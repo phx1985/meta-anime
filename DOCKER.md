@@ -2,6 +2,8 @@
 
 This guide explains how to run Meta-Anime API in Docker containers with PostgreSQL database.
 
+**Note:** Docker files are now located in the `api` directory for better integration with the .NET solution for debugging and development.
+
 ## ⚠️ Security Notice
 
 **IMPORTANT:** The default `docker-compose.yml` contains placeholder credentials that are publicly visible in this repository. These are suitable **ONLY for local development**.
@@ -21,27 +23,32 @@ For any deployment beyond your local machine:
 
 ### Running with Docker Compose
 
-1. **Build and start all services (API + PostgreSQL):**
+1. **Navigate to the api directory:**
+   ```bash
+   cd api
+   ```
+
+2. **Build and start all services (API + PostgreSQL):**
    ```bash
    docker compose up -d
    ```
 
-2. **View logs:**
+3. **View logs:**
    ```bash
    docker compose logs -f meta-anime-api
    ```
 
-3. **Stop all services:**
+4. **Stop all services:**
    ```bash
    docker compose down
    ```
 
-4. **Stop and remove volumes (⚠️ this will delete your database):**
+5. **Stop and remove volumes (⚠️ this will delete your database):**
    ```bash
    docker compose down -v
    ```
 
-5. **Access the API:**
+6. **Access the API:**
    - Swagger UI: http://localhost:8080/swagger
    - API: http://localhost:8080
 
@@ -63,12 +70,17 @@ Key environment variables:
 
 For local development with custom configuration:
 
-1. **Copy the template:**
+1. **Navigate to the api directory:**
+   ```bash
+   cd api
+   ```
+
+2. **Copy the template:**
    ```bash
    cp docker-compose.override.yml.template docker-compose.override.yml
    ```
 
-2. **Edit `docker-compose.override.yml` with your settings:**
+3. **Edit `docker-compose.override.yml` with your settings:**
    ```yaml
    services:
      meta-anime-api:
@@ -79,7 +91,7 @@ For local development with custom configuration:
          # ... other settings
    ```
 
-3. **Run with override:**
+4. **Run with override:**
    ```bash
    docker compose up -d
    ```
@@ -95,6 +107,9 @@ For local development with custom configuration:
 For development with hot reload:
 
 ```bash
+# Navigate to the api directory
+cd api
+
 # Start with debug configuration
 docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.debug.yml up
 
@@ -104,11 +119,13 @@ docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-co
 ### Option 2: Using Visual Studio / VS Code
 
 1. **Visual Studio 2022:**
-   - Open the solution
+   - Open the solution (api/MetaAnime.sln)
+   - Docker Compose support is configured to work with files in the api directory
    - Select "Docker Compose" from the debug target dropdown
    - Press F5 to start debugging
 
 2. **VS Code:**
+   - Open the api folder or workspace
    - Install Docker extension
    - Open the command palette (Ctrl+Shift+P)
    - Select "Docker: Compose Up"
