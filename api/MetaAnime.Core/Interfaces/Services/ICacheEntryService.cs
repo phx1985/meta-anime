@@ -7,7 +7,7 @@ namespace MetaAnime.Core.Interfaces.Services
 {
     public interface ICacheEntryService
     {
-        Task<Result> AddAsync(Result<CacheEntry> cacheEntry);
+        Task<Result<CacheEntry>> AddAsync(Result<CacheEntry> cacheEntry);
         Task<Result<CacheEntry?>> GetAsync(AnimeSource animeSource, string sourceId);
         Task<Result<IEnumerable<CacheEntry>>> GetAsync(AnimeSource animeSource);
         Task<Result> RemoveAsync(string sourceId, AnimeSource animeSource);

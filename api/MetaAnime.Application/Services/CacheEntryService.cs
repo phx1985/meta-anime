@@ -9,16 +9,16 @@ namespace MetaAnime.Application.Services
 {
     public class CacheEntryService(ICacheEntryRepository cacheEntryRepository) : ICacheEntryService
     {
-        public async Task<Result> AddAsync(Result<CacheEntry> cacheEntry)
+        public async Task<Result<CacheEntry>> AddAsync(Result<CacheEntry> cacheEntry)
         {
             try
             {
                 await cacheEntryRepository.AddAsync(cacheEntry.Value);
-                return Result.Success(cacheEntry);
+                return Result.Success(cacheEntry.Value);
             }
             catch (Exception ex)
             {
-                return Result.Failure(new Error("Error.AddAsync", ex.Message));
+                return Result.Failure(new Error("Error.AddAsync", ex.Message);
             }
         }
 
