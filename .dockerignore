@@ -1,0 +1,64 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker
+docker-compose*.yml
+!docker-compose.yml
+Dockerfile*
+.dockerignore
+
+# Documentation
+*.md
+!README.md
+LICENSE
+
+# IDE
+.vs
+.vscode
+.idea
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build artifacts
+**/bin/
+**/obj/
+**/out/
+**/TestResults/
+**/publish/
+
+# Logs
+**/logs/
+**/log/
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db
+*~
+
+# Node (for UI)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+docker-compose.override.yml
+
+# User secrets
+**/secrets.json
+
+# Test results
+**/*.trx
+**/*.coverage
+
+# Temporary files
+**/tmp/
+**/*.tmp
+**/*.temp
