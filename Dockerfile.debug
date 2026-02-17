@@ -1,0 +1,34 @@
+# Dockerfile.debug - For debugging in container
+# This Dockerfile is optimized for debugging with Visual Studio / VS Code
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS debug
+WORKDIR /src
+
+# Install debugger
+RUN apk add --no-cache bash procps
+
+# Copy project files for restore
+COPY ["api/MetaAnime.Presentation/MetaAnime.Presentation.csproj", "api/MetaAnime.Presentation/"]
+COPY ["api/MetaAnime.Application/MetaAnime.Application.csproj", "api/MetaAnime.Application/"]
+COPY ["api/MetaAnime.Core/MetaAnime.Core.csproj", "api/MetaAnime.Core/"]
+COPY ["api/MetaAnime.Infrastructure/MetaAnime.Infrastructure.csproj", "api/MetaAnime.Infrastructure/"]
+COPY ["api/MetaAnime.Infrastructure.Kometa/MetaAnime.Infrastructure.Kometa.csproj", "api/MetaAnime.Infrastructure.Kometa/"]
+COPY ["api/MetaAnime.Infrastructure.MyAnimeList/MetaAnime.Infrastructure.MyAnimeList.csproj", "api/MetaAnime.Infrastructure.MyAnimeList/"]
+COPY ["api/MetaAnime.Infrastructure.Plex/MetaAnime.Infrastructure.Plex.csproj", "api/MetaAnime.Infrastructure.Plex/"]
+COPY ["api/MetaAnime.Infrastructure.Sonarr/MetaAnime.Infrastructure.Sonarr.csproj", "api/MetaAnime.Infrastructure.Sonarr/"]
+
+# Restore dependencies
+RUN dotnet restore "api/MetaAnime.Presentation/MetaAnime.Presentation.csproj"
+
+# Copy source code (will be mounted as volume in debug mode)
+COPY api/ api/
+
+WORKDIR /src/api/MetaAnime.Presentation
+
+# Expose ports
+EXPOSE 8080
+EXPOSE 8081
+EXPOSE 4026
+
+# Default command for debugging with hot reload
+ENTRYPOINT ["dotnet", "watch"]
+CMD ["run", "--no-launch-profile"]

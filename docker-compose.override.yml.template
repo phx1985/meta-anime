@@ -1,0 +1,55 @@
+# docker-compose.override.yml.template
+# 
+# This is a template file for local development environment variables.
+# Copy this file to docker-compose.override.yml and customize it with your local settings.
+# 
+# docker-compose.override.yml is in .gitignore and will not be versioned
+# 
+# Usage:
+#   cp docker-compose.override.yml.template docker-compose.override.yml
+#   # Edit docker-compose.override.yml with your local configuration
+#   docker compose up
+
+services:
+  meta-anime-api:
+    environment:
+      # Development Environment
+      - ASPNETCORE_ENVIRONMENT=Development
+      
+      # Authentication - Set your local API key
+      - Authentication__ApiKey=your_local_api_key_here
+      
+      # Sonarr - Configure your local Sonarr instance
+      - Sonarr__Host=http://your-sonarr-host:8989
+      - Sonarr__ApiKey=your_sonarr_api_key
+      - Sonarr__AnimeTags=anime
+      
+      # Plex - Configure your local Plex server
+      - Plex__Host=http://your-plex-host:32400
+      - Plex__Token=your_plex_token
+      - Plex__AnimeSections=1,2
+      
+      # MyAnimeList - Configure your MAL API credentials
+      - MyAnimeList__ApiToken=your_mal_api_token
+      
+      # Override database password if needed for local development
+      # - Postgres__Password=your_custom_password
+    
+    # Enable debugging in Visual Studio / VS Code
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build
+    volumes:
+      # Mount source code for hot reload during development (optional)
+      - ./api:/src/api:ro
+    ports:
+      # Expose debugger port
+      - "5000:5000"
+      - "5001:5001"
+    
+    # Override command for debugging
+    # Uncomment the following lines when attaching debugger
+    # entrypoint: ["dotnet", "watch", "run", "--project", "/src/api/MetaAnime.Presentation", "--no-launch-profile"]
+    # stdin_open: true
+    # tty: true
