@@ -29,7 +29,7 @@ namespace MetaAnime.Controllers
 
         [HttpGet("{id}")]
         [Authorize]
-        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = ["id"])]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
         public async Task<ActionResult<GetAnimeDto>> GetById(string id)
         {
             var result = await animeMediatorService.GetByIdAsync(id);

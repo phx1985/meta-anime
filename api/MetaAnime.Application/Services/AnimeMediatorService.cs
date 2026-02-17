@@ -142,13 +142,13 @@ namespace MetaAnime.Application.Services
         {
             try
             {
-                var animesResult = await animeService.GetAllAsync();
-                if (animesResult.IsFailure)
+                var animeResult = await animeService.GetByIdAsync(id);
+                if (animeResult.IsFailure)
                 {
-                    return Result.Failure<AnimeDto>(animesResult.Error);
+                    return Result.Failure<AnimeDto>(animeResult.Error);
                 }
 
-                var anime = animesResult.Value.FirstOrDefault(a => a.Id == id);
+                var anime = animeResult.Value;
                 if (anime == null)
                 {
                     return Result.Failure<AnimeDto>(new("Error.NotFound", "Anime not found"));
