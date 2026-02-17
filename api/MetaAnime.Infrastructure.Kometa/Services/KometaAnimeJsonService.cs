@@ -1,15 +1,16 @@
-﻿using MetaAnime.Core.Helpers;
-using MetaAnime.Core.Interfaces.Services;
+﻿using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
+using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.Kometa.Models;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.Kometa.Services
 {
-    public class KometaAnimeJsonService : IKometaAnimeJsonService<KometaRaw>
+    public class KometaAnimeJsonService(IOptions<KometaSettings> options) : IKometaAnimeJsonService<KometaRaw>
     {
         #region Fields
-        private readonly string jsonUrl = ConfigurationHelper.GetEnvironmentVariableOrThrow("KOMETA_ANIME_IDS_JSON_URL");
+        private readonly string jsonUrl = options.Value.AnimeIdsJsonUrl;
         #endregion
 
         public async Task<Result<IList<KometaRaw>>> GetAllAsync()

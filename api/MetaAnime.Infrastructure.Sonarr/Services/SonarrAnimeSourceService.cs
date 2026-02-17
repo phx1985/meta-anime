@@ -1,28 +1,20 @@
-﻿using MetaAnime.Core.Helpers;
-using MetaAnime.Core.Interfaces.Services;
+﻿using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
+using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
+using Microsoft.Extensions.Options;
 using RestSharp;
 using System.Net;
 using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.Sonarr.Services
 {
-    public class SonarrAnimeSourceService : ISonarrAnimeSourceService<SonarrSeries>
+    public class SonarrAnimeSourceService(IOptions<SonarrSettings> options) : ISonarrAnimeSourceService<SonarrSeries>
     {
         #region Fields
-        private readonly string sonarrHost;
-        private readonly string apiKey;
-        private readonly List<string> tags;
-        #endregion
-
-        #region Constructor
-        public SonarrAnimeSourceService()
-        {
-            sonarrHost = ConfigurationHelper.GetEnvironmentVariableOrThrow("SONARR_HOST");
-            apiKey = ConfigurationHelper.GetEnvironmentVariableOrThrow("SONARR_API_KEY");
-            tags = [.. ConfigurationHelper.GetEnvironmentVariableOrThrow("SONARR_ANIME_TAGS").Split(',')];
-        }
+        private readonly string sonarrHost = options.Value.Host;
+        private readonly string apiKey = options.Value.ApiKey;
+        private readonly List<string> tags = [.. options.Value.AnimeTags.Split(',')];
         #endregion
 
         #region ISonarrSourceService Implementation
