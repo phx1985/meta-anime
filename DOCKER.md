@@ -39,7 +39,7 @@ This guide explains how to run Meta-Anime API in Docker containers with PostgreS
 
 ### Environment Variables
 
-The docker compose.yml includes default configuration. **You must change the API key before deploying to production!**
+The docker-compose.yml includes default configuration. **You must change the API key before deploying to production!**
 
 Key environment variables:
 - `Authentication__ApiKey` - API key for authentication (⚠️ CHANGE THIS!)
@@ -55,10 +55,10 @@ For local development with custom configuration:
 
 1. **Copy the template:**
    ```bash
-   cp docker compose.override.yml.template docker compose.override.yml
+   cp docker-compose.override.yml.template docker-compose.override.yml
    ```
 
-2. **Edit `docker compose.override.yml` with your settings:**
+2. **Edit `docker-compose.override.yml` with your settings:**
    ```yaml
    services:
      meta-anime-api:
@@ -74,19 +74,19 @@ For local development with custom configuration:
    docker compose up -d
    ```
 
-   Docker Compose automatically uses `docker compose.override.yml` if it exists.
+   Docker Compose automatically uses `docker-compose.override.yml` if it exists.
 
-**Note:** `docker compose.override.yml` is gitignored and won't be committed to version control.
+**Note:** `docker-compose.override.yml` is gitignored and won't be committed to version control.
 
 ## Debugging in Docker
 
-### Option 1: Using docker compose.debug.yml
+### Option 1: Using docker-compose.debug.yml
 
 For development with hot reload:
 
 ```bash
 # Start with debug configuration
-docker compose -f docker compose.yml -f docker compose.override.yml -f docker compose.debug.yml up
+docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.debug.yml up
 
 # The application will rebuild automatically when you change code
 ```
@@ -138,7 +138,7 @@ docker compose -f docker compose.yml -f docker compose.override.yml -f docker co
 
 ### PostgreSQL Configuration
 
-Default credentials (defined in docker compose.yml):
+Default credentials (defined in docker-compose.yml):
 - **Host:** postgres
 - **Port:** 5432
 - **Database:** metaanime
@@ -248,7 +248,7 @@ sudo chown -R 1000:1000 ./api
 If ports 8080, 8081, or 5432 are already in use:
 
 ```yaml
-# Change port mapping in docker compose.override.yml
+# Change port mapping in docker-compose.override.yml
 services:
   meta-anime-api:
     ports:
