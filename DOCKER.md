@@ -2,6 +2,16 @@
 
 This guide explains how to run Meta-Anime API in Docker containers with PostgreSQL database.
 
+## ⚠️ Security Notice
+
+**IMPORTANT:** The default `docker-compose.yml` contains placeholder credentials that are publicly visible in this repository. These are suitable **ONLY for local development**.
+
+For any deployment beyond your local machine:
+1. **NEVER** use the default API key or database password
+2. Create a `docker-compose.override.yml` file (gitignored) with your secure credentials
+3. Generate strong passwords: `openssl rand -base64 32`
+4. Consider using Docker secrets for production deployments
+
 ## Quick Start
 
 ### Prerequisites
@@ -138,12 +148,16 @@ docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-co
 
 ### PostgreSQL Configuration
 
-Default credentials (defined in docker-compose.yml):
+**⚠️ SECURITY WARNING:** The default credentials shown below are publicly visible in the repository. These MUST be changed for any non-local development use.
+
+Default credentials (defined in docker-compose.yml - **DO NOT USE IN PRODUCTION**):
 - **Host:** postgres
 - **Port:** 5432
 - **Database:** metaanime
 - **User:** metaanime
-- **Password:** metaanime_password (⚠️ change for production!)
+- **Password:** metaanime_password ⚠️ **CHANGE THIS IMMEDIATELY FOR PRODUCTION**
+
+**For production:** Use docker-compose.override.yml (gitignored) or Docker secrets to override these credentials.
 
 ### Automatic Migrations
 

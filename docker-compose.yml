@@ -6,6 +6,8 @@ services:
     environment:
       POSTGRES_DB: metaanime
       POSTGRES_USER: metaanime
+      # WARNING: Default password - MUST be changed for production!
+      # Use docker-compose.override.yml or Docker secrets for production
       POSTGRES_PASSWORD: metaanime_password
     ports:
       - "5432:5432"
@@ -42,6 +44,8 @@ services:
       - Postgres__Password=metaanime_password
       
       # Authentication (REQUIRED - Change this!)
+      # WARNING: This is a placeholder - NEVER use in production!
+      # Generate a secure key: openssl rand -base64 32
       - Authentication__ApiKey=CHANGE_ME_SUPER_SECRET_KEY
       
       # Sonarr Configuration (Optional)

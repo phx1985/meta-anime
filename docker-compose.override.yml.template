@@ -3,7 +3,7 @@
 # This is a template file for local development environment variables.
 # Copy this file to docker-compose.override.yml and customize it with your local settings.
 # 
-# docker-compose.override.yml is in .gitignore and will NOT be versioned
+# docker-compose.override.yml is in .gitignore and will not be versioned
 # 
 # Usage:
 #   cp docker-compose.override.yml.template docker-compose.override.yml

@@ -144,7 +144,8 @@ done
 # Test 10: Test database connection
 echo ""
 echo "Test 10: Testing database operations..."
-# Add a small delay to ensure database is fully initialized
+# Add a small delay to ensure database is fully initialized after pg_isready check
+# pg_isready only checks if the server is accepting connections, not if it's fully ready
 sleep 2
 if docker compose exec -T postgres psql -U metaanime -d metaanime -c "SELECT version();" > /dev/null 2>&1; then
     success "Database connection successful"
