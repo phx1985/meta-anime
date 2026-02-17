@@ -42,7 +42,7 @@ services:
       target: build
     volumes:
       # Mount source code for hot reload during development (optional)
-      - ./api:/src/api:ro
+      - .:/src:ro
     ports:
       # Expose debugger port
       - "5000:5000"
@@ -50,6 +50,6 @@ services:
     
     # Override command for debugging
     # Uncomment the following lines when attaching debugger
-    # entrypoint: ["dotnet", "watch", "run", "--project", "/src/api/MetaAnime.Presentation", "--no-launch-profile"]
+    # entrypoint: ["dotnet", "watch", "run", "--project", "/src/MetaAnime.Presentation", "--no-launch-profile"]
     # stdin_open: true
     # tty: true

@@ -21,7 +21,7 @@ services:
       - ASPNETCORE_URLS=http://+:8080;https://+:8081
     volumes:
       # Mount source for live debugging
-      - ./api:/src/api
+      - .:/src
       # Mount NuGet packages cache to speed up restore
       - ~/.nuget/packages:/root/.nuget/packages:ro
     ports:
@@ -30,4 +30,4 @@ services:
     stdin_open: true
     tty: true
     entrypoint: []
-    command: ["dotnet", "watch", "run", "--project", "/src/api/MetaAnime.Presentation/MetaAnime.Presentation.csproj", "--no-launch-profile"]
+    command: ["dotnet", "watch", "run", "--project", "/src/MetaAnime.Presentation/MetaAnime.Presentation.csproj", "--no-launch-profile"]
