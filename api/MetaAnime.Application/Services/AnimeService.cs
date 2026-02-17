@@ -145,5 +145,31 @@ namespace MetaAnime.Application.Services
                 return Result.Failure<IEnumerable<Anime>>(new("Error.RefreshData", ex.Message));
             }
         }
+
+        public async Task<Result<Anime?>> GetByIdAsync(Guid id)
+        {
+            try
+            {
+                var anime = await animeRepository.GetByIdAsync(id);
+                return Result.Success(anime);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<Anime?>(new("Error.GetByIdAsync", ex.Message));
+            }
+        }
+
+        public async Task<Result> DeleteAsync(Guid id)
+        {
+            try
+            {
+                await animeRepository.DeleteAsync(id);
+                return Result.Success();
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure(new("Error.DeleteAsync", ex.Message));
+            }
+        }
     }
 }

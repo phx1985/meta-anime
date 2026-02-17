@@ -2,10 +2,18 @@
 
 namespace MetaAnime.Application.DTOs
 {
-    public sealed class PlexAnimeDto(Anime? anime, string plexBaseUrl)
+    public sealed record PlexAnimeDto(
+        string Title,
+        string? Id,
+        string? Url
+    )
     {
-        public string Title { get; } = anime?.Title ?? "NO_TITLE";
-        public string? Id { get; } = anime?.SourceId;
-        public string? Url { get; } = $"{plexBaseUrl}{anime?.SourceId}";
+        public PlexAnimeDto(Anime? anime, string plexBaseUrl) 
+            : this(
+                anime?.Title ?? "NO_TITLE",
+                anime?.SourceId,
+                $"{plexBaseUrl}{anime?.SourceId}"
+            )
+        { }
     }
 }

@@ -2,10 +2,18 @@
 
 namespace MetaAnime.Application.DTOs
 {
-    public sealed class SonarrAnimeDto(Anime? anime, string sonarrBaseUrl)
+    public sealed record SonarrAnimeDto(
+        string Title,
+        string? Id,
+        string? Url
+    )
     {
-        public string Title { get; } = anime?.Title ?? "NO_TITLE";
-        public string? Id { get; } = anime?.SourceId;
-        public string? Url { get; } = $"{sonarrBaseUrl}/series/{anime?.SourceId}";
+        public SonarrAnimeDto(Anime? anime, string sonarrBaseUrl) 
+            : this(
+                anime?.Title ?? "NO_TITLE",
+                anime?.SourceId,
+                $"{sonarrBaseUrl}/series/{anime?.SourceId}"
+            )
+        { }
     }
 }

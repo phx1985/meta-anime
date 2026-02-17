@@ -57,5 +57,17 @@ namespace MetaAnime.Infrastructure.Repositories
         {
             return await dbContext.Anime.FirstOrDefaultAsync(a => a.SourceId == sourceId && a.AnimeSource == source);
         }
+
+        public async Task<Anime?> GetByIdAsync(Guid id)
+        {
+            return await dbContext.Anime
+                .Include(a => a.ExternalAnimeIdentifiers)
+                .FirstOrDefaultAsync(a => a.Id == id);
+        }
+
+        public async Task DeleteAsync(Guid id)
+        {
+            await dbContext.Anime.Where(a => a.Id == id).ExecuteDeleteAsync();
+        }
     }
 }
