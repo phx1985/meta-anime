@@ -1,17 +1,18 @@
-﻿using MetaAnime.Core.Helpers;
-using MetaAnime.Core.Interfaces.Services;
+﻿using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
+using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.MyAnimeList.Models;
+using Microsoft.Extensions.Options;
 using RestSharp;
 using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.MyAnimeList.Services
 {
-    public class MalAnimeSourceService : IMalAnimeSourceService<MalAnime>
+    public class MalAnimeSourceService(IOptions<MalSettings> options) : IMalAnimeSourceService<MalAnime>
     {
         #region Fields
-        private readonly string baseUrl = ConfigurationHelper.GetEnvironmentVariableOrThrow("MAL_API_BASE_URL");
-        private readonly string token = ConfigurationHelper.GetEnvironmentVariableOrThrow("MAL_API_TOKEN");
+        private readonly string baseUrl = options.Value.ApiBaseUrl;
+        private readonly string token = options.Value.ApiToken;
         private const string REQUEST_FIELDS = "synopsis";
         private const string EXTENDED_REQUEST_FIELDS = REQUEST_FIELDS + "alternative_titles{en,synonyms}, " +
                                                                         "genres{id,name}, " +

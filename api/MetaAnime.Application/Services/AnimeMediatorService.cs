@@ -1,12 +1,13 @@
 ﻿using MetaAnime.Application.DTOs;
 using MetaAnime.Application.Interfaces;
 using MetaAnime.Core.Enums;
-using MetaAnime.Core.Helpers;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
 using MetaAnime.Core.Models;
+using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.MyAnimeList.Models;
 using MetaAnime.Infrastructure.Plex.Models;
+using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 
 namespace MetaAnime.Application.Services
@@ -14,14 +15,17 @@ namespace MetaAnime.Application.Services
     public class AnimeMediatorService(
         IAnimeMappingService animeMappingService,
         IPlexAnimeSourceService<PlexMedia> plexAnimeSource,
-        IAnimeMatchingService animeMatchingService)
+        IAnimeMatchingService animeMatchingService,
+        IOptions<MalSettings> malOptions,
+        IOptions<SonarrSettings> sonarrOptions,
+        IOptions<PlexSettings> plexOptions)
         : IAnimeMediatorService
     {
-        private readonly string myAnimeListHost = ConfigurationHelper.GetEnvironmentVariableOrThrow("MAL_WEB_BASE_URL");
-        private readonly string sonarrHost = ConfigurationHelper.GetEnvironmentVariableOrThrow("SONARR_HOST");
+        private readonly string myAnimeListHost = malOptions.Value.WebBaseUrl;
+        private readonly string sonarrHost = sonarrOptions.Value.Host;
         // TODO : Add sonarr web url to the configuration
 
-        private readonly string plexBaseUrl = $"{ConfigurationHelper.GetEnvironmentVariableOrThrow("PLEX_HOST")}/desktop/#!/server/{plexAnimeSource.GetMachineIdentifierAsync().Result.Value}/details?key=%2Flibrary%2Fmetadata%2F";
+        private readonly string plexBaseUrl = $"{plexOptions.Value.Host}/desktop/#!/server/{plexAnimeSource.GetMachineIdentifierAsync().Result.Value}/details?key=%2Flibrary%2Fmetadata%2F";
         // TODO : Add plex web url to the configuration
         public async Task<Result<IEnumerable<GetAnimeDto>>> GetAllAsync()
         {

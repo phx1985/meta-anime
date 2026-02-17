@@ -1,17 +1,18 @@
 ﻿using LukeHagar.PlexAPI.SDK;
 using LukeHagar.PlexAPI.SDK.Models.Requests;
-using MetaAnime.Core.Helpers;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
+using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.Plex.Models;
+using Microsoft.Extensions.Options;
 using Components = LukeHagar.PlexAPI.SDK.Models.Components;
 
 namespace MetaAnime.Infrastructure.Plex.Services
 {
-    public class PlexAnimeSourceService(IPlexAPI plexAPI) : IPlexAnimeSourceService<PlexMedia>
+    public class PlexAnimeSourceService(IPlexAPI plexAPI, IOptions<PlexSettings> options) : IPlexAnimeSourceService<PlexMedia>
     {
         #region Fields
-        private readonly int[] animeSections = [.. ConfigurationHelper.GetEnvironmentVariableOrThrow("PLEX_ANIME_SECTIONS")
+        private readonly int[] animeSections = [.. options.Value.AnimeSections
                                                .Split(',')
                                                .Select(int.Parse)];
         private readonly IPlexAPI plexAPI = plexAPI;
