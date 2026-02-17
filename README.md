@@ -45,11 +45,44 @@ The application uses the .NET Options pattern. You can configure it using `appse
 
 ### Prerequisites
 
-*   [.NET 10 SDK](https://dotnet.microsoft.com/download)
-*   PostgreSQL
-*   Docker (Optional)
+*   [.NET 10 SDK](https://dotnet.microsoft.com/download) (for local development)
+*   PostgreSQL (for local development)
+*   **Docker & Docker Compose** (recommended for quickest setup)
 
-### Local Development
+### 🐳 Quick Start with Docker (Recommended)
+
+The fastest way to get started is using Docker:
+
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/phx1985/meta-anime.git
+    cd meta-anime
+    ```
+
+2.  **Start with Docker Compose**
+    ```bash
+    docker compose up -d
+    ```
+    
+    Or use the quick-start script:
+    ```bash
+    ./quick-start.sh
+    ```
+
+3.  **Access the API**
+    - Swagger UI: http://localhost:8080/swagger
+    - API: http://localhost:8080
+
+4.  **Configure (Optional)**
+    For custom configuration, copy the override template:
+    ```bash
+    cp docker-compose.override.yml.template docker-compose.override.yml
+    # Edit docker-compose.override.yml with your settings
+    ```
+
+**📚 See [DOCKER.md](DOCKER.md) for complete Docker documentation, debugging, and production deployment.**
+
+### 💻 Local Development (Without Docker)
 
 1.  **Clone the repository**
     ```bash
@@ -62,6 +95,7 @@ The application uses the .NET Options pattern. You can configure it using `appse
 
 3.  **Run the Database Migrations**
     ```bash
+    cd api
     dotnet ef database update --project MetaAnime.Infrastructure --startup-project MetaAnime.Presentation
     ```
 
@@ -73,24 +107,26 @@ The application uses the .NET Options pattern. You can configure it using `appse
 5.  **Access Swagger UI**
     Navigate to `https://localhost:5001/swagger/index.html` (port may vary).
 
-### Docker Support
+### 🛠️ Docker Commands (Quick Reference)
 
-The application is container-ready. Use `docker-compose` to spin up the API and a PostgreSQL instance.
+```bash
+# Start services
+docker compose up -d
 
-```yaml
-version: '3.8'
-services:
-  meta-anime-api:
-    image: meta-anime-api:latest
-    environment:
-      - Authentication__ApiKey=super_secret_key
-      - Postgres__Host=postgres
-      - Sonarr__Host=http://sonarr:8989
-      # ... other env vars
-    ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
+# View logs
+docker compose logs -f meta-anime-api
+
+# Stop services
+docker compose down
+
+# Rebuild and restart
+docker compose up -d --build
+
+# Use Makefile for easier management
+make up      # Start services
+make logs    # View logs
+make down    # Stop services
+make help    # See all commands
 ```
 
 ## 🔒 Authentication
