@@ -21,4 +21,8 @@
     <ProjectReference Include="..\MetaAnime.Core\MetaAnime.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\Migrations\" />
+  </ItemGroup>
+
 </Project>

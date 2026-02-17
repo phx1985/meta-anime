@@ -99,7 +99,7 @@ namespace MetaAnime.Infrastructure.Sonarr.Services
         /// <returns></returns>
         private bool IsAnimeTagged(SonarrSeries anime, List<SonarrTag> sonarrTags)
         {
-            if (tags?.Count == 0)
+            if (tags.Count == 0)
                 return false;
             return anime.Tags.Any(tagId => sonarrTags.Any(sonarrTag => sonarrTag.Id == tagId));
         }

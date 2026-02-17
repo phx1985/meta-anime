@@ -18,7 +18,7 @@ namespace MetaAnime.Application.Services
             }
             catch (Exception ex)
             {
-                return Result.Failure(new Error("Error.AddAsync", ex.Message);
+                return Result.Failure<CacheEntry>(new Error("Error.AddAsync", ex.Message));
             }
         }
 

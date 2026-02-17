@@ -77,13 +77,13 @@ namespace MetaAnime.Infrastructure.Plex.Services
 
         #region Private Methods
         private static PlexMedia MapToPlexMedia(Components.Metadata metadata)
-           => new()
-           {
-               Description = metadata.Summary,
-               Id = metadata.RatingKey,
-               Title = metadata.Title,
-               ExternalGuilds = [.. metadata!.Guids != null ? metadata.Guids.Select(g => g.Id)! : []]
-           };
+            => new()
+            {
+                Description = metadata.Summary,
+                Id = metadata.RatingKey,
+                Title = metadata.Title,
+                ExternalGuilds = metadata?.Guids?.Select(g => g.Id).ToArray() ?? []
+            };
         #endregion
     }
 }

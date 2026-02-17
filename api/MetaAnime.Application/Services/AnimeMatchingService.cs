@@ -81,7 +81,15 @@ namespace MetaAnime.Application.Services
 
             // Prepare the mappings
             var animeMappings = new ConcurrentBag<AnimeMapping>();
-            var tasks = allAnimes.Select(anime =>
+            // The platforms are ordered by priority
+            var platformMappings = new Dictionary<MediaPlatform, KometaAnimePlatform>
+            {
+                { MediaPlatform.Tvdb, KometaAnimePlatform.Tvdb },
+                { MediaPlatform.Imdb, KometaAnimePlatform.Imdb },
+                { MediaPlatform.Tmdb, KometaAnimePlatform.TmdbShow }
+            };
+
+            Parallel.ForEach(allAnimes, anime =>
             {
                 // MyAnimeList
                 // For that source, directly add the mapping
@@ -89,21 +97,13 @@ namespace MetaAnime.Application.Services
                 {
                     var malKometaMapping = kometaMappings.Where(km => km.GetPlatformEnum() == KometaAnimePlatform.Mal && km.PlatformId == anime.SourceId).ToList();
                     malKometaMapping.ForEach(km => animeMappings.Add(new AnimeMapping { AnimeId = anime.Id, AniDbId = km.AniDbId }));
-                    return Task.CompletedTask;
+                    return;
                 }
 
                 if (anime.ExternalAnimeIdentifiers is null || anime.ExternalAnimeIdentifiers.Count == 0)
-                    return Task.CompletedTask;
+                    return;
 
-                // For other sources, try to match the
-                // The platforms are ordered by priority
-                var platformMappings = new Dictionary<MediaPlatform, KometaAnimePlatform>
-                {
-                    { MediaPlatform.Tvdb, KometaAnimePlatform.Tvdb },
-                    { MediaPlatform.Imdb, KometaAnimePlatform.Imdb },
-                    { MediaPlatform.Tmdb, KometaAnimePlatform.TmdbShow }
-                };
-
+                // Other sources
                 foreach (var platformMapping in platformMappings)
                 {
                     if (anime.ExternalAnimeIdentifiers.Any(ea => ea.MediaPlatform == platformMapping.Key))
@@ -116,10 +116,7 @@ namespace MetaAnime.Application.Services
                         break;
                     }
                 }
-                return Task.CompletedTask;
             });
-
-            await Task.WhenAll(tasks);
 
             var addMappingsResult = await mappingService.BulkInsertAsync(animeMappings);
             if (addMappingsResult.IsFailure)
