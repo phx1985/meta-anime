@@ -2,10 +2,18 @@
 
 namespace MetaAnime.Application.DTOs
 {
-    public sealed class MalAnimeDto(Anime? anime, string malBaseUrl)
+    public sealed record MalAnimeDto(
+        string Title,
+        string? Id,
+        string? Url
+    )
     {
-        public string Title { get; } = anime?.Title ?? "NO_TITLE";
-        public string? Id { get; } = anime?.SourceId;
-        public string? Url { get; } = $"{malBaseUrl}/anime/{anime?.SourceId}";
+        public MalAnimeDto(Anime? anime, string malBaseUrl) 
+            : this(
+                anime?.Title ?? "NO_TITLE",
+                anime?.SourceId,
+                $"{malBaseUrl}/anime/{anime?.SourceId}"
+            )
+        { }
     }
 }

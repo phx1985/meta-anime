@@ -16,6 +16,7 @@ namespace MetaAnime.Application.Services
         IAnimeMappingService animeMappingService,
         IPlexAnimeSourceService<PlexMedia> plexAnimeSource,
         IAnimeMatchingService animeMatchingService,
+        IAnimeService animeService,
         IOptions<MalSettings> malOptions,
         IOptions<SonarrSettings> sonarrOptions,
         IOptions<PlexSettings> plexOptions)
@@ -42,14 +43,13 @@ namespace MetaAnime.Application.Services
                     .ThenBy(m => m.Anime?.AnimeSource)
                     .GroupBy(m => m.AniDbId);
 
-                var animeDtos = groupedMappings.AsParallel().Select(g => new GetAnimeDto
-                {
-                    Title = g.FirstOrDefault()?.Anime?.Title ?? "NO_TITLE",
-                    AniDbId = g.Key,
-                    MalAnimes = [.. g.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList).Select(m => new MalAnimeDto(m.Anime, myAnimeListHost))],
-                    PlexAnimes = [.. g.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex).Select(m => new PlexAnimeDto(m.Anime, plexBaseUrl))],
-                    SonarrAnimes = [.. g.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr).Select(m => new SonarrAnimeDto(m.Anime, sonarrHost))]
-                }).OrderBy(a => a.Title).ToList();
+                var animeDtos = groupedMappings.AsParallel().Select(g => new GetAnimeDto(
+                    g.Key,
+                    g.FirstOrDefault()?.Anime?.Title ?? "NO_TITLE",
+                    [.. g.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex).Select(m => new PlexAnimeDto(m.Anime, plexBaseUrl))],
+                    [.. g.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList).Select(m => new MalAnimeDto(m.Anime, myAnimeListHost))],
+                    [.. g.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr).Select(m => new SonarrAnimeDto(m.Anime, sonarrHost))]
+                )).OrderBy(a => a.Title).ToList();
 
                 return Result.Success<IEnumerable<GetAnimeDto>>(animeDtos);
             }
@@ -73,6 +73,130 @@ namespace MetaAnime.Application.Services
             catch (Exception ex)
             {
                 return Result.Failure(new("Error.SyncAllAsync", ex.Message));
+            }
+        }
+
+        public async Task<Result<GetAnimeDto?>> GetByIdAsync(string aniDbId)
+        {
+            try
+            {
+                var mappingsResult = await animeMappingService.GetAllAsync(includeAnime: true);
+                if (mappingsResult.IsFailure)
+                {
+                    return Result.Failure<GetAnimeDto?>(mappingsResult.Error);
+                }
+
+                var animeMappings = mappingsResult.Value
+                    .Where(m => m.AniDbId == aniDbId)
+                    .OrderBy(m => m.Anime?.AnimeSource)
+                    .ToList();
+
+                if (!animeMappings.Any())
+                {
+                    return Result.Success<GetAnimeDto?>(null);
+                }
+
+                var animeDto = new GetAnimeDto(
+                    aniDbId,
+                    animeMappings.FirstOrDefault()?.Anime?.Title ?? "NO_TITLE",
+                    [.. animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex).Select(m => new PlexAnimeDto(m.Anime, plexBaseUrl))],
+                    [.. animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList).Select(m => new MalAnimeDto(m.Anime, myAnimeListHost))],
+                    [.. animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr).Select(m => new SonarrAnimeDto(m.Anime, sonarrHost))]
+                );
+
+                return Result.Success<GetAnimeDto?>(animeDto);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<GetAnimeDto?>(new("Error.GetByIdAsync", ex.Message));
+            }
+        }
+
+        public async Task<Result<AnimeDto>> CreateAsync(CreateAnimeRequest request)
+        {
+            try
+            {
+                var anime = new Anime
+                {
+                    SourceId = request.SourceId,
+                    Title = request.Title,
+                    Description = request.Description,
+                    AnimeSource = request.AnimeSource
+                };
+
+                var insertResult = await animeService.BulkInsertAsync([anime]);
+                if (insertResult.IsFailure)
+                {
+                    return Result.Failure<AnimeDto>(insertResult.Error);
+                }
+
+                return Result.Success(AnimeDto.FromAnime(anime));
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<AnimeDto>(new("Error.CreateAsync", ex.Message));
+            }
+        }
+
+        public async Task<Result<AnimeDto>> UpdateAsync(Guid id, UpdateAnimeRequest request)
+        {
+            try
+            {
+                var animesResult = await animeService.GetAllAsync();
+                if (animesResult.IsFailure)
+                {
+                    return Result.Failure<AnimeDto>(animesResult.Error);
+                }
+
+                var anime = animesResult.Value.FirstOrDefault(a => a.Id == id);
+                if (anime == null)
+                {
+                    return Result.Failure<AnimeDto>(new("Error.NotFound", "Anime not found"));
+                }
+
+                anime.Title = request.Title;
+                anime.Description = request.Description;
+
+                var updateResult = await animeService.BulkInsertAsync([anime]);
+                if (updateResult.IsFailure)
+                {
+                    return Result.Failure<AnimeDto>(updateResult.Error);
+                }
+
+                return Result.Success(AnimeDto.FromAnime(anime));
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<AnimeDto>(new("Error.UpdateAsync", ex.Message));
+            }
+        }
+
+        public async Task<Result> DeleteAsync(Guid id)
+        {
+            try
+            {
+                var animeResult = await animeService.GetByIdAsync(id);
+                if (animeResult.IsFailure)
+                {
+                    return Result.Failure(animeResult.Error);
+                }
+
+                if (animeResult.Value == null)
+                {
+                    return Result.Failure(new("Error.NotFound", "Anime not found"));
+                }
+
+                var deleteResult = await animeService.DeleteAsync(id);
+                if (deleteResult.IsFailure)
+                {
+                    return Result.Failure(deleteResult.Error);
+                }
+
+                return Result.Success();
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure(new("Error.DeleteAsync", ex.Message));
             }
         }
 
