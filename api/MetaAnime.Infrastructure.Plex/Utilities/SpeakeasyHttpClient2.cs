@@ -8,11 +8,22 @@ namespace MetaAnime.Infrastructure.Plex.Utilities
     /// </summary>
     public sealed class SpeakeasyHttpClient2 : SpeakeasyHttpClient, IDisposable
     {
+        private bool _disposed;
+
         public SpeakeasyHttpClient2()
         {
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
-        public void Dispose() => httpClient.Dispose();
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            httpClient.Dispose();
+            _disposed = true;
+        }
     }
 }
