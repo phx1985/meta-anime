@@ -76,9 +76,9 @@ namespace MetaAnime.Application.Services
 
                 await Task.WhenAll(plexDataTask, malDataTask, sonarrDataTask);
 
-                var plexData = plexDataTask.Result;
-                var malData = malDataTask.Result;
-                var sonarrData = sonarrDataTask.Result;
+                var plexData = await plexDataTask;
+                var malData = await malDataTask;
+                var sonarrData = await sonarrDataTask;
 
                 var animeDtos = new List<AnimeDetailsResponse>();
 
@@ -310,7 +310,10 @@ namespace MetaAnime.Application.Services
                             cachedData[entry.SourceId] = malAnime;
                         }
                     }
-                    catch { /* Skip invalid cache entries */ }
+                    catch (System.Text.Json.JsonException)
+                    {
+                        // Skip invalid cache entries - cache may be corrupted or from older version
+                    }
                 }
             }
 
