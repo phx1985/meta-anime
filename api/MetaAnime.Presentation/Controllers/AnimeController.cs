@@ -3,7 +3,6 @@ using MediatR;
 using MetaAnime.Application.Commands;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Queries;
-using MetaAnime.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,7 +11,7 @@ namespace MetaAnime.Controllers
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/animes")]
-    public class AnimeController(IMediator mediator, IAnimeMatchingService animeMatchingService)
+    public class AnimeController(IMediator mediator)
         : ControllerBase
     {
         [HttpGet]
@@ -20,7 +19,12 @@ namespace MetaAnime.Controllers
         [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
         public async Task<ActionResult<IEnumerable<AnimeDetailsResponse>>> GetAll()
         {
-            await animeMatchingService.MatchAsync();
+            var matchResult = await mediator.Send(new MatchAnimeCommand());
+            if (matchResult.IsFailure)
+            {
+                return StatusCode(500, matchResult.Error.Message);
+            }
+
             var result = await mediator.Send(new GetAllAnimesQuery());
             
             if (result.IsFailure)
