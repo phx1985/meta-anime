@@ -1,7 +1,7 @@
-﻿using MetaAnime.Core.Enums;
+﻿using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
-using MetaAnime.Core.Models;
+using MetaAnime.Domain.Entities;
 using MetaAnime.Infrastructure.Kometa.Models;
 using MetaAnime.Infrastructure.Kometa.Utilities.Extensions;
 using MetaAnime.Infrastructure.Utilities.Extensions;

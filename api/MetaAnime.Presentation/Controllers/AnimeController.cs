@@ -1,23 +1,31 @@
-﻿using MetaAnime.Application.DTOs;
-using MetaAnime.Application.Interfaces;
-using MetaAnime.Core.Interfaces.Services;
+﻿using Asp.Versioning;
+using MediatR;
+using MetaAnime.Application.Commands;
+using MetaAnime.Application.Contracts;
+using MetaAnime.Application.Queries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MetaAnime.Controllers
 {
     [ApiController]
-    [Route("api/animes")]
-    public class AnimeController(IAnimeMediatorService animeMediatorService, IAnimeMatchingService animeMatchingService)
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/animes")]
+    public class AnimeController(IMediator mediator)
         : ControllerBase
     {
         [HttpGet]
         [Authorize]
         [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
-        public async Task<ActionResult<IEnumerable<GetAnimeDto>>> GetAll()
+        public async Task<ActionResult<IEnumerable<AnimeDetailsResponse>>> GetAll()
         {
-            await animeMatchingService.MatchAsync();
-            var result = await animeMediatorService.GetAllAsync();
+            var matchResult = await mediator.Send(new MatchAnimeCommand());
+            if (matchResult.IsFailure)
+            {
+                return StatusCode(500, matchResult.Error.Message);
+            }
+
+            var result = await mediator.Send(new GetAllAnimesQuery());
             
             if (result.IsFailure)
             {
@@ -30,9 +38,9 @@ namespace MetaAnime.Controllers
         [HttpGet("{id}")]
         [Authorize]
         [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
-        public async Task<ActionResult<GetAnimeDto>> GetById(string id)
+        public async Task<ActionResult<AnimeDetailsResponse>> GetById(string id)
         {
-            var result = await animeMediatorService.GetByIdAsync(id);
+            var result = await mediator.Send(new GetAnimeByIdQuery(id));
             
             if (result.IsFailure)
             {
@@ -49,14 +57,14 @@ namespace MetaAnime.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult<AnimeDto>> Create([FromBody] CreateAnimeRequest request)
+        public async Task<ActionResult<AnimeResponse>> Create([FromBody] CreateAnimeRequest request)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var result = await animeMediatorService.CreateAsync(request);
+            var result = await mediator.Send(new CreateAnimeCommand(request));
             
             if (result.IsFailure)
             {
@@ -68,14 +76,14 @@ namespace MetaAnime.Controllers
 
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<ActionResult<AnimeDto>> Update(Guid id, [FromBody] UpdateAnimeRequest request)
+        public async Task<ActionResult<AnimeResponse>> Update(Guid id, [FromBody] UpdateAnimeRequest request)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var result = await animeMediatorService.UpdateAsync(id, request);
+            var result = await mediator.Send(new UpdateAnimeCommand(id, request));
             
             if (result.IsFailure)
             {
@@ -93,7 +101,7 @@ namespace MetaAnime.Controllers
         [Authorize]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var result = await animeMediatorService.DeleteAsync(id);
+            var result = await mediator.Send(new DeleteAnimeCommand(id));
             
             if (result.IsFailure)
             {

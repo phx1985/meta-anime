@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MetaAnime.Domain\MetaAnime.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

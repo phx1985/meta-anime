@@ -1,14 +1,14 @@
-﻿using MetaAnime.Core.Models;
+﻿using MetaAnime.Domain.Entities;
 
-namespace MetaAnime.Application.DTOs
+namespace MetaAnime.Application.Contracts
 {
-    public sealed record PlexAnimeDto(
+    public sealed record PlexAnimeInfo(
         string Title,
         string? Id,
         string? Url
     )
     {
-        public PlexAnimeDto(Anime? anime, string plexBaseUrl) 
+        public PlexAnimeInfo(Anime? anime, string plexBaseUrl) 
             : this(
                 anime?.Title ?? "NO_TITLE",
                 anime?.SourceId,

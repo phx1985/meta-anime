@@ -1,10 +1,38 @@
+using Hangfire;
+using Hangfire.PostgreSql;
+using MetaAnime.Application.BackgroundJobs;
+using MetaAnime.Core.Settings;
 using MetaAnime.Utilities.Extensions;
+using MetaAnime.Utilities.Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddResponseCaching();
 builder.Services.AddControllers();
+
+// Add API versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+}).AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+// Configure Hangfire
+var dbSettings = builder.Configuration.GetSection(DatabaseSettings.SectionName).Get<DatabaseSettings>();
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(c =>
+        c.UseNpgsqlConnection(dbSettings?.ConnectionString ?? string.Empty)));
+
+builder.Services.AddHangfireServer();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddEndpointsApiExplorer();
@@ -21,6 +49,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Configure Hangfire Dashboard
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new HangfireAuthorizationFilter() }
+});
+
+// Schedule background jobs
+AnimeSyncJob.Schedule();
 
 app.UseHttpsRedirection();
 app.UseResponseCaching();

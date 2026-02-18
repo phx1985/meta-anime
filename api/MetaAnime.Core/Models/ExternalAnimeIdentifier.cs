@@ -1,4 +1,4 @@
-﻿using MetaAnime.Core.Enums;
+﻿using MetaAnime.Domain.Enums;
 
 namespace MetaAnime.Core.Models;
 

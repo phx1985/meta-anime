@@ -1,5 +1,5 @@
 ﻿using MetaAnime.Core.Interfaces.Shared.Results;
-using MetaAnime.Core.Models;
+using MetaAnime.Domain.Entities;
 
 namespace MetaAnime.Core.Interfaces.Services
 {
