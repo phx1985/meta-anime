@@ -61,6 +61,41 @@ namespace MetaAnime.Infrastructure.Sonarr.Services
             else
                 throw new HttpRequestException($"Failed to get Sonarr series: {response.StatusCode} - {response.Content}");
         }
+
+        public async Task<Dictionary<string, int>> GetCodecDistributionAsync(string seriesId)
+        {
+            var restClient = new RestClient(sonarrHost);
+            var restRequest = new RestRequest($"api/v3/episodefile");
+            restRequest.AddParameter("apikey", apiKey);
+            restRequest.AddParameter("seriesId", seriesId);
+            var response = await restClient.ExecuteAsync(restRequest);
+
+            var codecDistribution = new Dictionary<string, int>();
+
+            if (response.IsSuccessful)
+            {
+                var json = response.Content!;
+                var episodeFiles = JsonSerializer.Deserialize<SonarrEpisodeFile[]>(json);
+                
+                if (episodeFiles != null)
+                {
+                    foreach (var file in episodeFiles)
+                    {
+                        var codec = file?.MediaInfo?.VideoCodec ?? "Unknown";
+                        if (codecDistribution.ContainsKey(codec))
+                        {
+                            codecDistribution[codec]++;
+                        }
+                        else
+                        {
+                            codecDistribution[codec] = 1;
+                        }
+                    }
+                }
+            }
+
+            return codecDistribution;
+        }
         #endregion
 
         #region Private Methods

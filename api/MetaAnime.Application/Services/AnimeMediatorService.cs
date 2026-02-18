@@ -7,6 +7,7 @@ using MetaAnime.Domain.Entities;
 using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.MyAnimeList.Models;
 using MetaAnime.Infrastructure.Plex.Models;
+using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
 
@@ -15,6 +16,8 @@ namespace MetaAnime.Application.Services
     public class AnimeMediatorService(
         IAnimeMappingService animeMappingService,
         IPlexAnimeSourceService<PlexMedia> plexAnimeSource,
+        IMalAnimeSourceService<MalAnime> malAnimeSource,
+        ISonarrAnimeSourceService<SonarrSeries> sonarrAnimeSource,
         IAnimeMatchingService animeMatchingService,
         IAnimeService animeService,
         IOptions<MalSettings> malOptions,
@@ -43,15 +46,72 @@ namespace MetaAnime.Application.Services
                     .ThenBy(m => m.Anime?.AnimeSource)
                     .GroupBy(m => m.AniDbId);
 
-                var animeDtos = groupedMappings.AsParallel().Select(g => new AnimeDetailsResponse(
-                    g.Key,
-                    g.FirstOrDefault()?.Anime?.Title ?? "NO_TITLE",
-                    [.. g.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex).Select(m => new PlexAnimeInfo(m.Anime, plexBaseUrl))],
-                    [.. g.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList).Select(m => new MalAnimeInfo(m.Anime, myAnimeListHost))],
-                    [.. g.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr).Select(m => new SonarrAnimeInfo(m.Anime, sonarrHost))]
-                )).OrderBy(a => a.Title).ToList();
+                var animeDtos = new List<AnimeDetailsResponse>();
 
-                return Result.Success<IEnumerable<AnimeDetailsResponse>>(animeDtos);
+                foreach (var group in groupedMappings)
+                {
+                    var plexAnimes = new List<PlexAnimeInfo>();
+                    var malAnimes = new List<MalAnimeInfo>();
+                    var sonarrAnimes = new List<SonarrAnimeInfo>();
+
+                    // Fetch Plex anime details
+                    foreach (var mapping in group.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex))
+                    {
+                        var plexResult = await plexAnimeSource.GetByIdAsync(mapping.Anime!.SourceId);
+                        if (plexResult.IsSuccess && plexResult.Value != null)
+                        {
+                            plexAnimes.Add(new PlexAnimeInfo(
+                                plexResult.Value,
+                                plexBaseUrl,
+                                plexResult.Value.ViewedLeafCount,
+                                plexResult.Value.LeafCount
+                            ));
+                        }
+                        else
+                        {
+                            plexAnimes.Add(new PlexAnimeInfo(mapping.Anime, plexBaseUrl));
+                        }
+                    }
+
+                    // Fetch MAL anime details
+                    foreach (var mapping in group.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList))
+                    {
+                        var malResult = await malAnimeSource.GetByIdAsync(mapping.Anime!.SourceId);
+                        if (malResult.IsSuccess && malResult.Value != null)
+                        {
+                            malAnimes.Add(new MalAnimeInfo(malResult.Value, myAnimeListHost));
+                        }
+                        else
+                        {
+                            malAnimes.Add(new MalAnimeInfo(mapping.Anime, myAnimeListHost));
+                        }
+                    }
+
+                    // Fetch Sonarr anime details
+                    foreach (var mapping in group.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr))
+                    {
+                        var sonarrResult = await sonarrAnimeSource.GetByIdAsync(mapping.Anime!.SourceId);
+                        if (sonarrResult.IsSuccess && sonarrResult.Value != null)
+                        {
+                            var codecDistribution = await sonarrAnimeSource.GetCodecDistributionAsync(mapping.Anime!.SourceId);
+                            sonarrAnimes.Add(new SonarrAnimeInfo(sonarrResult.Value, sonarrHost, codecDistribution));
+                        }
+                        else
+                        {
+                            sonarrAnimes.Add(new SonarrAnimeInfo(mapping.Anime, sonarrHost));
+                        }
+                    }
+
+                    animeDtos.Add(new AnimeDetailsResponse(
+                        group.Key,
+                        group.FirstOrDefault()?.Anime?.Title ?? "NO_TITLE",
+                        [.. plexAnimes],
+                        [.. malAnimes],
+                        [.. sonarrAnimes]
+                    ));
+                }
+
+                return Result.Success<IEnumerable<AnimeDetailsResponse>>(animeDtos.OrderBy(a => a.Title));
             }
             catch (Exception ex)
             {
@@ -96,12 +156,64 @@ namespace MetaAnime.Application.Services
                     return Result.Success<AnimeDetailsResponse?>(null);
                 }
 
+                var plexAnimes = new List<PlexAnimeInfo>();
+                var malAnimes = new List<MalAnimeInfo>();
+                var sonarrAnimes = new List<SonarrAnimeInfo>();
+
+                // Fetch Plex anime details
+                foreach (var mapping in animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex))
+                {
+                    var plexResult = await plexAnimeSource.GetByIdAsync(mapping.Anime!.SourceId);
+                    if (plexResult.IsSuccess && plexResult.Value != null)
+                    {
+                        plexAnimes.Add(new PlexAnimeInfo(
+                            plexResult.Value,
+                            plexBaseUrl,
+                            plexResult.Value.ViewedLeafCount,
+                            plexResult.Value.LeafCount
+                        ));
+                    }
+                    else
+                    {
+                        plexAnimes.Add(new PlexAnimeInfo(mapping.Anime, plexBaseUrl));
+                    }
+                }
+
+                // Fetch MAL anime details
+                foreach (var mapping in animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList))
+                {
+                    var malResult = await malAnimeSource.GetByIdAsync(mapping.Anime!.SourceId);
+                    if (malResult.IsSuccess && malResult.Value != null)
+                    {
+                        malAnimes.Add(new MalAnimeInfo(malResult.Value, myAnimeListHost));
+                    }
+                    else
+                    {
+                        malAnimes.Add(new MalAnimeInfo(mapping.Anime, myAnimeListHost));
+                    }
+                }
+
+                // Fetch Sonarr anime details
+                foreach (var mapping in animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr))
+                {
+                    var sonarrResult = await sonarrAnimeSource.GetByIdAsync(mapping.Anime!.SourceId);
+                    if (sonarrResult.IsSuccess && sonarrResult.Value != null)
+                    {
+                        var codecDistribution = await sonarrAnimeSource.GetCodecDistributionAsync(mapping.Anime!.SourceId);
+                        sonarrAnimes.Add(new SonarrAnimeInfo(sonarrResult.Value, sonarrHost, codecDistribution));
+                    }
+                    else
+                    {
+                        sonarrAnimes.Add(new SonarrAnimeInfo(mapping.Anime, sonarrHost));
+                    }
+                }
+
                 var animeDto = new AnimeDetailsResponse(
                     aniDbId,
                     animeMappings.FirstOrDefault()?.Anime?.Title ?? "NO_TITLE",
-                    [.. animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex).Select(m => new PlexAnimeInfo(m.Anime, plexBaseUrl))],
-                    [.. animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList).Select(m => new MalAnimeInfo(m.Anime, myAnimeListHost))],
-                    [.. animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr).Select(m => new SonarrAnimeInfo(m.Anime, sonarrHost))]
+                    [.. plexAnimes],
+                    [.. malAnimes],
+                    [.. sonarrAnimes]
                 );
 
                 return Result.Success<AnimeDetailsResponse?>(animeDto);

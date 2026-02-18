@@ -6,6 +6,6 @@ namespace MetaAnime.Core.Interfaces.Services
     public interface ISonarrAnimeSourceService<T> : IAnimeSourceService<T>
         where T : class, IAnimeConvertible, new()
     {
-
+        Task<Dictionary<string, int>> GetCodecDistributionAsync(string seriesId);
     }
 }

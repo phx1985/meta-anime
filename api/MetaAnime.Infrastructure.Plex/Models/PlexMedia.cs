@@ -17,6 +17,8 @@ namespace MetaAnime.Infrastructure.Plex.Models
         public required string Id { get; set; }
         public required string Title { get; set; }
         public required string[] ExternalGuilds { get; set; } = [];
+        public int ViewedLeafCount { get; set; }
+        public int LeafCount { get; set; }
         #endregion
 
         #region IAnimeConvertible Implementation

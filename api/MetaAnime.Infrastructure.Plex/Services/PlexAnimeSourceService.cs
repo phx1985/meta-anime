@@ -83,7 +83,9 @@ namespace MetaAnime.Infrastructure.Plex.Services
                 Description = metadata.Summary,
                 Id = metadata.RatingKey,
                 Title = metadata.Title,
-                ExternalGuilds = metadata?.Guids?.Select(g => g.Id).ToArray() ?? []
+                ExternalGuilds = metadata?.Guids?.Select(g => g.Id).ToArray() ?? [],
+                ViewedLeafCount = metadata?.ViewedLeafCount ?? 0,
+                LeafCount = metadata?.LeafCount ?? 0
             };
         #endregion
     }
