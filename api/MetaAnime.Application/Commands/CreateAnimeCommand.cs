@@ -1,7 +1,7 @@
 using MediatR;
-using MetaAnime.Application.DTOs;
+using MetaAnime.Application.Contracts;
 using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Commands;
 
-public record CreateAnimeCommand(CreateAnimeRequest Request) : IRequest<Result<AnimeDto>>;
+public record CreateAnimeCommand(CreateAnimeRequest Request) : IRequest<Result<AnimeResponse>>;

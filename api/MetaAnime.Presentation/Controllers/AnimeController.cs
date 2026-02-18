@@ -1,7 +1,7 @@
 ﻿using Asp.Versioning;
 using MediatR;
 using MetaAnime.Application.Commands;
-using MetaAnime.Application.DTOs;
+using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Queries;
 using MetaAnime.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -18,7 +18,7 @@ namespace MetaAnime.Controllers
         [HttpGet]
         [Authorize]
         [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
-        public async Task<ActionResult<IEnumerable<GetAnimeDto>>> GetAll()
+        public async Task<ActionResult<IEnumerable<AnimeDetailsResponse>>> GetAll()
         {
             await animeMatchingService.MatchAsync();
             var result = await mediator.Send(new GetAllAnimesQuery());
@@ -34,7 +34,7 @@ namespace MetaAnime.Controllers
         [HttpGet("{id}")]
         [Authorize]
         [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
-        public async Task<ActionResult<GetAnimeDto>> GetById(string id)
+        public async Task<ActionResult<AnimeDetailsResponse>> GetById(string id)
         {
             var result = await mediator.Send(new GetAnimeByIdQuery(id));
             
@@ -53,7 +53,7 @@ namespace MetaAnime.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult<AnimeDto>> Create([FromBody] CreateAnimeRequest request)
+        public async Task<ActionResult<AnimeResponse>> Create([FromBody] CreateAnimeRequest request)
         {
             if (!ModelState.IsValid)
             {
@@ -72,7 +72,7 @@ namespace MetaAnime.Controllers
 
         [HttpPut("{id}")]
         [Authorize]
-        public async Task<ActionResult<AnimeDto>> Update(Guid id, [FromBody] UpdateAnimeRequest request)
+        public async Task<ActionResult<AnimeResponse>> Update(Guid id, [FromBody] UpdateAnimeRequest request)
         {
             if (!ModelState.IsValid)
             {

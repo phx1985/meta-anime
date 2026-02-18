@@ -1,18 +1,18 @@
 ﻿using MetaAnime.Domain.Entities;
 
-namespace MetaAnime.Application.DTOs
+namespace MetaAnime.Application.Contracts
 {
-    public sealed record PlexAnimeDto(
+    public sealed record MalAnimeInfo(
         string Title,
         string? Id,
         string? Url
     )
     {
-        public PlexAnimeDto(Anime? anime, string plexBaseUrl) 
+        public MalAnimeInfo(Anime? anime, string malBaseUrl) 
             : this(
                 anime?.Title ?? "NO_TITLE",
                 anime?.SourceId,
-                $"{plexBaseUrl}{anime?.SourceId}"
+                $"{malBaseUrl}/anime/{anime?.SourceId}"
             )
         { }
     }
