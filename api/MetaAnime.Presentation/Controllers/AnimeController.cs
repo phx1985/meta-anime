@@ -17,15 +17,12 @@ namespace MetaAnime.Controllers
         [HttpGet]
         [Authorize]
         [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
-        public async Task<ActionResult<IEnumerable<AnimeDetailsResponse>>> GetAll()
+        public async Task<ActionResult<IEnumerable<AnimeDetailsResponse>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 100)
         {
-            var matchResult = await mediator.Send(new MatchAnimeCommand());
-            if (matchResult.IsFailure)
-            {
-                return StatusCode(500, matchResult.Error.Message);
-            }
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 100) pageSize = 100;
 
-            var result = await mediator.Send(new GetAllAnimesQuery());
+            var result = await mediator.Send(new GetAllAnimesQuery(page, pageSize));
             
             if (result.IsFailure)
             {
