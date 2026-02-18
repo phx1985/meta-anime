@@ -22,9 +22,10 @@ services:
       retries: 5
 
   meta-anime-api:
+    image: ${DOCKER_REGISTRY-}metaanimeapi
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: MetaAnime.Presentation/Dockerfile
     container_name: meta-anime-api
     restart: unless-stopped
     ports:
@@ -64,7 +65,7 @@ services:
       - MyAnimeList__WebBaseUrl=https://myanimelist.net
       
       # Kometa Configuration (Optional)
-      - Kometa__AnimeIdsJsonUrl=https://raw.githubusercontent.com/Kometa-Team/Community-Configs/refs/heads/master/mdblist/anime_ids.json
+      - Kometa__AnimeIdsJsonUrl=https://raw.githubusercontent.com/Kometa-Team/Anime-IDs/refs/heads/master/anime_ids.json
     depends_on:
       postgres:
         condition: service_healthy
