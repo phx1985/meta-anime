@@ -19,7 +19,12 @@ namespace MetaAnime.Controllers
         [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
         public async Task<ActionResult<IEnumerable<AnimeDetailsResponse>>> GetAll()
         {
-            await mediator.Send(new MatchAnimeCommand());
+            var matchResult = await mediator.Send(new MatchAnimeCommand());
+            if (matchResult.IsFailure)
+            {
+                return StatusCode(500, matchResult.Error.Message);
+            }
+
             var result = await mediator.Send(new GetAllAnimesQuery());
             
             if (result.IsFailure)
