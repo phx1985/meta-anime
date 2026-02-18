@@ -1,6 +1,5 @@
 ﻿using MetaAnime.Application.DTOs;
 using MetaAnime.Application.Interfaces;
-using MetaAnime.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,16 +7,15 @@ namespace MetaAnime.Controllers
 {
     [ApiController]
     [Route("api/animes")]
-    public class AnimeController(IAnimeMediatorService animeMediatorService, IAnimeMatchingService animeMatchingService)
+    public class AnimeController(IAnimeMediatorService animeMediatorService)
         : ControllerBase
     {
         [HttpGet]
         [Authorize]
         [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
-        public async Task<ActionResult<IEnumerable<GetAnimeDto>>> GetAll()
+        public async Task<ActionResult<IEnumerable<GetAnimeDto>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 100)
         {
-            await animeMatchingService.MatchAsync();
-            var result = await animeMediatorService.GetAllAsync();
+            var result = await animeMediatorService.GetAllAsync(page, pageSize);
             
             if (result.IsFailure)
             {
@@ -105,6 +103,20 @@ namespace MetaAnime.Controllers
             }
 
             return NoContent();
+        }
+
+        [HttpPost("sync")]
+        [Authorize]
+        public async Task<IActionResult> Sync([FromQuery] bool forceRefreshKometaMapping = false)
+        {
+            var result = await animeMediatorService.SyncAllAsync(forceRefreshKometaMapping);
+            
+            if (result.IsFailure)
+            {
+                return StatusCode(500, result.Error.Message);
+            }
+
+            return Ok(new { message = "Sync completed successfully" });
         }
     }
 }

@@ -28,10 +28,15 @@ namespace MetaAnime.Application.Services
 
         private readonly string plexBaseUrl = $"{plexOptions.Value.Host}/desktop/#!/server/{plexAnimeSource.GetMachineIdentifierAsync().Result.Value}/details?key=%2Flibrary%2Fmetadata%2F";
         // TODO : Add plex web url to the configuration
-        public async Task<Result<IEnumerable<GetAnimeDto>>> GetAllAsync()
+        public async Task<Result<IEnumerable<GetAnimeDto>>> GetAllAsync(int page = 1, int pageSize = 100)
         {
             try
             {
+                // Validate pagination parameters
+                if (page < 1) page = 1;
+                if (pageSize < 1) pageSize = 1;
+                if (pageSize > 100) pageSize = 100;
+
                 var mappingsResult = await animeMappingService.GetAllAsync(includeAnime: true);
                 if (mappingsResult.IsFailure)
                 {
@@ -49,7 +54,11 @@ namespace MetaAnime.Application.Services
                     [.. g.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex).Select(m => new PlexAnimeDto(m.Anime, plexBaseUrl))],
                     [.. g.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList).Select(m => new MalAnimeDto(m.Anime, myAnimeListHost))],
                     [.. g.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr).Select(m => new SonarrAnimeDto(m.Anime, sonarrHost))]
-                )).OrderBy(a => a.Title).ToList();
+                ))
+                .OrderBy(a => a.Title)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
 
                 return Result.Success<IEnumerable<GetAnimeDto>>(animeDtos);
             }
