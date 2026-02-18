@@ -80,10 +80,12 @@ namespace MetaAnime.Infrastructure.Plex.Services
         private static PlexMedia MapToPlexMedia(Components.Metadata metadata)
             => new()
             {
-                Description = metadata.Summary,
-                Id = metadata.RatingKey,
-                Title = metadata.Title,
-                ExternalGuilds = metadata?.Guids?.Select(g => g.Id).ToArray() ?? []
+                Description = metadata.Summary ?? string.Empty,
+                Id = metadata.RatingKey ?? string.Empty,
+                Title = metadata.Title ?? string.Empty,
+                ExternalGuilds = metadata?.Guids?.Select(g => g.Id).ToArray() ?? [],
+                ViewedLeafCount = metadata?.ViewedLeafCount ?? 0,
+                LeafCount = metadata?.LeafCount ?? 0
             };
         #endregion
     }

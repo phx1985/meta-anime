@@ -15,6 +15,7 @@ namespace MetaAnime.Infrastructure.Sonarr.Services
         private readonly string sonarrHost = options.Value.Host;
         private readonly string apiKey = options.Value.ApiKey;
         private readonly List<string> tags = [.. options.Value.AnimeTags.Split(',')];
+        private static readonly JsonSerializerOptions jsonOptions = new() { PropertyNameCaseInsensitive = true };
         #endregion
 
         #region ISonarrSourceService Implementation
@@ -33,7 +34,7 @@ namespace MetaAnime.Infrastructure.Sonarr.Services
             if (response.IsSuccessful)
             {
                 var json = response.Content!;
-                var allSeries = JsonSerializer.Deserialize<SonarrSeries[]>(json)!;
+                var allSeries = JsonSerializer.Deserialize<SonarrSeries[]>(json, jsonOptions)!;
                 IList<SonarrSeries> animes = [.. allSeries.Where(a => IsAnimeTagged(a, sonarrTags!))];
                 return Result.Success(animes);
             }
@@ -53,13 +54,40 @@ namespace MetaAnime.Infrastructure.Sonarr.Services
             if (response.IsSuccessful)
             {
                 var json = response.Content!;
-                var anime = JsonSerializer.Deserialize<SonarrSeries>(json)!;
+                var anime = JsonSerializer.Deserialize<SonarrSeries>(json, jsonOptions)!;
                 return Result.Success(anime);
             }
             else if (response.StatusCode == HttpStatusCode.NotFound)
                 return Result.Failure<SonarrSeries>(new("TODO_NOTFOUND"));
             else
                 throw new HttpRequestException($"Failed to get Sonarr series: {response.StatusCode} - {response.Content}");
+        }
+
+        public async Task<Dictionary<string, int>> GetCodecDistributionAsync(string seriesId)
+        {
+            var restClient = new RestClient(sonarrHost);
+            var restRequest = new RestRequest($"api/v3/episodefile");
+            restRequest.AddParameter("apikey", apiKey);
+            restRequest.AddParameter("seriesId", seriesId);
+            var response = await restClient.ExecuteAsync(restRequest);
+
+            var codecDistribution = new Dictionary<string, int>();
+
+            if (response.IsSuccessful && !string.IsNullOrEmpty(response.Content))
+            {
+                var episodeFiles = JsonSerializer.Deserialize<SonarrEpisodeFile[]>(response.Content, jsonOptions);
+                
+                if (episodeFiles != null)
+                {
+                    foreach (var file in episodeFiles)
+                    {
+                        var codec = file?.MediaInfo?.VideoCodec ?? "Unknown";
+                        codecDistribution[codec] = codecDistribution.GetValueOrDefault(codec, 0) + 1;
+                    }
+                }
+            }
+
+            return codecDistribution;
         }
         #endregion
 
@@ -73,7 +101,7 @@ namespace MetaAnime.Infrastructure.Sonarr.Services
             if (response.IsSuccessful)
             {
                 var json = response.Content!;
-                var sonarrTags = JsonSerializer.Deserialize<SonarrTag[]>(json)!;
+                var sonarrTags = JsonSerializer.Deserialize<SonarrTag[]>(json, jsonOptions)!;
                 var filteredTags = sonarrTags.Where(st => tags.Any(t => t.Equals(st.Label, StringComparison.InvariantCultureIgnoreCase))).ToList();
                 return filteredTags;
             }
