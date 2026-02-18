@@ -29,24 +29,6 @@
       },
       "publishAllPorts": true,
       "useSSL": false
-    },
-    "Docker Compose": {
-      "commandName": "DockerCompose",
-      "composeLaunchAction": "LaunchBrowser",
-      "composeLaunchServiceName": "meta-anime-api",
-      "composeLaunchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/swagger",
-      "composeProfile": {
-        "includes": [
-          "docker-compose.yml",
-          "docker-compose.override.yml"
-        ]
-      },
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "serviceActions": {
-        "meta-anime-api": "StartDebugging"
-      }
     }
   },
   "$schema": "https://json.schemastore.org/launchsettings.json"

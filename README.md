@@ -56,17 +56,12 @@ The fastest way to get started is using Docker:
 1.  **Clone the repository**
     ```bash
     git clone https://github.com/phx1985/meta-anime.git
-    cd meta-anime
+    cd meta-anime/api
     ```
 
 2.  **Start with Docker Compose**
     ```bash
     docker compose up -d
-    ```
-    
-    Or use the quick-start script:
-    ```bash
-    ./quick-start.sh
     ```
 
 3.  **Access the API**
@@ -109,7 +104,12 @@ The fastest way to get started is using Docker:
 
 ### 🛠️ Docker Commands (Quick Reference)
 
+Docker files are located in the `api` directory.
+
 ```bash
+# Navigate to api directory
+cd api
+
 # Start services
 docker compose up -d
 
@@ -121,13 +121,9 @@ docker compose down
 
 # Rebuild and restart
 docker compose up -d --build
-
-# Use Makefile for easier management
-make up      # Start services
-make logs    # View logs
-make down    # Stop services
-make help    # See all commands
 ```
+
+For additional commands and Makefile usage, see [DOCKER.md](DOCKER.md).
 
 ## 🔒 Authentication
 
