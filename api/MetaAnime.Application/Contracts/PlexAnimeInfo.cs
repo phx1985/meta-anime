@@ -1,18 +1,18 @@
 ﻿using MetaAnime.Domain.Entities;
 
-namespace MetaAnime.Application.DTOs
+namespace MetaAnime.Application.Contracts
 {
-    public sealed record SonarrAnimeDto(
+    public sealed record PlexAnimeInfo(
         string Title,
         string? Id,
         string? Url
     )
     {
-        public SonarrAnimeDto(Anime? anime, string sonarrBaseUrl) 
+        public PlexAnimeInfo(Anime? anime, string plexBaseUrl) 
             : this(
                 anime?.Title ?? "NO_TITLE",
                 anime?.SourceId,
-                $"{sonarrBaseUrl}/series/{anime?.SourceId}"
+                $"{plexBaseUrl}{anime?.SourceId}"
             )
         { }
     }

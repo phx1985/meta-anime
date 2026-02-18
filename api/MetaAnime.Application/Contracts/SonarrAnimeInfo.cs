@@ -1,18 +1,18 @@
 ﻿using MetaAnime.Domain.Entities;
 
-namespace MetaAnime.Application.DTOs
+namespace MetaAnime.Application.Contracts
 {
-    public sealed record MalAnimeDto(
+    public sealed record SonarrAnimeInfo(
         string Title,
         string? Id,
         string? Url
     )
     {
-        public MalAnimeDto(Anime? anime, string malBaseUrl) 
+        public SonarrAnimeInfo(Anime? anime, string sonarrBaseUrl) 
             : this(
                 anime?.Title ?? "NO_TITLE",
                 anime?.SourceId,
-                $"{malBaseUrl}/anime/{anime?.SourceId}"
+                $"{sonarrBaseUrl}/series/{anime?.SourceId}"
             )
         { }
     }

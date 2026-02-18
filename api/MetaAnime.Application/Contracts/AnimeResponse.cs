@@ -1,9 +1,9 @@
 using MetaAnime.Domain.Enums;
 using MetaAnime.Domain.Entities;
 
-namespace MetaAnime.Application.DTOs
+namespace MetaAnime.Application.Contracts
 {
-    public sealed record AnimeDto(
+    public sealed record AnimeResponse(
         Guid Id,
         string SourceId,
         string Title,
@@ -11,9 +11,9 @@ namespace MetaAnime.Application.DTOs
         AnimeSource AnimeSource
     )
     {
-        public static AnimeDto FromAnime(Anime anime)
+        public static AnimeResponse FromAnime(Anime anime)
         {
-            return new AnimeDto(
+            return new AnimeResponse(
                 anime.Id,
                 anime.SourceId,
                 anime.Title,
