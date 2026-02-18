@@ -13,7 +13,7 @@ namespace MetaAnime.Controllers
         [HttpGet]
         [Authorize]
         [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
-        public async Task<ActionResult<IEnumerable<GetAnimeDto>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 100)
+        public async Task<ActionResult<PaginatedResult<GetAnimeDto>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 100)
         {
             var result = await animeMediatorService.GetAllAsync(page, pageSize);
             

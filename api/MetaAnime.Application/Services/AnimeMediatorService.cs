@@ -28,7 +28,7 @@ namespace MetaAnime.Application.Services
 
         private readonly string plexBaseUrl = $"{plexOptions.Value.Host}/desktop/#!/server/{plexAnimeSource.GetMachineIdentifierAsync().Result.Value}/details?key=%2Flibrary%2Fmetadata%2F";
         // TODO : Add plex web url to the configuration
-        public async Task<Result<IEnumerable<GetAnimeDto>>> GetAllAsync(int page = 1, int pageSize = 100)
+        public async Task<Result<PaginatedResult<GetAnimeDto>>> GetAllAsync(int page = 1, int pageSize = 100)
         {
             try
             {
@@ -40,7 +40,7 @@ namespace MetaAnime.Application.Services
                 var mappingsResult = await animeMappingService.GetAllAsync(includeAnime: true);
                 if (mappingsResult.IsFailure)
                 {
-                    return Result.Failure<IEnumerable<GetAnimeDto>>(mappingsResult.Error);
+                    return Result.Failure<PaginatedResult<GetAnimeDto>>(mappingsResult.Error);
                 }
 
                 var groupedMappings = mappingsResult.Value
@@ -48,7 +48,7 @@ namespace MetaAnime.Application.Services
                     .ThenBy(m => m.Anime?.AnimeSource)
                     .GroupBy(m => m.AniDbId);
 
-                var animeDtos = groupedMappings.AsParallel().Select(g => new GetAnimeDto(
+                var allAnimeDtos = groupedMappings.AsParallel().Select(g => new GetAnimeDto(
                     g.Key,
                     g.FirstOrDefault()?.Anime?.Title ?? "NO_TITLE",
                     [.. g.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex).Select(m => new PlexAnimeDto(m.Anime, plexBaseUrl))],
@@ -56,15 +56,29 @@ namespace MetaAnime.Application.Services
                     [.. g.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr).Select(m => new SonarrAnimeDto(m.Anime, sonarrHost))]
                 ))
                 .OrderBy(a => a.Title)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
                 .ToList();
 
-                return Result.Success<IEnumerable<GetAnimeDto>>(animeDtos);
+                var totalCount = allAnimeDtos.Count;
+                var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+                var paginatedItems = allAnimeDtos
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                var paginatedResult = new PaginatedResult<GetAnimeDto>(
+                    paginatedItems,
+                    page,
+                    pageSize,
+                    totalCount,
+                    totalPages
+                );
+
+                return Result.Success(paginatedResult);
             }
             catch (Exception ex)
             {
-                return Result.Failure<IEnumerable<GetAnimeDto>>(new("Error.GetAllAsync", ex.Message));
+                return Result.Failure<PaginatedResult<GetAnimeDto>>(new("Error.GetAllAsync", ex.Message));
             }
         }
 
