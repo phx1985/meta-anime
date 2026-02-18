@@ -1,16 +1,20 @@
 using Hangfire;
 using MetaAnime.Core.Interfaces.Services;
+using Microsoft.Extensions.Logging;
 
 namespace MetaAnime.Application.BackgroundJobs;
 
-public class AnimeSyncJob(IAnimeMatchingService animeMatchingService, IAnimeService animeService)
+public class AnimeSyncJob(
+    IAnimeMatchingService animeMatchingService,
+    IAnimeService animeService,
+    ILogger<AnimeSyncJob> logger)
 {
     /// <summary>
     /// Synchronizes anime metadata from external sources
     /// </summary>
     public async Task SyncAnimeMetadata()
     {
-        Console.WriteLine($"Starting anime metadata sync at {DateTime.UtcNow}");
+        logger.LogInformation("Starting anime metadata sync at {Time}", DateTime.UtcNow);
         
         try
         {
@@ -19,7 +23,7 @@ public class AnimeSyncJob(IAnimeMatchingService animeMatchingService, IAnimeServ
             
             if (refreshResult.IsFailure)
             {
-                Console.WriteLine($"Failed to refresh anime data: {refreshResult.Error.Message}");
+                logger.LogError("Failed to refresh anime data: {ErrorMessage}", refreshResult.Error.Message);
                 return;
             }
 
@@ -28,16 +32,16 @@ public class AnimeSyncJob(IAnimeMatchingService animeMatchingService, IAnimeServ
             
             if (matchResult.IsSuccess)
             {
-                Console.WriteLine($"Successfully synced anime metadata at {DateTime.UtcNow}");
+                logger.LogInformation("Successfully synced anime metadata at {Time}", DateTime.UtcNow);
             }
             else
             {
-                Console.WriteLine($"Failed to match anime: {matchResult.Error.Message}");
+                logger.LogError("Failed to match anime: {ErrorMessage}", matchResult.Error.Message);
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error during anime sync: {ex.Message}");
+            logger.LogError(ex, "Error during anime sync");
             throw; // Re-throw to mark job as failed in Hangfire
         }
     }

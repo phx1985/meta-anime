@@ -3,6 +3,7 @@ using Hangfire.PostgreSql;
 using MetaAnime.Application.BackgroundJobs;
 using MetaAnime.Core.Settings;
 using MetaAnime.Utilities.Extensions;
+using MetaAnime.Utilities.Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,7 +53,7 @@ if (app.Environment.IsDevelopment())
 // Configure Hangfire Dashboard
 app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
-    Authorization = Array.Empty<Hangfire.Dashboard.IDashboardAuthorizationFilter>() // Configure authorization as needed
+    Authorization = new[] { new HangfireAuthorizationFilter() }
 });
 
 // Schedule background jobs
