@@ -72,24 +72,16 @@ namespace MetaAnime.Infrastructure.Sonarr.Services
 
             var codecDistribution = new Dictionary<string, int>();
 
-            if (response.IsSuccessful)
+            if (response.IsSuccessful && !string.IsNullOrEmpty(response.Content))
             {
-                var json = response.Content!;
-                var episodeFiles = JsonSerializer.Deserialize<SonarrEpisodeFile[]>(json);
+                var episodeFiles = JsonSerializer.Deserialize<SonarrEpisodeFile[]>(response.Content);
                 
                 if (episodeFiles != null)
                 {
                     foreach (var file in episodeFiles)
                     {
                         var codec = file?.MediaInfo?.VideoCodec ?? "Unknown";
-                        if (codecDistribution.ContainsKey(codec))
-                        {
-                            codecDistribution[codec]++;
-                        }
-                        else
-                        {
-                            codecDistribution[codec] = 1;
-                        }
+                        codecDistribution[codec] = codecDistribution.GetValueOrDefault(codec, 0) + 1;
                     }
                 }
             }
