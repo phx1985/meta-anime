@@ -32,6 +32,9 @@ namespace MetaAnime.Utilities.Extensions
         /// </summary>
         public static void AddCustomServices(this IServiceCollection services, IConfiguration configuration)
         {
+            // Register MediatR
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(IAnimeMediatorService).Assembly));
+
             // Register Options
             services.AddOptions<PlexSettings>()
                 .Bind(configuration.GetSection(PlexSettings.SectionName))
