@@ -1,7 +1,7 @@
 ﻿using EFCore.BulkExtensions;
-using MetaAnime.Core.Enums;
+using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Repositories;
-using MetaAnime.Core.Models;
+using MetaAnime.Domain.Entities;
 using MetaAnime.Infrastructure.Utilities.Extensions;
 using Microsoft.EntityFrameworkCore;
 

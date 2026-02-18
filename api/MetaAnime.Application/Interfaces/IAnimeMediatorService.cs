@@ -1,5 +1,5 @@
 ﻿using MetaAnime.Application.DTOs;
-using MetaAnime.Core.Enums;
+using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Interfaces

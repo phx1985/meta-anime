@@ -1,4 +1,4 @@
-﻿using MetaAnime.Core.Models;
+﻿using MetaAnime.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -1,9 +1,9 @@
 ﻿using MetaAnime.Application.DTOs;
 using MetaAnime.Application.Interfaces;
-using MetaAnime.Core.Enums;
+using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
-using MetaAnime.Core.Models;
+using MetaAnime.Domain.Entities;
 using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.MyAnimeList.Models;
 using MetaAnime.Infrastructure.Plex.Models;

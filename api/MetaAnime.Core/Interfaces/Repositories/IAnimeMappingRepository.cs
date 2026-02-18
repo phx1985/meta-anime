@@ -1,4 +1,4 @@
-﻿using MetaAnime.Core.Models;
+﻿using MetaAnime.Domain.Entities;
 
 namespace MetaAnime.Core.Interfaces.Repositories
 {

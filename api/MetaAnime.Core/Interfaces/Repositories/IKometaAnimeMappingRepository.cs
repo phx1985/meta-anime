@@ -1,5 +1,5 @@
-﻿using MetaAnime.Core.Enums;
-using MetaAnime.Core.Models;
+﻿using MetaAnime.Domain.Enums;
+using MetaAnime.Domain.Entities;
 
 namespace MetaAnime.Core.Interfaces.Repositories
 {

@@ -1,9 +1,9 @@
-﻿using MetaAnime.Core.Enums;
+﻿using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Mappers;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
-using MetaAnime.Core.Models;
+using MetaAnime.Domain.Entities;
 using MetaAnime.Infrastructure.MyAnimeList.Models;
 using MetaAnime.Infrastructure.Plex.Models;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;

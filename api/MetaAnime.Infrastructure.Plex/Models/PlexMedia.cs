@@ -1,6 +1,6 @@
-﻿using MetaAnime.Core.Enums;
+﻿using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Mappers;
-using MetaAnime.Core.Models;
+using MetaAnime.Domain.Entities;
 
 namespace MetaAnime.Infrastructure.Plex.Models
 {

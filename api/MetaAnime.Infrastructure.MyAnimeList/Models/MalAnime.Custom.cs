@@ -1,7 +1,7 @@
-﻿using MetaAnime.Core.Enums;
+﻿using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Caching;
 using MetaAnime.Core.Interfaces.Mappers;
-using MetaAnime.Core.Models;
+using MetaAnime.Domain.Entities;
 using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.MyAnimeList.Models
