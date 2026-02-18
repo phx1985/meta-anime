@@ -1,3 +1,7 @@
+using Hangfire;
+using Hangfire.PostgreSql;
+using MetaAnime.Application.BackgroundJobs;
+using MetaAnime.Core.Settings;
 using MetaAnime.Utilities.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +22,17 @@ builder.Services.AddApiVersioning(options =>
     options.SubstituteApiVersionInUrl = true;
 });
 
+// Configure Hangfire
+var dbSettings = builder.Configuration.GetSection(DatabaseSettings.SectionName).Get<DatabaseSettings>();
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(c =>
+        c.UseNpgsqlConnection(dbSettings?.ConnectionString ?? string.Empty)));
+
+builder.Services.AddHangfireServer();
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGenWithApiKey();
@@ -33,6 +48,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Configure Hangfire Dashboard
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = Array.Empty<Hangfire.Dashboard.IDashboardAuthorizationFilter>() // Configure authorization as needed
+});
+
+// Schedule background jobs
+AnimeSyncJob.Schedule();
 
 app.UseHttpsRedirection();
 app.UseResponseCaching();
