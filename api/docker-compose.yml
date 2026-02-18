@@ -1,0 +1,81 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: meta-anime-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: metaanime
+      POSTGRES_USER: metaanime
+      # WARNING: Default password - MUST be changed for production!
+      # Use docker-compose.override.yml or Docker secrets for production
+      POSTGRES_PASSWORD: metaanime_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - meta-anime-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metaanime -d metaanime"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  meta-anime-api:
+    image: ${DOCKER_REGISTRY-}metaanimeapi
+    build:
+      context: .
+      dockerfile: MetaAnime.Presentation/Dockerfile
+    container_name: meta-anime-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      # ASPNETCORE Configuration
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      
+      # Database Configuration
+      - Postgres__Host=postgres
+      - Postgres__Port=5432
+      - Postgres__Db=metaanime
+      - Postgres__User=metaanime
+      - Postgres__Password=metaanime_password
+      
+      # Authentication (REQUIRED - Change this!)
+      # WARNING: This is a placeholder - NEVER use in production!
+      # Generate a secure key: openssl rand -base64 32
+      - Authentication__ApiKey=CHANGE_ME_SUPER_SECRET_KEY
+      
+      # Sonarr Configuration (Optional)
+      - Sonarr__Host=
+      - Sonarr__ApiKey=
+      - Sonarr__AnimeTags=anime
+      
+      # Plex Configuration (Optional)
+      - Plex__Host=
+      - Plex__Token=
+      - Plex__AnimeSections=
+      
+      # MyAnimeList Configuration (Optional)
+      - MyAnimeList__ApiBaseUrl=https://api.myanimelist.net/v2
+      - MyAnimeList__ApiToken=
+      - MyAnimeList__WebBaseUrl=https://myanimelist.net
+      
+      # Kometa Configuration (Optional)
+      - Kometa__AnimeIdsJsonUrl=https://raw.githubusercontent.com/Kometa-Team/Anime-IDs/refs/heads/master/anime_ids.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - meta-anime-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  meta-anime-network:
+    driver: bridge

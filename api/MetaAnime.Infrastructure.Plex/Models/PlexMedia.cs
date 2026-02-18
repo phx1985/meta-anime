@@ -1,0 +1,69 @@
+﻿using MetaAnime.Core.Enums;
+using MetaAnime.Core.Interfaces.Mappers;
+using MetaAnime.Core.Models;
+
+namespace MetaAnime.Infrastructure.Plex.Models
+{
+    public class PlexMedia : IAnimeConvertible
+    {
+        #region Consts
+        private const string TVDB_ID_PREFIX = "tvdb://";
+        private const string TMDB_ID_PREFIX = "tmdb://";
+        private const string IMDB_ID_PREFIX = "imdb://";
+        #endregion
+
+        #region Properties
+        public required string Description { get; set; }
+        public required string Id { get; set; }
+        public required string Title { get; set; }
+        public required string[] ExternalGuilds { get; set; } = [];
+        #endregion
+
+        #region IAnimeConvertible Implementation
+        public Anime ToAnime()
+        {
+            return new Anime
+            {
+                SourceId = Id,
+                Title = Title,
+                Description = Description,
+                AnimeSource = AnimeSource.Plex,
+                ExternalAnimeIdentifiers = GetExternalAnimeIdentifiers()
+            };
+        }
+        #endregion
+
+        private List<ExternalAnimeIdentifier> GetExternalAnimeIdentifiers()
+        {
+            var identifiers = new List<ExternalAnimeIdentifier>();
+            foreach (var guid in ExternalGuilds)
+            {
+                var identifier = guid switch
+                {
+                    var g when g.StartsWith(TVDB_ID_PREFIX) => new ExternalAnimeIdentifier
+                    {
+                        MediaPlatform = MediaPlatform.Tvdb,
+                        MediaPlatformId = g.Replace(TVDB_ID_PREFIX, string.Empty)
+                    },
+                    var g when g.StartsWith(TMDB_ID_PREFIX) => new ExternalAnimeIdentifier
+                    {
+                        MediaPlatform = MediaPlatform.Tmdb,
+                        MediaPlatformId = g.Replace(TMDB_ID_PREFIX, string.Empty)
+                    },
+                    var g when g.StartsWith(IMDB_ID_PREFIX) => new ExternalAnimeIdentifier
+                    {
+                        MediaPlatform = MediaPlatform.Imdb,
+                        MediaPlatformId = g.Replace(IMDB_ID_PREFIX, string.Empty)
+                    },
+                    _ => null
+                };
+
+                if (identifier != null)
+                {
+                    identifiers.Add(identifier);
+                }
+            }
+            return identifiers;
+        }
+    }
+}

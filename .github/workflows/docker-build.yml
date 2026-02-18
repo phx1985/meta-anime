@@ -1,0 +1,104 @@
+name: Docker Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+permissions:
+  contents: read
+
+jobs:
+  docker-build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: meta-anime-api:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Test Docker Compose configuration
+        run: |
+          docker compose config
+          echo "✅ Docker Compose configuration is valid"
+      
+      - name: Start services with Docker Compose
+        run: |
+          docker compose up -d postgres
+          echo "Waiting for PostgreSQL to be ready..."
+          sleep 10
+          docker compose ps
+      
+      - name: Check PostgreSQL health
+        run: |
+          docker compose exec postgres pg_isready -U metaanime -d metaanime
+          echo "✅ PostgreSQL is ready"
+      
+      - name: Stop services
+        if: always()
+        run: docker compose down -v
+
+  docker-debug-build:
+    name: Build Debug Docker Image
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build Debug Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile.debug
+          push: false
+          tags: meta-anime-api:debug
+          target: debug
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  docker-lint:
+    name: Lint Dockerfiles
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run hadolint on Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ./Dockerfile
+          failure-threshold: warning
+      
+      - name: Run hadolint on Dockerfile.debug
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ./Dockerfile.debug
+          failure-threshold: warning
