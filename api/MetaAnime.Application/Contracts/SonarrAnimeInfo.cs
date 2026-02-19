@@ -1,4 +1,5 @@
-﻿using MetaAnime.Domain.Entities;
+﻿using System.Text.Json;
+using MetaAnime.Domain.Entities;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
 
 namespace MetaAnime.Application.Contracts
@@ -67,11 +68,21 @@ namespace MetaAnime.Application.Contracts
             if (sizeOnDisk == null)
                 return null;
 
-            // Handle different possible types from Sonarr API
+            // Handle JsonElement type (when deserializing from System.Text.Json with object type)
+            if (sizeOnDisk is JsonElement jsonElement)
+            {
+                if (jsonElement.ValueKind == JsonValueKind.Number && jsonElement.TryGetInt64(out var longValue))
+                {
+                    return longValue;
+                }
+                return null;
+            }
+
+            // Handle other possible types from Sonarr API
             return sizeOnDisk switch
             {
                 long longValue => longValue,
-                int intValue => intValue,
+                int intValue => (long)intValue,
                 string strValue when long.TryParse(strValue, out var parsed) => parsed,
                 _ => null
             };
