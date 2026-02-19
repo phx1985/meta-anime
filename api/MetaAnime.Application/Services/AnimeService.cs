@@ -210,6 +210,7 @@ namespace MetaAnime.Application.Services
             
             for (int i = 0; i < malAnimes.Count; i += batchSize)
             {
+                // Materialize batch to avoid deferred execution issues when creating parallel tasks
                 var batch = malAnimes.Skip(i).Take(batchSize).ToList();
                 var tasks = batch.Select(async anime =>
                 {
@@ -245,6 +246,7 @@ namespace MetaAnime.Application.Services
             
             for (int i = 0; i < sonarrAnimes.Count; i += batchSize)
             {
+                // Materialize batch to avoid deferred execution issues when creating parallel tasks
                 var batch = sonarrAnimes.Skip(i).Take(batchSize).ToList();
                 var tasks = batch.Select(async anime =>
                 {
