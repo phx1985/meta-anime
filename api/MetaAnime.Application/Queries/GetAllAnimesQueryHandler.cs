@@ -10,6 +10,6 @@ public class GetAllAnimesQueryHandler(IAnimeMediatorService animeMediatorService
 {
     public async Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> Handle(GetAllAnimesQuery request, CancellationToken cancellationToken)
     {
-        return await animeMediatorService.GetAllAsync(request.Page, request.PageSize);
+        return await animeMediatorService.GetAllAsync(request.Page, request.PageSize, request.Filters);
     }
 }

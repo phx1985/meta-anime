@@ -16,12 +16,21 @@ namespace MetaAnime.Controllers
     {
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 100)
+        public async Task<ActionResult<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAll(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 100,
+            [FromQuery] string? title = null,
+            [FromQuery] string? source = null,
+            [FromQuery] string? status = null,
+            [FromQuery] int? year = null,
+            [FromQuery] string? sortBy = null,
+            [FromQuery] string? sortOrder = null)
         {
             if (page < 1) page = 1;
             if (pageSize < 1 || pageSize > 100) pageSize = 100;
 
-            var result = await mediator.Send(new GetAllAnimesQuery(page, pageSize));
+            var filters = new AnimeFilters(title, source, status, year, sortBy, sortOrder);
+            var result = await mediator.Send(new GetAllAnimesQuery(page, pageSize, filters));
             
             if (result.IsFailure)
             {

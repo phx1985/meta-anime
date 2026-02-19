@@ -1,5 +1,6 @@
 ﻿using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Interfaces;
+using MetaAnime.Application.Queries;
 using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
@@ -39,7 +40,7 @@ namespace MetaAnime.Application.Services
 
         private readonly string plexBaseUrl = $"{plexOptions.Value.Host}/desktop/#!/server/{plexAnimeSource.GetMachineIdentifierAsync().Result.Value}/details?key=%2Flibrary%2Fmetadata%2F";
         // TODO : Add plex web url to the configuration
-        public async Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAllAsync(int page = 1, int pageSize = 100)
+        public async Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAllAsync(int page = 1, int pageSize = 100, AnimeFilters? filters = null)
         {
             try
             {
@@ -48,19 +49,6 @@ namespace MetaAnime.Application.Services
                 {
                     return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(mappingsResult.Error);
                 }
-
-                var allGroupedMappings = mappingsResult.Value
-                    .OrderBy(m => m.AniDbId)
-                    .ThenBy(m => m.Anime?.AnimeSource)
-                    .GroupBy(m => m.AniDbId)
-                    .ToList();
-
-                var totalCount = allGroupedMappings.Count;
-
-                var groupedMappings = allGroupedMappings
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToList();
 
                 // Load all cache entries for all sources in parallel
                 var plexCacheTask = cacheEntryService.GetAsync(AnimeSource.Plex);
@@ -81,9 +69,16 @@ namespace MetaAnime.Application.Services
                     ? sonarrCacheTask.Result.Value.ToDictionary(c => c.SourceId, c => c.RawData) 
                     : new Dictionary<string, string>();
 
+                // Group all mappings
+                var allGroupedMappings = mappingsResult.Value
+                    .OrderBy(m => m.AniDbId)
+                    .ThenBy(m => m.Anime?.AnimeSource)
+                    .GroupBy(m => m.AniDbId)
+                    .ToList();
+
                 var animeDtos = new List<AnimeDetailsResponse>();
 
-                foreach (var group in groupedMappings)
+                foreach (var group in allGroupedMappings)
                 {
                     var plexAnimes = group
                         .Where(m => m.Anime?.AnimeSource == AnimeSource.Plex)
@@ -109,9 +104,22 @@ namespace MetaAnime.Application.Services
                     ));
                 }
 
-                var sortedData = animeDtos.OrderBy(a => a.Title);
+                // Apply filters
+                var filteredData = ApplyFilters(animeDtos, filters);
+
+                // Apply sorting
+                var sortedData = ApplySorting(filteredData, filters);
+
+                // Calculate total count after filtering
+                var totalCount = sortedData.Count();
+
+                // Apply pagination
+                var pagedData = sortedData
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize);
+
                 var pagedResponse = PagedResponse<IEnumerable<AnimeDetailsResponse>>.Create(
-                    sortedData,
+                    pagedData,
                     page,
                     pageSize,
                     totalCount
@@ -123,6 +131,59 @@ namespace MetaAnime.Application.Services
             {
                 return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(new("Error.GetAllAsync", ex.Message));
             }
+        }
+
+        private IEnumerable<AnimeDetailsResponse> ApplyFilters(IEnumerable<AnimeDetailsResponse> data, AnimeFilters? filters)
+        {
+            if (filters == null)
+                return data;
+
+            var result = data;
+
+            if (!string.IsNullOrWhiteSpace(filters.Title))
+            {
+                result = result.Where(a => a.Title.Contains(filters.Title, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filters.Source))
+            {
+                result = result.Where(a =>
+                    (filters.Source.Equals("plex", StringComparison.OrdinalIgnoreCase) && a.PlexAnimes?.Any() == true) ||
+                    (filters.Source.Equals("mal", StringComparison.OrdinalIgnoreCase) && a.MalAnimes?.Any() == true) ||
+                    (filters.Source.Equals("sonarr", StringComparison.OrdinalIgnoreCase) && a.SonarrAnimes?.Any() == true)
+                );
+            }
+
+            if (!string.IsNullOrWhiteSpace(filters.Status))
+            {
+                result = result.Where(a => 
+                    a.MalAnimes?.Any(m => m.ViewState != null && m.ViewState.Contains(filters.Status, StringComparison.OrdinalIgnoreCase)) == true ||
+                    a.SonarrAnimes?.Any(s => s.Exists) == true
+                );
+            }
+
+            if (filters.Year.HasValue)
+            {
+                // This is approximate - we would need year data in the response to filter properly
+                // For now, just return all if year filter is provided
+            }
+
+            return result;
+        }
+
+        private IEnumerable<AnimeDetailsResponse> ApplySorting(IEnumerable<AnimeDetailsResponse> data, AnimeFilters? filters)
+        {
+            if (filters == null || string.IsNullOrWhiteSpace(filters.SortBy))
+                return data.OrderBy(a => a.Title);
+
+            var sortOrder = filters.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) == true;
+
+            return filters.SortBy.ToLower() switch
+            {
+                "title" => sortOrder ? data.OrderByDescending(a => a.Title) : data.OrderBy(a => a.Title),
+                "anidbid" => sortOrder ? data.OrderByDescending(a => a.AniDbId) : data.OrderBy(a => a.AniDbId),
+                _ => data.OrderBy(a => a.Title)
+            };
         }
 
         public async Task<Result> SyncAllAsync(bool forceRefreshKometaMapping = false)
