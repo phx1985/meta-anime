@@ -37,9 +37,30 @@ namespace MetaAnime.Application.Contracts
                     s.Statistics?.EpisodeCount ?? 0
                 )).ToArray(),
                 codecDistribution,
-                ExtractSizeOnDisk(sonarrSeries?.Statistics?.SizeOnDisk)
+                CalculateTotalSizeOnDisk(sonarrSeries?.Seasons)
             )
         { }
+
+        private static long? CalculateTotalSizeOnDisk(List<Season>? seasons)
+        {
+            if (seasons == null || seasons.Count == 0)
+                return null;
+
+            long totalSize = 0;
+            bool hasAnySize = false;
+
+            foreach (var season in seasons)
+            {
+                var seasonSize = ExtractSizeOnDisk(season.Statistics?.SizeOnDisk);
+                if (seasonSize.HasValue)
+                {
+                    totalSize += seasonSize.Value;
+                    hasAnySize = true;
+                }
+            }
+
+            return hasAnySize ? totalSize : null;
+        }
 
         private static long? ExtractSizeOnDisk(object? sizeOnDisk)
         {
