@@ -119,23 +119,55 @@ namespace MetaAnime.Application.Services
 
                 // Run the tasks in parallel and wait for them to finish
                 await Task.WhenAll(plexTask, malTask, sonarrTask);
+                
                 // Check if any of the tasks failed
-                if (plexTask.Result.IsFailure)
-                    return Result.Failure<IEnumerable<Anime>>(plexTask.Result.Error);
-                if (malTask.Result.IsFailure)
-                    return Result.Failure<IEnumerable<Anime>>(malTask.Result.Error);
-                if (sonarrTask.Result.IsFailure)
-                    return Result.Failure<IEnumerable<Anime>>(sonarrTask.Result.Error);
+                var plexResult = await plexTask;
+                if (plexResult.IsFailure)
+                    return Result.Failure<IEnumerable<Anime>>(plexResult.Error);
+                    
+                var malResult = await malTask;
+                if (malResult.IsFailure)
+                    return Result.Failure<IEnumerable<Anime>>(malResult.Error);
+                    
+                var sonarrResult = await sonarrTask;
+                if (sonarrResult.IsFailure)
+                    return Result.Failure<IEnumerable<Anime>>(sonarrResult.Error);
+                    
                 // Delete all animes and add the fresh ones
                 await animeRepository.BulkDeleteAllAsync();
-                await animeRepository.BulkInsertAsync([.. plexTask.Result.Value, .. malTask.Result.Value, .. sonarrTask.Result.Value]);
-                // Refresh the cache for MyAnimeList animes
-                var deleteMalCacheResult = await cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.MyAnimeList);
-                if (deleteMalCacheResult.IsFailure)
-                    return Result.Failure<IEnumerable<Anime>>(deleteMalCacheResult.Error);
-                var addMalCacheResult = await cacheEntryService.BulkInsertAsync(malTask.Result.Value);
-                if (addMalCacheResult.IsFailure)
-                    return Result.Failure<IEnumerable<Anime>>(addMalCacheResult.Error);
+                await animeRepository.BulkInsertAsync([.. plexResult.Value, .. malResult.Value, .. sonarrResult.Value]);
+                
+                // Cache basic data from GetAllAsync for list display
+                // Frontend will call GetById for enriched data as needed (supports infinite scroll)
+                
+                // Refresh cache for all sources (Plex, MAL, Sonarr)
+                // Run cache operations sequentially to avoid exhausting database connection pool
+                var deletePlexResult = await cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.Plex);
+                if (deletePlexResult.IsFailure)
+                    return Result.Failure<IEnumerable<Anime>>(deletePlexResult.Error);
+                    
+                var deleteMalResult = await cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.MyAnimeList);
+                if (deleteMalResult.IsFailure)
+                    return Result.Failure<IEnumerable<Anime>>(deleteMalResult.Error);
+                    
+                var deleteSonarrResult = await cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.Sonarr);
+                if (deleteSonarrResult.IsFailure)
+                    return Result.Failure<IEnumerable<Anime>>(deleteSonarrResult.Error);
+                
+                // Cache basic data from GetAllAsync (no enrichment)
+                // GetById will fetch enriched data on-demand when frontend requests it
+                var addPlexResult = await cacheEntryService.BulkInsertAsync(plexResult.Value);
+                if (addPlexResult.IsFailure)
+                    return Result.Failure<IEnumerable<Anime>>(addPlexResult.Error);
+                    
+                var addMalResult = await cacheEntryService.BulkInsertAsync(malResult.Value);
+                if (addMalResult.IsFailure)
+                    return Result.Failure<IEnumerable<Anime>>(addMalResult.Error);
+                    
+                var addSonarrResult = await cacheEntryService.BulkInsertAsync(sonarrResult.Value);
+                if (addSonarrResult.IsFailure)
+                    return Result.Failure<IEnumerable<Anime>>(addSonarrResult.Error);
+                    
                 // Return the fresh animes
                 var freshAnimes = await animeRepository.GetAllAsync();
                 return Result.Success(freshAnimes);

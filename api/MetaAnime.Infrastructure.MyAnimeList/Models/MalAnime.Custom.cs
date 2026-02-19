@@ -22,10 +22,17 @@ namespace MetaAnime.Infrastructure.MyAnimeList.Models
 
         public CacheEntry ToCacheEntry()
         {
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+                // Don't use DefaultIgnoreCondition to ensure all fields are serialized, even if null
+                // This prevents missing data when deserializing from cache
+            };
+            
             return new CacheEntry
             {
                 SourceId = Id.ToString(),
-                RawData = JsonSerializer.Serialize(this),
+                RawData = JsonSerializer.Serialize(this, options),
                 AnimeSource = AnimeSource.MyAnimeList
             };
         }

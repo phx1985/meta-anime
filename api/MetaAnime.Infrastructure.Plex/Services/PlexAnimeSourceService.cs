@@ -12,15 +12,42 @@ namespace MetaAnime.Infrastructure.Plex.Services
     public class PlexAnimeSourceService(IPlexAPI plexAPI, IOptions<PlexSettings> options) : IPlexAnimeSourceService<PlexMedia>
     {
         #region Fields
-        private readonly int[] animeSections = [.. options.Value.AnimeSections
-                                               .Split(',')
-                                               .Select(int.Parse)];
+        private readonly int[] animeSections = ParseAnimeSections(options.Value.AnimeSections);
         private readonly IPlexAPI plexAPI = plexAPI;
+        private readonly bool isConfigured = !string.IsNullOrWhiteSpace(options.Value.Host) 
+            && !string.IsNullOrWhiteSpace(options.Value.Token) 
+            && !string.IsNullOrWhiteSpace(options.Value.AnimeSections);
         #endregion
+
+        private static int[] ParseAnimeSections(string sections)
+        {
+            if (string.IsNullOrWhiteSpace(sections))
+                return Array.Empty<int>();
+
+            try
+            {
+                return sections.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => s.Trim())
+                    .Where(s => int.TryParse(s, out _))
+                    .Select(int.Parse)
+                    .ToArray();
+            }
+            catch
+            {
+                return Array.Empty<int>();
+            }
+        }
 
         public async Task<Result<IList<PlexMedia>>> GetAllAsync()
         {
             var results = new List<PlexMedia>();
+
+            // Return empty list if Plex is not configured
+            if (!isConfigured)
+            {
+                return Result.Success<IList<PlexMedia>>(results);
+            }
+
             var showRequest = new ListContentRequest
             {
                 SectionId = animeSections[0].ToString(),
@@ -49,6 +76,12 @@ namespace MetaAnime.Infrastructure.Plex.Services
 
         public async Task<Result<PlexMedia>> GetByIdAsync(string id)
         {
+            // Return failure if Plex is not configured
+            if (!isConfigured)
+            {
+                return Result.Failure<PlexMedia>(new("Plex.NotConfigured", "Plex is not configured"));
+            }
+
             var req = new GetMetadataItemRequest { Ids = [id] }; // Correct usage
             var response = await plexAPI.Content.GetMetadataItemAsync(req);
 

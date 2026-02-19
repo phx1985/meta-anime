@@ -16,16 +16,21 @@ namespace MetaAnime.Controllers
     {
         [HttpGet]
         [Authorize]
-        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
-        public async Task<ActionResult<IEnumerable<AnimeDetailsResponse>>> GetAll()
+        public async Task<ActionResult<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAll(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 100,
+            [FromQuery] string? title = null,
+            [FromQuery] string? source = null,
+            [FromQuery] string? status = null,
+            [FromQuery] string? genre = null,
+            [FromQuery] string? sortBy = null,
+            [FromQuery] string? sortOrder = null)
         {
-            var matchResult = await mediator.Send(new MatchAnimeCommand());
-            if (matchResult.IsFailure)
-            {
-                return StatusCode(500, matchResult.Error.Message);
-            }
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 100) pageSize = 100;
 
-            var result = await mediator.Send(new GetAllAnimesQuery());
+            var filters = new AnimeFilters(title, source, status, genre, sortBy, sortOrder);
+            var result = await mediator.Send(new GetAllAnimesQuery(page, pageSize, filters));
             
             if (result.IsFailure)
             {
@@ -37,7 +42,6 @@ namespace MetaAnime.Controllers
 
         [HttpGet("{id}")]
         [Authorize]
-        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
         public async Task<ActionResult<AnimeDetailsResponse>> GetById(string id)
         {
             var result = await mediator.Send(new GetAnimeByIdQuery(id));
@@ -113,6 +117,26 @@ namespace MetaAnime.Controllers
             }
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Manually triggers a full cache refresh and anime matching across sources.
+        /// This operation fetches fresh data from Plex, MAL, and Sonarr APIs, updates the cache,
+        /// and performs matching using Kometa mapping data.
+        /// </summary>
+        /// <param name="forceRefreshKometaMapping">If true, forces a refresh of the Kometa mapping data before matching</param>
+        [HttpPost("sync")]
+        [Authorize]
+        public async Task<IActionResult> SyncAll([FromQuery] bool forceRefreshKometaMapping = false)
+        {
+            var result = await mediator.Send(new MatchAnimeCommand(forceRefreshKometaMapping));
+            
+            if (result.IsFailure)
+            {
+                return StatusCode(500, result.Error.Message);
+            }
+
+            return Ok(new { message = "Cache refresh and matching completed successfully" });
         }
     }
 }

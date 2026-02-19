@@ -13,6 +13,7 @@ namespace MetaAnime.Infrastructure.MyAnimeList.Services
         #region Fields
         private readonly string baseUrl = options.Value.ApiBaseUrl;
         private readonly string token = options.Value.ApiToken;
+        private readonly bool isConfigured = !string.IsNullOrWhiteSpace(options.Value.ApiBaseUrl) && !string.IsNullOrWhiteSpace(options.Value.ApiToken);
         private const string REQUEST_FIELDS = "synopsis";
         private const string EXTENDED_REQUEST_FIELDS = REQUEST_FIELDS + "alternative_titles{en,synonyms}, " +
                                                                         "genres{id,name}, " +
@@ -33,6 +34,13 @@ namespace MetaAnime.Infrastructure.MyAnimeList.Services
         public async Task<Result<IList<MalAnime>>> GetAllAsync()
         {
             var malApiAnimes = new List<MalAnime>();
+
+            // Return empty list if MAL is not configured
+            if (!isConfigured)
+            {
+                return Result.Success<IList<MalAnime>>(malApiAnimes);
+            }
+
             Paging paging = null!;
 
             // Fetch json result
@@ -60,6 +68,12 @@ namespace MetaAnime.Infrastructure.MyAnimeList.Services
 
         public async Task<Result<MalAnime>> GetByIdAsync(string id)
         {
+            // Return failure if MAL is not configured
+            if (!isConfigured)
+            {
+                return Result.Failure<MalAnime>(new("MAL.NotConfigured", "MyAnimeList is not configured"));
+            }
+
             var response = await FetchAnimeByIdAsync(id);
             var json = response.Content!;
             if (response.IsSuccessful)
@@ -80,7 +94,8 @@ namespace MetaAnime.Infrastructure.MyAnimeList.Services
         private async Task<RestResponse> FetchAnimeListAsync(Paging paging)
         {
             var pagingUri = paging?.HasNextPage == true ? paging.Next : null;
-            var animeListUri = new Uri(pagingUri ?? $"{baseUrl}/users/@me/animelist?nsfw=true&limit=1000&fields={REQUEST_FIELDS}");
+            // Use EXTENDED_REQUEST_FIELDS to get my_list_status data (needed for viewState, addedDate, progression, rating)
+            var animeListUri = new Uri(pagingUri ?? $"{baseUrl}/users/@me/animelist?nsfw=true&limit=1000&fields={EXTENDED_REQUEST_FIELDS}");
 
             var restClient = new RestClient(animeListUri);
             var restRequest = new RestRequest { Method = Method.Get };

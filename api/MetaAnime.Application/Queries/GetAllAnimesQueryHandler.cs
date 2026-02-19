@@ -6,10 +6,10 @@ using MetaAnime.Core.Interfaces.Shared.Results;
 namespace MetaAnime.Application.Queries;
 
 public class GetAllAnimesQueryHandler(IAnimeMediatorService animeMediatorService)
-    : IRequestHandler<GetAllAnimesQuery, Result<IEnumerable<AnimeDetailsResponse>>>
+    : IRequestHandler<GetAllAnimesQuery, Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>>
 {
-    public async Task<Result<IEnumerable<AnimeDetailsResponse>>> Handle(GetAllAnimesQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> Handle(GetAllAnimesQuery request, CancellationToken cancellationToken)
     {
-        return await animeMediatorService.GetAllAsync();
+        return await animeMediatorService.GetAllAsync(request.Page, request.PageSize, request.Filters);
     }
 }
