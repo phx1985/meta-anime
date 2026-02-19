@@ -126,16 +126,38 @@ namespace MetaAnime.Application.Services
                     return Result.Failure<IEnumerable<Anime>>(malTask.Result.Error);
                 if (sonarrTask.Result.IsFailure)
                     return Result.Failure<IEnumerable<Anime>>(sonarrTask.Result.Error);
+                    
                 // Delete all animes and add the fresh ones
                 await animeRepository.BulkDeleteAllAsync();
                 await animeRepository.BulkInsertAsync([.. plexTask.Result.Value, .. malTask.Result.Value, .. sonarrTask.Result.Value]);
-                // Refresh the cache for MyAnimeList animes
-                var deleteMalCacheResult = await cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.MyAnimeList);
-                if (deleteMalCacheResult.IsFailure)
-                    return Result.Failure<IEnumerable<Anime>>(deleteMalCacheResult.Error);
-                var addMalCacheResult = await cacheEntryService.BulkInsertAsync(malTask.Result.Value);
-                if (addMalCacheResult.IsFailure)
-                    return Result.Failure<IEnumerable<Anime>>(addMalCacheResult.Error);
+                
+                // Refresh cache for all sources (Plex, MAL, Sonarr)
+                var deletePlexCacheTask = cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.Plex);
+                var deleteMalCacheTask = cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.MyAnimeList);
+                var deleteSonarrCacheTask = cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.Sonarr);
+                
+                await Task.WhenAll(deletePlexCacheTask, deleteMalCacheTask, deleteSonarrCacheTask);
+                
+                if (deletePlexCacheTask.Result.IsFailure)
+                    return Result.Failure<IEnumerable<Anime>>(deletePlexCacheTask.Result.Error);
+                if (deleteMalCacheTask.Result.IsFailure)
+                    return Result.Failure<IEnumerable<Anime>>(deleteMalCacheTask.Result.Error);
+                if (deleteSonarrCacheTask.Result.IsFailure)
+                    return Result.Failure<IEnumerable<Anime>>(deleteSonarrCacheTask.Result.Error);
+                
+                var addPlexCacheTask = cacheEntryService.BulkInsertAsync(plexTask.Result.Value);
+                var addMalCacheTask = cacheEntryService.BulkInsertAsync(malTask.Result.Value);
+                var addSonarrCacheTask = cacheEntryService.BulkInsertAsync(sonarrTask.Result.Value);
+                
+                await Task.WhenAll(addPlexCacheTask, addMalCacheTask, addSonarrCacheTask);
+                
+                if (addPlexCacheTask.Result.IsFailure)
+                    return Result.Failure<IEnumerable<Anime>>(addPlexCacheTask.Result.Error);
+                if (addMalCacheTask.Result.IsFailure)
+                    return Result.Failure<IEnumerable<Anime>>(addMalCacheTask.Result.Error);
+                if (addSonarrCacheTask.Result.IsFailure)
+                    return Result.Failure<IEnumerable<Anime>>(addSonarrCacheTask.Result.Error);
+                    
                 // Return the fresh animes
                 var freshAnimes = await animeRepository.GetAllAsync();
                 return Result.Success(freshAnimes);

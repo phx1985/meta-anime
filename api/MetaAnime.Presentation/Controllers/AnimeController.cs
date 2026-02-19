@@ -111,5 +111,19 @@ namespace MetaAnime.Controllers
 
             return NoContent();
         }
+
+        [HttpPost("sync")]
+        [Authorize]
+        public async Task<IActionResult> SyncAll([FromQuery] bool forceRefreshKometaMapping = false)
+        {
+            var result = await mediator.Send(new MatchAnimeCommand(forceRefreshKometaMapping));
+            
+            if (result.IsFailure)
+            {
+                return StatusCode(500, result.Error.Message);
+            }
+
+            return Ok(new { message = "Cache refresh and matching completed successfully" });
+        }
     }
 }

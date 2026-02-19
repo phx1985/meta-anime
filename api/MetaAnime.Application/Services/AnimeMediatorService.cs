@@ -50,35 +50,24 @@ namespace MetaAnime.Application.Services
                     .Take(pageSize)
                     .ToList();
 
-                // Pre-fetch all external data in bulk to avoid N+1 queries
-                var plexIds = groupedMappings
-                    .SelectMany(g => g.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex))
-                    .Select(m => m.Anime!.SourceId)
-                    .Distinct()
-                    .ToList();
-                
-                var malIds = groupedMappings
-                    .SelectMany(g => g.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList))
-                    .Select(m => m.Anime!.SourceId)
-                    .Distinct()
-                    .ToList();
-                
-                var sonarrIds = groupedMappings
-                    .SelectMany(g => g.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr))
-                    .Select(m => m.Anime!.SourceId)
-                    .Distinct()
-                    .ToList();
+                // Load all cache entries for all sources in parallel
+                var plexCacheTask = cacheEntryService.GetAsync(AnimeSource.Plex);
+                var malCacheTask = cacheEntryService.GetAsync(AnimeSource.MyAnimeList);
+                var sonarrCacheTask = cacheEntryService.GetAsync(AnimeSource.Sonarr);
 
-                // Fetch all data in parallel
-                var plexDataTask = FetchPlexDataBulkAsync(plexIds);
-                var malDataTask = FetchMalDataBulkAsync(malIds);
-                var sonarrDataTask = FetchSonarrDataBulkAsync(sonarrIds);
+                await Task.WhenAll(plexCacheTask, malCacheTask, sonarrCacheTask);
 
-                await Task.WhenAll(plexDataTask, malDataTask, sonarrDataTask);
-
-                var plexData = await plexDataTask;
-                var malData = await malDataTask;
-                var sonarrData = await sonarrDataTask;
+                var plexCache = plexCacheTask.Result.IsSuccess 
+                    ? plexCacheTask.Result.Value.ToDictionary(c => c.SourceId, c => c.RawData) 
+                    : new Dictionary<string, string>();
+                    
+                var malCache = malCacheTask.Result.IsSuccess 
+                    ? malCacheTask.Result.Value.ToDictionary(c => c.SourceId, c => c.RawData) 
+                    : new Dictionary<string, string>();
+                    
+                var sonarrCache = sonarrCacheTask.Result.IsSuccess 
+                    ? sonarrCacheTask.Result.Value.ToDictionary(c => c.SourceId, c => c.RawData) 
+                    : new Dictionary<string, string>();
 
                 var animeDtos = new List<AnimeDetailsResponse>();
 
@@ -86,17 +75,17 @@ namespace MetaAnime.Application.Services
                 {
                     var plexAnimes = group
                         .Where(m => m.Anime?.AnimeSource == AnimeSource.Plex)
-                        .Select(m => CreatePlexAnimeInfo(m, plexData))
+                        .Select(m => CreatePlexAnimeInfoFromCache(m, plexCache))
                         .ToList();
                     
                     var malAnimes = group
                         .Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList)
-                        .Select(m => CreateMalAnimeInfo(m, malData))
+                        .Select(m => CreateMalAnimeInfoFromCache(m, malCache))
                         .ToList();
                     
                     var sonarrAnimes = group
                         .Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr)
-                        .Select(m => CreateSonarrAnimeInfo(m, sonarrData))
+                        .Select(m => CreateSonarrAnimeInfoFromCache(m, sonarrCache))
                         .ToList();
 
                     animeDtos.Add(new AnimeDetailsResponse(
@@ -262,148 +251,72 @@ namespace MetaAnime.Application.Services
         }
 
         #region Private Helper Methods
-        private async Task<Dictionary<string, PlexMedia>> FetchPlexDataBulkAsync(List<string> plexIds)
+        private PlexAnimeInfo CreatePlexAnimeInfoFromCache(AnimeMapping mapping, Dictionary<string, string> plexCache)
         {
-            var result = new Dictionary<string, PlexMedia>();
-            if (!plexIds.Any()) return result;
-
-            var tasks = plexIds.Select(async id =>
+            if (plexCache.TryGetValue(mapping.Anime!.SourceId, out var rawData))
             {
-                var plexResult = await plexAnimeSource.GetByIdAsync(id);
-                if (plexResult.IsSuccess && plexResult.Value != null)
+                try
                 {
-                    return (id, (PlexMedia?)plexResult.Value);
-                }
-                return (id, (PlexMedia?)null);
-            });
-
-            var results = await Task.WhenAll(tasks);
-            foreach (var (id, media) in results)
-            {
-                if (media != null)
-                {
-                    result[id] = media;
-                }
-            }
-
-            return result;
-        }
-
-        private async Task<Dictionary<string, MalAnime>> FetchMalDataBulkAsync(List<string> malIds)
-        {
-            var result = new Dictionary<string, MalAnime>();
-            if (!malIds.Any()) return result;
-
-            // Try to get from cache first
-            var cacheResult = await cacheEntryService.GetAsync(AnimeSource.MyAnimeList);
-            var cachedData = new Dictionary<string, MalAnime>();
-            
-            if (cacheResult.IsSuccess)
-            {
-                foreach (var entry in cacheResult.Value)
-                {
-                    try
+                    var plexMedia = System.Text.Json.JsonSerializer.Deserialize<PlexMedia>(rawData);
+                    if (plexMedia != null)
                     {
-                        var malAnime = System.Text.Json.JsonSerializer.Deserialize<MalAnime>(entry.RawData);
-                        if (malAnime != null)
-                        {
-                            cachedData[entry.SourceId] = malAnime;
-                        }
-                    }
-                    catch (System.Text.Json.JsonException)
-                    {
-                        // Skip invalid cache entries - cache may be corrupted or from older version
+                        return new PlexAnimeInfo(
+                            plexMedia,
+                            plexBaseUrl,
+                            plexMedia.ViewedLeafCount,
+                            plexMedia.LeafCount
+                        );
                     }
                 }
-            }
-
-            // Fetch missing data
-            var missingIds = malIds.Where(id => !cachedData.ContainsKey(id)).ToList();
-            if (missingIds.Any())
-            {
-                var tasks = missingIds.Select(async id =>
+                catch (System.Text.Json.JsonException)
                 {
-                    var malResult = await malAnimeSource.GetByIdAsync(id);
-                    if (malResult.IsSuccess && malResult.Value != null)
-                    {
-                        return (id, (MalAnime?)malResult.Value);
-                    }
-                    return (id, (MalAnime?)null);
-                });
-
-                var results = await Task.WhenAll(tasks);
-                foreach (var (id, anime) in results)
-                {
-                    if (anime != null)
-                    {
-                        cachedData[id] = anime;
-                    }
+                    // Fall through to return basic info
                 }
-            }
-
-            return cachedData;
-        }
-
-        private async Task<Dictionary<string, (SonarrSeries series, Dictionary<string, int>? codecDist)>> FetchSonarrDataBulkAsync(List<string> sonarrIds)
-        {
-            var result = new Dictionary<string, (SonarrSeries series, Dictionary<string, int>? codecDist)>();
-            if (!sonarrIds.Any()) return result;
-
-            var tasks = sonarrIds.Select(async id =>
-            {
-                var sonarrResult = await sonarrAnimeSource.GetByIdAsync(id);
-                if (sonarrResult.IsSuccess && sonarrResult.Value != null)
-                {
-                    // Don't fetch codec distribution here - it's too slow
-                    return (id, (SonarrSeries?)sonarrResult.Value, (Dictionary<string, int>?)null);
-                }
-                return (id, (SonarrSeries?)null, (Dictionary<string, int>?)null);
-            });
-
-            var results = await Task.WhenAll(tasks);
-            foreach (var (id, series, codecDist) in results)
-            {
-                if (series != null)
-                {
-                    result[id] = (series, codecDist);
-                }
-            }
-
-            return result;
-        }
-
-        private PlexAnimeInfo CreatePlexAnimeInfo(AnimeMapping mapping, Dictionary<string, PlexMedia> plexData)
-        {
-            if (plexData.TryGetValue(mapping.Anime!.SourceId, out var plexMedia))
-            {
-                return new PlexAnimeInfo(
-                    plexMedia,
-                    plexBaseUrl,
-                    plexMedia.ViewedLeafCount,
-                    plexMedia.LeafCount
-                );
             }
             return new PlexAnimeInfo(mapping.Anime, plexBaseUrl);
         }
 
-        private MalAnimeInfo CreateMalAnimeInfo(AnimeMapping mapping, Dictionary<string, MalAnime> malData)
+        private MalAnimeInfo CreateMalAnimeInfoFromCache(AnimeMapping mapping, Dictionary<string, string> malCache)
         {
-            if (malData.TryGetValue(mapping.Anime!.SourceId, out var malAnime))
+            if (malCache.TryGetValue(mapping.Anime!.SourceId, out var rawData))
             {
-                return new MalAnimeInfo(malAnime, myAnimeListHost);
+                try
+                {
+                    var malAnime = System.Text.Json.JsonSerializer.Deserialize<MalAnime>(rawData);
+                    if (malAnime != null)
+                    {
+                        return new MalAnimeInfo(malAnime, myAnimeListHost);
+                    }
+                }
+                catch (System.Text.Json.JsonException)
+                {
+                    // Fall through to return basic info
+                }
             }
             return new MalAnimeInfo(mapping.Anime, myAnimeListHost);
         }
 
-        private SonarrAnimeInfo CreateSonarrAnimeInfo(AnimeMapping mapping, Dictionary<string, (SonarrSeries series, Dictionary<string, int>? codecDist)> sonarrData)
+        private SonarrAnimeInfo CreateSonarrAnimeInfoFromCache(AnimeMapping mapping, Dictionary<string, string> sonarrCache)
         {
-            if (sonarrData.TryGetValue(mapping.Anime!.SourceId, out var data))
+            if (sonarrCache.TryGetValue(mapping.Anime!.SourceId, out var rawData))
             {
-                return new SonarrAnimeInfo(data.series, sonarrHost, data.codecDist ?? new Dictionary<string, int>());
+                try
+                {
+                    var sonarrSeries = System.Text.Json.JsonSerializer.Deserialize<SonarrSeries>(rawData);
+                    if (sonarrSeries != null)
+                    {
+                        return new SonarrAnimeInfo(sonarrSeries, sonarrHost, new Dictionary<string, int>());
+                    }
+                }
+                catch (System.Text.Json.JsonException)
+                {
+                    // Fall through to return basic info
+                }
             }
             return new SonarrAnimeInfo(mapping.Anime, sonarrHost);
         }
 
+        // Keep these methods for GetById which may need real-time data
         private async Task<List<PlexAnimeInfo>> FetchPlexAnimeDetailsAsync(IEnumerable<AnimeMapping> mappings)
         {
             var tasks = mappings.Select(async mapping =>

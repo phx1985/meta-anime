@@ -1,10 +1,12 @@
 ﻿using MetaAnime.Domain.Enums;
+using MetaAnime.Core.Interfaces.Caching;
 using MetaAnime.Core.Interfaces.Mappers;
 using MetaAnime.Domain.Entities;
+using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.Plex.Models
 {
-    public class PlexMedia : IAnimeConvertible
+    public class PlexMedia : IAnimeConvertible, ICacheable
     {
         #region Consts
         private const string TVDB_ID_PREFIX = "tvdb://";
@@ -66,6 +68,16 @@ namespace MetaAnime.Infrastructure.Plex.Models
                 }
             }
             return identifiers;
+        }
+
+        public CacheEntry ToCacheEntry()
+        {
+            return new CacheEntry
+            {
+                SourceId = Id,
+                RawData = JsonSerializer.Serialize(this),
+                AnimeSource = AnimeSource.Plex
+            };
         }
     }
 }

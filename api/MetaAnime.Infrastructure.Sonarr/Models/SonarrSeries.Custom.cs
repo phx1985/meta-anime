@@ -1,10 +1,12 @@
 ﻿using MetaAnime.Domain.Enums;
+using MetaAnime.Core.Interfaces.Caching;
 using MetaAnime.Core.Interfaces.Mappers;
 using MetaAnime.Domain.Entities;
+using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models
 {
-    public partial class SonarrSeries : IAnimeConvertible
+    public partial class SonarrSeries : IAnimeConvertible, ICacheable
     {
         public Anime ToAnime()
         {
@@ -59,6 +61,16 @@ namespace MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models
             }
 
             return results;
+        }
+
+        public CacheEntry ToCacheEntry()
+        {
+            return new CacheEntry
+            {
+                SourceId = Id.ToString(),
+                RawData = JsonSerializer.Serialize(this),
+                AnimeSource = AnimeSource.Sonarr
+            };
         }
     }
 }
