@@ -456,6 +456,7 @@ namespace MetaAnime.Application.Services
                             }
                             // Note: Codec distribution is not included in list view for performance.
                             // It requires an additional API call per series and is only populated in GetById.
+                            // Size on disk is null in list view as it's populated in GetById with real-time data
                             return new SonarrAnimeInfo(sonarrSeries, sonarrHost, new Dictionary<string, int>());
                         }
                     }

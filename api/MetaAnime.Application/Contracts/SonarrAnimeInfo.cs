@@ -9,7 +9,8 @@ namespace MetaAnime.Application.Contracts
         string? Url,
         bool Exists,
         SonarrSeasonInfo[]? SeasonInfo,
-        Dictionary<string, int>? CodecDistribution
+        Dictionary<string, int>? CodecDistribution,
+        long? SizeOnDisk
     )
     {
         public SonarrAnimeInfo(Anime? anime, string sonarrBaseUrl) 
@@ -18,6 +19,7 @@ namespace MetaAnime.Application.Contracts
                 anime?.SourceId,
                 $"{sonarrBaseUrl}/series/{anime?.SourceId}",
                 false,
+                null,
                 null,
                 null
             )
@@ -34,9 +36,25 @@ namespace MetaAnime.Application.Contracts
                     s.Statistics?.EpisodeFileCount ?? 0,
                     s.Statistics?.EpisodeCount ?? 0
                 )).ToArray(),
-                codecDistribution
+                codecDistribution,
+                ExtractSizeOnDisk(sonarrSeries?.Statistics?.SizeOnDisk)
             )
         { }
+
+        private static long? ExtractSizeOnDisk(object? sizeOnDisk)
+        {
+            if (sizeOnDisk == null)
+                return null;
+
+            // Handle different possible types from Sonarr API
+            return sizeOnDisk switch
+            {
+                long longValue => longValue,
+                int intValue => intValue,
+                string strValue when long.TryParse(strValue, out var parsed) => parsed,
+                _ => null
+            };
+        }
     }
 
     public sealed record SonarrSeasonInfo(
