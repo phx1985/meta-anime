@@ -16,6 +16,7 @@ namespace MetaAnime.Infrastructure.Sonarr.Services
         private readonly string apiKey = options.Value.ApiKey;
         private readonly List<string> tags = [.. options.Value.AnimeTags.Split(',')];
         private static readonly JsonSerializerOptions jsonOptions = new() { PropertyNameCaseInsensitive = true };
+        private readonly bool isConfigured = !string.IsNullOrWhiteSpace(options.Value.Host) && !string.IsNullOrWhiteSpace(options.Value.ApiKey);
         #endregion
 
         #region ISonarrSourceService Implementation
@@ -25,6 +26,12 @@ namespace MetaAnime.Infrastructure.Sonarr.Services
         /// <returns></returns>
         public async Task<Result<IList<SonarrSeries>>> GetAllAsync()
         {
+            // Return empty list if Sonarr is not configured
+            if (!isConfigured)
+            {
+                return Result.Success<IList<SonarrSeries>>(new List<SonarrSeries>());
+            }
+
             var sonarrTags = await GetSonarrTagsAsync();
             var restClient = new RestClient(sonarrHost);
             var restRequest = new RestRequest("api/v3/series");
@@ -46,6 +53,12 @@ namespace MetaAnime.Infrastructure.Sonarr.Services
 
         public async Task<Result<SonarrSeries>> GetByIdAsync(string id)
         {
+            // Return failure if Sonarr is not configured
+            if (!isConfigured)
+            {
+                return Result.Failure<SonarrSeries>(new("Sonarr.NotConfigured", "Sonarr is not configured"));
+            }
+
             var restClient = new RestClient(sonarrHost);
             var restRequest = new RestRequest($"api/v3/series/{id}");
             restRequest.AddParameter("apikey", apiKey);
@@ -65,13 +78,19 @@ namespace MetaAnime.Infrastructure.Sonarr.Services
 
         public async Task<Dictionary<string, int>> GetCodecDistributionAsync(string seriesId)
         {
+            var codecDistribution = new Dictionary<string, int>();
+
+            // Return empty dictionary if Sonarr is not configured
+            if (!isConfigured)
+            {
+                return codecDistribution;
+            }
+
             var restClient = new RestClient(sonarrHost);
             var restRequest = new RestRequest($"api/v3/episodefile");
             restRequest.AddParameter("apikey", apiKey);
             restRequest.AddParameter("seriesId", seriesId);
             var response = await restClient.ExecuteAsync(restRequest);
-
-            var codecDistribution = new Dictionary<string, int>();
 
             if (response.IsSuccessful && !string.IsNullOrEmpty(response.Content))
             {
