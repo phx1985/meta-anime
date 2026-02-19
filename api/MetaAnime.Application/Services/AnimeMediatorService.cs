@@ -10,6 +10,7 @@ using MetaAnime.Infrastructure.MyAnimeList.Models;
 using MetaAnime.Infrastructure.Plex.Models;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Text.Json;
 
@@ -25,7 +26,8 @@ namespace MetaAnime.Application.Services
         ICacheEntryService cacheEntryService,
         IOptions<MalSettings> malOptions,
         IOptions<SonarrSettings> sonarrOptions,
-        IOptions<PlexSettings> plexOptions)
+        IOptions<PlexSettings> plexOptions,
+        ILogger<AnimeMediatorService> logger)
         : IAnimeMediatorService
     {
         private static readonly JsonSerializerOptions JsonOptions = new()
@@ -160,12 +162,6 @@ namespace MetaAnime.Application.Services
                     a.MalAnimes?.Any(m => m.ViewState != null && m.ViewState.Contains(filters.Status, StringComparison.OrdinalIgnoreCase)) == true ||
                     a.SonarrAnimes?.Any(s => s.Exists) == true
                 );
-            }
-
-            if (filters.Year.HasValue)
-            {
-                // This is approximate - we would need year data in the response to filter properly
-                // For now, just return all if year filter is provided
             }
 
             return result;
@@ -373,8 +369,8 @@ namespace MetaAnime.Application.Services
                     }
                     catch (JsonException ex)
                     {
-                        // Log deserialization error but continue with fallback
-                        Console.WriteLine($"Failed to deserialize MAL anime {mapping.Anime.SourceId}: {ex.Message}");
+                        // Log deserialization error for debugging
+                        logger.LogWarning(ex, "Failed to deserialize MAL anime cache data for SourceId: {SourceId}", mapping.Anime.SourceId);
                     }
                 }
             }
@@ -395,13 +391,13 @@ namespace MetaAnime.Application.Services
                         {
                             // Note: Codec distribution is not included in list view for performance.
                             // It requires an additional API call per series and is only populated in GetById.
-                            return new SonarrAnimeInfo(sonarrSeries, sonarrHost, null);
+                            return new SonarrAnimeInfo(sonarrSeries, sonarrHost, new Dictionary<string, int>());
                         }
                     }
                     catch (JsonException ex)
                     {
-                        // Log deserialization error but continue with fallback
-                        Console.WriteLine($"Failed to deserialize Sonarr anime {mapping.Anime.SourceId}: {ex.Message}");
+                        // Log deserialization error for debugging
+                        logger.LogWarning(ex, "Failed to deserialize Sonarr anime cache data for SourceId: {SourceId}", mapping.Anime.SourceId);
                     }
                 }
             }
