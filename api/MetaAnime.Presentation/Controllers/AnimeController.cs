@@ -112,6 +112,12 @@ namespace MetaAnime.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Manually triggers a full cache refresh and anime matching across sources.
+        /// This operation fetches fresh data from Plex, MAL, and Sonarr APIs, updates the cache,
+        /// and performs matching using Kometa mapping data.
+        /// </summary>
+        /// <param name="forceRefreshKometaMapping">If true, forces a refresh of the Kometa mapping data before matching</param>
         [HttpPost("sync")]
         [Authorize]
         public async Task<IActionResult> SyncAll([FromQuery] bool forceRefreshKometaMapping = false)

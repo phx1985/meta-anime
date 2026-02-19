@@ -10,6 +10,7 @@ using MetaAnime.Infrastructure.Plex.Models;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
 using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
+using System.Text.Json;
 
 namespace MetaAnime.Application.Services
 {
@@ -257,7 +258,7 @@ namespace MetaAnime.Application.Services
             {
                 try
                 {
-                    var plexMedia = System.Text.Json.JsonSerializer.Deserialize<PlexMedia>(rawData);
+                    var plexMedia = JsonSerializer.Deserialize<PlexMedia>(rawData);
                     if (plexMedia != null)
                     {
                         return new PlexAnimeInfo(
@@ -282,7 +283,7 @@ namespace MetaAnime.Application.Services
             {
                 try
                 {
-                    var malAnime = System.Text.Json.JsonSerializer.Deserialize<MalAnime>(rawData);
+                    var malAnime = JsonSerializer.Deserialize<MalAnime>(rawData);
                     if (malAnime != null)
                     {
                         return new MalAnimeInfo(malAnime, myAnimeListHost);
@@ -302,13 +303,15 @@ namespace MetaAnime.Application.Services
             {
                 try
                 {
-                    var sonarrSeries = System.Text.Json.JsonSerializer.Deserialize<SonarrSeries>(rawData);
+                    var sonarrSeries = JsonSerializer.Deserialize<SonarrSeries>(rawData);
                     if (sonarrSeries != null)
                     {
+                        // Note: Codec distribution is not included in list view for performance.
+                        // It requires an additional API call per series and is only populated in GetById.
                         return new SonarrAnimeInfo(sonarrSeries, sonarrHost, new Dictionary<string, int>());
                     }
                 }
-                catch (System.Text.Json.JsonException)
+                catch (JsonException)
                 {
                     // Fall through to return basic info
                 }
