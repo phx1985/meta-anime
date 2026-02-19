@@ -4,4 +4,4 @@ using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Queries;
 
-public record GetAllAnimesQuery(int Page = 1, int PageSize = 100) : IRequest<Result<IEnumerable<AnimeDetailsResponse>>>;
+public record GetAllAnimesQuery(int Page = 1, int PageSize = 100) : IRequest<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>>;

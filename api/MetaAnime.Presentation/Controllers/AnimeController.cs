@@ -16,8 +16,7 @@ namespace MetaAnime.Controllers
     {
         [HttpGet]
         [Authorize]
-        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
-        public async Task<ActionResult<IEnumerable<AnimeDetailsResponse>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 100)
+        public async Task<ActionResult<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 100)
         {
             if (page < 1) page = 1;
             if (pageSize < 1 || pageSize > 100) pageSize = 100;
@@ -34,7 +33,6 @@ namespace MetaAnime.Controllers
 
         [HttpGet("{id}")]
         [Authorize]
-        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
         public async Task<ActionResult<AnimeDetailsResponse>> GetById(string id)
         {
             var result = await mediator.Send(new GetAnimeByIdQuery(id));

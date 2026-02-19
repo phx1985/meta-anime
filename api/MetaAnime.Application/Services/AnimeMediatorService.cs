@@ -27,26 +27,37 @@ namespace MetaAnime.Application.Services
         IOptions<PlexSettings> plexOptions)
         : IAnimeMediatorService
     {
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+        };
+
         private readonly string myAnimeListHost = malOptions.Value.WebBaseUrl;
         private readonly string sonarrHost = sonarrOptions.Value.Host;
         // TODO : Add sonarr web url to the configuration
 
         private readonly string plexBaseUrl = $"{plexOptions.Value.Host}/desktop/#!/server/{plexAnimeSource.GetMachineIdentifierAsync().Result.Value}/details?key=%2Flibrary%2Fmetadata%2F";
         // TODO : Add plex web url to the configuration
-        public async Task<Result<IEnumerable<AnimeDetailsResponse>>> GetAllAsync(int page = 1, int pageSize = 100)
+        public async Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAllAsync(int page = 1, int pageSize = 100)
         {
             try
             {
                 var mappingsResult = await animeMappingService.GetAllAsync(includeAnime: true);
                 if (mappingsResult.IsFailure)
                 {
-                    return Result.Failure<IEnumerable<AnimeDetailsResponse>>(mappingsResult.Error);
+                    return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(mappingsResult.Error);
                 }
 
-                var groupedMappings = mappingsResult.Value
+                var allGroupedMappings = mappingsResult.Value
                     .OrderBy(m => m.AniDbId)
                     .ThenBy(m => m.Anime?.AnimeSource)
                     .GroupBy(m => m.AniDbId)
+                    .ToList();
+
+                var totalCount = allGroupedMappings.Count;
+
+                var groupedMappings = allGroupedMappings
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .ToList();
@@ -98,11 +109,19 @@ namespace MetaAnime.Application.Services
                     ));
                 }
 
-                return Result.Success<IEnumerable<AnimeDetailsResponse>>(animeDtos.OrderBy(a => a.Title));
+                var sortedData = animeDtos.OrderBy(a => a.Title);
+                var pagedResponse = PagedResponse<IEnumerable<AnimeDetailsResponse>>.Create(
+                    sortedData,
+                    page,
+                    pageSize,
+                    totalCount
+                );
+
+                return Result.Success(pagedResponse);
             }
             catch (Exception ex)
             {
-                return Result.Failure<IEnumerable<AnimeDetailsResponse>>(new("Error.GetAllAsync", ex.Message));
+                return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(new("Error.GetAllAsync", ex.Message));
             }
         }
 
@@ -258,7 +277,7 @@ namespace MetaAnime.Application.Services
             {
                 try
                 {
-                    var plexMedia = JsonSerializer.Deserialize<PlexMedia>(rawData);
+                    var plexMedia = JsonSerializer.Deserialize<PlexMedia>(rawData, JsonOptions);
                     if (plexMedia != null)
                     {
                         return new PlexAnimeInfo(
@@ -269,7 +288,7 @@ namespace MetaAnime.Application.Services
                         );
                     }
                 }
-                catch (System.Text.Json.JsonException)
+                catch (JsonException)
                 {
                     // Fall through to return basic info
                 }
@@ -283,13 +302,13 @@ namespace MetaAnime.Application.Services
             {
                 try
                 {
-                    var malAnime = JsonSerializer.Deserialize<MalAnime>(rawData);
+                    var malAnime = JsonSerializer.Deserialize<MalAnime>(rawData, JsonOptions);
                     if (malAnime != null)
                     {
                         return new MalAnimeInfo(malAnime, myAnimeListHost);
                     }
                 }
-                catch (System.Text.Json.JsonException)
+                catch (JsonException)
                 {
                     // Fall through to return basic info
                 }
@@ -303,7 +322,7 @@ namespace MetaAnime.Application.Services
             {
                 try
                 {
-                    var sonarrSeries = JsonSerializer.Deserialize<SonarrSeries>(rawData);
+                    var sonarrSeries = JsonSerializer.Deserialize<SonarrSeries>(rawData, JsonOptions);
                     if (sonarrSeries != null)
                     {
                         // Note: Codec distribution is not included in list view for performance.
