@@ -32,8 +32,8 @@ namespace MetaAnime.Application.Services
     {
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
-            PropertyNameCaseInsensitive = true,
-            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            PropertyNameCaseInsensitive = true
+            // Don't use DefaultIgnoreCondition to match serialization options
         };
 
         private readonly string myAnimeListHost = malOptions.Value.WebBaseUrl;
@@ -364,6 +364,17 @@ namespace MetaAnime.Application.Services
                         var malAnime = JsonSerializer.Deserialize<MalAnime>(rawData, JsonOptions);
                         if (malAnime != null)
                         {
+                            // Log for debugging - check if MyListStatus is null
+                            if (malAnime.MyListStatus == null)
+                            {
+                                logger.LogWarning("MAL anime {SourceId} ({Title}) has null MyListStatus after deserialization", 
+                                    mapping.Anime.SourceId, malAnime.Title);
+                            }
+                            else
+                            {
+                                logger.LogInformation("MAL anime {SourceId} ({Title}) has MyListStatus: Status={Status}, CreatedAt={CreatedAt}", 
+                                    mapping.Anime.SourceId, malAnime.Title, malAnime.MyListStatus.Status, malAnime.MyListStatus.CreatedAt);
+                            }
                             return new MalAnimeInfo(malAnime, myAnimeListHost);
                         }
                     }
@@ -389,6 +400,18 @@ namespace MetaAnime.Application.Services
                         var sonarrSeries = JsonSerializer.Deserialize<SonarrSeries>(rawData, JsonOptions);
                         if (sonarrSeries != null)
                         {
+                            // Log for debugging - check if Seasons is null
+                            if (sonarrSeries.Seasons == null || !sonarrSeries.Seasons.Any())
+                            {
+                                logger.LogWarning("Sonarr anime {SourceId} ({Title}) has null or empty Seasons after deserialization", 
+                                    mapping.Anime.SourceId, sonarrSeries.Title);
+                            }
+                            else
+                            {
+                                var seasonsWithStats = sonarrSeries.Seasons.Count(s => s.Statistics != null);
+                                logger.LogInformation("Sonarr anime {SourceId} ({Title}) has {TotalSeasons} seasons, {SeasonsWithStats} with statistics", 
+                                    mapping.Anime.SourceId, sonarrSeries.Title, sonarrSeries.Seasons.Count, seasonsWithStats);
+                            }
                             // Note: Codec distribution is not included in list view for performance.
                             // It requires an additional API call per series and is only populated in GetById.
                             return new SonarrAnimeInfo(sonarrSeries, sonarrHost, new Dictionary<string, int>());
