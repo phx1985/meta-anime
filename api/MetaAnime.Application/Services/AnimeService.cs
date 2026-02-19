@@ -145,9 +145,9 @@ namespace MetaAnime.Application.Services
                 
                 await Task.WhenAll(enrichedPlexTask, enrichedMalTask, enrichedSonarrTask);
                 
-                var enrichedPlexData = await enrichedPlexTask;
-                var enrichedMalData = await enrichedMalTask;
-                var enrichedSonarrData = await enrichedSonarrTask;
+                var enrichedPlexData = enrichedPlexTask.Result;
+                var enrichedMalData = enrichedMalTask.Result;
+                var enrichedSonarrData = enrichedSonarrTask.Result;
                 
                 // Refresh cache for all sources (Plex, MAL, Sonarr)
                 // Run cache operations sequentially to avoid exhausting database connection pool
@@ -190,10 +190,10 @@ namespace MetaAnime.Application.Services
         /// Enrich Plex anime data by fetching detailed information.
         /// Plex GetAllAsync already returns complete data, so just return as-is.
         /// </summary>
-        private async Task<IList<PlexMedia>> EnrichPlexDataAsync(IList<PlexMedia> plexAnimes)
+        private Task<IList<PlexMedia>> EnrichPlexDataAsync(IList<PlexMedia> plexAnimes)
         {
             // Plex GetAllAsync already returns complete data with all fields
-            return await Task.FromResult(plexAnimes);
+            return Task.FromResult(plexAnimes);
         }
 
         /// <summary>
