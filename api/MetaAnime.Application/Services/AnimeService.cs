@@ -137,6 +137,18 @@ namespace MetaAnime.Application.Services
                 await animeRepository.BulkDeleteAllAsync();
                 await animeRepository.BulkInsertAsync([.. plexResult.Value, .. malResult.Value, .. sonarrResult.Value]);
                 
+                // Enrich data with detailed information by calling GetByIdAsync for each anime
+                // This ensures cache contains complete data (my_list_status for MAL, seasons for Sonarr)
+                var enrichedPlexTask = EnrichPlexDataAsync(plexResult.Value);
+                var enrichedMalTask = EnrichMalDataAsync(malResult.Value);
+                var enrichedSonarrTask = EnrichSonarrDataAsync(sonarrResult.Value);
+                
+                await Task.WhenAll(enrichedPlexTask, enrichedMalTask, enrichedSonarrTask);
+                
+                var enrichedPlexData = await enrichedPlexTask;
+                var enrichedMalData = await enrichedMalTask;
+                var enrichedSonarrData = await enrichedSonarrTask;
+                
                 // Refresh cache for all sources (Plex, MAL, Sonarr)
                 // Run cache operations sequentially to avoid exhausting database connection pool
                 var deletePlexResult = await cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.Plex);
@@ -151,15 +163,16 @@ namespace MetaAnime.Application.Services
                 if (deleteSonarrResult.IsFailure)
                     return Result.Failure<IEnumerable<Anime>>(deleteSonarrResult.Error);
                 
-                var addPlexResult = await cacheEntryService.BulkInsertAsync(plexResult.Value);
+                // Cache the enriched data instead of the basic GetAllAsync results
+                var addPlexResult = await cacheEntryService.BulkInsertAsync(enrichedPlexData);
                 if (addPlexResult.IsFailure)
                     return Result.Failure<IEnumerable<Anime>>(addPlexResult.Error);
                     
-                var addMalResult = await cacheEntryService.BulkInsertAsync(malResult.Value);
+                var addMalResult = await cacheEntryService.BulkInsertAsync(enrichedMalData);
                 if (addMalResult.IsFailure)
                     return Result.Failure<IEnumerable<Anime>>(addMalResult.Error);
                     
-                var addSonarrResult = await cacheEntryService.BulkInsertAsync(sonarrResult.Value);
+                var addSonarrResult = await cacheEntryService.BulkInsertAsync(enrichedSonarrData);
                 if (addSonarrResult.IsFailure)
                     return Result.Failure<IEnumerable<Anime>>(addSonarrResult.Error);
                     
@@ -171,6 +184,96 @@ namespace MetaAnime.Application.Services
             {
                 return Result.Failure<IEnumerable<Anime>>(new("Error.RefreshData", ex.Message));
             }
+        }
+
+        /// <summary>
+        /// Enrich Plex anime data by fetching detailed information.
+        /// Plex GetAllAsync already returns complete data, so just return as-is.
+        /// </summary>
+        private async Task<IList<PlexMedia>> EnrichPlexDataAsync(IList<PlexMedia> plexAnimes)
+        {
+            // Plex GetAllAsync already returns complete data with all fields
+            return await Task.FromResult(plexAnimes);
+        }
+
+        /// <summary>
+        /// Enrich MAL anime data by calling GetByIdAsync for each anime to get complete my_list_status.
+        /// Processes in batches with delay to avoid rate limiting.
+        /// </summary>
+        private async Task<IList<MalAnime>> EnrichMalDataAsync(IList<MalAnime> malAnimes)
+        {
+            const int batchSize = 50; // Process 50 anime at a time
+            const int delayMs = 100; // 100ms delay between batches
+            
+            var enrichedAnimes = new List<MalAnime>();
+            
+            for (int i = 0; i < malAnimes.Count; i += batchSize)
+            {
+                var batch = malAnimes.Skip(i).Take(batchSize);
+                var tasks = batch.Select(async anime =>
+                {
+                    // If the anime from GetAllAsync already has MyListStatus, use it as-is
+                    // Otherwise, try to fetch detailed data
+                    if (anime.MyListStatus != null)
+                    {
+                        return anime;
+                    }
+                    
+                    var detailedResult = await malAnimeSourceService.GetByIdAsync(anime.Id.ToString());
+                    return detailedResult.IsSuccess && detailedResult.Value != null ? detailedResult.Value : anime;
+                }).ToList();
+                
+                var batchResults = await Task.WhenAll(tasks);
+                enrichedAnimes.AddRange(batchResults);
+                
+                // Delay between batches to avoid rate limiting
+                if (i + batchSize < malAnimes.Count)
+                {
+                    await Task.Delay(delayMs);
+                }
+            }
+            
+            return enrichedAnimes;
+        }
+
+        /// <summary>
+        /// Enrich Sonarr anime data by calling GetByIdAsync for each anime to get complete season information.
+        /// Processes in batches with delay to avoid overwhelming Sonarr API.
+        /// </summary>
+        private async Task<IList<SonarrSeries>> EnrichSonarrDataAsync(IList<SonarrSeries> sonarrAnimes)
+        {
+            const int batchSize = 50; // Process 50 anime at a time
+            const int delayMs = 100; // 100ms delay between batches
+            
+            var enrichedAnimes = new List<SonarrSeries>();
+            
+            for (int i = 0; i < sonarrAnimes.Count; i += batchSize)
+            {
+                var batch = sonarrAnimes.Skip(i).Take(batchSize);
+                var tasks = batch.Select(async anime =>
+                {
+                    // If the anime from GetAllAsync already has Seasons with data, use it as-is
+                    // Otherwise, try to fetch detailed data
+                    if (anime.Seasons != null && anime.Seasons.Any())
+                    {
+                        return anime;
+                    }
+                    
+                    var detailedResult = await sonarrAnimeSourceService.GetByIdAsync(anime.Id.ToString());
+                    return detailedResult.IsSuccess && detailedResult.Value != null ? detailedResult.Value : anime;
+                }).ToList();
+                
+                var batchResults = await Task.WhenAll(tasks);
+                enrichedAnimes.AddRange(batchResults);
+                
+                // Delay between batches to avoid overwhelming Sonarr
+                if (i + batchSize < sonarrAnimes.Count)
+                {
+                    await Task.Delay(delayMs);
+                }
+            }
+            
+            return enrichedAnimes;
         }
 
         public async Task<Result<Anime?>> GetByIdAsync(Guid id)
