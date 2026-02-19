@@ -22,13 +22,14 @@ namespace MetaAnime.Controllers
             [FromQuery] string? title = null,
             [FromQuery] string? source = null,
             [FromQuery] string? status = null,
+            [FromQuery] string? genre = null,
             [FromQuery] string? sortBy = null,
             [FromQuery] string? sortOrder = null)
         {
             if (page < 1) page = 1;
             if (pageSize < 1 || pageSize > 100) pageSize = 100;
 
-            var filters = new AnimeFilters(title, source, status, sortBy, sortOrder);
+            var filters = new AnimeFilters(title, source, status, genre, sortBy, sortOrder);
             var result = await mediator.Send(new GetAllAnimesQuery(page, pageSize, filters));
             
             if (result.IsFailure)

@@ -106,8 +106,8 @@ namespace MetaAnime.Application.Services
                     ));
                 }
 
-                // Apply filters
-                var filteredData = ApplyFilters(animeDtos, filters);
+                // Apply filters (pass malCache for genre filtering)
+                var filteredData = ApplyFilters(animeDtos, filters, malCache);
 
                 // Apply sorting
                 var sortedData = ApplySorting(filteredData, filters);
@@ -135,7 +135,10 @@ namespace MetaAnime.Application.Services
             }
         }
 
-        private IEnumerable<AnimeDetailsResponse> ApplyFilters(IEnumerable<AnimeDetailsResponse> data, AnimeFilters? filters)
+        private IEnumerable<AnimeDetailsResponse> ApplyFilters(
+            IEnumerable<AnimeDetailsResponse> data, 
+            AnimeFilters? filters,
+            Dictionary<string, string> malCache)
         {
             if (filters == null)
                 return data;
@@ -162,6 +165,41 @@ namespace MetaAnime.Application.Services
                     a.MalAnimes?.Any(m => m.ViewState != null && m.ViewState.Contains(filters.Status, StringComparison.OrdinalIgnoreCase)) == true ||
                     a.SonarrAnimes?.Any(s => s.Exists) == true
                 );
+            }
+
+            if (!string.IsNullOrWhiteSpace(filters.Genre))
+            {
+                // Filter by MAL genre - check cached MAL data for genre names
+                var genreFilter = filters.Genre;
+                result = result.Where(a =>
+                {
+                    if (a.MalAnimes == null || !a.MalAnimes.Any())
+                        return false;
+                    
+                    // Check if any MAL anime in this group has the specified genre
+                    return a.MalAnimes.Any(m =>
+                    {
+                        if (string.IsNullOrWhiteSpace(m.Id))
+                            return false;
+                        
+                        // Get cached MAL anime JSON and deserialize to check genres
+                        if (!malCache.TryGetValue(m.Id, out var malJson) || string.IsNullOrWhiteSpace(malJson))
+                            return false;
+                        
+                        try
+                        {
+                            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                            var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, options);
+                            return malAnime?.Genres?.Any(g => 
+                                g.Name.Contains(genreFilter, StringComparison.OrdinalIgnoreCase)
+                            ) == true;
+                        }
+                        catch
+                        {
+                            return false;
+                        }
+                    });
+                });
             }
 
             return result;

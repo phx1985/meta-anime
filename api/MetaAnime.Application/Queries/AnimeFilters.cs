@@ -4,6 +4,7 @@ public record AnimeFilters(
     string? Title = null,
     string? Source = null,
     string? Status = null,
+    string? Genre = null,
     string? SortBy = null,
     string? SortOrder = null
 );
