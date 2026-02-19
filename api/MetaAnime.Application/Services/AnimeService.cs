@@ -199,6 +199,7 @@ namespace MetaAnime.Application.Services
         /// <summary>
         /// Enrich MAL anime data by calling GetByIdAsync for each anime to get complete my_list_status.
         /// Processes in batches with delay to avoid rate limiting.
+        /// Always calls GetByIdAsync to ensure complete data regardless of GetAllAsync results.
         /// </summary>
         private async Task<IList<MalAnime>> EnrichMalDataAsync(IList<MalAnime> malAnimes)
         {
@@ -209,16 +210,10 @@ namespace MetaAnime.Application.Services
             
             for (int i = 0; i < malAnimes.Count; i += batchSize)
             {
-                var batch = malAnimes.Skip(i).Take(batchSize);
+                var batch = malAnimes.Skip(i).Take(batchSize).ToList();
                 var tasks = batch.Select(async anime =>
                 {
-                    // If the anime from GetAllAsync already has MyListStatus, use it as-is
-                    // Otherwise, try to fetch detailed data
-                    if (anime.MyListStatus != null)
-                    {
-                        return anime;
-                    }
-                    
+                    // Always fetch detailed data to ensure complete my_list_status
                     var detailedResult = await malAnimeSourceService.GetByIdAsync(anime.Id.ToString());
                     return detailedResult.IsSuccess && detailedResult.Value != null ? detailedResult.Value : anime;
                 }).ToList();
@@ -239,6 +234,7 @@ namespace MetaAnime.Application.Services
         /// <summary>
         /// Enrich Sonarr anime data by calling GetByIdAsync for each anime to get complete season information.
         /// Processes in batches with delay to avoid overwhelming Sonarr API.
+        /// Always calls GetByIdAsync to ensure complete data regardless of GetAllAsync results.
         /// </summary>
         private async Task<IList<SonarrSeries>> EnrichSonarrDataAsync(IList<SonarrSeries> sonarrAnimes)
         {
@@ -249,16 +245,10 @@ namespace MetaAnime.Application.Services
             
             for (int i = 0; i < sonarrAnimes.Count; i += batchSize)
             {
-                var batch = sonarrAnimes.Skip(i).Take(batchSize);
+                var batch = sonarrAnimes.Skip(i).Take(batchSize).ToList();
                 var tasks = batch.Select(async anime =>
                 {
-                    // If the anime from GetAllAsync already has Seasons with data, use it as-is
-                    // Otherwise, try to fetch detailed data
-                    if (anime.Seasons != null && anime.Seasons.Any())
-                    {
-                        return anime;
-                    }
-                    
+                    // Always fetch detailed data to ensure complete season information
                     var detailedResult = await sonarrAnimeSourceService.GetByIdAsync(anime.Id.ToString());
                     return detailedResult.IsSuccess && detailedResult.Value != null ? detailedResult.Value : anime;
                 }).ToList();
