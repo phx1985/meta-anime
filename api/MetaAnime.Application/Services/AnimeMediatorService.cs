@@ -170,6 +170,9 @@ namespace MetaAnime.Application.Services
             if (!string.IsNullOrWhiteSpace(filters.Genre))
             {
                 // Filter by MAL genre - check cached MAL data for genre names
+                // Note: Deserializes MAL JSON for each anime when genre filter is applied
+                // This is acceptable because: 1) Genre filtering is optional, 2) Only applied to
+                // anime that passed previous filters, 3) Avoids memory overhead of caching deserialized objects
                 var genreFilter = filters.Genre;
                 result = result.Where(a =>
                 {
@@ -194,8 +197,9 @@ namespace MetaAnime.Application.Services
                                 g.Name.Contains(genreFilter, StringComparison.OrdinalIgnoreCase)
                             ) == true;
                         }
-                        catch
+                        catch (JsonException ex)
                         {
+                            logger.LogWarning("Failed to deserialize MAL anime {MalId} for genre filtering: {Error}", m.Id, ex.Message);
                             return false;
                         }
                     });
