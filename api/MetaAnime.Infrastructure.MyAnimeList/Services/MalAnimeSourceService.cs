@@ -94,7 +94,8 @@ namespace MetaAnime.Infrastructure.MyAnimeList.Services
         private async Task<RestResponse> FetchAnimeListAsync(Paging paging)
         {
             var pagingUri = paging?.HasNextPage == true ? paging.Next : null;
-            var animeListUri = new Uri(pagingUri ?? $"{baseUrl}/users/@me/animelist?nsfw=true&limit=1000&fields={REQUEST_FIELDS}");
+            // Use EXTENDED_REQUEST_FIELDS to get my_list_status data (needed for viewState, addedDate, progression, rating)
+            var animeListUri = new Uri(pagingUri ?? $"{baseUrl}/users/@me/animelist?nsfw=true&limit=1000&fields={EXTENDED_REQUEST_FIELDS}");
 
             var restClient = new RestClient(animeListUri);
             var restRequest = new RestRequest { Method = Method.Get };
