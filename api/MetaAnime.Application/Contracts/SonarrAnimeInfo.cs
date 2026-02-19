@@ -15,13 +15,13 @@ namespace MetaAnime.Application.Contracts
     {
         public SonarrAnimeInfo(Anime? anime, string sonarrBaseUrl) 
             : this(
-                anime?.Title ?? "NO_TITLE",
-                anime?.SourceId,
-                $"{sonarrBaseUrl}/series/{anime?.SourceId}",
-                false,
-                null,
-                null,
-                null
+                Title: anime?.Title ?? "NO_TITLE",
+                Id: anime?.SourceId,
+                Url: $"{sonarrBaseUrl}/series/{anime?.SourceId}",
+                Exists: false,
+                SeasonInfo: null,
+                CodecDistribution: null,
+                SizeOnDisk: null
             )
         { }
 
