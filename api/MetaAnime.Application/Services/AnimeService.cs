@@ -138,39 +138,28 @@ namespace MetaAnime.Application.Services
                 await animeRepository.BulkInsertAsync([.. plexResult.Value, .. malResult.Value, .. sonarrResult.Value]);
                 
                 // Refresh cache for all sources (Plex, MAL, Sonarr)
-                var deletePlexCacheTask = cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.Plex);
-                var deleteMalCacheTask = cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.MyAnimeList);
-                var deleteSonarrCacheTask = cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.Sonarr);
-                
-                await Task.WhenAll(deletePlexCacheTask, deleteMalCacheTask, deleteSonarrCacheTask);
-                
-                var deletePlexResult = await deletePlexCacheTask;
+                // Run cache operations sequentially to avoid exhausting database connection pool
+                var deletePlexResult = await cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.Plex);
                 if (deletePlexResult.IsFailure)
                     return Result.Failure<IEnumerable<Anime>>(deletePlexResult.Error);
                     
-                var deleteMalResult = await deleteMalCacheTask;
+                var deleteMalResult = await cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.MyAnimeList);
                 if (deleteMalResult.IsFailure)
                     return Result.Failure<IEnumerable<Anime>>(deleteMalResult.Error);
                     
-                var deleteSonarrResult = await deleteSonarrCacheTask;
+                var deleteSonarrResult = await cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.Sonarr);
                 if (deleteSonarrResult.IsFailure)
                     return Result.Failure<IEnumerable<Anime>>(deleteSonarrResult.Error);
                 
-                var addPlexCacheTask = cacheEntryService.BulkInsertAsync(plexResult.Value);
-                var addMalCacheTask = cacheEntryService.BulkInsertAsync(malResult.Value);
-                var addSonarrCacheTask = cacheEntryService.BulkInsertAsync(sonarrResult.Value);
-                
-                await Task.WhenAll(addPlexCacheTask, addMalCacheTask, addSonarrCacheTask);
-                
-                var addPlexResult = await addPlexCacheTask;
+                var addPlexResult = await cacheEntryService.BulkInsertAsync(plexResult.Value);
                 if (addPlexResult.IsFailure)
                     return Result.Failure<IEnumerable<Anime>>(addPlexResult.Error);
                     
-                var addMalResult = await addMalCacheTask;
+                var addMalResult = await cacheEntryService.BulkInsertAsync(malResult.Value);
                 if (addMalResult.IsFailure)
                     return Result.Failure<IEnumerable<Anime>>(addMalResult.Error);
                     
-                var addSonarrResult = await addSonarrCacheTask;
+                var addSonarrResult = await cacheEntryService.BulkInsertAsync(sonarrResult.Value);
                 if (addSonarrResult.IsFailure)
                     return Result.Failure<IEnumerable<Anime>>(addSonarrResult.Error);
                     
