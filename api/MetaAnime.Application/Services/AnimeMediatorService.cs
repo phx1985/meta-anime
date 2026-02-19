@@ -359,43 +359,53 @@ namespace MetaAnime.Application.Services
 
         private MalAnimeInfo CreateMalAnimeInfoFromCache(AnimeMapping mapping, Dictionary<string, string> malCache)
         {
-            if (malCache.TryGetValue(mapping.Anime!.SourceId, out var rawData))
+            if (mapping.Anime?.SourceId != null && malCache.TryGetValue(mapping.Anime.SourceId, out var rawData))
             {
-                try
+                if (!string.IsNullOrWhiteSpace(rawData))
                 {
-                    var malAnime = JsonSerializer.Deserialize<MalAnime>(rawData, JsonOptions);
-                    if (malAnime != null)
+                    try
                     {
-                        return new MalAnimeInfo(malAnime, myAnimeListHost);
+                        var malAnime = JsonSerializer.Deserialize<MalAnime>(rawData, JsonOptions);
+                        if (malAnime != null)
+                        {
+                            return new MalAnimeInfo(malAnime, myAnimeListHost);
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        // Log deserialization error but continue with fallback
+                        Console.WriteLine($"Failed to deserialize MAL anime {mapping.Anime.SourceId}: {ex.Message}");
                     }
                 }
-                catch (JsonException)
-                {
-                    // Fall through to return basic info
-                }
             }
+            // Fallback to basic anime info (will have null detailed fields)
             return new MalAnimeInfo(mapping.Anime, myAnimeListHost);
         }
 
         private SonarrAnimeInfo CreateSonarrAnimeInfoFromCache(AnimeMapping mapping, Dictionary<string, string> sonarrCache)
         {
-            if (sonarrCache.TryGetValue(mapping.Anime!.SourceId, out var rawData))
+            if (mapping.Anime?.SourceId != null && sonarrCache.TryGetValue(mapping.Anime.SourceId, out var rawData))
             {
-                try
+                if (!string.IsNullOrWhiteSpace(rawData))
                 {
-                    var sonarrSeries = JsonSerializer.Deserialize<SonarrSeries>(rawData, JsonOptions);
-                    if (sonarrSeries != null)
+                    try
                     {
-                        // Note: Codec distribution is not included in list view for performance.
-                        // It requires an additional API call per series and is only populated in GetById.
-                        return new SonarrAnimeInfo(sonarrSeries, sonarrHost, new Dictionary<string, int>());
+                        var sonarrSeries = JsonSerializer.Deserialize<SonarrSeries>(rawData, JsonOptions);
+                        if (sonarrSeries != null)
+                        {
+                            // Note: Codec distribution is not included in list view for performance.
+                            // It requires an additional API call per series and is only populated in GetById.
+                            return new SonarrAnimeInfo(sonarrSeries, sonarrHost, null);
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        // Log deserialization error but continue with fallback
+                        Console.WriteLine($"Failed to deserialize Sonarr anime {mapping.Anime.SourceId}: {ex.Message}");
                     }
                 }
-                catch (JsonException)
-                {
-                    // Fall through to return basic info
-                }
             }
+            // Fallback to basic anime info (will have null detailed fields)
             return new SonarrAnimeInfo(mapping.Anime, sonarrHost);
         }
 

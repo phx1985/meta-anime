@@ -22,10 +22,16 @@ namespace MetaAnime.Infrastructure.MyAnimeList.Models
 
         public CacheEntry ToCacheEntry()
         {
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            };
+            
             return new CacheEntry
             {
                 SourceId = Id.ToString(),
-                RawData = JsonSerializer.Serialize(this),
+                RawData = JsonSerializer.Serialize(this, options),
                 AnimeSource = AnimeSource.MyAnimeList
             };
         }

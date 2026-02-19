@@ -72,10 +72,16 @@ namespace MetaAnime.Infrastructure.Plex.Models
 
         public CacheEntry ToCacheEntry()
         {
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            };
+            
             return new CacheEntry
             {
                 SourceId = Id,
-                RawData = JsonSerializer.Serialize(this),
+                RawData = JsonSerializer.Serialize(this, options),
                 AnimeSource = AnimeSource.Plex
             };
         }
