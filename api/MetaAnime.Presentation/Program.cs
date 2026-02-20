@@ -58,6 +58,7 @@ app.UseHangfireDashboard("/hangfire", new DashboardOptions
 
 // Schedule background jobs
 AnimeSyncJob.Schedule();
+MalTokenRefreshJob.Schedule();
 
 app.UseHttpsRedirection();
 app.UseResponseCaching();

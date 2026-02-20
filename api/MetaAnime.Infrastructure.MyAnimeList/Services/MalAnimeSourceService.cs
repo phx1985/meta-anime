@@ -8,12 +8,11 @@ using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.MyAnimeList.Services;
 
-public class MalAnimeSourceService(IOptions<MalSettings> options) : IMalAnimeSourceService<MalAnime>
+public class MalAnimeSourceService(IOptions<MalSettings> options, IMalTokenService malTokenService) : IMalAnimeSourceService<MalAnime>
 {
     #region Fields
     private readonly string baseUrl = options.Value.ApiBaseUrl;
-    private readonly string token = options.Value.ApiToken;
-    private readonly bool isConfigured = !string.IsNullOrWhiteSpace(options.Value.ApiBaseUrl) && !string.IsNullOrWhiteSpace(options.Value.ApiToken);
+    private readonly bool isConfigured = !string.IsNullOrWhiteSpace(options.Value.ApiBaseUrl);
     private const string REQUEST_FIELDS = "synopsis";
     private const string EXTENDED_REQUEST_FIELDS = REQUEST_FIELDS + "alternative_titles{en,synonyms}, " +
                                                                     "genres{id,name}, " +
@@ -41,12 +40,18 @@ public class MalAnimeSourceService(IOptions<MalSettings> options) : IMalAnimeSou
             return Result.Success<IList<MalAnime>>(malApiAnimes);
         }
 
+        var token = await malTokenService.GetAccessTokenAsync();
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return Result.Success<IList<MalAnime>>(malApiAnimes);
+        }
+
         Paging paging = null!;
 
         // Fetch json result
         do
         {
-            var response = await FetchAnimeListAsync(paging);
+            var response = await FetchAnimeListAsync(paging, token);
             var json = response.Content!;
 
             if (response.IsSuccessful)
@@ -74,7 +79,13 @@ public class MalAnimeSourceService(IOptions<MalSettings> options) : IMalAnimeSou
             return Result.Failure<MalAnime>(new("MAL.NotConfigured", "MyAnimeList is not configured"));
         }
 
-        var response = await FetchAnimeByIdAsync(id);
+        var token = await malTokenService.GetAccessTokenAsync();
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return Result.Failure<MalAnime>(new("MAL.NoToken", "MyAnimeList access token is not available"));
+        }
+
+        var response = await FetchAnimeByIdAsync(id, token);
         var json = response.Content!;
         if (response.IsSuccessful)
         {
@@ -91,7 +102,7 @@ public class MalAnimeSourceService(IOptions<MalSettings> options) : IMalAnimeSou
     #endregion
 
     #region Private
-    private async Task<RestResponse> FetchAnimeListAsync(Paging paging)
+    private async Task<RestResponse> FetchAnimeListAsync(Paging paging, string token)
     {
         var pagingUri = paging?.HasNextPage == true ? paging.Next : null;
         // Use EXTENDED_REQUEST_FIELDS to get my_list_status data (needed for viewState, addedDate, progression, rating)
@@ -104,7 +115,7 @@ public class MalAnimeSourceService(IOptions<MalSettings> options) : IMalAnimeSou
         return await ExecuteRequestAsync(restClient, restRequest);
     }
 
-    private async Task<RestResponse> FetchAnimeByIdAsync(string id)
+    private async Task<RestResponse> FetchAnimeByIdAsync(string id, string token)
     {
         var animeUri = new Uri($"{baseUrl}/anime/{id}?fields={EXTENDED_REQUEST_FIELDS}");
         var restClient = new RestClient(animeUri);

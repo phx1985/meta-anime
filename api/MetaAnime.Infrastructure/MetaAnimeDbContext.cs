@@ -10,6 +10,7 @@ public class MetaAnimeDbContext(DbContextOptions<MetaAnimeDbContext> options) : 
     public DbSet<KometaAnimeMapping> KometaAnimeMapping { get; set; }
     public DbSet<CacheEntry> CacheEntries { get; set; }
     public DbSet<AnimeMapping> AnimeMappings { get; set; }
+    public DbSet<PropertyBag> PropertyBag { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -18,6 +19,7 @@ public class MetaAnimeDbContext(DbContextOptions<MetaAnimeDbContext> options) : 
         modelBuilder.ApplyConfiguration(new ExternalAnimeIdentifierConfiguration());
         modelBuilder.ApplyConfiguration(new CacheEntryConfiguration());
         modelBuilder.ApplyConfiguration(new AnimeMappingConfiguration());
+        modelBuilder.ApplyConfiguration(new PropertyBagConfiguration());
 
         base.OnModelCreating(modelBuilder);
     }
