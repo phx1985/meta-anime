@@ -19,6 +19,7 @@ namespace MetaAnime.Application.Services
     public class AnimeMediatorService(
         IAnimeMappingService animeMappingService,
         IPlexAnimeSourceService<PlexMedia> plexAnimeSource,
+        IPlexClientService plexClientService,
         IMalAnimeSourceService<MalAnime> malAnimeSource,
         ISonarrAnimeSourceService<SonarrSeries> sonarrAnimeSource,
         IAnimeMatchingService animeMatchingService,
@@ -359,6 +360,52 @@ namespace MetaAnime.Application.Services
             catch (Exception ex)
             {
                 return Result.Failure<IEnumerable<SonarrCodecSearchResponse>>(new("Error.GetSonarrSeriesByCodecAsync", ex.Message));
+            }
+        }
+
+        public async Task<Result<IEnumerable<PlexClientDeviceResponse>>> GetPlexDevicesAsync()
+        {
+            try
+            {
+                var devicesResult = await plexClientService.GetAvailableClientsAsync();
+                if (devicesResult.IsFailure)
+                    return Result.Failure<IEnumerable<PlexClientDeviceResponse>>(devicesResult.Error);
+
+                var responses = devicesResult.Value.Select(d => new PlexClientDeviceResponse(
+                    d.ClientIdentifier,
+                    d.Name,
+                    d.Product,
+                    d.Platform,
+                    d.Presence
+                ));
+
+                return Result.Success(responses);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<IEnumerable<PlexClientDeviceResponse>>(new("Error.GetPlexDevicesAsync", ex.Message));
+            }
+        }
+
+        public async Task<Result> NavigateToPlexSeriesAsync(string aniDbId, string clientIdentifier)
+        {
+            try
+            {
+                var mappingsResult = await animeMappingService.GetByAniDbIdsAsync([aniDbId]);
+                if (mappingsResult.IsFailure)
+                    return Result.Failure(mappingsResult.Error);
+
+                var plexMapping = mappingsResult.Value
+                    .FirstOrDefault(m => m.Anime?.AnimeSource == AnimeSource.Plex);
+
+                if (plexMapping?.Anime == null)
+                    return Result.Failure(new Error("Plex.SeriesNotFound", $"No Plex entry found for AniDb ID '{aniDbId}'."));
+
+                return await plexClientService.NavigateToSeriesAsync(plexMapping.Anime.SourceId, clientIdentifier);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure(new Error("Error.NavigateToPlexSeriesAsync", ex.Message));
             }
         }
 

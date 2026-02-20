@@ -77,11 +77,15 @@ namespace MetaAnime.Utilities.Extensions
                     .Build();
             });
 
+            // Register HttpClient for Plex client remote control
+            services.AddHttpClient();
+
             // Register custom services
             services.AddScoped<IKometaAnimeJsonService<KometaRaw>, KometaAnimeJsonService>();
             services.AddScoped<IKometaAnimeMappingService, KometaAnimeMappingService>();
             services.AddScoped<ISonarrAnimeSourceService<SonarrSeries>, SonarrAnimeSourceService>();
             services.AddScoped<IPlexAnimeSourceService<PlexMedia>, PlexAnimeSourceService>();
+            services.AddScoped<IPlexClientService, PlexClientService>();
             services.AddScoped<IMalAnimeSourceService<MalAnime>, MalAnimeSourceService>();
             services.AddScoped<ICacheEntryService, CacheEntryService>();
             services.AddScoped<IAnimeService, AnimeService>();
