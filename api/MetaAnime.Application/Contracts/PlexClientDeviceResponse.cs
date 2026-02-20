@@ -5,7 +5,6 @@ namespace MetaAnime.Application.Contracts
         string Name,
         string Product,
         string Platform,
-        string Provides,
-        bool Presence
+        string DeviceClass
     );
 }
