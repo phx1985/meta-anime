@@ -6,7 +6,6 @@ namespace MetaAnime.Application.BackgroundJobs;
 
 public class AnimeSyncJob(
     IAnimeMatchingService animeMatchingService,
-    IAnimeService animeService,
     ILogger<AnimeSyncJob> logger)
 {
     /// <summary>
@@ -18,16 +17,7 @@ public class AnimeSyncJob(
         
         try
         {
-            // Refresh data from external sources (Plex, Sonarr, MAL)
-            var refreshResult = await animeService.RefreshData();
-            
-            if (refreshResult.IsFailure)
-            {
-                logger.LogError("Failed to refresh anime data: {ErrorMessage}", refreshResult.Error.Message);
-                return;
-            }
-
-            // Match anime across sources using Kometa mapping
+            // MatchAsync internally refreshes data from Plex, MAL and Sonarr before matching
             var matchResult = await animeMatchingService.MatchAsync();
             
             if (matchResult.IsSuccess)
