@@ -282,6 +282,60 @@ namespace MetaAnime.Application.Services
             };
         }
 
+        public async Task<Result<AnimeStatisticsResponse>> GetStatisticsAsync()
+        {
+            try
+            {
+                var allAnimesResult = await animeService.GetAllAsync();
+                if (allAnimesResult.IsFailure)
+                    return Result.Failure<AnimeStatisticsResponse>(allAnimesResult.Error);
+
+                var animes = allAnimesResult.Value;
+
+                var totalCount = 0;
+                var plexCount = 0;
+                var malCount = 0;
+                var sonarrCount = 0;
+                foreach (var anime in animes)
+                {
+                    totalCount++;
+                    switch (anime.AnimeSource)
+                    {
+                        case AnimeSource.Plex: plexCount++; break;
+                        case AnimeSource.MyAnimeList: malCount++; break;
+                        case AnimeSource.Sonarr: sonarrCount++; break;
+                    }
+                }
+
+                var allAniDbIdsResult = await animeMappingService.GetAllFilteredAniDbIdsAsync();
+                if (allAniDbIdsResult.IsFailure)
+                    return Result.Failure<AnimeStatisticsResponse>(allAniDbIdsResult.Error);
+
+                var mappingsResult = await animeMappingService.GetByAniDbIdsAsync(allAniDbIdsResult.Value);
+                if (mappingsResult.IsFailure)
+                    return Result.Failure<AnimeStatisticsResponse>(mappingsResult.Error);
+
+                var matchedCount = mappingsResult.Value
+                    .GroupBy(m => m.AniDbId)
+                    .Count(g => g.Where(m => m.Anime != null)
+                                 .Select(m => m.Anime!.AnimeSource)
+                                 .Distinct()
+                                 .Count() > 1);
+
+                return Result.Success(new AnimeStatisticsResponse(
+                    totalCount,
+                    plexCount,
+                    malCount,
+                    sonarrCount,
+                    matchedCount
+                ));
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<AnimeStatisticsResponse>(new("Error.GetStatisticsAsync", ex.Message));
+            }
+        }
+
         public async Task<Result> SyncAllAsync(bool forceRefreshKometaMapping = false)
         {
             try

@@ -7,6 +7,7 @@ namespace MetaAnime.Application.Interfaces
 {
     public interface IAnimeMediatorService
     {
+        Task<Result<AnimeStatisticsResponse>> GetStatisticsAsync();
         Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAllAsync(int page = 1, int pageSize = 100, AnimeFilters? filters = null, bool enriched = false);
         Task<Result<AnimeDetailsResponse?>> GetByIdAsync(string aniDbId);
         Task<Result<IEnumerable<SonarrCodecSearchResponse>>> GetSonarrSeriesByCodecAsync(string codec);

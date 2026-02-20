@@ -14,6 +14,20 @@ namespace MetaAnime.Controllers
     public class AnimeController(IMediator mediator)
         : ControllerBase
     {
+        [HttpGet("statistics")]
+        [Authorize]
+        public async Task<ActionResult<AnimeStatisticsResponse>> GetStatistics()
+        {
+            var result = await mediator.Send(new GetAnimeStatisticsQuery());
+
+            if (result.IsFailure)
+            {
+                return StatusCode(500, result.Error.Message);
+            }
+
+            return Ok(result.Value);
+        }
+
         [HttpGet]
         [Authorize]
         public async Task<ActionResult<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAll(
