@@ -15,6 +15,21 @@ namespace MetaAnime.Infrastructure.Plex.Services
 
         private readonly string plexHost = options.Value.Host;
         private readonly string plexToken = options.Value.Token;
+        private readonly string plexClientIdentifier = string.IsNullOrEmpty(options.Value.ClientIdentifier)
+            ? PlexSettings.DefaultClientIdentifier
+            : options.Value.ClientIdentifier;
+
+        private void AddPlexHeaders(HttpRequestMessage request, string? targetClientIdentifier = null)
+        {
+            request.Headers.Add("X-Plex-Token", plexToken);
+            request.Headers.Add("X-Plex-Client-Identifier", plexClientIdentifier);
+            request.Headers.Add("X-Plex-Product", "Meta-Anime");
+            request.Headers.Add("X-Plex-Version", "1.0");
+            request.Headers.Add("X-Plex-Platform", "Web");
+            request.Headers.Add("X-Plex-Device-Name", "Meta-Anime");
+            if (!string.IsNullOrEmpty(targetClientIdentifier))
+                request.Headers.Add("X-Plex-Target-Client-Identifier", targetClientIdentifier);
+        }
 
         public async Task<Result<IList<PlexClientDevice>>> GetAvailableClientsAsync()
         {
@@ -22,7 +37,7 @@ namespace MetaAnime.Infrastructure.Plex.Services
             {
                 var httpClient = httpClientFactory.CreateClient(HttpClientName);
                 var request = new HttpRequestMessage(HttpMethod.Get, PlexTvDevicesUrl);
-                request.Headers.Add("X-Plex-Token", plexToken);
+                AddPlexHeaders(request);
 
                 var response = await httpClient.SendAsync(request);
                 response.EnsureSuccessStatusCode();
@@ -67,15 +82,15 @@ namespace MetaAnime.Infrastructure.Plex.Services
 
                 var httpClient = httpClientFactory.CreateClient(HttpClientName);
                 var key = Uri.EscapeDataString($"/library/metadata/{plexSeriesId}");
-                var targetClient = Uri.EscapeDataString(clientIdentifier);
                 var url = $"{plexHost}/player/navigation/navigateTo" +
                           $"?commandID={NavigateCommandId}" +
-                          $"&X-Plex-Target-Client-Identifier={targetClient}" +
                           $"&key={key}" +
-                          $"&machineIdentifier={Uri.EscapeDataString(machineIdentifier)}" +
-                          $"&X-Plex-Token={plexToken}";
+                          $"&machineIdentifier={Uri.EscapeDataString(machineIdentifier)}";
 
-                var response = await httpClient.GetAsync(url);
+                var navRequest = new HttpRequestMessage(HttpMethod.Get, url);
+                AddPlexHeaders(navRequest, targetClientIdentifier: clientIdentifier);
+
+                var response = await httpClient.SendAsync(navRequest);
                 if (!response.IsSuccessStatusCode)
                 {
                     return Result.Failure(new Error("Plex.Navigate.Failed", $"Navigation command failed: HTTP {(int)response.StatusCode}"));
