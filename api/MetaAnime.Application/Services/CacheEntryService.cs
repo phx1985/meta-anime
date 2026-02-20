@@ -87,6 +87,19 @@ namespace MetaAnime.Application.Services
             }
         }
 
+        public async Task<Result<IEnumerable<CacheEntry>>> GetAllAsync()
+        {
+            try
+            {
+                var cacheEntries = await cacheEntryRepository.GetAllAsync();
+                return Result.Success(cacheEntries);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<IEnumerable<CacheEntry>>(new Error("Error.GetAllAsync", ex.Message));
+            }
+        }
+
         public async Task<Result<IEnumerable<CacheEntry>>> GetAsync(AnimeSource animeSource)
         {
             try

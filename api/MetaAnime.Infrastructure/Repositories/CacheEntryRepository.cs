@@ -20,6 +20,11 @@ namespace MetaAnime.Infrastructure.Repositories
             return await dbContext.CacheEntries.FirstOrDefaultAsync(ce => ce.SourceId == sourceId && ce.AnimeSource == animeSource);
         }
 
+        public async Task<IEnumerable<CacheEntry>> GetAllAsync()
+        {
+            return await dbContext.CacheEntries.ToListAsync();
+        }
+
         public async Task<IEnumerable<CacheEntry>> GetAsync(AnimeSource animeSource)
         {
             return await dbContext.CacheEntries.Where(ce => ce.AnimeSource == animeSource).ToListAsync();

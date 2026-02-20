@@ -53,24 +53,19 @@ namespace MetaAnime.Application.Services
                     return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(mappingsResult.Error);
                 }
 
-                // Load all cache entries for all sources in parallel
-                var plexCacheTask = cacheEntryService.GetAsync(AnimeSource.Plex);
-                var malCacheTask = cacheEntryService.GetAsync(AnimeSource.MyAnimeList);
-                var sonarrCacheTask = cacheEntryService.GetAsync(AnimeSource.Sonarr);
+                // Load all cache entries in a single query and split by source in memory
+                // (avoids concurrent DbContext operations that occur with Task.WhenAll)
+                var allCacheResult = await cacheEntryService.GetAllAsync();
+                var allCache = allCacheResult.IsSuccess
+                    ? allCacheResult.Value.ToLookup(c => c.AnimeSource)
+                    : Enumerable.Empty<CacheEntry>().ToLookup(c => c.AnimeSource);
 
-                await Task.WhenAll(plexCacheTask, malCacheTask, sonarrCacheTask);
-
-                var plexCache = plexCacheTask.Result.IsSuccess 
-                    ? plexCacheTask.Result.Value.ToDictionary(c => c.SourceId, c => c.RawData) 
-                    : new Dictionary<string, string>();
-                    
-                var malCache = malCacheTask.Result.IsSuccess 
-                    ? malCacheTask.Result.Value.ToDictionary(c => c.SourceId, c => c.RawData) 
-                    : new Dictionary<string, string>();
-                    
-                var sonarrCache = sonarrCacheTask.Result.IsSuccess 
-                    ? sonarrCacheTask.Result.Value.ToDictionary(c => c.SourceId, c => c.RawData) 
-                    : new Dictionary<string, string>();
+                var plexCache = allCache[AnimeSource.Plex]
+                    .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData);
+                var malCache = allCache[AnimeSource.MyAnimeList]
+                    .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData);
+                var sonarrCache = allCache[AnimeSource.Sonarr]
+                    .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData);
 
                 // Group all mappings
                 var allGroupedMappings = mappingsResult.Value
