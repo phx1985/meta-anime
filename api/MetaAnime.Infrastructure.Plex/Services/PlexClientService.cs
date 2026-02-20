@@ -69,11 +69,16 @@ namespace MetaAnime.Infrastructure.Plex.Services
         {
             try
             {
+                var machineIdentifier = await GetServerMachineIdentifierAsync();
+                if (machineIdentifier is null)
+                    return Result.Failure(new Error("Plex.Navigate.ServerNotFound", "Could not retrieve server machine identifier."));
+
                 var httpClient = httpClientFactory.CreateClient(HttpClientName);
                 var key = Uri.EscapeDataString($"/library/metadata/{plexSeriesId}");
                 var url = $"{plexHost}/system/players/{Uri.EscapeDataString(clientIdentifier)}/navigation/navigateTo" +
                           $"?commandID={NavigateCommandId}" +
-                          $"&key={key}";
+                          $"&key={key}" +
+                          $"&machineIdentifier={Uri.EscapeDataString(machineIdentifier)}";
 
                 var navRequest = new HttpRequestMessage(HttpMethod.Get, url);
                 AddPlexHeaders(navRequest);
@@ -89,6 +94,33 @@ namespace MetaAnime.Infrastructure.Plex.Services
             catch (Exception ex)
             {
                 return Result.Failure(new Error("Plex.Navigate.Failed", ex.Message));
+            }
+        }
+
+        private string? _cachedMachineIdentifier;
+
+        private async Task<string?> GetServerMachineIdentifierAsync()
+        {
+            if (_cachedMachineIdentifier is not null)
+                return _cachedMachineIdentifier;
+
+            try
+            {
+                var httpClient = httpClientFactory.CreateClient(HttpClientName);
+                var request = new HttpRequestMessage(HttpMethod.Get, $"{plexHost}/identity");
+                AddPlexHeaders(request);
+
+                var response = await httpClient.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                var xml = await response.Content.ReadAsStringAsync();
+                var doc = XDocument.Parse(xml);
+                _cachedMachineIdentifier = doc.Root?.Attribute("machineIdentifier")?.Value;
+                return _cachedMachineIdentifier;
+            }
+            catch
+            {
+                return null;
             }
         }
 
