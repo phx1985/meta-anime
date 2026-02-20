@@ -37,12 +37,13 @@ namespace MetaAnime.Application.Services
         };
 
         private readonly string myAnimeListHost = malOptions.Value.WebBaseUrl;
-        private readonly string sonarrHost = sonarrOptions.Value.Host;
-        // TODO : Add sonarr web url to the configuration
+        private readonly string sonarrSeriesBaseUrl = !string.IsNullOrWhiteSpace(sonarrOptions.Value.RemoteUrl)
+            ? sonarrOptions.Value.RemoteUrl
+            : sonarrOptions.Value.Host;
 
         private readonly string plexBaseUrl = $"{plexOptions.Value.Host}/desktop/#!/server/{plexAnimeSource.GetMachineIdentifierAsync().Result.Value}/details?key=%2Flibrary%2Fmetadata%2F";
-        // TODO : Add plex web url to the configuration
-        public async Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAllAsync(int page = 1, int pageSize = 100, AnimeFilters? filters = null)
+
+        public async Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAllAsync(int page = 1, int pageSize = 100, AnimeFilters? filters = null, bool enriched = false)
         {
             try
             {
@@ -82,20 +83,37 @@ namespace MetaAnime.Application.Services
 
                 foreach (var group in allGroupedMappings)
                 {
-                    var plexAnimes = group
-                        .Where(m => m.Anime?.AnimeSource == AnimeSource.Plex)
-                        .Select(m => CreatePlexAnimeInfoFromCache(m, plexCache))
-                        .ToList();
-                    
-                    var malAnimes = group
-                        .Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList)
-                        .Select(m => CreateMalAnimeInfoFromCache(m, malCache))
-                        .ToList();
-                    
-                    var sonarrAnimes = group
-                        .Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr)
-                        .Select(m => CreateSonarrAnimeInfoFromCache(m, sonarrCache))
-                        .ToList();
+                    List<PlexAnimeInfo> plexAnimes;
+                    List<MalAnimeInfo> malAnimes;
+                    List<SonarrAnimeInfo> sonarrAnimes;
+
+                    if (enriched)
+                    {
+                        var plexTask = FetchPlexAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex));
+                        var malTask = FetchMalAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList));
+                        var sonarrTask = FetchSonarrAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr));
+                        await Task.WhenAll(plexTask, malTask, sonarrTask);
+                        plexAnimes = plexTask.Result;
+                        malAnimes = malTask.Result;
+                        sonarrAnimes = sonarrTask.Result;
+                    }
+                    else
+                    {
+                        plexAnimes = group
+                            .Where(m => m.Anime?.AnimeSource == AnimeSource.Plex)
+                            .Select(m => CreatePlexAnimeInfoFromCache(m, plexCache))
+                            .ToList();
+
+                        malAnimes = group
+                            .Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList)
+                            .Select(m => CreateMalAnimeInfoFromCache(m, malCache))
+                            .ToList();
+
+                        sonarrAnimes = group
+                            .Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr)
+                            .Select(m => CreateSonarrAnimeInfoFromCache(m, sonarrCache))
+                            .ToList();
+                    }
 
                     animeDtos.Add(new AnimeDetailsResponse(
                         group.Key,
@@ -457,7 +475,7 @@ namespace MetaAnime.Application.Services
                             // Note: Codec distribution is not included in list view for performance.
                             // It requires an additional API call per series and is only populated in GetById.
                             // Size on disk is null in list view as it's populated in GetById with real-time data
-                            return new SonarrAnimeInfo(sonarrSeries, sonarrHost, new Dictionary<string, int>());
+                            return new SonarrAnimeInfo(sonarrSeries, sonarrSeriesBaseUrl, new Dictionary<string, int>());
                         }
                     }
                     catch (JsonException ex)
@@ -468,7 +486,7 @@ namespace MetaAnime.Application.Services
                 }
             }
             // Fallback to basic anime info (will have null detailed fields)
-            return new SonarrAnimeInfo(mapping.Anime, sonarrHost);
+            return new SonarrAnimeInfo(mapping.Anime, sonarrSeriesBaseUrl);
         }
 
         // Keep these methods for GetById which may need real-time data
@@ -521,11 +539,11 @@ namespace MetaAnime.Application.Services
                 if (sonarrResult.IsSuccess && sonarrResult.Value != null)
                 {
                     var codecDistribution = await sonarrAnimeSource.GetCodecDistributionAsync(mapping.Anime!.SourceId);
-                    return new SonarrAnimeInfo(sonarrResult.Value, sonarrHost, codecDistribution);
+                    return new SonarrAnimeInfo(sonarrResult.Value, sonarrSeriesBaseUrl, codecDistribution);
                 }
                 else
                 {
-                    return new SonarrAnimeInfo(mapping.Anime, sonarrHost);
+                    return new SonarrAnimeInfo(mapping.Anime, sonarrSeriesBaseUrl);
                 }
             });
 

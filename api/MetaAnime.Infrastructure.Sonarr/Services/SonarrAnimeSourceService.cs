@@ -46,7 +46,7 @@ namespace MetaAnime.Infrastructure.Sonarr.Services
                 return Result.Success(animes);
             }
             else if (response.StatusCode == HttpStatusCode.NotFound)
-                return Result.Failure<IList<SonarrSeries>>(new("TODO_NOTFOUND"));
+                return Result.Failure<IList<SonarrSeries>>(new("Sonarr.NotFound", "Sonarr series endpoint not found"));
             else
                 throw new HttpRequestException($"Failed to get Sonarr series: {response.StatusCode} - {response.Content}");
         }
@@ -71,7 +71,7 @@ namespace MetaAnime.Infrastructure.Sonarr.Services
                 return Result.Success(anime);
             }
             else if (response.StatusCode == HttpStatusCode.NotFound)
-                return Result.Failure<SonarrSeries>(new("TODO_NOTFOUND"));
+                return Result.Failure<SonarrSeries>(new("Sonarr.NotFound", $"Sonarr series with id '{id}' not found"));
             else
                 throw new HttpRequestException($"Failed to get Sonarr series: {response.StatusCode} - {response.Content}");
         }
