@@ -1,10 +1,9 @@
 ﻿using MetaAnime.Core.Interfaces.Shared.Results;
 
-namespace MetaAnime.Core.Interfaces.Services
+namespace MetaAnime.Core.Interfaces.Services;
+
+public interface IKometaAnimeJsonService<T>
+    where T : class
 {
-    public interface IKometaAnimeJsonService<T>
-        where T : class
-    {
-        Task<Result<IList<T>>> GetAllAsync();
-    }
+    Task<Result<IList<T>>> GetAllAsync();
 }

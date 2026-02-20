@@ -1,8 +1,7 @@
-namespace MetaAnime.Core.Settings
+namespace MetaAnime.Core.Settings;
+
+public record KometaSettings
 {
-    public record KometaSettings
-    {
-        public const string SectionName = "Kometa";
-        public required string AnimeIdsJsonUrl { get; init; }
-    }
+    public const string SectionName = "Kometa";
+    public required string AnimeIdsJsonUrl { get; init; }
 }

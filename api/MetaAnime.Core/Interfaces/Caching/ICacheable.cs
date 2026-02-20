@@ -1,13 +1,12 @@
 ﻿using MetaAnime.Domain.Entities;
 
-namespace MetaAnime.Core.Interfaces.Caching
+namespace MetaAnime.Core.Interfaces.Caching;
+
+public interface ICacheable
 {
-    public interface ICacheable
-    {
-        /// <summary>
-        /// Returns an instance of CacheEntry
-        /// </summary>
-        /// <returns></returns>
-        public CacheEntry ToCacheEntry();
-    }
+    /// <summary>
+    /// Returns an instance of CacheEntry
+    /// </summary>
+    /// <returns></returns>
+    public CacheEntry ToCacheEntry();
 }

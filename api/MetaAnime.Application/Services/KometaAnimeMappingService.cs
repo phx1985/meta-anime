@@ -4,86 +4,85 @@ using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
 using MetaAnime.Domain.Entities;
 
-namespace MetaAnime.Application.Services
+namespace MetaAnime.Application.Services;
+
+public class KometaAnimeMappingService(IKometaAnimeMappingRepository kometaAnimeMappingRepository) : IKometaAnimeMappingService
 {
-    public class KometaAnimeMappingService(IKometaAnimeMappingRepository kometaAnimeMappingRepository) : IKometaAnimeMappingService
+    public async Task<Result<IList<KometaAnimeMapping>>> GetAllAsync()
     {
-        public async Task<Result<IList<KometaAnimeMapping>>> GetAllAsync()
+        try
         {
-            try
-            {
-                var result = await kometaAnimeMappingRepository.GetAllAsync();
-                return Result.Success(result);
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure<IList<KometaAnimeMapping>>(new Error("Error.GetAllAsync", ex.Message));
-            }
+            var result = await kometaAnimeMappingRepository.GetAllAsync();
+            return Result.Success(result);
         }
-
-        public async Task<Result<IList<KometaAnimeMapping>>> GetByAniDbIdAsync(string aniDbId)
+        catch (Exception ex)
         {
-            try
-            {
-                var result = await kometaAnimeMappingRepository.GetByAniDbIdAsync(aniDbId);
-                return Result.Success(result);
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure<IList<KometaAnimeMapping>>(new Error("Error.GetByAniDbIdAsync", ex.Message));
-            }
+            return Result.Failure<IList<KometaAnimeMapping>>(new Error("Error.GetAllAsync", ex.Message));
         }
+    }
 
-        public async Task<Result<KometaAnimeMapping?>> GetByPlatformIdAsync(KometaAnimePlatform animePlatform, string platformId)
+    public async Task<Result<IList<KometaAnimeMapping>>> GetByAniDbIdAsync(string aniDbId)
+    {
+        try
         {
-            try
-            {
-                var result = await kometaAnimeMappingRepository.GetByPlatformIdAsync(animePlatform, platformId);
-                return Result.Success(result);
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure<KometaAnimeMapping?>(new Error("Error.GetByPlatformIdAsync", ex.Message));
-            }
+            var result = await kometaAnimeMappingRepository.GetByAniDbIdAsync(aniDbId);
+            return Result.Success(result);
         }
-
-        public async Task<Result> BulkDeleteAllAsync()
+        catch (Exception ex)
         {
-            try
-            {
-                await kometaAnimeMappingRepository.BulkDeleteAllAsync();
-                return Result.Success();
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure(new Error("Error.BulkDeleteAllAsync", ex.Message));
-            }
+            return Result.Failure<IList<KometaAnimeMapping>>(new Error("Error.GetByAniDbIdAsync", ex.Message));
         }
+    }
 
-        public async Task<Result> BulkInsertAsync(IEnumerable<KometaAnimeMapping> kometaAnimeMappings)
+    public async Task<Result<KometaAnimeMapping?>> GetByPlatformIdAsync(KometaAnimePlatform animePlatform, string platformId)
+    {
+        try
         {
-            try
-            {
-                await kometaAnimeMappingRepository.BulkInsertAsync(kometaAnimeMappings);
-                return Result.Success();
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure(new Error("Error.BulkInsertAsync", ex.Message));
-            }
+            var result = await kometaAnimeMappingRepository.GetByPlatformIdAsync(animePlatform, platformId);
+            return Result.Success(result);
         }
-
-        public async Task<Result<bool>> AnyAsync()
+        catch (Exception ex)
         {
-            try
-            {
-                var result = await kometaAnimeMappingRepository.AnyAsync();
-                return Result.Success(result);
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure<bool>(new Error("Error.AnyAsync", ex.Message));
-            }
+            return Result.Failure<KometaAnimeMapping?>(new Error("Error.GetByPlatformIdAsync", ex.Message));
+        }
+    }
+
+    public async Task<Result> BulkDeleteAllAsync()
+    {
+        try
+        {
+            await kometaAnimeMappingRepository.BulkDeleteAllAsync();
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(new Error("Error.BulkDeleteAllAsync", ex.Message));
+        }
+    }
+
+    public async Task<Result> BulkInsertAsync(IEnumerable<KometaAnimeMapping> kometaAnimeMappings)
+    {
+        try
+        {
+            await kometaAnimeMappingRepository.BulkInsertAsync(kometaAnimeMappings);
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(new Error("Error.BulkInsertAsync", ex.Message));
+        }
+    }
+
+    public async Task<Result<bool>> AnyAsync()
+    {
+        try
+        {
+            var result = await kometaAnimeMappingRepository.AnyAsync();
+            return Result.Success(result);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<bool>(new Error("Error.AnyAsync", ex.Message));
         }
     }
 }

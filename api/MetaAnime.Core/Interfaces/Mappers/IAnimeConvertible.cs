@@ -1,13 +1,12 @@
 ﻿using MetaAnime.Domain.Entities;
 
-namespace MetaAnime.Core.Interfaces.Mappers
+namespace MetaAnime.Core.Interfaces.Mappers;
+
+public interface IAnimeConvertible
 {
-    public interface IAnimeConvertible
-    {
-        /// <summary>
-        /// Returns an instance of Anime
-        /// </summary>
-        /// <returns></returns>
-        public Anime ToAnime();
-    }
+    /// <summary>
+    /// Returns an instance of Anime
+    /// </summary>
+    /// <returns></returns>
+    public Anime ToAnime();
 }

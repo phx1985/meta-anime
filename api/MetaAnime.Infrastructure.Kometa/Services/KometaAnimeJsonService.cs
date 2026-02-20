@@ -5,32 +5,31 @@ using MetaAnime.Infrastructure.Kometa.Models;
 using Microsoft.Extensions.Options;
 using System.Text.Json;
 
-namespace MetaAnime.Infrastructure.Kometa.Services
+namespace MetaAnime.Infrastructure.Kometa.Services;
+
+public class KometaAnimeJsonService(IOptions<KometaSettings> options) : IKometaAnimeJsonService<KometaRaw>
 {
-    public class KometaAnimeJsonService(IOptions<KometaSettings> options) : IKometaAnimeJsonService<KometaRaw>
+    #region Fields
+    private readonly string jsonUrl = options.Value.AnimeIdsJsonUrl;
+    #endregion
+
+    public async Task<Result<IList<KometaRaw>>> GetAllAsync()
     {
-        #region Fields
-        private readonly string jsonUrl = options.Value.AnimeIdsJsonUrl;
-        #endregion
+        using var client = new HttpClient();
+        using var response = await client.GetAsync(jsonUrl);
 
-        public async Task<Result<IList<KometaRaw>>> GetAllAsync()
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync();
+        var results = JsonSerializer.Deserialize<Dictionary<string, KometaRaw>>(json)!;
+
+        // Initialize the AniDbId property of each KometaRawMapping object
+        // with the key of the dictionary
+        foreach (var (key, value) in results)
         {
-            using var client = new HttpClient();
-            using var response = await client.GetAsync(jsonUrl);
-
-            response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsStringAsync();
-            var results = JsonSerializer.Deserialize<Dictionary<string, KometaRaw>>(json)!;
-
-            // Initialize the AniDbId property of each KometaRawMapping object
-            // with the key of the dictionary
-            foreach (var (key, value) in results)
-            {
-                value.AniDbId = key;
-            }
-
-            return Result.Success<IList<KometaRaw>>([.. results.Values]);
+            value.AniDbId = key;
         }
+
+        return Result.Success<IList<KometaRaw>>([.. results.Values]);
     }
 }

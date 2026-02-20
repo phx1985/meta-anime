@@ -4,80 +4,79 @@ using MetaAnime.Core.Interfaces.Mappers;
 using MetaAnime.Domain.Entities;
 using System.Text.Json;
 
-namespace MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models
+namespace MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
+
+public partial class SonarrSeries : IAnimeConvertible, ICacheable
 {
-    public partial class SonarrSeries : IAnimeConvertible, ICacheable
+    public Anime ToAnime()
     {
-        public Anime ToAnime()
+        return new Anime
         {
-            return new Anime
+            SourceId = Id.ToString(),
+            Title = Title,
+            Description = Overview ?? string.Empty,
+            AnimeSource = AnimeSource.Sonarr,
+            ExternalAnimeIdentifiers = GetExternalIdentifiers()
+        };
+    }
+
+    private List<ExternalAnimeIdentifier> GetExternalIdentifiers()
+    {
+        var results = new List<ExternalAnimeIdentifier>();
+
+        if (TvdbId != 0)
+        {
+            results.Add(new ExternalAnimeIdentifier
             {
-                SourceId = Id.ToString(),
-                Title = Title,
-                Description = Overview ?? string.Empty,
-                AnimeSource = AnimeSource.Sonarr,
-                ExternalAnimeIdentifiers = GetExternalIdentifiers()
-            };
+                MediaPlatform = MediaPlatform.Tvdb,
+                MediaPlatformId = TvdbId.ToString()
+            });
         }
 
-        private List<ExternalAnimeIdentifier> GetExternalIdentifiers()
+        if (TvMazeId != 0)
         {
-            var results = new List<ExternalAnimeIdentifier>();
-
-            if (TvdbId != 0)
+            results.Add(new ExternalAnimeIdentifier
             {
-                results.Add(new ExternalAnimeIdentifier
-                {
-                    MediaPlatform = MediaPlatform.Tvdb,
-                    MediaPlatformId = TvdbId.ToString()
-                });
-            }
-
-            if (TvMazeId != 0)
-            {
-                results.Add(new ExternalAnimeIdentifier
-                {
-                    MediaPlatform = MediaPlatform.TvMaze,
-                    MediaPlatformId = TvMazeId.ToString()
-                });
-            }
-
-            if (TvRageId != 0)
-            {
-                results.Add(new ExternalAnimeIdentifier
-                {
-                    MediaPlatform = MediaPlatform.TvRage,
-                    MediaPlatformId = TvRageId.ToString()
-                });
-            }
-
-            if (!string.IsNullOrEmpty(ImdbId))
-            {
-                results.Add(new ExternalAnimeIdentifier
-                {
-                    MediaPlatform = MediaPlatform.Imdb,
-                    MediaPlatformId = ImdbId
-                });
-            }
-
-            return results;
+                MediaPlatform = MediaPlatform.TvMaze,
+                MediaPlatformId = TvMazeId.ToString()
+            });
         }
 
-        public CacheEntry ToCacheEntry()
+        if (TvRageId != 0)
         {
-            var options = new JsonSerializerOptions
+            results.Add(new ExternalAnimeIdentifier
             {
-                PropertyNameCaseInsensitive = true
-                // Don't use DefaultIgnoreCondition to ensure all fields are serialized, even if null
-                // This prevents missing data when deserializing from cache
-            };
-            
-            return new CacheEntry
-            {
-                SourceId = Id.ToString(),
-                RawData = JsonSerializer.Serialize(this, options),
-                AnimeSource = AnimeSource.Sonarr
-            };
+                MediaPlatform = MediaPlatform.TvRage,
+                MediaPlatformId = TvRageId.ToString()
+            });
         }
+
+        if (!string.IsNullOrEmpty(ImdbId))
+        {
+            results.Add(new ExternalAnimeIdentifier
+            {
+                MediaPlatform = MediaPlatform.Imdb,
+                MediaPlatformId = ImdbId
+            });
+        }
+
+        return results;
+    }
+
+    public CacheEntry ToCacheEntry()
+    {
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+            // Don't use DefaultIgnoreCondition to ensure all fields are serialized, even if null
+            // This prevents missing data when deserializing from cache
+        };
+
+        return new CacheEntry
+        {
+            SourceId = Id.ToString(),
+            RawData = JsonSerializer.Serialize(this, options),
+            AnimeSource = AnimeSource.Sonarr
+        };
     }
 }

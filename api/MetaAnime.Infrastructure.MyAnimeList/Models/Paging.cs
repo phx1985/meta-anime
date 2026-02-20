@@ -1,11 +1,10 @@
 ﻿#nullable disable
 using System.Text.Json.Serialization;
 
-namespace MetaAnime.Infrastructure.MyAnimeList.Models
+namespace MetaAnime.Infrastructure.MyAnimeList.Models;
+
+public partial class Paging
 {
-    public partial class Paging
-    {
-        [JsonPropertyName("next")]
-        public string Next { get; set; }
-    }
+    [JsonPropertyName("next")]
+    public string Next { get; set; }
 }
