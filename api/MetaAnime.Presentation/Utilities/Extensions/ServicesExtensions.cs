@@ -73,6 +73,7 @@ namespace MetaAnime.Utilities.Extensions
                 return PlexAPI.Builder()
                     .WithToken(settings.Token)
                     .WithServerUrl(settings.Host)
+                    .WithClientIdentifier(settings.ClientIdentifier)
                     .WithClient(new SpeakeasyHttpClient2())
                     .Build();
             });

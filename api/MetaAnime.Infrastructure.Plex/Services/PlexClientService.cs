@@ -15,6 +15,7 @@ namespace MetaAnime.Infrastructure.Plex.Services
 
         private readonly string plexHost = options.Value.Host;
         private readonly string plexToken = options.Value.Token;
+        private readonly string plexClientIdentifier = options.Value.ClientIdentifier;
 
         public async Task<Result<IList<PlexClientDevice>>> GetAvailableClientsAsync()
         {
@@ -22,6 +23,7 @@ namespace MetaAnime.Infrastructure.Plex.Services
             {
                 var req = new GetServerResourcesRequest
                 {
+                    ClientIdentifier = plexClientIdentifier,
                     IncludeHttps = IncludeHttps.True,
                     IncludeRelay = IncludeRelay.True
                 };
