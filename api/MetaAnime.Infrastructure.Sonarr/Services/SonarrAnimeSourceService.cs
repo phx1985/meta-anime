@@ -86,31 +86,90 @@ namespace MetaAnime.Infrastructure.Sonarr.Services
                 return codecDistribution;
             }
 
-            var restClient = new RestClient(sonarrHost);
-            var restRequest = new RestRequest($"api/v3/episodefile");
-            restRequest.AddParameter("apikey", apiKey);
-            restRequest.AddParameter("seriesId", seriesId);
-            var response = await restClient.ExecuteAsync(restRequest);
-
-            if (response.IsSuccessful && !string.IsNullOrEmpty(response.Content))
+            var episodeFiles = await FetchEpisodeFilesAsync(seriesId);
+            if (episodeFiles != null)
             {
-                var episodeFiles = JsonSerializer.Deserialize<SonarrEpisodeFile[]>(response.Content, jsonOptions);
-                
-                if (episodeFiles != null)
+                foreach (var file in episodeFiles)
                 {
-                    foreach (var file in episodeFiles)
-                    {
-                        var codec = file?.MediaInfo?.VideoCodec ?? "Unknown";
-                        codecDistribution[codec] = codecDistribution.GetValueOrDefault(codec, 0) + 1;
-                    }
+                    var codec = file?.MediaInfo?.VideoCodec ?? "Unknown";
+                    codecDistribution[codec] = codecDistribution.GetValueOrDefault(codec, 0) + 1;
                 }
             }
 
             return codecDistribution;
         }
+
+        public async Task<Result<IList<SonarrSeriesCodecResult>>> GetSeriesByCodecAsync(string codec)
+        {
+            if (!isConfigured)
+                return Result.Success<IList<SonarrSeriesCodecResult>>(new List<SonarrSeriesCodecResult>());
+
+            var allSeriesResult = await GetAllAsync();
+            if (allSeriesResult.IsFailure)
+                return Result.Failure<IList<SonarrSeriesCodecResult>>(allSeriesResult.Error);
+
+            // Throttle concurrent requests to avoid overwhelming the Sonarr API
+            using var semaphore = new SemaphoreSlim(10, 10);
+
+            var tasks = allSeriesResult.Value.Select(async series =>
+            {
+                await semaphore.WaitAsync();
+                try
+                {
+                    var files = await FetchEpisodeFilesAsync(series.Id.ToString());
+                    if (files == null || files.Length == 0)
+                        return null;
+
+                    var codecDist = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                    long totalSize = 0;
+                    foreach (var file in files)
+                    {
+                        var c = file?.MediaInfo?.VideoCodec ?? "Unknown";
+                        codecDist[c] = codecDist.GetValueOrDefault(c, 0) + 1;
+                        totalSize += file?.Size ?? 0;
+                    }
+
+                    // Only include series that have at least one file matching the requested codec
+                    bool hasRequestedCodec = codecDist.Keys.Any(k =>
+                        k.Contains(codec, StringComparison.OrdinalIgnoreCase));
+
+                    if (!hasRequestedCodec)
+                        return null;
+
+                    return new SonarrSeriesCodecResult(series.Id, series.Title, codecDist, totalSize);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
+
+            var results = await Task.WhenAll(tasks);
+            IList<SonarrSeriesCodecResult> matched = results
+                .Where(r => r != null)
+                .Select(r => r!)
+                .OrderBy(r => r.Title)
+                .ToList();
+
+            return Result.Success(matched);
+        }
         #endregion
 
         #region Private Methods
+        private async Task<SonarrEpisodeFile[]?> FetchEpisodeFilesAsync(string seriesId)
+        {
+            var restClient = new RestClient(sonarrHost);
+            var restRequest = new RestRequest("api/v3/episodefile");
+            restRequest.AddParameter("apikey", apiKey);
+            restRequest.AddParameter("seriesId", seriesId);
+            var response = await restClient.ExecuteAsync(restRequest);
+
+            if (response.IsSuccessful && !string.IsNullOrEmpty(response.Content))
+                return JsonSerializer.Deserialize<SonarrEpisodeFile[]>(response.Content, jsonOptions);
+
+            return null;
+        }
+
         private async Task<List<SonarrTag>?> GetSonarrTagsAsync()
         {
             var restClient = new RestClient(sonarrHost);

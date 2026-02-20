@@ -338,6 +338,30 @@ namespace MetaAnime.Application.Services
             }
         }
 
+        public async Task<Result<IEnumerable<SonarrCodecSearchResponse>>> GetSonarrSeriesByCodecAsync(string codec)
+        {
+            try
+            {
+                var searchResult = await sonarrAnimeSource.GetSeriesByCodecAsync(codec);
+                if (searchResult.IsFailure)
+                    return Result.Failure<IEnumerable<SonarrCodecSearchResponse>>(searchResult.Error);
+
+                var responses = searchResult.Value.Select(r => new SonarrCodecSearchResponse(
+                    r.Id,
+                    r.Title,
+                    $"{sonarrSeriesBaseUrl}/series/{r.Id}",
+                    r.CodecDistribution,
+                    r.TotalSizeOnDisk
+                ));
+
+                return Result.Success(responses);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<IEnumerable<SonarrCodecSearchResponse>>(new("Error.GetSonarrSeriesByCodecAsync", ex.Message));
+            }
+        }
+
         public async Task<Result<AnimeResponse>> CreateAsync(CreateAnimeRequest request)
         {
             try
