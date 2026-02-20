@@ -376,6 +376,7 @@ namespace MetaAnime.Application.Services
                     d.Name,
                     d.Product,
                     d.Platform,
+                    d.Provides,
                     d.Presence
                 ));
 

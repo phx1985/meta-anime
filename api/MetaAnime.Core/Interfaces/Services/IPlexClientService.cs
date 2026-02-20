@@ -14,6 +14,7 @@ namespace MetaAnime.Core.Interfaces.Services
         public required string Name { get; set; }
         public required string Product { get; set; }
         public required string Platform { get; set; }
+        public required string Provides { get; set; }
         public bool Presence { get; set; }
     }
 }

@@ -31,13 +31,14 @@ namespace MetaAnime.Infrastructure.Plex.Services
                 var response = await plexAPI.Plex.GetServerResourcesAsync(req, serverUrl: PlexTvApiUrl);
 
                 var devices = response.PlexDevices?
-                    .Where(d => d.Provides.Contains("player") && d.Presence)
+                    .Where(d => !d.Provides.Contains("server"))
                     .Select(d => new PlexClientDevice
                     {
                         ClientIdentifier = d.ClientIdentifier,
                         Name = d.Name,
                         Product = d.Product,
                         Platform = d.Platform ?? string.Empty,
+                        Provides = d.Provides,
                         Presence = d.Presence
                     })
                     .ToList() ?? [];

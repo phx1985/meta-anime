@@ -57,17 +57,8 @@ public class PlexClientServiceTests
         Connections = []
     };
 
-    [Fact]
-    public async Task GetAvailableClientsAsync_WhenPlayersPresent_ReturnsOnlyOnlinePlayerDevices()
+    private void SetupPlexSdk(List<PlexDevice> devices)
     {
-        // Arrange
-        var plexDevices = new List<PlexDevice>
-        {
-            MakePlexDevice("client-1", "Living Room TV", "player", true),
-            MakePlexDevice("server-1", "My Plex Server", "server", true),
-            MakePlexDevice("client-offline", "Offline TV", "player", false)
-        };
-
         var mockPlexSdk = new Mock<IPlex>();
         mockPlexSdk
             .Setup(x => x.GetServerResourcesAsync(It.IsAny<GetServerResourcesRequest>(), "https://plex.tv/api/v2"))
@@ -76,10 +67,39 @@ public class PlexClientServiceTests
                 ContentType = "application/json",
                 StatusCode = 200,
                 RawResponse = new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.OK),
-                PlexDevices = plexDevices
+                PlexDevices = devices
             });
-
         _mockPlexApi.Setup(x => x.Plex).Returns(mockPlexSdk.Object);
+    }
+
+    [Fact]
+    public async Task GetAvailableClientsAsync_ExcludesServerDevices()
+    {
+        // Arrange — mix of player, client, offline, and server devices
+        SetupPlexSdk([
+            MakePlexDevice("player-1", "Living Room TV", "player", true),
+            MakePlexDevice("client-1", "Chromecast", "client", false),          // offline Chromecast
+            MakePlexDevice("combo-1", "Plex for Windows", "client,player,pubsub-player,controller", true),
+            MakePlexDevice("server-1", "My Plex Server", "server", true)         // server — must be excluded
+        ]);
+
+        // Act
+        var result = await _sut.GetAvailableClientsAsync();
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().HaveCount(3);
+        result.Value.Should().NotContain(d => d.ClientIdentifier == "server-1");
+    }
+
+    [Fact]
+    public async Task GetAvailableClientsAsync_IncludesOfflineClientDevices()
+    {
+        // Arrange — offline Chromecast (Presence=false) must appear in results
+        SetupPlexSdk([
+            MakePlexDevice("chromecast-1", "Living Room Chromecast", "player", false),
+            MakePlexDevice("server-1", "My Plex Server", "server", true)
+        ]);
 
         // Act
         var result = await _sut.GetAvailableClientsAsync();
@@ -87,31 +107,35 @@ public class PlexClientServiceTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1);
-        result.Value.First().ClientIdentifier.Should().Be("client-1");
-        result.Value.First().Name.Should().Be("Living Room TV");
+        result.Value.First().ClientIdentifier.Should().Be("chromecast-1");
+        result.Value.First().Presence.Should().BeFalse();
     }
 
     [Fact]
-    public async Task GetAvailableClientsAsync_WhenNoPlayersOnline_ReturnsEmptyList()
+    public async Task GetAvailableClientsAsync_IncludesDevicesWithClientProvides()
+    {
+        // Arrange — some devices register with "client" rather than "player" in Provides
+        SetupPlexSdk([
+            MakePlexDevice("gtv-1", "Google TV Streamer", "client", false)
+        ]);
+
+        // Act
+        var result = await _sut.GetAvailableClientsAsync();
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().HaveCount(1);
+        result.Value.First().ClientIdentifier.Should().Be("gtv-1");
+        result.Value.First().Provides.Should().Be("client");
+    }
+
+    [Fact]
+    public async Task GetAvailableClientsAsync_WhenOnlyServersPresent_ReturnsEmptyList()
     {
         // Arrange
-        var plexDevices = new List<PlexDevice>
-        {
+        SetupPlexSdk([
             MakePlexDevice("server-1", "My Plex Server", "server", true)
-        };
-
-        var mockPlexSdk = new Mock<IPlex>();
-        mockPlexSdk
-            .Setup(x => x.GetServerResourcesAsync(It.IsAny<GetServerResourcesRequest>(), "https://plex.tv/api/v2"))
-            .ReturnsAsync(new GetServerResourcesResponse
-            {
-                ContentType = "application/json",
-                StatusCode = 200,
-                RawResponse = new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.OK),
-                PlexDevices = plexDevices
-            });
-
-        _mockPlexApi.Setup(x => x.Plex).Returns(mockPlexSdk.Object);
+        ]);
 
         // Act
         var result = await _sut.GetAvailableClientsAsync();
@@ -129,7 +153,6 @@ public class PlexClientServiceTests
         mockPlexSdk
             .Setup(x => x.GetServerResourcesAsync(It.IsAny<GetServerResourcesRequest>(), "https://plex.tv/api/v2"))
             .ThrowsAsync(new InvalidOperationException("Plex API unreachable"));
-
         _mockPlexApi.Setup(x => x.Plex).Returns(mockPlexSdk.Object);
 
         // Act
