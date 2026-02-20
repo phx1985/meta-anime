@@ -9,6 +9,9 @@ namespace MetaAnime.Infrastructure.Plex.Services
 {
     public class PlexClientService(IPlexAPI plexAPI, IOptions<PlexSettings> options, IHttpClientFactory httpClientFactory) : IPlexClientService
     {
+        private const int NavigateCommandId = 1;
+        public const string HttpClientName = "PlexNavigate";
+
         private readonly string plexHost = options.Value.Host;
         private readonly string plexToken = options.Value.Token;
 
@@ -56,11 +59,11 @@ namespace MetaAnime.Infrastructure.Plex.Services
                     return Result.Failure(new Error("Plex.Navigate.ServerNotFound", "Could not retrieve server machine identifier."));
                 }
 
-                var httpClient = httpClientFactory.CreateClient();
+                var httpClient = httpClientFactory.CreateClient(HttpClientName);
                 var key = Uri.EscapeDataString($"/library/metadata/{plexSeriesId}");
                 var targetClient = Uri.EscapeDataString(clientIdentifier);
                 var url = $"{plexHost}/player/navigation/navigateTo" +
-                          $"?commandID=1" +
+                          $"?commandID={NavigateCommandId}" +
                           $"&X-Plex-Target-Client-Identifier={targetClient}" +
                           $"&key={key}" +
                           $"&machineIdentifier={Uri.EscapeDataString(machineIdentifier)}" +

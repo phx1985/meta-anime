@@ -78,7 +78,10 @@ namespace MetaAnime.Utilities.Extensions
             });
 
             // Register HttpClient for Plex client remote control
-            services.AddHttpClient();
+            services.AddHttpClient(MetaAnime.Infrastructure.Plex.Services.PlexClientService.HttpClientName, client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(10);
+            });
 
             // Register custom services
             services.AddScoped<IKometaAnimeJsonService<KometaRaw>, KometaAnimeJsonService>();

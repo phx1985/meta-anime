@@ -39,7 +39,7 @@ namespace MetaAnime.Controllers
         /// </summary>
         /// <param name="aniDbId">The AniDB ID of the anime series</param>
         /// <param name="clientIdentifier">The client identifier of the target Plex device (from GET /plex/devices)</param>
-        [HttpPost("{aniDbId}/play/{clientIdentifier}")]
+        [HttpPost("{aniDbId}/navigate/{clientIdentifier}")]
         [Authorize]
         public async Task<IActionResult> NavigateToSeries(string aniDbId, string clientIdentifier)
         {
