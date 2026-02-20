@@ -5,6 +5,7 @@ namespace MetaAnime.Application.Contracts
         string Name,
         string Product,
         string Platform,
-        string DeviceClass
+        string Provides,
+        DateTime? LastSeen
     );
 }

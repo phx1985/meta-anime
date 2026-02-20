@@ -13,7 +13,6 @@ public class PlexClientServiceTests
 {
     private readonly Mock<IPlexAPI> _mockPlexApi;
     private readonly IOptions<PlexSettings> _plexOptions;
-    private readonly PlexClientService _sut;
 
     public PlexClientServiceTests()
     {
@@ -24,66 +23,93 @@ public class PlexClientServiceTests
             Host = "http://localhost:32400",
             AnimeSections = "1"
         });
-        _sut = new PlexClientService(_mockPlexApi.Object, _plexOptions, CreateHttpClientFactory());
     }
 
-    private static IHttpClientFactory CreateHttpClientFactory(string json = "")
+    private PlexClientService CreateSut(string xmlBody, HttpStatusCode statusCode = HttpStatusCode.OK)
     {
-        var handler = new StubHttpHandler(json);
-        var client = new HttpClient(handler) { BaseAddress = new Uri("http://localhost:32400") };
+        var handler = new StubHttpHandler(xmlBody, statusCode);
+        var client = new HttpClient(handler);
         var factory = new Mock<IHttpClientFactory>();
         factory.Setup(f => f.CreateClient(PlexClientService.HttpClientName)).Returns(client);
-        return factory.Object;
+        return new PlexClientService(_mockPlexApi.Object, _plexOptions, factory.Object);
     }
 
-    [Fact]
-    public async Task GetAvailableClientsAsync_WithMultipleClients_ReturnsAllClients()
-    {
-        // Arrange
-        var json = """
-        {
-          "MediaContainer": {
-            "size": 2,
-            "Server": [
-              {
-                "machineIdentifier": "chromecast-1",
-                "name": "Living Room Chromecast",
-                "product": "Plex for Chromecast",
-                "platform": "Cast",
-                "deviceClass": "stb"
-              },
-              {
-                "machineIdentifier": "windows-1",
-                "name": "My PC",
-                "product": "Plex for Windows",
-                "platform": "Windows",
-                "deviceClass": "desktop"
-              }
-            ]
-          }
-        }
+    private const string TwoClientsXml = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <MediaContainer size="3">
+          <Device clientIdentifier="chromecast-1" name="Living Room Chromecast"
+                  product="Plex for Chromecast" platform="Cast" provides="player" lastSeenAt="1708394400" />
+          <Device clientIdentifier="windows-1" name="My PC"
+                  product="Plex for Windows" platform="Windows"
+                  provides="client,player,pubsub-player,controller" lastSeenAt="1708394400" />
+          <Device clientIdentifier="server-1" name="My Plex Server"
+                  product="Plex Media Server" platform="Linux" provides="server" lastSeenAt="1708394400" />
+        </MediaContainer>
         """;
-        var sut = new PlexClientService(_mockPlexApi.Object, _plexOptions, CreateHttpClientFactory(json));
 
+    [Fact]
+    public async Task GetAvailableClientsAsync_ExcludesServerDevices()
+    {
         // Act
-        var result = await sut.GetAvailableClientsAsync();
+        var result = await CreateSut(TwoClientsXml).GetAvailableClientsAsync();
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(2);
-        result.Value.Should().Contain(d => d.ClientIdentifier == "chromecast-1" && d.DeviceClass == "stb");
-        result.Value.Should().Contain(d => d.ClientIdentifier == "windows-1" && d.DeviceClass == "desktop");
+        result.Value.Should().NotContain(d => d.ClientIdentifier == "server-1");
     }
 
     [Fact]
-    public async Task GetAvailableClientsAsync_WhenNoClients_ReturnsEmptyList()
+    public async Task GetAvailableClientsAsync_IncludesOfflineDevices()
     {
-        // Arrange
-        var json = """{"MediaContainer":{"size":0}}""";
-        var sut = new PlexClientService(_mockPlexApi.Object, _plexOptions, CreateHttpClientFactory(json));
+        // Arrange — device has an old lastSeenAt (was offline for days)
+        var xml = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <MediaContainer size="1">
+              <Device clientIdentifier="gtv-1" name="Google TV Streamer"
+                      product="Plex for Android TV" platform="Android" provides="player" lastSeenAt="1700000000" />
+            </MediaContainer>
+            """;
 
         // Act
-        var result = await sut.GetAvailableClientsAsync();
+        var result = await CreateSut(xml).GetAvailableClientsAsync();
+
+        // Assert — offline device (last seen days ago) must still appear
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().HaveCount(1);
+        result.Value.First().ClientIdentifier.Should().Be("gtv-1");
+    }
+
+    [Fact]
+    public async Task GetAvailableClientsAsync_MapsAllFieldsCorrectly()
+    {
+        // Act
+        var result = await CreateSut(TwoClientsXml).GetAvailableClientsAsync();
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var chromecast = result.Value.Single(d => d.ClientIdentifier == "chromecast-1");
+        chromecast.Name.Should().Be("Living Room Chromecast");
+        chromecast.Product.Should().Be("Plex for Chromecast");
+        chromecast.Platform.Should().Be("Cast");
+        chromecast.Provides.Should().Be("player");
+        chromecast.LastSeen.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GetAvailableClientsAsync_WhenOnlyServers_ReturnsEmptyList()
+    {
+        // Arrange
+        var xml = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <MediaContainer size="1">
+              <Device clientIdentifier="server-1" name="My Plex Server"
+                      product="Plex Media Server" platform="Linux" provides="server" lastSeenAt="1708394400" />
+            </MediaContainer>
+            """;
+
+        // Act
+        var result = await CreateSut(xml).GetAvailableClientsAsync();
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -91,62 +117,20 @@ public class PlexClientServiceTests
     }
 
     [Fact]
-    public async Task GetAvailableClientsAsync_WhenPmsReturnsError_ReturnsFailure()
+    public async Task GetAvailableClientsAsync_WhenPlexTvReturnsError_ReturnsFailure()
     {
-        // Arrange
-        var handler = new StubHttpHandler("", HttpStatusCode.Unauthorized);
-        var client = new HttpClient(handler);
-        var factory = new Mock<IHttpClientFactory>();
-        factory.Setup(f => f.CreateClient(PlexClientService.HttpClientName)).Returns(client);
-
-        var sut = new PlexClientService(_mockPlexApi.Object, _plexOptions, factory.Object);
-
         // Act
-        var result = await sut.GetAvailableClientsAsync();
+        var result = await CreateSut("", HttpStatusCode.Unauthorized).GetAvailableClientsAsync();
 
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("Plex.GetDevices.Failed");
     }
 
-    [Fact]
-    public async Task GetAvailableClientsAsync_MapsAllFields_Correctly()
-    {
-        // Arrange
-        var json = """
-        {
-          "MediaContainer": {
-            "Server": [
-              {
-                "machineIdentifier": "gtv-1",
-                "name": "Google TV Streamer",
-                "product": "Plex for Android TV",
-                "platform": "Android",
-                "deviceClass": "stb"
-              }
-            ]
-          }
-        }
-        """;
-        var sut = new PlexClientService(_mockPlexApi.Object, _plexOptions, CreateHttpClientFactory(json));
-
-        // Act
-        var result = await sut.GetAvailableClientsAsync();
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        var device = result.Value.Single();
-        device.ClientIdentifier.Should().Be("gtv-1");
-        device.Name.Should().Be("Google TV Streamer");
-        device.Product.Should().Be("Plex for Android TV");
-        device.Platform.Should().Be("Android");
-        device.DeviceClass.Should().Be("stb");
-    }
-
     /// <summary>Minimal stub HTTP handler for unit testing.</summary>
-    /// <param name="json">The JSON body to return in the response.</param>
+    /// <param name="body">The response body to return.</param>
     /// <param name="statusCode">The HTTP status code to return (default: 200 OK).</param>
-    private sealed class StubHttpHandler(string json, HttpStatusCode statusCode = HttpStatusCode.OK)
+    private sealed class StubHttpHandler(string body, HttpStatusCode statusCode = HttpStatusCode.OK)
         : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(
@@ -154,7 +138,7 @@ public class PlexClientServiceTests
         {
             var response = new HttpResponseMessage(statusCode)
             {
-                Content = new StringContent(json, Encoding.UTF8, "application/json")
+                Content = new StringContent(body, Encoding.UTF8, "application/xml")
             };
             return Task.FromResult(response);
         }

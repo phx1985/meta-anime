@@ -376,7 +376,8 @@ namespace MetaAnime.Application.Services
                     d.Name,
                     d.Product,
                     d.Platform,
-                    d.DeviceClass
+                    d.Provides,
+                    d.LastSeen
                 ));
 
                 return Result.Success(responses);

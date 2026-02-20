@@ -14,6 +14,7 @@ namespace MetaAnime.Core.Interfaces.Services
         public required string Name { get; set; }
         public required string Product { get; set; }
         public required string Platform { get; set; }
-        public required string DeviceClass { get; set; }
+        public required string Provides { get; set; }
+        public DateTime? LastSeen { get; set; }
     }
 }

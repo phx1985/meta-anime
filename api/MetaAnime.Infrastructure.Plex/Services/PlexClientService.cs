@@ -3,47 +3,46 @@ using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
 using MetaAnime.Core.Settings;
 using Microsoft.Extensions.Options;
-using System.Net.Http.Headers;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using System.Xml.Linq;
 
 namespace MetaAnime.Infrastructure.Plex.Services
 {
     public class PlexClientService(IPlexAPI plexAPI, IOptions<PlexSettings> options, IHttpClientFactory httpClientFactory) : IPlexClientService
     {
+        private const string PlexTvDevicesUrl = "https://plex.tv/devices.xml";
         private const int NavigateCommandId = 1;
         public const string HttpClientName = "PlexNavigate";
 
         private readonly string plexHost = options.Value.Host;
         private readonly string plexToken = options.Value.Token;
 
-        private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
-
         public async Task<Result<IList<PlexClientDevice>>> GetAvailableClientsAsync()
         {
             try
             {
                 var httpClient = httpClientFactory.CreateClient(HttpClientName);
-                var request = new HttpRequestMessage(HttpMethod.Get,
-                    $"{plexHost}/clients");
-                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                var request = new HttpRequestMessage(HttpMethod.Get, PlexTvDevicesUrl);
                 request.Headers.Add("X-Plex-Token", plexToken);
 
                 var response = await httpClient.SendAsync(request);
                 response.EnsureSuccessStatusCode();
 
-                var json = await response.Content.ReadAsStringAsync();
-                var parsed = JsonSerializer.Deserialize<PmsClientsResponse>(json, JsonOpts);
+                var xml = await response.Content.ReadAsStringAsync();
+                var doc = XDocument.Parse(xml);
 
-                var devices = parsed?.MediaContainer?.Server?
-                    .Select(c => new PlexClientDevice
+                var devices = doc.Root?
+                    .Elements("Device")
+                    .Select(d => new PlexClientDevice
                     {
-                        ClientIdentifier = c.MachineIdentifier,
-                        Name = c.Name,
-                        Product = c.Product ?? string.Empty,
-                        Platform = c.Platform ?? string.Empty,
-                        DeviceClass = c.DeviceClass ?? string.Empty
+                        ClientIdentifier = d.Attribute("clientIdentifier")?.Value ?? string.Empty,
+                        Name = d.Attribute("name")?.Value ?? string.Empty,
+                        Product = d.Attribute("product")?.Value ?? string.Empty,
+                        Platform = d.Attribute("platform")?.Value ?? string.Empty,
+                        Provides = d.Attribute("provides")?.Value ?? string.Empty,
+                        LastSeen = ParseDateTime(d.Attribute("lastSeenAt")?.Value)
                     })
+                    .Where(d => !string.IsNullOrEmpty(d.ClientIdentifier)
+                             && !d.Provides.Equals("server", StringComparison.OrdinalIgnoreCase))
                     .ToList() ?? [];
 
                 return Result.Success<IList<PlexClientDevice>>(devices);
@@ -90,37 +89,11 @@ namespace MetaAnime.Infrastructure.Plex.Services
             }
         }
 
-        #region Private response models
-
-        private sealed class PmsClientsResponse
+        private static DateTime? ParseDateTime(string? unixSeconds)
         {
-            public PmsClientsMediaContainer? MediaContainer { get; set; }
+            if (string.IsNullOrEmpty(unixSeconds) || !long.TryParse(unixSeconds, out var ts))
+                return null;
+            return DateTimeOffset.FromUnixTimeSeconds(ts).UtcDateTime;
         }
-
-        private sealed class PmsClientsMediaContainer
-        {
-            // Plex returns connected clients as "Server" elements (a known PMS API quirk)
-            public List<PmsClientEntry>? Server { get; set; }
-        }
-
-        private sealed class PmsClientEntry
-        {
-            [JsonPropertyName("machineIdentifier")]
-            public string MachineIdentifier { get; set; } = string.Empty;
-
-            [JsonPropertyName("name")]
-            public string Name { get; set; } = string.Empty;
-
-            [JsonPropertyName("product")]
-            public string? Product { get; set; }
-
-            [JsonPropertyName("platform")]
-            public string? Platform { get; set; }
-
-            [JsonPropertyName("deviceClass")]
-            public string? DeviceClass { get; set; }
-        }
-
-        #endregion
     }
 }
