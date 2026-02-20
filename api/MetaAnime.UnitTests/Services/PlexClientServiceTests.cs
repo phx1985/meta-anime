@@ -70,7 +70,7 @@ public class PlexClientServiceTests
 
         var mockPlexSdk = new Mock<IPlex>();
         mockPlexSdk
-            .Setup(x => x.GetServerResourcesAsync(It.IsAny<GetServerResourcesRequest>(), It.IsAny<string?>()))
+            .Setup(x => x.GetServerResourcesAsync(It.IsAny<GetServerResourcesRequest>(), "https://plex.tv/api/v2"))
             .ReturnsAsync(new GetServerResourcesResponse
             {
                 ContentType = "application/json",
@@ -102,7 +102,7 @@ public class PlexClientServiceTests
 
         var mockPlexSdk = new Mock<IPlex>();
         mockPlexSdk
-            .Setup(x => x.GetServerResourcesAsync(It.IsAny<GetServerResourcesRequest>(), It.IsAny<string?>()))
+            .Setup(x => x.GetServerResourcesAsync(It.IsAny<GetServerResourcesRequest>(), "https://plex.tv/api/v2"))
             .ReturnsAsync(new GetServerResourcesResponse
             {
                 ContentType = "application/json",
@@ -127,7 +127,7 @@ public class PlexClientServiceTests
         // Arrange
         var mockPlexSdk = new Mock<IPlex>();
         mockPlexSdk
-            .Setup(x => x.GetServerResourcesAsync(It.IsAny<GetServerResourcesRequest>(), It.IsAny<string?>()))
+            .Setup(x => x.GetServerResourcesAsync(It.IsAny<GetServerResourcesRequest>(), "https://plex.tv/api/v2"))
             .ThrowsAsync(new InvalidOperationException("Plex API unreachable"));
 
         _mockPlexApi.Setup(x => x.Plex).Returns(mockPlexSdk.Object);

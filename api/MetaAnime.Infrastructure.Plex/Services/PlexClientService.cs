@@ -9,6 +9,7 @@ namespace MetaAnime.Infrastructure.Plex.Services
 {
     public class PlexClientService(IPlexAPI plexAPI, IOptions<PlexSettings> options, IHttpClientFactory httpClientFactory) : IPlexClientService
     {
+        private const string PlexTvApiUrl = "https://plex.tv/api/v2";
         private const int NavigateCommandId = 1;
         public const string HttpClientName = "PlexNavigate";
 
@@ -25,7 +26,7 @@ namespace MetaAnime.Infrastructure.Plex.Services
                     IncludeRelay = IncludeRelay.True
                 };
 
-                var response = await plexAPI.Plex.GetServerResourcesAsync(req);
+                var response = await plexAPI.Plex.GetServerResourcesAsync(req, serverUrl: PlexTvApiUrl);
 
                 var devices = response.PlexDevices?
                     .Where(d => d.Provides.Contains("player") && d.Presence)
