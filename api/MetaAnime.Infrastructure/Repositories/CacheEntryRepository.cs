@@ -22,12 +22,12 @@ namespace MetaAnime.Infrastructure.Repositories
 
         public async Task<IEnumerable<CacheEntry>> GetAllAsync()
         {
-            return await dbContext.CacheEntries.ToListAsync();
+            return await dbContext.CacheEntries.AsNoTracking().ToListAsync();
         }
 
         public async Task<IEnumerable<CacheEntry>> GetAsync(AnimeSource animeSource)
         {
-            return await dbContext.CacheEntries.Where(ce => ce.AnimeSource == animeSource).ToListAsync();
+            return await dbContext.CacheEntries.AsNoTracking().Where(ce => ce.AnimeSource == animeSource).ToListAsync();
         }
 
         public async Task RemoveAsync(string sourceId, AnimeSource animeSource)

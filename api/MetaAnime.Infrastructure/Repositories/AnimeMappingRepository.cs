@@ -24,8 +24,8 @@ namespace MetaAnime.Infrastructure.Repositories
         public async Task<IEnumerable<AnimeMapping>> GetAllAsync(bool includeAnime = false)
         {
             return includeAnime
-                ? await dbContext.AnimeMappings.Include(am => am.Anime).ToListAsync()
-                : await dbContext.AnimeMappings.ToListAsync();
+                ? await dbContext.AnimeMappings.AsNoTracking().Include(am => am.Anime).ToListAsync()
+                : await dbContext.AnimeMappings.AsNoTracking().ToListAsync();
         }
     }
 }
