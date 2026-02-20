@@ -286,14 +286,9 @@ namespace MetaAnime.Application.Services
         {
             try
             {
-                var allAnimesTask = animeService.GetAllAsync();
-                var allAniDbIdsTask = animeMappingService.GetAllFilteredAniDbIdsAsync();
-                var malCacheTask = cacheEntryService.GetAsync(AnimeSource.MyAnimeList);
-                var plexCacheTask = cacheEntryService.GetAsync(AnimeSource.Plex);
-
-                await Task.WhenAll(allAnimesTask, allAniDbIdsTask, malCacheTask, plexCacheTask);
-
-                var allAnimesResult = await allAnimesTask;
+                // Execute all DB-backed queries sequentially — they share the same scoped DbContext,
+                // which does not support concurrent operations.
+                var allAnimesResult = await animeService.GetAllAsync();
                 if (allAnimesResult.IsFailure)
                     return Result.Failure<AnimeStatisticsResponse>(allAnimesResult.Error);
 
@@ -314,7 +309,7 @@ namespace MetaAnime.Application.Services
                     }
                 }
 
-                var allAniDbIdsResult = await allAniDbIdsTask;
+                var allAniDbIdsResult = await animeMappingService.GetAllFilteredAniDbIdsAsync();
                 if (allAniDbIdsResult.IsFailure)
                     return Result.Failure<AnimeStatisticsResponse>(allAniDbIdsResult.Error);
 
@@ -334,7 +329,7 @@ namespace MetaAnime.Application.Services
                 var malEpisodesWatched = 0;
                 var malTotalEpisodes = 0;
 
-                var malCacheResult = await malCacheTask;
+                var malCacheResult = await cacheEntryService.GetAsync(AnimeSource.MyAnimeList);
                 if (malCacheResult.IsSuccess)
                 {
                     foreach (var entry in malCacheResult.Value)
@@ -372,7 +367,7 @@ namespace MetaAnime.Application.Services
                 var plexEpisodesWatched = 0;
                 var plexTotalEpisodes = 0;
 
-                var plexCacheResult = await plexCacheTask;
+                var plexCacheResult = await cacheEntryService.GetAsync(AnimeSource.Plex);
                 if (plexCacheResult.IsSuccess)
                 {
                     foreach (var entry in plexCacheResult.Value)
