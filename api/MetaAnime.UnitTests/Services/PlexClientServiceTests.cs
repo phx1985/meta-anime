@@ -1,5 +1,4 @@
 using FluentAssertions;
-using LukeHagar.PlexAPI.SDK;
 using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.Plex.Services;
 using Microsoft.Extensions.Options;
@@ -11,12 +10,10 @@ namespace MetaAnime.UnitTests.Services;
 
 public class PlexClientServiceTests
 {
-    private readonly Mock<IPlexAPI> _mockPlexApi;
     private readonly IOptions<PlexSettings> _plexOptions;
 
     public PlexClientServiceTests()
     {
-        _mockPlexApi = new Mock<IPlexAPI>();
         _plexOptions = Options.Create(new PlexSettings
         {
             Token = "test-token",
@@ -31,7 +28,7 @@ public class PlexClientServiceTests
         var client = new HttpClient(handler);
         var factory = new Mock<IHttpClientFactory>();
         factory.Setup(f => f.CreateClient(PlexClientService.HttpClientName)).Returns(client);
-        return new PlexClientService(_mockPlexApi.Object, _plexOptions, factory.Object);
+        return new PlexClientService(_plexOptions, factory.Object);
     }
 
     private const string TwoClientsXml = """

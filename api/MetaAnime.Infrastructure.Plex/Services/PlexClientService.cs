@@ -1,4 +1,3 @@
-using LukeHagar.PlexAPI.SDK;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
 using MetaAnime.Core.Settings;
@@ -7,7 +6,7 @@ using System.Xml.Linq;
 
 namespace MetaAnime.Infrastructure.Plex.Services
 {
-    public class PlexClientService(IPlexAPI plexAPI, IOptions<PlexSettings> options, IHttpClientFactory httpClientFactory) : IPlexClientService
+    public class PlexClientService(IOptions<PlexSettings> options, IHttpClientFactory httpClientFactory) : IPlexClientService
     {
         private const string PlexTvDevicesUrl = "https://plex.tv/devices.xml";
         private const int NavigateCommandId = 1;
@@ -19,7 +18,7 @@ namespace MetaAnime.Infrastructure.Plex.Services
             ? PlexSettings.DefaultClientIdentifier
             : options.Value.ClientIdentifier;
 
-        private void AddPlexHeaders(HttpRequestMessage request, string? targetClientIdentifier = null)
+        private void AddPlexHeaders(HttpRequestMessage request)
         {
             request.Headers.Add("X-Plex-Token", plexToken);
             request.Headers.Add("X-Plex-Client-Identifier", plexClientIdentifier);
@@ -27,8 +26,6 @@ namespace MetaAnime.Infrastructure.Plex.Services
             request.Headers.Add("X-Plex-Version", "1.0");
             request.Headers.Add("X-Plex-Platform", "Web");
             request.Headers.Add("X-Plex-Device-Name", "Meta-Anime");
-            if (!string.IsNullOrEmpty(targetClientIdentifier))
-                request.Headers.Add("X-Plex-Target-Client-Identifier", targetClientIdentifier);
         }
 
         public async Task<Result<IList<PlexClientDevice>>> GetAvailableClientsAsync()
@@ -72,23 +69,14 @@ namespace MetaAnime.Infrastructure.Plex.Services
         {
             try
             {
-                var identityResponse = await plexAPI.General.GetIdentityAsync();
-                var machineIdentifier = identityResponse.Object?.MediaContainer?.MachineIdentifier;
-
-                if (string.IsNullOrEmpty(machineIdentifier))
-                {
-                    return Result.Failure(new Error("Plex.Navigate.ServerNotFound", "Could not retrieve server machine identifier."));
-                }
-
                 var httpClient = httpClientFactory.CreateClient(HttpClientName);
                 var key = Uri.EscapeDataString($"/library/metadata/{plexSeriesId}");
-                var url = $"{plexHost}/player/navigation/navigateTo" +
+                var url = $"{plexHost}/system/players/{Uri.EscapeDataString(clientIdentifier)}/navigation/navigateTo" +
                           $"?commandID={NavigateCommandId}" +
-                          $"&key={key}" +
-                          $"&machineIdentifier={Uri.EscapeDataString(machineIdentifier)}";
+                          $"&key={key}";
 
                 var navRequest = new HttpRequestMessage(HttpMethod.Get, url);
-                AddPlexHeaders(navRequest, targetClientIdentifier: clientIdentifier);
+                AddPlexHeaders(navRequest);
 
                 var response = await httpClient.SendAsync(navRequest);
                 if (!response.IsSuccessStatusCode)
