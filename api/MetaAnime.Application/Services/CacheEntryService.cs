@@ -5,138 +5,137 @@ using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
 using MetaAnime.Domain.Entities;
 
-namespace MetaAnime.Application.Services
+namespace MetaAnime.Application.Services;
+
+public class CacheEntryService(ICacheEntryRepository cacheEntryRepository) : ICacheEntryService
 {
-    public class CacheEntryService(ICacheEntryRepository cacheEntryRepository) : ICacheEntryService
+    public async Task<Result<CacheEntry>> AddAsync(Result<CacheEntry> cacheEntry)
     {
-        public async Task<Result<CacheEntry>> AddAsync(Result<CacheEntry> cacheEntry)
+        try
         {
-            try
-            {
-                await cacheEntryRepository.AddAsync(cacheEntry.Value);
-                return Result.Success(cacheEntry.Value);
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure<CacheEntry>(new Error("Error.AddAsync", ex.Message));
-            }
+            await cacheEntryRepository.AddAsync(cacheEntry.Value);
+            return Result.Success(cacheEntry.Value);
         }
-
-        public async Task<Result> BulkInsertAsync(IEnumerable<CacheEntry> cacheEntries)
+        catch (Exception ex)
         {
-            try
-            {
-                await cacheEntryRepository.BulkInsertAsync(cacheEntries);
-                return Result.Success();
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure(new Error("Error.BulkInsertAsync", ex.Message));
-            }
+            return Result.Failure<CacheEntry>(new Error("Error.AddAsync", ex.Message));
         }
+    }
 
-        public async Task<Result> BulkInsertAsync(IEnumerable<ICacheable> cacheables)
+    public async Task<Result> BulkInsertAsync(IEnumerable<CacheEntry> cacheEntries)
+    {
+        try
         {
-            try
-            {
-                await cacheEntryRepository.BulkInsertAsync(cacheables);
-                return Result.Success();
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure(new Error("Error.BulkInsertAsync", ex.Message));
-            }
+            await cacheEntryRepository.BulkInsertAsync(cacheEntries);
+            return Result.Success();
         }
-
-        public async Task<Result> BulkDeleteAllAsync()
+        catch (Exception ex)
         {
-            try
-            {
-                await cacheEntryRepository.BulkDeleteAllAsync();
-                return Result.Success();
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure(new Error("Error.BulkDeleteAllAsync", ex.Message));
-            }
+            return Result.Failure(new Error("Error.BulkInsertAsync", ex.Message));
         }
+    }
 
-        public async Task<Result> BulkDeleteBySourceAsync(AnimeSource animeSource)
+    public async Task<Result> BulkInsertAsync(IEnumerable<ICacheable> cacheables)
+    {
+        try
         {
-            try
-            {
-                await cacheEntryRepository.BulkDeleteBySourceAsync(animeSource);
-                return Result.Success();
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure(new Error("Error.BulkDeleteBySourceAsync", ex.Message));
-            }
+            await cacheEntryRepository.BulkInsertAsync(cacheables);
+            return Result.Success();
         }
-
-        public async Task<Result<CacheEntry?>> GetAsync(AnimeSource animeSource, string sourceId)
+        catch (Exception ex)
         {
-            try
-            {
-                var cacheEntry = await cacheEntryRepository.GetAsync(animeSource, sourceId);
-                return Result.Success(cacheEntry);
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure<CacheEntry?>(new Error("Error.GetAsync", ex.Message));
-            }
+            return Result.Failure(new Error("Error.BulkInsertAsync", ex.Message));
         }
+    }
 
-        public async Task<Result<IEnumerable<CacheEntry>>> GetAllAsync()
+    public async Task<Result> BulkDeleteAllAsync()
+    {
+        try
         {
-            try
-            {
-                var cacheEntries = await cacheEntryRepository.GetAllAsync();
-                return Result.Success(cacheEntries);
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure<IEnumerable<CacheEntry>>(new Error("Error.GetAllAsync", ex.Message));
-            }
+            await cacheEntryRepository.BulkDeleteAllAsync();
+            return Result.Success();
         }
-
-        public async Task<Result<IEnumerable<CacheEntry>>> GetAsync(AnimeSource animeSource)
+        catch (Exception ex)
         {
-            try
-            {
-                var cacheEntries = await cacheEntryRepository.GetAsync(animeSource);
-                return Result.Success(cacheEntries);
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure<IEnumerable<CacheEntry>>(new Error("Error.GetAsync", ex.Message));
-            }
+            return Result.Failure(new Error("Error.BulkDeleteAllAsync", ex.Message));
         }
+    }
 
-        public async Task<Result<IEnumerable<CacheEntry>>> GetBySourceIdsAsync(IEnumerable<string> sourceIds)
+    public async Task<Result> BulkDeleteBySourceAsync(AnimeSource animeSource)
+    {
+        try
         {
-            try
-            {
-                var cacheEntries = await cacheEntryRepository.GetBySourceIdsAsync(sourceIds);
-                return Result.Success(cacheEntries);
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure<IEnumerable<CacheEntry>>(new Error("Error.GetBySourceIdsAsync", ex.Message));
-            }
+            await cacheEntryRepository.BulkDeleteBySourceAsync(animeSource);
+            return Result.Success();
         }
-
-        public async Task<Result> RemoveAsync(string sourceId, AnimeSource animeSource)
+        catch (Exception ex)
         {
-            try
-            {
-                await cacheEntryRepository.RemoveAsync(sourceId, animeSource);
-                return Result.Success();
-            }
-            catch (Exception ex)
-            {
-                return Result.Failure(new Error("Error.RemoveAsync", ex.Message));
-            }
+            return Result.Failure(new Error("Error.BulkDeleteBySourceAsync", ex.Message));
+        }
+    }
+
+    public async Task<Result<CacheEntry?>> GetAsync(AnimeSource animeSource, string sourceId)
+    {
+        try
+        {
+            var cacheEntry = await cacheEntryRepository.GetAsync(animeSource, sourceId);
+            return Result.Success(cacheEntry);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<CacheEntry?>(new Error("Error.GetAsync", ex.Message));
+        }
+    }
+
+    public async Task<Result<IEnumerable<CacheEntry>>> GetAllAsync()
+    {
+        try
+        {
+            var cacheEntries = await cacheEntryRepository.GetAllAsync();
+            return Result.Success(cacheEntries);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<IEnumerable<CacheEntry>>(new Error("Error.GetAllAsync", ex.Message));
+        }
+    }
+
+    public async Task<Result<IEnumerable<CacheEntry>>> GetAsync(AnimeSource animeSource)
+    {
+        try
+        {
+            var cacheEntries = await cacheEntryRepository.GetAsync(animeSource);
+            return Result.Success(cacheEntries);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<IEnumerable<CacheEntry>>(new Error("Error.GetAsync", ex.Message));
+        }
+    }
+
+    public async Task<Result<IEnumerable<CacheEntry>>> GetBySourceIdsAsync(IEnumerable<string> sourceIds)
+    {
+        try
+        {
+            var cacheEntries = await cacheEntryRepository.GetBySourceIdsAsync(sourceIds);
+            return Result.Success(cacheEntries);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<IEnumerable<CacheEntry>>(new Error("Error.GetBySourceIdsAsync", ex.Message));
+        }
+    }
+
+    public async Task<Result> RemoveAsync(string sourceId, AnimeSource animeSource)
+    {
+        try
+        {
+            await cacheEntryRepository.RemoveAsync(sourceId, animeSource);
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(new Error("Error.RemoveAsync", ex.Message));
         }
     }
 }

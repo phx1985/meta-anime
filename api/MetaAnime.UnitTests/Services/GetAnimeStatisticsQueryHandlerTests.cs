@@ -24,7 +24,7 @@ public class GetAnimeStatisticsQueryHandlerTests
         // Arrange
         var genreStats = new Dictionary<string, int> { { "Action", 10 }, { "Drama", 5 } };
         var viewingProgress = new ViewingProgressStats(120, 300, 80, 200);
-        var expectedStats = new AnimeStatisticsResponse(500, 300, 400, 350, 280, genreStats, viewingProgress);
+        var expectedStats = new AnimeStatisticsResponse(300, 400, 350, 280, genreStats, viewingProgress);
         _mockAnimeMediatorService
             .Setup(x => x.GetStatisticsAsync())
             .ReturnsAsync(Result.Success(expectedStats));
@@ -34,7 +34,6 @@ public class GetAnimeStatisticsQueryHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.TotalAnime.Should().Be(500);
         result.Value.PlexAnime.Should().Be(300);
         result.Value.MyAnimeListAnime.Should().Be(400);
         result.Value.SonarrAnime.Should().Be(350);
