@@ -286,7 +286,14 @@ namespace MetaAnime.Application.Services
         {
             try
             {
-                var allAnimesResult = await animeService.GetAllAsync();
+                var allAnimesTask = animeService.GetAllAsync();
+                var allAniDbIdsTask = animeMappingService.GetAllFilteredAniDbIdsAsync();
+                var malCacheTask = cacheEntryService.GetAsync(AnimeSource.MyAnimeList);
+                var plexCacheTask = cacheEntryService.GetAsync(AnimeSource.Plex);
+
+                await Task.WhenAll(allAnimesTask, allAniDbIdsTask, malCacheTask, plexCacheTask);
+
+                var allAnimesResult = await allAnimesTask;
                 if (allAnimesResult.IsFailure)
                     return Result.Failure<AnimeStatisticsResponse>(allAnimesResult.Error);
 
@@ -307,7 +314,7 @@ namespace MetaAnime.Application.Services
                     }
                 }
 
-                var allAniDbIdsResult = await animeMappingService.GetAllFilteredAniDbIdsAsync();
+                var allAniDbIdsResult = await allAniDbIdsTask;
                 if (allAniDbIdsResult.IsFailure)
                     return Result.Failure<AnimeStatisticsResponse>(allAniDbIdsResult.Error);
 
@@ -322,12 +329,83 @@ namespace MetaAnime.Application.Services
                                  .Distinct()
                                  .Count() > 1);
 
+                // Genre stats and MAL viewing progress from cached MAL data
+                var genreStats = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                var malEpisodesWatched = 0;
+                var malTotalEpisodes = 0;
+
+                var malCacheResult = await malCacheTask;
+                if (malCacheResult.IsSuccess)
+                {
+                    foreach (var entry in malCacheResult.Value)
+                    {
+                        if (string.IsNullOrWhiteSpace(entry.RawData))
+                            continue;
+
+                        MalAnime? malAnime = null;
+                        try
+                        {
+                            malAnime = JsonSerializer.Deserialize<MalAnime>(entry.RawData, JsonOptions);
+                        }
+                        catch (JsonException ex)
+                        {
+                            logger.LogWarning(ex, "Failed to deserialize MAL cache entry {SourceId} for statistics", entry.SourceId);
+                        }
+
+                        if (malAnime == null)
+                            continue;
+
+                        foreach (var genre in malAnime.Genres ?? [])
+                        {
+                            if (string.IsNullOrWhiteSpace(genre.Name))
+                                continue;
+                            genreStats.TryGetValue(genre.Name, out var existing);
+                            genreStats[genre.Name] = existing + 1;
+                        }
+
+                        malEpisodesWatched += malAnime.MyListStatus?.NumEpisodesWatched ?? 0;
+                        malTotalEpisodes += malAnime.NumEpisodes;
+                    }
+                }
+
+                // Plex viewing progress from cached Plex data
+                var plexEpisodesWatched = 0;
+                var plexTotalEpisodes = 0;
+
+                var plexCacheResult = await plexCacheTask;
+                if (plexCacheResult.IsSuccess)
+                {
+                    foreach (var entry in plexCacheResult.Value)
+                    {
+                        if (string.IsNullOrWhiteSpace(entry.RawData))
+                            continue;
+
+                        PlexMedia? plexMedia = null;
+                        try
+                        {
+                            plexMedia = JsonSerializer.Deserialize<PlexMedia>(entry.RawData, JsonOptions);
+                        }
+                        catch (JsonException ex)
+                        {
+                            logger.LogWarning(ex, "Failed to deserialize Plex cache entry {SourceId} for statistics", entry.SourceId);
+                        }
+
+                        if (plexMedia == null)
+                            continue;
+
+                        plexEpisodesWatched += plexMedia.ViewedLeafCount;
+                        plexTotalEpisodes += plexMedia.LeafCount;
+                    }
+                }
+
                 return Result.Success(new AnimeStatisticsResponse(
                     totalCount,
                     plexCount,
                     malCount,
                     sonarrCount,
-                    matchedCount
+                    matchedCount,
+                    genreStats,
+                    new ViewingProgressStats(malEpisodesWatched, malTotalEpisodes, plexEpisodesWatched, plexTotalEpisodes)
                 ));
             }
             catch (Exception ex)
