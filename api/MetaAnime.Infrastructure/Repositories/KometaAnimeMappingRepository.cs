@@ -12,11 +12,12 @@ namespace MetaAnime.Infrastructure.Repositories
     {
         public async Task<IList<KometaAnimeMapping>> GetAllAsync()
         {
-            return await dbContext.KometaAnimeMapping.ToListAsync();
+            return await dbContext.KometaAnimeMapping.AsNoTracking().ToListAsync();
         }
         public async Task<IList<KometaAnimeMapping>> GetByAniDbIdAsync(string aniDbId)
         {
             return await dbContext.KometaAnimeMapping
+                .AsNoTracking()
                 .Where(kam => kam.AniDbId == aniDbId)
                 .ToListAsync();
         }
@@ -24,6 +25,7 @@ namespace MetaAnime.Infrastructure.Repositories
         {
             var platformName = animePlatform.GetPlatformName();
             return await dbContext.KometaAnimeMapping
+                                  .AsNoTracking()
                                   .Where(kam => kam.PlatformName == platformName && kam.PlatformId == platformId)
                                   .FirstOrDefaultAsync();
         }

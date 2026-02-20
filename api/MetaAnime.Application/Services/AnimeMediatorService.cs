@@ -37,68 +37,134 @@ namespace MetaAnime.Application.Services
         };
 
         private readonly string myAnimeListHost = malOptions.Value.WebBaseUrl;
-        private readonly string sonarrHost = sonarrOptions.Value.Host;
-        // TODO : Add sonarr web url to the configuration
+        private readonly string sonarrSeriesBaseUrl = !string.IsNullOrWhiteSpace(sonarrOptions.Value.RemoteUrl)
+            ? sonarrOptions.Value.RemoteUrl
+            : sonarrOptions.Value.Host;
 
         private readonly string plexBaseUrl = $"{plexOptions.Value.Host}/desktop/#!/server/{plexAnimeSource.GetMachineIdentifierAsync().Result.Value}/details?key=%2Flibrary%2Fmetadata%2F";
-        // TODO : Add plex web url to the configuration
-        public async Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAllAsync(int page = 1, int pageSize = 100, AnimeFilters? filters = null)
+
+        public async Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAllAsync(int page = 1, int pageSize = 100, AnimeFilters? filters = null, bool enriched = false)
         {
             try
             {
-                var mappingsResult = await animeMappingService.GetAllAsync(includeAnime: true);
-                if (mappingsResult.IsFailure)
+                // Parse source filter to AnimeSource enum for DB-level filtering
+                AnimeSource? sourceFilter = filters?.Source?.ToLower() switch
                 {
-                    return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(mappingsResult.Error);
+                    "plex" => AnimeSource.Plex,
+                    "mal" => AnimeSource.MyAnimeList,
+                    "sonarr" => AnimeSource.Sonarr,
+                    _ => null
+                };
+                bool sortDescending = filters?.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) == true;
+                bool needsInMemoryPostFilter = !string.IsNullOrWhiteSpace(filters?.Genre)
+                                             || !string.IsNullOrWhiteSpace(filters?.Status);
+
+                List<string> aniDbIds;
+                int totalCount;
+
+                if (!needsInMemoryPostFilter)
+                {
+                    // FAST PATH: push pagination + filtering entirely into the database.
+                    // Two targeted SQL queries (COUNT + paged IDs) replace a full-table scan.
+                    var pagedResult = await animeMappingService.GetPagedAniDbIdsAsync(
+                        page, pageSize, filters?.Title, sourceFilter, filters?.SortBy, sortDescending);
+                    if (pagedResult.IsFailure)
+                        return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(pagedResult.Error);
+
+                    (aniDbIds, totalCount) = pagedResult.Value;
+
+                    if (aniDbIds.Count == 0)
+                        return Result.Success(PagedResponse<IEnumerable<AnimeDetailsResponse>>.Create(
+                            Enumerable.Empty<AnimeDetailsResponse>(), page, pageSize, 0));
+                }
+                else
+                {
+                    // SLOWER PATH: genre/status require in-memory post-filtering.
+                    // Still efficient: only load the title/source-filtered subset of AniDbIds (string IDs, no JSON).
+                    var filteredResult = await animeMappingService.GetAllFilteredAniDbIdsAsync(
+                        filters?.Title, sourceFilter);
+                    if (filteredResult.IsFailure)
+                        return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(filteredResult.Error);
+
+                    aniDbIds = filteredResult.Value;
+                    totalCount = 0; // will be recalculated after in-memory filter
                 }
 
-                // Load all cache entries for all sources in parallel
-                var plexCacheTask = cacheEntryService.GetAsync(AnimeSource.Plex);
-                var malCacheTask = cacheEntryService.GetAsync(AnimeSource.MyAnimeList);
-                var sonarrCacheTask = cacheEntryService.GetAsync(AnimeSource.Sonarr);
+                // Load mappings + anime only for the relevant AniDbIds (not the whole table)
+                var mappingsResult = await animeMappingService.GetByAniDbIdsAsync(aniDbIds);
+                if (mappingsResult.IsFailure)
+                    return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(mappingsResult.Error);
 
-                await Task.WhenAll(plexCacheTask, malCacheTask, sonarrCacheTask);
+                var mappings = mappingsResult.Value.ToList();
 
-                var plexCache = plexCacheTask.Result.IsSuccess 
-                    ? plexCacheTask.Result.Value.ToDictionary(c => c.SourceId, c => c.RawData) 
-                    : new Dictionary<string, string>();
-                    
-                var malCache = malCacheTask.Result.IsSuccess 
-                    ? malCacheTask.Result.Value.ToDictionary(c => c.SourceId, c => c.RawData) 
-                    : new Dictionary<string, string>();
-                    
-                var sonarrCache = sonarrCacheTask.Result.IsSuccess 
-                    ? sonarrCacheTask.Result.Value.ToDictionary(c => c.SourceId, c => c.RawData) 
-                    : new Dictionary<string, string>();
-
-                // Group all mappings
-                var allGroupedMappings = mappingsResult.Value
-                    .OrderBy(m => m.AniDbId)
-                    .ThenBy(m => m.Anime?.AnimeSource)
-                    .GroupBy(m => m.AniDbId)
+                // Load cache entries only for the relevant SourceIds (not the whole CacheEntry table)
+                var sourceIds = mappings
+                    .Where(m => m.Anime != null)
+                    .Select(m => m.Anime!.SourceId)
+                    .Distinct()
                     .ToList();
 
-                var animeDtos = new List<AnimeDetailsResponse>();
+                var cacheResult = await cacheEntryService.GetBySourceIdsAsync(sourceIds);
+                var cacheEntries = cacheResult.IsSuccess ? cacheResult.Value.ToList() : new List<CacheEntry>();
 
-                foreach (var group in allGroupedMappings)
+                // Build per-source dictionaries (keyed by SourceId within each source)
+                var plexCache = cacheEntries
+                    .Where(c => c.AnimeSource == AnimeSource.Plex)
+                    .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData);
+                var malCache = cacheEntries
+                    .Where(c => c.AnimeSource == AnimeSource.MyAnimeList)
+                    .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData);
+                var sonarrCache = cacheEntries
+                    .Where(c => c.AnimeSource == AnimeSource.Sonarr)
+                    .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData);
+
+                // Group mappings by AniDbId for fast lookup
+                var mappingsByAniDbId = mappings
+                    .GroupBy(m => m.AniDbId)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                // Build DTOs only for the loaded AniDbIds
+                var animeDtos = new List<AnimeDetailsResponse>();
+                foreach (var aniDbId in aniDbIds)
                 {
-                    var plexAnimes = group
-                        .Where(m => m.Anime?.AnimeSource == AnimeSource.Plex)
-                        .Select(m => CreatePlexAnimeInfoFromCache(m, plexCache))
-                        .ToList();
-                    
-                    var malAnimes = group
-                        .Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList)
-                        .Select(m => CreateMalAnimeInfoFromCache(m, malCache))
-                        .ToList();
-                    
-                    var sonarrAnimes = group
-                        .Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr)
-                        .Select(m => CreateSonarrAnimeInfoFromCache(m, sonarrCache))
-                        .ToList();
+                    if (!mappingsByAniDbId.TryGetValue(aniDbId, out var group))
+                    {
+                        logger.LogDebug("AniDbId {AniDbId} has no anime mappings — data may be inconsistent", aniDbId);
+                        continue;
+                    }
+
+                    List<PlexAnimeInfo> plexAnimes;
+                    List<MalAnimeInfo> malAnimes;
+                    List<SonarrAnimeInfo> sonarrAnimes;
+
+                    if (enriched)
+                    {
+                        var plexTask = FetchPlexAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex));
+                        var malTask = FetchMalAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList));
+                        var sonarrTask = FetchSonarrAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr));
+                        await Task.WhenAll(plexTask, malTask, sonarrTask);
+                        plexAnimes = plexTask.Result;
+                        malAnimes = malTask.Result;
+                        sonarrAnimes = sonarrTask.Result;
+                    }
+                    else
+                    {
+                        plexAnimes = group
+                            .Where(m => m.Anime?.AnimeSource == AnimeSource.Plex)
+                            .Select(m => CreatePlexAnimeInfoFromCache(m, plexCache))
+                            .ToList();
+                        malAnimes = group
+                            .Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList)
+                            .Select(m => CreateMalAnimeInfoFromCache(m, malCache))
+                            .ToList();
+                        sonarrAnimes = group
+                            .Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr)
+                            .Select(m => CreateSonarrAnimeInfoFromCache(m, sonarrCache))
+                            .ToList();
+                    }
 
                     animeDtos.Add(new AnimeDetailsResponse(
-                        group.Key,
+                        aniDbId,
                         group.FirstOrDefault()?.Anime?.Title ?? "NO_TITLE",
                         [.. plexAnimes],
                         [.. malAnimes],
@@ -106,28 +172,20 @@ namespace MetaAnime.Application.Services
                     ));
                 }
 
-                // Apply filters (pass malCache for genre filtering)
-                var filteredData = ApplyFilters(animeDtos, filters, malCache);
+                if (needsInMemoryPostFilter)
+                {
+                    // Apply genre/status filter in memory (only over the pre-filtered subset)
+                    var filtered = ApplyFilters(animeDtos, filters, malCache);
+                    var sorted = ApplySorting(filtered, filters);
+                    totalCount = sorted.Count();
+                    var paged = sorted.Skip((page - 1) * pageSize).Take(pageSize);
+                    return Result.Success(PagedResponse<IEnumerable<AnimeDetailsResponse>>.Create(
+                        paged, page, pageSize, totalCount));
+                }
 
-                // Apply sorting
-                var sortedData = ApplySorting(filteredData, filters);
-
-                // Calculate total count after filtering
-                var totalCount = sortedData.Count();
-
-                // Apply pagination
-                var pagedData = sortedData
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize);
-
-                var pagedResponse = PagedResponse<IEnumerable<AnimeDetailsResponse>>.Create(
-                    pagedData,
-                    page,
-                    pageSize,
-                    totalCount
-                );
-
-                return Result.Success(pagedResponse);
+                // Fast path: already paginated at DB level; DB sort order is preserved by iterating aniDbIds
+                return Result.Success(PagedResponse<IEnumerable<AnimeDetailsResponse>>.Create(
+                    animeDtos, page, pageSize, totalCount));
             }
             catch (Exception ex)
             {
@@ -245,14 +303,13 @@ namespace MetaAnime.Application.Services
         {
             try
             {
-                var mappingsResult = await animeMappingService.GetAllAsync(includeAnime: true);
+                var mappingsResult = await animeMappingService.GetByAniDbIdsAsync([aniDbId]);
                 if (mappingsResult.IsFailure)
                 {
                     return Result.Failure<AnimeDetailsResponse?>(mappingsResult.Error);
                 }
 
                 var animeMappings = mappingsResult.Value
-                    .Where(m => m.AniDbId == aniDbId)
                     .OrderBy(m => m.Anime?.AnimeSource)
                     .ToList();
 
@@ -278,6 +335,30 @@ namespace MetaAnime.Application.Services
             catch (Exception ex)
             {
                 return Result.Failure<AnimeDetailsResponse?>(new("Error.GetByIdAsync", ex.Message));
+            }
+        }
+
+        public async Task<Result<IEnumerable<SonarrCodecSearchResponse>>> GetSonarrSeriesByCodecAsync(string codec)
+        {
+            try
+            {
+                var searchResult = await sonarrAnimeSource.GetSeriesByCodecAsync(codec);
+                if (searchResult.IsFailure)
+                    return Result.Failure<IEnumerable<SonarrCodecSearchResponse>>(searchResult.Error);
+
+                var responses = searchResult.Value.Select(r => new SonarrCodecSearchResponse(
+                    r.Id,
+                    r.Title,
+                    $"{sonarrSeriesBaseUrl}/series/{r.Id}",
+                    r.CodecDistribution,
+                    r.TotalSizeOnDisk
+                ));
+
+                return Result.Success(responses);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<IEnumerable<SonarrCodecSearchResponse>>(new("Error.GetSonarrSeriesByCodecAsync", ex.Message));
             }
         }
 
@@ -406,17 +487,8 @@ namespace MetaAnime.Application.Services
                         var malAnime = JsonSerializer.Deserialize<MalAnime>(rawData, JsonOptions);
                         if (malAnime != null)
                         {
-                            // Log for debugging - check if MyListStatus is null
-                            if (malAnime.MyListStatus == null)
-                            {
-                                logger.LogWarning("MAL anime {SourceId} ({Title}) has null MyListStatus after deserialization", 
-                                    mapping.Anime.SourceId, malAnime.Title);
-                            }
-                            else
-                            {
-                                logger.LogInformation("MAL anime {SourceId} ({Title}) has MyListStatus: Status={Status}, CreatedAt={CreatedAt}", 
-                                    mapping.Anime.SourceId, malAnime.Title, malAnime.MyListStatus.Status, malAnime.MyListStatus.CreatedAt);
-                            }
+                            logger.LogDebug("MAL anime {SourceId} ({Title}) has MyListStatus: Status={Status}",
+                                mapping.Anime.SourceId, malAnime.Title, malAnime.MyListStatus?.Status);
                             return new MalAnimeInfo(malAnime, myAnimeListHost);
                         }
                     }
@@ -442,22 +514,12 @@ namespace MetaAnime.Application.Services
                         var sonarrSeries = JsonSerializer.Deserialize<SonarrSeries>(rawData, JsonOptions);
                         if (sonarrSeries != null)
                         {
-                            // Log for debugging - check if Seasons is null
-                            if (sonarrSeries.Seasons == null || !sonarrSeries.Seasons.Any())
-                            {
-                                logger.LogWarning("Sonarr anime {SourceId} ({Title}) has null or empty Seasons after deserialization", 
-                                    mapping.Anime.SourceId, sonarrSeries.Title);
-                            }
-                            else
-                            {
-                                var seasonsWithStats = sonarrSeries.Seasons.Count(s => s.Statistics != null);
-                                logger.LogInformation("Sonarr anime {SourceId} ({Title}) has {TotalSeasons} seasons, {SeasonsWithStats} with statistics", 
-                                    mapping.Anime.SourceId, sonarrSeries.Title, sonarrSeries.Seasons.Count, seasonsWithStats);
-                            }
+                            logger.LogDebug("Sonarr anime {SourceId} ({Title}) has {TotalSeasons} seasons",
+                                mapping.Anime.SourceId, sonarrSeries.Title, sonarrSeries.Seasons?.Count ?? 0);
                             // Note: Codec distribution is not included in list view for performance.
                             // It requires an additional API call per series and is only populated in GetById.
                             // Size on disk is null in list view as it's populated in GetById with real-time data
-                            return new SonarrAnimeInfo(sonarrSeries, sonarrHost, new Dictionary<string, int>());
+                            return new SonarrAnimeInfo(sonarrSeries, sonarrSeriesBaseUrl, new Dictionary<string, int>());
                         }
                     }
                     catch (JsonException ex)
@@ -468,7 +530,7 @@ namespace MetaAnime.Application.Services
                 }
             }
             // Fallback to basic anime info (will have null detailed fields)
-            return new SonarrAnimeInfo(mapping.Anime, sonarrHost);
+            return new SonarrAnimeInfo(mapping.Anime, sonarrSeriesBaseUrl);
         }
 
         // Keep these methods for GetById which may need real-time data
@@ -521,11 +583,11 @@ namespace MetaAnime.Application.Services
                 if (sonarrResult.IsSuccess && sonarrResult.Value != null)
                 {
                     var codecDistribution = await sonarrAnimeSource.GetCodecDistributionAsync(mapping.Anime!.SourceId);
-                    return new SonarrAnimeInfo(sonarrResult.Value, sonarrHost, codecDistribution);
+                    return new SonarrAnimeInfo(sonarrResult.Value, sonarrSeriesBaseUrl, codecDistribution);
                 }
                 else
                 {
-                    return new SonarrAnimeInfo(mapping.Anime, sonarrHost);
+                    return new SonarrAnimeInfo(mapping.Anime, sonarrSeriesBaseUrl);
                 }
             });
 

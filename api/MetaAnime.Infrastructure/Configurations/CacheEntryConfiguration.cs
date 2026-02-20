@@ -14,6 +14,7 @@ namespace MetaAnime.Infrastructure.Configurations
             builder.Property(cache => cache.RawData).HasColumnType("jsonb").IsRequired();
             builder.Property(cache => cache.SourceId).IsRequired();
             builder.Property(cache => cache.AnimeSource).IsRequired();
+            builder.HasIndex(c => c.SourceId).HasDatabaseName("IX_CacheEntry_SourceId");
         }
     }
 }

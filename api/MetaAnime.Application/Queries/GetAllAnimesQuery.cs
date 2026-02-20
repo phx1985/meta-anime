@@ -7,5 +7,6 @@ namespace MetaAnime.Application.Queries;
 public record GetAllAnimesQuery(
     int Page = 1, 
     int PageSize = 100,
-    AnimeFilters? Filters = null
+    AnimeFilters? Filters = null,
+    bool Enriched = false
 ) : IRequest<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>>;

@@ -44,23 +44,24 @@ namespace MetaAnime.Infrastructure.Repositories
 
         public async Task<IEnumerable<Anime>> GetAllBySourceAsync(AnimeSource source)
         {
-            return await dbContext.Anime.Where(a => a.AnimeSource == source).ToListAsync();
+            return await dbContext.Anime.AsNoTracking().Where(a => a.AnimeSource == source).ToListAsync();
         }
 
         public async Task<IEnumerable<Anime>> GetAllAsync()
         {
-            return await dbContext.Anime.Include(a => a.ExternalAnimeIdentifiers)
+            return await dbContext.Anime.AsNoTracking()
+                                        .Include(a => a.ExternalAnimeIdentifiers)
                                         .ToListAsync();
         }
 
         public async Task<Anime?> GetAnimeAsync(AnimeSource source, string sourceId)
         {
-            return await dbContext.Anime.FirstOrDefaultAsync(a => a.SourceId == sourceId && a.AnimeSource == source);
+            return await dbContext.Anime.AsNoTracking().FirstOrDefaultAsync(a => a.SourceId == sourceId && a.AnimeSource == source);
         }
 
         public async Task<Anime?> GetByIdAsync(Guid id)
         {
-            return await dbContext.Anime
+            return await dbContext.Anime.AsNoTracking()
                 .Include(a => a.ExternalAnimeIdentifiers)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
