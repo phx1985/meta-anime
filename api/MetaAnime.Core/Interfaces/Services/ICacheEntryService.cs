@@ -11,6 +11,7 @@ namespace MetaAnime.Core.Interfaces.Services
         Task<Result<IEnumerable<CacheEntry>>> GetAllAsync();
         Task<Result<CacheEntry?>> GetAsync(AnimeSource animeSource, string sourceId);
         Task<Result<IEnumerable<CacheEntry>>> GetAsync(AnimeSource animeSource);
+        Task<Result<IEnumerable<CacheEntry>>> GetBySourceIdsAsync(IEnumerable<string> sourceIds);
         Task<Result> RemoveAsync(string sourceId, AnimeSource animeSource);
         Task<Result> BulkDeleteAllAsync();
         Task<Result> BulkDeleteBySourceAsync(AnimeSource animeSource);

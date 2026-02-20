@@ -113,6 +113,19 @@ namespace MetaAnime.Application.Services
             }
         }
 
+        public async Task<Result<IEnumerable<CacheEntry>>> GetBySourceIdsAsync(IEnumerable<string> sourceIds)
+        {
+            try
+            {
+                var cacheEntries = await cacheEntryRepository.GetBySourceIdsAsync(sourceIds);
+                return Result.Success(cacheEntries);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<IEnumerable<CacheEntry>>(new Error("Error.GetBySourceIdsAsync", ex.Message));
+            }
+        }
+
         public async Task<Result> RemoveAsync(string sourceId, AnimeSource animeSource)
         {
             try

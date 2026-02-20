@@ -44,6 +44,9 @@ namespace MetaAnime.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AnimeSource")
+                        .HasDatabaseName("IX_Anime_AnimeSource");
+
                     b.ToTable("Anime", (string)null);
                 });
 
@@ -61,6 +64,9 @@ namespace MetaAnime.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AniDbId")
+                        .HasDatabaseName("IX_AnimeMapping_AniDbId");
 
                     b.HasIndex("AnimeId");
 
@@ -85,6 +91,9 @@ namespace MetaAnime.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SourceId")
+                        .HasDatabaseName("IX_CacheEntry_SourceId");
 
                     b.ToTable("CacheEntry", (string)null);
                 });

@@ -16,6 +16,7 @@ namespace MetaAnime.Infrastructure.Configurations
             builder.Property(a => a.Description);
             builder.Property(a => a.AnimeSource).IsRequired();
             builder.HasMany(a => a.ExternalAnimeIdentifiers).WithOne(e => e.Anime);
+            builder.HasIndex(a => a.AnimeSource).HasDatabaseName("IX_Anime_AnimeSource");
         }
     }
 }

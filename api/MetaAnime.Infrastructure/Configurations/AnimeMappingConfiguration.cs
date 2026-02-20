@@ -13,6 +13,7 @@ namespace MetaAnime.Infrastructure.Configurations
             builder.Property(e => e.AniDbId).IsRequired();
             builder.Property(e => e.AnimeId).IsRequired();
             builder.HasOne(e => e.Anime).WithMany().HasForeignKey(e => e.AnimeId);
+            builder.HasIndex(e => e.AniDbId).HasDatabaseName("IX_AnimeMapping_AniDbId");
         }
     }
 }

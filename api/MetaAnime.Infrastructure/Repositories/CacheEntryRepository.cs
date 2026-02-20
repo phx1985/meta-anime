@@ -30,6 +30,15 @@ namespace MetaAnime.Infrastructure.Repositories
             return await dbContext.CacheEntries.AsNoTracking().Where(ce => ce.AnimeSource == animeSource).ToListAsync();
         }
 
+        public async Task<IEnumerable<CacheEntry>> GetBySourceIdsAsync(IEnumerable<string> sourceIds)
+        {
+            var idList = sourceIds.ToList();
+            return await dbContext.CacheEntries
+                .AsNoTracking()
+                .Where(ce => idList.Contains(ce.SourceId))
+                .ToListAsync();
+        }
+
         public async Task RemoveAsync(string sourceId, AnimeSource animeSource)
         {
             var cacheEntry = await GetAsync(animeSource, sourceId);
