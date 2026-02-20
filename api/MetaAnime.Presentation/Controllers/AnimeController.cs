@@ -31,7 +31,7 @@ public class AnimeController(IMediator mediator)
     [HttpGet]
     [Authorize]
     public async Task<ActionResult<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAll(
-        [FromQuery] int page = 1, 
+        [FromQuery] int page = 1,
         [FromQuery] int pageSize = 100,
         [FromQuery] string? title = null,
         [FromQuery] string? source = null,
@@ -46,7 +46,7 @@ public class AnimeController(IMediator mediator)
 
         var filters = new AnimeFilters(title, source, status, genre, sortBy, sortOrder);
         var result = await mediator.Send(new GetAllAnimesQuery(page, pageSize, filters, enriched));
-        
+
         if (result.IsFailure)
         {
             return StatusCode(500, result.Error.Message);
@@ -60,7 +60,7 @@ public class AnimeController(IMediator mediator)
     public async Task<ActionResult<AnimeDetailsResponse>> GetById(string id)
     {
         var result = await mediator.Send(new GetAnimeByIdQuery(id));
-        
+
         if (result.IsFailure)
         {
             return StatusCode(500, result.Error.Message);
@@ -84,7 +84,7 @@ public class AnimeController(IMediator mediator)
         }
 
         var result = await mediator.Send(new CreateAnimeCommand(request));
-        
+
         if (result.IsFailure)
         {
             return StatusCode(500, result.Error.Message);
@@ -103,7 +103,7 @@ public class AnimeController(IMediator mediator)
         }
 
         var result = await mediator.Send(new UpdateAnimeCommand(id, request));
-        
+
         if (result.IsFailure)
         {
             if (result.Error.Code == "Error.NotFound")
@@ -121,7 +121,7 @@ public class AnimeController(IMediator mediator)
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await mediator.Send(new DeleteAnimeCommand(id));
-        
+
         if (result.IsFailure)
         {
             if (result.Error.Code == "Error.NotFound")
@@ -145,7 +145,7 @@ public class AnimeController(IMediator mediator)
     public async Task<IActionResult> SyncAll([FromQuery] bool forceRefreshKometaMapping = false)
     {
         var result = await mediator.Send(new MatchAnimeCommand(forceRefreshKometaMapping));
-        
+
         if (result.IsFailure)
         {
             return StatusCode(500, result.Error.Message);

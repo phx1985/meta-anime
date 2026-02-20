@@ -14,7 +14,7 @@ public sealed record SonarrAnimeInfo(
     long? SizeOnDisk
 )
 {
-    public SonarrAnimeInfo(Anime? anime, string sonarrBaseUrl) 
+    public SonarrAnimeInfo(Anime? anime, string sonarrBaseUrl)
         : this(
             Title: anime?.Title ?? "NO_TITLE",
             Id: anime?.SourceId,

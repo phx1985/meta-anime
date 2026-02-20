@@ -75,10 +75,8 @@ public class PlexMedia : IAnimeConvertible, ICacheable
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
-            // Don't use DefaultIgnoreCondition to ensure all fields are serialized, even if null
-            // This prevents missing data when deserializing from cache
         };
-        
+
         return new CacheEntry
         {
             SourceId = Id,

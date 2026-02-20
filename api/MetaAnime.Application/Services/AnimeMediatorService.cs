@@ -33,7 +33,6 @@ public class AnimeMediatorService(
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
-        // Don't use DefaultIgnoreCondition to match serialization options
     };
 
     private readonly string myAnimeListHost = malOptions.Value.WebBaseUrl;
@@ -47,7 +46,6 @@ public class AnimeMediatorService(
     {
         try
         {
-            // Parse source filter to AnimeSource enum for DB-level filtering
             AnimeSource? sourceFilter = filters?.Source?.ToLower() switch
             {
                 "plex" => AnimeSource.Plex,
@@ -90,14 +88,12 @@ public class AnimeMediatorService(
                 totalCount = 0; // will be recalculated after in-memory filter
             }
 
-            // Load mappings + anime only for the relevant AniDbIds (not the whole table)
             var mappingsResult = await animeMappingService.GetByAniDbIdsAsync(aniDbIds);
             if (mappingsResult.IsFailure)
                 return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(mappingsResult.Error);
 
             var mappings = mappingsResult.Value.ToList();
 
-            // Load cache entries only for the relevant SourceIds (not the whole CacheEntry table)
             var sourceIds = mappings
                 .Where(m => m.Anime != null)
                 .Select(m => m.Anime!.SourceId)
@@ -107,7 +103,6 @@ public class AnimeMediatorService(
             var cacheResult = await cacheEntryService.GetBySourceIdsAsync(sourceIds);
             var cacheEntries = cacheResult.IsSuccess ? cacheResult.Value.ToList() : new List<CacheEntry>();
 
-            // Build per-source dictionaries (keyed by SourceId within each source)
             var plexCache = cacheEntries
                 .Where(c => c.AnimeSource == AnimeSource.Plex)
                 .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData);
@@ -118,12 +113,10 @@ public class AnimeMediatorService(
                 .Where(c => c.AnimeSource == AnimeSource.Sonarr)
                 .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData);
 
-            // Group mappings by AniDbId for fast lookup
             var mappingsByAniDbId = mappings
                 .GroupBy(m => m.AniDbId)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
-            // Build DTOs only for the loaded AniDbIds
             var animeDtos = new List<AnimeDetailsResponse>();
             foreach (var aniDbId in aniDbIds)
             {
@@ -194,7 +187,7 @@ public class AnimeMediatorService(
     }
 
     private IEnumerable<AnimeDetailsResponse> ApplyFilters(
-        IEnumerable<AnimeDetailsResponse> data, 
+        IEnumerable<AnimeDetailsResponse> data,
         AnimeFilters? filters,
         Dictionary<string, string> malCache)
     {
@@ -219,7 +212,7 @@ public class AnimeMediatorService(
 
         if (!string.IsNullOrWhiteSpace(filters.Status))
         {
-            result = result.Where(a => 
+            result = result.Where(a =>
                 a.MalAnimes?.Any(m => m.ViewState != null && m.ViewState.Contains(filters.Status, StringComparison.OrdinalIgnoreCase)) == true ||
                 a.SonarrAnimes?.Any(s => s.Exists) == true
             );
@@ -227,31 +220,25 @@ public class AnimeMediatorService(
 
         if (!string.IsNullOrWhiteSpace(filters.Genre))
         {
-            // Filter by MAL genre - check cached MAL data for genre names
-            // Note: Deserializes MAL JSON for each anime when genre filter is applied
-            // This is acceptable because: 1) Genre filtering is optional, 2) Only applied to
-            // anime that passed previous filters, 3) Avoids memory overhead of caching deserialized objects
             var genreFilter = filters.Genre;
             result = result.Where(a =>
             {
                 if (a.MalAnimes == null || !a.MalAnimes.Any())
                     return false;
-                
-                // Check if any MAL anime in this group has the specified genre
+
                 return a.MalAnimes.Any(m =>
                 {
                     if (string.IsNullOrWhiteSpace(m.Id))
                         return false;
-                    
-                    // Get cached MAL anime JSON and deserialize to check genres
+
                     if (!malCache.TryGetValue(m.Id, out var malJson) || string.IsNullOrWhiteSpace(malJson))
                         return false;
-                    
+
                     try
                     {
                         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                         var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, options);
-                        return malAnime?.Genres?.Any(g => 
+                        return malAnime?.Genres?.Any(g =>
                             g.Name.Contains(genreFilter, StringComparison.OrdinalIgnoreCase)
                         ) == true;
                     }
@@ -286,8 +273,7 @@ public class AnimeMediatorService(
     {
         try
         {
-            // Execute all DB-backed queries sequentially — they share the same scoped DbContext,
-            // which does not support concurrent operations.
+            // Execute all DB-backed queries sequentially — the scoped DbContext does not support concurrent operations.
             var allAnimesResult = await animeService.GetAllAsync();
             if (allAnimesResult.IsFailure)
                 return Result.Failure<AnimeStatisticsResponse>(allAnimesResult.Error);
@@ -312,7 +298,6 @@ public class AnimeMediatorService(
                              .Distinct()
                              .Count() > 1);
 
-            // Genre stats and MAL viewing progress from cached MAL data
             var genreStats = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var malEpisodesWatched = 0;
             var malTotalEpisodes = 0;
@@ -351,7 +336,6 @@ public class AnimeMediatorService(
                 }
             }
 
-            // Plex viewing progress from cached Plex data
             var plexEpisodesWatched = 0;
             var plexTotalEpisodes = 0;
 
@@ -584,7 +568,6 @@ public class AnimeMediatorService(
             }
             catch (JsonException)
             {
-                // Fall through to return basic info
             }
         }
         return new PlexAnimeInfo(mapping.Anime, plexBaseUrl);
@@ -608,12 +591,10 @@ public class AnimeMediatorService(
                 }
                 catch (JsonException ex)
                 {
-                    // Log deserialization error for debugging
                     logger.LogWarning(ex, "Failed to deserialize MAL anime cache data for SourceId: {SourceId}", mapping.Anime.SourceId);
                 }
             }
         }
-        // Fallback to basic anime info (will have null detailed fields)
         return new MalAnimeInfo(mapping.Anime, myAnimeListHost);
     }
 
@@ -630,24 +611,18 @@ public class AnimeMediatorService(
                     {
                         logger.LogDebug("Sonarr anime {SourceId} ({Title}) has {TotalSeasons} seasons",
                             mapping.Anime.SourceId, sonarrSeries.Title, sonarrSeries.Seasons?.Count ?? 0);
-                        // Note: Codec distribution is not included in list view for performance.
-                        // It requires an additional API call per series and is only populated in GetById.
-                        // Size on disk is null in list view as it's populated in GetById with real-time data
                         return new SonarrAnimeInfo(sonarrSeries, sonarrSeriesBaseUrl, new Dictionary<string, int>());
                     }
                 }
                 catch (JsonException ex)
                 {
-                    // Log deserialization error for debugging
                     logger.LogWarning(ex, "Failed to deserialize Sonarr anime cache data for SourceId: {SourceId}", mapping.Anime.SourceId);
                 }
             }
         }
-        // Fallback to basic anime info (will have null detailed fields)
         return new SonarrAnimeInfo(mapping.Anime, sonarrSeriesBaseUrl);
     }
 
-    // Keep these methods for GetById which may need real-time data
     private async Task<List<PlexAnimeInfo>> FetchPlexAnimeDetailsAsync(IEnumerable<AnimeMapping> mappings)
     {
         var tasks = mappings.Select(async mapping =>

@@ -14,12 +14,11 @@ public class AnimeSyncJob(
     public async Task SyncAnimeMetadata()
     {
         logger.LogInformation("Starting anime metadata sync at {Time}", DateTime.UtcNow);
-        
+
         try
         {
-            // MatchAsync internally refreshes data from Plex, MAL and Sonarr before matching
             var matchResult = await animeMatchingService.MatchAsync();
-            
+
             if (matchResult.IsSuccess)
             {
                 logger.LogInformation("Successfully synced anime metadata at {Time}", DateTime.UtcNow);
@@ -32,7 +31,7 @@ public class AnimeSyncJob(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error during anime sync");
-            throw; // Re-throw to mark job as failed in Hangfire
+            throw; // re-throw to mark the Hangfire job as failed
         }
     }
 
@@ -41,7 +40,6 @@ public class AnimeSyncJob(
     /// </summary>
     public static void Schedule()
     {
-        // Run every hour at minute 0
         RecurringJob.AddOrUpdate<AnimeSyncJob>(
             "anime-metadata-sync",
             job => job.SyncAnimeMetadata(),

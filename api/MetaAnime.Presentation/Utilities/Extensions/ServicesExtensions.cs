@@ -21,7 +21,6 @@ using Microsoft.OpenApi;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.Options;
 using MetaAnime.Core.Settings;
-// using Microsoft.OpenApi.Models;
 
 namespace MetaAnime.Utilities.Extensions;
 
@@ -32,10 +31,8 @@ public static class ServicesExtensions
     /// </summary>
     public static void AddCustomServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Register MediatR
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(IAnimeMediatorService).Assembly));
 
-        // Register Options
         services.AddOptions<PlexSettings>()
             .Bind(configuration.GetSection(PlexSettings.SectionName))
             .ValidateDataAnnotations()
@@ -66,8 +63,7 @@ public static class ServicesExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        // External services
-        services.AddSingleton<IPlexAPI, PlexAPI>(provider => 
+        services.AddSingleton<IPlexAPI, PlexAPI>(provider =>
         {
             var settings = provider.GetRequiredService<IOptions<PlexSettings>>().Value;
             return PlexAPI.Builder()
@@ -77,7 +73,6 @@ public static class ServicesExtensions
                 .Build();
         });
 
-        // Register custom services
         services.AddScoped<IKometaAnimeJsonService<KometaRaw>, KometaAnimeJsonService>();
         services.AddScoped<IKometaAnimeMappingService, KometaAnimeMappingService>();
         services.AddScoped<ISonarrAnimeSourceService<SonarrSeries>, SonarrAnimeSourceService>();
@@ -89,7 +84,6 @@ public static class ServicesExtensions
         services.AddScoped<IAnimeMatchingService, AnimeMatchingService>();
         services.AddScoped<IAnimeMediatorService, AnimeMediatorService>();
 
-        // Register repositories
         services.AddScoped<IKometaAnimeMappingRepository, KometaAnimeMappingRepository>();
         services.AddScoped<ICacheEntryRepository, CacheEntryRepository>();
         services.AddScoped<IAnimeRepository, AnimeRepository>();
@@ -102,13 +96,6 @@ public static class ServicesExtensions
     public static void SetupDatabase(this IServiceCollection services, IConfiguration configuration)
     {
         var dbSettings = configuration.GetSection(DatabaseSettings.SectionName).Get<DatabaseSettings>();
-
-        // If configuration is missing, fallback or let it fail? 
-        // Previous logic handled EF command skipping. 
-        // If dbSettings is null here, CreateDbContext will fail later.
-        // For EF Migrations we might need to handle this gracefully if we want to support generating script without env vars.
-        // But let's assume valid config or fail for now as Get<T> binds.
-
         var connectionString = dbSettings?.ConnectionString ?? string.Empty;
 
         services.AddDbContext<MetaAnimeDbContext>(options => options.UseNpgsql(connectionString));
@@ -188,4 +175,4 @@ public static class ServicesExtensions
     }
 
 
-        }
+}

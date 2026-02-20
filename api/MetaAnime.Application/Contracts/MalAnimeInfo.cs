@@ -13,7 +13,7 @@ public sealed record MalAnimeInfo(
     MalRatingInfo? Rating
 )
 {
-    public MalAnimeInfo(Anime? anime, string malBaseUrl) 
+    public MalAnimeInfo(Anime? anime, string malBaseUrl)
         : this(
             anime?.Title ?? "NO_TITLE",
             anime?.SourceId,

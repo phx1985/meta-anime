@@ -14,8 +14,8 @@ public class PlexAnimeSourceService(IPlexAPI plexAPI, IOptions<PlexSettings> opt
     #region Fields
     private readonly int[] animeSections = ParseAnimeSections(options.Value.AnimeSections);
     private readonly IPlexAPI plexAPI = plexAPI;
-    private readonly bool isConfigured = !string.IsNullOrWhiteSpace(options.Value.Host) 
-        && !string.IsNullOrWhiteSpace(options.Value.Token) 
+    private readonly bool isConfigured = !string.IsNullOrWhiteSpace(options.Value.Host)
+        && !string.IsNullOrWhiteSpace(options.Value.Token)
         && !string.IsNullOrWhiteSpace(options.Value.AnimeSections);
     #endregion
 
@@ -42,7 +42,6 @@ public class PlexAnimeSourceService(IPlexAPI plexAPI, IOptions<PlexSettings> opt
     {
         var results = new List<PlexMedia>();
 
-        // Return empty list if Plex is not configured
         if (!isConfigured)
         {
             return Result.Success<IList<PlexMedia>>(results);
@@ -53,7 +52,7 @@ public class PlexAnimeSourceService(IPlexAPI plexAPI, IOptions<PlexSettings> opt
             SectionId = animeSections[0].ToString(),
             MediaQuery = new Components.MediaQuery
             {
-                 Type = Components.MediaType.TvShow
+                Type = Components.MediaType.TvShow
             },
             XPlexContainerSize = null,
             IncludeMeta = Components.BoolInt.True,
@@ -63,10 +62,10 @@ public class PlexAnimeSourceService(IPlexAPI plexAPI, IOptions<PlexSettings> opt
 
         res.RawResponse.EnsureSuccessStatusCode();
 
-        var mediaContainer = res.MediaContainerWithMetadata?.MediaContainer; 
+        var mediaContainer = res.MediaContainerWithMetadata?.MediaContainer;
         if (mediaContainer?.Metadata == null)
         {
-             return Result.Success<IList<PlexMedia>>(results);
+            return Result.Success<IList<PlexMedia>>(results);
         }
 
         results.AddRange(mediaContainer.Metadata.Select(MapToPlexMedia));
@@ -76,20 +75,18 @@ public class PlexAnimeSourceService(IPlexAPI plexAPI, IOptions<PlexSettings> opt
 
     public async Task<Result<PlexMedia>> GetByIdAsync(string id)
     {
-        // Return failure if Plex is not configured
         if (!isConfigured)
         {
             return Result.Failure<PlexMedia>(new("Plex.NotConfigured", "Plex is not configured"));
         }
 
-        var req = new GetMetadataItemRequest { Ids = [id] }; // Correct usage
+        var req = new GetMetadataItemRequest { Ids = [id] };
         var response = await plexAPI.Content.GetMetadataItemAsync(req);
 
         var mediaContainer = response.MediaContainerWithMetadata?.MediaContainer;
         if (mediaContainer?.Metadata == null || mediaContainer.Metadata.Count == 0)
         {
-             // Handle null?
-             return Result.Success<PlexMedia>(null!);
+            return Result.Success<PlexMedia>(null!);
         }
 
         var result = MapToPlexMedia(mediaContainer.Metadata.First());

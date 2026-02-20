@@ -21,7 +21,6 @@ public class AnimeRepository(MetaAnimeDbContext dbContext) : IAnimeRepository
                 externalAnimeIdentifier.AnimeId = anime.Id;
             }
         }
-        // Add the animes and their ExternalAnimeIdentifiers to the database
         await dbContext.BulkInsertAsync(animeList);
         await dbContext.BulkInsertAsync(animeList.SelectMany(a => a.ExternalAnimeIdentifiers));
         await dbContext.SaveChangesAsync();

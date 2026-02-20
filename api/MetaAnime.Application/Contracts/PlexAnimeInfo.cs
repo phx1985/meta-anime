@@ -10,7 +10,7 @@ public sealed record PlexAnimeInfo(
     PlexProgressionInfo? Progression
 )
 {
-    public PlexAnimeInfo(Anime? anime, string plexBaseUrl) 
+    public PlexAnimeInfo(Anime? anime, string plexBaseUrl)
         : this(
             anime?.Title ?? "NO_TITLE",
             anime?.SourceId,

@@ -28,7 +28,7 @@ public partial class MalAnime : IAnimeConvertible, ICacheable
             // Don't use DefaultIgnoreCondition to ensure all fields are serialized, even if null
             // This prevents missing data when deserializing from cache
         };
-        
+
         return new CacheEntry
         {
             SourceId = Id.ToString(),
