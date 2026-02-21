@@ -76,13 +76,13 @@ public class MalAnimeSourceService(IOptions<MalSettings> options, IMalTokenServi
         // Return failure if MAL is not configured
         if (!isConfigured)
         {
-            return Result.Failure<MalAnime>(new("MAL.NotConfigured", "MyAnimeList is not configured"));
+            return Result.Failure<MalAnime>(new(Constants.Errors.NotConfigured, "MyAnimeList is not configured"));
         }
 
         var token = await malTokenService.GetAccessTokenAsync();
         if (string.IsNullOrWhiteSpace(token))
         {
-            return Result.Failure<MalAnime>(new("MAL.NoToken", "MyAnimeList access token is not available"));
+            return Result.Failure<MalAnime>(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
         }
 
         var response = await FetchAnimeByIdAsync(id, token);

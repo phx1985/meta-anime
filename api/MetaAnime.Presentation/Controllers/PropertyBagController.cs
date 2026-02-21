@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using MediatR;
+using ApplicationConstants = MetaAnime.Application.Constants;
 using MetaAnime.Application.Commands;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Queries;
@@ -73,7 +74,7 @@ public class PropertyBagController(IMediator mediator) : ControllerBase
 
         if (result.IsFailure)
         {
-            if (result.Error.Code == "Error.NotFound")
+            if (result.Error.Code == ApplicationConstants.Errors.NotFound)
             {
                 return NotFound(result.Error.Message);
             }

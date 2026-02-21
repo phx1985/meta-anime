@@ -18,7 +18,7 @@ public class CacheEntryService(ICacheEntryRepository cacheEntryRepository) : ICa
         }
         catch (Exception ex)
         {
-            return Result.Failure<CacheEntry>(new Error("Error.AddAsync", ex.Message));
+            return Result.Failure<CacheEntry>(new Error(Constants.Errors.AddAsync, ex.Message));
         }
     }
 
@@ -31,7 +31,7 @@ public class CacheEntryService(ICacheEntryRepository cacheEntryRepository) : ICa
         }
         catch (Exception ex)
         {
-            return Result.Failure(new Error("Error.BulkInsertAsync", ex.Message));
+            return Result.Failure(new Error(Constants.Errors.BulkInsertAsync, ex.Message));
         }
     }
 
@@ -44,7 +44,7 @@ public class CacheEntryService(ICacheEntryRepository cacheEntryRepository) : ICa
         }
         catch (Exception ex)
         {
-            return Result.Failure(new Error("Error.BulkInsertAsync", ex.Message));
+            return Result.Failure(new Error(Constants.Errors.BulkInsertAsync, ex.Message));
         }
     }
 
@@ -57,7 +57,7 @@ public class CacheEntryService(ICacheEntryRepository cacheEntryRepository) : ICa
         }
         catch (Exception ex)
         {
-            return Result.Failure(new Error("Error.BulkDeleteAllAsync", ex.Message));
+            return Result.Failure(new Error(Constants.Errors.BulkDeleteAllAsync, ex.Message));
         }
     }
 
@@ -70,7 +70,7 @@ public class CacheEntryService(ICacheEntryRepository cacheEntryRepository) : ICa
         }
         catch (Exception ex)
         {
-            return Result.Failure(new Error("Error.BulkDeleteBySourceAsync", ex.Message));
+            return Result.Failure(new Error(Constants.Errors.BulkDeleteBySourceAsync, ex.Message));
         }
     }
 
@@ -83,7 +83,7 @@ public class CacheEntryService(ICacheEntryRepository cacheEntryRepository) : ICa
         }
         catch (Exception ex)
         {
-            return Result.Failure<CacheEntry?>(new Error("Error.GetAsync", ex.Message));
+            return Result.Failure<CacheEntry?>(new Error(Constants.Errors.GetAsync, ex.Message));
         }
     }
 
@@ -96,7 +96,7 @@ public class CacheEntryService(ICacheEntryRepository cacheEntryRepository) : ICa
         }
         catch (Exception ex)
         {
-            return Result.Failure<IEnumerable<CacheEntry>>(new Error("Error.GetAllAsync", ex.Message));
+            return Result.Failure<IEnumerable<CacheEntry>>(new Error(Constants.Errors.GetAllAsync, ex.Message));
         }
     }
 
@@ -109,7 +109,7 @@ public class CacheEntryService(ICacheEntryRepository cacheEntryRepository) : ICa
         }
         catch (Exception ex)
         {
-            return Result.Failure<IEnumerable<CacheEntry>>(new Error("Error.GetAsync", ex.Message));
+            return Result.Failure<IEnumerable<CacheEntry>>(new Error(Constants.Errors.GetAsync, ex.Message));
         }
     }
 
@@ -122,7 +122,7 @@ public class CacheEntryService(ICacheEntryRepository cacheEntryRepository) : ICa
         }
         catch (Exception ex)
         {
-            return Result.Failure<IEnumerable<CacheEntry>>(new Error("Error.GetBySourceIdsAsync", ex.Message));
+            return Result.Failure<IEnumerable<CacheEntry>>(new Error(Constants.Errors.GetBySourceIdsAsync, ex.Message));
         }
     }
 
@@ -135,7 +135,7 @@ public class CacheEntryService(ICacheEntryRepository cacheEntryRepository) : ICa
         }
         catch (Exception ex)
         {
-            return Result.Failure(new Error("Error.RemoveAsync", ex.Message));
+            return Result.Failure(new Error(Constants.Errors.RemoveAsync, ex.Message));
         }
     }
 }

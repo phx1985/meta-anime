@@ -122,7 +122,7 @@ public class AnimeMediatorService(
             {
                 if (!mappingsByAniDbId.TryGetValue(aniDbId, out var group))
                 {
-                    logger.LogDebug("AniDbId {AniDbId} has no anime mappings — data may be inconsistent", aniDbId);
+                    logger.LogDebug(Constants.LogMessages.AnimeMediatorService.NoAnimeMappings, aniDbId);
                     continue;
                 }
 
@@ -182,7 +182,7 @@ public class AnimeMediatorService(
         }
         catch (Exception ex)
         {
-            return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(new("Error.GetAllAsync", ex.Message));
+            return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(new(Constants.Errors.GetAllAsync, ex.Message));
         }
     }
 
@@ -244,7 +244,7 @@ public class AnimeMediatorService(
                     }
                     catch (JsonException ex)
                     {
-                        logger.LogWarning("Failed to deserialize MAL anime {MalId} for genre filtering: {Error}", m.Id, ex.Message);
+                        logger.LogWarning(Constants.LogMessages.AnimeMediatorService.MalDeserializeFailedGenreFilter, m.Id, ex.Message);
                         return false;
                     }
                 });
@@ -317,7 +317,7 @@ public class AnimeMediatorService(
                     }
                     catch (JsonException ex)
                     {
-                        logger.LogWarning(ex, "Failed to deserialize MAL cache entry {SourceId} for statistics", entry.SourceId);
+                        logger.LogWarning(ex, Constants.LogMessages.AnimeMediatorService.MalCacheDeserializeFailedStats, entry.SourceId);
                     }
 
                     if (malAnime == null)
@@ -354,7 +354,7 @@ public class AnimeMediatorService(
                     }
                     catch (JsonException ex)
                     {
-                        logger.LogWarning(ex, "Failed to deserialize Plex cache entry {SourceId} for statistics", entry.SourceId);
+                        logger.LogWarning(ex, Constants.LogMessages.AnimeMediatorService.PlexCacheDeserializeFailedStats, entry.SourceId);
                     }
 
                     if (plexMedia == null)
@@ -376,7 +376,7 @@ public class AnimeMediatorService(
         }
         catch (Exception ex)
         {
-            return Result.Failure<AnimeStatisticsResponse>(new("Error.GetStatisticsAsync", ex.Message));
+            return Result.Failure<AnimeStatisticsResponse>(new(Constants.Errors.GetStatisticsAsync, ex.Message));
         }
     }
 
@@ -393,7 +393,7 @@ public class AnimeMediatorService(
         }
         catch (Exception ex)
         {
-            return Result.Failure(new("Error.SyncAllAsync", ex.Message));
+            return Result.Failure(new(Constants.Errors.SyncAllAsync, ex.Message));
         }
     }
 
@@ -432,7 +432,7 @@ public class AnimeMediatorService(
         }
         catch (Exception ex)
         {
-            return Result.Failure<AnimeDetailsResponse?>(new("Error.GetByIdAsync", ex.Message));
+            return Result.Failure<AnimeDetailsResponse?>(new(Constants.Errors.GetByIdAsync, ex.Message));
         }
     }
 
@@ -456,7 +456,7 @@ public class AnimeMediatorService(
         }
         catch (Exception ex)
         {
-            return Result.Failure<IEnumerable<SonarrCodecSearchResponse>>(new("Error.GetSonarrSeriesByCodecAsync", ex.Message));
+            return Result.Failure<IEnumerable<SonarrCodecSearchResponse>>(new(Constants.Errors.GetSonarrSeriesByCodecAsync, ex.Message));
         }
     }
 
@@ -482,7 +482,7 @@ public class AnimeMediatorService(
         }
         catch (Exception ex)
         {
-            return Result.Failure<AnimeResponse>(new("Error.CreateAsync", ex.Message));
+            return Result.Failure<AnimeResponse>(new(Constants.Errors.CreateAsync, ex.Message));
         }
     }
 
@@ -499,7 +499,7 @@ public class AnimeMediatorService(
             var anime = animeResult.Value;
             if (anime == null)
             {
-                return Result.Failure<AnimeResponse>(new("Error.NotFound", "Anime not found"));
+                return Result.Failure<AnimeResponse>(new(Constants.Errors.NotFound, "Anime not found"));
             }
 
             anime.Title = request.Title;
@@ -515,7 +515,7 @@ public class AnimeMediatorService(
         }
         catch (Exception ex)
         {
-            return Result.Failure<AnimeResponse>(new("Error.UpdateAsync", ex.Message));
+            return Result.Failure<AnimeResponse>(new(Constants.Errors.UpdateAsync, ex.Message));
         }
     }
 
@@ -531,7 +531,7 @@ public class AnimeMediatorService(
 
             if (animeResult.Value == null)
             {
-                return Result.Failure(new("Error.NotFound", "Anime not found"));
+                return Result.Failure(new(Constants.Errors.NotFound, "Anime not found"));
             }
 
             var deleteResult = await animeService.DeleteAsync(id);
@@ -544,7 +544,7 @@ public class AnimeMediatorService(
         }
         catch (Exception ex)
         {
-            return Result.Failure(new("Error.DeleteAsync", ex.Message));
+            return Result.Failure(new(Constants.Errors.DeleteAsync, ex.Message));
         }
     }
 
@@ -584,14 +584,14 @@ public class AnimeMediatorService(
                     var malAnime = JsonSerializer.Deserialize<MalAnime>(rawData, JsonOptions);
                     if (malAnime != null)
                     {
-                        logger.LogDebug("MAL anime {SourceId} ({Title}) has MyListStatus: Status={Status}",
+                        logger.LogDebug(Constants.LogMessages.AnimeMediatorService.MalAnimeMyListStatus,
                             mapping.Anime.SourceId, malAnime.Title, malAnime.MyListStatus?.Status);
                         return new MalAnimeInfo(malAnime, myAnimeListHost);
                     }
                 }
                 catch (JsonException ex)
                 {
-                    logger.LogWarning(ex, "Failed to deserialize MAL anime cache data for SourceId: {SourceId}", mapping.Anime.SourceId);
+                    logger.LogWarning(ex, Constants.LogMessages.AnimeMediatorService.MalCacheDeserializeFailed, mapping.Anime.SourceId);
                 }
             }
         }
@@ -609,14 +609,14 @@ public class AnimeMediatorService(
                     var sonarrSeries = JsonSerializer.Deserialize<SonarrSeries>(rawData, JsonOptions);
                     if (sonarrSeries != null)
                     {
-                        logger.LogDebug("Sonarr anime {SourceId} ({Title}) has {TotalSeasons} seasons",
+                        logger.LogDebug(Constants.LogMessages.AnimeMediatorService.SonarrAnimeSeasons,
                             mapping.Anime.SourceId, sonarrSeries.Title, sonarrSeries.Seasons?.Count ?? 0);
                         return new SonarrAnimeInfo(sonarrSeries, sonarrSeriesBaseUrl, new Dictionary<string, int>());
                     }
                 }
                 catch (JsonException ex)
                 {
-                    logger.LogWarning(ex, "Failed to deserialize Sonarr anime cache data for SourceId: {SourceId}", mapping.Anime.SourceId);
+                    logger.LogWarning(ex, Constants.LogMessages.AnimeMediatorService.SonarrCacheDeserializeFailed, mapping.Anime.SourceId);
                 }
             }
         }

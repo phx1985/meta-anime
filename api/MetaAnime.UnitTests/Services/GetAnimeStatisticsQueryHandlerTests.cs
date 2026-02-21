@@ -1,4 +1,5 @@
 using FluentAssertions;
+using MetaAnime.Application;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Interfaces;
 using MetaAnime.Application.Queries;
@@ -50,7 +51,7 @@ public class GetAnimeStatisticsQueryHandlerTests
     public async Task Handle_WhenServiceFails_ReturnsFailureResult()
     {
         // Arrange
-        var error = new Error("Error.GetStatisticsAsync", "An error occurred");
+        var error = new Error(Constants.Errors.GetStatisticsAsync, "An error occurred");
         _mockAnimeMediatorService
             .Setup(x => x.GetStatisticsAsync())
             .ReturnsAsync(Result.Failure<AnimeStatisticsResponse>(error));
@@ -60,6 +61,6 @@ public class GetAnimeStatisticsQueryHandlerTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("Error.GetStatisticsAsync");
+        result.Error.Code.Should().Be(Constants.Errors.GetStatisticsAsync);
     }
 }

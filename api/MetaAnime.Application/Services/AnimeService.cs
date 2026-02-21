@@ -27,7 +27,7 @@ public class AnimeService(
         }
         catch (Exception ex)
         {
-            return Result.Failure(new("Error.BulkInsertAsync", ex.Message));
+            return Result.Failure(new(Constants.Errors.BulkInsertAsync, ex.Message));
         }
     }
 
@@ -40,7 +40,7 @@ public class AnimeService(
         }
         catch (Exception ex)
         {
-            return Result.Failure(new("Error.BulkInsertAsync", ex.Message));
+            return Result.Failure(new(Constants.Errors.BulkInsertAsync, ex.Message));
         }
     }
 
@@ -53,7 +53,7 @@ public class AnimeService(
         }
         catch (Exception ex)
         {
-            return Result.Failure(new("Error.BulkDeleteAllAsync", ex.Message));
+            return Result.Failure(new(Constants.Errors.BulkDeleteAllAsync, ex.Message));
         }
     }
 
@@ -66,7 +66,7 @@ public class AnimeService(
         }
         catch (Exception ex)
         {
-            return Result.Failure(new("Error.BulkDeleteBySourceAsync", ex.Message));
+            return Result.Failure(new(Constants.Errors.BulkDeleteBySourceAsync, ex.Message));
         }
     }
 
@@ -79,7 +79,7 @@ public class AnimeService(
         }
         catch (Exception ex)
         {
-            return Result.Failure<IEnumerable<Anime>>(new("Error.GetAllAsync", ex.Message));
+            return Result.Failure<IEnumerable<Anime>>(new(Constants.Errors.GetAllAsync, ex.Message));
         }
     }
 
@@ -92,7 +92,7 @@ public class AnimeService(
         }
         catch (Exception ex)
         {
-            return Result.Failure<IEnumerable<Anime>>(new("Error.GetAllBySourceAsync", ex.Message));
+            return Result.Failure<IEnumerable<Anime>>(new(Constants.Errors.GetAllBySourceAsync, ex.Message));
         }
     }
 
@@ -105,7 +105,7 @@ public class AnimeService(
         }
         catch (Exception ex)
         {
-            return Result.Failure<Anime?>(new("Error.GetAnimeAsync", ex.Message));
+            return Result.Failure<Anime?>(new(Constants.Errors.GetAnimeAsync, ex.Message));
         }
     }
 
@@ -163,7 +163,7 @@ public class AnimeService(
         }
         catch (Exception ex)
         {
-            return Result.Failure<IEnumerable<Anime>>(new("Error.RefreshData", ex.Message));
+            return Result.Failure<IEnumerable<Anime>>(new(Constants.Errors.RefreshData, ex.Message));
         }
     }
 
@@ -176,7 +176,7 @@ public class AnimeService(
         }
         catch (Exception ex)
         {
-            return Result.Failure<Anime?>(new("Error.GetByIdAsync", ex.Message));
+            return Result.Failure<Anime?>(new(Constants.Errors.GetByIdAsync, ex.Message));
         }
     }
 
@@ -189,7 +189,7 @@ public class AnimeService(
         }
         catch (Exception ex)
         {
-            return Result.Failure(new("Error.DeleteAsync", ex.Message));
+            return Result.Failure(new(Constants.Errors.DeleteAsync, ex.Message));
         }
     }
 }
