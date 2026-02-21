@@ -21,7 +21,28 @@ For any deployment beyond your local machine:
 - Docker Engine 20.10+
 - Docker Compose 2.0+
 
-### Running with Docker Compose
+### Running the Full Stack (API + UI) for Development
+
+A `docker-compose.dev.yml` at the repo root starts **Postgres + API + Angular UI** together with hot-reload enabled.
+
+1. **From the repo root:**
+   ```bash
+   docker compose -f docker-compose.dev.yml up --build
+   ```
+
+2. **Access the services:**
+   - Angular UI: http://localhost:4200
+   - API: http://localhost:8080
+   - Swagger: http://localhost:8080/swagger
+
+3. **Stop:**
+   ```bash
+   docker compose -f docker-compose.dev.yml down
+   ```
+
+The Angular dev server proxies all `/api` requests to the API container automatically (see `ui/meta-anime-ui/proxy.conf.json`). Source files are bind-mounted so changes trigger hot-reload without rebuilding the image.
+
+### Running the API only with Docker Compose
 
 1. **Navigate to the api directory:**
    ```bash
