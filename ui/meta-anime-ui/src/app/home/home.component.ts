@@ -1,4 +1,4 @@
-import { Component, inject, signal, DestroyRef } from '@angular/core';
+import { Component, inject, signal, computed, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
@@ -21,7 +21,7 @@ import { AnimeStatisticsResponse } from '../models/anime.models';
         <div class="row g-4 mb-4">
           <div class="col-6 col-md-4 col-lg-2">
             <div class="stat-card">
-              <div class="stat-value">{{ stats()!.PlexAnime + stats()!.MyAnimeListAnime }}</div>
+              <div class="stat-value">{{ totalAnimes() }}</div>
               <div class="stat-label">{{ 'home.stats.total' | translate }}</div>
             </div>
           </div>
@@ -123,6 +123,10 @@ export class HomeComponent {
   private animeService = inject(AnimeService);
   private destroyRef = inject(DestroyRef);
   stats = signal<AnimeStatisticsResponse | null>(null);
+  totalAnimes = computed(() => {
+    const s = this.stats();
+    return s ? s.PlexAnime + s.MyAnimeListAnime : 0;
+  });
 
   constructor() {
     this.animeService.getStatistics()

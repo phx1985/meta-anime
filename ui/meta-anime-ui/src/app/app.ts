@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from './services/theme.service';
@@ -12,12 +12,19 @@ import { ThemeService } from './services/theme.service';
 export class App {
   protected themeService = inject(ThemeService);
   protected translate = inject(TranslateService);
+  protected currentLang = signal<string>('en');
+
+  constructor() {
+    this.translate.use('en');
+  }
 
   toggleTheme(): void {
     this.themeService.toggleTheme();
   }
 
-  switchLanguage(lang: string): void {
-    this.translate.use(lang);
+  switchLanguage(): void {
+    const next = this.currentLang() === 'en' ? 'fr' : 'en';
+    this.currentLang.set(next);
+    this.translate.use(next);
   }
 }

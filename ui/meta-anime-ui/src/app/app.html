@@ -29,7 +29,7 @@
           @if (themeService.isDarkTheme()) { ☀️ } @else { 🌙 }
           {{ 'theme.toggle' | translate }}
         </button>
-        <button class="btn btn-sm btn-outline-secondary" (click)="switchLanguage(translate.currentLang === 'en' ? 'fr' : 'en')">
+        <button class="btn btn-sm btn-outline-secondary" (click)="switchLanguage()">
           {{ 'lang.switch' | translate }}
         </button>
       </div>
