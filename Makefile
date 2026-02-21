@@ -26,23 +26,29 @@ help:
 	@echo "  make db-restore  - Restore PostgreSQL database"
 	@echo "  make db-shell    - Open PostgreSQL shell"
 
+# Check if a dev override file exists and append it to the compose command
+DEV_COMPOSE_CMD = docker compose -f docker-compose.dev.yml
+ifneq (,$(wildcard ./docker-compose.dev.override.yml))
+	DEV_COMPOSE_CMD += -f docker-compose.dev.override.yml
+endif
+
 # ── Full-stack dev targets (run from repo root) ───────────────────────────────
 
 # Build and start full stack (Postgres + API + Angular UI) with hot-reload
 dev-up:
-	docker compose -f docker-compose.dev.yml up --build -d
+	$(DEV_COMPOSE_CMD) up --build -d
 
 # Stop full stack
 dev-down:
-	docker compose -f docker-compose.dev.yml down
+	$(DEV_COMPOSE_CMD) down
 
 # Follow logs for all dev services
 dev-logs:
-	docker compose -f docker-compose.dev.yml logs -f
+	$(DEV_COMPOSE_CMD) logs -f
 
 # Rebuild images without cache
 dev-build:
-	docker compose -f docker-compose.dev.yml build --no-cache
+	$(DEV_COMPOSE_CMD) build --no-cache
 
 # ── API-only targets (intended to be run from the api/ directory) ─────────────
 

@@ -44,5 +44,6 @@ public class MalTokenRefreshJob(
             Constants.JobNames.MalTokenRefresh,
             job => job.RefreshToken(),
             Cron.Daily);
+        RecurringJob.TriggerJob(Constants.JobNames.MalTokenRefresh); // Trigger immediately on startup
     }
 }
