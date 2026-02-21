@@ -49,7 +49,59 @@ The application uses the .NET Options pattern. You can configure it using `appse
 *   PostgreSQL (for local development)
 *   **Docker & Docker Compose** (recommended for quickest setup)
 
-### 🐳 Quick Start with Docker (Recommended)
+### 🚀 Quick Start with .NET Aspire (Recommended for Local Development)
+
+.NET Aspire orchestrates all services (PostgreSQL, API, and Angular UI) with a single command, includes a developer dashboard, and supports live reload for the Angular UI.
+
+#### Prerequisites
+
+*   [.NET 9 SDK or later](https://dotnet.microsoft.com/download)
+*   [Node.js and npm](https://nodejs.org/) (for the Angular UI)
+*   [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for the PostgreSQL container)
+
+#### Steps
+
+1.  **Clone the repository**
+    ```bash
+    git clone https://github.com/phx1985/meta-anime.git
+    cd meta-anime
+    ```
+
+2.  **Install npm dependencies** (first time only)
+    ```bash
+    cd ui/meta-anime-ui && npm install && cd ../..
+    ```
+
+3.  **Run the full stack**
+    ```bash
+    dotnet run --project MetaAnime.AppHost
+    ```
+    Aspire will start:
+    - A PostgreSQL container
+    - The .NET API (with automatic DB migration)
+    - The Angular UI dev server with **live hot-reload**
+    - The Aspire Developer Dashboard (automatically opened in your browser)
+
+4.  **Access the services**
+
+    | Service | URL |
+    |---------|-----|
+    | Aspire Dashboard | http://localhost:15888 (or shown in terminal) |
+    | Angular UI | http://localhost:4200 |
+    | API | shown in Aspire Dashboard |
+    | Swagger | `<api-url>/swagger` |
+
+5.  **Configure credentials** — set API keys, Sonarr, Plex, MAL settings using .NET User Secrets (run from the repository root):
+    ```bash
+    dotnet user-secrets set "Authentication__ApiKey" "your-api-key" --project MetaAnime.AppHost
+    ```
+    Or set them in `api/MetaAnime.Presentation/appsettings.Development.json`.
+
+> **Live reload**: The Angular UI supports full hot-reload — file changes in `ui/meta-anime-ui/src` are reflected in the browser instantly without restarting the stack.
+
+> **Visual Studio / Rider**: Open `api/MetaAnime.sln`, set `MetaAnime.AppHost` as the startup project, and press F5.
+
+### 🐳 Quick Start with Docker (Alternative)
 
 The fastest way to get up and running — **full stack with the Angular UI** — is a single command from the repo root:
 

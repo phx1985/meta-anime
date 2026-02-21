@@ -7,6 +7,8 @@ using MetaAnime.Utilities.Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 // Add services to the container.
 builder.Services.AddResponseCaching();
 builder.Services.AddControllers();
@@ -24,13 +26,15 @@ builder.Services.AddApiVersioning(options =>
 });
 
 // Configure Hangfire
-var dbSettings = builder.Configuration.GetSection(DatabaseSettings.SectionName).Get<DatabaseSettings>();
+var hangfireConnectionString = builder.Configuration.GetConnectionString("metaanime")
+    ?? builder.Configuration.GetSection(DatabaseSettings.SectionName).Get<DatabaseSettings>()?.ConnectionString
+    ?? string.Empty;
 builder.Services.AddHangfire(configuration => configuration
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
     .UsePostgreSqlStorage(c =>
-        c.UseNpgsqlConnection(dbSettings?.ConnectionString ?? string.Empty)));
+        c.UseNpgsqlConnection(hangfireConnectionString)));
 
 builder.Services.AddHangfireServer();
 
@@ -49,6 +53,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.MapDefaultEndpoints();
 
 // Configure Hangfire Dashboard
 app.UseHangfireDashboard("/hangfire", new DashboardOptions

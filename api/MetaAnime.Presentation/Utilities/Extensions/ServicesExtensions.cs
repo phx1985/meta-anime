@@ -97,8 +97,10 @@ public static class ServicesExtensions
     /// </summary>
     public static void SetupDatabase(this IServiceCollection services, IConfiguration configuration)
     {
-        var dbSettings = configuration.GetSection(DatabaseSettings.SectionName).Get<DatabaseSettings>();
-        var connectionString = dbSettings?.ConnectionString ?? string.Empty;
+        // Support both Aspire-injected connection string and manual configuration
+        var connectionString = configuration.GetConnectionString("metaanime")
+            ?? configuration.GetSection(DatabaseSettings.SectionName).Get<DatabaseSettings>()?.ConnectionString
+            ?? string.Empty;
 
         services.AddDbContext<MetaAnimeDbContext>(options => options.UseNpgsql(connectionString));
     }
