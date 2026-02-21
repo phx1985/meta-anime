@@ -1,23 +1,11 @@
 @use 'sass:math';
 
-// ── Hero Section ──────────────────────────────────────────────────────────────
+// Hero Section
 
 .hero-section {
   position: relative;
   min-height: 75vh;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
   overflow: hidden;
-  padding-bottom: 4rem;
-}
-
-// Hidden SVG filter definition (no visual footprint)
-.hero-noise-svg {
-  position: absolute;
-  width: 0;
-  height: 0;
-  pointer-events: none;
 }
 
 // Background image layer
@@ -31,34 +19,34 @@
   z-index: 0;
 }
 
-// Subtle bottom vignette – just enough shadow for text readability
+// Subtle bottom vignette
 .hero-vignette {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to bottom,
-    transparent 40%,
-    rgba(0, 0, 0, 0.45) 100%
+    transparent 35%,
+    rgba(0, 0, 0, 0.5) 100%
   );
   z-index: 1;
   pointer-events: none;
 }
 
-// ── Film Grain ────────────────────────────────────────────────────────────────
-
+// Film Grain
+// The SVG filter #hero-grain is defined globally in index.html so
+// url(#hero-grain) resolves across Angular component encapsulation.
 .hero-noise {
   position: absolute;
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  // Gray base + turbulence filter → film grain look
   background: rgb(128 128 128);
   filter: url(#hero-grain);
-  opacity: 0.055;
+  opacity: 0.12;
   mix-blend-mode: overlay;
 }
 
-// ── Animated Bubbles ──────────────────────────────────────────────────────────
+// Animated Bubbles
 
 .particles {
   position: absolute;
@@ -68,7 +56,6 @@
   overflow: hidden;
 }
 
-// Easing curves for organic motion
 $ease-rise: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
 .particle {
@@ -76,7 +63,6 @@ $ease-rise: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   bottom: -30px;
   display: block;
   background: rgba(255, 255, 255, 0.22);
-  // Each particle has a unique organic shape via nth-child
   animation: bubbleRise $ease-rise infinite;
 
   @for $i from 1 through 12 {
@@ -85,7 +71,6 @@ $ease-rise: cubic-bezier(0.25, 0.46, 0.45, 0.94);
       $left: ($i - 1) * 8.2% + math.random(6) * 1%;
       $delay: -(math.random(14)) * 1s;
       $dur: 10s + math.random(12) * 1s;
-      // Organic non-circular shape per bubble
       $r1: 40 + math.random(20);
       $r2: 40 + math.random(20);
       $r3: 40 + math.random(20);
@@ -100,7 +85,6 @@ $ease-rise: cubic-bezier(0.25, 0.46, 0.45, 0.94);
       border-radius: $r1 * 1% $r2 * 1% $r3 * 1% $r4 * 1%;
       opacity: 0.1 + math.random(3) * 0.07;
 
-      // Blur smaller bubbles for depth-of-field feel
       @if $size < 10px {
         filter: blur(0.8px);
       }
@@ -108,31 +92,26 @@ $ease-rise: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
 }
 
-// Organic rise: lateral wobble + ease + scale pulse
 @keyframes bubbleRise {
-  0%   {
-    transform: translateY(0) translateX(0) scale(1);
-    opacity: 0;
-  }
+  0%   { transform: translateY(0)      translateX(0)    scale(1);    opacity: 0; }
   8%   { opacity: 1; }
-  30%  { transform: translateY(-30vh) translateX(12px) scale(1.04); }
-  55%  { transform: translateY(-58vh) translateX(-8px) scale(0.97); }
-  80%  { transform: translateY(-85vh) translateX(10px) scale(1.02); }
+  30%  { transform: translateY(-30vh)  translateX(12px) scale(1.04); }
+  55%  { transform: translateY(-58vh)  translateX(-8px) scale(0.97); }
+  80%  { transform: translateY(-85vh)  translateX(10px) scale(1.02); }
   92%  { opacity: 0.6; }
-  100% {
-    transform: translateY(-110vh) translateX(0) scale(0.9);
-    opacity: 0;
-  }
+  100% { transform: translateY(-110vh) translateX(0)    scale(0.9);  opacity: 0; }
 }
 
-// ── Hero Text ─────────────────────────────────────────────────────────────────
+// Hero Text - pinned to the absolute bottom of the banner
 
 .hero-content {
-  position: relative;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 4;
   text-align: center;
-  padding: 0 1.5rem 1rem;
-  max-width: 720px;
+  padding: 0 1.5rem 2.5rem;
 }
 
 .hero-title {
@@ -140,24 +119,24 @@ $ease-rise: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   font-weight: 800;
   color: #ffffff;
   letter-spacing: -0.02em;
-  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.55);
-  margin-bottom: 0.75rem;
+  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.6);
+  margin-bottom: 0.5rem;
   animation: fadeSlideUp 0.9s ease both;
 }
 
 .hero-subtitle {
   font-size: clamp(1rem, 2.5vw, 1.3rem);
   color: rgba(255, 255, 255, 0.88);
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
   animation: fadeSlideUp 0.9s 0.2s ease both;
 }
 
 @keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(28px); }
+  from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-// ── Stats Section ─────────────────────────────────────────────────────────────
+// Stats Section
 
 .stats-section {
   position: relative;
@@ -169,7 +148,7 @@ $ease-rise: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   font-size: 0.85rem;
 }
 
-// ── Stat Cards ────────────────────────────────────────────────────────────────
+// Stat Cards
 
 .stat-card {
   background: var(--card-bg);
