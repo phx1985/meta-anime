@@ -19,5 +19,7 @@
     "ApiToken": "your_mal_api_token",
     "ClientId": "your_mal_client_id",
     "RefreshToken": "your_initial_mal_refresh_token"
-  }
+  },
+
+  "AllowedCorsOrigins": [ "http://localhost:4200" ]
 }

@@ -13,6 +13,25 @@ builder.AddServiceDefaults();
 builder.Services.AddResponseCaching();
 builder.Services.AddControllers();
 
+// Configure CORS — allow the Angular dev-server origin in Development
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        if (builder.Environment.IsDevelopment())
+        {
+            var allowedOrigins = builder.Configuration
+                .GetSection("AllowedCorsOrigins")
+                .Get<string[]>()
+                ?? ["http://localhost:4200"];
+
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        }
+    });
+});
+
 // Add API versioning
 builder.Services.AddApiVersioning(options =>
 {
@@ -67,6 +86,7 @@ AnimeSyncJob.Schedule();
 MalTokenRefreshJob.Schedule();
 
 app.UseHttpsRedirection();
+app.UseCors();
 app.UseResponseCaching();
 app.UseAuthentication();
 app.UseAuthorization();
