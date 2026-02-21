@@ -17,6 +17,11 @@
     },
     "welcome": "Bienvenue sur Meta Anime"
   },
+  "animeList": {
+    "title": "Liste des Animes",
+    "error": "Échec du chargement des animes. Veuillez réessayer plus tard.",
+    "empty": "Aucun anime trouvé."
+  },
   "theme": {
     "toggle": "Changer le thème"
   },
