@@ -13,9 +13,21 @@
       "plex": "Plex",
       "sonarr": "Sonarr",
       "mal": "MyAnimeList",
-      "description": "Agrégé depuis toutes vos sources"
+      "description": "Agrégé depuis toutes vos sources",
+      "tooltip": {
+        "total": "Nombre total d'entrées anime trouvées dans toutes les sources connectées (Plex + MyAnimeList).",
+        "matched": "Anime croisés avec succès entre Plex, MyAnimeList et Sonarr via le mapping AniDB.",
+        "plex": "Séries anime disponibles dans votre bibliothèque Plex.",
+        "sonarr": "Séries anime suivies par votre instance Sonarr.",
+        "mal": "Entrées anime issues de votre compte MyAnimeList."
+      }
     },
     "welcome": "Bienvenue sur Meta Anime"
+  },
+  "animeList": {
+    "title": "Liste des Animes",
+    "error": "Échec du chargement des animes. Veuillez réessayer plus tard.",
+    "empty": "Aucun anime trouvé."
   },
   "theme": {
     "toggle": "Changer le thème"

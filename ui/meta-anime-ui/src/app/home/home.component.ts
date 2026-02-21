@@ -18,7 +18,7 @@ export class HomeComponent {
   stats = signal<AnimeStatisticsResponse | null>(null);
   totalAnimes = computed(() => {
     const s = this.stats();
-    return s ? s.PlexAnime + s.MyAnimeListAnime : 0;
+    return s ? s.plexAnime + s.myAnimeListAnime : 0;
   });
 
   /** Array used to render floating particles via @for in the template */
