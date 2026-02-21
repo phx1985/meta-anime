@@ -46,7 +46,7 @@ The application uses the .NET Options pattern. You can configure it using `appse
 ### Prerequisites
 
 *   [.NET 10 SDK](https://dotnet.microsoft.com/download) (for local development)
-*   PostgreSQL (for local development)
+*   [Node.js and npm](https://nodejs.org/) (for the Angular UI)
 *   **Docker & Docker Compose** (recommended for quickest setup)
 
 ### 🚀 Quick Start with .NET Aspire (Recommended for Local Development)
@@ -55,7 +55,7 @@ The application uses the .NET Options pattern. You can configure it using `appse
 
 #### Prerequisites
 
-*   [.NET 9 SDK or later](https://dotnet.microsoft.com/download)
+*   [.NET 10 SDK](https://dotnet.microsoft.com/download)
 *   [Node.js and npm](https://nodejs.org/) (for the Angular UI)
 *   [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for the PostgreSQL container)
 
@@ -74,7 +74,7 @@ The application uses the .NET Options pattern. You can configure it using `appse
 
 3.  **Run the full stack**
     ```bash
-    dotnet run --project MetaAnime.AppHost
+    dotnet run --project MetaAnime.AppHost --launch-profile https
     ```
     Aspire will start:
     - A PostgreSQL container
@@ -82,11 +82,13 @@ The application uses the .NET Options pattern. You can configure it using `appse
     - The Angular UI dev server with **live hot-reload**
     - The Aspire Developer Dashboard (automatically opened in your browser)
 
+    > **Visual Studio / Rider**: Open `api/MetaAnime.sln`, set `MetaAnime.AppHost` as the startup project, and press **F5**. The `https` launch profile is selected by default.
+
 4.  **Access the services**
 
     | Service | URL |
     |---------|-----|
-    | Aspire Dashboard | http://localhost:15888 (or shown in terminal) |
+    | Aspire Dashboard | https://localhost:17042 |
     | Angular UI | http://localhost:4200 |
     | API | shown in Aspire Dashboard |
     | Swagger | `<api-url>/swagger` |
@@ -98,8 +100,6 @@ The application uses the .NET Options pattern. You can configure it using `appse
     Or set them in `api/MetaAnime.Presentation/appsettings.Development.json`.
 
 > **Live reload**: The Angular UI supports full hot-reload — file changes in `ui/meta-anime-ui/src` are reflected in the browser instantly without restarting the stack.
-
-> **Visual Studio / Rider**: Open `api/MetaAnime.sln`, set `MetaAnime.AppHost` as the startup project, and press F5.
 
 ### 🐳 Quick Start with Docker (Alternative)
 
