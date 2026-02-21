@@ -1,24 +1,50 @@
-# Makefile for Meta Anime API Docker operations
+# Makefile for Meta Anime Docker operations
 
-.PHONY: help build up down restart logs ps clean setup-dev test-build
+.PHONY: help build up down restart logs ps clean setup-dev test-build dev-up dev-down dev-logs dev-build
 
 # Default target
 help:
-	@echo "Meta Anime API - Docker Management"
+	@echo "Meta Anime - Docker Management"
 	@echo ""
-	@echo "Available targets:"
-	@echo "  make build       - Build the Docker image"
-	@echo "  make up          - Start services in detached mode"
-	@echo "  make down        - Stop and remove services"
-	@echo "  make restart     - Restart services"
-	@echo "  make logs        - View logs (follow mode)"
+	@echo "── Full-stack dev (API + UI) — run from repo root ──────────────"
+	@echo "  make dev-up      - Build and start full stack (Postgres + API + UI)"
+	@echo "  make dev-down    - Stop full stack"
+	@echo "  make dev-logs    - Follow logs for all dev services"
+	@echo "  make dev-build   - Rebuild images without cache"
+	@echo ""
+	@echo "── API-only — run from the api/ directory ───────────────────────"
+	@echo "  make build       - Build the API Docker image"
+	@echo "  make up          - Start API services in detached mode"
+	@echo "  make down        - Stop API services"
+	@echo "  make restart     - Restart API services"
+	@echo "  make logs        - View API logs (follow mode)"
 	@echo "  make ps          - Show running services"
 	@echo "  make clean       - Stop services and remove volumes (⚠️  deletes data)"
 	@echo "  make setup-dev   - Setup local development environment"
-	@echo "  make test-build  - Test build without cache"
+	@echo "  make test-build  - Test API build without cache"
 	@echo "  make db-backup   - Backup PostgreSQL database"
 	@echo "  make db-restore  - Restore PostgreSQL database"
 	@echo "  make db-shell    - Open PostgreSQL shell"
+
+# ── Full-stack dev targets (run from repo root) ───────────────────────────────
+
+# Build and start full stack (Postgres + API + Angular UI) with hot-reload
+dev-up:
+	docker compose -f docker-compose.dev.yml up --build -d
+
+# Stop full stack
+dev-down:
+	docker compose -f docker-compose.dev.yml down
+
+# Follow logs for all dev services
+dev-logs:
+	docker compose -f docker-compose.dev.yml logs -f
+
+# Rebuild images without cache
+dev-build:
+	docker compose -f docker-compose.dev.yml build --no-cache
+
+# ── API-only targets (intended to be run from the api/ directory) ─────────────
 
 # Build the Docker image
 build:
