@@ -17,7 +17,7 @@ public class KometaAnimeMappingService(IKometaAnimeMappingRepository kometaAnime
         }
         catch (Exception ex)
         {
-            return Result.Failure<IList<KometaAnimeMapping>>(new Error("Error.GetAllAsync", ex.Message));
+            return Result.Failure<IList<KometaAnimeMapping>>(new Error(Constants.Errors.GetAllAsync, ex.Message));
         }
     }
 
@@ -30,7 +30,7 @@ public class KometaAnimeMappingService(IKometaAnimeMappingRepository kometaAnime
         }
         catch (Exception ex)
         {
-            return Result.Failure<IList<KometaAnimeMapping>>(new Error("Error.GetByAniDbIdAsync", ex.Message));
+            return Result.Failure<IList<KometaAnimeMapping>>(new Error(Constants.Errors.GetByAniDbIdAsync, ex.Message));
         }
     }
 
@@ -43,7 +43,7 @@ public class KometaAnimeMappingService(IKometaAnimeMappingRepository kometaAnime
         }
         catch (Exception ex)
         {
-            return Result.Failure<KometaAnimeMapping?>(new Error("Error.GetByPlatformIdAsync", ex.Message));
+            return Result.Failure<KometaAnimeMapping?>(new Error(Constants.Errors.GetByPlatformIdAsync, ex.Message));
         }
     }
 
@@ -56,7 +56,7 @@ public class KometaAnimeMappingService(IKometaAnimeMappingRepository kometaAnime
         }
         catch (Exception ex)
         {
-            return Result.Failure(new Error("Error.BulkDeleteAllAsync", ex.Message));
+            return Result.Failure(new Error(Constants.Errors.BulkDeleteAllAsync, ex.Message));
         }
     }
 
@@ -69,7 +69,7 @@ public class KometaAnimeMappingService(IKometaAnimeMappingRepository kometaAnime
         }
         catch (Exception ex)
         {
-            return Result.Failure(new Error("Error.BulkInsertAsync", ex.Message));
+            return Result.Failure(new Error(Constants.Errors.BulkInsertAsync, ex.Message));
         }
     }
 
@@ -82,7 +82,7 @@ public class KometaAnimeMappingService(IKometaAnimeMappingRepository kometaAnime
         }
         catch (Exception ex)
         {
-            return Result.Failure<bool>(new Error("Error.AnyAsync", ex.Message));
+            return Result.Failure<bool>(new Error(Constants.Errors.AnyAsync, ex.Message));
         }
     }
 }

@@ -34,13 +34,13 @@ public class MalTokenService(
     {
         if (string.IsNullOrWhiteSpace(_settings.ClientId))
         {
-            return Result.Failure(new Error("MAL.MissingClientId", "MyAnimeList ClientId is not configured"));
+            return Result.Failure(new Error(Constants.Errors.MissingClientId, "MyAnimeList ClientId is not configured"));
         }
 
         var refreshToken = await GetCurrentRefreshTokenAsync();
         if (string.IsNullOrWhiteSpace(refreshToken))
         {
-            return Result.Failure(new Error("MAL.MissingRefreshToken", "No MAL refresh token available in PropertyBag or settings"));
+            return Result.Failure(new Error(Constants.Errors.MissingRefreshToken, "No MAL refresh token available in PropertyBag or settings"));
         }
 
         var client = new RestClient(new Uri(TokenUrl));
@@ -60,18 +60,18 @@ public class MalTokenService(
         }
         catch (Exception ex)
         {
-            return Result.Failure(new Error("MAL.RefreshError", $"Error calling MAL token endpoint: {ex.Message}"));
+            return Result.Failure(new Error(Constants.Errors.RefreshError, $"Error calling MAL token endpoint: {ex.Message}"));
         }
 
         if (!response.IsSuccessful || response.Content is null)
         {
-            return Result.Failure(new Error("MAL.RefreshFailed", $"MAL token refresh failed: {response.StatusCode} {response.Content}"));
+            return Result.Failure(new Error(Constants.Errors.RefreshFailed, $"MAL token refresh failed: {response.StatusCode} {response.Content}"));
         }
 
         var tokenResponse = JsonSerializer.Deserialize<MalTokenResponse>(response.Content);
         if (tokenResponse is null || string.IsNullOrWhiteSpace(tokenResponse.AccessToken))
         {
-            return Result.Failure(new Error("MAL.InvalidResponse", "MAL token response was invalid"));
+            return Result.Failure(new Error(Constants.Errors.InvalidResponse, "MAL token response was invalid"));
         }
 
         await propertyBagRepository.UpsertAsync(AccessTokenKey, tokenResponse.AccessToken);

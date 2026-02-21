@@ -77,7 +77,7 @@ public class PlexAnimeSourceService(IPlexAPI plexAPI, IOptions<PlexSettings> opt
     {
         if (!isConfigured)
         {
-            return Result.Failure<PlexMedia>(new("Plex.NotConfigured", "Plex is not configured"));
+            return Result.Failure<PlexMedia>(new(Constants.Errors.NotConfigured, "Plex is not configured"));
         }
 
         var req = new GetMetadataItemRequest { Ids = [id] };
@@ -100,7 +100,7 @@ public class PlexAnimeSourceService(IPlexAPI plexAPI, IOptions<PlexSettings> opt
 
         if (string.IsNullOrEmpty(machineIdentifier))
         {
-            return Result.Failure<string>(new Error("MachineIdentifierNotFound", "Could not retrieve machine identifier."));
+            return Result.Failure<string>(new Error(Constants.Errors.MachineIdentifierNotFound, "Could not retrieve machine identifier."));
         }
 
         return Result.Success(machineIdentifier);

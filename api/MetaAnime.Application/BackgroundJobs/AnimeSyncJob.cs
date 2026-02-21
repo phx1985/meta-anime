@@ -13,7 +13,7 @@ public class AnimeSyncJob(
     /// </summary>
     public async Task SyncAnimeMetadata()
     {
-        logger.LogInformation("Starting anime metadata sync at {Time}", DateTime.UtcNow);
+        logger.LogInformation(Constants.LogMessages.AnimeSyncJob.Starting, DateTime.UtcNow);
 
         try
         {
@@ -21,16 +21,16 @@ public class AnimeSyncJob(
 
             if (matchResult.IsSuccess)
             {
-                logger.LogInformation("Successfully synced anime metadata at {Time}", DateTime.UtcNow);
+                logger.LogInformation(Constants.LogMessages.AnimeSyncJob.Succeeded, DateTime.UtcNow);
             }
             else
             {
-                logger.LogError("Failed to match anime: {ErrorMessage}", matchResult.Error.Message);
+                logger.LogError(Constants.LogMessages.AnimeSyncJob.MatchFailed, matchResult.Error.Message);
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error during anime sync");
+            logger.LogError(ex, Constants.LogMessages.AnimeSyncJob.Error);
             throw; // re-throw to mark the Hangfire job as failed
         }
     }
@@ -41,7 +41,7 @@ public class AnimeSyncJob(
     public static void Schedule()
     {
         RecurringJob.AddOrUpdate<AnimeSyncJob>(
-            "anime-metadata-sync",
+            Constants.JobNames.AnimeMetadataSync,
             job => job.SyncAnimeMetadata(),
             Cron.Hourly);
     }

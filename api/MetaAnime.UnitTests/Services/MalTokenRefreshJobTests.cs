@@ -2,6 +2,7 @@ using FluentAssertions;
 using MetaAnime.Application.BackgroundJobs;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
+using MetaAnime.Infrastructure.MyAnimeList;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -39,7 +40,7 @@ public class MalTokenRefreshJobTests
     public async Task RefreshToken_WhenFailure_LogsError()
     {
         // Arrange
-        var error = new Error("MAL.MissingClientId", "ClientId not configured");
+        var error = new Error(Constants.Errors.MissingClientId, "ClientId not configured");
         _mockMalTokenService
             .Setup(x => x.RefreshTokenAsync())
             .ReturnsAsync(Result.Failure(error));

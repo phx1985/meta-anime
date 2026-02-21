@@ -18,7 +18,7 @@ public class GetAllPropertyBagQueryHandler(IPropertyBagRepository propertyBagRep
         }
         catch (Exception ex)
         {
-            return Result.Failure<IEnumerable<PropertyBagResponse>>(new("Error.GetAllPropertyBag", ex.Message));
+            return Result.Failure<IEnumerable<PropertyBagResponse>>(new(Constants.Errors.GetAllPropertyBag, ex.Message));
         }
     }
 }

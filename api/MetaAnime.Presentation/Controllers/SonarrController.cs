@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Interfaces;
+using MetaAnime.Presentation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -27,14 +28,14 @@ public class SonarrController(
         [FromQuery] string codec)
     {
         if (string.IsNullOrWhiteSpace(codec))
-            return BadRequest("The 'codec' query parameter is required.");
+            return BadRequest(Constants.Messages.CodecParameterRequired);
 
         var result = await animeMediatorService.GetSonarrSeriesByCodecAsync(codec);
 
         if (result.IsFailure)
         {
             logger.LogError("Sonarr codec search failed for codec '{Codec}': {Error}", codec, result.Error.Message);
-            return StatusCode(500, "An error occurred while searching Sonarr for series with the requested codec.");
+            return StatusCode(500, Constants.Messages.SonarrCodecSearchError);
         }
 
         return Ok(result.Value);

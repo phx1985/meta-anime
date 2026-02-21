@@ -17,7 +17,7 @@ public class AnimeMappingService(IAnimeMappingRepository mappingRepository) : IA
         }
         catch (Exception ex)
         {
-            return Result.Failure(new("Error.BulkDeleteAll", ex.Message));
+            return Result.Failure(new(Constants.Errors.BulkDeleteAll, ex.Message));
         }
     }
 
@@ -30,7 +30,7 @@ public class AnimeMappingService(IAnimeMappingRepository mappingRepository) : IA
         }
         catch (Exception ex)
         {
-            return Result.Failure(new("Error.BulkInsertAsync", ex.Message));
+            return Result.Failure(new(Constants.Errors.BulkInsertAsync, ex.Message));
         }
     }
 
@@ -43,7 +43,7 @@ public class AnimeMappingService(IAnimeMappingRepository mappingRepository) : IA
         }
         catch (Exception ex)
         {
-            return Result.Failure<IEnumerable<AnimeMapping>>(new("Error.GetAllAsync", ex.Message));
+            return Result.Failure<IEnumerable<AnimeMapping>>(new(Constants.Errors.GetAllAsync, ex.Message));
         }
     }
 
@@ -62,7 +62,7 @@ public class AnimeMappingService(IAnimeMappingRepository mappingRepository) : IA
         }
         catch (Exception ex)
         {
-            return Result.Failure<(List<string>, int)>(new("Error.GetPagedAniDbIdsAsync", ex.Message));
+            return Result.Failure<(List<string>, int)>(new(Constants.Errors.GetPagedAniDbIdsAsync, ex.Message));
         }
     }
 
@@ -77,7 +77,7 @@ public class AnimeMappingService(IAnimeMappingRepository mappingRepository) : IA
         }
         catch (Exception ex)
         {
-            return Result.Failure<List<string>>(new("Error.GetAllFilteredAniDbIdsAsync", ex.Message));
+            return Result.Failure<List<string>>(new(Constants.Errors.GetAllFilteredAniDbIdsAsync, ex.Message));
         }
     }
 
@@ -90,7 +90,7 @@ public class AnimeMappingService(IAnimeMappingRepository mappingRepository) : IA
         }
         catch (Exception ex)
         {
-            return Result.Failure<IEnumerable<AnimeMapping>>(new("Error.GetByAniDbIdsAsync", ex.Message));
+            return Result.Failure<IEnumerable<AnimeMapping>>(new(Constants.Errors.GetByAniDbIdsAsync, ex.Message));
         }
     }
 }

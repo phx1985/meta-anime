@@ -13,7 +13,7 @@ public class MalTokenRefreshJob(
     /// </summary>
     public async Task RefreshToken()
     {
-        logger.LogInformation("Starting MAL token refresh at {Time}", DateTime.UtcNow);
+        logger.LogInformation(Constants.LogMessages.MalTokenRefreshJob.Starting, DateTime.UtcNow);
 
         try
         {
@@ -21,16 +21,16 @@ public class MalTokenRefreshJob(
 
             if (result.IsSuccess)
             {
-                logger.LogInformation("Successfully refreshed MAL token at {Time}", DateTime.UtcNow);
+                logger.LogInformation(Constants.LogMessages.MalTokenRefreshJob.Succeeded, DateTime.UtcNow);
             }
             else
             {
-                logger.LogError("Failed to refresh MAL token: {ErrorMessage}", result.Error.Message);
+                logger.LogError(Constants.LogMessages.MalTokenRefreshJob.Failed, result.Error.Message);
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error during MAL token refresh");
+            logger.LogError(ex, Constants.LogMessages.MalTokenRefreshJob.Error);
             throw; // re-throw to mark the Hangfire job as failed
         }
     }
@@ -41,7 +41,7 @@ public class MalTokenRefreshJob(
     public static void Schedule()
     {
         RecurringJob.AddOrUpdate<MalTokenRefreshJob>(
-            "mal-token-refresh",
+            Constants.JobNames.MalTokenRefresh,
             job => job.RefreshToken(),
             Cron.Daily);
     }

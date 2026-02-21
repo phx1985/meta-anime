@@ -46,7 +46,7 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options) : ISonar
             return Result.Success(animes);
         }
         else if (response.StatusCode == HttpStatusCode.NotFound)
-            return Result.Failure<IList<SonarrSeries>>(new("Sonarr.NotFound", "Sonarr series endpoint not found"));
+            return Result.Failure<IList<SonarrSeries>>(new(Constants.Errors.NotFound, "Sonarr series endpoint not found"));
         else
             throw new HttpRequestException($"Failed to get Sonarr series: {response.StatusCode} - {response.Content}");
     }
@@ -56,7 +56,7 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options) : ISonar
         // Return failure if Sonarr is not configured
         if (!isConfigured)
         {
-            return Result.Failure<SonarrSeries>(new("Sonarr.NotConfigured", "Sonarr is not configured"));
+            return Result.Failure<SonarrSeries>(new(Constants.Errors.NotConfigured, "Sonarr is not configured"));
         }
 
         var restClient = new RestClient(sonarrHost);
@@ -71,7 +71,7 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options) : ISonar
             return Result.Success(anime);
         }
         else if (response.StatusCode == HttpStatusCode.NotFound)
-            return Result.Failure<SonarrSeries>(new("Sonarr.NotFound", $"Sonarr series with id '{id}' not found"));
+            return Result.Failure<SonarrSeries>(new(Constants.Errors.NotFound, $"Sonarr series with id '{id}' not found"));
         else
             throw new HttpRequestException($"Failed to get Sonarr series: {response.StatusCode} - {response.Content}");
     }

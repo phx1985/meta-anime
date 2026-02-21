@@ -14,7 +14,7 @@ public class DeletePropertyBagCommandHandler(IPropertyBagRepository propertyBagR
             var existing = await propertyBagRepository.GetByKeyAsync(request.Key);
             if (existing is null)
             {
-                return Result.Failure(new Error("Error.NotFound", $"PropertyBag entry with key '{request.Key}' was not found"));
+                return Result.Failure(new Error(Constants.Errors.NotFound, $"PropertyBag entry with key '{request.Key}' was not found"));
             }
 
             await propertyBagRepository.DeleteAsync(request.Key);
@@ -22,7 +22,7 @@ public class DeletePropertyBagCommandHandler(IPropertyBagRepository propertyBagR
         }
         catch (Exception ex)
         {
-            return Result.Failure(new("Error.DeletePropertyBag", ex.Message));
+            return Result.Failure(new(Constants.Errors.DeletePropertyBag, ex.Message));
         }
     }
 }

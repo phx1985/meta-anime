@@ -22,7 +22,7 @@ public class GetPropertyBagByKeyQueryHandler(IPropertyBagRepository propertyBagR
         }
         catch (Exception ex)
         {
-            return Result.Failure<PropertyBagResponse?>(new("Error.GetPropertyBagByKey", ex.Message));
+            return Result.Failure<PropertyBagResponse?>(new(Constants.Errors.GetPropertyBagByKey, ex.Message));
         }
     }
 }

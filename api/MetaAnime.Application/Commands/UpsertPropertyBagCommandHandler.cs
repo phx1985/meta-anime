@@ -18,7 +18,7 @@ public class UpsertPropertyBagCommandHandler(IPropertyBagRepository propertyBagR
         }
         catch (Exception ex)
         {
-            return Result.Failure<PropertyBagResponse>(new("Error.UpsertPropertyBag", ex.Message));
+            return Result.Failure<PropertyBagResponse>(new(Constants.Errors.UpsertPropertyBag, ex.Message));
         }
     }
 }
