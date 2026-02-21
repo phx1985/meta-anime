@@ -7,7 +7,7 @@ var api = builder.AddProject<Projects.MetaAnime_Presentation>("api")
     .WithReference(postgres)
     .WaitFor(postgres);
 
-builder.AddNpmApp("ui", "../ui/meta-anime-ui", "start")
+builder.AddExecutable("ui", "npm", "../ui/meta-anime-ui", "run", "start")
     .WithReference(api)
     .WaitFor(api)
     .WithHttpEndpoint(port: 4200, isProxied: false)
