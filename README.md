@@ -93,11 +93,25 @@ The application uses the .NET Options pattern. You can configure it using `appse
     | API | shown in Aspire Dashboard |
     | Swagger | `<api-url>/swagger` |
 
-5.  **Configure credentials** — set API keys, Sonarr, Plex, MAL settings using .NET User Secrets (run from the repository root):
+5.  **Configure local credentials** (Aspire equivalent of `docker-compose.override.yml`)
+
+    Copy the template and fill in your values:
     ```bash
-    dotnet user-secrets set "Authentication__ApiKey" "your-api-key" --project MetaAnime.AppHost
+    cp api/MetaAnime.Presentation/appsettings.Development.json.template \
+       api/MetaAnime.Presentation/appsettings.Development.json
+    # Edit appsettings.Development.json with your local API keys and service URLs
     ```
-    Or set them in `api/MetaAnime.Presentation/appsettings.Development.json`.
+    `appsettings.Development.json` is gitignored and will never be committed.
+
+    > **What goes in this file?** Authentication key, Sonarr, Plex, and MAL credentials. You do **not** need any `Postgres__*` settings — Aspire injects the connection string automatically.
+
+    > **Prefer User Secrets?** Store sensitive values outside the repo instead:
+    > ```bash
+    > dotnet user-secrets set "Authentication__ApiKey" "your-key" \
+    >     --project api/MetaAnime.Presentation
+    > dotnet user-secrets set "Sonarr__ApiKey" "your-key" \
+    >     --project api/MetaAnime.Presentation
+    > ```
 
 > **Live reload**: The Angular UI supports full hot-reload — file changes in `ui/meta-anime-ui/src` are reflected in the browser instantly without restarting the stack.
 

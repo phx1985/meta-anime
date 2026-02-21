@@ -62,3 +62,7 @@ Thumbs.db
 docker-compose.override.yml
 .env
 docker-compose.dev.override.yml
+
+# ASP.NET Core local development settings (contains secrets)
+appsettings.Development.json
+appsettings.Local.json

@@ -1,0 +1,23 @@
+{
+  "Authentication": {
+    "ApiKey": "your_local_api_key_here"
+  },
+
+  "Sonarr": {
+    "Host": "http://your-sonarr-host:8989",
+    "ApiKey": "your_sonarr_api_key",
+    "AnimeTags": "anime"
+  },
+
+  "Plex": {
+    "Host": "http://your-plex-host:32400",
+    "Token": "your_plex_token",
+    "AnimeSections": "1,2"
+  },
+
+  "MyAnimeList": {
+    "ApiToken": "your_mal_api_token",
+    "ClientId": "your_mal_client_id",
+    "RefreshToken": "your_initial_mal_refresh_token"
+  }
+}
