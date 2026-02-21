@@ -10,6 +10,7 @@ import { AnimeStatisticsResponse } from '../models/anime.models';
   imports: [TranslatePipe],
   template: `
     <div class="hero-section">
+      <div class="hero-overlay"></div>
       <div class="hero-content">
         <h1 class="hero-title">{{ 'home.title' | translate }}</h1>
         <p class="hero-subtitle">{{ 'home.subtitle' | translate }}</p>
@@ -62,13 +63,26 @@ import { AnimeStatisticsResponse } from '../models/anime.models';
   `,
   styles: [`
     .hero-section {
-      min-height: 40vh;
+      min-height: 60vh;
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-      animation: gradientShift 8s ease infinite;
+      background-image: url('/assets/images/hero.jpg');
+      background-size: cover;
+      background-position: center;
+      background-color: var(--gradient-start);
+    }
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--gradient-start) 80%, transparent),
+        color-mix(in srgb, var(--gradient-end) 70%, transparent)
+      );
       background-size: 200% 200%;
+      animation: gradientShift 8s ease infinite;
     }
     @keyframes gradientShift {
       0% { background-position: 0% 50%; }
@@ -76,20 +90,23 @@ import { AnimeStatisticsResponse } from '../models/anime.models';
       100% { background-position: 0% 50%; }
     }
     .hero-content {
+      position: relative;
+      z-index: 1;
       text-align: center;
       padding: 2rem;
     }
     .hero-title {
       font-size: 3.5rem;
       font-weight: 700;
-      color: var(--hero-text);
-      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      color: #ffffff;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.5);
       margin-bottom: 1rem;
     }
     .hero-subtitle {
       font-size: 1.25rem;
-      color: var(--hero-text);
-      opacity: 0.85;
+      color: #ffffff;
+      opacity: 0.9;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.4);
     }
     .stat-card {
       background: var(--card-bg);
