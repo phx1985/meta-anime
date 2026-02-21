@@ -11,10 +11,7 @@
   font-size: 1.3rem;
   color: var(--text-primary) !important;
   text-decoration: none;
-}
-
-.brand-icon {
-  margin-right: 0.25rem;
+  letter-spacing: -0.01em;
 }
 
 .nav-link {
@@ -25,4 +22,17 @@
 .nav-link:hover,
 .nav-link.active {
   color: var(--accent-primary) !important;
+}
+
+// On mobile the action buttons sit below the nav links; give them a border-top separator
+@media (max-width: 991.98px) {
+  .navbar-actions {
+    border-top: 1px solid var(--navbar-border);
+    width: 100%;
+    padding-top: 0.75rem !important;
+
+    .btn {
+      flex: 1 1 auto;
+    }
+  }
 }

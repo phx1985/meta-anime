@@ -1,8 +1,6 @@
 <nav class="navbar navbar-expand-lg sticky-top">
   <div class="container">
-    <a class="navbar-brand" routerLink="/">
-      <span class="brand-icon">🎌</span> Meta Anime
-    </a>
+    <a class="navbar-brand" routerLink="/">Meta Anime</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
             aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -25,7 +23,7 @@
           </a>
         </li>
       </ul>
-      <div class="d-flex align-items-center gap-2">
+      <div class="navbar-actions d-flex flex-wrap align-items-center gap-2 py-2 py-lg-0">
         <button class="btn btn-sm btn-outline-secondary" (click)="toggleTheme()">
           @if (themeService.isDarkTheme()) { ☀️ } @else { 🌙 }
           {{ 'theme.toggle' | translate }}
