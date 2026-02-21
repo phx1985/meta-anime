@@ -31,6 +31,12 @@ services:
       
       # MyAnimeList - Configure your MAL API credentials
       - MyAnimeList__ApiToken=your_mal_api_token
+      # OAuth2 settings for automatic token refresh (optional)
+      # Obtain a ClientId by registering an app at https://myanimelist.net/apiconfig
+      # Set RefreshToken once to bootstrap; subsequent tokens are stored in the PropertyBag table
+      - MyAnimeList__ClientId=your_mal_client_id
+      # - MyAnimeList__ClientSecret=your_mal_client_secret
+      - MyAnimeList__RefreshToken=your_initial_mal_refresh_token
       
       # Override database password if needed for local development
       # - Postgres__Password=your_custom_password

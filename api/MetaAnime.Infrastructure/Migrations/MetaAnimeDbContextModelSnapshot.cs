@@ -22,7 +22,7 @@ namespace MetaAnime.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("MetaAnime.Core.Models.Anime", b =>
+            modelBuilder.Entity("MetaAnime.Domain.Entities.Anime", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -50,7 +50,7 @@ namespace MetaAnime.Infrastructure.Migrations
                     b.ToTable("Anime", (string)null);
                 });
 
-            modelBuilder.Entity("MetaAnime.Core.Models.AnimeMapping", b =>
+            modelBuilder.Entity("MetaAnime.Domain.Entities.AnimeMapping", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -73,7 +73,7 @@ namespace MetaAnime.Infrastructure.Migrations
                     b.ToTable("AnimeMapping", (string)null);
                 });
 
-            modelBuilder.Entity("MetaAnime.Core.Models.CacheEntry", b =>
+            modelBuilder.Entity("MetaAnime.Domain.Entities.CacheEntry", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -98,7 +98,7 @@ namespace MetaAnime.Infrastructure.Migrations
                     b.ToTable("CacheEntry", (string)null);
                 });
 
-            modelBuilder.Entity("MetaAnime.Core.Models.ExternalAnimeIdentifier", b =>
+            modelBuilder.Entity("MetaAnime.Domain.Entities.ExternalAnimeIdentifier", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -121,7 +121,7 @@ namespace MetaAnime.Infrastructure.Migrations
                     b.ToTable("ExternalAnimeIdentifier", (string)null);
                 });
 
-            modelBuilder.Entity("MetaAnime.Core.Models.KometaAnimeMapping", b =>
+            modelBuilder.Entity("MetaAnime.Domain.Entities.KometaAnimeMapping", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -150,9 +150,29 @@ namespace MetaAnime.Infrastructure.Migrations
                     b.ToTable("KometaAnimeMapping", (string)null);
                 });
 
-            modelBuilder.Entity("MetaAnime.Core.Models.AnimeMapping", b =>
+            modelBuilder.Entity("MetaAnime.Domain.Entities.PropertyBag", b =>
                 {
-                    b.HasOne("MetaAnime.Core.Models.Anime", "Anime")
+                    b.Property<string>("Key")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("PropertyBag", (string)null);
+                });
+
+            modelBuilder.Entity("MetaAnime.Domain.Entities.AnimeMapping", b =>
+                {
+                    b.HasOne("MetaAnime.Domain.Entities.Anime", "Anime")
                         .WithMany()
                         .HasForeignKey("AnimeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -161,9 +181,9 @@ namespace MetaAnime.Infrastructure.Migrations
                     b.Navigation("Anime");
                 });
 
-            modelBuilder.Entity("MetaAnime.Core.Models.ExternalAnimeIdentifier", b =>
+            modelBuilder.Entity("MetaAnime.Domain.Entities.ExternalAnimeIdentifier", b =>
                 {
-                    b.HasOne("MetaAnime.Core.Models.Anime", "Anime")
+                    b.HasOne("MetaAnime.Domain.Entities.Anime", "Anime")
                         .WithMany("ExternalAnimeIdentifiers")
                         .HasForeignKey("AnimeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -172,7 +192,7 @@ namespace MetaAnime.Infrastructure.Migrations
                     b.Navigation("Anime");
                 });
 
-            modelBuilder.Entity("MetaAnime.Core.Models.Anime", b =>
+            modelBuilder.Entity("MetaAnime.Domain.Entities.Anime", b =>
                 {
                     b.Navigation("ExternalAnimeIdentifiers");
                 });

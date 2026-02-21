@@ -78,6 +78,7 @@ public static class ServicesExtensions
         services.AddScoped<ISonarrAnimeSourceService<SonarrSeries>, SonarrAnimeSourceService>();
         services.AddScoped<IPlexAnimeSourceService<PlexMedia>, PlexAnimeSourceService>();
         services.AddScoped<IMalAnimeSourceService<MalAnime>, MalAnimeSourceService>();
+        services.AddScoped<IMalTokenService, MalTokenService>();
         services.AddScoped<ICacheEntryService, CacheEntryService>();
         services.AddScoped<IAnimeService, AnimeService>();
         services.AddScoped<IAnimeMappingService, AnimeMappingService>();
@@ -88,6 +89,7 @@ public static class ServicesExtensions
         services.AddScoped<ICacheEntryRepository, CacheEntryRepository>();
         services.AddScoped<IAnimeRepository, AnimeRepository>();
         services.AddScoped<IAnimeMappingRepository, AnimeMappingRepository>();
+        services.AddScoped<IPropertyBagRepository, PropertyBagRepository>();
     }
 
     /// <summary>

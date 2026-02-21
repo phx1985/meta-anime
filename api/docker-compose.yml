@@ -63,6 +63,10 @@ services:
       - MyAnimeList__ApiBaseUrl=https://api.myanimelist.net/v2
       - MyAnimeList__ApiToken=
       - MyAnimeList__WebBaseUrl=https://myanimelist.net
+      # OAuth2 settings for automatic token refresh (optional)
+      - MyAnimeList__ClientId=
+      # - MyAnimeList__ClientSecret=
+      - MyAnimeList__RefreshToken=
       
       # Kometa Configuration (Optional)
       - Kometa__AnimeIdsJsonUrl=https://raw.githubusercontent.com/Kometa-Team/Anime-IDs/refs/heads/master/anime_ids.json
