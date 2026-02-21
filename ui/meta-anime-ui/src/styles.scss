@@ -1,0 +1,82 @@
+// CSS Custom Properties for theming
+:root,
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --text-primary: #1a1a2e;
+  --text-secondary: #495057;
+  --text-muted: #6c757d;
+  --accent-primary: #6c63ff;
+  --navbar-bg: rgba(255, 255, 255, 0.92);
+  --navbar-border: rgba(0, 0, 0, 0.08);
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.08);
+  --card-shadow: rgba(0, 0, 0, 0.12);
+  --gradient-start: #6c63ff;
+  --gradient-end: #3ecfcf;
+  --hero-text: #ffffff;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0f0f1a;
+  --bg-secondary: #1a1a2e;
+  --text-primary: #e8e8f0;
+  --text-secondary: #a8a8c0;
+  --text-muted: #6c6c88;
+  --accent-primary: #9d94ff;
+  --navbar-bg: rgba(15, 15, 26, 0.92);
+  --navbar-border: rgba(255, 255, 255, 0.06);
+  --card-bg: #1a1a2e;
+  --card-border: rgba(255, 255, 255, 0.06);
+  --card-shadow: rgba(0, 0, 0, 0.4);
+  --gradient-start: #3d2b8e;
+  --gradient-end: #1a6b6b;
+  --hero-text: #ffffff;
+}
+
+// Global styles
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+}
+
+// Bootstrap overrides
+.btn-outline-secondary {
+  color: var(--text-secondary);
+  border-color: var(--card-border);
+  
+  &:hover {
+    background-color: var(--card-bg);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+  }
+}
+
+.spinner-border {
+  color: var(--accent-primary);
+}
+
+// Scrollbar
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: 3px;
+}
