@@ -1,0 +1,109 @@
+# docker-compose.dev.yml
+#
+# Development compose file that runs Postgres, the .NET API, and the Angular UI together.
+#
+# Usage (from repo root):
+#   docker compose -f docker-compose.dev.yml up --build
+#
+# The Angular dev server is reachable at http://localhost:4200
+# The API is reachable at http://localhost:8080
+#
+# To override settings (API keys, passwords, etc.) create a
+# docker-compose.override.yml in the repo root (it is gitignored).
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: meta-anime-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: metaanime
+      POSTGRES_USER: metaanime
+      # WARNING: Default password – change for any non-local use
+      POSTGRES_PASSWORD: metaanime_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - meta-anime-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metaanime -d metaanime"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  meta-anime-api:
+    image: ${DOCKER_REGISTRY-}metaanimeapi
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: meta-anime-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # ASPNETCORE Configuration
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+
+      # Database Configuration
+      - Postgres__Host=postgres
+      - Postgres__Port=5432
+      - Postgres__Db=metaanime
+      - Postgres__User=metaanime
+      - Postgres__Password=metaanime_password
+
+      # Authentication (REQUIRED – change this!)
+      - Authentication__ApiKey=CHANGE_ME_SUPER_SECRET_KEY
+
+      # Sonarr Configuration (Optional)
+      - Sonarr__Host=
+      - Sonarr__ApiKey=
+      - Sonarr__AnimeTags=anime
+
+      # Plex Configuration (Optional)
+      - Plex__Host=
+      - Plex__Token=
+      - Plex__AnimeSections=
+
+      # MyAnimeList Configuration (Optional)
+      - MyAnimeList__ApiBaseUrl=https://api.myanimelist.net/v2
+      - MyAnimeList__ApiToken=
+      - MyAnimeList__WebBaseUrl=https://myanimelist.net
+      - MyAnimeList__ClientId=
+      - MyAnimeList__RefreshToken=
+
+      # Kometa Configuration (Optional)
+      - Kometa__AnimeIdsJsonUrl=https://raw.githubusercontent.com/Kometa-Team/Anime-IDs/refs/heads/master/anime_ids.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - meta-anime-network
+
+  meta-anime-ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile.dev
+    container_name: meta-anime-ui
+    restart: unless-stopped
+    ports:
+      - "4200:4200"
+    volumes:
+      # Bind-mount source for live hot-reload
+      - ./ui/meta-anime-ui:/app
+      # Preserve the container's node_modules (avoids host overwrite)
+      - ui_node_modules:/app/node_modules
+    depends_on:
+      - meta-anime-api
+    networks:
+      - meta-anime-network
+
+volumes:
+  postgres_data:
+    driver: local
+  ui_node_modules:
+    driver: local
+
+networks:
+  meta-anime-network:
+    driver: bridge

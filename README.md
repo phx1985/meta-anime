@@ -51,29 +51,49 @@ The application uses the .NET Options pattern. You can configure it using `appse
 
 ### 🐳 Quick Start with Docker (Recommended)
 
-The fastest way to get started is using Docker:
+The fastest way to get up and running — **full stack with the Angular UI** — is a single command from the repo root:
 
 1.  **Clone the repository**
     ```bash
     git clone https://github.com/phx1985/meta-anime.git
-    cd meta-anime/api
+    cd meta-anime
     ```
 
-2.  **Start with Docker Compose**
+2.  **Start the full stack (PostgreSQL + API + Angular UI) with hot-reload**
     ```bash
-    docker compose up -d
+    docker compose -f docker-compose.dev.yml up --build
     ```
+    > First run builds both images (~2–5 min). Subsequent starts are faster.
 
-3.  **Access the API**
-    - Swagger UI: http://localhost:8080/swagger
-    - API: http://localhost:8080
+3.  **Access the services**
+    | Service | URL |
+    |---------|-----|
+    | Angular UI | http://localhost:4200 |
+    | API | http://localhost:8080 |
+    | Swagger | http://localhost:8080/swagger |
 
-4.  **Configure (Optional)**
-    For custom configuration, copy the override template:
+4.  **Stop**
     ```bash
-    cp docker-compose.override.yml.template docker-compose.override.yml
-    # Edit docker-compose.override.yml with your settings
+    docker compose -f docker-compose.dev.yml down
     ```
+
+5.  **Configure (Optional)** — override API keys, Sonarr, Plex, MAL credentials:
+
+    Copy the template from the `api/` directory to the repo root and edit it:
+    ```bash
+    cp api/docker-compose.override.yml.template docker-compose.override.yml
+    # Edit docker-compose.override.yml — set Authentication__ApiKey, Sonarr__*, etc.
+    ```
+    The file is gitignored. Docker Compose will automatically merge it with `docker-compose.dev.yml`.
+
+#### API-only (no UI)
+
+If you only need the API + database without the Angular frontend:
+
+```bash
+cd api
+docker compose up -d
+```
 
 **📚 See [DOCKER.md](DOCKER.md) for complete Docker documentation, debugging, and production deployment.**
 
@@ -104,10 +124,25 @@ The fastest way to get started is using Docker:
 
 ### 🛠️ Docker Commands (Quick Reference)
 
-Docker files are located in the `api` directory.
+**Full stack (API + UI) — run from the repo root:**
 
 ```bash
-# Navigate to api directory
+# Start full stack with hot-reload
+docker compose -f docker-compose.dev.yml up --build
+
+# View UI logs
+docker compose -f docker-compose.dev.yml logs -f meta-anime-ui
+
+# View API logs
+docker compose -f docker-compose.dev.yml logs -f meta-anime-api
+
+# Stop full stack
+docker compose -f docker-compose.dev.yml down
+```
+
+**API-only — run from the `api` directory:**
+
+```bash
 cd api
 
 # Start services

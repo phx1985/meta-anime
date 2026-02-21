@@ -47,7 +47,7 @@ services:
       # Authentication (REQUIRED - Change this!)
       # WARNING: This is a placeholder - NEVER use in production!
       # Generate a secure key: openssl rand -base64 32
-      - Authentication__ApiKey=CHANGE_ME_SUPER_SECRET_KEY
+      - Authentication__ApiKey=CHANGE_ME_SUPER_SECRET_KEY123
       
       # Sonarr Configuration (Optional)
       - Sonarr__Host=
