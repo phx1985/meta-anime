@@ -141,6 +141,11 @@ $ease-rise: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 .stats-section {
   position: relative;
   z-index: 10;
+
+  // Allow tooltip pseudo-elements to overflow the row/col boundaries
+  .row {
+    overflow: visible;
+  }
 }
 
 .stats-desc {
@@ -156,18 +161,91 @@ $ease-rise: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   border-radius: 14px;
   padding: 1.5rem 1rem;
   text-align: center;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  animation: fadeIn 0.6s ease both;
+  cursor: default;
+  position: relative;
+
+  // Pop-fade-in on entry
+  animation: popFadeIn 0.55s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+
+  // Elegant spring-bounce on hover
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease;
 
   &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 28px var(--card-shadow);
+    transform: translateY(-7px) scale(1.04);
+    box-shadow: 0 16px 36px var(--card-shadow);
+  }
+
+  // ── CSS Tooltip ──────────────────────────────────────────────────────────
+  // Bubble
+  &::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    background: rgba(15, 15, 25, 0.92);
+    backdrop-filter: blur(4px);
+    color: #fff;
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 400;
+    line-height: 1.5;
+    white-space: normal;
+    width: max-content;
+    max-width: 210px;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 100;
+  }
+
+  // Arrow
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 4px);
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    border: 6px solid transparent;
+    border-top-color: rgba(15, 15, 25, 0.92);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 100;
+  }
+
+  &:hover::before,
+  &:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+// Staggered pop-fade-in delays (card 1–5 inside the row)
+.row > div {
+  @for $i from 1 through 5 {
+    &:nth-child(#{$i}) .stat-card {
+      animation-delay: #{($i - 1) * 0.1}s;
+    }
+  }
+}
+
+@keyframes popFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.82);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.03);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .stat-value {

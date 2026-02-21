@@ -13,7 +13,14 @@
       "plex": "Plex",
       "sonarr": "Sonarr",
       "mal": "MyAnimeList",
-      "description": "Aggregated from all your sources"
+      "description": "Aggregated from all your sources",
+      "tooltip": {
+        "total": "Combined number of anime entries found across all connected sources (Plex + MyAnimeList).",
+        "matched": "Anime successfully cross-referenced between Plex, MyAnimeList and Sonarr using AniDB mapping.",
+        "plex": "Anime series available in your Plex media library.",
+        "sonarr": "Anime series tracked by your Sonarr instance.",
+        "mal": "Anime entries sourced from your MyAnimeList account."
+      }
     },
     "welcome": "Welcome to Meta Anime"
   },

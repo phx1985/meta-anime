@@ -27,31 +27,36 @@
   @if (stats()) {
     <div class="row g-4 mb-3 justify-content-center">
       <div class="col-6 col-md-4 col-lg-2">
-        <div class="stat-card">
+        <div class="stat-card"
+             [attr.data-tooltip]="'home.stats.tooltip.total' | translate">
           <div class="stat-value">{{ totalAnimes() }}</div>
           <div class="stat-label">{{ 'home.stats.total' | translate }}</div>
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg-2">
-        <div class="stat-card stat-card--matched">
+        <div class="stat-card stat-card--matched"
+             [attr.data-tooltip]="'home.stats.tooltip.matched' | translate">
           <div class="stat-value">{{ stats()!.matchedAnime }}</div>
           <div class="stat-label">{{ 'home.stats.matched' | translate }}</div>
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg-2">
-        <div class="stat-card stat-card--plex">
+        <div class="stat-card stat-card--plex"
+             [attr.data-tooltip]="'home.stats.tooltip.plex' | translate">
           <div class="stat-value">{{ stats()!.plexAnime }}</div>
           <div class="stat-label">{{ 'home.stats.plex' | translate }}</div>
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg-2">
-        <div class="stat-card stat-card--sonarr">
+        <div class="stat-card stat-card--sonarr"
+             [attr.data-tooltip]="'home.stats.tooltip.sonarr' | translate">
           <div class="stat-value">{{ stats()!.sonarrAnime }}</div>
           <div class="stat-label">{{ 'home.stats.sonarr' | translate }}</div>
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg-2">
-        <div class="stat-card stat-card--mal">
+        <div class="stat-card stat-card--mal"
+             [attr.data-tooltip]="'home.stats.tooltip.mal' | translate">
           <div class="stat-value">{{ stats()!.myAnimeListAnime }}</div>
           <div class="stat-label">{{ 'home.stats.mal' | translate }}</div>
         </div>
