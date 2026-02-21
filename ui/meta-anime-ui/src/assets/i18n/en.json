@@ -1,0 +1,26 @@
+{
+  "nav": {
+    "home": "Home",
+    "animes": "Animes",
+    "settings": "Settings"
+  },
+  "home": {
+    "title": "Meta Anime",
+    "subtitle": "Your unified anime metadata hub",
+    "stats": {
+      "total": "Total Animes",
+      "matched": "Matched",
+      "plex": "Plex",
+      "sonarr": "Sonarr",
+      "mal": "MyAnimeList",
+      "description": "Aggregated from all your sources"
+    },
+    "welcome": "Welcome to Meta Anime"
+  },
+  "theme": {
+    "toggle": "Toggle Theme"
+  },
+  "lang": {
+    "switch": "Français"
+  }
+}

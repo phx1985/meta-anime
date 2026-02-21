@@ -1,0 +1,38 @@
+.navbar {
+  background: var(--navbar-bg);
+  border-bottom: 1px solid var(--navbar-border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.3s ease;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--text-primary) !important;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.nav-link {
+  color: var(--text-secondary) !important;
+  transition: color 0.2s ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--accent-primary) !important;
+}
+
+// On mobile the action buttons sit below the nav links; give them a border-top separator
+@media (max-width: 991.98px) {
+  .navbar-actions {
+    border-top: 1px solid var(--navbar-border);
+    width: 100%;
+    padding-top: 0.75rem !important;
+
+    .btn {
+      flex: 1 1 auto;
+    }
+  }
+}
