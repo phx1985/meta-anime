@@ -1,7 +1,7 @@
 export interface SonarrCodecSearchResponse {
-  Id: number;
-  Title: string;
-  Url: string;
-  CodecDistribution: { [key: string]: number };
-  TotalSizeOnDisk: number;
+  id: number;
+  title: string;
+  url: string;
+  codecDistribution: { [key: string]: number };
+  totalSizeOnDisk: number;
 }

@@ -1,10 +1,10 @@
 export interface PropertyBagResponse {
-  Key: string;
-  Value: string;
-  CreationDate: string;
-  UpdateDate: string;
+  key: string;
+  value: string;
+  creationDate: string;
+  updateDate: string;
 }
 
 export interface UpsertPropertyBagRequest {
-  Value: string;
+  value: string;
 }

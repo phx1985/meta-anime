@@ -31,18 +31,18 @@ describe('AnimeListComponent', () => {
   it('should create', () => {
     const fixture = TestBed.createComponent(AnimeListComponent);
     const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
-    req.flush({ Data: [], Page: 1, PageSize: 100, TotalCount: 0, TotalPages: 0, HasNextPage: false, HasPreviousPage: false } as PagedResponse<AnimeResponse>);
+    req.flush({ data: [], page: 1, pageSize: 100, totalCount: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false } as PagedResponse<AnimeResponse>);
     expect(fixture.componentInstance).toBeTruthy();
   });
 
   it('should display anime names', async () => {
     const fixture = TestBed.createComponent(AnimeListComponent);
     const mockAnimes: AnimeResponse[] = [
-      { Id: '1', SourceId: 's1', Title: 'Naruto', AnimeSource: AnimeSource.Plex },
-      { Id: '2', SourceId: 's2', Title: 'One Piece', AnimeSource: AnimeSource.MyAnimeList },
+      { id: '1', sourceId: 's1', title: 'Naruto', animeSource: AnimeSource.Plex },
+      { id: '2', sourceId: 's2', title: 'One Piece', animeSource: AnimeSource.MyAnimeList },
     ];
     const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
-    req.flush({ Data: mockAnimes, Page: 1, PageSize: 100, TotalCount: 2, TotalPages: 1, HasNextPage: false, HasPreviousPage: false } as PagedResponse<AnimeResponse>);
+    req.flush({ data: mockAnimes, page: 1, pageSize: 100, totalCount: 2, totalPages: 1, hasNextPage: false, hasPreviousPage: false } as PagedResponse<AnimeResponse>);
 
     await fixture.whenStable();
     fixture.detectChanges();
@@ -57,7 +57,7 @@ describe('AnimeListComponent', () => {
   it('should show empty message when no animes', async () => {
     const fixture = TestBed.createComponent(AnimeListComponent);
     const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
-    req.flush({ Data: [], Page: 1, PageSize: 100, TotalCount: 0, TotalPages: 0, HasNextPage: false, HasPreviousPage: false } as PagedResponse<AnimeResponse>);
+    req.flush({ data: [], page: 1, pageSize: 100, totalCount: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false } as PagedResponse<AnimeResponse>);
 
     await fixture.whenStable();
     fixture.detectChanges();

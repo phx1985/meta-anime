@@ -26,7 +26,7 @@ export class AnimeListComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: data => {
-          this.animes.set(data.Data);
+          this.animes.set(data.data);
           this.loading.set(false);
         },
         error: () => {

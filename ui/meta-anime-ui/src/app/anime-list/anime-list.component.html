@@ -15,8 +15,8 @@
     <p class="text-muted">{{ 'animeList.empty' | translate }}</p>
   } @else {
     <ul class="anime-names-list list-unstyled">
-      @for (anime of animes(); track anime.Id) {
-        <li class="anime-name-item">{{ anime.Title }}</li>
+      @for (anime of animes(); track anime.id) {
+        <li class="anime-name-item">{{ anime.title }}</li>
       }
     </ul>
   }

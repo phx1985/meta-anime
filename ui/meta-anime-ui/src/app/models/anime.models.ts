@@ -5,60 +5,60 @@ export enum AnimeSource {
 }
 
 export interface PlexAnimeInfo {
-  PlexId: string;
-  Title: string;
+  plexId: string;
+  title: string;
 }
 
 export interface MalAnimeInfo {
-  MalId: string;
-  Title: string;
+  malId: string;
+  title: string;
 }
 
 export interface SonarrAnimeInfo {
-  SonarrId: string;
-  Title: string;
+  sonarrId: string;
+  title: string;
 }
 
 export interface AnimeDetailsResponse {
-  AniDbId: string;
-  Title: string;
-  PlexAnimes?: PlexAnimeInfo[];
-  MalAnimes?: MalAnimeInfo[];
-  SonarrAnimes?: SonarrAnimeInfo[];
+  aniDbId: string;
+  title: string;
+  plexAnimes?: PlexAnimeInfo[];
+  malAnimes?: MalAnimeInfo[];
+  sonarrAnimes?: SonarrAnimeInfo[];
 }
 
 export interface AnimeResponse {
-  Id: string;
-  SourceId: string;
-  Title: string;
-  Description?: string;
-  AnimeSource: AnimeSource;
+  id: string;
+  sourceId: string;
+  title: string;
+  description?: string;
+  animeSource: AnimeSource;
 }
 
 export interface ViewingProgressStats {
-  MalEpisodesWatched: number;
-  MalTotalEpisodes: number;
-  PlexEpisodesWatched: number;
-  PlexTotalEpisodes: number;
+  malEpisodesWatched: number;
+  malTotalEpisodes: number;
+  plexEpisodesWatched: number;
+  plexTotalEpisodes: number;
 }
 
 export interface AnimeStatisticsResponse {
-  PlexAnime: number;
-  MyAnimeListAnime: number;
-  SonarrAnime: number;
-  MatchedAnime: number;
-  GenreStats: { [key: string]: number };
-  ViewingProgress: ViewingProgressStats;
+  plexAnime: number;
+  myAnimeListAnime: number;
+  sonarrAnime: number;
+  matchedAnime: number;
+  genreStats: { [key: string]: number };
+  viewingProgress: ViewingProgressStats;
 }
 
 export interface PagedResponse<T> {
-  Data: T[];
-  Page: number;
-  PageSize: number;
-  TotalCount: number;
-  TotalPages: number;
-  HasNextPage: boolean;
-  HasPreviousPage: boolean;
+  data: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 }
 
 export interface AnimeFilters {
@@ -71,13 +71,13 @@ export interface AnimeFilters {
 }
 
 export interface CreateAnimeRequest {
-  SourceId: string;
-  Title: string;
-  Description?: string;
-  AnimeSource: AnimeSource;
+  sourceId: string;
+  title: string;
+  description?: string;
+  animeSource: AnimeSource;
 }
 
 export interface UpdateAnimeRequest {
-  Title: string;
-  Description?: string;
+  title: string;
+  description?: string;
 }
