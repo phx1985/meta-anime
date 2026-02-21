@@ -7,7 +7,7 @@ import { ThemeService } from './services/theme.service';
   selector: 'app-root',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.scss'
 })
 export class App {
   protected themeService = inject(ThemeService);

@@ -8,142 +8,21 @@ import { AnimeStatisticsResponse } from '../models/anime.models';
   selector: 'app-home',
   standalone: true,
   imports: [TranslatePipe],
-  template: `
-    <div class="hero-section">
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <h1 class="hero-title">{{ 'home.title' | translate }}</h1>
-        <p class="hero-subtitle">{{ 'home.subtitle' | translate }}</p>
-      </div>
-    </div>
-
-    <div class="container py-5">
-      @if (stats()) {
-        <div class="row g-4 mb-4">
-          <div class="col-6 col-md-4 col-lg-2">
-            <div class="stat-card">
-              <div class="stat-value">{{ totalAnimes() }}</div>
-              <div class="stat-label">{{ 'home.stats.total' | translate }}</div>
-            </div>
-          </div>
-          <div class="col-6 col-md-4 col-lg-2">
-            <div class="stat-card stat-card--matched">
-              <div class="stat-value">{{ stats()!.MatchedAnime }}</div>
-              <div class="stat-label">{{ 'home.stats.matched' | translate }}</div>
-            </div>
-          </div>
-          <div class="col-6 col-md-4 col-lg-2">
-            <div class="stat-card stat-card--plex">
-              <div class="stat-value">{{ stats()!.PlexAnime }}</div>
-              <div class="stat-label">{{ 'home.stats.plex' | translate }}</div>
-            </div>
-          </div>
-          <div class="col-6 col-md-4 col-lg-2">
-            <div class="stat-card stat-card--sonarr">
-              <div class="stat-value">{{ stats()!.SonarrAnime }}</div>
-              <div class="stat-label">{{ 'home.stats.sonarr' | translate }}</div>
-            </div>
-          </div>
-          <div class="col-6 col-md-4 col-lg-2">
-            <div class="stat-card stat-card--mal">
-              <div class="stat-value">{{ stats()!.MyAnimeListAnime }}</div>
-              <div class="stat-label">{{ 'home.stats.mal' | translate }}</div>
-            </div>
-          </div>
-        </div>
-        <p class="text-center text-muted">{{ 'home.stats.description' | translate }}</p>
-      } @else {
-        <div class="d-flex justify-content-center py-5">
-          <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      }
-    </div>
-  `,
-  styles: [`
-    .hero-section {
-      min-height: 60vh;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background-image: url('/assets/images/hero.jpg');
-      background-size: cover;
-      background-position: center;
-      background-color: var(--gradient-start);
-    }
-    .hero-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--gradient-start) 80%, transparent),
-        color-mix(in srgb, var(--gradient-end) 70%, transparent)
-      );
-      background-size: 200% 200%;
-      animation: gradientShift 8s ease infinite;
-    }
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    .hero-content {
-      position: relative;
-      z-index: 1;
-      text-align: center;
-      padding: 2rem;
-    }
-    .hero-title {
-      font-size: 3.5rem;
-      font-weight: 700;
-      color: #ffffff;
-      text-shadow: 0 2px 12px rgba(0,0,0,0.5);
-      margin-bottom: 1rem;
-    }
-    .hero-subtitle {
-      font-size: 1.25rem;
-      color: #ffffff;
-      opacity: 0.9;
-      text-shadow: 0 1px 6px rgba(0,0,0,0.4);
-    }
-    .stat-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 1.5rem 1rem;
-      text-align: center;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .stat-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px var(--card-shadow);
-    }
-    .stat-value {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: var(--accent-primary);
-    }
-    .stat-label {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-top: 0.25rem;
-    }
-    .stat-card--matched .stat-value { color: #22c55e; }
-    .stat-card--plex .stat-value { color: #e5a00d; }
-    .stat-card--sonarr .stat-value { color: #3b82f6; }
-    .stat-card--mal .stat-value { color: #ef4444; }
-  `]
+  templateUrl: './home.component.html',
+  styleUrl: './home.component.scss'
 })
 export class HomeComponent {
   private animeService = inject(AnimeService);
   private destroyRef = inject(DestroyRef);
+
   stats = signal<AnimeStatisticsResponse | null>(null);
   totalAnimes = computed(() => {
     const s = this.stats();
     return s ? s.PlexAnime + s.MyAnimeListAnime : 0;
   });
+
+  /** Array used to render floating particles via @for in the template */
+  readonly particles = Array.from({ length: 12 });
 
   constructor() {
     this.animeService.getStatistics()
