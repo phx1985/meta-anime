@@ -13,7 +13,7 @@ describe('App', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
-        provideTranslateService({ defaultLanguage: 'en' }),
+        provideTranslateService({ fallbackLang: 'en' }),
       ],
     }).compileComponents();
   });

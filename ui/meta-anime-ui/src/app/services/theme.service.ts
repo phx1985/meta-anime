@@ -19,7 +19,9 @@ export class ThemeService {
   private loadTheme(): boolean {
     const stored = localStorage.getItem(this.STORAGE_KEY);
     if (stored) return stored === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(prefers-color-scheme: dark)').matches
+      : false;
   }
 
   private applyTheme(dark: boolean): void {
