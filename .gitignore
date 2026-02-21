@@ -58,10 +58,9 @@ testem.log
 .DS_Store
 Thumbs.db
 
-# Docker
+# Docker (kept for any remaining Docker usage)
 docker-compose.override.yml
 .env
-docker-compose.dev.override.yml
 
 # ASP.NET Core local development settings (contains secrets)
 appsettings.Development.json

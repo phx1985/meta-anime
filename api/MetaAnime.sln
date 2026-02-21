@@ -19,8 +19,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaAnime.Infrastructure.So
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaAnime.Presentation", "MetaAnime.Presentation\MetaAnime.Presentation.csproj", "{374F099D-2014-9A81-2933-D06611A8C450}"
 EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{AC59247F-8FF8-410A-B15A-49339E145783}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaAnime.Domain", "MetaAnime.Domain\MetaAnime.Domain.csproj", "{67C8AB6A-C7A1-4406-BB26-841198576D48}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MetaAnime.UnitTests", "MetaAnime.UnitTests\MetaAnime.UnitTests.csproj", "{209B3230-6DB7-4469-BF40-528FB7BE0B19}"
@@ -137,12 +135,6 @@ Global
 		{374F099D-2014-9A81-2933-D06611A8C450}.Release|x64.Build.0 = Release|Any CPU
 		{374F099D-2014-9A81-2933-D06611A8C450}.Release|x86.ActiveCfg = Release|Any CPU
 		{374F099D-2014-9A81-2933-D06611A8C450}.Release|x86.Build.0 = Release|Any CPU
-		{AC59247F-8FF8-410A-B15A-49339E145783}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AC59247F-8FF8-410A-B15A-49339E145783}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{AC59247F-8FF8-410A-B15A-49339E145783}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{AC59247F-8FF8-410A-B15A-49339E145783}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AC59247F-8FF8-410A-B15A-49339E145783}.Release|x64.ActiveCfg = Release|Any CPU
-		{AC59247F-8FF8-410A-B15A-49339E145783}.Release|x86.ActiveCfg = Release|Any CPU
 		{67C8AB6A-C7A1-4406-BB26-841198576D48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{67C8AB6A-C7A1-4406-BB26-841198576D48}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{67C8AB6A-C7A1-4406-BB26-841198576D48}.Debug|x64.ActiveCfg = Debug|Any CPU
