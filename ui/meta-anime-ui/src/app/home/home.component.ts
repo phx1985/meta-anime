@@ -1,4 +1,5 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { AnimeStatisticsResponse } from '../models/anime.models';
@@ -118,14 +119,17 @@ import { AnimeStatisticsResponse } from '../models/anime.models';
     .stat-card--mal .stat-value { color: #ef4444; }
   `]
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent {
   private animeService = inject(AnimeService);
+  private destroyRef = inject(DestroyRef);
   stats = signal<AnimeStatisticsResponse | null>(null);
 
-  ngOnInit(): void {
-    this.animeService.getStatistics().subscribe({
-      next: data => this.stats.set(data),
-      error: () => this.stats.set(null)
-    });
+  constructor() {
+    this.animeService.getStatistics()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: data => this.stats.set(data),
+        error: () => this.stats.set(null)
+      });
   }
 }
