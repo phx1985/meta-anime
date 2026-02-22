@@ -36,6 +36,12 @@ public class AnimeMediatorService(
         PropertyNameCaseInsensitive = true
     };
 
+    /// <summary>Genre names that are always treated as NSFW regardless of the MAL <c>nsfw</c> field value.</summary>
+    private static readonly HashSet<string> NsfwGenres = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Ecchi", "Hentai", "Erotica"
+    };
+
     private readonly string myAnimeListHost = malOptions.Value.WebBaseUrl;
     private readonly string sonarrSeriesBaseUrl = !string.IsNullOrWhiteSpace(sonarrOptions.Value.RemoteUrl)
         ? sonarrOptions.Value.RemoteUrl
@@ -167,6 +173,13 @@ public class AnimeMediatorService(
                         .ToList();
                 }
 
+                // Skip entries with no MAL association — they have no metadata to display.
+                if (malAnimes.Count == 0)
+                {
+                    logger.LogDebug(Constants.LogMessages.AnimeMediatorService.NoAnimeMappings, aniDbId);
+                    continue;
+                }
+
                 animeDtos.Add(new AnimeDetailsResponse(
                     aniDbId,
                     group.FirstOrDefault()?.Anime?.Title ?? "NO_TITLE",
@@ -285,10 +298,7 @@ public class AnimeMediatorService(
                     try
                     {
                         var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, JsonOptions);
-                        var nsfw = malAnime?.Nsfw;
-                        // "gray" or "black" are the NSFW signals from the MAL API
-                        return !string.IsNullOrEmpty(nsfw)
-                            && !nsfw.Equals("white", StringComparison.OrdinalIgnoreCase);
+                        return malAnime != null && IsNsfwAnime(malAnime);
                     }
                     catch (JsonException)
                     {
@@ -390,12 +400,8 @@ public class AnimeMediatorService(
                         continue;
 
                     // Skip NSFW entries when NSFW content is disabled
-                    if (!showNsfw)
-                    {
-                        var nsfw = malAnime.Nsfw;
-                        if (!string.IsNullOrEmpty(nsfw) && !nsfw.Equals("white", StringComparison.OrdinalIgnoreCase))
-                            continue;
-                    }
+                    if (!showNsfw && IsNsfwAnime(malAnime))
+                        continue;
 
                     foreach (var genre in malAnime.Genres ?? [])
                     {
@@ -637,6 +643,21 @@ public class AnimeMediatorService(
     {
         var entry = await propertyBagRepository.GetByKeyAsync(MetaAnime.Core.SettingsKeys.AppShowNsfw);
         return entry?.Value?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    /// <summary>
+    /// Returns true when the MAL anime should be considered NSFW and filtered out.
+    /// Checks the MAL <c>nsfw</c> field AND explicit NSFW genres (Ecchi, Hentai, Erotica).
+    /// </summary>
+    private static bool IsNsfwAnime(MalAnime malAnime)
+    {
+        // MAL API nsfw field: "gray" or "black" = NSFW, "white" = SFW
+        var nsfw = malAnime.Nsfw;
+        if (!string.IsNullOrEmpty(nsfw) && !nsfw.Equals("white", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Some Ecchi/Hentai titles are rated "white" by MAL but carry explicit genres
+        return malAnime.Genres?.Any(g => NsfwGenres.Contains(g.Name)) == true;
     }
 
     private async Task<PlexAnimeInfo> CreatePlexAnimeInfoFromCacheAsync(AnimeMapping mapping, Dictionary<string, string> plexCache)
