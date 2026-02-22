@@ -17,7 +17,7 @@
       <div class="settings-card mb-4">
         <!-- Category header -->
         <div class="settings-card-header">
-          <span class="category-icon">{{ 'settings.category.' + cat + '.icon' | translate }}</span>
+          <span class="category-icon" aria-hidden="true">{{ 'settings.category.' + cat + '.icon' | translate }}</span>
           <div>
             <h2 class="category-title mb-0">{{ 'settings.category.' + cat + '.name' | translate }}</h2>
             <p class="category-desc mb-0">{{ 'settings.category.' + cat + '.desc' | translate }}</p>
@@ -35,7 +35,7 @@
                     <span class="badge-required">{{ 'settings.required' | translate }}</span>
                   }
                   @if (setting.isSensitive) {
-                    <span class="badge-sensitive" [title]="'settings.sensitiveHint' | translate">🔒</span>
+                    <span class="badge-sensitive" [attr.aria-label]="'settings.sensitiveHint' | translate" role="img">🔒</span>
                   }
                 </div>
                 <div class="setting-desc">{{ setting.description }}</div>

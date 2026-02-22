@@ -118,7 +118,7 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options, IPropert
 
     public async Task<Result<IList<SonarrSeriesCodecResult>>> GetSeriesByCodecAsync(string codec)
     {
-        var (_, _, _, isConfigured) = await GetSettingsAsync();
+        var (host, apiKey, _, isConfigured) = await GetSettingsAsync();
 
         if (!isConfigured)
             return Result.Success<IList<SonarrSeriesCodecResult>>(new List<SonarrSeriesCodecResult>());
@@ -126,8 +126,6 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options, IPropert
         var allSeriesResult = await GetAllAsync();
         if (allSeriesResult.IsFailure)
             return Result.Failure<IList<SonarrSeriesCodecResult>>(allSeriesResult.Error);
-
-        var (host, apiKey, _, _) = await GetSettingsAsync();
 
         // Throttle concurrent requests to avoid overwhelming the Sonarr API
         using var semaphore = new SemaphoreSlim(10, 10);
