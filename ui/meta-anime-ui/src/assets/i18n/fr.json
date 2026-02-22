@@ -67,11 +67,14 @@
       },
       "step": {
         "init":     "Initialisation",
+        "kometa":   "Chargement des mappings Kometa",
         "plex":     "Récupération bibliothèque Plex",
         "mal":      "Récupération entrées MyAnimeList",
         "sonarr":   "Récupération séries Sonarr",
         "matching": "Correspondance et indexation"
-      }
+      },
+      "lastSync": "Dernière sync",
+      "neverSynced": "Jamais synchronisé"
     },
     "category": {
       "plex": {

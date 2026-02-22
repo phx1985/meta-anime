@@ -26,4 +26,7 @@ public static class SettingsKeys
 
     // Kometa
     public const string KometaAnimeIdsJsonUrl = "Kometa:AnimeIdsJsonUrl";
+
+    // System (not user-configurable)
+    public const string LastSyncDate = "System:LastSyncDate";
 }

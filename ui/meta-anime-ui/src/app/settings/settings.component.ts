@@ -20,6 +20,16 @@ function fmtElapsed(ms: number): string {
   return `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 
+/** Format a DateTimeOffset ISO string as a short local date+time */
+function fmtDate(iso: string): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleString(undefined, {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  });
+}
+
 @Component({
   selector: 'app-settings',
   standalone: true,
@@ -50,6 +60,7 @@ export class SettingsComponent {
   // ── Sync hub state (driven by SignalR) ────────────────────────────────────
   syncing      = signal(false);
   showSyncHub  = signal(false);
+  lastSyncDate = signal<string | null>(null);
 
   // Convert SignalR observables → signals for template use
   syncSteps    = toSignal(this.signalR.steps$,     { initialValue: [] as SyncStep[] });
@@ -79,8 +90,9 @@ export class SettingsComponent {
   /** Per-setting reactive forms */
   forms: Record<string, FormGroup> = {};
 
-  /** Expose elapsed formatter to template */
+  /** Expose formatters to template */
   readonly fmtElapsed = fmtElapsed;
+  readonly fmtDate    = fmtDate;
 
   constructor() {
     // Connect to SignalR hub on component init
@@ -100,13 +112,28 @@ export class SettingsComponent {
         }
       });
 
-    // Auto-clear syncing flag when hub reports done/error
+    // Load initial last sync date
+    this.loadSyncStatus();
+
+    // Auto-clear syncing flag when hub reports done/error; refresh sync date on done
     this.signalR.syncDone$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(done => {
-      if (done) this.syncing.set(false);
+      if (done) {
+        this.syncing.set(false);
+        this.loadSyncStatus();
+      }
     });
     this.signalR.syncError$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(err => {
       if (err) this.syncing.set(false);
     });
+  }
+
+  private loadSyncStatus(): void {
+    this.settingsService.getSyncStatus()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: status => this.lastSyncDate.set(status.lastSyncDate),
+        error: () => { /* non-critical — ignore */ }
+      });
   }
 
   private buildForms(settings: SettingDefinition[]): void {

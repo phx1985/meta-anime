@@ -30,6 +30,21 @@ public class SettingsController(IMediator mediator) : ControllerBase
     }
 
     /// <summary>
+    /// Returns the date/time of the last successful sync, or null if never synced.
+    /// </summary>
+    [HttpGet("sync-status")]
+    [Authorize]
+    public async Task<ActionResult<SyncStatusResponse>> GetSyncStatus()
+    {
+        var result = await mediator.Send(new GetSyncStatusQuery());
+
+        if (result.IsFailure)
+            return StatusCode(500, result.Error.Message);
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
     /// Updates a setting value in the PropertyBag.
     /// </summary>
     [HttpPut("{key}")]

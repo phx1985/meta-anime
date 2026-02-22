@@ -67,11 +67,14 @@
       },
       "step": {
         "init":     "Initialising sync",
+        "kometa":   "Loading Kometa mappings",
         "plex":     "Fetching Plex library",
         "mal":      "Fetching MyAnimeList entries",
         "sonarr":   "Fetching Sonarr series",
         "matching": "Matching & indexing"
-      }
+      },
+      "lastSync": "Last sync",
+      "neverSynced": "Never synced"
     },
     "category": {
       "plex": {
