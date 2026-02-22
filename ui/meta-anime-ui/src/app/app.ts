@@ -45,7 +45,8 @@ export class App implements OnInit {
         const sonarrRemote = settings.find(s => s.key === 'Sonarr:RemoteUrl')?.value ?? null;
         const sonarrHost   = settings.find(s => s.key === 'Sonarr:Host')?.value ?? null;
         const sonarrUrl    = sonarrRemote || sonarrHost;
-        if (plexHost)   this.plexHomeUrl.set(plexHost);
+        // Always link to the Plex web app (not the local instance)
+        if (plexHost)   this.plexHomeUrl.set('https://app.plex.tv');
         if (sonarrUrl)  this.sonarrHomeUrl.set(sonarrUrl);
       },
       error: () => { /* non-critical */ }

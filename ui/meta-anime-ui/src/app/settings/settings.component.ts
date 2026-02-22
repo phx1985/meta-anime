@@ -118,8 +118,8 @@ export class SettingsComponent {
   /** Expose formatters to template */
   readonly fmtElapsed = fmtElapsed;
 
-  /** IntersectionObserver instance — cleaned up on destroy */
-  private _intersectionObserver?: IntersectionObserver;
+  /** Scroll listener for active-section tracking — cleaned up on destroy */
+  private _scrollListener?: () => void;
 
   // ── Timing constants ─────────────────────────────────────────────────────
   private static readonly HIGHLIGHT_DURATION_MS   = 2000;
@@ -172,8 +172,8 @@ export class SettingsComponent {
               document.getElementById(fragment)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, SCROLL_DELAY_MS);
           }
-          // Set up IntersectionObserver after DOM renders
-          setTimeout(() => this.setupIntersectionObserver(), SettingsComponent.OBSERVER_SETUP_DELAY_MS);
+      // Set up scroll-based active-section tracking after DOM renders
+          setTimeout(() => this.setupActiveSectionTracking(), SettingsComponent.OBSERVER_SETUP_DELAY_MS);
         },
         error: () => {
           this.error.set(true);
@@ -200,8 +200,10 @@ export class SettingsComponent {
       if (err) this.syncing.set(false);
     });
 
-    // Disconnect IntersectionObserver on destroy
-    this.destroyRef.onDestroy(() => this._intersectionObserver?.disconnect());
+    // Remove scroll listener on destroy
+    this.destroyRef.onDestroy(() => {
+      if (this._scrollListener) window.removeEventListener('scroll', this._scrollListener);
+    });
   }
 
   private loadSyncStatus(): void {
@@ -225,31 +227,35 @@ export class SettingsComponent {
     this.revealed.set(revealedInit);
   }
 
-  /** Watch all section cards with IntersectionObserver to track the active nav item */
-  private setupIntersectionObserver(): void {
-    this._intersectionObserver?.disconnect();
+  /** Track active section using a scroll listener — correctly handles short last sections */
+  private setupActiveSectionTracking(): void {
+    // Remove any previous listener
+    if (this._scrollListener) window.removeEventListener('scroll', this._scrollListener);
 
-    this._intersectionObserver = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const cat = entry.target.id === 'sync-section'
-              ? 'sync'
-              : entry.target.id.replace('section-', '');
-            this.activeCategory.set(cat);
-            break;
-          }
+    const NAVBAR_OFFSET = 90; // px — approx sticky navbar height
+
+    // Build a stable ordered list of { cat, el } pairs
+    const sections = this.navItems()
+      .map(cat => ({ cat, el: document.getElementById(this.sectionId(cat)) }))
+      .filter((s): s is { cat: string; el: HTMLElement } => s.el !== null);
+
+    const pick = () => {
+      // Find the section whose top edge is closest to (but not below) NAVBAR_OFFSET.
+      // Fallback: if we are scrolled past all sections, use the last one.
+      let best = sections[0]?.cat ?? '';
+      for (const { cat, el } of sections) {
+        const top = el.getBoundingClientRect().top;
+        if (top <= NAVBAR_OFFSET + 10) {
+          // This section's top is at or above the trigger line → it is "in view"
+          best = cat;
         }
-      },
-      // rootMargin: top -5% = ignore very top of viewport; bottom -80% = only trigger
-      // when element enters the top 15% of the viewport, giving a "leading-edge" feel
-      { rootMargin: '-5% 0px -80% 0px', threshold: 0 }
-    );
+      }
+      this.activeCategory.set(best);
+    };
 
-    for (const cat of this.navItems()) {
-      const el = document.getElementById(this.sectionId(cat));
-      if (el) this._intersectionObserver.observe(el);
-    }
+    this._scrollListener = pick;
+    window.addEventListener('scroll', pick, { passive: true });
+    pick(); // run once immediately to set initial state
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
