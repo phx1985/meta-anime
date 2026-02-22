@@ -171,7 +171,25 @@
 
               <!-- Value area -->
               <div class="setting-value-area">
-                @if (!editing()[setting.key]) {
+                @if (setting.fieldType === 'boolean') {
+                  <!-- Boolean toggle — no edit mode needed -->
+                  <div class="display-row">
+                    <button
+                      type="button"
+                      class="toggle-switch"
+                      [class.toggle-switch--on]="boolValue(setting)"
+                      [disabled]="isSaving(setting.key)"
+                      (click)="toggleBool(setting)"
+                      role="switch"
+                      [attr.aria-checked]="boolValue(setting)"
+                      [attr.aria-label]="'settings.fields.' + slug(setting.key) + '.name' | translate">
+                      <span class="toggle-thumb"></span>
+                    </button>
+                    <span class="toggle-label">
+                      {{ (boolValue(setting) ? 'settings.toggle.on' : 'settings.toggle.off') | translate }}
+                    </span>
+                  </div>
+                } @else if (!editing()[setting.key]) {
                   <!-- Display mode -->
                   <div class="display-row">
                     <span class="setting-current-value">

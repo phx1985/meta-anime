@@ -72,6 +72,7 @@ export class SettingsComponent {
     sonarr: 'assets/images/sonarr.svg',
     mal:    'assets/images/mal.svg',
     kometa: 'assets/images/kometa.png',
+    app:    'assets/images/app.svg',
   };
 
   /** Settings grouped by category */
@@ -175,6 +176,28 @@ export class SettingsComponent {
 
   toggleReveal(key: string): void {
     this.revealed.update(r => ({ ...r, [key]: !r[key] }));
+  }
+
+  /** Immediately toggle a boolean setting (no edit-mode needed). */
+  toggleBool(setting: SettingDefinition): void {
+    const next = setting.value !== 'true' ? 'true' : 'false';
+    this.savingKey.set(setting.key);
+    this.settingsService.update(setting.key, { value: next })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.savingKey.set(null);
+          this.settings.update(list =>
+            list.map(s => s.key === setting.key ? { ...s, value: next } : s)
+          );
+        },
+        error: () => { this.savingKey.set(null); }
+      });
+  }
+
+  /** Whether a boolean setting is currently enabled */
+  boolValue(setting: SettingDefinition): boolean {
+    return setting.value === 'true';
   }
 
   save(setting: SettingDefinition): void {

@@ -68,6 +68,8 @@ public class SettingsSeedService(
             [SettingsKeys.MalRefreshToken]         = mal.RefreshToken,
 
             [SettingsKeys.KometaAnimeIdsJsonUrl]   = kometa.AnimeIdsJsonUrl,
+
+            [SettingsKeys.AppShowNsfw]             = "false",
         };
     }
 }

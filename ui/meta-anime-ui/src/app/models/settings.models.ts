@@ -4,6 +4,7 @@ export interface SettingDefinition {
   isSensitive: boolean;
   isRequired: boolean;
   value: string | null;
+  fieldType: string;
 }
 
 export interface UpdateSettingRequest {

@@ -92,11 +92,11 @@
         "dismiss": "Dismiss"
       },
       "step": {
-        "init":     "Initialising sync",
-        "kometa":   "Loading Kometa mappings",
-        "plex":     "Fetching Plex library",
-        "mal":      "Fetching MyAnimeList entries",
-        "sonarr":   "Fetching Sonarr series",
+        "init": "Initialising sync",
+        "kometa": "Loading Kometa mappings",
+        "plex": "Fetching Plex library",
+        "mal": "Fetching MyAnimeList entries",
+        "sonarr": "Fetching Sonarr series",
         "matching": "Matching & indexing"
       },
       "lastSync": "Last sync",
@@ -118,6 +118,10 @@
       "kometa": {
         "name": "Kometa",
         "desc": "Source of the AniDB ↔ TVDB / TMDB mapping file."
+      },
+      "app": {
+        "name": "App Preferences",
+        "desc": "General application preferences and content filtering options."
       }
     },
     "fields": {
@@ -168,7 +172,15 @@
       "Kometa_AnimeIdsJsonUrl": {
         "name": "Anime IDs JSON URL",
         "desc": "URL of the Kometa Community anime_ids.json AniDB mapping file."
+      },
+      "App_ShowNsfw": {
+        "name": "Show NSFW Content",
+        "desc": "When enabled, adult and explicit content from MyAnimeList will be included in lists and statistics."
       }
+    },
+    "toggle": {
+      "on": "Enabled",
+      "off": "Disabled"
     }
   },
   "theme": {

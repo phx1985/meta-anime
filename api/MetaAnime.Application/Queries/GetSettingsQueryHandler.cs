@@ -50,6 +50,9 @@ public class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRepositor
 
             // ── Kometa ────────────────────────────────────────────────────────
             new(SettingsKeys.KometaAnimeIdsJsonUrl, "kometa", false, true,  Get(SettingsKeys.KometaAnimeIdsJsonUrl)),
+
+            // ── App preferences ───────────────────────────────────────────────
+            new(SettingsKeys.AppShowNsfw, "app", false, false, Get(SettingsKeys.AppShowNsfw), "boolean"),
         ];
     }
 }
