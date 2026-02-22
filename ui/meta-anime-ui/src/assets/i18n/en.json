@@ -32,7 +32,9 @@
       "malNotInPlex": "MAL not in Plex",
       "malNotInPlexDesc": "Series on your MAL watch-list that are missing from your Plex library.",
       "plexNotInMal": "Plex not in MAL",
-      "plexNotInMalDesc": "Series in your Plex library that have no matching entry in MyAnimeList."
+      "plexNotInMalDesc": "Series in your Plex library that have no matching entry in MyAnimeList.",
+      "plexNotInSonarr": "Plex not in Sonarr",
+      "plexNotInSonarrDesc": "Series in your Plex library that are not tracked by Sonarr."
     },
     "welcome": "Welcome to Meta Anime"
   },

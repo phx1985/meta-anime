@@ -50,6 +50,7 @@ export interface AnimeStatisticsResponse {
   sonarrNotInMal: number;
   malNotInPlex: number;
   plexNotInMal: number;
+  plexNotInSonarr: number;
   genreStats: { [key: string]: number };
   viewingProgress: ViewingProgressStats;
 }

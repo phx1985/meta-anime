@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { SettingsService } from '../services/settings.service';
 import { AnimeService } from '../services/anime.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
@@ -20,14 +20,10 @@ function fmtElapsed(ms: number): string {
   return `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 
-/** Format a DateTimeOffset ISO string as a short local date+time */
-function fmtDate(iso: string): string {
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return iso;
-  return d.toLocaleString(undefined, {
-    year: 'numeric', month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  });
+/** Map an ngx-translate lang code to a BCP-47 locale for Intl.DateTimeFormat */
+function langToLocale(lang: string): string {
+  const map: Record<string, string> = { en: 'en-GB', fr: 'fr-FR', de: 'de-DE', es: 'es-ES', ja: 'ja-JP' };
+  return map[lang] ?? lang;
 }
 
 @Component({
@@ -44,6 +40,7 @@ export class SettingsComponent {
   readonly signalR        = inject(SyncSignalRService);
   private fb              = inject(FormBuilder);
   private destroyRef      = inject(DestroyRef);
+  private translate       = inject(TranslateService);
 
   // ── Settings load state ───────────────────────────────────────────────────
   loading   = signal(true);
@@ -61,6 +58,7 @@ export class SettingsComponent {
   syncing      = signal(false);
   showSyncHub  = signal(false);
   lastSyncDate = signal<string | null>(null);
+  currentLang  = signal(this.translate.currentLang ?? this.translate.defaultLang ?? 'en');
 
   // Convert SignalR observables → signals for template use
   syncSteps    = toSignal(this.signalR.steps$,     { initialValue: [] as SyncStep[] });
@@ -92,7 +90,16 @@ export class SettingsComponent {
 
   /** Expose formatters to template */
   readonly fmtElapsed = fmtElapsed;
-  readonly fmtDate    = fmtDate;
+
+  /** Locale-aware date formatter — uses current app language */
+  fmtDate(iso: string): string {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleString(langToLocale(this.currentLang()), {
+      year: 'numeric', month: 'short', day: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  }
 
   constructor() {
     // Connect to SignalR hub on component init
@@ -114,6 +121,11 @@ export class SettingsComponent {
 
     // Load initial last sync date
     this.loadSyncStatus();
+
+    // Track language changes so fmtDate() uses the correct locale
+    this.translate.onLangChange
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(evt => this.currentLang.set(evt.lang));
 
     // Auto-clear syncing flag when hub reports done/error; refresh sync date on done
     this.signalR.syncDone$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(done => {

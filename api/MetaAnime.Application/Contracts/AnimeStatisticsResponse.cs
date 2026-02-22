@@ -8,6 +8,7 @@ public sealed record AnimeStatisticsResponse(
     int SonarrNotInMal,
     int MalNotInPlex,
     int PlexNotInMal,
+    int PlexNotInSonarr,
     Dictionary<string, int> GenreStats,
     ViewingProgressStats ViewingProgress
 );

@@ -1,48 +1,93 @@
 <div class="missing-stats-card">
-  <h3 class="missing-title">{{ 'home.missing.title' | translate }}</h3>
-  <p class="missing-subtitle">{{ 'home.missing.subtitle' | translate }}</p>
-
   <div class="missing-rows">
-    <!-- Sonarr not in MAL -->
-    <div class="missing-row missing-row--sonarr">
-      <div class="missing-icon" aria-hidden="true">
-        <img src="assets/images/sonarr.svg" width="28" height="28" alt="Sonarr" class="provider-img" />
+
+    <!-- Sonarr → MAL (Sonarr not in MAL) -->
+    <div class="gap-row gap-row--sonarr-mal">
+      <div class="gap-icon-pair" aria-hidden="true">
+        <img src="assets/images/sonarr.svg" class="gap-src-img" alt="" />
+        <span class="gap-arrow">
+          <svg viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="1" y1="8" x2="24" y2="8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            <polyline points="18,2 25,8 18,14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <div class="gap-tgt-wrap gap-tgt-wrap--mal">
+          <img src="assets/images/mal.svg" class="gap-tgt-img" alt="" />
+          <span class="gap-tgt-strike" aria-hidden="true"></span>
+          <span class="gap-tgt-particles" aria-hidden="true"></span>
+        </div>
       </div>
-      <div class="missing-info">
-        <div class="missing-label">{{ 'home.missing.sonarrNotInMal' | translate }}</div>
-        <div class="missing-desc">{{ 'home.missing.sonarrNotInMalDesc' | translate }}</div>
+      <div class="gap-info">
+        <span class="gap-desc">{{ 'home.missing.sonarrNotInMalDesc' | translate }}</span>
       </div>
-      <div class="missing-count" [class.missing-count--zero]="stats.sonarrNotInMal === 0">
-        {{ stats.sonarrNotInMal }}
-      </div>
+      <div class="gap-count" [class.gap-count--zero]="stats.sonarrNotInMal === 0">{{ stats.sonarrNotInMal }}</div>
     </div>
 
-    <!-- MAL not in Plex -->
-    <div class="missing-row missing-row--mal">
-      <div class="missing-icon" aria-hidden="true">
-        <img src="assets/images/mal.svg" width="28" height="28" alt="MAL" class="provider-img" />
+    <!-- MAL → Plex (MAL not in Plex) -->
+    <div class="gap-row gap-row--mal-plex">
+      <div class="gap-icon-pair" aria-hidden="true">
+        <img src="assets/images/mal.svg" class="gap-src-img" alt="" />
+        <span class="gap-arrow">
+          <svg viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="1" y1="8" x2="24" y2="8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            <polyline points="18,2 25,8 18,14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <div class="gap-tgt-wrap gap-tgt-wrap--plex">
+          <img src="assets/images/plex.svg" class="gap-tgt-img" alt="" />
+          <span class="gap-tgt-strike" aria-hidden="true"></span>
+          <span class="gap-tgt-particles" aria-hidden="true"></span>
+        </div>
       </div>
-      <div class="missing-info">
-        <div class="missing-label">{{ 'home.missing.malNotInPlex' | translate }}</div>
-        <div class="missing-desc">{{ 'home.missing.malNotInPlexDesc' | translate }}</div>
+      <div class="gap-info">
+        <span class="gap-desc">{{ 'home.missing.malNotInPlexDesc' | translate }}</span>
       </div>
-      <div class="missing-count" [class.missing-count--zero]="stats.malNotInPlex === 0">
-        {{ stats.malNotInPlex }}
-      </div>
+      <div class="gap-count" [class.gap-count--zero]="stats.malNotInPlex === 0">{{ stats.malNotInPlex }}</div>
     </div>
 
-    <!-- Plex not in MAL -->
-    <div class="missing-row missing-row--plex">
-      <div class="missing-icon" aria-hidden="true">
-        <img src="assets/images/plex.svg" width="28" height="28" alt="Plex" class="provider-img" />
+    <!-- Plex → MAL (Plex not in MAL) -->
+    <div class="gap-row gap-row--plex-mal">
+      <div class="gap-icon-pair" aria-hidden="true">
+        <img src="assets/images/plex.svg" class="gap-src-img" alt="" />
+        <span class="gap-arrow">
+          <svg viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="1" y1="8" x2="24" y2="8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            <polyline points="18,2 25,8 18,14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <div class="gap-tgt-wrap gap-tgt-wrap--mal">
+          <img src="assets/images/mal.svg" class="gap-tgt-img" alt="" />
+          <span class="gap-tgt-strike" aria-hidden="true"></span>
+          <span class="gap-tgt-particles" aria-hidden="true"></span>
+        </div>
       </div>
-      <div class="missing-info">
-        <div class="missing-label">{{ 'home.missing.plexNotInMal' | translate }}</div>
-        <div class="missing-desc">{{ 'home.missing.plexNotInMalDesc' | translate }}</div>
+      <div class="gap-info">
+        <span class="gap-desc">{{ 'home.missing.plexNotInMalDesc' | translate }}</span>
       </div>
-      <div class="missing-count" [class.missing-count--zero]="stats.plexNotInMal === 0">
-        {{ stats.plexNotInMal }}
-      </div>
+      <div class="gap-count" [class.gap-count--zero]="stats.plexNotInMal === 0">{{ stats.plexNotInMal }}</div>
     </div>
+
+    <!-- Plex → Sonarr (Plex not in Sonarr) -->
+    <div class="gap-row gap-row--plex-sonarr">
+      <div class="gap-icon-pair" aria-hidden="true">
+        <img src="assets/images/plex.svg" class="gap-src-img" alt="" />
+        <span class="gap-arrow">
+          <svg viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="1" y1="8" x2="24" y2="8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            <polyline points="18,2 25,8 18,14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <div class="gap-tgt-wrap gap-tgt-wrap--sonarr">
+          <img src="assets/images/sonarr.svg" class="gap-tgt-img" alt="" />
+          <span class="gap-tgt-strike" aria-hidden="true"></span>
+          <span class="gap-tgt-particles" aria-hidden="true"></span>
+        </div>
+      </div>
+      <div class="gap-info">
+        <span class="gap-desc">{{ 'home.missing.plexNotInSonarrDesc' | translate }}</span>
+      </div>
+      <div class="gap-count" [class.gap-count--zero]="stats.plexNotInSonarr === 0">{{ stats.plexNotInSonarr }}</div>
+    </div>
+
   </div>
 </div>

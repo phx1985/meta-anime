@@ -1,16 +1,18 @@
 import {
   Component, Input, OnChanges, SimpleChanges,
-  ElementRef, ViewChild, AfterViewInit, OnDestroy, inject
+  ElementRef, ViewChild, AfterViewInit, OnDestroy, inject, DestroyRef
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
   Chart, ArcElement, BarElement, CategoryScale, LinearScale,
   Tooltip, Legend, DoughnutController, BarController,
   ChartConfiguration
 } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { ThemeService } from '../services/theme.service';
 
-Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend, DoughnutController, BarController);
+Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend, DoughnutController, BarController, ChartDataLabels);
 
 @Component({
   selector: 'app-genre-chart',
@@ -24,7 +26,8 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
   @ViewChild('chartCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
 
   themeService  = inject(ThemeService);
-  private translate = inject(TranslateService);
+  private translate  = inject(TranslateService);
+  private destroyRef = inject(DestroyRef);
 
   chartType: 'doughnut' | 'bar' = 'doughnut';
   private chart: Chart | null = null;
@@ -39,6 +42,11 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
   ngAfterViewInit(): void {
     this.ready = true;
     this.buildChart();
+
+    // Rebuild whenever the active language changes so labels are translated
+    this.translate.onLangChange
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.buildChart());
   }
 
   ngOnChanges(_: SimpleChanges): void {
@@ -64,7 +72,6 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
   private translateGenre(raw: string): string {
     const key = `genres.${raw}`;
     const translated = this.translate.instant(key);
-    // ngx-translate returns the key itself if no translation is found
     return translated !== key ? translated : raw;
   }
 
@@ -82,9 +89,11 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
 
     this.chart?.destroy();
 
-    const rawLabels  = this.entries.map(([k]) => k);
+    const rawEntries = this.entries;
+    const rawLabels  = rawEntries.map(([k]) => k);
     const labels     = rawLabels.map(k => this.translateGenre(k));
-    const data       = this.entries.map(([, v]) => v);
+    const data       = rawEntries.map(([, v]) => v);
+    const total      = data.reduce((a, b) => a + b, 0);
     const colors     = labels.map((_, i) => this.PALETTE[i % this.PALETTE.length]);
     const isDark     = this.themeService.isDarkTheme();
     const textColor  = isDark ? '#e8e8f0' : '#1a1a2e';
@@ -92,13 +101,26 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
 
     const tooltipCallbacks = { label: (ctx: Parameters<typeof this.tooltipLabel>[0]) => this.tooltipLabel(ctx) };
 
-    const commonOpts = {
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: { duration: 900, easing: 'easeInOutQuart' as const },
-      plugins: {
-        legend: { display: true, labels: { color: textColor, font: { size: 12 }, boxWidth: 14, padding: 12 } },
-        tooltip: { callbacks: tooltipCallbacks }
+    // Legend with count suffix: "Action (123)"
+    const legendWithCount = {
+      display: true,
+      labels: {
+        color: textColor,
+        font: { size: 11 },
+        boxWidth: 12,
+        padding: 10,
+        generateLabels: (chart: Chart) => {
+          const ds = chart.data.datasets[0];
+          return (chart.data.labels as string[]).map((lbl, i) => ({
+            text: `${lbl} (${(ds.data as number[])[i]})`,
+            fillStyle: (ds.backgroundColor as string[])[i],
+            strokeStyle: (ds.backgroundColor as string[])[i],
+            lineWidth: 0,
+            index: i,
+            hidden: false,
+            fontColor: textColor
+          }));
+        }
       }
     };
 
@@ -110,11 +132,28 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
         type: 'doughnut',
         data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: isDark ? '#1a1a2e' : '#fff', hoverOffset: 12 }] },
         options: {
-          ...commonOpts,
-          cutout: '62%',
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 900, easing: 'easeInOutQuart' as const },
+          cutout: '58%',
           plugins: {
-            ...commonOpts.plugins,
-            legend: { ...commonOpts.plugins.legend, position: 'right' }
+            legend: { ...legendWithCount, position: 'right' },
+            tooltip: { callbacks: tooltipCallbacks },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            datalabels: {
+              color: '#fff',
+              font: { weight: 'bold' as const, size: 10 },
+              formatter: (value: number) => {
+                const pct = total > 0 ? ((value / total) * 100).toFixed(0) : '0';
+                return `${pct}%`;
+              },
+              // Hide labels for very small slices to avoid clutter
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              display: (ctx: any) => {
+                const pct = total > 0 ? (ctx.dataset.data[ctx.dataIndex] as number) / total : 0;
+                return pct > 0.04;
+              }
+            } as never
           }
         }
       };
@@ -124,12 +163,24 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
         type: 'bar',
         data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
         options: {
-          ...commonOpts,
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 900, easing: 'easeInOutQuart' as const },
           indexAxis: 'y' as const,
           plugins: {
-            ...commonOpts.plugins,
             legend: { display: false },
-            tooltip: { callbacks: tooltipCallbacks }
+            tooltip: { callbacks: tooltipCallbacks },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            datalabels: {
+              anchor: 'end',
+              align: 'end',
+              color: textColor,
+              font: { size: 10, weight: 'bold' as const },
+              formatter: (value: number) => {
+                const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+                return `${pct}%`;
+              }
+            } as never
           },
           scales: {
             x: { ticks: { color: textColor }, grid: { color: gridColor } },

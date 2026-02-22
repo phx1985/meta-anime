@@ -32,7 +32,9 @@
       "malNotInPlex": "MAL absent de Plex",
       "malNotInPlexDesc": "Séries de votre liste MAL absentes de votre bibliothèque Plex.",
       "plexNotInMal": "Plex absent de MAL",
-      "plexNotInMalDesc": "Séries dans votre bibliothèque Plex sans entrée correspondante dans MyAnimeList."
+      "plexNotInMalDesc": "Séries dans votre bibliothèque Plex sans entrée correspondante dans MyAnimeList.",
+      "plexNotInSonarr": "Plex absent de Sonarr",
+      "plexNotInSonarrDesc": "Séries présentes dans votre bibliothèque Plex mais non suivies par Sonarr."
     },
     "welcome": "Bienvenue sur Meta Anime"
   },
