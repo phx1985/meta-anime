@@ -60,6 +60,11 @@
       "on_hold": "En pause",
       "dropped": "Abandonné",
       "plan_to_watch": "À regarder"
+    },
+    "seriesStatus": {
+      "finished_airing": "Terminée",
+      "currently_airing": "En cours",
+      "not_yet_aired": "À venir"
     }
   },
   "settings": {

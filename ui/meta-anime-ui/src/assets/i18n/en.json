@@ -60,6 +60,11 @@
       "on_hold": "On Hold",
       "dropped": "Dropped",
       "plan_to_watch": "Plan to Watch"
+    },
+    "seriesStatus": {
+      "finished_airing": "Finished",
+      "currently_airing": "Airing",
+      "not_yet_aired": "Upcoming"
     }
   },
   "settings": {

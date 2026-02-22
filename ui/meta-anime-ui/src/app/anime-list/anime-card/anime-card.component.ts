@@ -1,7 +1,12 @@
-import { Component, Input, signal, inject, computed } from '@angular/core';
+import { Component, Input, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo } from '../../models/anime.models';
+
+const TRUNCATE_AT = 180;
+
+/** Circumference of the score SVG arc (2π × r, r=15) */
+const ARC_CIRCUMFERENCE = 94.25;
 
 @Component({
   selector: 'app-anime-card',
@@ -18,7 +23,7 @@ export class AnimeCardComponent {
   showAltTitles = signal(false);
   descExpanded = signal(false);
 
-  // ── Computed helpers ──────────────────────────────────────────────────────
+  // ── Data accessors ────────────────────────────────────────────────────────
 
   get mal(): MalAnimeInfo | undefined {
     return this.anime.malAnimes?.[0];
@@ -32,15 +37,30 @@ export class AnimeCardComponent {
     return this.anime.plexAnimes?.[0];
   }
 
+  // ── Title / image ─────────────────────────────────────────────────────────
+
+  get coverImageUrl(): string | undefined {
+    return this.mal?.coverImageUrl;
+  }
+
   /** Best-effort localised title based on current UI language */
-  get localizedTitle(): string | undefined {
+  get displayTitle(): string {
     const lang = this.translate.currentLang ?? 'en';
     const alt = this.mal?.alternativeTitles;
-    if (!alt) return undefined;
-    if (lang === 'ja' && alt.ja) return alt.ja;
-    // For all other languages fall back to the English alt title
-    if (alt.en && alt.en !== this.anime.title) return alt.en;
-    return undefined;
+    if (alt) {
+      if (lang === 'ja' && alt.ja) return alt.ja;
+      if (alt.en && alt.en !== this.anime.title) return alt.en;
+    }
+    return this.anime.title;
+  }
+
+  get subtitle(): string | undefined {
+    // Show the original DB title as subtitle when a localized title is shown
+    const dt = this.displayTitle;
+    if (dt !== this.anime.title) return this.anime.title;
+    // Otherwise show Japanese alt as subtitle
+    const ja = this.mal?.alternativeTitles?.ja;
+    return ja && ja !== dt ? ja : undefined;
   }
 
   get allAltTitles(): string[] {
@@ -50,18 +70,62 @@ export class AnimeCardComponent {
     if (alt.en) titles.push(alt.en);
     if (alt.ja) titles.push(alt.ja);
     if (alt.synonyms) titles.push(...alt.synonyms);
-    return [...new Set(titles)].filter((t) => t !== this.anime.title);
+    return [...new Set(titles)].filter((t) => t !== this.displayTitle);
   }
+
+  // ── Description ───────────────────────────────────────────────────────────
 
   get description(): string {
     return this.mal?.synopsis ?? this.anime.description ?? '';
   }
 
+  /** Arc circumference constant for score badge SVG */
+  readonly arcCircumference = ARC_CIRCUMFERENCE;
+
   get truncatedDescription(): string {
     const d = this.description;
     if (!d) return '';
-    return this.descExpanded() || d.length <= 200 ? d : d.slice(0, 200) + '…';
+    return this.descExpanded() || d.length <= TRUNCATE_AT ? d : d.slice(0, TRUNCATE_AT) + '…';
   }
+
+  // ── Status ────────────────────────────────────────────────────────────────
+
+  /** MAL list status (watching / completed / on_hold / dropped / plan_to_watch) */
+  get malViewState(): string | undefined {
+    return this.mal?.viewState;
+  }
+
+  /** MAL series airing status (finished_airing / currently_airing / not_yet_aired) */
+  get seriesStatus(): string | undefined {
+    return this.mal?.status;
+  }
+
+  viewStateLabel(state: string): string {
+    const key = `animeCard.malStatus.${state}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : state;
+  }
+
+  seriesStatusLabel(status: string): string {
+    const key = `animeCard.seriesStatus.${status}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : status.replace(/_/g, ' ');
+  }
+
+  // ── Genres ────────────────────────────────────────────────────────────────
+
+  get genres(): string[] {
+    return this.mal?.genres ?? [];
+  }
+
+  /** Translate a genre name — safe for names containing spaces */
+  translateGenre(name: string): string {
+    const key = `genres.${name}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : name;
+  }
+
+  // ── Scores ────────────────────────────────────────────────────────────────
 
   get malScore(): number {
     return this.mal?.rating?.malMean ?? 0;
@@ -71,9 +135,12 @@ export class AnimeCardComponent {
     return this.mal?.rating?.myScore ?? 0;
   }
 
-  get genres(): string[] {
-    return this.mal?.genres ?? [];
+  /** 0–100 percentage for the score arc (scaled from 0–10) */
+  scorePct(score: number): number {
+    return Math.round(Math.min(10, Math.max(0, score)) * 10);
   }
+
+  // ── Dates ─────────────────────────────────────────────────────────────────
 
   get startDate(): string | undefined {
     return this.mal?.startDate;
@@ -87,9 +154,7 @@ export class AnimeCardComponent {
     return this.mal?.addedDate ? new Date(this.mal.addedDate) : undefined;
   }
 
-  get malViewState(): string | undefined {
-    return this.mal?.viewState;
-  }
+  // ── Progression ───────────────────────────────────────────────────────────
 
   get plexProgress(): { watched: number; total: number } | undefined {
     const p = this.plex?.progression;
@@ -98,75 +163,46 @@ export class AnimeCardComponent {
 
   get malProgress(): { watched: number; total: number } | undefined {
     const p = this.mal?.progression;
-    return p ? { watched: p.episodesWatched, total: p.totalEpisodes } : undefined;
+    return p && p.totalEpisodes > 0 ? { watched: p.episodesWatched, total: p.totalEpisodes } : undefined;
   }
 
-  /** Size on disk in GB (localized unit label) */
+  // ── Storage / codec ───────────────────────────────────────────────────────
+
+  /** Size on disk with localized unit (GB / Go) */
   get sizeOnDisk(): string | undefined {
     const bytes = this.sonarr?.sizeOnDisk;
     if (!bytes) return undefined;
     const gb = bytes / 1_073_741_824;
-    const lang = this.translate.currentLang ?? 'en';
-    const unit = lang === 'fr' ? 'Go' : 'GB';
-    return `${gb.toFixed(2)} ${unit}`;
+    const unit = this.translate.currentLang === 'fr' ? 'Go' : 'GB';
+    return `${gb.toFixed(1)} ${unit}`;
   }
 
-  get codecEntries(): { codec: string; count: number; pct: number; color: string }[] {
+  /** Primary codec summary (top 2 codecs) */
+  get codecSummary(): string | undefined {
     const dist = this.sonarr?.codecDistribution;
-    if (!dist) return [];
-    const entries = Object.entries(dist);
-    const total = entries.reduce((s, [, v]) => s + v, 0);
-    if (total === 0) return [];
-    return entries
+    if (!dist) return undefined;
+    return Object.entries(dist)
       .sort((a, b) => b[1] - a[1])
-      .map(([codec, count], i) => ({
-        codec,
-        count,
-        pct: Math.round((count / total) * 100),
-        color: CODEC_COLORS[i % CODEC_COLORS.length],
-      }));
+      .slice(0, 2)
+      .map(([c]) => c)
+      .join(' · ') || undefined;
   }
 
-  get malUrl(): string | undefined {
-    return this.mal?.url;
+  // ── URLs ──────────────────────────────────────────────────────────────────
+
+  get malUrl(): string | null {
+    return this.mal?.url ?? null;
   }
 
-  get sonarrUrl(): string | undefined {
-    return this.sonarr?.url;
+  get sonarrUrl(): string | null {
+    return this.sonarr?.url ?? null;
   }
 
-  get plexUrl(): string | undefined {
-    return this.plex?.url;
+  get plexUrl(): string | null {
+    return this.plex?.url ?? null;
   }
 
-  /** Accent hue based on MAL mean score (0-10): 0→red (0°), 5→yellow (65°), 10→green (130°) */
-  get scoreHue(): number {
-    const s = Math.min(10, Math.max(0, this.malScore));
-    return Math.round(s * 13);
-  }
-
-  /** Stars array for visual score (filled / half / empty) */
-  starsFor(score: number): ('full' | 'half' | 'empty')[] {
-    const normalized = Math.min(10, Math.max(0, score)) / 2; // to 5-star scale
-    return Array.from({ length: 5 }, (_, i) => {
-      const diff = normalized - i;
-      if (diff >= 0.75) return 'full';
-      if (diff >= 0.25) return 'half';
-      return 'empty';
-    });
-  }
-
-  translateViewState(state: string | undefined): string {
-    if (!state) return '';
-    const map: Record<string, string> = {
-      watching: '▶',
-      completed: '✓',
-      on_hold: '⏸',
-      dropped: '✕',
-      plan_to_watch: '📋',
-    };
-    return map[state] ?? state;
-  }
+  // ── Interaction ───────────────────────────────────────────────────────────
 
   toggleAltTitles(): void {
     this.showAltTitles.update((v) => !v);
@@ -176,5 +212,3 @@ export class AnimeCardComponent {
     this.descExpanded.update((v) => !v);
   }
 }
-
-const CODEC_COLORS = ['#6c63ff', '#3ecfcf', '#e5a00d', '#ef4444', '#22c55e', '#3b82f6', '#a855f7'];

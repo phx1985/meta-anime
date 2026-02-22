@@ -1,194 +1,214 @@
-<article class="anime-card" [style.--score-hue]="scoreHue">
-  <!-- ── Score accent bar ─────────────────────────────────────────────── -->
-  <div class="card-accent" aria-hidden="true"></div>
+<article class="anime-card">
 
-  <div class="card-body">
-    <!-- ── Header row: title + alt-title button ─────────────────────── -->
-    <div class="card-header-row">
-      <div class="title-block">
-        <h3 class="card-title">
-          {{ localizedTitle ?? anime.title }}
-        </h3>
-        @if (localizedTitle && localizedTitle !== anime.title) {
-          <span class="card-subtitle">{{ anime.title }}</span>
-        }
-      </div>
+  <div class="card-main">
+    <!-- ── Cover image ────────────────────────────────────────────────── -->
+    <div class="card-cover" aria-hidden="true">
+      @if (coverImageUrl) {
+        <img [src]="coverImageUrl" [alt]="anime.title" class="cover-img" loading="lazy" />
+      } @else {
+        <div class="cover-placeholder">{{ anime.title.charAt(0) }}</div>
+      }
+    </div>
 
-      @if (allAltTitles.length > 0) {
-        <div class="alt-btn-wrap">
-          <button
-            class="alt-btn"
-            (click)="toggleAltTitles()"
-            [attr.aria-expanded]="showAltTitles()"
-            [title]="'animeCard.altTitles' | translate"
-            aria-label="Alternative titles"
-          >
-            🌐
-          </button>
-          @if (showAltTitles()) {
-            <div class="alt-popover" role="tooltip">
-              @for (t of allAltTitles; track t) {
-                <span class="alt-title">{{ t }}</span>
+    <!-- ── Main content ───────────────────────────────────────────────── -->
+    <div class="card-content">
+
+      <!-- ── Header: title + status pills + alt-titles ──────────────── -->
+      <div class="card-head">
+        <div class="head-top">
+          <div class="title-block">
+            <h3 class="card-title">{{ displayTitle }}</h3>
+            @if (subtitle) {
+              <span class="card-subtitle">{{ subtitle }}</span>
+            }
+          </div>
+
+          <!-- alt-titles popover -->
+          @if (allAltTitles.length > 0) {
+            <div class="alt-wrap">
+              <button
+                class="alt-btn"
+                (click)="toggleAltTitles()"
+                [attr.aria-expanded]="showAltTitles()"
+                [title]="'animeCard.altTitles' | translate"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="13" height="13">
+                  <path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 0 2H4a1 1 0 0 1-1-1zm0 4a1 1 0 0 1 1-1h12a1 1 0 0 1 0 2H4a1 1 0 0 1-1-1zm0 4a1 1 0 0 1 1-1h7a1 1 0 0 1 0 2H4a1 1 0 0 1-1-1z"/>
+                </svg>
+              </button>
+              @if (showAltTitles()) {
+                <div class="alt-popover" role="tooltip">
+                  @for (t of allAltTitles; track t) {
+                    <span class="alt-title">{{ t }}</span>
+                  }
+                </div>
               }
             </div>
           }
         </div>
-      }
-    </div>
 
-    <!-- ── Description ──────────────────────────────────────────────── -->
-    @if (description) {
-      <p class="card-desc">
-        {{ truncatedDescription }}
-        @if (description.length > 200) {
-          <button class="desc-toggle" (click)="toggleDesc()">
-            {{ descExpanded() ? ('animeCard.less' | translate) : ('animeCard.more' | translate) }}
-          </button>
-        }
-      </p>
-    }
-
-    <!-- ── Genres ────────────────────────────────────────────────────── -->
-    @if (genres.length > 0) {
-      <div class="genre-row" aria-label="Genres">
-        @for (g of genres; track g) {
-          <span class="genre-pill">{{ 'genres.' + g | translate }}</span>
-        }
-      </div>
-    }
-
-    <!-- ── Scores ────────────────────────────────────────────────────── -->
-    @if (mal?.rating) {
-      <div class="scores-row">
-        <div class="score-block">
-          <span class="score-label">{{ 'animeCard.malScore' | translate }}</span>
-          <span class="score-value">{{ malScore | number: '1.1-1' }}</span>
-          <span class="stars" aria-hidden="true">
-            @for (s of starsFor(malScore); track $index) {
-              <span class="star star--{{ s }}"></span>
-            }
-          </span>
-        </div>
-        @if (myScore > 0) {
-          <div class="score-block">
-            <span class="score-label">{{ 'animeCard.myScore' | translate }}</span>
-            <span class="score-value">{{ myScore }}</span>
-            <span class="stars" aria-hidden="true">
-              @for (s of starsFor(myScore); track $index) {
-                <span class="star star--{{ s }}"></span>
-              }
+        <!-- Status pills row -->
+        <div class="status-pills">
+          @if (malViewState) {
+            <span class="pill pill--viewstate pill--{{ malViewState }}">
+              {{ viewStateLabel(malViewState) }}
             </span>
-          </div>
-        }
-      </div>
-    }
-
-    <!-- ── Dates ─────────────────────────────────────────────────────── -->
-    <div class="dates-row">
-      @if (startDate) {
-        <span class="date-chip">
-          <span class="date-icon">📅</span>
-          {{ startDate }}
-          @if (endDate) { → {{ endDate }} }
-        </span>
-      }
-      @if (addedDate) {
-        <span class="date-chip date-chip--added">
-          <span class="date-icon">➕</span>
-          {{ 'animeCard.addedOn' | translate }}
-          {{ addedDate | date: 'mediumDate' }}
-        </span>
-      }
-    </div>
-
-    <!-- ── Status badges ────────────────────────────────────────────── -->
-    <div class="status-row">
-      @if (malViewState) {
-        <span class="status-badge status-badge--mal" [class]="'state-' + malViewState">
-          <span class="badge-icon">🎌</span>
-          {{ translateViewState(malViewState) }}
-          {{ 'animeCard.malStatus.' + malViewState | translate }}
-          @if (malProgress) {
-            <span class="progress-chip">{{ malProgress.watched }}/{{ malProgress.total }}</span>
           }
-        </span>
-      }
-      @if (plexProgress) {
-        <span class="status-badge status-badge--plex">
-          <span class="badge-icon">🎬</span>
-          {{ 'animeCard.plex' | translate }}
-          <span class="progress-chip">{{ plexProgress.watched }}/{{ plexProgress.total }}</span>
-        </span>
-      }
-    </div>
+          @if (seriesStatus) {
+            <span class="pill pill--series">
+              {{ seriesStatusLabel(seriesStatus) }}
+            </span>
+          }
+        </div>
+      </div>
 
-    <!-- ── Storage + Codec ───────────────────────────────────────────── -->
-    @if (sizeOnDisk || codecEntries.length > 0) {
-      <div class="storage-row">
-        @if (sizeOnDisk) {
-          <span class="storage-chip">
-            <span class="storage-icon">💾</span>
-            {{ sizeOnDisk }}
-          </span>
-        }
-        @if (codecEntries.length > 0) {
-          <div class="codec-chart" aria-label="Codec distribution">
-            @for (entry of codecEntries; track entry.codec) {
-              <div
-                class="codec-bar-wrap"
-                [title]="entry.codec + ': ' + entry.count + ' (' + entry.pct + '%)'"
-              >
-                <div
-                  class="codec-bar"
-                  [style.width.%]="entry.pct"
-                  [style.background]="entry.color"
-                ></div>
-                <span class="codec-label">{{ entry.codec }}</span>
+      <!-- ── Description ──────────────────────────────────────────────── -->
+      @if (description) {
+        <p class="card-desc">
+          {{ truncatedDescription }}
+          @if (description.length > 180) {
+            <button class="desc-toggle" (click)="toggleDesc()">
+              {{ descExpanded() ? ('animeCard.less' | translate) : ('animeCard.more' | translate) }}
+            </button>
+          }
+        </p>
+      }
+
+      <!-- ── Genres ────────────────────────────────────────────────────── -->
+      @if (genres.length > 0) {
+        <div class="genre-list">
+          @for (g of genres; track g) {
+            <span class="genre-tag">{{ translateGenre(g) }}</span>
+          }
+        </div>
+      }
+
+      <!-- ── Scores + dates ─────────────────────────────────────────── -->
+      <div class="meta-row">
+        @if (mal?.rating) {
+          <div class="scores">
+            <div class="score-badge" [title]="'animeCard.malScore' | translate">
+              <span class="score-num">{{ malScore | number: '1.1-1' }}</span>
+              <span class="score-out">/10</span>
+              <span class="score-src">MAL</span>
+              <svg class="score-arc" viewBox="0 0 36 36" fill="none">
+                <circle class="arc-bg"  cx="18" cy="18" r="15" stroke-width="3"/>
+                <circle class="arc-fill" cx="18" cy="18" r="15" stroke-width="3"
+                        [attr.stroke-dashoffset]="arcCircumference - scorePct(malScore) * (arcCircumference / 100)"
+                        [attr.stroke-dasharray]="arcCircumference + ' ' + arcCircumference"
+                        transform="rotate(-90 18 18)"/>
+              </svg>
+            </div>
+            @if (myScore > 0) {
+              <div class="score-badge score-badge--mine" [title]="'animeCard.myScore' | translate">
+                <span class="score-num">{{ myScore }}</span>
+                <span class="score-out">/10</span>
+                <span class="score-src">{{ 'animeCard.myScore' | translate }}</span>
+                <svg class="score-arc" viewBox="0 0 36 36" fill="none">
+                  <circle class="arc-bg"  cx="18" cy="18" r="15" stroke-width="3"/>
+                  <circle class="arc-fill arc-fill--mine" cx="18" cy="18" r="15" stroke-width="3"
+                          [attr.stroke-dashoffset]="arcCircumference - scorePct(myScore) * (arcCircumference / 100)"
+                          [attr.stroke-dasharray]="arcCircumference + ' ' + arcCircumference"
+                          transform="rotate(-90 18 18)"/>
+                </svg>
               </div>
             }
           </div>
         }
+        @if (startDate) {
+          <span class="date-range">
+            {{ startDate }}
+            @if (endDate) { <span class="date-arrow">→</span> {{ endDate }} }
+          </span>
+        }
+        @if (addedDate) {
+          <span class="added-date">
+            {{ 'animeCard.addedOn' | translate }} {{ addedDate | date: 'mediumDate' }}
+          </span>
+        }
       </div>
-    }
 
-    <!-- ── Action buttons ────────────────────────────────────────────── -->
-    <div class="actions-row">
-      <a
-        class="action-btn action-btn--plex"
-        [class.action-btn--disabled]="!plexUrl"
-        [href]="plexUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-        [attr.aria-disabled]="!plexUrl"
-        [title]="'animeCard.openPlex' | translate"
-      >
-        <span class="btn-icon">🎬</span>
+    </div><!-- /card-content -->
+  </div><!-- /card-main -->
+
+  <!-- ── Source ribbons ──────────────────────────────────────────────── -->
+  @if (malViewState || plexProgress) {
+    <div class="ribbons">
+      @if (malViewState) {
+        <div class="ribbon ribbon--mal">
+          <svg class="ribbon-icon" viewBox="0 0 28 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="0" y="11" font-size="11" font-weight="800" font-family="Arial,sans-serif" fill="#2e51a2">MAL</text>
+          </svg>
+          <span class="ribbon-text">
+            {{ viewStateLabel(malViewState) }}
+            @if (malProgress) {
+              <span class="ribbon-chip">{{ malProgress.watched }}&thinsp;/&thinsp;{{ malProgress.total }}</span>
+            }
+          </span>
+        </div>
+      }
+      @if (plexProgress) {
+        <div class="ribbon ribbon--plex">
+          <svg class="ribbon-icon" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="7" cy="7" r="6.5" stroke="#e5a00d" stroke-width="1"/>
+            <path d="M5.5 4.5l5 2.5-5 2.5V4.5z" fill="#e5a00d"/>
+          </svg>
+          <span class="ribbon-text">
+            Plex
+            <span class="ribbon-chip">{{ plexProgress.watched }}&thinsp;/&thinsp;{{ plexProgress.total }}</span>
+          </span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── Footer ──────────────────────────────────────────────────────── -->
+  <div class="card-footer">
+    <div class="footer-actions">
+      <a class="action action--plex"
+         [attr.href]="plexUrl"
+         [class.action--disabled]="!plexUrl"
+         target="_blank" rel="noopener noreferrer"
+         [title]="'animeCard.openPlex' | translate">
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
+          <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M6.5 5.5l5 2.5-5 2.5V5.5z" fill="currentColor"/>
+        </svg>
         Plex
       </a>
-      <a
-        class="action-btn action-btn--sonarr"
-        [class.action-btn--disabled]="!sonarrUrl"
-        [href]="sonarrUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-        [attr.aria-disabled]="!sonarrUrl"
-        [title]="'animeCard.openSonarr' | translate"
-      >
-        <span class="btn-icon">📡</span>
+      <a class="action action--sonarr"
+         [attr.href]="sonarrUrl"
+         [class.action--disabled]="!sonarrUrl"
+         target="_blank" rel="noopener noreferrer"
+         [title]="'animeCard.openSonarr' | translate">
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
+          <rect x="1.5" y="3" width="13" height="9" rx="1.2" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M5.5 13.5h5M8 12v1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
         Sonarr
       </a>
-      <a
-        class="action-btn action-btn--mal"
-        [class.action-btn--disabled]="!malUrl"
-        [href]="malUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-        [attr.aria-disabled]="!malUrl"
-        [title]="'animeCard.openMal' | translate"
-      >
-        <span class="btn-icon">🎌</span>
+      <a class="action action--mal"
+         [attr.href]="malUrl"
+         [class.action--disabled]="!malUrl"
+         target="_blank" rel="noopener noreferrer"
+         [title]="'animeCard.openMal' | translate">
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
+          <path d="M3 4h10M3 7h10M3 10h7M3 13h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
         MAL
       </a>
     </div>
+
+    @if (codecSummary || sizeOnDisk) {
+      <div class="footer-info">
+        @if (codecSummary) {
+          <span class="info-codec">{{ codecSummary }}</span>
+        }
+        @if (sizeOnDisk) {
+          <span class="info-size">{{ sizeOnDisk }}</span>
+        }
+      </div>
+    }
   </div>
+
 </article>

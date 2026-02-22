@@ -16,6 +16,7 @@ public class MalAnimeSourceService(IOptions<MalSettings> options, IMalTokenServi
     private const string REQUEST_FIELDS = "synopsis";
     private const string EXTENDED_REQUEST_FIELDS = REQUEST_FIELDS + "alternative_titles{en,synonyms}, " +
                                                                     "genres{id,name}, " +
+                                                                    "main_picture, " +
                                                                     "my_list_status{score,created_at,updated_at,status}, " +
                                                                     "nsfw, " +
                                                                     "popularity, " +

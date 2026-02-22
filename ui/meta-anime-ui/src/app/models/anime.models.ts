@@ -51,6 +51,8 @@ export interface MalAnimeInfo {
   startDate?: string;
   endDate?: string;
   alternativeTitles?: MalAlternativeTitles;
+  coverImageUrl?: string;
+  status?: string;
 }
 
 export interface SonarrAnimeInfo {
