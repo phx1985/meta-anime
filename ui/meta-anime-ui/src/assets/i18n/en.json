@@ -107,6 +107,9 @@
         "desc": "Manually trigger or monitor the background sync. Logs remain visible until cleared."
       }
     },
+    "mal": {
+      "tokenRefreshed": "Token refreshed:"
+    },
     "category": {
       "plex": {
         "name": "Plex",

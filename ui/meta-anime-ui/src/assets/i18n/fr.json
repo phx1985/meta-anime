@@ -107,6 +107,9 @@
         "desc": "Déclenchez manuellement ou surveillez la synchronisation. Les logs restent visibles jusqu'à effacement."
       }
     },
+    "mal": {
+      "tokenRefreshed": "Token actualisé :"
+    },
     "category": {
       "plex": {
         "name": "Plex",

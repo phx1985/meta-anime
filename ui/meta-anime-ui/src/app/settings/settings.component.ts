@@ -70,6 +70,12 @@ export class SettingsComponent {
   hubConnected    = toSignal(this.signalR.connected$,        { initialValue: false });
   overallElapsed  = toSignal(this.signalR.overallElapsedMs$, { initialValue: 0 });
 
+  // ── Floating side navigation ──────────────────────────────────────────────
+  /** Category currently in the top viewport slice (tracked by IntersectionObserver) */
+  activeCategory   = signal<string>('');
+  /** Category recently clicked — gets a bounce highlight for 2 s then clears */
+  highlighted      = signal<string | null>(null);
+
   /** Provider logo paths — used both in category headers and in step rows */
   readonly providerImages: Record<string, string> = {
     plex:     'assets/images/plex.svg',
@@ -80,10 +86,10 @@ export class SettingsComponent {
     matching: 'assets/images/app.svg',
   };
 
-  /** Settings grouped by category — App:SyncInterval is excluded (shown in the sync card) */
+  /** Settings grouped by category — App:SyncInterval and System:* are excluded */
   grouped = computed<SettingsByCategory>(() =>
     this.settings()
-      .filter(s => s.key !== 'App:SyncInterval')
+      .filter(s => s.key !== 'App:SyncInterval' && !s.key.startsWith('System:'))
       .reduce((acc, s) => {
         (acc[s.category] ??= []).push(s);
         return acc;
@@ -95,14 +101,29 @@ export class SettingsComponent {
     this.settings().find(s => s.key === 'App:SyncInterval')
   );
 
+  /** Last MAL OAuth token refresh date (from System:MalTokenRefreshedAt) */
+  malTokenRefreshDate = computed(() =>
+    this.settings().find(s => s.key === 'System:MalTokenRefreshedAt')?.value ?? null
+  );
+
   /** Ordered category keys */
   categories = computed(() => Object.keys(this.grouped()));
+
+  /** All nav items: categories in order + 'sync' sentinel */
+  navItems = computed<string[]>(() => [...this.categories(), 'sync']);
 
   /** Per-setting reactive forms */
   forms: Record<string, FormGroup> = {};
 
   /** Expose formatters to template */
   readonly fmtElapsed = fmtElapsed;
+
+  /** IntersectionObserver instance — cleaned up on destroy */
+  private _intersectionObserver?: IntersectionObserver;
+
+  // ── Timing constants ─────────────────────────────────────────────────────
+  private static readonly HIGHLIGHT_DURATION_MS   = 2000;
+  private static readonly OBSERVER_SETUP_DELAY_MS = 120;
 
   /** Locale-aware date formatter — uses current app language */
   fmtDate(iso: string): string {
@@ -117,6 +138,22 @@ export class SettingsComponent {
   /** Whether the step log has any non-pending entries (i.e. a sync has been triggered) */
   hasSyncActivity = computed(() => this.syncSteps().some(s => s.state !== 'pending'));
 
+  /** DOM id for a nav category */
+  sectionId(cat: string): string {
+    return cat === 'sync' ? 'sync-section' : `section-${cat}`;
+  }
+
+  /** Scroll smoothly to a settings section and briefly highlight it */
+  scrollToSection(cat: string): void {
+    const el = document.getElementById(this.sectionId(cat));
+    if (!el) return;
+    this.highlighted.set(cat);
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => {
+      if (this.highlighted() === cat) this.highlighted.set(null);
+    }, SettingsComponent.HIGHLIGHT_DURATION_MS);
+  }
+
   constructor() {
     // Connect to SignalR hub on component init
     this.signalR.connect();
@@ -128,7 +165,6 @@ export class SettingsComponent {
           this.settings.set(data);
           this.buildForms(data);
           this.loading.set(false);
-          // Small delay to let Angular render the now-loaded settings DOM before scrolling
           const SCROLL_DELAY_MS = 80;
           const fragment = this.route.snapshot.fragment;
           if (fragment) {
@@ -136,6 +172,8 @@ export class SettingsComponent {
               document.getElementById(fragment)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, SCROLL_DELAY_MS);
           }
+          // Set up IntersectionObserver after DOM renders
+          setTimeout(() => this.setupIntersectionObserver(), SettingsComponent.OBSERVER_SETUP_DELAY_MS);
         },
         error: () => {
           this.error.set(true);
@@ -161,6 +199,9 @@ export class SettingsComponent {
     this.signalR.syncError$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(err => {
       if (err) this.syncing.set(false);
     });
+
+    // Disconnect IntersectionObserver on destroy
+    this.destroyRef.onDestroy(() => this._intersectionObserver?.disconnect());
   }
 
   private loadSyncStatus(): void {
@@ -182,6 +223,33 @@ export class SettingsComponent {
     }
     this.editing.set(editingInit);
     this.revealed.set(revealedInit);
+  }
+
+  /** Watch all section cards with IntersectionObserver to track the active nav item */
+  private setupIntersectionObserver(): void {
+    this._intersectionObserver?.disconnect();
+
+    this._intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const cat = entry.target.id === 'sync-section'
+              ? 'sync'
+              : entry.target.id.replace('section-', '');
+            this.activeCategory.set(cat);
+            break;
+          }
+        }
+      },
+      // rootMargin: top -5% = ignore very top of viewport; bottom -80% = only trigger
+      // when element enters the top 15% of the viewport, giving a "leading-edge" feel
+      { rootMargin: '-5% 0px -80% 0px', threshold: 0 }
+    );
+
+    for (const cat of this.navItems()) {
+      const el = document.getElementById(this.sectionId(cat));
+      if (el) this._intersectionObserver.observe(el);
+    }
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -309,4 +377,3 @@ export class SettingsComponent {
     this.signalR.resetSteps();
   }
 }
-

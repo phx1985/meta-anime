@@ -80,6 +80,10 @@ public class MalTokenService(
             await propertyBagRepository.UpsertAsync(RefreshTokenKey, tokenResponse.RefreshToken);
         }
 
+        await propertyBagRepository.UpsertAsync(
+            Core.SettingsKeys.MalTokenRefreshedAt,
+            DateTime.UtcNow.ToString("O"));
+
         return Result.Success();
     }
 

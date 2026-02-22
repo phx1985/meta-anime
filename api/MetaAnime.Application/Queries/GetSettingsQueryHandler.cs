@@ -47,6 +47,7 @@ public class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRepositor
             new(SettingsKeys.MalClientId,           "mal",    false, false, Get(SettingsKeys.MalClientId)),
             new(SettingsKeys.MalClientSecret,       "mal",    true,  false, Get(SettingsKeys.MalClientSecret)),
             new(SettingsKeys.MalRefreshToken,       "mal",    true,  false, Get(SettingsKeys.MalRefreshToken)),
+            new(SettingsKeys.MalTokenRefreshedAt,   "mal",    false, false, Get(SettingsKeys.MalTokenRefreshedAt), "info"),
 
             // ── Kometa ────────────────────────────────────────────────────────
             new(SettingsKeys.KometaAnimeIdsJsonUrl, "kometa", false, true,  Get(SettingsKeys.KometaAnimeIdsJsonUrl)),

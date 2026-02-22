@@ -32,5 +32,6 @@ public static class SettingsKeys
     public const string AppSyncInterval  = "App:SyncInterval";
 
     // System (not user-configurable)
-    public const string LastSyncDate = "System:LastSyncDate";
+    public const string LastSyncDate           = "System:LastSyncDate";
+    public const string MalTokenRefreshedAt    = "System:MalTokenRefreshedAt";
 }
