@@ -309,10 +309,10 @@ public class AnimeMediatorService(
                 })
                 .ToList();
 
-            var matchedCount    = mappingGroups.Count(g => g.Count > 1);
-            var sonarrNotInMal  = mappingGroups.Count(g => g.HasSonarr && !g.HasMal);
-            var malNotInPlex    = mappingGroups.Count(g => g.HasMal    && !g.HasPlex);
-            var plexNotInMal    = mappingGroups.Count(g => g.HasPlex   && !g.HasMal);
+            var matchedCount   = mappingGroups.Count(g => g.Count > 1);
+            var sonarrNotInMal = mappingGroups.Count(g => g.HasSonarr && !g.HasMal);
+            var malNotInPlex   = mappingGroups.Count(g => g.HasMal    && !g.HasPlex);
+            var plexNotInMal   = mappingGroups.Count(g => g.HasPlex   && !g.HasMal);
 
             var genreStats = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var malEpisodesWatched = 0;

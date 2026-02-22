@@ -5,7 +5,8 @@ import {
 import { TranslatePipe } from '@ngx-translate/core';
 import {
   Chart, ArcElement, BarElement, CategoryScale, LinearScale,
-  Tooltip, Legend, DoughnutController, BarController
+  Tooltip, Legend, DoughnutController, BarController,
+  ChartConfiguration
 } from 'chart.js';
 import { ThemeService } from '../services/theme.service';
 
@@ -25,8 +26,7 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
   themeService = inject(ThemeService);
 
   chartType: 'doughnut' | 'bar' = 'doughnut';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private chart: any = null;
+  private chart: Chart | null = null;
   private ready = false;
 
   readonly PALETTE = [
@@ -81,10 +81,10 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let config: any;
+    let config: ChartConfiguration;
 
     if (this.chartType === 'doughnut') {
-      config = {
+      const doughnutConfig: ChartConfiguration<'doughnut'> = {
         type: 'doughnut',
         data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: isDark ? '#1a1a2e' : '#fff', hoverOffset: 12 }] },
         options: {
@@ -96,13 +96,14 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
           }
         }
       };
+      config = doughnutConfig as unknown as ChartConfiguration;
     } else {
-      config = {
+      const barConfig: ChartConfiguration<'bar'> = {
         type: 'bar',
         data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
         options: {
           ...commonOpts,
-          indexAxis: 'y',
+          indexAxis: 'y' as const,
           plugins: { ...commonOpts.plugins, legend: { display: false } },
           scales: {
             x: { ticks: { color: textColor }, grid: { color: gridColor } },
@@ -110,6 +111,7 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
           }
         }
       };
+      config = barConfig as unknown as ChartConfiguration;
     }
 
     this.chart = new Chart(this.canvasRef.nativeElement, config);

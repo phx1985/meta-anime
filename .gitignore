@@ -65,3 +65,4 @@ docker-compose.override.yml
 # ASP.NET Core local development settings (contains secrets)
 appsettings.Development.json
 appsettings.Local.json
+nohup.out
