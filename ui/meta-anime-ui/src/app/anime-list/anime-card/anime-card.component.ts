@@ -186,6 +186,29 @@ export class AnimeCardComponent {
     return `${gb.toFixed(1)} ${unit}`;
   }
 
+  /** Fixed 3-segment codec breakdown: H.265 / H.264 / Other — null when no files */
+  get codecSegments(): Array<{ label: string; pct: number }> | null {
+    const dist = this.sonarr?.codecDistribution;
+    if (!dist) return null;
+    const total = Object.values(dist).reduce((s, v) => s + v, 0);
+    if (total === 0) return null;
+    let h265 = 0, h264 = 0, other = 0;
+    for (const [codec, count] of Object.entries(dist)) {
+      const c = codec.toLowerCase();
+      if (c === 'hevc' || c === 'h265' || c === 'h.265') h265 += count;
+      else if (c === 'avc' || c === 'h264' || c === 'h.264' || c === 'x264') h264 += count;
+      else other += count;
+    }
+    const pctH265  = Math.round((h265 / total) * 100);
+    const pctH264  = Math.round((h264 / total) * 100);
+    const pctOther = 100 - pctH265 - pctH264; // absorb rounding so segments always sum to 100
+    return [
+      { label: 'H.265', pct: pctH265  },
+      { label: 'H.264', pct: pctH264  },
+      { label: 'Other', pct: pctOther },
+    ];
+  }
+
   /** Primary codec summary (top 2 codecs) */
   get codecSummary(): string | undefined {
     const dist = this.sonarr?.codecDistribution;

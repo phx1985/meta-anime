@@ -240,13 +240,18 @@ export class SettingsComponent {
       .filter((s): s is { cat: string; el: HTMLElement } => s.el !== null);
 
     const pick = () => {
+      // If the page is scrolled near the bottom, activate the last section
+      const scrollBottom = window.scrollY + window.innerHeight;
+      const pageHeight   = document.documentElement.scrollHeight;
+      if (scrollBottom >= pageHeight - 80) {
+        this.activeCategory.set(sections[sections.length - 1]?.cat ?? '');
+        return;
+      }
       // Find the section whose top edge is closest to (but not below) NAVBAR_OFFSET.
-      // Fallback: if we are scrolled past all sections, use the last one.
       let best = sections[0]?.cat ?? '';
       for (const { cat, el } of sections) {
         const top = el.getBoundingClientRect().top;
         if (top <= NAVBAR_OFFSET + 10) {
-          // This section's top is at or above the trigger line → it is "in view"
           best = cat;
         }
       }
@@ -370,6 +375,13 @@ export class SettingsComponent {
 
     this.syncing.set(true);
     this.signalR.resetSteps();
+
+    // Scroll the sync card fully into view so the progress log is visible
+    // Brief delay lets the sync card begin expanding before we scroll to it
+    const SYNC_SCROLL_DELAY_MS = 80;
+    setTimeout(() => {
+      document.getElementById('sync-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, SYNC_SCROLL_DELAY_MS);
 
     this.animeService.syncAnimes()
       .pipe(takeUntilDestroyed(this.destroyRef))

@@ -617,6 +617,58 @@
   }
 }
 
+// ─── Codec pill bar (fixed 3-segment: H.265 / H.264 / Other + size pill) ────
+
+.codec-pill-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.codec-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.13rem 0.38rem;
+  border-radius: 4px;
+  border: 1px solid var(--card-border);
+  background: var(--bg-primary);
+  white-space: nowrap;
+  flex: 1;
+  justify-content: center;
+
+  &:nth-child(1) .codec-pill-dot { background: var(--accent-primary); }
+  &:nth-child(2) .codec-pill-dot { background: #22c55e; }
+  &:nth-child(3) .codec-pill-dot { background: #94a3b8; }
+
+  &--size {
+    flex: none;
+    .codec-size-icon { color: var(--text-muted); flex-shrink: 0; }
+    .codec-pill-pct  { color: var(--text-secondary); font-weight: 600; }
+  }
+}
+
+.codec-pill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.codec-pill-name {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.codec-pill-pct {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 // ─── Animations ──────────────────────────────────────────────────────────────
 
 @keyframes cardIn {
