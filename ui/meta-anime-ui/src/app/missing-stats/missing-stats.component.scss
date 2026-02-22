@@ -12,6 +12,22 @@
   flex-direction: column;
 }
 
+// ── Card header ────────────────────────────────────────────────────────────────
+
+.missing-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.875rem;
+}
+
+.missing-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
 @keyframes popFadeIn {
   from { opacity: 0; transform: translateY(24px) scale(0.96); }
   to   { opacity: 1; transform: none; }
@@ -61,12 +77,12 @@
   to   { opacity: 1; transform: none; }
 }
 
-// ── Icon pair: [source] → [ghost-target] ──────────────────────────────────────
+// ── Icon pair: [source] + [ghost-target] ──────────────────────────────────────
 
 .gap-icon-pair {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 3px;
   flex-shrink: 0;
 }
 
@@ -78,27 +94,6 @@
   object-fit: contain;
   display: block;
   flex-shrink: 0;
-}
-
-// Arrow between icons
-.gap-arrow {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  color: #ef4444;
-  opacity: 0.7;
-  animation: arrowPulse 1.8s ease-in-out infinite;
-
-  svg {
-    width: 26px;
-    height: 13px;
-    display: block;
-  }
-}
-
-@keyframes arrowPulse {
-  0%, 100% { opacity: 0.5; transform: translateX(0); }
-  50%       { opacity: 0.9; transform: translateX(2px); }
 }
 
 // ── Ghost target icon wrapper ──────────────────────────────────────────────────
@@ -135,61 +130,6 @@
       transparent      100%
     );
   }
-
-  // Diagonal red strikethrough
-  .gap-tgt-strike {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    border-radius: 6px;
-    overflow: hidden;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: -4px;
-      right: -4px;
-      height: 2px;
-      background: linear-gradient(to right, rgba(239,68,68,0.9), rgba(239,68,68,0.3));
-      transform: rotate(-22deg) translateY(-50%);
-      transform-origin: center left;
-      border-radius: 1px;
-    }
-  }
-
-  // Disintegration particles scattered off the right edge
-  .gap-tgt-particles {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 1px;
-    height: 1px;
-    pointer-events: none;
-    animation: particleFade 3s ease-in-out infinite;
-
-    // A cluster of 12 tiny dots simulating pixel disintegration
-    // They drift rightward and fade out via the animation
-    box-shadow:
-       9px  -6px 0 1.5px rgba(239,68,68, 0.70),
-      14px  -2px 0 1px   rgba(239,68,68, 0.55),
-      18px   4px 0 1.5px rgba(239,68,68, 0.40),
-      22px  -5px 0 1px   rgba(239,68,68, 0.30),
-      11px   8px 0 1px   rgba(120,120,140,0.50),
-      16px   7px 0 1.5px rgba(120,120,140,0.35),
-      20px  -8px 0 1px   rgba(120,120,140,0.25),
-       8px   3px 0 1px   rgba(239,68,68, 0.45),
-      13px  -9px 0 1.5px rgba(239,68,68, 0.30),
-      24px   2px 0 1px   rgba(120,120,140,0.20),
-      19px   9px 0 1px   rgba(239,68,68, 0.20),
-      26px  -3px 0 1px   rgba(120,120,140,0.15);
-    border-radius: 50%;
-  }
-}
-
-@keyframes particleFade {
-  0%, 100% { opacity: 0.6; transform: translate(0, 0); }
-  50%       { opacity: 1;   transform: translate(2px, 0); }
 }
 
 // ── Gap info text ──────────────────────────────────────────────────────────────

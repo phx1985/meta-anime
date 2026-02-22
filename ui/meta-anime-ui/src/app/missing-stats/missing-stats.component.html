@@ -1,20 +1,15 @@
 <div class="missing-stats-card">
+  <div class="missing-header">
+    <h3 class="missing-title">{{ 'home.missing.title' | translate }}</h3>
+  </div>
   <div class="missing-rows">
 
-    <!-- Sonarr → MAL (Sonarr not in MAL) -->
+    <!-- Sonarr not in MAL -->
     <div class="gap-row gap-row--sonarr-mal">
       <div class="gap-icon-pair" aria-hidden="true">
         <img src="assets/images/sonarr.svg" class="gap-src-img" alt="" />
-        <span class="gap-arrow">
-          <svg viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <line x1="1" y1="8" x2="24" y2="8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-            <polyline points="18,2 25,8 18,14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-          </svg>
-        </span>
-        <div class="gap-tgt-wrap gap-tgt-wrap--mal">
+        <div class="gap-tgt-wrap">
           <img src="assets/images/mal.svg" class="gap-tgt-img" alt="" />
-          <span class="gap-tgt-strike" aria-hidden="true"></span>
-          <span class="gap-tgt-particles" aria-hidden="true"></span>
         </div>
       </div>
       <div class="gap-info">
@@ -23,20 +18,12 @@
       <div class="gap-count" [class.gap-count--zero]="stats.sonarrNotInMal === 0">{{ stats.sonarrNotInMal }}</div>
     </div>
 
-    <!-- MAL → Plex (MAL not in Plex) -->
+    <!-- MAL not in Plex -->
     <div class="gap-row gap-row--mal-plex">
       <div class="gap-icon-pair" aria-hidden="true">
         <img src="assets/images/mal.svg" class="gap-src-img" alt="" />
-        <span class="gap-arrow">
-          <svg viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <line x1="1" y1="8" x2="24" y2="8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-            <polyline points="18,2 25,8 18,14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-          </svg>
-        </span>
-        <div class="gap-tgt-wrap gap-tgt-wrap--plex">
+        <div class="gap-tgt-wrap">
           <img src="assets/images/plex.svg" class="gap-tgt-img" alt="" />
-          <span class="gap-tgt-strike" aria-hidden="true"></span>
-          <span class="gap-tgt-particles" aria-hidden="true"></span>
         </div>
       </div>
       <div class="gap-info">
@@ -45,20 +32,12 @@
       <div class="gap-count" [class.gap-count--zero]="stats.malNotInPlex === 0">{{ stats.malNotInPlex }}</div>
     </div>
 
-    <!-- Plex → MAL (Plex not in MAL) -->
+    <!-- Plex not in MAL -->
     <div class="gap-row gap-row--plex-mal">
       <div class="gap-icon-pair" aria-hidden="true">
         <img src="assets/images/plex.svg" class="gap-src-img" alt="" />
-        <span class="gap-arrow">
-          <svg viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <line x1="1" y1="8" x2="24" y2="8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-            <polyline points="18,2 25,8 18,14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-          </svg>
-        </span>
-        <div class="gap-tgt-wrap gap-tgt-wrap--mal">
+        <div class="gap-tgt-wrap">
           <img src="assets/images/mal.svg" class="gap-tgt-img" alt="" />
-          <span class="gap-tgt-strike" aria-hidden="true"></span>
-          <span class="gap-tgt-particles" aria-hidden="true"></span>
         </div>
       </div>
       <div class="gap-info">
@@ -67,20 +46,12 @@
       <div class="gap-count" [class.gap-count--zero]="stats.plexNotInMal === 0">{{ stats.plexNotInMal }}</div>
     </div>
 
-    <!-- Plex → Sonarr (Plex not in Sonarr) -->
+    <!-- Plex not in Sonarr -->
     <div class="gap-row gap-row--plex-sonarr">
       <div class="gap-icon-pair" aria-hidden="true">
         <img src="assets/images/plex.svg" class="gap-src-img" alt="" />
-        <span class="gap-arrow">
-          <svg viewBox="0 0 32 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <line x1="1" y1="8" x2="24" y2="8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
-            <polyline points="18,2 25,8 18,14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-          </svg>
-        </span>
-        <div class="gap-tgt-wrap gap-tgt-wrap--sonarr">
+        <div class="gap-tgt-wrap">
           <img src="assets/images/sonarr.svg" class="gap-tgt-img" alt="" />
-          <span class="gap-tgt-strike" aria-hidden="true"></span>
-          <span class="gap-tgt-particles" aria-hidden="true"></span>
         </div>
       </div>
       <div class="gap-info">
