@@ -89,7 +89,8 @@
         "title": "Sync in progress",
         "done": "Sync complete",
         "error": "Sync failed — please retry",
-        "dismiss": "Dismiss"
+        "dismiss": "Dismiss",
+        "clearLog": "Clear log"
       },
       "step": {
         "init": "Initialising sync",
@@ -100,7 +101,11 @@
         "matching": "Matching & indexing"
       },
       "lastSync": "Last sync",
-      "neverSynced": "Never synced"
+      "neverSynced": "Never synced",
+      "card": {
+        "title": "Synchronisation",
+        "desc": "Manually trigger or monitor the background sync. Logs remain visible until cleared."
+      }
     },
     "category": {
       "plex": {
@@ -176,6 +181,17 @@
       "App_ShowNsfw": {
         "name": "Show NSFW Content",
         "desc": "When enabled, adult and explicit content from MyAnimeList will be included in lists and statistics."
+      },
+      "App_SyncInterval": {
+        "name": "Sync Interval",
+        "desc": "How often the background sync job runs to fetch new data from all sources.",
+        "option": {
+          "hourly": "Every Hour",
+          "every6h": "Every 6 Hours",
+          "every12h": "Every 12 Hours",
+          "daily": "Daily",
+          "weekly": "Weekly"
+        }
       }
     },
     "toggle": {
@@ -223,5 +239,13 @@
   },
   "lang": {
     "switch": "Français"
+  },
+  "toast": {
+    "noSync": {
+      "title": "No sync yet",
+      "message": "Your library has not been synced. Run a sync to populate your anime list.",
+      "cta": "Go to Sync",
+      "dismiss": "Dismiss"
+    }
   }
 }

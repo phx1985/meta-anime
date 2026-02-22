@@ -83,7 +83,7 @@ app.MapDefaultEndpoints();
 
 // Schedule background jobs
 var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>();
-AnimeSyncJob.Schedule(recurringJobManager);
+await AnimeSyncJob.ScheduleAsync(recurringJobManager, app.Services);
 MalTokenRefreshJob.Schedule(recurringJobManager);
 
 app.UseHttpsRedirection();

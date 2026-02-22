@@ -89,7 +89,8 @@
         "title": "Synchronisation en cours",
         "done": "Synchronisation terminée",
         "error": "Échec de la synchronisation — réessayez",
-        "dismiss": "Fermer"
+        "dismiss": "Fermer",
+        "clearLog": "Effacer les logs"
       },
       "step": {
         "init": "Initialisation",
@@ -100,7 +101,11 @@
         "matching": "Correspondance et indexation"
       },
       "lastSync": "Dernière sync",
-      "neverSynced": "Jamais synchronisé"
+      "neverSynced": "Jamais synchronisé",
+      "card": {
+        "title": "Synchronisation",
+        "desc": "Déclenchez manuellement ou surveillez la synchronisation. Les logs restent visibles jusqu'à effacement."
+      }
     },
     "category": {
       "plex": {
@@ -176,6 +181,17 @@
       "App_ShowNsfw": {
         "name": "Afficher le contenu NSFW",
         "desc": "Lorsqu'activé, le contenu adulte et explicite de MyAnimeList sera inclus dans les listes et statistiques."
+      },
+      "App_SyncInterval": {
+        "name": "Intervalle de sync",
+        "desc": "Fréquence à laquelle la tâche de synchronisation récupère les données de toutes les sources.",
+        "option": {
+          "hourly": "Toutes les heures",
+          "every6h": "Toutes les 6 heures",
+          "every12h": "Toutes les 12 heures",
+          "daily": "Quotidien",
+          "weekly": "Hebdomadaire"
+        }
       }
     },
     "toggle": {
@@ -223,5 +239,13 @@
   },
   "lang": {
     "switch": "English"
+  },
+  "toast": {
+    "noSync": {
+      "title": "Aucune synchronisation",
+      "message": "Votre bibliothèque n'a pas encore été synchronisée. Lancez une sync pour voir vos animés.",
+      "cta": "Aller à la sync",
+      "dismiss": "Fermer"
+    }
   }
 }

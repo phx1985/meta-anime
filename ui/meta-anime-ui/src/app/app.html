@@ -95,3 +95,29 @@
 </nav>
 
 <router-outlet />
+
+<!-- ── No-sync toast ─────────────────────────────────────────────────────── -->
+@if (showNoSyncToast()) {
+  <div class="no-sync-toast" role="alert" aria-live="polite">
+    <div class="no-sync-toast-icon" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+    </div>
+    <div class="no-sync-toast-body">
+      <strong class="no-sync-toast-title">{{ 'toast.noSync.title' | translate }}</strong>
+      <span class="no-sync-toast-msg">{{ 'toast.noSync.message' | translate }}</span>
+    </div>
+    <button type="button" class="no-sync-toast-cta" (click)="goToSync()">
+      {{ 'toast.noSync.cta' | translate }}
+    </button>
+    <button type="button" class="no-sync-toast-close" (click)="dismissNoSyncToast()"
+            [attr.aria-label]="'toast.noSync.dismiss' | translate">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+}

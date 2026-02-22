@@ -1,8 +1,11 @@
 using Asp.Versioning;
+using Hangfire;
 using MediatR;
+using MetaAnime.Application.BackgroundJobs;
 using MetaAnime.Application.Commands;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Queries;
+using MetaAnime.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -58,6 +61,13 @@ public class SettingsController(IMediator mediator) : ControllerBase
 
         if (result.IsFailure)
             return StatusCode(500, result.Error.Message);
+
+        // Re-schedule the sync job whenever the sync interval setting changes
+        if (key == SettingsKeys.AppSyncInterval)
+        {
+            var jobManager = HttpContext.RequestServices.GetRequiredService<IRecurringJobManager>();
+            await AnimeSyncJob.ScheduleAsync(jobManager, HttpContext.RequestServices);
+        }
 
         return Ok(result.Value);
     }

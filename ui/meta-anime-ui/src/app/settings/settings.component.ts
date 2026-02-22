@@ -13,11 +13,13 @@ function fieldSlug(key: string): string {
   return key.replace(':', '_');
 }
 
-/** Format elapsed ms as "1m 23s" or "45s" */
+/** Format elapsed ms as "123 ms", "4.5 s", "1m 23s" */
 function fmtElapsed(ms: number): string {
-  const s = Math.floor(ms / 1000);
-  if (s < 60) return `${s}s`;
-  return `${Math.floor(s / 60)}m ${s % 60}s`;
+  if (ms < 1000) return `${ms} ms`;
+  const s = ms / 1000;
+  if (s < 60) return `${s.toFixed(1)} s`;
+  const m = Math.floor(s / 60);
+  return `${m}m ${Math.floor(s % 60)}s`;
 }
 
 /** Map an ngx-translate lang code to a BCP-47 locale for Intl.DateTimeFormat */
@@ -54,9 +56,8 @@ export class SettingsComponent {
   editing  = signal<Record<string, boolean>>({});
   revealed = signal<Record<string, boolean>>({});
 
-  // ── Sync hub state (driven by SignalR) ────────────────────────────────────
+  // ── Sync state (driven by SignalR) ────────────────────────────────────────
   syncing      = signal(false);
-  showSyncHub  = signal(false);
   lastSyncDate = signal<string | null>(null);
   currentLang  = signal(this.translate.currentLang ?? this.translate.defaultLang ?? 'en');
 
@@ -67,13 +68,14 @@ export class SettingsComponent {
   hubConnected    = toSignal(this.signalR.connected$,        { initialValue: false });
   overallElapsed  = toSignal(this.signalR.overallElapsedMs$, { initialValue: 0 });
 
-  /** Provider logo image paths */
+  /** Provider logo paths — used both in category headers and in step rows */
   readonly providerImages: Record<string, string> = {
-    plex:   'assets/images/plex.svg',
-    sonarr: 'assets/images/sonarr.svg',
-    mal:    'assets/images/mal.svg',
-    kometa: 'assets/images/kometa.png',
-    app:    'assets/images/app.svg',
+    plex:     'assets/images/plex.svg',
+    sonarr:   'assets/images/sonarr.svg',
+    mal:      'assets/images/mal.svg',
+    kometa:   'assets/images/kometa.png',
+    app:      'assets/images/app.svg',
+    matching: 'assets/images/app.svg',
   };
 
   /** Settings grouped by category */
@@ -102,6 +104,9 @@ export class SettingsComponent {
       hour: '2-digit', minute: '2-digit'
     });
   }
+
+  /** Whether the step log has any non-pending entries (i.e. a sync has been triggered) */
+  hasSyncActivity = computed(() => this.syncSteps().some(s => s.state !== 'pending'));
 
   constructor() {
     // Connect to SignalR hub on component init
@@ -154,7 +159,6 @@ export class SettingsComponent {
     const editingInit:  Record<string, boolean> = {};
     const revealedInit: Record<string, boolean> = {};
     for (const s of settings) {
-      // Pre-fill form with the real value (sensitive values now returned by API)
       this.forms[s.key]   = this.fb.group({ value: [s.value ?? ''] });
       editingInit[s.key]  = false;
       revealedInit[s.key] = false;
@@ -199,6 +203,27 @@ export class SettingsComponent {
   /** Whether a boolean setting is currently enabled */
   boolValue(setting: SettingDefinition): boolean {
     return setting.value === 'true';
+  }
+
+  /** Handle select-field change (auto-save on selection). */
+  onSelectChange(setting: SettingDefinition, event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.savingKey.set(setting.key);
+    this.settingsService.update(setting.key, { value })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.savingKey.set(null);
+          this.savedKey.set(setting.key);
+          this.settings.update(list =>
+            list.map(s => s.key === setting.key ? { ...s, value } : s)
+          );
+          setTimeout(() => {
+            if (this.savedKey() === setting.key) this.savedKey.set(null);
+          }, 2000);
+        },
+        error: () => { this.savingKey.set(null); }
+      });
   }
 
   save(setting: SettingDefinition): void {
@@ -248,25 +273,23 @@ export class SettingsComponent {
   trackByCategory(_: number, cat: string): string      { return cat;   }
   trackByStepKey(_: number, s: SyncStep): string       { return s.stepKey; }
 
-  // ── Sync hub ──────────────────────────────────────────────────────────────
+  // ── Sync card ─────────────────────────────────────────────────────────────
   triggerSync(): void {
     if (this.syncing()) return;
 
     this.syncing.set(true);
-    this.showSyncHub.set(true);
     this.signalR.resetSteps();
 
     this.animeService.syncAnimes()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        // SignalR drives the step UI; HTTP response is just confirmation
         next:  () => { /* SignalR done event handles syncing flag */ },
         error: () => { this.syncing.set(false); }
       });
   }
 
-  dismissSyncHub(): void {
-    this.showSyncHub.set(false);
+  clearSyncLog(): void {
     this.signalR.resetSteps();
   }
 }
+

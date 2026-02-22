@@ -1,5 +1,8 @@
 using Hangfire;
+using MetaAnime.Core;
+using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace MetaAnime.Application.BackgroundJobs;
@@ -36,13 +39,27 @@ public class AnimeSyncJob(
     }
 
     /// <summary>
-    /// Schedules the anime sync job to run periodically
+    /// Schedules (or reschedules) the anime sync job using the interval configured in the PropertyBag.
     /// </summary>
-    public static void Schedule(IRecurringJobManager recurringJobManager)
+    public static async Task ScheduleAsync(IRecurringJobManager recurringJobManager, IServiceProvider services)
     {
+        using var scope = services.CreateScope();
+        var repo = scope.ServiceProvider.GetRequiredService<IPropertyBagRepository>();
+        var entry = await repo.GetByKeyAsync(SettingsKeys.AppSyncInterval);
+        var cronExpr = MapIntervalToCron(entry?.Value ?? "daily");
+
         recurringJobManager.AddOrUpdate<AnimeSyncJob>(
             Constants.JobNames.AnimeMetadataSync,
             job => job.SyncAnimeMetadata(),
-            Cron.Hourly);
+            cronExpr);
     }
+
+    private static string MapIntervalToCron(string interval) => interval switch
+    {
+        "hourly"   => Cron.Hourly(),
+        "every6h"  => "0 */6 * * *",
+        "every12h" => "0 */12 * * *",
+        "weekly"   => Cron.Weekly(),
+        _          => Cron.Daily(), // "daily" is the default
+    };
 }

@@ -6,5 +6,6 @@ public record SettingDefinition(
     bool IsSensitive,
     bool IsRequired,
     string? Value,
-    string FieldType = "text"
+    string FieldType = "text",
+    string[]? SelectOptions = null
 );

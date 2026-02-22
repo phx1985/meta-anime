@@ -70,6 +70,7 @@ public class SettingsSeedService(
             [SettingsKeys.KometaAnimeIdsJsonUrl]   = kometa.AnimeIdsJsonUrl,
 
             [SettingsKeys.AppShowNsfw]             = "false",
+            [SettingsKeys.AppSyncInterval]         = "daily",
         };
     }
 }

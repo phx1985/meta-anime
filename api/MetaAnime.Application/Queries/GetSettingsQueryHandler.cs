@@ -52,7 +52,9 @@ public class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRepositor
             new(SettingsKeys.KometaAnimeIdsJsonUrl, "kometa", false, true,  Get(SettingsKeys.KometaAnimeIdsJsonUrl)),
 
             // ── App preferences ───────────────────────────────────────────────
-            new(SettingsKeys.AppShowNsfw, "app", false, false, Get(SettingsKeys.AppShowNsfw), "boolean"),
+            new(SettingsKeys.AppShowNsfw,      "app", false, false, Get(SettingsKeys.AppShowNsfw),     "boolean"),
+            new(SettingsKeys.AppSyncInterval,  "app", false, false, Get(SettingsKeys.AppSyncInterval), "select",
+                SelectOptions: ["hourly", "every6h", "every12h", "daily", "weekly"]),
         ];
     }
 }

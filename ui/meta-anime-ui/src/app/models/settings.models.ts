@@ -5,6 +5,7 @@ export interface SettingDefinition {
   isRequired: boolean;
   value: string | null;
   fieldType: string;
+  selectOptions?: string[];
 }
 
 export interface UpdateSettingRequest {
