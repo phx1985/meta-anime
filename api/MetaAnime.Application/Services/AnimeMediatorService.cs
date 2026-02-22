@@ -28,7 +28,6 @@ public class AnimeMediatorService(
     IPropertyBagRepository propertyBagRepository,
     IOptions<MalSettings> malOptions,
     IOptions<SonarrSettings> sonarrOptions,
-    IOptions<PlexSettings> plexOptions,
     ILogger<AnimeMediatorService> logger)
     : IAnimeMediatorService
 {
@@ -42,7 +41,15 @@ public class AnimeMediatorService(
         ? sonarrOptions.Value.RemoteUrl
         : sonarrOptions.Value.Host;
 
-    private readonly string plexBaseUrl = $"{plexOptions.Value.Host}/web/index.html#!/server/{plexAnimeSource.GetMachineIdentifierAsync().Result.Value}/details?key=%2Flibrary%2Fmetadata%2F";
+    // Lazily resolved the first time a URL is needed so the constructor stays synchronous.
+    private string? _plexBaseUrl;
+    private async Task<string> GetPlexBaseUrlAsync()
+    {
+        if (_plexBaseUrl is not null) return _plexBaseUrl;
+        var idResult = await plexAnimeSource.GetMachineIdentifierAsync();
+        _plexBaseUrl = $"https://app.plex.tv/desktop/#!/server/{idResult.Value}/details?key=%2Flibrary%2Fmetadata%2F";
+        return _plexBaseUrl;
+    }
 
     public async Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAllAsync(int page = 1, int pageSize = 100, AnimeFilters? filters = null, bool enriched = false)
     {
@@ -147,10 +154,9 @@ public class AnimeMediatorService(
                 }
                 else
                 {
-                    plexAnimes = group
+                    plexAnimes = (await Task.WhenAll(group
                         .Where(m => m.Anime?.AnimeSource == AnimeSource.Plex)
-                        .Select(m => CreatePlexAnimeInfoFromCache(m, plexCache))
-                        .ToList();
+                        .Select(m => CreatePlexAnimeInfoFromCacheAsync(m, plexCache)))).ToList();
                     malAnimes = group
                         .Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList)
                         .Select(m => CreateMalAnimeInfoFromCache(m, malCache))
@@ -633,8 +639,9 @@ public class AnimeMediatorService(
         return entry?.Value?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
     }
 
-    private PlexAnimeInfo CreatePlexAnimeInfoFromCache(AnimeMapping mapping, Dictionary<string, string> plexCache)
+    private async Task<PlexAnimeInfo> CreatePlexAnimeInfoFromCacheAsync(AnimeMapping mapping, Dictionary<string, string> plexCache)
     {
+        var baseUrl = await GetPlexBaseUrlAsync();
         if (plexCache.TryGetValue(mapping.Anime!.SourceId, out var rawData))
         {
             try
@@ -644,7 +651,7 @@ public class AnimeMediatorService(
                 {
                     return new PlexAnimeInfo(
                         plexMedia,
-                        plexBaseUrl,
+                        baseUrl,
                         plexMedia.ViewedLeafCount,
                         plexMedia.LeafCount
                     );
@@ -654,7 +661,7 @@ public class AnimeMediatorService(
             {
             }
         }
-        return new PlexAnimeInfo(mapping.Anime, plexBaseUrl);
+        return new PlexAnimeInfo(mapping.Anime, baseUrl);
     }
 
     private MalAnimeInfo CreateMalAnimeInfoFromCache(AnimeMapping mapping, Dictionary<string, string> malCache)
@@ -695,7 +702,7 @@ public class AnimeMediatorService(
                     {
                         logger.LogDebug(Constants.LogMessages.AnimeMediatorService.SonarrAnimeSeasons,
                             mapping.Anime.SourceId, sonarrSeries.Title, sonarrSeries.Seasons?.Count ?? 0);
-                        return new SonarrAnimeInfo(sonarrSeries, sonarrSeriesBaseUrl, new Dictionary<string, int>());
+                        return new SonarrAnimeInfo(sonarrSeries, sonarrSeriesBaseUrl, sonarrSeries.CodecDistribution);
                     }
                 }
                 catch (JsonException ex)
@@ -709,6 +716,7 @@ public class AnimeMediatorService(
 
     private async Task<List<PlexAnimeInfo>> FetchPlexAnimeDetailsAsync(IEnumerable<AnimeMapping> mappings)
     {
+        var baseUrl = await GetPlexBaseUrlAsync();
         var tasks = mappings.Select(async mapping =>
         {
             var plexResult = await plexAnimeSource.GetByIdAsync(mapping.Anime!.SourceId);
@@ -716,14 +724,14 @@ public class AnimeMediatorService(
             {
                 return new PlexAnimeInfo(
                     plexResult.Value,
-                    plexBaseUrl,
+                    baseUrl,
                     plexResult.Value.ViewedLeafCount,
                     plexResult.Value.LeafCount
                 );
             }
             else
             {
-                return new PlexAnimeInfo(mapping.Anime, plexBaseUrl);
+                return new PlexAnimeInfo(mapping.Anime, baseUrl);
             }
         });
 

@@ -129,6 +129,13 @@ public class AnimeService(
             if (sonarrResult.IsFailure)
                 return Result.Failure<IEnumerable<Anime>>(sonarrResult.Error);
 
+            // Enrich each Sonarr series with codec distribution so it is included in the cache.
+            // Runs sequentially to respect the shared DbContext constraint.
+            foreach (var series in sonarrResult.Value)
+            {
+                series.CodecDistribution = await sonarrAnimeSourceService.GetCodecDistributionAsync(series.Id.ToString());
+            }
+
             await animeRepository.BulkDeleteAllAsync();
             await animeRepository.BulkInsertAsync([.. plexResult.Value, .. malResult.Value, .. sonarrResult.Value]);
 

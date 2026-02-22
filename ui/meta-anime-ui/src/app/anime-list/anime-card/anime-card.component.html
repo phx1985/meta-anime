@@ -1,8 +1,15 @@
-<article class="anime-card">
+<article class="anime-card" [class.card--expanded]="descExpanded()">
+
+  <!-- ── Blurred backdrop (visible when synopsis expanded) ──────────────── -->
+  @if (coverImageUrl) {
+    <div class="cover-backdrop" aria-hidden="true">
+      <img [src]="coverImageUrl" class="backdrop-img" [alt]="''" />
+    </div>
+  }
 
   <div class="card-main">
     <!-- ── Cover image ────────────────────────────────────────────────── -->
-    <div class="card-cover" aria-hidden="true">
+    <div class="card-cover" aria-hidden="true" (click)="openLightbox()" [class.cover--clickable]="!!coverImageUrl">
       @if (coverImageUrl) {
         <img [src]="coverImageUrl" [alt]="anime.title" class="cover-img" loading="lazy" />
       } @else {
@@ -58,6 +65,9 @@
             <span class="pill pill--series">
               {{ seriesStatusLabel(seriesStatus) }}
             </span>
+          }
+          @if (seasonTag) {
+            <span class="pill pill--season">{{ seasonTag }}</span>
           }
         </div>
       </div>
@@ -211,3 +221,15 @@
   </div>
 
 </article>
+
+<!-- ── Lightbox overlay (outside article, teleported to body) ──────────── -->
+@if (showLightbox() && coverImageUrl) {
+  <div class="lightbox-overlay" (click)="closeLightbox()" role="dialog" aria-modal="true">
+    <button class="lightbox-close" type="button" (click)="closeLightbox()" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <img class="lightbox-img" [src]="coverImageUrl" [alt]="anime.title" (click)="$event.stopPropagation()" />
+  </div>
+}

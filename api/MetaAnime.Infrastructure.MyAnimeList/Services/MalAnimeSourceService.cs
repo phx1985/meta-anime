@@ -13,11 +13,11 @@ public class MalAnimeSourceService(IOptions<MalSettings> options, IMalTokenServi
     #region Fields
     private readonly string baseUrl = options.Value.ApiBaseUrl;
     private readonly bool isConfigured = !string.IsNullOrWhiteSpace(options.Value.ApiBaseUrl);
-    private const string REQUEST_FIELDS = "synopsis";
-    private const string EXTENDED_REQUEST_FIELDS = REQUEST_FIELDS + "alternative_titles{en,synonyms}, " +
+    private const string REQUEST_FIELDS = "synopsis, ";
+    private const string EXTENDED_REQUEST_FIELDS = REQUEST_FIELDS + "alternative_titles{en,ja,synonyms}, " +
                                                                     "genres{id,name}, " +
                                                                     "main_picture, " +
-                                                                    "my_list_status{score,created_at,updated_at,status}, " +
+                                                                    "my_list_status{score,num_episodes_watched,created_at,updated_at,status}, " +
                                                                     "nsfw, " +
                                                                     "popularity, " +
                                                                     "rank, " +

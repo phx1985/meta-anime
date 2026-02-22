@@ -1,3 +1,53 @@
+// ─── Page wrapper ─────────────────────────────────────────────────────────────
+
+.anime-list-page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+// ─── Bokeh background ─────────────────────────────────────────────────────────
+
+.bokeh {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bokeh__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.045;
+  animation: bokehFloat linear infinite;
+  background: var(--accent-primary);
+
+  &:nth-child(1) { width: 120px; height: 120px; left: 15%;  top: 10%;  animation-duration: 22s; animation-delay:  0s;   background: var(--accent-primary); }
+  &:nth-child(2) { width: 180px; height: 180px; left: 60%;  top: 5%;   animation-duration: 30s; animation-delay: -8s;   background: var(--accent-primary); }
+  &:nth-child(3) { width: 90px;  height: 90px;  left: 80%;  top: 40%;  animation-duration: 18s; animation-delay: -4s;   background: #a855f7; }
+  &:nth-child(4) { width: 150px; height: 150px; left: 30%;  top: 60%;  animation-duration: 26s; animation-delay: -14s;  background: #22c55e; }
+  &:nth-child(5) { width: 200px; height: 200px; left: 5%;   top: 70%;  animation-duration: 34s; animation-delay: -20s;  background: var(--accent-primary); }
+  &:nth-child(6) { width: 100px; height: 100px; left: 70%;  top: 75%;  animation-duration: 20s; animation-delay: -6s;   background: #a855f7; }
+  &:nth-child(7) { width: 140px; height: 140px; left: 45%;  top: 85%;  animation-duration: 28s; animation-delay: -10s;  background: #22c55e; }
+}
+
+@keyframes bokehFloat {
+  0%   { transform: translate(0, 0) scale(1); }
+  25%  { transform: translate(40px, -30px) scale(1.15); }
+  50%  { transform: translate(-20px, 50px) scale(0.9); }
+  75%  { transform: translate(30px, 20px) scale(1.05); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+// ─── Content sits on top of bokeh ─────────────────────────────────────────────
+
+.container {
+  position: relative;
+  z-index: 1;
+}
+
 .anime-list-title {
   font-weight: 700;
   color: var(--accent-primary);
@@ -22,3 +72,4 @@
     }
   }
 }
+
