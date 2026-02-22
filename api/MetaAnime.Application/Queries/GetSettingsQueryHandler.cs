@@ -28,26 +28,25 @@ public class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRepositor
     private static IEnumerable<SettingDefinition> BuildDefinitions(Dictionary<string, string> bag)
     {
         string Get(string key) => bag.TryGetValue(key, out var v) ? v : string.Empty;
-        string Mask(string key) => bag.ContainsKey(key) ? "••••••••" : string.Empty;
 
         return
         [
             // ── Plex ──────────────────────────────────────────────────────────
             new(SettingsKeys.PlexHost,              "plex",   false, true,  Get(SettingsKeys.PlexHost)),
-            new(SettingsKeys.PlexToken,             "plex",   true,  true,  Mask(SettingsKeys.PlexToken)),
+            new(SettingsKeys.PlexToken,             "plex",   true,  true,  Get(SettingsKeys.PlexToken)),
             new(SettingsKeys.PlexAnimeSections,     "plex",   false, true,  Get(SettingsKeys.PlexAnimeSections)),
 
             // ── Sonarr ────────────────────────────────────────────────────────
             new(SettingsKeys.SonarrHost,            "sonarr", false, true,  Get(SettingsKeys.SonarrHost)),
-            new(SettingsKeys.SonarrApiKey,          "sonarr", true,  true,  Mask(SettingsKeys.SonarrApiKey)),
+            new(SettingsKeys.SonarrApiKey,          "sonarr", true,  true,  Get(SettingsKeys.SonarrApiKey)),
             new(SettingsKeys.SonarrAnimeTags,       "sonarr", false, true,  Get(SettingsKeys.SonarrAnimeTags)),
             new(SettingsKeys.SonarrRemoteUrl,       "sonarr", false, false, Get(SettingsKeys.SonarrRemoteUrl)),
 
             // ── MyAnimeList ───────────────────────────────────────────────────
-            new(SettingsKeys.MalApiToken,           "mal",    true,  false, Mask(SettingsKeys.MalApiToken)),
+            new(SettingsKeys.MalApiToken,           "mal",    true,  false, Get(SettingsKeys.MalApiToken)),
             new(SettingsKeys.MalClientId,           "mal",    false, false, Get(SettingsKeys.MalClientId)),
-            new(SettingsKeys.MalClientSecret,       "mal",    true,  false, Mask(SettingsKeys.MalClientSecret)),
-            new(SettingsKeys.MalRefreshToken,       "mal",    true,  false, Mask(SettingsKeys.MalRefreshToken)),
+            new(SettingsKeys.MalClientSecret,       "mal",    true,  false, Get(SettingsKeys.MalClientSecret)),
+            new(SettingsKeys.MalRefreshToken,       "mal",    true,  false, Get(SettingsKeys.MalRefreshToken)),
 
             // ── Kometa ────────────────────────────────────────────────────────
             new(SettingsKeys.KometaAnimeIdsJsonUrl, "kometa", false, true,  Get(SettingsKeys.KometaAnimeIdsJsonUrl)),

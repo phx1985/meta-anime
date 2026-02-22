@@ -1,19 +1,29 @@
-import { Component, inject, signal, computed, DestroyRef } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, inject, signal, computed, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { SettingsService } from '../services/settings.service';
 import { AnimeService } from '../services/anime.service';
+import { SyncSignalRService } from '../services/sync-signalr.service';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
+import { SyncStep } from '../models/sync-progress.models';
 
-/** Map a setting key (e.g. "Plex:Host") to an i18n slug (e.g. "Plex_Host") */
+/** "Plex:Host" → "Plex_Host" for i18n key lookups */
 function fieldSlug(key: string): string {
   return key.replace(':', '_');
+}
+
+/** Format elapsed ms as "1m 23s" or "45s" */
+function fmtElapsed(ms: number): string {
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}s`;
+  return `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 
 @Component({
   selector: 'app-settings',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TranslatePipe, ReactiveFormsModule],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss'
@@ -21,6 +31,7 @@ function fieldSlug(key: string): string {
 export class SettingsComponent {
   private settingsService = inject(SettingsService);
   private animeService    = inject(AnimeService);
+  readonly signalR        = inject(SyncSignalRService);
   private fb              = inject(FormBuilder);
   private destroyRef      = inject(DestroyRef);
 
@@ -36,23 +47,15 @@ export class SettingsComponent {
   editing  = signal<Record<string, boolean>>({});
   revealed = signal<Record<string, boolean>>({});
 
-  // ── Sync hub state ────────────────────────────────────────────────────────
+  // ── Sync hub state (driven by SignalR) ────────────────────────────────────
   syncing      = signal(false);
-  syncStep     = signal(-1);        // active step index, -1 = idle
-  syncComplete = signal(false);
-  syncError    = signal(false);
   showSyncHub  = signal(false);
 
-  private stepTimers: ReturnType<typeof setTimeout>[] = [];
-
-  /** Sync progress steps (i18n keys) */
-  readonly syncSteps = [
-    'settings.sync.step.init',
-    'settings.sync.step.plex',
-    'settings.sync.step.mal',
-    'settings.sync.step.sonarr',
-    'settings.sync.step.matching',
-  ];
+  // Convert SignalR observables → signals for template use
+  syncSteps    = toSignal(this.signalR.steps$,     { initialValue: [] as SyncStep[] });
+  syncDone     = toSignal(this.signalR.syncDone$,  { initialValue: false });
+  syncError    = toSignal(this.signalR.syncError$,  { initialValue: false });
+  hubConnected = toSignal(this.signalR.connected$,  { initialValue: false });
 
   /** Provider logo image paths */
   readonly providerImages: Record<string, string> = {
@@ -73,11 +76,15 @@ export class SettingsComponent {
   /** Ordered category keys */
   categories = computed(() => Object.keys(this.grouped()));
 
-  /** Per-setting reactive forms (populated once on load) */
+  /** Per-setting reactive forms */
   forms: Record<string, FormGroup> = {};
 
+  /** Expose elapsed formatter to template */
+  readonly fmtElapsed = fmtElapsed;
+
   constructor() {
-    this.destroyRef.onDestroy(() => this.clearStepTimers());
+    // Connect to SignalR hub on component init
+    this.signalR.connect();
 
     this.settingsService.getAll()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -92,13 +99,22 @@ export class SettingsComponent {
           this.loading.set(false);
         }
       });
+
+    // Auto-clear syncing flag when hub reports done/error
+    this.signalR.syncDone$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(done => {
+      if (done) this.syncing.set(false);
+    });
+    this.signalR.syncError$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(err => {
+      if (err) this.syncing.set(false);
+    });
   }
 
   private buildForms(settings: SettingDefinition[]): void {
     const editingInit:  Record<string, boolean> = {};
     const revealedInit: Record<string, boolean> = {};
     for (const s of settings) {
-      this.forms[s.key]  = this.fb.group({ value: [s.isSensitive ? '' : (s.value ?? '')] });
+      // Pre-fill form with the real value (sensitive values now returned by API)
+      this.forms[s.key]   = this.fb.group({ value: [s.value ?? ''] });
       editingInit[s.key]  = false;
       revealedInit[s.key] = false;
     }
@@ -124,7 +140,7 @@ export class SettingsComponent {
 
   save(setting: SettingDefinition): void {
     const form = this.forms[setting.key];
-    if (!form || form.invalid) return;
+    if (!form) return;
 
     const value: string = form.value.value ?? '';
     this.savingKey.set(setting.key);
@@ -139,9 +155,7 @@ export class SettingsComponent {
           this.savedKey.set(setting.key);
           this.editing.update(e => ({ ...e, [setting.key]: false }));
           this.settings.update(list =>
-            list.map(s => s.key === setting.key
-              ? { ...s, value: setting.isSensitive ? '••••••••' : value }
-              : s)
+            list.map(s => s.key === setting.key ? { ...s, value } : s)
           );
           setTimeout(() => {
             if (this.savedKey() === setting.key) this.savedKey.set(null);
@@ -155,11 +169,11 @@ export class SettingsComponent {
   }
 
   cancelEdit(key: string): void {
-    this.editing.update(e  => ({ ...e,  [key]: false }));
-    this.revealed.update(r => ({ ...r,  [key]: false }));
+    this.editing.update(e  => ({ ...e, [key]: false }));
+    this.revealed.update(r => ({ ...r, [key]: false }));
     const setting = this.settings().find(s => s.key === key);
     if (setting) {
-      this.forms[key].patchValue({ value: setting.isSensitive ? '' : (setting.value ?? '') });
+      this.forms[key].patchValue({ value: setting.value ?? '' });
     }
   }
 
@@ -169,65 +183,27 @@ export class SettingsComponent {
 
   trackByKey(_: number, s: SettingDefinition): string { return s.key; }
   trackByCategory(_: number, cat: string): string      { return cat;   }
+  trackByStepKey(_: number, s: SyncStep): string       { return s.stepKey; }
 
   // ── Sync hub ──────────────────────────────────────────────────────────────
-  /** Kick off a manual sync and animate step progress */
   triggerSync(): void {
     if (this.syncing()) return;
 
     this.syncing.set(true);
-    this.syncComplete.set(false);
-    this.syncError.set(false);
-    this.syncStep.set(0);
     this.showSyncHub.set(true);
-    this.clearStepTimers();
-
-    // Advance through steps while waiting for the API
-    const stepDelays = [5_000, 15_000, 30_000, 50_000]; // delays for steps 1-4
-    stepDelays.forEach((delay, i) => {
-      const t = setTimeout(() => {
-        if (this.syncing()) this.syncStep.set(i + 1);
-      }, delay);
-      this.stepTimers.push(t);
-    });
+    this.signalR.resetSteps();
 
     this.animeService.syncAnimes()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
-          this.clearStepTimers();
-          this.syncStep.set(this.syncSteps.length - 1);
-          this.syncing.set(false);
-          this.syncComplete.set(true);
-          const t = setTimeout(() => this.dismissSyncHub(), 8_000);
-          this.stepTimers.push(t);
-        },
-        error: () => {
-          this.clearStepTimers();
-          this.syncing.set(false);
-          this.syncError.set(true);
-        }
+        // SignalR drives the step UI; HTTP response is just confirmation
+        next:  () => { /* SignalR done event handles syncing flag */ },
+        error: () => { this.syncing.set(false); }
       });
   }
 
   dismissSyncHub(): void {
     this.showSyncHub.set(false);
-    this.syncComplete.set(false);
-    this.syncError.set(false);
-    this.syncStep.set(-1);
-  }
-
-  stepState(i: number): 'pending' | 'running' | 'done' | 'error' {
-    if (this.syncError()    && i === this.syncStep()) return 'error';
-    if (this.syncComplete())                          return 'done';
-    if (i < this.syncStep())                          return 'done';
-    if (i === this.syncStep())                        return 'running';
-    return 'pending';
-  }
-
-  private clearStepTimers(): void {
-    this.stepTimers.forEach(clearTimeout);
-    this.stepTimers = [];
+    this.signalR.resetSteps();
   }
 }
-

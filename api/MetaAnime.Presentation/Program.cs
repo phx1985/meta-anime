@@ -2,6 +2,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using MetaAnime.Application.BackgroundJobs;
 using MetaAnime.Core.Settings;
+using MetaAnime.Hubs;
 using MetaAnime.Utilities.Extensions;
 using MetaAnime.Utilities.Hangfire;
 
@@ -12,6 +13,7 @@ builder.AddServiceDefaults();
 // Add services to the container.
 builder.Services.AddResponseCaching();
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 // Configure CORS — allow the Angular dev-server origin in Development
 builder.Services.AddCors(options =>
@@ -27,7 +29,8 @@ builder.Services.AddCors(options =>
 
             policy.WithOrigins(allowedOrigins)
                   .AllowAnyHeader()
-                  .AllowAnyMethod();
+                  .AllowAnyMethod()
+                  .AllowCredentials();
         }
     });
 });
@@ -96,4 +99,5 @@ if (!app.Environment.IsDevelopment())
 app.UseHangfireDashboard("/hangfire", dashboardOptions);
 
 app.MapControllers();
+app.MapHub<SyncHub>("/hubs/sync");
 app.Run();

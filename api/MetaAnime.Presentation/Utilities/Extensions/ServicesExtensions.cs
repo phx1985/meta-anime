@@ -14,6 +14,7 @@ using MetaAnime.Infrastructure.Plex.Utilities;
 using MetaAnime.Infrastructure.Repositories;
 using MetaAnime.Infrastructure.Sonarr.Services;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
+using MetaAnime.Presentation.Hubs;
 using MetaAnime.Utilities.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
@@ -91,6 +92,7 @@ public static class ServicesExtensions
         services.AddScoped<IAnimeMappingRepository, AnimeMappingRepository>();
         services.AddScoped<IPropertyBagRepository, PropertyBagRepository>();
 
+        services.AddScoped<ISyncProgressNotifier, SyncProgressNotifier>();
         services.AddHostedService<SettingsSeedService>();
     }
 

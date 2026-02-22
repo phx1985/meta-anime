@@ -26,25 +26,26 @@
     </button>
   </div>
 
-  <!-- ── Sync notification hub ────────────────────────────────────────────── -->
+  <!-- ── SignalR sync notification hub ────────────────────────────────────── -->
   @if (showSyncHub()) {
     <div
       class="sync-hub"
-      [class.sync-hub--done]="syncComplete()"
+      [class.sync-hub--done]="syncDone()"
       [class.sync-hub--error]="syncError()"
       role="status"
       aria-live="polite">
 
+      <!-- Hub header -->
       <div class="sync-hub-header">
         <div class="sync-hub-title">
-          @if (syncComplete()) {
+          @if (syncDone()) {
             <span class="sync-status-icon sync-status-icon--done" aria-hidden="true">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
             </span>
             {{ 'settings.sync.hub.done' | translate }}
           } @else if (syncError()) {
             <span class="sync-status-icon sync-status-icon--error" aria-hidden="true">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </span>
             {{ 'settings.sync.hub.error' | translate }}
           } @else {
@@ -58,45 +59,65 @@
             class="sync-hub-dismiss"
             (click)="dismissSyncHub()"
             [attr.aria-label]="'settings.sync.hub.dismiss' | translate">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
         }
       </div>
 
+      <!-- Step rows -->
       <ol class="sync-hub-steps" aria-label="Sync steps">
-        @for (step of syncSteps; track $index; let i = $index) {
-          <li class="sync-step"
-              [class.sync-step--done]="stepState(i) === 'done'"
-              [class.sync-step--running]="stepState(i) === 'running'"
-              [class.sync-step--error]="stepState(i) === 'error'"
-              [class.sync-step--pending]="stepState(i) === 'pending'">
+        @for (step of syncSteps(); track trackByStepKey($index, step)) {
+          <li
+            class="sync-step"
+            [class.sync-step--done]="step.state === 'done'"
+            [class.sync-step--running]="step.state === 'running'"
+            [class.sync-step--error]="step.state === 'error'"
+            [class.sync-step--pending]="step.state === 'pending'">
+
+            <!-- Step icon -->
             <span class="sync-step-icon" aria-hidden="true">
-              @switch (stepState(i)) {
-                @case ('done')    {
+              @switch (step.state) {
+                @case ('done') {
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                 }
-                @case ('running') {
-                  <span class="mini-spin"></span>
-                }
-                @case ('error')   {
+                @case ('running') { <span class="mini-spin"></span> }
+                @case ('error') {
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 }
-                @default {
-                  <span class="step-dot"></span>
-                }
+                @default { <span class="step-dot"></span> }
               }
             </span>
-            <span class="sync-step-label">{{ step | translate }}</span>
+
+            <!-- Step label + elapsed time + error -->
+            <div class="sync-step-body">
+              <span class="sync-step-label">
+                {{ 'settings.sync.step.' + step.stepKey | translate }}
+              </span>
+              @if (step.state === 'running' || step.state === 'done') {
+                <span class="sync-step-elapsed">{{ fmtElapsed(step.elapsedMs) }}</span>
+              }
+              @if (step.errorMessage) {
+                <span class="sync-step-error">{{ step.errorMessage }}</span>
+              }
+            </div>
+
+            <!-- Progress bar (only while running and progressPercent known) -->
+            @if (step.state === 'running' && step.progressPercent !== undefined) {
+              <div class="sync-step-progress" role="progressbar"
+                   [attr.aria-valuenow]="step.progressPercent"
+                   aria-valuemin="0" aria-valuemax="100">
+                <div class="sync-step-progress-fill" [style.width.%]="step.progressPercent"></div>
+              </div>
+            }
           </li>
         }
       </ol>
     </div>
   }
 
-  <!-- ── Main content ──────────────────────────────────────────────────────── -->
+  <!-- ── Settings cards ────────────────────────────────────────────────────── -->
   @if (loading()) {
     <div class="d-flex justify-content-center py-5">
       <div class="spinner-border" role="status">
@@ -114,12 +135,7 @@
         <!-- Category header with real provider logo -->
         <div class="settings-card-header settings-card-header--{{ cat }}">
           <div class="provider-logo" aria-hidden="true">
-            <img
-              [src]="providerImages[cat]"
-              [alt]="cat"
-              width="36"
-              height="36"
-              class="provider-logo-img" />
+            <img [src]="providerImages[cat]" [alt]="cat" width="36" height="36" class="provider-logo-img" />
           </div>
           <div>
             <h2 class="category-title mb-0">{{ 'settings.category.' + cat + '.name' | translate }}</h2>
@@ -127,12 +143,12 @@
           </div>
         </div>
 
-        <!-- Settings rows -->
+        <!-- Setting rows -->
         <div class="settings-rows">
           @for (setting of grouped()[cat]; track trackByKey($index, setting)) {
             <div class="setting-row" [class.setting-row--editing]="editing()[setting.key]">
 
-              <!-- Field info (i18n only – no API translations) -->
+              <!-- Field name + desc (i18n only — nothing from API) -->
               <div class="setting-info">
                 <div class="setting-name">
                   {{ 'settings.fields.' + slug(setting.key) + '.name' | translate }}
@@ -242,11 +258,9 @@
                   </form>
                 }
               </div>
-
             </div>
           }
         </div>
-
       </div>
     }
   }

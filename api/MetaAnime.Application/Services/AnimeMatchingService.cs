@@ -1,11 +1,13 @@
 ﻿using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
+using MetaAnime.Core.Sync;
 using MetaAnime.Domain.Entities;
 using MetaAnime.Infrastructure.Kometa.Models;
 using MetaAnime.Infrastructure.Kometa.Utilities.Extensions;
 using MetaAnime.Infrastructure.Utilities.Extensions;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace MetaAnime.Application.Services;
 
@@ -16,13 +18,19 @@ public class AnimeMatchingService(
     IAnimeService animeService)
     : IAnimeMatchingService
 {
-    public async Task<Result> MatchAsync(bool forceRefreshKometaMapping = false)
+    public async Task<Result> MatchAsync(bool forceRefreshKometaMapping = false, ISyncProgressNotifier? progressNotifier = null)
     {
+        var sw = Stopwatch.StartNew();
+
+        // ── Step 1: Kometa mappings ──────────────────────────────────────────
+        await NotifyAsync(progressNotifier, "kometa", SyncStepState.Running, 0, sw);
+
         if (forceRefreshKometaMapping)
         {
             var deleteKometaMappingsResult = await kometaAnimeMappingService.BulkDeleteAllAsync();
             if (deleteKometaMappingsResult.IsFailure)
             {
+                await NotifyAsync(progressNotifier, "kometa", SyncStepState.Error, null, sw, deleteKometaMappingsResult.Error.Message);
                 return Result.Failure(deleteKometaMappingsResult.Error);
             }
         }
@@ -32,6 +40,7 @@ public class AnimeMatchingService(
             : await kometaAnimeMappingService.AnyAsync();
         if (hasMappingsResult.IsFailure)
         {
+            await NotifyAsync(progressNotifier, "kometa", SyncStepState.Error, null, sw, hasMappingsResult.Error.Message);
             return Result.Failure(hasMappingsResult.Error);
         }
 
@@ -40,25 +49,47 @@ public class AnimeMatchingService(
             var rawMappingsResult = await kometaAnimeJsonService.GetAllAsync();
             if (rawMappingsResult.IsFailure)
             {
+                await NotifyAsync(progressNotifier, "kometa", SyncStepState.Error, null, sw, rawMappingsResult.Error.Message);
                 return Result.Failure(rawMappingsResult.Error);
             }
 
             var addKometaMappingsResult = await kometaAnimeMappingService.BulkInsertAsync(rawMappingsResult.Value.ToKometaAnimeMappings());
             if (addKometaMappingsResult.IsFailure)
             {
+                await NotifyAsync(progressNotifier, "kometa", SyncStepState.Error, null, sw, addKometaMappingsResult.Error.Message);
                 return Result.Failure(addKometaMappingsResult.Error);
             }
         }
 
+        await NotifyAsync(progressNotifier, "kometa", SyncStepState.Done, 100, sw);
+        sw.Restart();
+
+        // ── Step 2: Fetch from sources (Plex, MAL, Sonarr in parallel) ──────
+        await NotifyAsync(progressNotifier, "plex", SyncStepState.Running, 0, sw);
+        await NotifyAsync(progressNotifier, "mal", SyncStepState.Running, 0, sw);
+        await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Running, 0, sw);
+
         var refreshDataResult = await animeService.RefreshData();
         if (refreshDataResult.IsFailure)
         {
+            await NotifyAsync(progressNotifier, "plex", SyncStepState.Error, null, sw, refreshDataResult.Error.Message);
+            await NotifyAsync(progressNotifier, "mal", SyncStepState.Error, null, sw, refreshDataResult.Error.Message);
+            await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Error, null, sw, refreshDataResult.Error.Message);
             return Result.Failure(refreshDataResult.Error);
         }
+
+        await NotifyAsync(progressNotifier, "plex", SyncStepState.Done, 100, sw);
+        await NotifyAsync(progressNotifier, "mal", SyncStepState.Done, 100, sw);
+        await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Done, 100, sw);
+        sw.Restart();
+
+        // ── Step 3: Match anime across sources ───────────────────────────────
+        await NotifyAsync(progressNotifier, "matching", SyncStepState.Running, 0, sw);
 
         var kometaMappingsResult = await kometaAnimeMappingService.GetAllAsync();
         if (kometaMappingsResult.IsFailure)
         {
+            await NotifyAsync(progressNotifier, "matching", SyncStepState.Error, null, sw, kometaMappingsResult.Error.Message);
             return Result.Failure(kometaMappingsResult.Error);
         }
 
@@ -68,6 +99,7 @@ public class AnimeMatchingService(
         var deleteMappingsResult = await mappingService.BulkDeleteAllAsync();
         if (deleteMappingsResult.IsFailure)
         {
+            await NotifyAsync(progressNotifier, "matching", SyncStepState.Error, null, sw, deleteMappingsResult.Error.Message);
             return Result.Failure(deleteMappingsResult.Error);
         }
 
@@ -108,8 +140,19 @@ public class AnimeMatchingService(
         var addMappingsResult = await mappingService.BulkInsertAsync(animeMappings);
         if (addMappingsResult.IsFailure)
         {
+            await NotifyAsync(progressNotifier, "matching", SyncStepState.Error, null, sw, addMappingsResult.Error.Message);
             return Result.Failure(addMappingsResult.Error);
         }
+
+        await NotifyAsync(progressNotifier, "matching", SyncStepState.Done, 100, sw);
         return Result.Success();
+    }
+
+    private static Task NotifyAsync(
+        ISyncProgressNotifier? notifier, string stepKey, SyncStepState state,
+        int? progressPercent, Stopwatch sw, string? errorMessage = null)
+    {
+        if (notifier is null) return Task.CompletedTask;
+        return notifier.NotifyAsync(new SyncProgressUpdate(stepKey, state, progressPercent, sw.ElapsedMilliseconds, errorMessage));
     }
 }
