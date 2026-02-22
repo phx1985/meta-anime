@@ -64,7 +64,7 @@ builder.Services.AddCustomServices(builder.Configuration);
 builder.Services.SetupDatabase(builder.Configuration);
 builder.Services.SetupAuthentication();
 var app = builder.Build();
-app.Services.MigrateDatabase();
+await app.Services.MigrateDatabaseAsync();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
