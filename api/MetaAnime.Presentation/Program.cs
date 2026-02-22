@@ -75,12 +75,6 @@ if (app.Environment.IsDevelopment())
 
 app.MapDefaultEndpoints();
 
-// Configure Hangfire Dashboard
-app.UseHangfireDashboard("/hangfire", new DashboardOptions
-{
-    Authorization = new[] { new HangfireAuthorizationFilter() }
-});
-
 // Schedule background jobs
 AnimeSyncJob.Schedule();
 MalTokenRefreshJob.Schedule();
@@ -90,5 +84,15 @@ app.UseCors();
 app.UseResponseCaching();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Hangfire Dashboard — open in Development (browser can't send X-Api-Key),
+// protected by HangfireAuthorizationFilter in all other environments.
+var dashboardOptions = new DashboardOptions();
+if (!app.Environment.IsDevelopment())
+{
+    dashboardOptions.Authorization = [new HangfireAuthorizationFilter()];
+}
+app.UseHangfireDashboard("/hangfire", dashboardOptions);
+
 app.MapControllers();
 app.Run();

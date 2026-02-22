@@ -133,7 +133,7 @@ The **Aspire Developer Dashboard** opens automatically in your browser.
 | **Angular UI** | http://localhost:4200 | Hot-reload enabled |
 | **API** | shown in Dashboard | Dynamic port; click the resource link |
 | **Swagger** | `<api-url>/swagger` | Interactive API docs |
-| **Hangfire** | `<api-url>/hangfire` | Background job monitor |
+| **Hangfire** | `<api-url>/hangfire` | Background job monitor *(Development only — requires authentication in other environments)* |
 | **Health (all)** | `<api-url>/health` | Aggregated health check |
 | **Liveness** | `<api-url>/alive` | Liveness probe |
 
