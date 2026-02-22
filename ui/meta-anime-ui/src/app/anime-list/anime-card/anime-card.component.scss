@@ -1,5 +1,11 @@
 // ─── Anime Card ─────────────────────────────────────────────────────────────
 
+// Transparent host so article participates directly in grid layout
+// (enables equal card heights via CSS Grid's default align-items: stretch)
+:host {
+  display: contents;
+}
+
 .anime-card {
   display: flex;
   flex-direction: column;
@@ -24,12 +30,13 @@
   display: flex;
   flex: 1;
   overflow: hidden;
+  min-height: 0;
 }
 
 // ─── Cover image ─────────────────────────────────────────────────────────────
 
 .card-cover {
-  width: 88px;
+  width: 120px;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
@@ -56,7 +63,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.2rem;
+  font-size: 2.5rem;
   font-weight: 800;
   color: var(--text-muted);
   background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
@@ -71,6 +78,7 @@
   flex-direction: column;
   gap: 0.5rem;
   min-width: 0;
+  overflow: hidden;
 }
 
 // ─── Header ──────────────────────────────────────────────────────────────────
@@ -205,23 +213,37 @@
   }
 }
 
-// ─── Description ─────────────────────────────────────────────────────────────
+// ─── Description (animated expand/collapse) ──────────────────────────────────
 
-.card-desc {
+.desc-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.desc-text {
   font-size: 0.78rem;
   color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
+  // Collapsed by default: show ~3 lines
+  max-height: 3.75rem;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.desc--expanded {
+    max-height: 40rem;
+  }
 }
 
 .desc-toggle {
+  align-self: flex-start;
   background: none;
   border: none;
   padding: 0;
-  margin-left: 0.2rem;
   color: var(--accent-primary);
   cursor: pointer;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 600;
   text-decoration: underline dotted;
   opacity: 0.8;
@@ -336,60 +358,36 @@
   color: var(--text-muted);
 }
 
-// ─── Source ribbons ──────────────────────────────────────────────────────────
+// ─── Progress strip (MAL + Plex — one line) ──────────────────────────────────
 
-.ribbons {
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid var(--card-border);
-}
-
-.ribbon {
+.progress-strip {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.3rem 0.8rem;
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-
-  & + .ribbon {
-    border-top: 1px solid var(--card-border);
-  }
-
-  &--mal {
-    border-left: 3px solid #2e51a2;
-    padding-left: calc(0.8rem - 3px);
-    .ribbon-chip { background: rgba(46, 81, 162, 0.15); color: #2e51a2; }
-  }
-
-  &--plex {
-    border-left: 3px solid #e5a00d;
-    padding-left: calc(0.8rem - 3px);
-    .ribbon-chip { background: rgba(229, 160, 13, 0.15); color: #e5a00d; }
-  }
+  gap: 0.75rem;
+  padding: 0.3rem 0.75rem;
+  border-top: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--bg-secondary) 30%, transparent);
 }
 
-.ribbon-icon {
-  width: 20px;
-  height: 14px;
+.prog-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.prog-icon {
   flex-shrink: 0;
   overflow: visible;
+
+  .prog-item--mal & { width: 22px; height: 10px; }
+  .prog-item--plex & { width: 12px; height: 12px; }
 }
 
-.ribbon-text {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  flex: 1;
-}
-
-.ribbon-chip {
-  border-radius: 999px;
-  padding: 0.05rem 0.4rem;
-  font-size: 0.67rem;
+.prog-count {
+  font-size: 0.7rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
 }
 
 // ─── Footer ──────────────────────────────────────────────────────────────────

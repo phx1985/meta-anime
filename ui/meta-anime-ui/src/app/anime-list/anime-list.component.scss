@@ -5,10 +5,11 @@
 
 .anime-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
+  align-items: stretch;
   gap: 1.25rem;
 
-  @media (max-width: 480px) {
+  @media (max-width: 639px) {
     grid-template-columns: 1fr;
   }
 }

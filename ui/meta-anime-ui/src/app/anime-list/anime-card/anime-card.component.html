@@ -50,7 +50,7 @@
         <!-- Status pills row -->
         <div class="status-pills">
           @if (malViewState) {
-            <span class="pill pill--viewstate pill--{{ malViewState }}">
+            <span class="pill pill--{{ malViewState }}">
               {{ viewStateLabel(malViewState) }}
             </span>
           }
@@ -64,14 +64,14 @@
 
       <!-- ── Description ──────────────────────────────────────────────── -->
       @if (description) {
-        <p class="card-desc">
-          {{ truncatedDescription }}
+        <div class="desc-wrap">
+          <p class="desc-text" [class.desc--expanded]="descExpanded()">{{ description }}</p>
           @if (description.length > 180) {
             <button class="desc-toggle" (click)="toggleDesc()">
               {{ descExpanded() ? ('animeCard.less' | translate) : ('animeCard.more' | translate) }}
             </button>
           }
-        </p>
+        </div>
       }
 
       <!-- ── Genres ────────────────────────────────────────────────────── -->
@@ -131,33 +131,25 @@
     </div><!-- /card-content -->
   </div><!-- /card-main -->
 
-  <!-- ── Source ribbons ──────────────────────────────────────────────── -->
-  @if (malViewState || plexProgress) {
-    <div class="ribbons">
-      @if (malViewState) {
-        <div class="ribbon ribbon--mal">
-          <svg class="ribbon-icon" viewBox="0 0 28 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <text x="0" y="11" font-size="11" font-weight="800" font-family="Arial,sans-serif" fill="#2e51a2">MAL</text>
+  <!-- ── Progress strip (MAL + Plex on one line) ─────────────────────── -->
+  @if (malProgress || plexProgress) {
+    <div class="progress-strip">
+      @if (malProgress) {
+        <span class="prog-item prog-item--mal">
+          <svg class="prog-icon" viewBox="0 0 24 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="0" y="9" font-size="9.5" font-weight="800" font-family="Arial,sans-serif" fill="#2e51a2">MAL</text>
           </svg>
-          <span class="ribbon-text">
-            {{ viewStateLabel(malViewState) }}
-            @if (malProgress) {
-              <span class="ribbon-chip">{{ malProgress.watched }}&thinsp;/&thinsp;{{ malProgress.total }}</span>
-            }
-          </span>
-        </div>
+          <span class="prog-count">{{ malProgress?.watched }}&thinsp;/&thinsp;{{ malProgress?.total }}</span>
+        </span>
       }
       @if (plexProgress) {
-        <div class="ribbon ribbon--plex">
-          <svg class="ribbon-icon" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="7" cy="7" r="6.5" stroke="#e5a00d" stroke-width="1"/>
-            <path d="M5.5 4.5l5 2.5-5 2.5V4.5z" fill="#e5a00d"/>
+        <span class="prog-item prog-item--plex">
+          <svg class="prog-icon" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="6" cy="6" r="5.5" stroke="#e5a00d" stroke-width="1"/>
+            <path d="M4.5 3.5l4.5 2.5-4.5 2.5V3.5z" fill="#e5a00d"/>
           </svg>
-          <span class="ribbon-text">
-            Plex
-            <span class="ribbon-chip">{{ plexProgress.watched }}&thinsp;/&thinsp;{{ plexProgress.total }}</span>
-          </span>
-        </div>
+          <span class="prog-count">{{ plexProgress?.watched }}&thinsp;/&thinsp;{{ plexProgress?.total }}</span>
+        </span>
       }
     </div>
   }

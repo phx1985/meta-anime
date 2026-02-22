@@ -45,7 +45,7 @@ public sealed record MalAnimeInfo(
             malAnime?.Id.ToString(),
             $"{malBaseUrl}/anime/{malAnime?.Id}",
             malAnime?.MyListStatus?.Status,
-            malAnime?.MyListStatus?.CreatedAt,
+            malAnime?.MyListStatus is { } ls && ls.CreatedAt.Year > 1 ? ls.CreatedAt : (DateTime?)null,
             malAnime != null ? new MalProgressionInfo(
                 malAnime.MyListStatus?.NumEpisodesWatched ?? 0,
                 malAnime.NumEpisodes
