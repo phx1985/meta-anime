@@ -20,7 +20,9 @@
       {{ 'settings.error' | translate }}
     </div>
   } @else {
-    @for (cat of categories(); track trackByCategory($index, cat)) {
+    <!-- Main settings grid — disabled while sync is in progress -->
+    <div [class.settings-grid--disabled]="syncing()">
+      @for (cat of categories(); track trackByCategory($index, cat)) {
       <div class="settings-card mb-4">
 
         <!-- Category header with real provider logo -->
@@ -193,6 +195,7 @@
         </div>
       </div>
     }
+    </div><!-- /settings-grid -->
 
     <!-- ── Dedicated Sync Card (always at the bottom) ─────────────────────── -->
     <div
@@ -245,6 +248,35 @@
           </button>
         </div>
       </div>
+
+      <!-- ── Sync Interval setting ──────────────────────────────────────────── -->
+      @if (syncIntervalSetting(); as intervalSetting) {
+        <div class="sync-interval-row">
+          <div class="sync-interval-info">
+            <span class="sync-interval-label">{{ 'settings.fields.App_SyncInterval.name' | translate }}</span>
+            <span class="sync-interval-desc">{{ 'settings.fields.App_SyncInterval.desc' | translate }}</span>
+          </div>
+          <div class="sync-interval-control">
+            <select
+              class="setting-select"
+              [disabled]="isSaving(intervalSetting.key) || syncing()"
+              (change)="onSelectChange(intervalSetting, $event)"
+              [attr.aria-label]="'settings.fields.App_SyncInterval.name' | translate">
+              @for (opt of intervalSetting.selectOptions ?? []; track opt) {
+                <option [value]="opt" [selected]="intervalSetting.value === opt">
+                  {{ 'settings.fields.App_SyncInterval.option.' + opt | translate }}
+                </option>
+              }
+            </select>
+            @if (isSaving(intervalSetting.key)) {
+              <span class="spinner-border spinner-border-sm select-spinner" role="status"></span>
+            }
+            @if (isSaved(intervalSetting.key)) {
+              <span class="badge-saved">✓</span>
+            }
+          </div>
+        </div>
+      }
 
       <!-- Sync progress section -->
       <div class="sync-progress-body">

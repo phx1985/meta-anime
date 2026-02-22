@@ -794,3 +794,47 @@
   width: 40% !important;
   animation: indeterminate 1.4s ease-in-out infinite;
 }
+
+// ── Disabled state for settings grid during sync ──────────────────────────────
+.settings-grid--disabled {
+  pointer-events: none;
+  opacity: 0.55;
+  transition: opacity 0.3s ease;
+  user-select: none;
+}
+
+// ── Sync interval setting row (inside sync card) ──────────────────────────────
+.sync-interval-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.85rem 1.5rem;
+  border-bottom: 1px solid var(--card-border);
+  background: rgba(108, 99, 255, 0.03);
+}
+
+.sync-interval-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.sync-interval-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sync-interval-desc {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.sync-interval-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}

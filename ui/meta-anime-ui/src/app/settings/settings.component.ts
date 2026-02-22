@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, DestroyRef, ChangeDetectionStrateg
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ActivatedRoute } from '@angular/router';
 import { SettingsService } from '../services/settings.service';
 import { AnimeService } from '../services/anime.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
@@ -43,6 +44,7 @@ export class SettingsComponent {
   private fb              = inject(FormBuilder);
   private destroyRef      = inject(DestroyRef);
   private translate       = inject(TranslateService);
+  private route           = inject(ActivatedRoute);
 
   // ── Settings load state ───────────────────────────────────────────────────
   loading   = signal(true);
@@ -78,12 +80,19 @@ export class SettingsComponent {
     matching: 'assets/images/app.svg',
   };
 
-  /** Settings grouped by category */
+  /** Settings grouped by category — App:SyncInterval is excluded (shown in the sync card) */
   grouped = computed<SettingsByCategory>(() =>
-    this.settings().reduce((acc, s) => {
-      (acc[s.category] ??= []).push(s);
-      return acc;
-    }, {} as SettingsByCategory)
+    this.settings()
+      .filter(s => s.key !== 'App:SyncInterval')
+      .reduce((acc, s) => {
+        (acc[s.category] ??= []).push(s);
+        return acc;
+      }, {} as SettingsByCategory)
+  );
+
+  /** The App:SyncInterval setting — rendered inside the sync card */
+  syncIntervalSetting = computed(() =>
+    this.settings().find(s => s.key === 'App:SyncInterval')
   );
 
   /** Ordered category keys */
@@ -119,6 +128,14 @@ export class SettingsComponent {
           this.settings.set(data);
           this.buildForms(data);
           this.loading.set(false);
+          // Small delay to let Angular render the now-loaded settings DOM before scrolling
+          const SCROLL_DELAY_MS = 80;
+          const fragment = this.route.snapshot.fragment;
+          if (fragment) {
+            setTimeout(() => {
+              document.getElementById(fragment)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, SCROLL_DELAY_MS);
+          }
         },
         error: () => {
           this.error.set(true);

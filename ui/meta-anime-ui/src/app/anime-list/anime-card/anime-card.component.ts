@@ -8,18 +8,6 @@ const TRUNCATE_AT = 180;
 /** Circumference of the score SVG arc (2π × r, r=15) */
 const ARC_CIRCUMFERENCE = 94.25;
 
-/** Season extraction patterns applied to Sonarr / MAL title */
-const SEASON_PATTERNS: Array<[RegExp, (m: RegExpMatchArray) => string]> = [
-  [/\bfinal\s+season\b/i,                  () => 'Final'],
-  [/\b(\d+)(st|nd|rd|th)\s+season\b/i,    (m) => `S${m[1]}`],
-  [/\bseason\s+(\d+)\b/i,                  (m) => `S${m[1]}`],
-  [/\bpart\s+(\d+)\b/i,                    (m) => `P${m[1]}`],
-  [/\bspecials?\b/i,                       () => 'SP'],
-  [/\bmovie\b/i,                           () => 'Movie'],
-  [/\bova\b/i,                             () => 'OVA'],
-  [/\bona\b/i,                             () => 'ONA'],
-];
-
 @Component({
   selector: 'app-anime-card',
   standalone: true,
@@ -255,17 +243,5 @@ export class AnimeCardComponent {
 
   closeLightbox(): void {
     this.showLightbox.set(false);
-  }
-
-  // ── Season tag ────────────────────────────────────────────────────────────
-
-  /** Short season/type tag extracted from Sonarr or MAL title (e.g. "S2", "Final", "OVA") */
-  get seasonTag(): string | undefined {
-    const candidate = this.sonarr?.title ?? this.mal?.alternativeTitles?.en ?? this.anime.title;
-    for (const [pattern, formatter] of SEASON_PATTERNS) {
-      const m = candidate.match(pattern);
-      if (m) return formatter(m);
-    }
-    return undefined;
   }
 }

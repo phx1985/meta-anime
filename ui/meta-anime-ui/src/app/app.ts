@@ -19,6 +19,11 @@ export class App implements OnInit {
   protected menuOpen         = signal<boolean>(false);
   protected showNoSyncToast  = signal<boolean>(false);
 
+  /** Provider home-page URLs (populated from settings) */
+  protected plexHomeUrl   = signal<string | null>(null);
+  protected sonarrHomeUrl = signal<string | null>(null);
+  protected readonly malHomeUrl = 'https://myanimelist.net';
+
   constructor() {
     this.translate.use('en');
   }
@@ -29,6 +34,19 @@ export class App implements OnInit {
         if (!status.lastSyncDate) {
           this.showNoSyncToast.set(true);
         }
+      },
+      error: () => { /* non-critical */ }
+    });
+
+    // Load provider URLs for navbar quick-links
+    this.settingsService.getAll().subscribe({
+      next: settings => {
+        const plexHost     = settings.find(s => s.key === 'Plex:Host')?.value ?? null;
+        const sonarrRemote = settings.find(s => s.key === 'Sonarr:RemoteUrl')?.value ?? null;
+        const sonarrHost   = settings.find(s => s.key === 'Sonarr:Host')?.value ?? null;
+        const sonarrUrl    = sonarrRemote || sonarrHost;
+        if (plexHost)   this.plexHomeUrl.set(plexHost);
+        if (sonarrUrl)  this.sonarrHomeUrl.set(sonarrUrl);
       },
       error: () => { /* non-critical */ }
     });

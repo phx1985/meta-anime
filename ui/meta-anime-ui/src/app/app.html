@@ -35,6 +35,34 @@
 
       <div class="navbar-actions">
 
+        <!-- Provider quick links -->
+        <div class="provider-links" aria-label="Provider links">
+          <a class="provider-link"
+             [href]="malHomeUrl"
+             target="_blank" rel="noopener noreferrer"
+             [title]="'MyAnimeList'">
+            <img src="assets/images/mal.svg" alt="MAL" width="18" height="18" />
+          </a>
+          @if (sonarrHomeUrl()) {
+            <a class="provider-link"
+               [href]="sonarrHomeUrl()"
+               target="_blank" rel="noopener noreferrer"
+               title="Sonarr">
+              <img src="assets/images/sonarr.svg" alt="Sonarr" width="18" height="18" />
+            </a>
+          }
+          @if (plexHomeUrl()) {
+            <a class="provider-link"
+               [href]="plexHomeUrl()"
+               target="_blank" rel="noopener noreferrer"
+               title="Plex">
+              <img src="assets/images/plex.svg" alt="Plex" width="18" height="18" />
+            </a>
+          }
+        </div>
+
+        <span class="navbar-divider" aria-hidden="true"></span>
+
         <!-- Language switcher -->
         <button class="btn-lang" type="button" (click)="switchLanguage()"
                 [title]="'lang.switch' | translate">
