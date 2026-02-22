@@ -13,7 +13,10 @@ builder.AddServiceDefaults();
 // Add services to the container.
 builder.Services.AddResponseCaching();
 builder.Services.AddControllers();
-builder.Services.AddSignalR();
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+        options.PayloadSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
 // Configure CORS — allow the Angular dev-server origin in Development
 builder.Services.AddCors(options =>

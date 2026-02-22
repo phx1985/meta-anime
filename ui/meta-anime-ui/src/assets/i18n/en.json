@@ -145,6 +145,38 @@
   "theme": {
     "toggle": "Toggle Theme"
   },
+  "genres": {
+    "Action": "Action",
+    "Adventure": "Adventure",
+    "Avant Garde": "Avant Garde",
+    "Award Winning": "Award Winning",
+    "Boys Love": "Boys Love",
+    "Comedy": "Comedy",
+    "Drama": "Drama",
+    "Ecchi": "Ecchi",
+    "Fantasy": "Fantasy",
+    "Girls Love": "Girls Love",
+    "Gourmet": "Gourmet",
+    "Horror": "Horror",
+    "Mystery": "Mystery",
+    "Romance": "Romance",
+    "Sci-Fi": "Sci-Fi",
+    "Slice of Life": "Slice of Life",
+    "Sports": "Sports",
+    "Supernatural": "Supernatural",
+    "Suspense": "Suspense",
+    "Isekai": "Isekai",
+    "Mecha": "Mecha",
+    "Music": "Music",
+    "Psychological": "Psychological",
+    "School": "School",
+    "Seinen": "Seinen",
+    "Shoujo": "Shoujo",
+    "Shounen": "Shounen",
+    "Space": "Space",
+    "Military": "Military",
+    "Historical": "Historical"
+  },
   "lang": {
     "switch": "Français"
   }

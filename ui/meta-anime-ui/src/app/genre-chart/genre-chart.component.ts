@@ -2,7 +2,7 @@ import {
   Component, Input, OnChanges, SimpleChanges,
   ElementRef, ViewChild, AfterViewInit, OnDestroy, inject
 } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
   Chart, ArcElement, BarElement, CategoryScale, LinearScale,
   Tooltip, Legend, DoughnutController, BarController,
@@ -23,7 +23,8 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
   @Input() genreStats: { [key: string]: number } = {};
   @ViewChild('chartCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
 
-  themeService = inject(ThemeService);
+  themeService  = inject(ThemeService);
+  private translate = inject(TranslateService);
 
   chartType: 'doughnut' | 'bar' = 'doughnut';
   private chart: Chart | null = null;
@@ -59,24 +60,45 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
       .slice(0, 15);
   }
 
+  /** Translate a MAL genre name using the i18n `genres.*` key, falling back to the raw name. */
+  private translateGenre(raw: string): string {
+    const key = `genres.${raw}`;
+    const translated = this.translate.instant(key);
+    // ngx-translate returns the key itself if no translation is found
+    return translated !== key ? translated : raw;
+  }
+
+  /** Chart.js tooltip label callback — shows count + percentage */
+  private tooltipLabel(ctx: { raw: unknown; dataset: { data: unknown[] } }): string {
+    const values = ctx.dataset.data as number[];
+    const total = values.reduce((a, b) => a + b, 0);
+    const value = ctx.raw as number;
+    const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+    return ` ${value} (${pct}%)`;
+  }
+
   private buildChart(): void {
     if (!this.ready || !this.canvasRef) return;
 
     this.chart?.destroy();
 
-    const labels = this.entries.map(([k]) => k);
-    const data   = this.entries.map(([, v]) => v);
-    const colors = labels.map((_, i) => this.PALETTE[i % this.PALETTE.length]);
-    const isDark = this.themeService.isDarkTheme();
-    const textColor = isDark ? '#e8e8f0' : '#1a1a2e';
-    const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+    const rawLabels  = this.entries.map(([k]) => k);
+    const labels     = rawLabels.map(k => this.translateGenre(k));
+    const data       = this.entries.map(([, v]) => v);
+    const colors     = labels.map((_, i) => this.PALETTE[i % this.PALETTE.length]);
+    const isDark     = this.themeService.isDarkTheme();
+    const textColor  = isDark ? '#e8e8f0' : '#1a1a2e';
+    const gridColor  = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+
+    const tooltipCallbacks = { label: (ctx: Parameters<typeof this.tooltipLabel>[0]) => this.tooltipLabel(ctx) };
 
     const commonOpts = {
       responsive: true,
       maintainAspectRatio: false,
       animation: { duration: 900, easing: 'easeInOutQuart' as const },
       plugins: {
-        legend: { display: true, labels: { color: textColor, font: { size: 12 }, boxWidth: 14, padding: 12 } }
+        legend: { display: true, labels: { color: textColor, font: { size: 12 }, boxWidth: 14, padding: 12 } },
+        tooltip: { callbacks: tooltipCallbacks }
       }
     };
 
@@ -104,7 +126,11 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
         options: {
           ...commonOpts,
           indexAxis: 'y' as const,
-          plugins: { ...commonOpts.plugins, legend: { display: false } },
+          plugins: {
+            ...commonOpts.plugins,
+            legend: { display: false },
+            tooltip: { callbacks: tooltipCallbacks }
+          },
           scales: {
             x: { ticks: { color: textColor }, grid: { color: gridColor } },
             y: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } }
