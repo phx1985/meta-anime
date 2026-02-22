@@ -11,8 +11,9 @@ import { ThemeService } from './services/theme.service';
 })
 export class App {
   protected themeService = inject(ThemeService);
-  protected translate = inject(TranslateService);
-  protected currentLang = signal<string>('en');
+  protected translate    = inject(TranslateService);
+  protected currentLang  = signal<string>('en');
+  protected menuOpen     = signal<boolean>(false);
 
   constructor() {
     this.translate.use('en');
@@ -20,6 +21,18 @@ export class App {
 
   toggleTheme(): void {
     this.themeService.toggleTheme();
+  }
+
+  toggleFollowOs(): void {
+    this.themeService.setFollowOsTheme(!this.themeService.followOsTheme());
+  }
+
+  toggleMenu(): void {
+    this.menuOpen.update(v => !v);
+  }
+
+  closeMenu(): void {
+    this.menuOpen.set(false);
   }
 
   switchLanguage(): void {

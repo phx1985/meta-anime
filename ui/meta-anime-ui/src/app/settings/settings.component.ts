@@ -61,10 +61,11 @@ export class SettingsComponent {
   currentLang  = signal(this.translate.currentLang ?? this.translate.defaultLang ?? 'en');
 
   // Convert SignalR observables → signals for template use
-  syncSteps    = toSignal(this.signalR.steps$,     { initialValue: [] as SyncStep[] });
-  syncDone     = toSignal(this.signalR.syncDone$,  { initialValue: false });
-  syncError    = toSignal(this.signalR.syncError$,  { initialValue: false });
-  hubConnected = toSignal(this.signalR.connected$,  { initialValue: false });
+  syncSteps       = toSignal(this.signalR.steps$,            { initialValue: [] as SyncStep[] });
+  syncDone        = toSignal(this.signalR.syncDone$,         { initialValue: false });
+  syncError       = toSignal(this.signalR.syncError$,        { initialValue: false });
+  hubConnected    = toSignal(this.signalR.connected$,        { initialValue: false });
+  overallElapsed  = toSignal(this.signalR.overallElapsedMs$, { initialValue: 0 });
 
   /** Provider logo image paths */
   readonly providerImages: Record<string, string> = {

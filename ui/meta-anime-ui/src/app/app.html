@@ -1,36 +1,94 @@
 <nav class="navbar navbar-expand-lg sticky-top">
   <div class="container">
     <a class="navbar-brand" routerLink="/">Meta Anime</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+
+    <!-- Mobile hamburger (Angular-driven) -->
+    <button
+      class="navbar-toggler"
+      type="button"
+      (click)="toggleMenu()"
+      [attr.aria-expanded]="menuOpen()"
+      aria-controls="navbarNav"
+      aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
+
+    <div class="navbar-collapse" [class.show]="menuOpen()" id="navbarNav">
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
-          <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+          <a class="nav-link" routerLink="/" routerLinkActive="active"
+             [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">
             {{ 'nav.home' | translate }}
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/animes" routerLinkActive="active">
+          <a class="nav-link" routerLink="/animes" routerLinkActive="active" (click)="closeMenu()">
             {{ 'nav.animes' | translate }}
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/settings" routerLinkActive="active">
+          <a class="nav-link" routerLink="/settings" routerLinkActive="active" (click)="closeMenu()">
             {{ 'nav.settings' | translate }}
           </a>
         </li>
       </ul>
-      <div class="navbar-actions d-flex flex-wrap align-items-center gap-2 py-2 py-lg-0">
-        <button class="btn btn-sm btn-outline-secondary" (click)="toggleTheme()">
-          @if (themeService.isDarkTheme()) { ☀️ } @else { 🌙 }
-          {{ 'theme.toggle' | translate }}
-        </button>
-        <button class="btn btn-sm btn-outline-secondary" (click)="switchLanguage()">
+
+      <div class="navbar-actions">
+
+        <!-- Language switcher -->
+        <button class="btn-lang" type="button" (click)="switchLanguage()"
+                [title]="'lang.switch' | translate">
           {{ 'lang.switch' | translate }}
         </button>
+
+        <!-- OS-theme follow toggle -->
+        <button
+          class="btn-os-theme"
+          type="button"
+          [class.btn-os-theme--active]="themeService.followOsTheme()"
+          (click)="toggleFollowOs()"
+          [title]="'theme.followOs' | translate"
+          [attr.aria-pressed]="themeService.followOsTheme()">
+          <!-- Monitor icon -->
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </button>
+
+        <!-- Sun/Moon theme toggle pill -->
+        <button
+          class="btn-theme-toggle"
+          type="button"
+          (click)="toggleTheme()"
+          [title]="'theme.toggle' | translate"
+          [attr.aria-label]="'theme.toggle' | translate">
+          <span class="btn-theme-track">
+            <span class="btn-theme-thumb" [class.btn-theme-thumb--dark]="themeService.isDarkTheme()">
+              @if (themeService.isDarkTheme()) {
+                <!-- Moon -->
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+              } @else {
+                <!-- Sun -->
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <circle cx="12" cy="12" r="5"/>
+                  <line x1="12" y1="1" x2="12" y2="3"/>
+                  <line x1="12" y1="21" x2="12" y2="23"/>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                  <line x1="1" y1="12" x2="3" y2="12"/>
+                  <line x1="21" y1="12" x2="23" y2="12"/>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+              }
+            </span>
+          </span>
+        </button>
+
       </div>
     </div>
   </div>

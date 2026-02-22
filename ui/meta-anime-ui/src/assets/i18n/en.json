@@ -184,7 +184,10 @@
     }
   },
   "theme": {
-    "toggle": "Toggle Theme"
+    "toggle": "Toggle Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "followOs": "Sync with OS theme"
   },
   "genres": {
     "Action": "Action",
