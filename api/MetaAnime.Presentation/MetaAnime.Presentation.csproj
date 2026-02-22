@@ -30,6 +30,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MetaAnime.Application\MetaAnime.Application.csproj" />
     <ProjectReference Include="..\MetaAnime.Infrastructure\MetaAnime.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\MetaAnime.ServiceDefaults\MetaAnime.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

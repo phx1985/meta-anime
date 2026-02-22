@@ -97,8 +97,10 @@ public static class ServicesExtensions
     /// </summary>
     public static void SetupDatabase(this IServiceCollection services, IConfiguration configuration)
     {
-        var dbSettings = configuration.GetSection(DatabaseSettings.SectionName).Get<DatabaseSettings>();
-        var connectionString = dbSettings?.ConnectionString ?? string.Empty;
+        // Support both Aspire-injected connection string and manual configuration
+        var connectionString = configuration.GetConnectionString("metaanime")
+            ?? configuration.GetSection(DatabaseSettings.SectionName).Get<DatabaseSettings>()?.ConnectionString
+            ?? string.Empty;
 
         services.AddDbContext<MetaAnimeDbContext>(options => options.UseNpgsql(connectionString));
     }
@@ -108,31 +110,42 @@ public static class ServicesExtensions
     /// Migrate database
     /// </summary>
     /// <param name="serviceProvider"></param>
-    public static void MigrateDatabase(this IServiceProvider serviceProvider)
+    public static async Task MigrateDatabaseAsync(this IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MetaAnimeDbContext>();
 
-        // Wait for the database to be ready
         var retries = 10;
         var delay = TimeSpan.FromSeconds(5);
+        Exception? lastException = null;
+
         for (var i = 0; i < retries; i++)
         {
+            if (i > 0)
+                await Task.Delay(delay);
+
             try
             {
-                if (dbContext.Database.CanConnect())
-                {
-                    break;
-                }
+                // Pre-create the migrations history table so EF Core can query it
+                // without logging "Failed executing DbCommand" on a fresh database.
+                await dbContext.Database.ExecuteSqlRawAsync("""
+                    CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+                        "MigrationId" character varying(150) NOT NULL,
+                        "ProductVersion" character varying(32) NOT NULL,
+                        CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
+                    )
+                    """);
+
+                await dbContext.Database.MigrateAsync();
+                return;
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore exceptions and retry
+                lastException = ex;
             }
-            Thread.Sleep(delay);
         }
 
-        dbContext.Database.Migrate();
+        throw lastException!;
     }
 
     /// <summary>

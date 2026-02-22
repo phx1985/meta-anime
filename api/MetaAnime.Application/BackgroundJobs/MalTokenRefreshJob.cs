@@ -38,12 +38,12 @@ public class MalTokenRefreshJob(
     /// <summary>
     /// Schedules the MAL token refresh job to run daily.
     /// </summary>
-    public static void Schedule()
+    public static void Schedule(IRecurringJobManager recurringJobManager)
     {
-        RecurringJob.AddOrUpdate<MalTokenRefreshJob>(
+        recurringJobManager.AddOrUpdate<MalTokenRefreshJob>(
             Constants.JobNames.MalTokenRefresh,
             job => job.RefreshToken(),
             Cron.Daily);
-        RecurringJob.TriggerJob(Constants.JobNames.MalTokenRefresh); // Trigger immediately on startup
+        recurringJobManager.Trigger(Constants.JobNames.MalTokenRefresh); // Trigger immediately on startup
     }
 }
