@@ -1,4 +1,4 @@
-﻿using LukeHagar.PlexAPI.SDK;
+using LukeHagar.PlexAPI.SDK;
 using MetaAnime.Application.Interfaces;
 using MetaAnime.Application.Services;
 using MetaAnime.Core.Interfaces.Repositories;
@@ -90,6 +90,8 @@ public static class ServicesExtensions
         services.AddScoped<IAnimeRepository, AnimeRepository>();
         services.AddScoped<IAnimeMappingRepository, AnimeMappingRepository>();
         services.AddScoped<IPropertyBagRepository, PropertyBagRepository>();
+
+        services.AddHostedService<SettingsSeedService>();
     }
 
     /// <summary>

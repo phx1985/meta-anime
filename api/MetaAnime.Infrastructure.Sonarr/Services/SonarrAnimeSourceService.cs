@@ -1,4 +1,6 @@
-﻿using MetaAnime.Core.Interfaces.Services;
+using MetaAnime.Core;
+using MetaAnime.Core.Interfaces.Repositories;
+using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
 using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
@@ -9,31 +11,43 @@ using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.Sonarr.Services;
 
-public class SonarrAnimeSourceService(IOptions<SonarrSettings> options) : ISonarrAnimeSourceService<SonarrSeries>
+public class SonarrAnimeSourceService(IOptions<SonarrSettings> options, IPropertyBagRepository propertyBagRepository) : ISonarrAnimeSourceService<SonarrSeries>
 {
     #region Fields
-    private readonly string sonarrHost = options.Value.Host;
-    private readonly string apiKey = options.Value.ApiKey;
-    private readonly List<string> tags = [.. options.Value.AnimeTags.Split(',')];
     private static readonly JsonSerializerOptions jsonOptions = new() { PropertyNameCaseInsensitive = true };
-    private readonly bool isConfigured = !string.IsNullOrWhiteSpace(options.Value.Host) && !string.IsNullOrWhiteSpace(options.Value.ApiKey);
     #endregion
+
+    private async Task<(string host, string apiKey, List<string> tags, bool isConfigured)> GetSettingsAsync()
+    {
+        var hostEntry   = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrHost);
+        var apiKeyEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrApiKey);
+        var tagsEntry   = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrAnimeTags);
+
+        var host    = hostEntry?.Value   ?? options.Value.Host   ?? string.Empty;
+        var apiKey  = apiKeyEntry?.Value ?? options.Value.ApiKey ?? string.Empty;
+        var tagsStr = tagsEntry?.Value   ?? options.Value.AnimeTags ?? string.Empty;
+        var tags    = tagsStr.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+        var isConfigured = !string.IsNullOrWhiteSpace(host) && !string.IsNullOrWhiteSpace(apiKey);
+
+        return (host, apiKey, tags, isConfigured);
+    }
 
     #region ISonarrSourceService Implementation
     /// <summary>
     /// Allows to get all anime series from Sonarr
     /// </summary>
-    /// <returns></returns>
     public async Task<Result<IList<SonarrSeries>>> GetAllAsync()
     {
+        var (host, apiKey, tags, isConfigured) = await GetSettingsAsync();
+
         // Return empty list if Sonarr is not configured
         if (!isConfigured)
         {
             return Result.Success<IList<SonarrSeries>>(new List<SonarrSeries>());
         }
 
-        var sonarrTags = await GetSonarrTagsAsync();
-        var restClient = new RestClient(sonarrHost);
+        var sonarrTags = await GetSonarrTagsAsync(host, apiKey, tags);
+        var restClient = new RestClient(host);
         var restRequest = new RestRequest("api/v3/series");
         restRequest.AddParameter("apikey", apiKey);
         var response = await restClient.ExecuteAsync(restRequest);
@@ -42,7 +56,7 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options) : ISonar
         {
             var json = response.Content!;
             var allSeries = JsonSerializer.Deserialize<SonarrSeries[]>(json, jsonOptions)!;
-            IList<SonarrSeries> animes = [.. allSeries.Where(a => IsAnimeTagged(a, sonarrTags!))];
+            IList<SonarrSeries> animes = [.. allSeries.Where(a => IsAnimeTagged(a, sonarrTags!, tags))];
             return Result.Success(animes);
         }
         else if (response.StatusCode == HttpStatusCode.NotFound)
@@ -53,13 +67,15 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options) : ISonar
 
     public async Task<Result<SonarrSeries>> GetByIdAsync(string id)
     {
+        var (host, apiKey, _, isConfigured) = await GetSettingsAsync();
+
         // Return failure if Sonarr is not configured
         if (!isConfigured)
         {
             return Result.Failure<SonarrSeries>(new(Constants.Errors.NotConfigured, "Sonarr is not configured"));
         }
 
-        var restClient = new RestClient(sonarrHost);
+        var restClient = new RestClient(host);
         var restRequest = new RestRequest($"api/v3/series/{id}");
         restRequest.AddParameter("apikey", apiKey);
         var response = await restClient.ExecuteAsync(restRequest);
@@ -79,6 +95,7 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options) : ISonar
     public async Task<Dictionary<string, int>> GetCodecDistributionAsync(string seriesId)
     {
         var codecDistribution = new Dictionary<string, int>();
+        var (host, apiKey, _, isConfigured) = await GetSettingsAsync();
 
         // Return empty dictionary if Sonarr is not configured
         if (!isConfigured)
@@ -86,7 +103,7 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options) : ISonar
             return codecDistribution;
         }
 
-        var episodeFiles = await FetchEpisodeFilesAsync(seriesId);
+        var episodeFiles = await FetchEpisodeFilesAsync(seriesId, host, apiKey);
         if (episodeFiles != null)
         {
             foreach (var file in episodeFiles)
@@ -101,12 +118,16 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options) : ISonar
 
     public async Task<Result<IList<SonarrSeriesCodecResult>>> GetSeriesByCodecAsync(string codec)
     {
+        var (_, _, _, isConfigured) = await GetSettingsAsync();
+
         if (!isConfigured)
             return Result.Success<IList<SonarrSeriesCodecResult>>(new List<SonarrSeriesCodecResult>());
 
         var allSeriesResult = await GetAllAsync();
         if (allSeriesResult.IsFailure)
             return Result.Failure<IList<SonarrSeriesCodecResult>>(allSeriesResult.Error);
+
+        var (host, apiKey, _, _) = await GetSettingsAsync();
 
         // Throttle concurrent requests to avoid overwhelming the Sonarr API
         using var semaphore = new SemaphoreSlim(10, 10);
@@ -116,7 +137,7 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options) : ISonar
             await semaphore.WaitAsync();
             try
             {
-                var files = await FetchEpisodeFilesAsync(series.Id.ToString());
+                var files = await FetchEpisodeFilesAsync(series.Id.ToString(), host, apiKey);
                 if (files == null || files.Length == 0)
                     return null;
 
@@ -156,9 +177,9 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options) : ISonar
     #endregion
 
     #region Private Methods
-    private async Task<SonarrEpisodeFile[]?> FetchEpisodeFilesAsync(string seriesId)
+    private async Task<SonarrEpisodeFile[]?> FetchEpisodeFilesAsync(string seriesId, string host, string apiKey)
     {
-        var restClient = new RestClient(sonarrHost);
+        var restClient = new RestClient(host);
         var restRequest = new RestRequest("api/v3/episodefile");
         restRequest.AddParameter("apikey", apiKey);
         restRequest.AddParameter("seriesId", seriesId);
@@ -170,9 +191,9 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options) : ISonar
         return null;
     }
 
-    private async Task<List<SonarrTag>?> GetSonarrTagsAsync()
+    private async Task<List<SonarrTag>?> GetSonarrTagsAsync(string host, string apiKey, List<string> tags)
     {
-        var restClient = new RestClient(sonarrHost);
+        var restClient = new RestClient(host);
         var restRequest = new RestRequest("api/v3/tag");
         restRequest.AddParameter("apikey", apiKey);
         var response = await restClient.ExecuteAsync(restRequest);
@@ -192,10 +213,7 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options) : ISonar
     /// <summary>
     /// Check if the anime is tagged as anime
     /// </summary>
-    /// <param name="anime"></param>
-    /// <param name="sonarrTags"></param>
-    /// <returns></returns>
-    private bool IsAnimeTagged(SonarrSeries anime, List<SonarrTag> sonarrTags)
+    private static bool IsAnimeTagged(SonarrSeries anime, List<SonarrTag> sonarrTags, List<string> tags)
     {
         if (tags.Count == 0)
             return false;

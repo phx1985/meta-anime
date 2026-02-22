@@ -1,0 +1,101 @@
+<div class="settings-page container py-5">
+  <h1 class="settings-title mb-2">{{ 'settings.title' | translate }}</h1>
+  <p class="settings-subtitle mb-5">{{ 'settings.subtitle' | translate }}</p>
+
+  @if (loading()) {
+    <div class="d-flex justify-content-center py-5">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+  } @else if (error()) {
+    <div class="alert alert-danger" role="alert">
+      {{ 'settings.error' | translate }}
+    </div>
+  } @else {
+    @for (cat of categories(); track trackByCategory($index, cat)) {
+      <div class="settings-card mb-4">
+        <!-- Category header -->
+        <div class="settings-card-header">
+          <span class="category-icon">{{ 'settings.category.' + cat + '.icon' | translate }}</span>
+          <div>
+            <h2 class="category-title mb-0">{{ 'settings.category.' + cat + '.name' | translate }}</h2>
+            <p class="category-desc mb-0">{{ 'settings.category.' + cat + '.desc' | translate }}</p>
+          </div>
+        </div>
+
+        <!-- Settings rows -->
+        <div class="settings-rows">
+          @for (setting of grouped()[cat]; track trackByKey($index, setting)) {
+            <div class="setting-row" [class.setting-row--editing]="editing[setting.key]">
+              <div class="setting-info">
+                <div class="setting-name">
+                  {{ setting.displayName }}
+                  @if (setting.isRequired) {
+                    <span class="badge-required">{{ 'settings.required' | translate }}</span>
+                  }
+                  @if (setting.isSensitive) {
+                    <span class="badge-sensitive" [title]="'settings.sensitiveHint' | translate">🔒</span>
+                  }
+                </div>
+                <div class="setting-desc">{{ setting.description }}</div>
+              </div>
+
+              <div class="setting-value-area">
+                @if (!editing[setting.key]) {
+                  <!-- Display mode -->
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="setting-current-value">
+                      @if (setting.value) {
+                        {{ setting.isSensitive ? '••••••••' : setting.value }}
+                      } @else {
+                        <span class="text-muted fst-italic">{{ 'settings.notSet' | translate }}</span>
+                      }
+                    </span>
+                    @if (isSaved(setting.key)) {
+                      <span class="badge-saved">✓ {{ 'settings.saved' | translate }}</span>
+                    }
+                    <button class="btn btn-sm btn-outline-secondary" (click)="toggleEdit(setting.key)">
+                      ✏️ {{ 'settings.edit' | translate }}
+                    </button>
+                  </div>
+                } @else {
+                  <!-- Edit mode -->
+                  <form [formGroup]="forms[setting.key]" (ngSubmit)="save(setting)" class="edit-form">
+                    <input
+                      [type]="setting.isSensitive ? 'password' : 'text'"
+                      formControlName="value"
+                      class="form-control form-control-sm setting-input"
+                      [placeholder]="setting.isSensitive ? ('settings.sensitiveHint' | translate) : setting.displayName"
+                      [attr.aria-label]="setting.displayName" />
+                    <div class="edit-actions">
+                      <button
+                        type="submit"
+                        class="btn btn-sm btn-primary"
+                        [disabled]="isSaving(setting.key)">
+                        @if (isSaving(setting.key)) {
+                          <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        }
+                        {{ 'settings.save' | translate }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary"
+                        (click)="cancelEdit(setting.key)"
+                        [disabled]="isSaving(setting.key)">
+                        {{ 'settings.cancel' | translate }}
+                      </button>
+                    </div>
+                    @if (hasError(setting.key)) {
+                      <div class="text-danger small mt-1">{{ 'settings.saveError' | translate }}</div>
+                    }
+                  </form>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+</div>

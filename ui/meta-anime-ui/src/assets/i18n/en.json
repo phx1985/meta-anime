@@ -8,14 +8,12 @@
     "title": "Meta Anime",
     "subtitle": "Your unified anime metadata hub",
     "stats": {
-      "total": "Total Animes",
       "matched": "Matched",
       "plex": "Plex",
       "sonarr": "Sonarr",
       "mal": "MyAnimeList",
       "description": "Aggregated from all your sources",
       "tooltip": {
-        "total": "Combined number of anime entries found across all connected sources (Plex + MyAnimeList).",
         "matched": "Anime successfully cross-referenced between Plex, MyAnimeList and Sonarr using AniDB mapping.",
         "plex": "Anime series available in your Plex media library.",
         "sonarr": "Anime series tracked by your Sonarr instance.",
@@ -28,6 +26,41 @@
     "title": "Anime List",
     "error": "Failed to load animes. Please try again later.",
     "empty": "No animes found."
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your integrations and connection settings. Changes take effect immediately.",
+    "error": "Failed to load settings. Please try again later.",
+    "required": "required",
+    "sensitiveHint": "Sensitive — enter a new value to update",
+    "notSet": "Not configured",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saved": "Saved",
+    "saveError": "Failed to save. Please try again.",
+    "category": {
+      "plex": {
+        "icon": "🎬",
+        "name": "Plex",
+        "desc": "Connect to your Plex Media Server to sync your anime library."
+      },
+      "sonarr": {
+        "icon": "📡",
+        "name": "Sonarr",
+        "desc": "Track anime series from your Sonarr instance."
+      },
+      "mal": {
+        "icon": "📋",
+        "name": "MyAnimeList",
+        "desc": "Authenticate with your MyAnimeList account for watch-list data."
+      },
+      "kometa": {
+        "icon": "🗄️",
+        "name": "Kometa",
+        "desc": "Source of the AniDB ↔ TVDB / TMDB mapping file."
+      }
+    }
   },
   "theme": {
     "toggle": "Toggle Theme"

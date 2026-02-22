@@ -1,0 +1,49 @@
+using Asp.Versioning;
+using MediatR;
+using MetaAnime.Application.Commands;
+using MetaAnime.Application.Contracts;
+using MetaAnime.Application.Queries;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace MetaAnime.Controllers;
+
+[ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/settings")]
+public class SettingsController(IMediator mediator) : ControllerBase
+{
+    /// <summary>
+    /// Returns all settings definitions with their current values.
+    /// Sensitive fields are masked.
+    /// </summary>
+    [HttpGet]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<SettingDefinition>>> GetAll()
+    {
+        var result = await mediator.Send(new GetSettingsQuery());
+
+        if (result.IsFailure)
+            return StatusCode(500, result.Error.Message);
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Updates a setting value in the PropertyBag.
+    /// </summary>
+    [HttpPut("{key}")]
+    [Authorize]
+    public async Task<ActionResult<PropertyBagResponse>> Update(string key, [FromBody] UpsertPropertyBagRequest request)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        var result = await mediator.Send(new UpsertPropertyBagCommand(key, request));
+
+        if (result.IsFailure)
+            return StatusCode(500, result.Error.Message);
+
+        return Ok(result.Value);
+    }
+}
