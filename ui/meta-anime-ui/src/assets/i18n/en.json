@@ -8,19 +8,33 @@
     "title": "Meta Anime",
     "subtitle": "Your unified anime metadata hub",
     "stats": {
-      "total": "Total Animes",
-      "matched": "Matched",
       "plex": "Plex",
       "sonarr": "Sonarr",
       "mal": "MyAnimeList",
       "description": "Aggregated from all your sources",
       "tooltip": {
-        "total": "Combined number of anime entries found across all connected sources (Plex + MyAnimeList).",
-        "matched": "Anime successfully cross-referenced between Plex, MyAnimeList and Sonarr using AniDB mapping.",
         "plex": "Anime series available in your Plex media library.",
         "sonarr": "Anime series tracked by your Sonarr instance.",
         "mal": "Anime entries sourced from your MyAnimeList account."
       }
+    },
+    "chart": {
+      "title": "Genre Distribution",
+      "toggleLabel": "Chart type",
+      "pie": "Pie",
+      "bar": "Bar"
+    },
+    "missing": {
+      "title": "Coverage Gaps",
+      "subtitle": "Series present in one source but absent from another.",
+      "sonarrNotInMal": "Sonarr not in MAL",
+      "sonarrNotInMalDesc": "Series tracked by Sonarr with no matching entry in MyAnimeList.",
+      "malNotInPlex": "MAL not in Plex",
+      "malNotInPlexDesc": "Series on your MAL watch-list that are missing from your Plex library.",
+      "plexNotInMal": "Plex not in MAL",
+      "plexNotInMalDesc": "Series in your Plex library that have no matching entry in MyAnimeList.",
+      "plexNotInSonarr": "Plex not in Sonarr",
+      "plexNotInSonarrDesc": "Series in your Plex library that are not tracked by Sonarr."
     },
     "welcome": "Welcome to Meta Anime"
   },
@@ -29,8 +43,144 @@
     "error": "Failed to load animes. Please try again later.",
     "empty": "No animes found."
   },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your integrations and connection settings. Changes take effect immediately.",
+    "error": "Failed to load settings. Please try again later.",
+    "required": "required",
+    "sensitive": "Sensitive field",
+    "sensitiveHint": "Enter a new value to update",
+    "notSet": "Not configured",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saved": "Saved",
+    "saveError": "Failed to save. Please try again.",
+    "reveal": "Show value",
+    "hide": "Hide value",
+    "sync": {
+      "button": "Force Sync",
+      "inProgress": "Syncing…",
+      "hub": {
+        "title": "Sync in progress",
+        "done": "Sync complete",
+        "error": "Sync failed — please retry",
+        "dismiss": "Dismiss"
+      },
+      "step": {
+        "init":     "Initialising sync",
+        "kometa":   "Loading Kometa mappings",
+        "plex":     "Fetching Plex library",
+        "mal":      "Fetching MyAnimeList entries",
+        "sonarr":   "Fetching Sonarr series",
+        "matching": "Matching & indexing"
+      },
+      "lastSync": "Last sync",
+      "neverSynced": "Never synced"
+    },
+    "category": {
+      "plex": {
+        "name": "Plex",
+        "desc": "Connect to your Plex Media Server to sync your anime library."
+      },
+      "sonarr": {
+        "name": "Sonarr",
+        "desc": "Track anime series from your Sonarr instance."
+      },
+      "mal": {
+        "name": "MyAnimeList",
+        "desc": "Authenticate with your MyAnimeList account for watch-list data."
+      },
+      "kometa": {
+        "name": "Kometa",
+        "desc": "Source of the AniDB ↔ TVDB / TMDB mapping file."
+      }
+    },
+    "fields": {
+      "Plex_Host": {
+        "name": "Server URL",
+        "desc": "Base URL of your Plex Media Server (e.g. http://localhost:32400)."
+      },
+      "Plex_Token": {
+        "name": "Auth Token",
+        "desc": "Authentication token for your Plex account."
+      },
+      "Plex_AnimeSections": {
+        "name": "Anime Library IDs",
+        "desc": "Comma-separated Plex library section IDs that contain anime."
+      },
+      "Sonarr_Host": {
+        "name": "Server URL",
+        "desc": "Base URL of your Sonarr instance (e.g. http://localhost:8989)."
+      },
+      "Sonarr_ApiKey": {
+        "name": "API Key",
+        "desc": "API key found in Sonarr › Settings › General."
+      },
+      "Sonarr_AnimeTags": {
+        "name": "Anime Tags",
+        "desc": "Comma-separated Sonarr tag names used to identify anime series."
+      },
+      "Sonarr_RemoteUrl": {
+        "name": "Remote URL",
+        "desc": "Optional public URL for Sonarr used to build series deep-links."
+      },
+      "MAL_ApiToken": {
+        "name": "Access Token",
+        "desc": "Current OAuth access token for the MyAnimeList API."
+      },
+      "MAL_ClientId": {
+        "name": "OAuth Client ID",
+        "desc": "Client ID registered on the MyAnimeList developer portal."
+      },
+      "MAL_ClientSecret": {
+        "name": "OAuth Client Secret",
+        "desc": "Client Secret registered on the MyAnimeList developer portal."
+      },
+      "MAL_RefreshToken": {
+        "name": "Refresh Token",
+        "desc": "OAuth Refresh Token used to renew the access token automatically."
+      },
+      "Kometa_AnimeIdsJsonUrl": {
+        "name": "Anime IDs JSON URL",
+        "desc": "URL of the Kometa Community anime_ids.json AniDB mapping file."
+      }
+    }
+  },
   "theme": {
     "toggle": "Toggle Theme"
+  },
+  "genres": {
+    "Action": "Action",
+    "Adventure": "Adventure",
+    "Avant Garde": "Avant Garde",
+    "Award Winning": "Award Winning",
+    "Boys Love": "Boys Love",
+    "Comedy": "Comedy",
+    "Drama": "Drama",
+    "Ecchi": "Ecchi",
+    "Fantasy": "Fantasy",
+    "Girls Love": "Girls Love",
+    "Gourmet": "Gourmet",
+    "Horror": "Horror",
+    "Mystery": "Mystery",
+    "Romance": "Romance",
+    "Sci-Fi": "Sci-Fi",
+    "Slice of Life": "Slice of Life",
+    "Sports": "Sports",
+    "Supernatural": "Supernatural",
+    "Suspense": "Suspense",
+    "Isekai": "Isekai",
+    "Mecha": "Mecha",
+    "Music": "Music",
+    "Psychological": "Psychological",
+    "School": "School",
+    "Seinen": "Seinen",
+    "Shoujo": "Shoujo",
+    "Shounen": "Shounen",
+    "Space": "Space",
+    "Military": "Military",
+    "Historical": "Historical"
   },
   "lang": {
     "switch": "Français"

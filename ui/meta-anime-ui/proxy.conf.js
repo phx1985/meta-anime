@@ -13,4 +13,10 @@ module.exports = {
     secure: false,
     changeOrigin: true,
   },
+  '/hubs': {
+    target: apiTarget,
+    secure: false,
+    changeOrigin: true,
+    ws: true,
+  },
 };

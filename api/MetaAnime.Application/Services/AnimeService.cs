@@ -113,21 +113,19 @@ public class AnimeService(
     {
         try
         {
-            var plexTask = plexAnimeSourceService.GetAllAsync();
-            var malTask = malAnimeSourceService.GetAllAsync();
-            var sonarrTask = sonarrAnimeSourceService.GetAllAsync();
-
-            await Task.WhenAll(plexTask, malTask, sonarrTask);
-
-            var plexResult = await plexTask;
+            // Run sequentially: Sonarr and MAL source services each access
+            // IPropertyBagRepository which uses the scoped DbContext. Running
+            // them concurrently (Task.WhenAll) causes "second operation started
+            // on this context" errors because EF Core DbContext is not thread-safe.
+            var plexResult = await plexAnimeSourceService.GetAllAsync();
             if (plexResult.IsFailure)
                 return Result.Failure<IEnumerable<Anime>>(plexResult.Error);
 
-            var malResult = await malTask;
+            var malResult = await malAnimeSourceService.GetAllAsync();
             if (malResult.IsFailure)
                 return Result.Failure<IEnumerable<Anime>>(malResult.Error);
 
-            var sonarrResult = await sonarrTask;
+            var sonarrResult = await sonarrAnimeSourceService.GetAllAsync();
             if (sonarrResult.IsFailure)
                 return Result.Failure<IEnumerable<Anime>>(sonarrResult.Error);
 

@@ -4,5 +4,5 @@ namespace MetaAnime.Core.Interfaces.Services;
 
 public interface IAnimeMatchingService
 {
-    public Task<Result> MatchAsync(bool forceRefreshKometaMapping = false);
+    Task<Result> MatchAsync(bool forceRefreshKometaMapping = false, ISyncProgressNotifier? progressNotifier = null);
 }

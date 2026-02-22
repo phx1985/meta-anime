@@ -291,12 +291,29 @@ public class AnimeMediatorService(
             if (mappingsResult.IsFailure)
                 return Result.Failure<AnimeStatisticsResponse>(mappingsResult.Error);
 
-            var matchedCount = mappingsResult.Value
+            var mappingGroups = mappingsResult.Value
                 .GroupBy(m => m.AniDbId)
-                .Count(g => g.Where(m => m.Anime != null)
-                             .Select(m => m.Anime!.AnimeSource)
-                             .Distinct()
-                             .Count() > 1);
+                .Select(g =>
+                {
+                    var sources = g.Where(m => m.Anime != null)
+                                   .Select(m => m.Anime!.AnimeSource)
+                                   .Distinct()
+                                   .ToHashSet();
+                    return new
+                    {
+                        HasSonarr = sources.Contains(AnimeSource.Sonarr),
+                        HasMal    = sources.Contains(AnimeSource.MyAnimeList),
+                        HasPlex   = sources.Contains(AnimeSource.Plex),
+                        Count     = sources.Count
+                    };
+                })
+                .ToList();
+
+            var matchedCount    = mappingGroups.Count(g => g.Count > 1);
+            var sonarrNotInMal  = mappingGroups.Count(g => g.HasSonarr && !g.HasMal);
+            var malNotInPlex    = mappingGroups.Count(g => g.HasMal    && !g.HasPlex);
+            var plexNotInMal    = mappingGroups.Count(g => g.HasPlex   && !g.HasMal);
+            var plexNotInSonarr = mappingGroups.Count(g => g.HasPlex   && !g.HasSonarr);
 
             var genreStats = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var malEpisodesWatched = 0;
@@ -370,6 +387,10 @@ public class AnimeMediatorService(
                 malCount,
                 sonarrCount,
                 matchedCount,
+                sonarrNotInMal,
+                malNotInPlex,
+                plexNotInMal,
+                plexNotInSonarr,
                 genreStats,
                 new ViewingProgressStats(malEpisodesWatched, malTotalEpisodes, plexEpisodesWatched, plexTotalEpisodes)
             ));
