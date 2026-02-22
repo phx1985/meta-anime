@@ -8,17 +8,31 @@
     "title": "Meta Anime",
     "subtitle": "Votre hub centralisé de métadonnées anime",
     "stats": {
-      "matched": "Correspondances",
       "plex": "Plex",
       "sonarr": "Sonarr",
       "mal": "MyAnimeList",
       "description": "Agrégé depuis toutes vos sources",
       "tooltip": {
-        "matched": "Anime croisés avec succès entre Plex, MyAnimeList et Sonarr via le mapping AniDB.",
         "plex": "Séries anime disponibles dans votre bibliothèque Plex.",
         "sonarr": "Séries anime suivies par votre instance Sonarr.",
         "mal": "Entrées anime issues de votre compte MyAnimeList."
       }
+    },
+    "chart": {
+      "title": "Répartition par genre",
+      "toggleLabel": "Type de graphique",
+      "pie": "Camembert",
+      "bar": "Barres"
+    },
+    "missing": {
+      "title": "Lacunes de couverture",
+      "subtitle": "Séries présentes dans une source mais absentes d'une autre.",
+      "sonarrNotInMal": "Sonarr absent de MAL",
+      "sonarrNotInMalDesc": "Séries suivies par Sonarr sans entrée correspondante dans MyAnimeList.",
+      "malNotInPlex": "MAL absent de Plex",
+      "malNotInPlexDesc": "Séries de votre liste MAL absentes de votre bibliothèque Plex.",
+      "plexNotInMal": "Plex absent de MAL",
+      "plexNotInMalDesc": "Séries dans votre bibliothèque Plex sans entrée correspondante dans MyAnimeList."
     },
     "welcome": "Bienvenue sur Meta Anime"
   },
@@ -29,36 +43,85 @@
   },
   "settings": {
     "title": "Paramètres",
-    "subtitle": "Gérez vos intégrations et vos paramètres de connexion. Les modifications prennent effet immédiatement.",
+    "subtitle": "Gérez vos intégrations et paramètres de connexion. Les modifications prennent effet immédiatement.",
     "error": "Échec du chargement des paramètres. Veuillez réessayer plus tard.",
     "required": "requis",
-    "sensitiveHint": "Sensible — saisissez une nouvelle valeur pour mettre à jour",
+    "sensitive": "Champ sensible",
+    "sensitiveHint": "Saisissez une nouvelle valeur pour mettre à jour",
     "notSet": "Non configuré",
     "edit": "Modifier",
     "save": "Enregistrer",
     "cancel": "Annuler",
     "saved": "Enregistré",
     "saveError": "Échec de l'enregistrement. Veuillez réessayer.",
+    "reveal": "Afficher la valeur",
+    "hide": "Masquer la valeur",
     "category": {
       "plex": {
-        "icon": "🎬",
         "name": "Plex",
         "desc": "Connectez-vous à votre Plex Media Server pour synchroniser votre bibliothèque anime."
       },
       "sonarr": {
-        "icon": "📡",
         "name": "Sonarr",
         "desc": "Suivez les séries anime depuis votre instance Sonarr."
       },
       "mal": {
-        "icon": "📋",
         "name": "MyAnimeList",
-        "desc": "Authentifiez-vous avec votre compte MyAnimeList pour les données de liste de visionnage."
+        "desc": "Authentifiez-vous avec votre compte MyAnimeList pour les données de liste."
       },
       "kometa": {
-        "icon": "🗄️",
         "name": "Kometa",
         "desc": "Source du fichier de mapping AniDB ↔ TVDB / TMDB."
+      }
+    },
+    "fields": {
+      "Plex_Host": {
+        "name": "URL du serveur",
+        "desc": "URL de base de votre Plex Media Server (ex. http://localhost:32400)."
+      },
+      "Plex_Token": {
+        "name": "Jeton d'authentification",
+        "desc": "Jeton d'authentification de votre compte Plex."
+      },
+      "Plex_AnimeSections": {
+        "name": "IDs des bibliothèques anime",
+        "desc": "IDs de sections de bibliothèque Plex contenant des animes, séparés par des virgules."
+      },
+      "Sonarr_Host": {
+        "name": "URL du serveur",
+        "desc": "URL de base de votre instance Sonarr (ex. http://localhost:8989)."
+      },
+      "Sonarr_ApiKey": {
+        "name": "Clé API",
+        "desc": "Clé API trouvée dans Sonarr › Paramètres › Général."
+      },
+      "Sonarr_AnimeTags": {
+        "name": "Tags anime",
+        "desc": "Noms de tags Sonarr utilisés pour identifier les séries anime, séparés par des virgules."
+      },
+      "Sonarr_RemoteUrl": {
+        "name": "URL distante",
+        "desc": "URL publique optionnelle de Sonarr pour construire des liens profonds vers les séries."
+      },
+      "MAL_ApiToken": {
+        "name": "Jeton d'accès",
+        "desc": "Jeton d'accès OAuth actuel pour l'API MyAnimeList."
+      },
+      "MAL_ClientId": {
+        "name": "ID client OAuth",
+        "desc": "ID client enregistré sur le portail développeur MyAnimeList."
+      },
+      "MAL_ClientSecret": {
+        "name": "Secret client OAuth",
+        "desc": "Secret client enregistré sur le portail développeur MyAnimeList."
+      },
+      "MAL_RefreshToken": {
+        "name": "Jeton de rafraîchissement",
+        "desc": "Jeton de rafraîchissement OAuth pour renouveler automatiquement le jeton d'accès."
+      },
+      "Kometa_AnimeIdsJsonUrl": {
+        "name": "URL JSON des IDs anime",
+        "desc": "URL du fichier anime_ids.json de Kometa Community pour le mapping AniDB."
       }
     }
   },

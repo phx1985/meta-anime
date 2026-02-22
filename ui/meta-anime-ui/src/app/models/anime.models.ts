@@ -47,6 +47,9 @@ export interface AnimeStatisticsResponse {
   myAnimeListAnime: number;
   sonarrAnime: number;
   matchedAnime: number;
+  sonarrNotInMal: number;
+  malNotInPlex: number;
+  plexNotInMal: number;
   genreStats: { [key: string]: number };
   viewingProgress: ViewingProgressStats;
 }

@@ -15,9 +15,45 @@
   } @else {
     @for (cat of categories(); track trackByCategory($index, cat)) {
       <div class="settings-card mb-4">
-        <!-- Category header -->
-        <div class="settings-card-header">
-          <span class="category-icon" aria-hidden="true">{{ 'settings.category.' + cat + '.icon' | translate }}</span>
+
+        <!-- Category header with provider logo -->
+        <div class="settings-card-header settings-card-header--{{ cat }}">
+          <div class="provider-logo" aria-hidden="true">
+            @switch (cat) {
+              @case ('plex') {
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                  <rect width="36" height="36" rx="8" fill="#E5A00D"/>
+                  <path d="M13 9l16 9-16 9V9z" fill="white"/>
+                </svg>
+              }
+              @case ('sonarr') {
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                  <rect width="36" height="36" rx="8" fill="#35C5F4"/>
+                  <circle cx="18" cy="18" r="11" stroke="white" stroke-width="2.2" fill="none"/>
+                  <circle cx="18" cy="18" r="7"  stroke="white" stroke-width="2.2" fill="none"/>
+                  <circle cx="18" cy="18" r="3"  fill="white"/>
+                </svg>
+              }
+              @case ('mal') {
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                  <rect width="36" height="36" rx="8" fill="#2E51A2"/>
+                  <text x="5" y="25" font-family="Arial Black, sans-serif" font-weight="900" font-size="13" fill="white">MAL</text>
+                </svg>
+              }
+              @case ('kometa') {
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                  <defs>
+                    <linearGradient id="kg" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stop-color="#7C3AED"/>
+                      <stop offset="100%" stop-color="#4F46E5"/>
+                    </linearGradient>
+                  </defs>
+                  <rect width="36" height="36" rx="8" fill="url(#kg)"/>
+                  <text x="9" y="25" font-family="Arial Black, sans-serif" font-weight="900" font-size="16" fill="white">K</text>
+                </svg>
+              }
+            }
+          </div>
           <div>
             <h2 class="category-title mb-0">{{ 'settings.category.' + cat + '.name' | translate }}</h2>
             <p class="category-desc mb-0">{{ 'settings.category.' + cat + '.desc' | translate }}</p>
@@ -28,61 +64,90 @@
         <div class="settings-rows">
           @for (setting of grouped()[cat]; track trackByKey($index, setting)) {
             <div class="setting-row" [class.setting-row--editing]="editing[setting.key]">
+
+              <!-- Field info from i18n (not from API) -->
               <div class="setting-info">
                 <div class="setting-name">
-                  {{ setting.displayName }}
+                  {{ 'settings.fields.' + slug(setting.key) + '.name' | translate }}
                   @if (setting.isRequired) {
                     <span class="badge-required">{{ 'settings.required' | translate }}</span>
                   }
                   @if (setting.isSensitive) {
-                    <span class="badge-sensitive" [attr.aria-label]="'settings.sensitiveHint' | translate" role="img">🔒</span>
+                    <span class="badge-sensitive" [attr.aria-label]="'settings.sensitive' | translate" role="img">🔒</span>
                   }
                 </div>
-                <div class="setting-desc">{{ setting.description }}</div>
+                <div class="setting-desc">{{ 'settings.fields.' + slug(setting.key) + '.desc' | translate }}</div>
               </div>
 
+              <!-- Value area (fixed width so all edit buttons align) -->
               <div class="setting-value-area">
                 @if (!editing[setting.key]) {
-                  <!-- Display mode -->
-                  <div class="d-flex align-items-center gap-2">
+                  <div class="display-row">
                     <span class="setting-current-value">
                       @if (setting.value) {
-                        {{ setting.isSensitive ? '••••••••' : setting.value }}
+                        @if (setting.isSensitive && !revealed[setting.key]) {
+                          ••••••••
+                        } @else {
+                          {{ setting.value }}
+                        }
                       } @else {
                         <span class="text-muted fst-italic">{{ 'settings.notSet' | translate }}</span>
                       }
                     </span>
-                    @if (isSaved(setting.key)) {
-                      <span class="badge-saved">✓ {{ 'settings.saved' | translate }}</span>
-                    }
-                    <button class="btn btn-sm btn-outline-secondary" (click)="toggleEdit(setting.key)">
-                      ✏️ {{ 'settings.edit' | translate }}
-                    </button>
+                    <div class="display-actions">
+                      @if (setting.isSensitive && setting.value) {
+                        <button
+                          type="button"
+                          class="btn-icon"
+                          (click)="toggleReveal(setting.key)"
+                          [attr.aria-label]="(revealed[setting.key] ? 'settings.hide' : 'settings.reveal') | translate">
+                          @if (revealed[setting.key]) {
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                          } @else {
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                          }
+                        </button>
+                      }
+                      @if (isSaved(setting.key)) {
+                        <span class="badge-saved">✓ {{ 'settings.saved' | translate }}</span>
+                      }
+                      <button class="btn btn-sm btn-outline-secondary edit-btn" (click)="toggleEdit(setting.key)">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        {{ 'settings.edit' | translate }}
+                      </button>
+                    </div>
                   </div>
                 } @else {
-                  <!-- Edit mode -->
                   <form [formGroup]="forms[setting.key]" (ngSubmit)="save(setting)" class="edit-form">
-                    <input
-                      [type]="setting.isSensitive ? 'password' : 'text'"
-                      formControlName="value"
-                      class="form-control form-control-sm setting-input"
-                      [placeholder]="setting.isSensitive ? ('settings.sensitiveHint' | translate) : setting.displayName"
-                      [attr.aria-label]="setting.displayName" />
+                    <div class="input-with-eye">
+                      <input
+                        [type]="setting.isSensitive && !revealed[setting.key] ? 'password' : 'text'"
+                        formControlName="value"
+                        class="form-control form-control-sm setting-input"
+                        [placeholder]="setting.isSensitive ? ('settings.sensitiveHint' | translate) : ('settings.fields.' + slug(setting.key) + '.name' | translate)"
+                        [attr.aria-label]="'settings.fields.' + slug(setting.key) + '.name' | translate" />
+                      @if (setting.isSensitive) {
+                        <button
+                          type="button"
+                          class="btn-icon eye-btn"
+                          (click)="toggleReveal(setting.key)"
+                          [attr.aria-label]="(revealed[setting.key] ? 'settings.hide' : 'settings.reveal') | translate">
+                          @if (revealed[setting.key]) {
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                          } @else {
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                          }
+                        </button>
+                      }
+                    </div>
                     <div class="edit-actions">
-                      <button
-                        type="submit"
-                        class="btn btn-sm btn-primary"
-                        [disabled]="isSaving(setting.key)">
+                      <button type="submit" class="btn btn-sm btn-primary" [disabled]="isSaving(setting.key)">
                         @if (isSaving(setting.key)) {
                           <span class="spinner-border spinner-border-sm me-1" role="status"></span>
                         }
                         {{ 'settings.save' | translate }}
                       </button>
-                      <button
-                        type="button"
-                        class="btn btn-sm btn-outline-secondary"
-                        (click)="cancelEdit(setting.key)"
-                        [disabled]="isSaving(setting.key)">
+                      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="cancelEdit(setting.key)" [disabled]="isSaving(setting.key)">
                         {{ 'settings.cancel' | translate }}
                       </button>
                     </div>
@@ -92,9 +157,11 @@
                   </form>
                 }
               </div>
+
             </div>
           }
         </div>
+
       </div>
     }
   }

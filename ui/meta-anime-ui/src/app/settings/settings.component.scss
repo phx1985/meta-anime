@@ -1,5 +1,5 @@
 .settings-page {
-  max-width: 860px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -27,33 +27,41 @@
 
 @keyframes popFadeIn {
   from { opacity: 0; transform: translateY(20px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0)    scale(1); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+// Stagger card entry
+.settings-card:nth-child(1) { animation-delay: 0s; }
+.settings-card:nth-child(2) { animation-delay: 0.08s; }
+.settings-card:nth-child(3) { animation-delay: 0.16s; }
+.settings-card:nth-child(4) { animation-delay: 0.24s; }
 
 .settings-card-header {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1.25rem 1.5rem;
+  padding: 1.1rem 1.5rem;
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
   color: #fff;
 }
 
-.category-icon {
-  font-size: 2rem;
-  line-height: 1;
+.provider-logo {
   flex-shrink: 0;
+  line-height: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
 
 .category-title {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: #fff;
 }
 
 .category-desc {
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.78);
 }
 
 // ── Setting rows ──────────────────────────────────────────────────────────────
@@ -62,33 +70,29 @@
   padding: 0.25rem 0;
 }
 
+// Grid layout: info takes remaining space; value-area is always 300px wide → buttons stay aligned
 .setting-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  align-items: start;
   gap: 1rem;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--card-border);
   transition: background 0.2s ease;
 
-  &:last-child {
-    border-bottom: none;
-  }
+  &:last-child { border-bottom: none; }
 
   &:hover,
-  &.setting-row--editing {
-    background: var(--bg-secondary);
-  }
+  &.setting-row--editing { background: var(--bg-secondary); }
 }
 
 .setting-info {
-  flex: 1 1 auto;
   min-width: 0;
 }
 
 .setting-name {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--text-primary);
   display: flex;
   align-items: center;
@@ -97,22 +101,23 @@
 }
 
 .setting-desc {
-  font-size: 0.78rem;
+  font-size: 0.77rem;
   color: var(--text-muted);
   margin-top: 0.2rem;
+  line-height: 1.45;
 }
 
 // ── Badges ────────────────────────────────────────────────────────────────────
 
 .badge-required {
-  font-size: 0.65rem;
-  font-weight: 600;
+  font-size: 0.62rem;
+  font-weight: 700;
   color: #ef4444;
   background: rgba(239, 68, 68, 0.12);
   border-radius: 4px;
   padding: 1px 5px;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
 }
 
 .badge-sensitive {
@@ -124,6 +129,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: #22c55e;
+  white-space: nowrap;
   animation: fadeIn 0.3s ease both;
 }
 
@@ -135,15 +141,61 @@
 // ── Value area ────────────────────────────────────────────────────────────────
 
 .setting-value-area {
-  flex: 0 0 auto;
-  min-width: 260px;
-  max-width: 340px;
+  min-width: 0;
+}
+
+// Display row: value on left, actions (eye + edit button) flush right
+.display-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2rem;
 }
 
 .setting-current-value {
-  font-size: 0.85rem;
+  flex: 1 1 auto;
+  font-size: 0.83rem;
   color: var(--text-secondary);
   word-break: break-all;
+  min-width: 0;
+}
+
+.display-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+// ── Icon-only button (eye) ────────────────────────────────────────────────────
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    background: rgba(108, 99, 255, 0.06);
+  }
+}
+
+// Edit button consistent size
+.edit-btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 // ── Edit form ─────────────────────────────────────────────────────────────────
@@ -152,6 +204,24 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.input-with-eye {
+  position: relative;
+  display: flex;
+
+  .setting-input { flex: 1 1 auto; padding-right: 2.2rem; }
+
+  .eye-btn {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 4px;
+  }
 }
 
 .setting-input {
@@ -174,14 +244,8 @@
 
 // ── Responsive ────────────────────────────────────────────────────────────────
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .setting-row {
-    flex-direction: column;
-  }
-
-  .setting-value-area {
-    min-width: 0;
-    max-width: 100%;
-    width: 100%;
+    grid-template-columns: 1fr;
   }
 }

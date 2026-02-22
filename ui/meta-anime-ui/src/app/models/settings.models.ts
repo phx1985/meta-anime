@@ -1,8 +1,6 @@
 export interface SettingDefinition {
   key: string;
   category: string;
-  displayName: string;
-  description: string;
   isSensitive: boolean;
   isRequired: boolean;
   value: string | null;

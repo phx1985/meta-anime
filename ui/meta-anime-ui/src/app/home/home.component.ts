@@ -3,11 +3,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { AnimeStatisticsResponse } from '../models/anime.models';
+import { GenreChartComponent } from '../genre-chart/genre-chart.component';
+import { MissingStatsComponent } from '../missing-stats/missing-stats.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, GenreChartComponent, MissingStatsComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })

@@ -5,6 +5,11 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { SettingsService } from '../services/settings.service';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
 
+/** Map a setting key (e.g. "Plex:Host") to an i18n slug (e.g. "plex_Host") */
+function fieldSlug(key: string): string {
+  return key.replace(':', '_');
+}
+
 @Component({
   selector: 'app-settings',
   standalone: true,
@@ -39,6 +44,8 @@ export class SettingsComponent {
   forms: Record<string, FormGroup> = {};
   /** Track which fields are in "edit" mode */
   editing: Record<string, boolean> = {};
+  /** Track which sensitive fields have revealed value */
+  revealed: Record<string, boolean> = {};
 
   constructor() {
     this.settingsService.getAll()
@@ -60,16 +67,23 @@ export class SettingsComponent {
     for (const s of settings) {
       this.forms[s.key] = this.fb.group({ value: [s.isSensitive ? '' : (s.value ?? '')] });
       this.editing[s.key] = false;
+      this.revealed[s.key] = false;
     }
   }
 
+  /** Convert "Plex:Host" → i18n key fragment "plex_Host" */
+  slug(key: string): string { return fieldSlug(key); }
+
   toggleEdit(key: string): void {
     this.editing[key] = !this.editing[key];
-    // Clear saved / error feedback when re-entering edit
     if (this.editing[key]) {
       if (this.savedKey() === key) this.savedKey.set(null);
       if (this.errorKey() === key) this.errorKey.set(null);
     }
+  }
+
+  toggleReveal(key: string): void {
+    this.revealed[key] = !this.revealed[key];
   }
 
   save(setting: SettingDefinition): void {
@@ -88,7 +102,6 @@ export class SettingsComponent {
           this.savingKey.set(null);
           this.savedKey.set(setting.key);
           this.editing[setting.key] = false;
-          // Update local value
           this.settings.update(list =>
             list.map(s => s.key === setting.key
               ? { ...s, value: setting.isSensitive ? '••••••••' : value }
@@ -107,6 +120,7 @@ export class SettingsComponent {
 
   cancelEdit(key: string): void {
     this.editing[key] = false;
+    this.revealed[key] = false;
     const setting = this.settings().find(s => s.key === key);
     if (setting) {
       this.forms[key].patchValue({ value: setting.isSensitive ? '' : (setting.value ?? '') });
@@ -120,3 +134,4 @@ export class SettingsComponent {
   trackByKey(_: number, s: SettingDefinition): string { return s.key; }
   trackByCategory(_: number, cat: string): string { return cat; }
 }
+
