@@ -1,6 +1,7 @@
 import { Component, Input, signal, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { trigger, state, style, animate, transition } from '@angular/animations';
 import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo } from '../../models/anime.models';
 
 const TRUNCATE_AT = 180;
@@ -14,6 +15,14 @@ const ARC_CIRCUMFERENCE = 94.25;
   imports: [CommonModule, TranslatePipe],
   templateUrl: './anime-card.component.html',
   styleUrl: './anime-card.component.scss',
+  animations: [
+    trigger('expandCollapse', [
+      state('collapsed', style({ height: '3.75rem', overflow: 'hidden' })),
+      state('expanded',  style({ height: '*',       overflow: 'hidden' })),
+      transition('collapsed => expanded', animate('380ms cubic-bezier(0.4, 0, 0.2, 1)')),
+      transition('expanded => collapsed', animate('280ms cubic-bezier(0.4, 0, 1, 1)')),
+    ])
+  ]
 })
 export class AnimeCardComponent {
   @Input({ required: true }) anime!: AnimeDetailsResponse;
@@ -186,7 +195,8 @@ export class AnimeCardComponent {
     return `${gb.toFixed(1)} ${unit}`;
   }
 
-  /** Fixed 3-segment codec breakdown: H.265 / H.264 / Other — null when no files */
+  /** Fixed 3-segment codec breakdown: H.265 / H.264 / Other — null when no files.
+   *  Segments with 0% are omitted so only meaningful codecs are shown. */
   get codecSegments(): Array<{ label: string; pct: number }> | null {
     const dist = this.sonarr?.codecDistribution;
     if (!dist) return null;
@@ -204,11 +214,12 @@ export class AnimeCardComponent {
     const pctH265  = Math.round((h265 / total) * 100);
     const pctH264  = Math.round((h264 / total) * 100);
     const pctOther = 100 - pctH265 - pctH264; // absorb rounding so segments always sum to 100
+    // Filter out 0% segments — only show codecs that are actually present
     return [
       { label: 'H.265', pct: pctH265  },
       { label: 'H.264', pct: pctH264  },
       { label: 'Other', pct: pctOther },
-    ];
+    ].filter(s => s.pct > 0);
   }
 
   // ── URLs ──────────────────────────────────────────────────────────────────

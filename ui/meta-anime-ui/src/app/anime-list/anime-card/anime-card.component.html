@@ -72,7 +72,8 @@
       <!-- ── Description ──────────────────────────────────────────────── -->
       @if (description) {
         <div class="desc-wrap">
-          <p class="desc-text" [class.desc--expanded]="descExpanded()">{{ description }}</p>
+          <p class="desc-text"
+             [@expandCollapse]="descExpanded() ? 'expanded' : 'collapsed'">{{ description }}</p>
           @if (description.length > 180) {
             <button class="desc-toggle" (click)="toggleDesc()">
               {{ descExpanded() ? ('animeCard.less' | translate) : ('animeCard.more' | translate) }}
@@ -223,6 +224,14 @@
           }
         </div>
       </div>
+    } @else if (sonarr) {
+      <span class="codec-pill codec-pill--no-files" [title]="'animeCard.noFiles' | translate">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+          <polyline points="13 2 13 9 20 9"/>
+        </svg>
+        <span class="codec-pill-name">{{ 'animeCard.noFiles' | translate }}</span>
+      </span>
     }
   </div>
 

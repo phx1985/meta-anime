@@ -120,6 +120,8 @@ export class SettingsComponent {
 
   /** Scroll listener for active-section tracking — cleaned up on destroy */
   private _scrollListener?: () => void;
+  /** While true, the scroll listener won't override the manually-set active category */
+  private _navScrollLocked = false;
 
   // ── Timing constants ─────────────────────────────────────────────────────
   private static readonly HIGHLIGHT_DURATION_MS   = 2000;
@@ -145,14 +147,18 @@ export class SettingsComponent {
 
   /** Scroll smoothly to a settings section and briefly highlight it.
    *  Sets `activeCategory` synchronously so the sidenav active indicator
-   *  updates immediately on click, regardless of scroll position. */
+   *  updates immediately on click, regardless of scroll position.
+   *  Locks the scroll listener for 600 ms to prevent it from overriding
+   *  the manually-selected category during the smooth-scroll. */
   scrollToSection(cat: string): void {
     const el = document.getElementById(this.sectionId(cat));
     if (!el) return;
     this.activeCategory.set(cat);   // immediate nav sync
     this.highlighted.set(cat);
+    this._navScrollLocked = true;   // prevent scroll listener from overriding
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setTimeout(() => {
+      this._navScrollLocked = false;
       if (this.highlighted() === cat) this.highlighted.set(null);
     }, SettingsComponent.HIGHLIGHT_DURATION_MS);
   }
@@ -243,6 +249,9 @@ export class SettingsComponent {
       .filter((s): s is { cat: string; el: HTMLElement } => s.el !== null);
 
     const pick = () => {
+      // While a manual nav click is in progress, don't override activeCategory
+      if (this._navScrollLocked) return;
+
       // If the page is scrolled near the bottom, activate the last section
       const scrollBottom = window.scrollY + window.innerHeight;
       const pageHeight   = document.documentElement.scrollHeight;

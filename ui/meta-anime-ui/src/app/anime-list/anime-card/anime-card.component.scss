@@ -274,7 +274,7 @@
   }
 }
 
-// ─── Description (animated expand/collapse) ──────────────────────────────────
+// ─── Description (animated via Angular animation trigger) ────────────────────
 
 .desc-wrap {
   display: flex;
@@ -287,14 +287,9 @@
   color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
-  // Collapsed by default: show ~3 lines
-  max-height: 3.75rem;
+  // height is driven by Angular @expandCollapse animation — no CSS max-height needed
   overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-
-  &.desc--expanded {
-    max-height: 40rem;
-  }
+  display: block;
 }
 
 .desc-toggle {
@@ -647,6 +642,14 @@
     flex: none;
     .codec-size-icon { color: var(--text-muted); flex-shrink: 0; }
     .codec-pill-pct  { color: var(--text-secondary); font-weight: 600; }
+  }
+
+  &--no-files {
+    flex: none;
+    color: var(--text-muted);
+    font-style: italic;
+    svg { color: var(--text-muted); flex-shrink: 0; }
+    .codec-pill-name { font-weight: 400; color: var(--text-muted); font-style: italic; }
   }
 }
 

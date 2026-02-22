@@ -65,7 +65,9 @@
       "finished_airing": "Terminée",
       "currently_airing": "En cours",
       "not_yet_aired": "À venir"
-    }
+    },
+    "noFiles": "Aucun fichier",
+    "sizeOnDisk": "Taille sur disque"
   },
   "settings": {
     "title": "Paramètres",

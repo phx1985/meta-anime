@@ -65,7 +65,9 @@
       "finished_airing": "Finished",
       "currently_airing": "Airing",
       "not_yet_aired": "Upcoming"
-    }
+    },
+    "noFiles": "No files",
+    "sizeOnDisk": "Size on disk"
   },
   "settings": {
     "title": "Settings",

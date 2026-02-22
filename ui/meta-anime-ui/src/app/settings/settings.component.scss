@@ -451,6 +451,8 @@
   overflow: hidden;
   box-shadow: 0 4px 20px var(--card-shadow);
   animation: popFadeIn 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  // Ensure the sticky navbar (≈64 px) + some breathing room doesn't cover the card header
+  scroll-margin-top: 80px;
 }
 
 @keyframes popFadeIn {
