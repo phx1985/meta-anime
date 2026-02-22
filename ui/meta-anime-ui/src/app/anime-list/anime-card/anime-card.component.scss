@@ -36,7 +36,8 @@
 // ─── Cover image ─────────────────────────────────────────────────────────────
 
 .card-cover {
-  width: 120px;
+  width: 150px;
+  min-height: 210px;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
@@ -467,6 +468,44 @@
 .info-size {
   font-weight: 600;
   color: var(--text-secondary);
+}
+
+// ─── Codec mini chart ────────────────────────────────────────────────────────
+
+.codec-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.codec-bar-track {
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--card-border) 60%, transparent);
+  width: 100%;
+  min-width: 60px;
+}
+
+.codec-seg {
+  height: 100%;
+  transition: flex 0.5s ease;
+
+  &:nth-child(1) { background: var(--accent-primary); }
+  &:nth-child(2) { background: #22c55e; }
+  &:nth-child(3) { background: #f59e0b; }
+  &:nth-child(4) { background: #a855f7; }
+  &:nth-child(5) { background: #ef4444; }
+}
+
+.codec-names {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 // ─── Animations ──────────────────────────────────────────────────────────────

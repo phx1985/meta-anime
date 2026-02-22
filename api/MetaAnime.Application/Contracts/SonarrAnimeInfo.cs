@@ -30,7 +30,7 @@ public sealed record SonarrAnimeInfo(
         : this(
             sonarrSeries?.Title ?? "NO_TITLE",
             sonarrSeries?.Id.ToString(),
-            $"{sonarrBaseUrl}/series/{sonarrSeries?.Id}",
+            $"{sonarrBaseUrl}/series/{sonarrSeries?.TitleSlug ?? sonarrSeries?.Id.ToString()}",
             sonarrSeries != null,
             sonarrSeries?.Seasons?.Select(s => new SonarrSeasonInfo(
                 s.SeasonNumber,

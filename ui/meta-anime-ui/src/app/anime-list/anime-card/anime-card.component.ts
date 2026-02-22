@@ -151,7 +151,10 @@ export class AnimeCardComponent {
   }
 
   get addedDate(): Date | undefined {
-    return this.mal?.addedDate ? new Date(this.mal.addedDate) : undefined;
+    const raw = this.mal?.addedDate;
+    if (!raw) return undefined;
+    const d = new Date(raw);
+    return d.getFullYear() > 1 ? d : undefined;
   }
 
   // ── Progression ───────────────────────────────────────────────────────────
@@ -186,6 +189,22 @@ export class AnimeCardComponent {
       .slice(0, 2)
       .map(([c]) => c)
       .join(' · ') || undefined;
+  }
+
+  /** Codec distribution as segments for the mini bar chart */
+  get codecBars(): Array<{ name: string; pct: number; count: number }> {
+    const dist = this.sonarr?.codecDistribution;
+    if (!dist) return [];
+    const entries = Object.entries(dist)
+      .filter(([, v]) => v > 0)
+      .sort((a, b) => b[1] - a[1]);
+    const total = entries.reduce((s, [, v]) => s + v, 0);
+    if (total === 0) return [];
+    return entries.slice(0, 5).map(([name, count]) => ({
+      name,
+      pct: Math.round((count / total) * 100),
+      count,
+    }));
   }
 
   // ── URLs ──────────────────────────────────────────────────────────────────

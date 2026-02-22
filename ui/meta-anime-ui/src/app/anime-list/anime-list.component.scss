@@ -6,7 +6,7 @@
 .anime-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  align-items: stretch;
+  align-items: start;
   gap: 1.25rem;
 
   @media (max-width: 639px) {

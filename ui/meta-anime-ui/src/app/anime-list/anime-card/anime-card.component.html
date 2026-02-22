@@ -191,10 +191,17 @@
       </a>
     </div>
 
-    @if (codecSummary || sizeOnDisk) {
+    @if (codecBars.length > 0 || sizeOnDisk) {
       <div class="footer-info">
-        @if (codecSummary) {
-          <span class="info-codec">{{ codecSummary }}</span>
+        @if (codecBars.length > 0) {
+          <div class="codec-chart" [title]="codecSummary ?? ''">
+            <div class="codec-bar-track">
+              @for (bar of codecBars; track bar.name) {
+                <div class="codec-seg" [style.flex]="bar.count" [title]="bar.name + ' · ' + bar.pct + '%'"></div>
+              }
+            </div>
+            <span class="codec-names">{{ codecSummary }}</span>
+          </div>
         }
         @if (sizeOnDisk) {
           <span class="info-size">{{ sizeOnDisk }}</span>

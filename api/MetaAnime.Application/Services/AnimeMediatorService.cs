@@ -40,7 +40,7 @@ public class AnimeMediatorService(
         ? sonarrOptions.Value.RemoteUrl
         : sonarrOptions.Value.Host;
 
-    private readonly string plexBaseUrl = $"{plexOptions.Value.Host}/desktop/#!/server/{plexAnimeSource.GetMachineIdentifierAsync().Result.Value}/details?key=%2Flibrary%2Fmetadata%2F";
+    private readonly string plexBaseUrl = $"{plexOptions.Value.Host}/web/index.html#!/server/{plexAnimeSource.GetMachineIdentifierAsync().Result.Value}/details?key=%2Flibrary%2Fmetadata%2F";
 
     public async Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAllAsync(int page = 1, int pageSize = 100, AnimeFilters? filters = null, bool enriched = false)
     {
