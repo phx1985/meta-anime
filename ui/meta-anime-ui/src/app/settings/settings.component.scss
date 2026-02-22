@@ -957,13 +957,17 @@
   flex-shrink: 0;
 }
 
-// ── Settings card highlight / dim animations (triggered by sidenav click) ─────
+// ── Settings card highlight / dim (triggered by sidenav click) ───────────────
+// Using pure CSS transitions (no keyframe animation) so class removal is always
+// smooth — no end-of-animation flash.
 
 .settings-card {
-  transition: opacity 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
+  transition: opacity 0.4s ease,
+              transform 0.5s cubic-bezier(0.34, 1.4, 0.64, 1),
+              box-shadow 0.4s ease;
 
   &--highlighted {
-    animation: cardGrow 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: scale(1.018);
     box-shadow: 0 0 0 2px var(--accent-primary), 0 10px 36px rgba(108, 99, 255, 0.22);
   }
 
@@ -971,12 +975,6 @@
     opacity: 0.42;
     transform: scale(0.995);
   }
-}
-
-@keyframes cardGrow {
-  0%   { transform: scale(1);     }
-  45%  { transform: scale(1.018); }
-  100% { transform: scale(1);     }
 }
 
 // ── Category header text wrapper ──────────────────────────────────────────────

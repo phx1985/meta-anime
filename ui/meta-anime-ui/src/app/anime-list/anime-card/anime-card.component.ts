@@ -195,8 +195,10 @@ export class AnimeCardComponent {
     let h265 = 0, h264 = 0, other = 0;
     for (const [codec, count] of Object.entries(dist)) {
       const c = codec.toLowerCase();
-      if (c === 'hevc' || c === 'h265' || c === 'h.265') h265 += count;
-      else if (c === 'avc' || c === 'h264' || c === 'h.264' || c === 'x264') h264 += count;
+      // H.265 aliases: hevc, h265, h.265, x265, x.265
+      if (c === 'hevc' || c === 'h265' || c === 'h.265' || c === 'x265' || c === 'x.265') h265 += count;
+      // H.264 aliases: avc, h264, h.264, x264, x.264, avc1
+      else if (c === 'avc' || c === 'h264' || c === 'h.264' || c === 'x264' || c === 'x.264' || c === 'avc1') h264 += count;
       else other += count;
     }
     const pctH265  = Math.round((h265 / total) * 100);
@@ -207,33 +209,6 @@ export class AnimeCardComponent {
       { label: 'H.264', pct: pctH264  },
       { label: 'Other', pct: pctOther },
     ];
-  }
-
-  /** Primary codec summary (top 2 codecs) */
-  get codecSummary(): string | undefined {
-    const dist = this.sonarr?.codecDistribution;
-    if (!dist) return undefined;
-    return Object.entries(dist)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 2)
-      .map(([c]) => c)
-      .join(' · ') || undefined;
-  }
-
-  /** Codec distribution as segments for the mini bar chart */
-  get codecBars(): Array<{ name: string; pct: number; count: number }> {
-    const dist = this.sonarr?.codecDistribution;
-    if (!dist) return [];
-    const entries = Object.entries(dist)
-      .filter(([, v]) => v > 0)
-      .sort((a, b) => b[1] - a[1]);
-    const total = entries.reduce((s, [, v]) => s + v, 0);
-    if (total === 0) return [];
-    return entries.slice(0, 5).map(([name, count]) => ({
-      name,
-      pct: Math.round((count / total) * 100),
-      count,
-    }));
   }
 
   // ── URLs ──────────────────────────────────────────────────────────────────

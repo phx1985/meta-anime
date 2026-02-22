@@ -143,10 +143,13 @@ export class SettingsComponent {
     return cat === 'sync' ? 'sync-section' : `section-${cat}`;
   }
 
-  /** Scroll smoothly to a settings section and briefly highlight it */
+  /** Scroll smoothly to a settings section and briefly highlight it.
+   *  Sets `activeCategory` synchronously so the sidenav active indicator
+   *  updates immediately on click, regardless of scroll position. */
   scrollToSection(cat: string): void {
     const el = document.getElementById(this.sectionId(cat));
     if (!el) return;
+    this.activeCategory.set(cat);   // immediate nav sync
     this.highlighted.set(cat);
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setTimeout(() => {
