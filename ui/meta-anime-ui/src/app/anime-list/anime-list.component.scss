@@ -3,16 +3,21 @@
   color: var(--accent-primary);
 }
 
-.anime-names-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+.anime-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.25rem;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 }
 
-.anime-name-item {
-  padding: 0.75rem 1rem;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 8px;
-  font-size: 1rem;
+// Stagger card entrance animations
+.anime-grid > app-anime-card {
+  @for $i from 1 through 20 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{($i - 1) * 0.04}s;
+    }
+  }
 }

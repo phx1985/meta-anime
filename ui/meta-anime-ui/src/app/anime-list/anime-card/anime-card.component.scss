@@ -1,0 +1,463 @@
+// ─── Anime Card ─────────────────────────────────────────────────────────────
+
+.anime-card {
+  position: relative;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition:
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s ease;
+  animation: cardFadeIn 0.5s ease both;
+
+  &:hover {
+    transform: translateY(-5px) scale(1.01);
+    box-shadow: 0 20px 48px var(--card-shadow);
+  }
+}
+
+// Score-driven left accent bar
+.card-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: hsl(var(--score-hue, 0) 75% 55%);
+  transition: background 0.4s ease;
+}
+
+.card-body {
+  padding: 1.1rem 1.25rem 1.1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  flex: 1;
+}
+
+// ─── Header ──────────────────────────────────────────────────────────────────
+
+.card-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.title-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.card-subtitle {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// ─── Alt-title popover ────────────────────────────────────────────────────────
+
+.alt-btn-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.alt-btn {
+  background: none;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s;
+  color: var(--text-secondary);
+
+  &:hover,
+  &[aria-expanded='true'] {
+    background: var(--card-border);
+    border-color: var(--accent-primary);
+  }
+}
+
+.alt-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: rgba(15, 15, 25, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+  min-width: 200px;
+  max-width: 280px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  animation: popIn 0.2s ease both;
+}
+
+.alt-title {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.4;
+
+  &::before {
+    content: '↪ ';
+    opacity: 0.5;
+  }
+}
+
+// ─── Description ─────────────────────────────────────────────────────────────
+
+.card-desc {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.desc-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 0.25rem;
+  color: var(--accent-primary);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: underline dotted;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.75;
+  }
+}
+
+// ─── Genres ──────────────────────────────────────────────────────────────────
+
+.genre-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.genre-pill {
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+  color: var(--accent-primary);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 30%, transparent);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.55rem;
+  letter-spacing: 0.02em;
+  transition: background 0.2s;
+  white-space: nowrap;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent-primary) 22%, transparent);
+  }
+}
+
+// ─── Scores ──────────────────────────────────────────────────────────────────
+
+.scores-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.score-block {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.score-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.score-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 2rem;
+  text-align: right;
+}
+
+.stars {
+  display: flex;
+  gap: 1px;
+}
+
+.star {
+  width: 11px;
+  height: 11px;
+  display: inline-block;
+  position: relative;
+
+  &::before {
+    content: '★';
+    font-size: 11px;
+    line-height: 1;
+  }
+
+  &--full::before {
+    color: #f59e0b;
+  }
+
+  &--half {
+    position: relative;
+
+    &::before {
+      color: #f59e0b;
+      clip-path: inset(0 50% 0 0);
+    }
+
+    &::after {
+      content: '★';
+      font-size: 11px;
+      line-height: 1;
+      color: var(--card-border);
+      position: absolute;
+      top: 0;
+      left: 0;
+      clip-path: inset(0 0 0 50%);
+    }
+  }
+
+  &--empty::before {
+    color: var(--card-border);
+  }
+}
+
+// ─── Dates ───────────────────────────────────────────────────────────────────
+
+.dates-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.date-chip {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  &--added {
+    color: var(--text-muted);
+  }
+}
+
+.date-icon {
+  font-size: 0.8rem;
+}
+
+// ─── Status badges ────────────────────────────────────────────────────────────
+
+.status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.73rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+
+  &--mal {
+    background: color-mix(in srgb, #ef4444 12%, transparent);
+    border-color: color-mix(in srgb, #ef4444 30%, transparent);
+    color: #ef4444;
+  }
+
+  &--plex {
+    background: color-mix(in srgb, #e5a00d 12%, transparent);
+    border-color: color-mix(in srgb, #e5a00d 30%, transparent);
+    color: #e5a00d;
+  }
+}
+
+.badge-icon {
+  font-size: 0.85rem;
+}
+
+.progress-chip {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 0 0.35rem;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+// ─── Storage + Codec ─────────────────────────────────────────────────────────
+
+.storage-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.storage-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.storage-icon {
+  font-size: 0.9rem;
+}
+
+.codec-chart {
+  flex: 1;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.codec-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.codec-bar {
+  height: 5px;
+  border-radius: 3px;
+  min-width: 4px;
+  transition: width 0.6s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.codec-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  min-width: 36px;
+}
+
+// ─── Actions ─────────────────────────────────────────────────────────────────
+
+.actions-row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 0.3rem;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--card-border);
+  color: var(--text-secondary);
+  background: transparent;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s,
+    transform 0.15s;
+
+  &:hover:not(.action-btn--disabled) {
+    transform: translateY(-2px);
+  }
+
+  &--disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &--plex:not(.action-btn--disabled):hover {
+    background: color-mix(in srgb, #e5a00d 15%, transparent);
+    color: #e5a00d;
+    border-color: #e5a00d;
+  }
+
+  &--sonarr:not(.action-btn--disabled):hover {
+    background: color-mix(in srgb, #3b82f6 15%, transparent);
+    color: #3b82f6;
+    border-color: #3b82f6;
+  }
+
+  &--mal:not(.action-btn--disabled):hover {
+    background: color-mix(in srgb, #ef4444 15%, transparent);
+    color: #ef4444;
+    border-color: #ef4444;
+  }
+}
+
+.btn-icon {
+  font-size: 0.9rem;
+}
+
+// ─── Animations ──────────────────────────────────────────────────────────────
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

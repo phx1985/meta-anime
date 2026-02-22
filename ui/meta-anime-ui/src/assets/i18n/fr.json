@@ -43,6 +43,25 @@
     "error": "Échec du chargement des animes. Veuillez réessayer plus tard.",
     "empty": "Aucun anime trouvé."
   },
+  "animeCard": {
+    "altTitles": "Titres alternatifs",
+    "more": "plus",
+    "less": "moins",
+    "malScore": "MAL",
+    "myScore": "Moi",
+    "addedOn": "Ajouté",
+    "plex": "Plex",
+    "openPlex": "Ouvrir dans Plex",
+    "openSonarr": "Ouvrir dans Sonarr",
+    "openMal": "Ouvrir dans MyAnimeList",
+    "malStatus": {
+      "watching": "En cours",
+      "completed": "Terminé",
+      "on_hold": "En pause",
+      "dropped": "Abandonné",
+      "plan_to_watch": "À regarder"
+    }
+  },
   "settings": {
     "title": "Paramètres",
     "subtitle": "Gérez vos intégrations et paramètres de connexion. Les modifications prennent effet immédiatement.",

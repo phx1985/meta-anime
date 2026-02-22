@@ -43,6 +43,25 @@
     "error": "Failed to load animes. Please try again later.",
     "empty": "No animes found."
   },
+  "animeCard": {
+    "altTitles": "Alternative titles",
+    "more": "more",
+    "less": "less",
+    "malScore": "MAL",
+    "myScore": "Mine",
+    "addedOn": "Added",
+    "plex": "Plex",
+    "openPlex": "Open in Plex",
+    "openSonarr": "Open in Sonarr",
+    "openMal": "Open in MyAnimeList",
+    "malStatus": {
+      "watching": "Watching",
+      "completed": "Completed",
+      "on_hold": "On Hold",
+      "dropped": "Dropped",
+      "plan_to_watch": "Plan to Watch"
+    }
+  },
   "settings": {
     "title": "Settings",
     "subtitle": "Manage your integrations and connection settings. Changes take effect immediately.",

@@ -4,24 +4,69 @@ export enum AnimeSource {
   Plex = 2
 }
 
+export interface MalProgressionInfo {
+  episodesWatched: number;
+  totalEpisodes: number;
+}
+
+export interface MalRatingInfo {
+  myScore: number;
+  malMean: number;
+}
+
+export interface MalAlternativeTitles {
+  en?: string;
+  ja?: string;
+  synonyms?: string[];
+}
+
+export interface PlexProgressionInfo {
+  viewedEpisodes: number;
+  totalEpisodes: number;
+}
+
+export interface SonarrSeasonInfo {
+  seasonNumber: number;
+  availableEpisodes: number;
+  totalEpisodes: number;
+}
+
 export interface PlexAnimeInfo {
-  plexId: string;
   title: string;
+  id?: string;
+  url?: string;
+  progression?: PlexProgressionInfo;
 }
 
 export interface MalAnimeInfo {
-  malId: string;
   title: string;
+  id?: string;
+  url?: string;
+  viewState?: string;
+  addedDate?: string;
+  progression?: MalProgressionInfo;
+  rating?: MalRatingInfo;
+  genres?: string[];
+  synopsis?: string;
+  startDate?: string;
+  endDate?: string;
+  alternativeTitles?: MalAlternativeTitles;
 }
 
 export interface SonarrAnimeInfo {
-  sonarrId: string;
   title: string;
+  id?: string;
+  url?: string;
+  exists: boolean;
+  seasonInfo?: SonarrSeasonInfo[];
+  codecDistribution?: { [key: string]: number };
+  sizeOnDisk?: number;
 }
 
 export interface AnimeDetailsResponse {
   aniDbId: string;
   title: string;
+  description?: string;
   plexAnimes?: PlexAnimeInfo[];
   malAnimes?: MalAnimeInfo[];
   sonarrAnimes?: SonarrAnimeInfo[];

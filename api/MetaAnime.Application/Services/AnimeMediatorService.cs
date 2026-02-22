@@ -159,6 +159,7 @@ public class AnimeMediatorService(
                 animeDtos.Add(new AnimeDetailsResponse(
                     aniDbId,
                     group.FirstOrDefault()?.Anime?.Title ?? "NO_TITLE",
+                    group.FirstOrDefault()?.Anime?.Description,
                     [.. plexAnimes],
                     [.. malAnimes],
                     [.. sonarrAnimes]
@@ -444,6 +445,7 @@ public class AnimeMediatorService(
             var animeDto = new AnimeDetailsResponse(
                 aniDbId,
                 animeMappings.FirstOrDefault()?.Anime?.Title ?? "NO_TITLE",
+                animeMappings.FirstOrDefault()?.Anime?.Description,
                 [.. plexAnimes],
                 [.. malAnimes],
                 [.. sonarrAnimes]

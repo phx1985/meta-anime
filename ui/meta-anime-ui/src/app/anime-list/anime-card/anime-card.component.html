@@ -1,0 +1,194 @@
+<article class="anime-card" [style.--score-hue]="scoreHue">
+  <!-- ── Score accent bar ─────────────────────────────────────────────── -->
+  <div class="card-accent" aria-hidden="true"></div>
+
+  <div class="card-body">
+    <!-- ── Header row: title + alt-title button ─────────────────────── -->
+    <div class="card-header-row">
+      <div class="title-block">
+        <h3 class="card-title">
+          {{ localizedTitle ?? anime.title }}
+        </h3>
+        @if (localizedTitle && localizedTitle !== anime.title) {
+          <span class="card-subtitle">{{ anime.title }}</span>
+        }
+      </div>
+
+      @if (allAltTitles.length > 0) {
+        <div class="alt-btn-wrap">
+          <button
+            class="alt-btn"
+            (click)="toggleAltTitles()"
+            [attr.aria-expanded]="showAltTitles()"
+            [title]="'animeCard.altTitles' | translate"
+            aria-label="Alternative titles"
+          >
+            🌐
+          </button>
+          @if (showAltTitles()) {
+            <div class="alt-popover" role="tooltip">
+              @for (t of allAltTitles; track t) {
+                <span class="alt-title">{{ t }}</span>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- ── Description ──────────────────────────────────────────────── -->
+    @if (description) {
+      <p class="card-desc">
+        {{ truncatedDescription }}
+        @if (description.length > 200) {
+          <button class="desc-toggle" (click)="toggleDesc()">
+            {{ descExpanded() ? ('animeCard.less' | translate) : ('animeCard.more' | translate) }}
+          </button>
+        }
+      </p>
+    }
+
+    <!-- ── Genres ────────────────────────────────────────────────────── -->
+    @if (genres.length > 0) {
+      <div class="genre-row" aria-label="Genres">
+        @for (g of genres; track g) {
+          <span class="genre-pill">{{ 'genres.' + g | translate }}</span>
+        }
+      </div>
+    }
+
+    <!-- ── Scores ────────────────────────────────────────────────────── -->
+    @if (mal?.rating) {
+      <div class="scores-row">
+        <div class="score-block">
+          <span class="score-label">{{ 'animeCard.malScore' | translate }}</span>
+          <span class="score-value">{{ malScore | number: '1.1-1' }}</span>
+          <span class="stars" aria-hidden="true">
+            @for (s of starsFor(malScore); track $index) {
+              <span class="star star--{{ s }}"></span>
+            }
+          </span>
+        </div>
+        @if (myScore > 0) {
+          <div class="score-block">
+            <span class="score-label">{{ 'animeCard.myScore' | translate }}</span>
+            <span class="score-value">{{ myScore }}</span>
+            <span class="stars" aria-hidden="true">
+              @for (s of starsFor(myScore); track $index) {
+                <span class="star star--{{ s }}"></span>
+              }
+            </span>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ── Dates ─────────────────────────────────────────────────────── -->
+    <div class="dates-row">
+      @if (startDate) {
+        <span class="date-chip">
+          <span class="date-icon">📅</span>
+          {{ startDate }}
+          @if (endDate) { → {{ endDate }} }
+        </span>
+      }
+      @if (addedDate) {
+        <span class="date-chip date-chip--added">
+          <span class="date-icon">➕</span>
+          {{ 'animeCard.addedOn' | translate }}
+          {{ addedDate | date: 'mediumDate' }}
+        </span>
+      }
+    </div>
+
+    <!-- ── Status badges ────────────────────────────────────────────── -->
+    <div class="status-row">
+      @if (malViewState) {
+        <span class="status-badge status-badge--mal" [class]="'state-' + malViewState">
+          <span class="badge-icon">🎌</span>
+          {{ translateViewState(malViewState) }}
+          {{ 'animeCard.malStatus.' + malViewState | translate }}
+          @if (malProgress) {
+            <span class="progress-chip">{{ malProgress.watched }}/{{ malProgress.total }}</span>
+          }
+        </span>
+      }
+      @if (plexProgress) {
+        <span class="status-badge status-badge--plex">
+          <span class="badge-icon">🎬</span>
+          {{ 'animeCard.plex' | translate }}
+          <span class="progress-chip">{{ plexProgress.watched }}/{{ plexProgress.total }}</span>
+        </span>
+      }
+    </div>
+
+    <!-- ── Storage + Codec ───────────────────────────────────────────── -->
+    @if (sizeOnDisk || codecEntries.length > 0) {
+      <div class="storage-row">
+        @if (sizeOnDisk) {
+          <span class="storage-chip">
+            <span class="storage-icon">💾</span>
+            {{ sizeOnDisk }}
+          </span>
+        }
+        @if (codecEntries.length > 0) {
+          <div class="codec-chart" aria-label="Codec distribution">
+            @for (entry of codecEntries; track entry.codec) {
+              <div
+                class="codec-bar-wrap"
+                [title]="entry.codec + ': ' + entry.count + ' (' + entry.pct + '%)'"
+              >
+                <div
+                  class="codec-bar"
+                  [style.width.%]="entry.pct"
+                  [style.background]="entry.color"
+                ></div>
+                <span class="codec-label">{{ entry.codec }}</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ── Action buttons ────────────────────────────────────────────── -->
+    <div class="actions-row">
+      <a
+        class="action-btn action-btn--plex"
+        [class.action-btn--disabled]="!plexUrl"
+        [href]="plexUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        [attr.aria-disabled]="!plexUrl"
+        [title]="'animeCard.openPlex' | translate"
+      >
+        <span class="btn-icon">🎬</span>
+        Plex
+      </a>
+      <a
+        class="action-btn action-btn--sonarr"
+        [class.action-btn--disabled]="!sonarrUrl"
+        [href]="sonarrUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        [attr.aria-disabled]="!sonarrUrl"
+        [title]="'animeCard.openSonarr' | translate"
+      >
+        <span class="btn-icon">📡</span>
+        Sonarr
+      </a>
+      <a
+        class="action-btn action-btn--mal"
+        [class.action-btn--disabled]="!malUrl"
+        [href]="malUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        [attr.aria-disabled]="!malUrl"
+        [title]="'animeCard.openMal' | translate"
+      >
+        <span class="btn-icon">🎌</span>
+        MAL
+      </a>
+    </div>
+  </div>
+</article>
