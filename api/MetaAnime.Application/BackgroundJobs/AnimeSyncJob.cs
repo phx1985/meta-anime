@@ -38,9 +38,9 @@ public class AnimeSyncJob(
     /// <summary>
     /// Schedules the anime sync job to run periodically
     /// </summary>
-    public static void Schedule()
+    public static void Schedule(IRecurringJobManager recurringJobManager)
     {
-        RecurringJob.AddOrUpdate<AnimeSyncJob>(
+        recurringJobManager.AddOrUpdate<AnimeSyncJob>(
             Constants.JobNames.AnimeMetadataSync,
             job => job.SyncAnimeMetadata(),
             Cron.Hourly);

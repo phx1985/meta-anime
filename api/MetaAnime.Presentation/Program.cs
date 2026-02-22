@@ -76,8 +76,9 @@ if (app.Environment.IsDevelopment())
 app.MapDefaultEndpoints();
 
 // Schedule background jobs
-AnimeSyncJob.Schedule();
-MalTokenRefreshJob.Schedule();
+var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>();
+AnimeSyncJob.Schedule(recurringJobManager);
+MalTokenRefreshJob.Schedule(recurringJobManager);
 
 app.UseHttpsRedirection();
 app.UseCors();
