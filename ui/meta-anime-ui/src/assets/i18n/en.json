@@ -56,6 +56,23 @@
     "saveError": "Failed to save. Please try again.",
     "reveal": "Show value",
     "hide": "Hide value",
+    "sync": {
+      "button": "Force Sync",
+      "inProgress": "Syncing…",
+      "hub": {
+        "title": "Sync in progress",
+        "done": "Sync complete",
+        "error": "Sync failed — please retry",
+        "dismiss": "Dismiss"
+      },
+      "step": {
+        "init":     "Initialising sync",
+        "plex":     "Fetching Plex library",
+        "mal":      "Fetching MyAnimeList entries",
+        "sonarr":   "Fetching Sonarr series",
+        "matching": "Matching & indexing"
+      }
+    },
     "category": {
       "plex": {
         "name": "Plex",

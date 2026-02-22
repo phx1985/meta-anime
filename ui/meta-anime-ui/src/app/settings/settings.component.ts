@@ -3,9 +3,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe } from '@ngx-translate/core';
 import { SettingsService } from '../services/settings.service';
+import { AnimeService } from '../services/anime.service';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
 
-/** Map a setting key (e.g. "Plex:Host") to an i18n slug (e.g. "plex_Host") */
+/** Map a setting key (e.g. "Plex:Host") to an i18n slug (e.g. "Plex_Host") */
 function fieldSlug(key: string): string {
   return key.replace(':', '_');
 }
@@ -19,15 +20,47 @@ function fieldSlug(key: string): string {
 })
 export class SettingsComponent {
   private settingsService = inject(SettingsService);
-  private fb = inject(FormBuilder);
-  private destroyRef = inject(DestroyRef);
+  private animeService    = inject(AnimeService);
+  private fb              = inject(FormBuilder);
+  private destroyRef      = inject(DestroyRef);
 
-  loading = signal(true);
-  error = signal(false);
-  settings = signal<SettingDefinition[]>([]);
+  // ── Settings load state ───────────────────────────────────────────────────
+  loading   = signal(true);
+  error     = signal(false);
+  settings  = signal<SettingDefinition[]>([]);
   savingKey = signal<string | null>(null);
-  savedKey = signal<string | null>(null);
-  errorKey = signal<string | null>(null);
+  savedKey  = signal<string | null>(null);
+  errorKey  = signal<string | null>(null);
+
+  // ── Row-level edit / reveal state (signals — required in zoneless app) ────
+  editing  = signal<Record<string, boolean>>({});
+  revealed = signal<Record<string, boolean>>({});
+
+  // ── Sync hub state ────────────────────────────────────────────────────────
+  syncing      = signal(false);
+  syncStep     = signal(-1);        // active step index, -1 = idle
+  syncComplete = signal(false);
+  syncError    = signal(false);
+  showSyncHub  = signal(false);
+
+  private stepTimers: ReturnType<typeof setTimeout>[] = [];
+
+  /** Sync progress steps (i18n keys) */
+  readonly syncSteps = [
+    'settings.sync.step.init',
+    'settings.sync.step.plex',
+    'settings.sync.step.mal',
+    'settings.sync.step.sonarr',
+    'settings.sync.step.matching',
+  ];
+
+  /** Provider logo image paths */
+  readonly providerImages: Record<string, string> = {
+    plex:   'assets/images/plex.svg',
+    sonarr: 'assets/images/sonarr.svg',
+    mal:    'assets/images/mal.svg',
+    kometa: 'assets/images/kometa.png',
+  };
 
   /** Settings grouped by category */
   grouped = computed<SettingsByCategory>(() =>
@@ -40,14 +73,12 @@ export class SettingsComponent {
   /** Ordered category keys */
   categories = computed(() => Object.keys(this.grouped()));
 
-  /** Per-setting edit forms */
+  /** Per-setting reactive forms (populated once on load) */
   forms: Record<string, FormGroup> = {};
-  /** Track which fields are in "edit" mode */
-  editing: Record<string, boolean> = {};
-  /** Track which sensitive fields have revealed value */
-  revealed: Record<string, boolean> = {};
 
   constructor() {
+    this.destroyRef.onDestroy(() => this.clearStepTimers());
+
     this.settingsService.getAll()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -64,26 +95,31 @@ export class SettingsComponent {
   }
 
   private buildForms(settings: SettingDefinition[]): void {
+    const editingInit:  Record<string, boolean> = {};
+    const revealedInit: Record<string, boolean> = {};
     for (const s of settings) {
-      this.forms[s.key] = this.fb.group({ value: [s.isSensitive ? '' : (s.value ?? '')] });
-      this.editing[s.key] = false;
-      this.revealed[s.key] = false;
+      this.forms[s.key]  = this.fb.group({ value: [s.isSensitive ? '' : (s.value ?? '')] });
+      editingInit[s.key]  = false;
+      revealedInit[s.key] = false;
     }
+    this.editing.set(editingInit);
+    this.revealed.set(revealedInit);
   }
 
-  /** Convert "Plex:Host" → i18n key fragment "plex_Host" */
+  // ── Helpers ───────────────────────────────────────────────────────────────
   slug(key: string): string { return fieldSlug(key); }
 
   toggleEdit(key: string): void {
-    this.editing[key] = !this.editing[key];
-    if (this.editing[key]) {
+    const nowEditing = !this.editing()[key];
+    this.editing.update(e => ({ ...e, [key]: nowEditing }));
+    if (nowEditing) {
       if (this.savedKey() === key) this.savedKey.set(null);
       if (this.errorKey() === key) this.errorKey.set(null);
     }
   }
 
   toggleReveal(key: string): void {
-    this.revealed[key] = !this.revealed[key];
+    this.revealed.update(r => ({ ...r, [key]: !r[key] }));
   }
 
   save(setting: SettingDefinition): void {
@@ -101,7 +137,7 @@ export class SettingsComponent {
         next: () => {
           this.savingKey.set(null);
           this.savedKey.set(setting.key);
-          this.editing[setting.key] = false;
+          this.editing.update(e => ({ ...e, [setting.key]: false }));
           this.settings.update(list =>
             list.map(s => s.key === setting.key
               ? { ...s, value: setting.isSensitive ? '••••••••' : value }
@@ -119,8 +155,8 @@ export class SettingsComponent {
   }
 
   cancelEdit(key: string): void {
-    this.editing[key] = false;
-    this.revealed[key] = false;
+    this.editing.update(e  => ({ ...e,  [key]: false }));
+    this.revealed.update(r => ({ ...r,  [key]: false }));
     const setting = this.settings().find(s => s.key === key);
     if (setting) {
       this.forms[key].patchValue({ value: setting.isSensitive ? '' : (setting.value ?? '') });
@@ -128,10 +164,70 @@ export class SettingsComponent {
   }
 
   isSaving(key: string): boolean { return this.savingKey() === key; }
-  isSaved(key: string): boolean  { return this.savedKey()  === key; }
+  isSaved(key: string):  boolean { return this.savedKey()  === key; }
   hasError(key: string): boolean { return this.errorKey()  === key; }
 
   trackByKey(_: number, s: SettingDefinition): string { return s.key; }
-  trackByCategory(_: number, cat: string): string { return cat; }
+  trackByCategory(_: number, cat: string): string      { return cat;   }
+
+  // ── Sync hub ──────────────────────────────────────────────────────────────
+  /** Kick off a manual sync and animate step progress */
+  triggerSync(): void {
+    if (this.syncing()) return;
+
+    this.syncing.set(true);
+    this.syncComplete.set(false);
+    this.syncError.set(false);
+    this.syncStep.set(0);
+    this.showSyncHub.set(true);
+    this.clearStepTimers();
+
+    // Advance through steps while waiting for the API
+    const stepDelays = [5_000, 15_000, 30_000, 50_000]; // delays for steps 1-4
+    stepDelays.forEach((delay, i) => {
+      const t = setTimeout(() => {
+        if (this.syncing()) this.syncStep.set(i + 1);
+      }, delay);
+      this.stepTimers.push(t);
+    });
+
+    this.animeService.syncAnimes()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.clearStepTimers();
+          this.syncStep.set(this.syncSteps.length - 1);
+          this.syncing.set(false);
+          this.syncComplete.set(true);
+          const t = setTimeout(() => this.dismissSyncHub(), 8_000);
+          this.stepTimers.push(t);
+        },
+        error: () => {
+          this.clearStepTimers();
+          this.syncing.set(false);
+          this.syncError.set(true);
+        }
+      });
+  }
+
+  dismissSyncHub(): void {
+    this.showSyncHub.set(false);
+    this.syncComplete.set(false);
+    this.syncError.set(false);
+    this.syncStep.set(-1);
+  }
+
+  stepState(i: number): 'pending' | 'running' | 'done' | 'error' {
+    if (this.syncError()    && i === this.syncStep()) return 'error';
+    if (this.syncComplete())                          return 'done';
+    if (i < this.syncStep())                          return 'done';
+    if (i === this.syncStep())                        return 'running';
+    return 'pending';
+  }
+
+  private clearStepTimers(): void {
+    this.stepTimers.forEach(clearTimeout);
+    this.stepTimers = [];
+  }
 }
 

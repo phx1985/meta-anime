@@ -56,6 +56,23 @@
     "saveError": "Échec de l'enregistrement. Veuillez réessayer.",
     "reveal": "Afficher la valeur",
     "hide": "Masquer la valeur",
+    "sync": {
+      "button": "Forcer la sync",
+      "inProgress": "Synchronisation…",
+      "hub": {
+        "title": "Synchronisation en cours",
+        "done": "Synchronisation terminée",
+        "error": "Échec de la synchronisation — réessayez",
+        "dismiss": "Fermer"
+      },
+      "step": {
+        "init":     "Initialisation",
+        "plex":     "Récupération bibliothèque Plex",
+        "mal":      "Récupération entrées MyAnimeList",
+        "sonarr":   "Récupération séries Sonarr",
+        "matching": "Correspondance et indexation"
+      }
+    },
     "category": {
       "plex": {
         "name": "Plex",
