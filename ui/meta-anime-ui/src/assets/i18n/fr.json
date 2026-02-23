@@ -106,7 +106,11 @@
       "neverSynced": "Jamais synchronisé",
       "card": {
         "title": "Synchronisation",
-        "desc": "Déclenchez manuellement ou surveillez la synchronisation. Les logs restent visibles jusqu'à effacement."
+        "desc": "Suivez la progression de la sync en arrière-plan et configurez le calendrier automatique."
+      },
+      "manual": {
+        "title": "Sync manuelle",
+        "desc": "Déclenchez une synchronisation immédiate depuis toutes les sources (Plex, Sonarr, MyAnimeList)."
       }
     },
     "mal": {
@@ -267,6 +271,15 @@
       "title": "Synchronisation requise",
       "message": "Votre bibliothèque n'a pas encore été synchronisée. Lancez une sync pour peupler votre liste avec les métadonnées.",
       "action": "Aller à la sync"
+    },
+    "sync": {
+      "startTitle": "Sync démarrée",
+      "startMessage": "La synchronisation manuelle a été déclenchée. Consultez le journal dans Paramètres.",
+      "doneTitle": "Sync terminée ✓",
+      "doneMessage": "Toutes les sources ont été synchronisées avec succès.",
+      "errorTitle": "Échec de la sync",
+      "errorMessage": "La synchronisation a rencontré une erreur. Consultez le journal pour plus de détails.",
+      "viewLog": "Voir le journal"
     }
   },
   "toast": {

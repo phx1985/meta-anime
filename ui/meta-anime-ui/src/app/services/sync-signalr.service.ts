@@ -86,6 +86,12 @@ export class SyncSignalRService implements OnDestroy {
     this.overallStartedAt = null;
   }
 
+  /** Called when the HTTP trigger itself fails (before any SignalR progress arrives). */
+  markError(): void {
+    this._syncError$.next(true);
+    this.stopTicker();
+  }
+
   ngOnDestroy(): void {
     this.disconnect();
   }

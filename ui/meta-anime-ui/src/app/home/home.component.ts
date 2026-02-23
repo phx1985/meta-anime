@@ -20,7 +20,7 @@ export class HomeComponent {
   stats = signal<AnimeStatisticsResponse | null>(null);
 
   /** Array used to render floating particles via @for in the template */
-  readonly particles = Array.from({ length: 12 });
+  readonly particles = Array.from({ length: 14 });
 
   constructor() {
     this.animeService.getStatistics()
