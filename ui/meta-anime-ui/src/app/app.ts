@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, HostListener, DestroyRef } from '@angular/core';
+import { Component, inject, signal, OnInit, HostListener, DestroyRef, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -14,7 +14,7 @@ import { SyncSignalRService } from './services/sync-signalr.service';
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-export class App implements OnInit {
+export class App implements OnInit, AfterViewInit {
   protected themeService    = inject(ThemeService);
   protected translate       = inject(TranslateService);
   protected notifService    = inject(NotificationService);
@@ -23,9 +23,13 @@ export class App implements OnInit {
   private   router          = inject(Router);
   private   destroyRef      = inject(DestroyRef);
 
+  @ViewChild('navbarEl', { read: ElementRef }) private navbarEl?: ElementRef<HTMLElement>;
+
   protected currentLang     = signal<string>('en');
   protected menuOpen        = signal<boolean>(false);
   protected notifCenterOpen = signal<boolean>(false);
+  /** Dynamic top offset for the toast stack — tracks the actual navbar height */
+  protected toastTopPx      = signal<number>(72); // ~4.5rem default
 
   /** Provider home-page URLs (populated from settings) */
   protected plexHomeUrl   = signal<string | null>(null);
@@ -147,6 +151,19 @@ export class App implements OnInit {
              { n: Math.floor(diff / 86_400_000) });
   }
 
+  /** Duration of the CSS `.navbar-collapse` max-height transition — keep in sync with app.scss */
+  private static readonly NAVBAR_COLLAPSE_MS = 310;
+
+  ngAfterViewInit(): void {
+    this.syncToastTop();
+  }
+
+  /** Measure navbar height and update toast-stack top offset */
+  private syncToastTop(): void {
+    const h = this.navbarEl?.nativeElement?.offsetHeight;
+    if (h) this.toastTopPx.set(h + 8);
+  }
+
   toggleTheme(): void {
     this.themeService.toggleTheme();
   }
@@ -157,10 +174,13 @@ export class App implements OnInit {
 
   toggleMenu(): void {
     this.menuOpen.update(v => !v);
+    // Measure after the CSS max-height transition completes
+    setTimeout(() => this.syncToastTop(), App.NAVBAR_COLLAPSE_MS);
   }
 
   closeMenu(): void {
     this.menuOpen.set(false);
+    setTimeout(() => this.syncToastTop(), App.NAVBAR_COLLAPSE_MS);
   }
 
   switchLanguage(): void {

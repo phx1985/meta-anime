@@ -24,17 +24,20 @@
   color: var(--accent-primary) !important;
 }
 
-// Mobile menu collapse — Angular-driven (no Bootstrap JS needed)
+// Mobile menu collapse — Angular-driven, smooth max-height animation
 .navbar-collapse {
   @media (max-width: 991.98px) {
-    display: none;
+    display: flex;
     width: 100%;
     flex-direction: column;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease;
 
     &.show {
-      display: flex;
+      max-height: 32rem;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
     }
 
     .navbar-nav {
@@ -273,8 +276,13 @@
   animation: panelFadeSlide 0.2s cubic-bezier(0.34, 1.2, 0.64, 1) both;
 
   @media (max-width: 480px) {
-    right: -50px;
-    width: calc(100vw - 2rem);
+    position: fixed;
+    top: 4.5rem;
+    left: 0.75rem;
+    right: 0.75rem;
+    width: auto;
+    max-width: none;
+    max-height: calc(100vh - 5.5rem);
   }
 }
 
@@ -424,7 +432,7 @@
 
 .toast-stack {
   position: fixed;
-  top: 4.5rem; // below sticky navbar
+  top: 4.5rem; // below sticky navbar — overridden dynamically via [style.top.px]
   right: 1.25rem;
   z-index: 8999;
   display: flex;
@@ -432,6 +440,7 @@
   gap: 0.6rem;
   max-width: 380px;
   pointer-events: none; // clicks pass through the container
+  transition: top 0.3s ease;
 
   @media (max-width: 480px) {
     left: 0.75rem;

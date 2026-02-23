@@ -642,6 +642,24 @@
 
 // ─── Animations ──────────────────────────────────────────────────────────────
 
+// ── Codec pill bar — smaller on mobile ────────────────────────────────────
+@media (max-width: 639px) {
+  .codec-pill {
+    padding: 0.15rem 0.35rem;
+    gap: 0.15rem;
+  }
+
+  .codec-pill-name,
+  .codec-pill-pct {
+    font-size: 0.6rem;
+  }
+
+  .codec-pill-dot {
+    width: 5px;
+    height: 5px;
+  }
+}
+
 @keyframes cardIn {
   from { opacity: 0; transform: translateY(12px) scale(0.98); }
   to   { opacity: 1; transform: translateY(0)    scale(1);    }

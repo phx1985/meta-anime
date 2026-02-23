@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg sticky-top">
+<nav class="navbar navbar-expand-lg sticky-top" #navbarEl>
   <div class="container">
     <a class="navbar-brand" routerLink="/">Meta Anime</a>
 
@@ -223,7 +223,7 @@
 <router-outlet />
 
 <!-- ── Toast stack (top-right, below navbar) ──────────────────────────────── -->
-<div class="toast-stack" aria-live="polite" aria-atomic="false">
+<div class="toast-stack" [style.top.px]="toastTopPx()" aria-live="polite" aria-atomic="false">
   @for (toast of notifService.activeToasts(); track toast.id) {
     <div class="toast-item toast-item--{{ toast.severity }}"
          [class.toast-item--leaving]="notifService.leavingToastIds().has(toast.id)"
