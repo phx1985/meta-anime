@@ -188,14 +188,10 @@ export class SettingsComponent {
       if (done) {
         this.syncing.set(false);
         this.loadSyncStatus();
-        this.pushSyncNotif('done', Date.now());
       }
     });
     this.signalR.syncError$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(err => {
-      if (err) {
-        this.syncing.set(false);
-        this.pushSyncNotif('error', Date.now());
-      }
+      if (err) this.syncing.set(false);
     });
   }
 
@@ -333,7 +329,13 @@ export class SettingsComponent {
     this.syncing.set(true);
     this.signalR.resetSteps();
 
-    this.pushSyncNotif('start', Date.now());
+    this.notifService.push({
+      id: `sync-start-${Date.now()}`,
+      severity: 'info',
+      titleKey: 'notifications.sync.startTitle',
+      messageKey: 'notifications.sync.startMessage',
+      action: { labelKey: 'notifications.sync.viewLog', route: ['/settings'], fragment: 'sync-section' },
+    });
 
     // Scroll the sync card fully into view so the progress log is visible
     // Brief delay lets the sync card begin expanding before we scroll to it
@@ -349,46 +351,11 @@ export class SettingsComponent {
         error: () => {
           this.syncing.set(false);
           this.signalR.markError();
-          this.pushSyncNotif('error', Date.now());
         }
       });
   }
 
   clearSyncLog(): void {
     this.signalR.resetSteps();
-  }
-
-  // ── Notification helpers ──────────────────────────────────────────────────
-
-  private pushSyncNotif(type: 'start' | 'done' | 'error', ts: number): void {
-    const viewLogAction = { labelKey: 'notifications.sync.viewLog', route: ['/settings'], fragment: 'sync-section' };
-    switch (type) {
-      case 'start':
-        this.notifService.push({
-          id: `sync-start-${ts}`,
-          severity: 'info',
-          titleKey: 'notifications.sync.startTitle',
-          messageKey: 'notifications.sync.startMessage',
-          action: viewLogAction,
-        });
-        break;
-      case 'done':
-        this.notifService.push({
-          id: `sync-done-${ts}`,
-          severity: 'success',
-          titleKey: 'notifications.sync.doneTitle',
-          messageKey: 'notifications.sync.doneMessage',
-        });
-        break;
-      case 'error':
-        this.notifService.push({
-          id: `sync-error-${ts}`,
-          severity: 'error',
-          titleKey: 'notifications.sync.errorTitle',
-          messageKey: 'notifications.sync.errorMessage',
-          action: viewLogAction,
-        });
-        break;
-    }
   }
 }

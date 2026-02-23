@@ -722,14 +722,15 @@
 }
 
 .sync-manual-title {
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: 0.88rem;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 .sync-manual-desc {
-  font-size: 0.76rem;
+  font-size: 0.77rem;
   color: var(--text-muted);
+  line-height: 1.45;
 }
 
 .sync-manual-controls {
@@ -741,7 +742,7 @@
 }
 
 .sync-progress-body {
-  padding: 0.75rem 1.25rem 1rem;
+  padding: 0.75rem 1.5rem 1rem;
 }
 
 .sync-overall-row {
