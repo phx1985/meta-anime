@@ -634,6 +634,10 @@
   .filter-header-summary {
     max-width: min(40ch, 45%);
   }
+
+  .filter-field--display-mode {
+    display: none;
+  }
 }
 
 // ─── Grid layout ──────────────────────────────────────────────────────────────

@@ -122,7 +122,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   // ── Filter state ──────────────────────────────────────────────────────────
   filterTitle        = '';
-  /** Signal so that computed() consumers (genreLabel, activeFilterCount) react to changes */
+  /** Signal so that computed() consumers (genreLabel, filteredGenreList) react to changes */
   filterGenre         = signal<string[]>([]);
   genreOperator: 'or' | 'and' = 'or';
   filterWatchState:   string[] = [];
@@ -151,7 +151,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   });
 
   /** Count of active (non-default) filters for the badge */
-  readonly activeFilterCount = computed(() => {
+  get activeFilterCount(): number {
     let n = 0;
     if (this.filterTitle) n++;
     if (this.filterGenre().length) n++;
@@ -160,7 +160,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     if (this.filterHasFile !== 'any') n++;
     if (this.filterCodec.length) n++;
     return n;
-  });
+  }
 
   private currentPage = 1;
   private scrollObserver: IntersectionObserver | null = null;

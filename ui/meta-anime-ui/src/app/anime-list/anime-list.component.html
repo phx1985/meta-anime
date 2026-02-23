@@ -25,8 +25,8 @@
             <span class="filter-header-title">{{ 'animeList.filter.title' | translate }}</span>
             <span class="filter-header-summary" [title]="filterSummary">{{ filterSummary }}</span>
           </div>
-          @if (activeFilterCount() > 0) {
-            <span class="filter-badge">{{ activeFilterCount() }}</span>
+          @if (activeFilterCount > 0) {
+            <span class="filter-badge">{{ activeFilterCount }}</span>
           }
         </div>
         <svg class="filter-chevron" [class.filter-chevron--open]="filterOpen()" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -234,7 +234,7 @@
             </div>
 
             <!-- Display mode -->
-            <div class="filter-field filter-field--compact">
+            <div class="filter-field filter-field--compact filter-field--display-mode">
               <span class="filter-label">{{ 'animeList.displayMode' | translate }}</span>
               <div class="display-mode-toggle" role="group" [attr.aria-label]="'animeList.displayMode' | translate">
                 <button type="button" class="mode-btn" [class.mode-btn--active]="displayMode() === 1" (click)="setDisplayMode(1)" [attr.aria-pressed]="displayMode() === 1">
