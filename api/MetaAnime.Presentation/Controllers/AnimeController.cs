@@ -37,7 +37,7 @@ public class AnimeController(IMediator mediator)
         [FromQuery] string? title = null,
         [FromQuery] string? source = null,
         [FromQuery] string[]? status = null,
-        [FromQuery] string? genre = null,
+        [FromQuery] string[]? genre = null,
         [FromQuery] string? sortBy = null,
         [FromQuery] string? sortOrder = null,
         [FromQuery] bool enriched = false,

@@ -75,7 +75,10 @@ public class AnimeMediatorService(
                 _ => null
             };
             bool sortDescending = filters?.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) == true;
-            bool needsInMemoryPostFilter = !string.IsNullOrWhiteSpace(filters?.Genre)
+            // Title is always handled in-memory (word-level Levenshtein fuzzy match).
+            // The DB-level ILike pre-filter cannot handle typos, so we bypass it for title searches.
+            bool needsInMemoryPostFilter = !string.IsNullOrWhiteSpace(filters?.Title)
+                                         || filters?.Genre?.Length > 0
                                          || filters?.Status?.Length > 0
                                          || filters?.AiringStatus?.Length > 0
                                          || filters?.HasFile.HasValue == true
@@ -103,9 +106,11 @@ public class AnimeMediatorService(
             else
             {
                 // SLOWER PATH: genre/status/etc. require in-memory post-filtering.
-                // ILike pre-filters by title at DB level; fuzzy similarity is applied in-memory below.
+                // Title is intentionally NOT passed to the DB: ILike cannot handle typos,
+                // so we fetch all source-filtered IDs and let the word-level Levenshtein
+                // in ApplyFilters perform typo-tolerant fuzzy matching in memory.
                 var filteredResult = await animeMappingService.GetAllFilteredAniDbIdsAsync(
-                    filters?.Title, sourceFilter);
+                    null, sourceFilter);
                 if (filteredResult.IsFailure)
                     return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(filteredResult.Error);
 
@@ -234,10 +239,11 @@ public class AnimeMediatorService(
         {
             var query = filters.Title;
             var threshold = (titleSimilarityThreshold ?? 80) / 100.0;
-            // Accept if the title contains the query as a substring OR meets the trigram similarity threshold.
+            // Accept if the title contains the query as a substring OR
+            // the word-level Levenshtein similarity meets the threshold (handles typos).
             result = result.Where(a =>
                 a.Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                ComputeTrigramSimilarity(a.Title, query) >= threshold);
+                ComputeWordLevelFuzzySimilarity(a.Title, query) >= threshold);
         }
 
         if (!string.IsNullOrWhiteSpace(filters.Source))
@@ -257,9 +263,10 @@ public class AnimeMediatorService(
                         m.ViewState.Equals(s, StringComparison.OrdinalIgnoreCase)) == true));
         }
 
-        if (!string.IsNullOrWhiteSpace(filters.Genre))
+        if (filters.Genre?.Length > 0)
         {
-            var genreFilter = filters.Genre;
+            // Use a HashSet for O(1) genre lookups instead of O(n) inner Any()
+            var genreSet = new HashSet<string>(filters.Genre, StringComparer.OrdinalIgnoreCase);
             result = result.Where(a =>
             {
                 if (a.MalAnimes == null || !a.MalAnimes.Any())
@@ -277,9 +284,8 @@ public class AnimeMediatorService(
                     {
                         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                         var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, options);
-                        return malAnime?.Genres?.Any(g =>
-                            g.Name.Contains(genreFilter, StringComparison.OrdinalIgnoreCase)
-                        ) == true;
+                        // Match if the anime has ANY of the selected genres (O(1) HashSet lookup)
+                        return malAnime?.Genres?.Any(g => genreSet.Contains(g.Name)) == true;
                     }
                     catch (JsonException ex)
                     {
@@ -356,51 +362,96 @@ public class AnimeMediatorService(
 
         return filters.SortBy.ToLower() switch
         {
-            "title"      => desc ? data.OrderByDescending(a => a.Title)   : data.OrderBy(a => a.Title),
-            "anidbid"    => desc ? data.OrderByDescending(a => a.AniDbId) : data.OrderBy(a => a.AniDbId),
-            "malscore"   => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MalMean  ?? 0)
-                                 : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MalMean  ?? 0),
-            "myscore"    => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MyScore  ?? 0)
-                                 : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MyScore  ?? 0),
-            "startdate"  => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.StartDate)
-                                 : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.StartDate),
-            "addeddate"  => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.AddedDate)
-                                 : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.AddedDate),
-            "sizeondisk" => desc ? data.OrderByDescending(a => a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0)
-                                 : data.OrderBy(a => a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0),
-            _            => data.OrderBy(a => a.Title)
+            "title"         => desc ? data.OrderByDescending(a => a.Title)   : data.OrderBy(a => a.Title),
+            "anidbid"       => desc ? data.OrderByDescending(a => a.AniDbId) : data.OrderBy(a => a.AniDbId),
+            "malscore"      => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MalMean  ?? 0)
+                                    : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MalMean  ?? 0),
+            "myscore"       => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MyScore  ?? 0)
+                                    : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MyScore  ?? 0),
+            "startdate"     => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.StartDate)
+                                    : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.StartDate),
+            "enddate"       => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.EndDate)
+                                    : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.EndDate),
+            "addeddate"     => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.AddedDate)
+                                    : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.AddedDate),
+            "sizeondisk"    => desc ? data.OrderByDescending(a => a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0)
+                                    : data.OrderBy(a => a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0),
+            "totalsizedisk" => desc ? data.OrderByDescending(a => a.SonarrAnimes?.Sum(s => s.SizeOnDisk ?? 0) ?? 0)
+                                    : data.OrderBy(a => a.SonarrAnimes?.Sum(s => s.SizeOnDisk ?? 0) ?? 0),
+            _               => data.OrderBy(a => a.Title)
         };
     }
 
     /// <summary>
-    /// Computes the character-trigram (Dice coefficient) similarity between two strings,
-    /// mirroring what PostgreSQL's <c>similarity()</c> function (pg_trgm) does.
+    /// Computes a word-level fuzzy similarity between a search query and an anime title.
+    /// For each word in the query, finds the best-matching word in the title using normalised
+    /// Levenshtein distance, then averages those per-word scores.
+    /// This correctly handles single-character typos (e.g. "dargon ball" ≈ "Dragon Ball Z").
     /// Returns a value in [0.0, 1.0].
     /// </summary>
-    private static double ComputeTrigramSimilarity(string a, string b)
+    private static double ComputeWordLevelFuzzySimilarity(string title, string query)
     {
-        if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b)) return 0.0;
-        a = a.ToLowerInvariant();
-        b = b.ToLowerInvariant();
-        if (a == b) return 1.0;
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(query)) return 0.0;
 
-        var trigramsA = GetTrigrams(a);
-        var trigramsB = GetTrigrams(b);
+        var qWords = query.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var tWords = title.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-        var setA = new HashSet<string>(trigramsA, StringComparer.Ordinal);
-        var setB = new HashSet<string>(trigramsB, StringComparer.Ordinal);
+        if (qWords.Length == 0 || tWords.Length == 0) return 0.0;
 
-        int intersection = setA.Count(t => setB.Contains(t));
-        int denominator  = setA.Count + setB.Count;
-        return denominator == 0 ? 0.0 : (2.0 * intersection) / denominator;
+        double totalScore = 0;
+        foreach (var qWord in qWords)
+        {
+            double bestWordScore = 0;
+            foreach (var tWord in tWords)
+            {
+                double score = NormalisedLevenshteinSimilarity(qWord, tWord);
+                if (score > bestWordScore) bestWordScore = score;
+                if (bestWordScore >= 1.0) break; // exact match found – no need to check further
+            }
+            totalScore += bestWordScore;
+        }
+
+        return totalScore / qWords.Length;
     }
 
-    private static IEnumerable<string> GetTrigrams(string s)
+    /// <summary>
+    /// Returns 1 − (Levenshtein(a, b) / max(|a|, |b|)), i.e. 1.0 for identical strings.
+    /// </summary>
+    private static double NormalisedLevenshteinSimilarity(string a, string b)
     {
-        // pad left with two spaces and right with one space (matches pg_trgm behaviour)
-        s = "  " + s + " ";
-        for (int i = 0; i <= s.Length - 3; i++)
-            yield return s.Substring(i, 3);
+        if (a == b) return 1.0;
+        int maxLen = Math.Max(a.Length, b.Length);
+        if (maxLen == 0) return 1.0;
+        // Skip if lengths differ too much to ever reach the caller's 80% threshold
+        int minLen = Math.Min(a.Length, b.Length);
+        if ((double)minLen / maxLen < 0.2) return 0.0;
+        return 1.0 - (double)LevenshteinDistance(a, b) / maxLen;
+    }
+
+    /// <summary>Standard iterative Levenshtein (edit) distance.</summary>
+    private static int LevenshteinDistance(string s, string t)
+    {
+        int m = s.Length, n = t.Length;
+        if (m == 0) return n;
+        if (n == 0) return m;
+
+        var prev = new int[n + 1];
+        var curr = new int[n + 1];
+
+        for (int j = 0; j <= n; j++) prev[j] = j;
+
+        for (int i = 1; i <= m; i++)
+        {
+            curr[0] = i;
+            for (int j = 1; j <= n; j++)
+            {
+                int cost = s[i - 1] == t[j - 1] ? 0 : 1;
+                curr[j] = Math.Min(Math.Min(curr[j - 1] + 1, prev[j] + 1), prev[j - 1] + cost);
+            }
+            Array.Copy(curr, prev, n + 1);
+        }
+
+        return prev[n];
     }
 
     /// <summary>

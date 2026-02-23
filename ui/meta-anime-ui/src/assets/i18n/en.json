@@ -71,8 +71,10 @@
       "malScore": "MAL score",
       "myScore": "My score",
       "startDate": "Air date",
+      "endDate": "End date",
       "addedDate": "Date added",
-      "sizeOnDisk": "Size on disk"
+      "sizeOnDisk": "Size on disk",
+      "totalSizeDisk": "Total size"
     }
   },
   "animeCard": {

@@ -119,14 +119,14 @@ describe('AnimeListComponent', () => {
   });
 
   it('should reset filters and clear results without triggering a search', () => {
-    comp.filterGenre = 'Action';
+    comp.filterGenre = ['Action'];
     comp.filterWatchState = ['watching'];
     comp.filterHasFile = 'yes';
     comp.reset();
 
     // No HTTP call should be made for animes after reset
     httpMock.expectNone(r => r.url.includes('/api/v1/animes'));
-    expect(comp.filterGenre).toBe('');
+    expect(comp.filterGenre).toEqual([]);
     expect(comp.filterWatchState).toEqual([]);
     expect(comp.filterHasFile).toBe('any');
     expect(comp.searched()).toBe(false);
@@ -138,6 +138,14 @@ describe('AnimeListComponent', () => {
     comp.search();
     const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
     expect(req.request.params.getAll('status')).toEqual(['watching', 'completed']);
+    req.flush(emptyResponse);
+  });
+
+  it('should send multi-value genre params when multiple genres selected', () => {
+    comp.filterGenre = ['Action', 'Fantasy'];
+    comp.search();
+    const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
+    expect(req.request.params.getAll('genre')).toEqual(['Action', 'Fantasy']);
     req.flush(emptyResponse);
   });
 });

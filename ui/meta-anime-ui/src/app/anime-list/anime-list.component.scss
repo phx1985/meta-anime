@@ -67,7 +67,7 @@
   z-index: 1;
 }
 
-// ─── Header row (title + sort + display mode toggle) ──────────────────────────
+// ─── Header row (title only) ──────────────────────────────────────────────────
 
 .anime-list-header {
   display: flex;
@@ -82,17 +82,13 @@
   color: var(--accent-primary);
 }
 
-.header-controls {
-  display: flex;
+// ─── Sort + display-mode toolbar (inside filter card) ────────────────────────
+
+.filter-row--toolbar {
   align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-// ─── Sort controls ────────────────────────────────────────────────────────────
-
-.sort-controls {
-  gap: 0.375rem;
+  border-top: 1px solid var(--card-border);
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
 }
 
 .sort-select {
@@ -320,6 +316,13 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.3rem;
+
+  &--wrap {
+    flex-wrap: wrap;
+    max-height: 7rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
 }
 
 .filter-pill {

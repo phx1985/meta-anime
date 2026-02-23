@@ -50,12 +50,14 @@ export const AIRING_STATES = [
 ];
 
 export const SORT_OPTIONS = [
-  { value: 'title',      labelKey: 'animeList.sort.title' },
-  { value: 'malscore',   labelKey: 'animeList.sort.malScore' },
-  { value: 'myscore',    labelKey: 'animeList.sort.myScore' },
-  { value: 'startdate',  labelKey: 'animeList.sort.startDate' },
-  { value: 'addeddate',  labelKey: 'animeList.sort.addedDate' },
-  { value: 'sizeondisk', labelKey: 'animeList.sort.sizeOnDisk' },
+  { value: 'title',         labelKey: 'animeList.sort.title' },
+  { value: 'malscore',      labelKey: 'animeList.sort.malScore' },
+  { value: 'myscore',       labelKey: 'animeList.sort.myScore' },
+  { value: 'startdate',     labelKey: 'animeList.sort.startDate' },
+  { value: 'enddate',       labelKey: 'animeList.sort.endDate' },
+  { value: 'addeddate',     labelKey: 'animeList.sort.addedDate' },
+  { value: 'sizeondisk',    labelKey: 'animeList.sort.sizeOnDisk' },
+  { value: 'totalsizedisk', labelKey: 'animeList.sort.totalSizeDisk' },
 ];
 
 export const CODEC_OPTIONS = [
@@ -114,7 +116,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   // ── Filter state ──────────────────────────────────────────────────────────
   filterTitle        = '';
-  filterGenre        = '';
+  filterGenre:        string[] = [];
   filterWatchState:   string[] = [];
   filterAiringStatus: string[] = [];
   filterHasFile: 'any' | 'yes' | 'no' = 'any';
@@ -200,7 +202,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   /** Clears all filters and empties the results list without triggering a search. */
   reset(): void {
     this.filterTitle        = '';
-    this.filterGenre        = '';
+    this.filterGenre        = [];
     this.filterWatchState   = [];
     this.filterAiringStatus = [];
     this.filterHasFile      = 'any';
@@ -225,7 +227,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   private buildFilters(): AnimeFilters {
     return {
       title:        this.filterTitle        || undefined,
-      genre:        this.filterGenre        || undefined,
+      genre:        this.filterGenre.length        ? this.filterGenre        : undefined,
       status:       this.filterWatchState.length   ? this.filterWatchState   : undefined,
       airingStatus: this.filterAiringStatus.length ? this.filterAiringStatus : undefined,
       hasFile:      this.resolveHasFile(),

@@ -116,7 +116,7 @@ export interface AnimeFilters {
   title?: string;
   source?: string;
   status?: string[];
-  genre?: string;
+  genre?: string[];
   sortBy?: string;
   sortOrder?: string;
   airingStatus?: string[];
