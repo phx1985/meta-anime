@@ -1,16 +1,22 @@
-import { Component, Input, signal, inject, HostListener } from '@angular/core';
+import { Component, Input, signal, inject, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { trigger, state, style, animate, transition } from '@angular/animations';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DestroyRef } from '@angular/core';
 import { SeasonalAnimeItem } from '../../models/anime.models';
 import { ScoreBadgeComponent } from '../../anime-list/anime-card/score-badge/score-badge.component';
+import { SonarrService } from '../../services/sonarr.service';
+import { AnimeService } from '../../services/anime.service';
+import { SonarrRootFolder, SonarrQualityProfile } from '../../models/sonarr.models';
 
 const TRUNCATE_AT = 180;
 
 @Component({
   selector: 'app-seasonal-card',
   standalone: true,
-  imports: [CommonModule, TranslatePipe, ScoreBadgeComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, ScoreBadgeComponent],
   templateUrl: './seasonal-card.component.html',
   styleUrl: './seasonal-card.component.scss',
   animations: [
@@ -22,40 +28,59 @@ const TRUNCATE_AT = 180;
     ])
   ]
 })
-export class SeasonalCardComponent {
+export class SeasonalCardComponent implements OnInit {
   @Input({ required: true }) anime!: SeasonalAnimeItem;
 
-  private translate = inject(TranslateService);
+  private translate    = inject(TranslateService);
+  private sonarrService = inject(SonarrService);
+  private animeService  = inject(AnimeService);
+  private destroyRef   = inject(DestroyRef);
 
-  descExpanded = signal(false);
-  showLightbox = signal(false);
+  descExpanded  = signal(false);
+  showLightbox  = signal(false);
+
+  // ── Sonarr add modal ─────────────────────────────────────────────────────
+  showSonarrModal  = signal(false);
+  sonarrRootFolders   = signal<SonarrRootFolder[]>([]);
+  sonarrQualityProfiles = signal<SonarrQualityProfile[]>([]);
+  sonarrLoadingOptions = signal(false);
+  sonarrAdding     = signal(false);
+  sonarrError      = signal('');
+  sonarrSuccess    = signal(false);
+  sonarrRootFolder = signal('');
+  sonarrProfileId  = signal(0);
+
+  // ── MAL add modal ─────────────────────────────────────────────────────────
+  showMalModal  = signal(false);
+  malAdding     = signal(false);
+  malError      = signal('');
+  malSuccess    = signal(false);
+  malStatus     = signal('plan_to_watch');
+  malEpisodes   = signal(0);
+  malScore      = signal(0);
+
+  readonly malStatuses = [
+    { value: 'watching',      labelKey: 'seasonal.malStatus.watching' },
+    { value: 'completed',     labelKey: 'seasonal.malStatus.completed' },
+    { value: 'on_hold',       labelKey: 'seasonal.malStatus.on_hold' },
+    { value: 'dropped',       labelKey: 'seasonal.malStatus.dropped' },
+    { value: 'plan_to_watch', labelKey: 'seasonal.malStatus.plan_to_watch' },
+  ];
+
+  ngOnInit(): void {}
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.showLightbox()) this.showLightbox.set(false);
+    if (this.showLightbox()) { this.showLightbox.set(false); return; }
+    if (this.showSonarrModal()) { this.closeSonarrModal(); return; }
+    if (this.showMalModal()) { this.closeMalModal(); }
   }
 
-  get coverImageUrl(): string | undefined {
-    return this.anime.coverImageUrl;
-  }
+  get coverImageUrl(): string | undefined { return this.anime.coverImageUrl; }
+  get displayTitle(): string { return this.anime.title; }
+  get description(): string { return this.anime.synopsis ?? ''; }
 
-  get displayTitle(): string {
-    return this.anime.title;
-  }
-
-  get description(): string {
-    return this.anime.synopsis ?? '';
-  }
-
-  get truncatedDescription(): string {
-    const d = this.description;
-    if (!d) return '';
-    return this.descExpanded() || d.length <= TRUNCATE_AT ? d : d.slice(0, TRUNCATE_AT) + '…';
-  }
-
-  get genres(): string[] {
-    return this.anime.genres ?? [];
-  }
+  get genres(): string[] { return this.anime.genres ?? []; }
 
   translateGenre(name: string): string {
     const key = `genres.${name}`;
@@ -63,17 +88,9 @@ export class SeasonalCardComponent {
     return t !== key ? t : name;
   }
 
-  get malScore(): number {
-    return this.anime.malScore ?? 0;
-  }
-
-  get startDate(): string | undefined {
-    return this.anime.startDate;
-  }
-
-  get mediaType(): string | undefined {
-    return this.anime.mediaType;
-  }
+  get malScore2(): number { return this.anime.malScore ?? 0; }
+  get startDate(): string | undefined { return this.anime.startDate; }
+  get mediaType(): string | undefined { return this.anime.mediaType; }
 
   mediaTypeLabel(type: string): string {
     const key = `animeCard.mediaType.${type}`;
@@ -81,9 +98,7 @@ export class SeasonalCardComponent {
     return t !== key ? t : type.toUpperCase();
   }
 
-  get seriesStatus(): string | undefined {
-    return this.anime.status;
-  }
+  get seriesStatus(): string | undefined { return this.anime.status; }
 
   seriesStatusLabel(status: string): string {
     const key = `animeCard.seriesStatus.${status}`;
@@ -91,19 +106,100 @@ export class SeasonalCardComponent {
     return t !== key ? t : status.replace(/_/g, ' ');
   }
 
-  get malUrl(): string | null {
-    return this.anime.malUrl ?? null;
+  get malUrl(): string | null { return this.anime.malUrl ?? null; }
+
+  toggleDesc(): void { this.descExpanded.update(v => !v); }
+  openLightbox(): void { if (this.coverImageUrl) this.showLightbox.set(true); }
+  closeLightbox(): void { this.showLightbox.set(false); }
+
+  // ── Sonarr ────────────────────────────────────────────────────────────────
+  openSonarrModal(): void {
+    if (this.sonarrLoadingOptions()) return;
+    this.sonarrError.set('');
+    this.sonarrSuccess.set(false);
+    this.showSonarrModal.set(true);
+
+    if (this.sonarrRootFolders().length === 0) {
+      this.sonarrLoadingOptions.set(true);
+      this.sonarrService.getOptions()
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: opts => {
+            this.sonarrRootFolders.set(opts.rootFolders);
+            this.sonarrQualityProfiles.set(opts.qualityProfiles);
+            if (opts.rootFolders.length > 0) this.sonarrRootFolder.set(opts.rootFolders[0].path);
+            if (opts.qualityProfiles.length > 0) this.sonarrProfileId.set(opts.qualityProfiles[0].id);
+            this.sonarrLoadingOptions.set(false);
+          },
+          error: () => {
+            this.sonarrError.set(this.translate.instant('seasonal.sonarrOptionsError'));
+            this.sonarrLoadingOptions.set(false);
+          }
+        });
+    }
   }
 
-  toggleDesc(): void {
-    this.descExpanded.update((v) => !v);
+  closeSonarrModal(): void { this.showSonarrModal.set(false); }
+
+  confirmAddSonarr(): void {
+    if (this.sonarrAdding()) return;
+    this.sonarrAdding.set(true);
+    this.sonarrError.set('');
+    this.sonarrService.addSeries({
+      malId: this.anime.malId,
+      rootFolderPath: this.sonarrRootFolder(),
+      qualityProfileId: this.sonarrProfileId(),
+    })
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe({
+      next: () => {
+        this.sonarrSuccess.set(true);
+        this.sonarrAdding.set(false);
+        // Update local flag
+        (this.anime as { inSonarr: boolean }).inSonarr = true;
+        setTimeout(() => this.showSonarrModal.set(false), 1500);
+      },
+      error: (err) => {
+        this.sonarrError.set(err?.error ?? this.translate.instant('seasonal.sonarrAddError'));
+        this.sonarrAdding.set(false);
+      }
+    });
   }
 
-  openLightbox(): void {
-    if (this.coverImageUrl) this.showLightbox.set(true);
+  // ── MAL ───────────────────────────────────────────────────────────────────
+  openMalModal(): void {
+    this.malError.set('');
+    this.malSuccess.set(false);
+    this.malStatus.set('plan_to_watch');
+    this.malEpisodes.set(0);
+    this.malScore.set(0);
+    this.showMalModal.set(true);
   }
 
-  closeLightbox(): void {
-    this.showLightbox.set(false);
+  closeMalModal(): void { this.showMalModal.set(false); }
+
+  confirmAddMal(): void {
+    if (this.malAdding()) return;
+    this.malAdding.set(true);
+    this.malError.set('');
+    this.animeService.updateMalListStatus(this.anime.malId, {
+      status: this.malStatus(),
+      numWatchedEpisodes: this.malEpisodes(),
+      score: this.malScore(),
+    })
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe({
+      next: () => {
+        this.malSuccess.set(true);
+        this.malAdding.set(false);
+        (this.anime as { inMal: boolean }).inMal = true;
+        setTimeout(() => this.showMalModal.set(false), 1500);
+      },
+      error: (err) => {
+        this.malError.set(err?.error ?? this.translate.instant('seasonal.malAddError'));
+        this.malAdding.set(false);
+      }
+    });
   }
 }
+

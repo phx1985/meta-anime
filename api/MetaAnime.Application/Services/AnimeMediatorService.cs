@@ -26,6 +26,7 @@ public class AnimeMediatorService(
     IAnimeService animeService,
     ICacheEntryService cacheEntryService,
     IPropertyBagRepository propertyBagRepository,
+    IKometaAnimeMappingRepository kometaAnimeMappingRepository,
     IOptions<MalSettings> malOptions,
     IOptions<SonarrSettings> sonarrOptions,
     ILogger<AnimeMediatorService> logger)
@@ -790,6 +791,7 @@ public class AnimeMediatorService(
     {
         try
         {
+            bool showNsfw = await IsNsfwAllowedAsync();
             var offset = (page - 1) * pageSize;
             var seasonalResult = await malAnimeSource.GetSeasonalAsync(year, season, offset, pageSize);
             if (seasonalResult.IsFailure)
@@ -816,9 +818,15 @@ public class AnimeMediatorService(
                 }
             }
 
-            var responses = items.Select(anime =>
+            // Apply NSFW filtering: skip anime marked as explicit when NSFW is disabled
+            var filteredItems = showNsfw
+                ? items
+                : items.Where(anime => !IsNsfwAnime(anime)).ToList();
+
+            var responses = filteredItems.Select(anime =>
             {
                 var malId = anime.Id.ToString();
+                var inMal = malToSources.ContainsKey(malId);
                 var inLibrary = malToSources.TryGetValue(malId, out var sources);
                 return new SeasonalAnimeResponse(
                     MalId: malId,
@@ -831,6 +839,7 @@ public class AnimeMediatorService(
                     MediaType: anime.MediaType,
                     Status: anime.Status,
                     MalUrl: $"{myAnimeListHost}/anime/{malId}",
+                    InMal: inMal,
                     InPlex: inLibrary && sources.HasPlex,
                     PlexUrl: null,
                     InSonarr: inLibrary && sources.HasSonarr,
@@ -841,7 +850,7 @@ public class AnimeMediatorService(
             // MAL's seasonal endpoint does not provide a total count.
             // Estimate: if a next page exists, report at least one item beyond the current page
             // so the paging consumer knows to request more; otherwise use the exact item count.
-            var estimatedTotal = hasNextPage ? offset + pageSize + 1 : offset + items.Count;
+            var estimatedTotal = hasNextPage ? offset + pageSize + 1 : offset + filteredItems.Count;
             var totalPages = hasNextPage ? page + 1 : page;
             return Result.Success(new PagedResponse<IEnumerable<SeasonalAnimeResponse>>(
                 responses,
@@ -856,6 +865,71 @@ public class AnimeMediatorService(
         catch (Exception ex)
         {
             return Result.Failure<PagedResponse<IEnumerable<SeasonalAnimeResponse>>>(new(Constants.Errors.GetAllAsync, ex.Message));
+        }
+    }
+
+    public async Task<Result<SonarrOptionsResponse>> GetSonarrOptionsAsync()
+    {
+        try
+        {
+            var optionsResult = await sonarrAnimeSource.GetOptionsAsync();
+            if (optionsResult.IsFailure)
+                return Result.Failure<SonarrOptionsResponse>(optionsResult.Error);
+
+            var opts = optionsResult.Value;
+            return Result.Success(new SonarrOptionsResponse(
+                opts.RootFolders.Select(f => new SonarrRootFolderDto(f.Id, f.Path, f.FreeSpace)).ToList(),
+                opts.QualityProfiles.Select(p => new SonarrQualityProfileDto(p.Id, p.Name)).ToList(),
+                opts.AnimeTagIds
+            ));
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<SonarrOptionsResponse>(new(Constants.Errors.GetAllAsync, ex.Message));
+        }
+    }
+
+    public async Task<Result<SonarrSeries>> AddSonarrSeriesAsync(string malId, string rootFolderPath, int qualityProfileId)
+    {
+        try
+        {
+            // Resolve MAL ID → TVDB ID via Kometa mapping table
+            var kometaMapping = await kometaAnimeMappingRepository.GetByPlatformIdAsync(MetaAnime.Domain.Enums.KometaAnimePlatform.Mal, malId);
+            if (kometaMapping == null)
+                return Result.Failure<SonarrSeries>(new(Constants.Errors.NotFound, $"No TVDB mapping found for MAL ID {malId}"));
+
+            var aniDbId = kometaMapping.AniDbId;
+            var tvdbMappings = await kometaAnimeMappingRepository.GetByAniDbIdAsync(aniDbId);
+            var tvdbEntry = tvdbMappings.FirstOrDefault(m => m.PlatformName.Equals("tvdb", StringComparison.OrdinalIgnoreCase));
+            if (tvdbEntry == null || !int.TryParse(tvdbEntry.PlatformId, out var tvdbId))
+                return Result.Failure<SonarrSeries>(new(Constants.Errors.NotFound, $"No TVDB ID found for MAL ID {malId}"));
+
+            // Get the configured tag IDs to apply to the new series
+            var optionsResult = await sonarrAnimeSource.GetOptionsAsync();
+            var tagIds = optionsResult.IsSuccess ? optionsResult.Value.AnimeTagIds : new List<int>();
+
+            var addResult = await sonarrAnimeSource.AddSeriesAsync(tvdbId, rootFolderPath, qualityProfileId, tagIds);
+            if (addResult.IsFailure)
+                return Result.Failure<SonarrSeries>(addResult.Error);
+
+            // Return a minimal SonarrSeries shaped object (the controller just serialises it)
+            return Result.Success(new SonarrSeries { Id = addResult.Value.Id, Title = addResult.Value.Title, TitleSlug = addResult.Value.TitleSlug });
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<SonarrSeries>(new(Constants.Errors.GetAllAsync, ex.Message));
+        }
+    }
+
+    public async Task<Result> UpdateMalListStatusAsync(string malId, string status, int numWatchedEpisodes, int score)
+    {
+        try
+        {
+            return await malAnimeSource.UpdateListStatusAsync(malId, status, numWatchedEpisodes, score);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(new(Constants.Errors.GetAllAsync, ex.Message));
         }
     }
 

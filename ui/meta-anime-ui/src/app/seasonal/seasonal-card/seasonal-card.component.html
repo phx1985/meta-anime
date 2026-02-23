@@ -61,9 +61,9 @@
 
       <!-- ── Score + date ─────────────────────────────────────────────────── -->
       <div class="meta-row">
-        @if (malScore > 0) {
+        @if (malScore2 > 0) {
           <div class="scores">
-            <app-score-badge [score]="malScore" label="MAL" titleKey="animeCard.malScore" />
+            <app-score-badge [score]="malScore2" label="MAL" titleKey="animeCard.malScore" />
           </div>
         }
         @if (startDate) {
@@ -93,32 +93,66 @@
         Plex
       </a>
 
-      <!-- Sonarr icon: greyed out with gradient fade if not in Sonarr -->
-      <a class="action action--sonarr"
-         [class.action--in-library]="anime.inSonarr"
-         [class.action--not-in-library]="!anime.inSonarr"
-         [attr.href]="anime.inSonarr ? (anime.sonarrUrl ?? null) : null"
-         [attr.target]="anime.inSonarr ? '_blank' : null"
-         rel="noopener noreferrer"
-         [title]="anime.inSonarr ? ('animeCard.openSonarr' | translate) : ('seasonal.notInSonarr' | translate)">
-        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
-          <rect x="1.5" y="3" width="13" height="9" rx="1.2" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M5.5 13.5h5M8 12v1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-        Sonarr
-      </a>
-
-      <!-- MAL link -->
-      @if (malUrl) {
-        <a class="action action--mal action--in-library"
-           [href]="malUrl"
+      <!-- Sonarr: link if in library, or "+" add button -->
+      @if (anime.inSonarr) {
+        <a class="action action--sonarr action--in-library"
+           [attr.href]="anime.sonarrUrl ?? null"
            target="_blank" rel="noopener noreferrer"
-           [title]="'animeCard.openMal' | translate">
+           [title]="'animeCard.openSonarr' | translate">
           <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
-            <path d="M3 4h10M3 7h10M3 10h7M3 13h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <rect x="1.5" y="3" width="13" height="9" rx="1.2" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M5.5 13.5h5M8 12v1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
           </svg>
-          MAL
+          Sonarr
         </a>
+      } @else {
+        <div class="action-group">
+          <a class="action action--sonarr action--not-in-library"
+             [title]="'seasonal.notInSonarr' | translate">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
+              <rect x="1.5" y="3" width="13" height="9" rx="1.2" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M5.5 13.5h5M8 12v1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            Sonarr
+          </a>
+          <button type="button" class="add-btn add-btn--sonarr" (click)="openSonarrModal()"
+                  [title]="'seasonal.addToSonarr' | translate">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="add-btn__icon">
+              <path d="M8 3v10M3 8h10"/>
+            </svg>
+          </button>
+        </div>
+      }
+
+      <!-- MAL: link if in MAL list, or "+" add button -->
+      @if (anime.inMal) {
+        @if (malUrl) {
+          <a class="action action--mal action--in-library"
+             [href]="malUrl"
+             target="_blank" rel="noopener noreferrer"
+             [title]="'animeCard.openMal' | translate">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
+              <path d="M3 4h10M3 7h10M3 10h7M3 13h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            MAL
+          </a>
+        }
+      } @else {
+        <div class="action-group">
+          <a class="action action--mal action--not-in-library"
+             [title]="'seasonal.notInMal' | translate">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
+              <path d="M3 4h10M3 7h10M3 10h7M3 13h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            MAL
+          </a>
+          <button type="button" class="add-btn add-btn--mal" (click)="openMalModal()"
+                  [title]="'seasonal.addToMal' | translate">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="add-btn__icon">
+              <path d="M8 3v10M3 8h10"/>
+            </svg>
+          </button>
+        </div>
       }
     </div>
   </div>
@@ -134,5 +168,123 @@
       </svg>
     </button>
     <img class="lightbox-img" [src]="coverImageUrl" [alt]="anime.title" (click)="$event.stopPropagation()" />
+  </div>
+}
+
+<!-- ── Add to Sonarr modal ───────────────────────────────────────────────── -->
+@if (showSonarrModal()) {
+  <div class="modal-overlay" (click)="closeSonarrModal()" role="dialog" aria-modal="true">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__head">
+        <span class="modal__title">{{ 'seasonal.addToSonarr' | translate }}</span>
+        <button class="modal__close" type="button" (click)="closeSonarrModal()" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="modal__anime-title">{{ anime.title }}</p>
+
+      @if (sonarrLoadingOptions()) {
+        <div class="modal__loading">
+          <div class="loading-spinner loading-spinner--sm"></div>
+        </div>
+      } @else if (sonarrSuccess()) {
+        <div class="modal__success">✓ {{ 'seasonal.sonarrAddSuccess' | translate }}</div>
+      } @else {
+        <div class="modal__body">
+          <label class="modal__label">{{ 'seasonal.rootFolder' | translate }}
+            <select class="modal__select" [ngModel]="sonarrRootFolder()" (ngModelChange)="sonarrRootFolder.set($event)">
+              @for (f of sonarrRootFolders(); track f.id) {
+                <option [value]="f.path">{{ f.path }}</option>
+              }
+            </select>
+          </label>
+          <label class="modal__label">{{ 'seasonal.qualityProfile' | translate }}
+            <select class="modal__select" [ngModel]="sonarrProfileId()" (ngModelChange)="sonarrProfileId.set(+$event)">
+              @for (p of sonarrQualityProfiles(); track p.id) {
+                <option [value]="p.id">{{ p.name }}</option>
+              }
+            </select>
+          </label>
+          <p class="modal__info">{{ 'seasonal.sonarrAutoSettings' | translate }}</p>
+          @if (sonarrError()) {
+            <p class="modal__error">{{ sonarrError() }}</p>
+          }
+        </div>
+        <div class="modal__footer">
+          <button class="modal__btn modal__btn--cancel" type="button" (click)="closeSonarrModal()">
+            {{ 'common.cancel' | translate }}
+          </button>
+          <button class="modal__btn modal__btn--confirm" type="button"
+                  [disabled]="sonarrAdding()"
+                  (click)="confirmAddSonarr()">
+            @if (sonarrAdding()) {
+              <div class="loading-spinner loading-spinner--sm"></div>
+            } @else {
+              {{ 'common.add' | translate }}
+            }
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
+
+<!-- ── Add to MAL modal ──────────────────────────────────────────────────── -->
+@if (showMalModal()) {
+  <div class="modal-overlay" (click)="closeMalModal()" role="dialog" aria-modal="true">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__head">
+        <span class="modal__title">{{ 'seasonal.addToMal' | translate }}</span>
+        <button class="modal__close" type="button" (click)="closeMalModal()" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="modal__anime-title">{{ anime.title }}</p>
+
+      @if (malSuccess()) {
+        <div class="modal__success">✓ {{ 'seasonal.malAddSuccess' | translate }}</div>
+      } @else {
+        <div class="modal__body">
+          <label class="modal__label">{{ 'seasonal.malStatusLabel' | translate }}
+            <select class="modal__select" [ngModel]="malStatus()" (ngModelChange)="malStatus.set($event)">
+              @for (s of malStatuses; track s.value) {
+                <option [value]="s.value">{{ s.labelKey | translate }}</option>
+              }
+            </select>
+          </label>
+          <label class="modal__label">{{ 'seasonal.episodesWatched' | translate }}
+            <input class="modal__input" type="number" min="0"
+                   [ngModel]="malEpisodes()" (ngModelChange)="malEpisodes.set(+$event)" />
+          </label>
+          <label class="modal__label">{{ 'seasonal.score' | translate }}
+            <input class="modal__input" type="number" min="0" max="10"
+                   [ngModel]="malScore()" (ngModelChange)="malScore.set(+$event)" />
+          </label>
+          @if (malError()) {
+            <p class="modal__error">{{ malError() }}</p>
+          }
+        </div>
+        <div class="modal__footer">
+          <button class="modal__btn modal__btn--cancel" type="button" (click)="closeMalModal()">
+            {{ 'common.cancel' | translate }}
+          </button>
+          <button class="modal__btn modal__btn--confirm" type="button"
+                  [disabled]="malAdding()"
+                  (click)="confirmAddMal()">
+            @if (malAdding()) {
+              <div class="loading-spinner loading-spinner--sm"></div>
+            } @else {
+              {{ 'common.add' | translate }}
+            }
+          </button>
+        </div>
+      }
+    </div>
   </div>
 }

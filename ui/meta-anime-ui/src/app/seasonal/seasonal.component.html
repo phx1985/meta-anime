@@ -15,18 +15,29 @@
       <p class="seasonal-subtitle">{{ 'seasonal.subtitle' | translate }}</p>
     </div>
 
-    <!-- Season tabs -->
-    <div class="season-tabs mb-4" role="tablist" [attr.aria-label]="'seasonal.seasonSelect' | translate">
-      @for (tab of tabs; track tab.year + '-' + tab.season) {
-        <button
-          type="button"
-          class="season-tab"
-          role="tab"
-          [class.season-tab--active]="activeTab().year === tab.year && activeTab().season === tab.season"
-          [attr.aria-selected]="activeTab().year === tab.year && activeTab().season === tab.season"
-          (click)="selectTab(tab)">
-          <span class="tab-season">{{ tab.labelKey | translate }}</span>
-          <span class="tab-year">{{ tab.year }}</span>
+    <!-- Season tabs + load more -->
+    <div class="season-tabs-row mb-4">
+      <div class="season-tabs" role="tablist" [attr.aria-label]="'seasonal.seasonSelect' | translate">
+        @for (tab of tabs(); track tab.year + '-' + tab.season) {
+          <button
+            type="button"
+            class="season-tab"
+            role="tab"
+            [class.season-tab--active]="activeTab()?.year === tab.year && activeTab()?.season === tab.season"
+            [attr.aria-selected]="activeTab()?.year === tab.year && activeTab()?.season === tab.season"
+            (click)="selectTab(tab)">
+            <span class="tab-season">{{ tab.labelKey | translate }}</span>
+            <span class="tab-year">{{ tab.year }}</span>
+          </button>
+        }
+      </div>
+
+      @if (canLoadMoreSeasons()) {
+        <button type="button" class="btn-load-seasons" (click)="loadMoreSeasons()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="btn-load-seasons__icon" aria-hidden="true">
+            <path d="M4 8h8M8 4l4 4-4 4"/>
+          </svg>
+          {{ 'seasonal.loadMoreSeasons' | translate }}
         </button>
       }
     </div>
@@ -48,7 +59,7 @@
     @if (!loading() && animes().length > 0) {
       <div class="seasonal-grid">
         @for (anime of animes(); track anime.malId) {
-          <div #seasonalCard>
+          <div #seasonalCard class="seasonal-grid__cell">
             <app-seasonal-card [anime]="anime" />
           </div>
         }

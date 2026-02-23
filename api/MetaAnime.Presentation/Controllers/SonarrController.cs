@@ -18,9 +18,6 @@ public class SonarrController(
     /// <summary>
     /// Returns all Sonarr anime series that contain at least one episode file encoded with the
     /// specified video codec (e.g. "h264", "x264", "hevc", "av1").
-    /// Useful for finding series that still need to be converted to a more efficient codec.
-    /// The codec filter is case-insensitive and matches on partial name
-    /// (e.g. "h264" matches both "h264" and "x264").
     /// </summary>
     [HttpGet("series")]
     [Authorize]
@@ -40,4 +37,40 @@ public class SonarrController(
 
         return Ok(result.Value);
     }
+
+    /// <summary>Returns root folders, quality profiles and configured anime tag IDs.</summary>
+    [HttpGet("options")]
+    [Authorize]
+    public async Task<ActionResult<SonarrOptionsResponse>> GetOptions()
+    {
+        var result = await animeMediatorService.GetSonarrOptionsAsync();
+        if (result.IsFailure)
+            return StatusCode(500, result.Error.Message);
+        return Ok(result.Value);
+    }
+
+    /// <summary>Adds an anime to Sonarr by MAL ID.</summary>
+    [HttpPost("add")]
+    [Authorize]
+    public async Task<ActionResult> AddSeries([FromBody] SonarrAddSeriesRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.MalId))
+            return BadRequest("malId is required");
+        if (string.IsNullOrWhiteSpace(request.RootFolderPath))
+            return BadRequest("rootFolderPath is required");
+
+        var result = await animeMediatorService.AddSonarrSeriesAsync(
+            request.MalId, request.RootFolderPath, request.QualityProfileId);
+
+        if (result.IsFailure)
+        {
+            logger.LogError("Sonarr add failed for MAL ID '{MalId}': {Error}", request.MalId, result.Error.Message);
+            return StatusCode(500, result.Error.Message);
+        }
+
+        return Ok(result.Value);
+    }
 }
+
+public sealed record SonarrAddSeriesRequest(string MalId, string RootFolderPath, int QualityProfileId);
+

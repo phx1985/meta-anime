@@ -46,8 +46,30 @@
     "loading": "Chargement des animes saisonniers…",
     "error": "Échec du chargement des animes saisonniers. Veuillez réessayer plus tard.",
     "empty": "Aucun anime trouvé pour cette saison.",
+    "loadMoreSeasons": "Plus de saisons",
     "notInPlex": "Absent de votre bibliothèque Plex",
     "notInSonarr": "Non suivi par Sonarr",
+    "notInMal": "Non dans votre liste MAL",
+    "addToSonarr": "Ajouter à Sonarr",
+    "addToMal": "Ajouter à MAL",
+    "rootFolder": "Dossier racine",
+    "qualityProfile": "Profil qualité",
+    "sonarrAutoSettings": "Type : Anime/Absolu · Dossiers de saison : Oui · Tags de la config",
+    "sonarrOptionsError": "Échec du chargement des options Sonarr.",
+    "sonarrAddError": "Échec de l'ajout à Sonarr.",
+    "sonarrAddSuccess": "Ajouté avec succès à Sonarr !",
+    "malStatusLabel": "Statut",
+    "episodesWatched": "Épisodes vus",
+    "score": "Score (0–10)",
+    "malAddError": "Échec de la mise à jour de la liste MAL.",
+    "malAddSuccess": "Ajouté avec succès à votre liste MAL !",
+    "malStatus": {
+      "watching": "En cours",
+      "completed": "Terminé",
+      "on_hold": "En pause",
+      "dropped": "Abandonné",
+      "plan_to_watch": "À regarder"
+    },
     "season": {
       "winter": "Hiver",
       "spring": "Printemps",
@@ -381,5 +403,10 @@
       "cta": "Aller à la sync",
       "dismiss": "Fermer"
     }
+  },
+  "common": {
+    "cancel": "Annuler",
+    "add": "Ajouter",
+    "confirm": "Confirmer"
   }
 }

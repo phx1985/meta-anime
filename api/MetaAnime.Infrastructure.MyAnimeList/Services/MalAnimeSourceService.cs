@@ -140,6 +140,30 @@ public class MalAnimeSourceService(IOptions<MalSettings> options, IMalTokenServi
             return Result.Failure<(IList<MalAnime>, bool)>(new Error(error.Message));
         }
     }
+    public async Task<Result> UpdateListStatusAsync(string animeId, string status, int numWatchedEpisodes, int score)
+    {
+        if (!isConfigured)
+            return Result.Failure(new(Constants.Errors.NotConfigured, "MyAnimeList is not configured"));
+
+        var token = await malTokenService.GetAccessTokenAsync();
+        if (string.IsNullOrWhiteSpace(token))
+            return Result.Failure(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
+
+        var uri = new Uri($"{baseUrl}/anime/{animeId}/my_list_status");
+        var restClient = new RestClient(uri);
+        var restRequest = new RestRequest { Method = Method.Patch };
+        restRequest.AddHeader("Authorization", $"Bearer {token}");
+        restRequest.AddParameter("status", status);
+        restRequest.AddParameter("num_watched_episodes", numWatchedEpisodes);
+        restRequest.AddParameter("score", score);
+
+        var response = await ExecuteRequestAsync(restClient, restRequest);
+        if (response.IsSuccessful)
+            return Result.Success();
+
+        var error = JsonSerializer.Deserialize<MalError>(response.Content!, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        return Result.Failure(new Error(error?.Message ?? "Failed to update MAL list status"));
+    }
     #endregion
 
     #region Private

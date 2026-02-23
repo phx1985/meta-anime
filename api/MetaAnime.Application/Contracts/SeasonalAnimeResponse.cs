@@ -11,6 +11,7 @@ public sealed record SeasonalAnimeResponse(
     string? MediaType,
     string? Status,
     string? MalUrl,
+    bool InMal,
     bool InPlex,
     string? PlexUrl,
     bool InSonarr,

@@ -212,6 +212,88 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options, IPropert
 
         return Result.Success(matched);
     }
+
+    public async Task<Result<SonarrInstanceOptions>> GetOptionsAsync()
+    {
+        var (host, apiKey, tags, isConfigured) = await GetSettingsAsync();
+        if (!isConfigured)
+            return Result.Failure<SonarrInstanceOptions>(
+                new(Constants.Errors.NotConfigured, "Sonarr is not configured"));
+
+        var client = new RestClient(host);
+
+        var rootReq = new RestRequest("api/v3/rootfolder");
+        rootReq.AddParameter("apikey", apiKey);
+        var rootResp = await client.ExecuteAsync(rootReq);
+        if (!rootResp.IsSuccessful)
+            return Result.Failure<SonarrInstanceOptions>(
+                new("sonarr.rootfolders", rootResp.Content ?? "Failed to get root folders"));
+        var rawFolders = JsonSerializer.Deserialize<SonarrRootFolder[]>(rootResp.Content!, jsonOptions) ?? [];
+        IList<SonarrRootFolderInfo> rootFolders = rawFolders.Select(f => new SonarrRootFolderInfo(f.Id, f.Path, f.FreeSpace)).ToList();
+
+        var profileReq = new RestRequest("api/v3/qualityprofile");
+        profileReq.AddParameter("apikey", apiKey);
+        var profileResp = await client.ExecuteAsync(profileReq);
+        if (!profileResp.IsSuccessful)
+            return Result.Failure<SonarrInstanceOptions>(
+                new("sonarr.qualityprofiles", profileResp.Content ?? "Failed to get quality profiles"));
+        var rawProfiles = JsonSerializer.Deserialize<SonarrQualityProfile[]>(profileResp.Content!, jsonOptions) ?? [];
+        IList<SonarrQualityProfileInfo> profiles = rawProfiles.Select(p => new SonarrQualityProfileInfo(p.Id, p.Name)).ToList();
+
+        // Resolve configured tag names → Sonarr tag IDs
+        var sonarrTags = await GetSonarrTagsAsync(host, apiKey, tags);
+        IList<int> tagIds = sonarrTags?.Select(t => t.Id).ToList() ?? [];
+
+        return Result.Success(new SonarrInstanceOptions(rootFolders, profiles, tagIds));
+    }
+
+    public async Task<Result<SonarrAddedSeries>> AddSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, IList<int> tagIds)
+    {
+        var (host, apiKey, _, isConfigured) = await GetSettingsAsync();
+        if (!isConfigured)
+            return Result.Failure<SonarrAddedSeries>(new(Constants.Errors.NotConfigured, "Sonarr is not configured"));
+
+        var client = new RestClient(host);
+
+        // Look up series by TVDB ID
+        var lookupReq = new RestRequest("api/v3/series/lookup");
+        lookupReq.AddParameter("apikey", apiKey);
+        lookupReq.AddParameter("term", $"tvdb:{tvdbId}");
+        var lookupResp = await client.ExecuteAsync(lookupReq);
+        if (!lookupResp.IsSuccessful || string.IsNullOrEmpty(lookupResp.Content))
+            return Result.Failure<SonarrAddedSeries>(new("sonarr.lookup", "Series lookup failed"));
+
+        var lookupResults = JsonSerializer.Deserialize<SonarrSeries[]>(lookupResp.Content, jsonOptions);
+        var match = lookupResults?.FirstOrDefault();
+        if (match == null)
+            return Result.Failure<SonarrAddedSeries>(new(Constants.Errors.NotFound, $"TVDB ID {tvdbId} not found in Sonarr lookup"));
+
+        // Build the add-series payload
+        var addPayload = new
+        {
+            tvdbId,
+            title = match.Title,
+            titleSlug = match.TitleSlug,
+            images = match.Images,
+            seasons = match.Seasons?.Select(s => new { s.SeasonNumber, monitored = true }) ?? [],
+            rootFolderPath,
+            qualityProfileId,
+            seriesType = "anime",
+            seasonFolder = true,
+            monitored = true,
+            tags = tagIds,
+        };
+
+        var addReq = new RestRequest("api/v3/series", Method.Post);
+        addReq.AddParameter("apikey", apiKey);
+        addReq.AddJsonBody(addPayload);
+        var addResp = await client.ExecuteAsync(addReq);
+        if (!addResp.IsSuccessful)
+            return Result.Failure<SonarrAddedSeries>(new("sonarr.add", addResp.Content ?? "Failed to add series"));
+
+        var added = JsonSerializer.Deserialize<SonarrSeries>(addResp.Content!, jsonOptions)!;
+        return Result.Success(new SonarrAddedSeries(added.Id, added.Title, added.TitleSlug ?? added.Id.ToString()));
+    }
     #endregion
 
     #region Private Methods

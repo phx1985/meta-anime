@@ -82,12 +82,22 @@
   margin: 0;
 }
 
+// ─── Season tabs row ─────────────────────────────────────────────────────────
+
+.season-tabs-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 // ─── Season tabs ─────────────────────────────────────────────────────────────
 
 .season-tabs {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  flex: 1;
 }
 
 .season-tab {
@@ -109,10 +119,17 @@
     transform: translateY(-2px);
   }
 
+  // Active tab permanently shows the hover color; no pointer (clicking does nothing)
   &--active {
     border-color: var(--accent-primary);
-    background: color-mix(in srgb, var(--accent-primary) 15%, transparent);
+    background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 30%, transparent);
+    cursor: default;
+    transform: none;
+
+    &:hover {
+      transform: none;
+    }
   }
 }
 
@@ -139,6 +156,37 @@
   }
 }
 
+// ─── Load more seasons button ─────────────────────────────────────────────────
+
+.btn-load-seasons {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  border: 1px dashed var(--card-border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  white-space: nowrap;
+  align-self: stretch;
+
+  &:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+  }
+
+  &__icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+}
+
 // ─── Grid ────────────────────────────────────────────────────────────────────
 
 .seasonal-grid {
@@ -155,8 +203,17 @@
     grid-template-columns: repeat(3, 1fr);
   }
 
-  // Stagger card entrance animations
-  > div {
+  // Each wrapper cell stretches to fill the grid row height
+  > .seasonal-grid__cell {
+    display: flex;
+    flex-direction: column;
+
+    app-seasonal-card {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
     @for $i from 1 through 20 {
       &:nth-child(#{$i}) app-seasonal-card {
         animation-delay: #{($i - 1) * 0.04}s;

@@ -172,6 +172,7 @@ export interface SeasonalAnimeItem {
   mediaType?: string;
   status?: string;
   malUrl?: string;
+  inMal: boolean;
   inPlex: boolean;
   plexUrl?: string;
   inSonarr: boolean;

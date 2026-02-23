@@ -46,8 +46,30 @@
     "loading": "Loading seasonal anime…",
     "error": "Failed to load seasonal anime. Please try again later.",
     "empty": "No anime found for this season.",
+    "loadMoreSeasons": "More seasons",
     "notInPlex": "Not in your Plex library",
     "notInSonarr": "Not tracked by Sonarr",
+    "notInMal": "Not in your MAL list",
+    "addToSonarr": "Add to Sonarr",
+    "addToMal": "Add to MAL",
+    "rootFolder": "Root Folder",
+    "qualityProfile": "Quality Profile",
+    "sonarrAutoSettings": "Series type: Anime/Absolute · Season folders: Yes · Tags from config",
+    "sonarrOptionsError": "Failed to load Sonarr options.",
+    "sonarrAddError": "Failed to add series to Sonarr.",
+    "sonarrAddSuccess": "Successfully added to Sonarr!",
+    "malStatusLabel": "Status",
+    "episodesWatched": "Episodes Watched",
+    "score": "Score (0–10)",
+    "malAddError": "Failed to update MAL list.",
+    "malAddSuccess": "Successfully added to MAL list!",
+    "malStatus": {
+      "watching": "Watching",
+      "completed": "Completed",
+      "on_hold": "On Hold",
+      "dropped": "Dropped",
+      "plan_to_watch": "Plan to Watch"
+    },
     "season": {
       "winter": "Winter",
       "spring": "Spring",
@@ -381,5 +403,10 @@
       "cta": "Go to Sync",
       "dismiss": "Dismiss"
     }
+  },
+  "common": {
+    "cancel": "Cancel",
+    "add": "Add",
+    "confirm": "Confirm"
   }
 }

@@ -11,12 +11,14 @@ import {
   UpdateAnimeRequest,
   SeasonalAnimeItem
 } from '../models/anime.models';
+import { MalListStatusRequest } from '../models/sonarr.models';
 
 @Injectable({ providedIn: 'root' })
 export class AnimeService {
   private http = inject(HttpClient);
   private base = '/api/v1/animes';
   private seasonalBase = '/api/v1/seasonal';
+  private malBase = '/api/v1/mal';
 
   getStatistics(): Observable<AnimeStatisticsResponse> {
     return this.http.get<AnimeStatisticsResponse>(`${this.base}/statistics`);
@@ -74,5 +76,9 @@ export class AnimeService {
       .set('page', page)
       .set('pageSize', pageSize);
     return this.http.get<PagedResponse<SeasonalAnimeItem>>(this.seasonalBase, { params });
+  }
+
+  updateMalListStatus(malId: string, request: MalListStatusRequest): Observable<void> {
+    return this.http.put<void>(`${this.malBase}/list/${malId}`, request);
   }
 }
