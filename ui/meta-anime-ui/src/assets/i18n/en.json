@@ -70,6 +70,22 @@
       "noFilterActive": "No filter selected",
       "prompt": "Set your filters and press Search to explore your anime library."
     },
+    "presets": {
+      "label": "Presets",
+      "saveAs": "Save as preset",
+      "namePlaceholder": "Preset name…",
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete preset",
+      "builtIn": {
+        "currentlyAiring": "Currently Airing",
+        "topRated": "Top Rated",
+        "watching": "Watching",
+        "planToWatch": "Plan to Watch",
+        "hasFiles": "Has Files",
+        "actionAdventure": "Action / Adventure"
+      }
+    },
     "sort": {
       "by": "Sort by",
       "order": "Sort order",

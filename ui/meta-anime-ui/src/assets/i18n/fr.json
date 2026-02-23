@@ -70,6 +70,22 @@
       "noFilterActive": "Aucun filtre sélectionné",
       "prompt": "Définissez vos filtres et appuyez sur Rechercher pour explorer votre bibliothèque."
     },
+    "presets": {
+      "label": "Présélections",
+      "saveAs": "Enregistrer comme présélection",
+      "namePlaceholder": "Nom de la présélection…",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "delete": "Supprimer la présélection",
+      "builtIn": {
+        "currentlyAiring": "En cours de diffusion",
+        "topRated": "Les mieux notés",
+        "watching": "En cours",
+        "planToWatch": "À regarder",
+        "hasFiles": "Avec fichiers",
+        "actionAdventure": "Action / Aventure"
+      }
+    },
     "sort": {
       "by": "Trier par",
       "order": "Ordre de tri",

@@ -38,6 +38,75 @@
       <div class="filter-card__body" [@filterCollapse]="filterOpen() ? 'open' : 'closed'">
         <div class="filter-card__inner">
 
+          <!-- ── Presets ──────────────────────────────────────────────── -->
+          <div class="presets-section">
+            <div class="presets-header">
+              <span class="filter-label">{{ 'animeList.presets.label' | translate }}</span>
+              <button type="button" class="btn-save-preset" (click)="openSavePreset()">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                  <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                </svg>
+                {{ 'animeList.presets.saveAs' | translate }}
+              </button>
+            </div>
+
+            <!-- Save-as-preset inline form -->
+            @if (showSavePreset) {
+              <div class="preset-save-form">
+                <input
+                  class="preset-name-input"
+                  type="text"
+                  [(ngModel)]="newPresetName"
+                  [placeholder]="'animeList.presets.namePlaceholder' | translate"
+                  (keydown.enter)="confirmSavePreset()"
+                  (keydown.escape)="cancelSavePreset()"
+                  autofocus />
+                <button type="button" class="btn-preset-confirm" (click)="confirmSavePreset()" [disabled]="!newPresetName.trim()">
+                  {{ 'animeList.presets.save' | translate }}
+                </button>
+                <button type="button" class="btn-preset-cancel" (click)="cancelSavePreset()">
+                  {{ 'animeList.presets.cancel' | translate }}
+                </button>
+              </div>
+            }
+
+            <!-- Built-in + saved preset chips -->
+            <div class="preset-chips" role="list">
+              @for (p of presetService.builtInPresets; track p.id) {
+                <button
+                  type="button"
+                  class="preset-chip preset-chip--builtin"
+                  role="listitem"
+                  [attr.aria-label]="p.labelKey | translate"
+                  (click)="applyPreset(p)">
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <path d="M2 8l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  </svg>
+                  {{ p.labelKey | translate }}
+                </button>
+              }
+              @for (p of savedPresets(); track p.id) {
+                <button
+                  type="button"
+                  class="preset-chip preset-chip--saved"
+                  role="listitem"
+                  [attr.aria-label]="p.labelKey"
+                  (click)="applyPreset(p)">
+                  {{ p.labelKey }}
+                  <span
+                    class="preset-chip__delete"
+                    role="button"
+                    [attr.aria-label]="'animeList.presets.delete' | translate"
+                    (click)="deletePreset(p.id, $event)">
+                    <svg width="8" height="8" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                      <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
+                  </span>
+                </button>
+              }
+            </div>
+          </div>
+
           <!-- ── Row 1: Title search ──────────────────────────────────── -->
           <div class="filter-row">
             <div class="filter-field filter-field--grow">
