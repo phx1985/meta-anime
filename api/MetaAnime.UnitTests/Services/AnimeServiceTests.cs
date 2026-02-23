@@ -104,13 +104,13 @@ public class AnimeServiceTests
             .Setup(x => x.GetAllAsync())
             .ReturnsAsync(Result.Success<IList<SonarrSeries>>(sonarrSeries));
 
-        foreach (var id in seriesIds)
-        {
-            var capturedId = id;
-            _mockSonarrService
-                .Setup(x => x.GetCodecDistributionAsync(capturedId.ToString()))
-                .ReturnsAsync(new Dictionary<string, int> { ["h264"] = capturedId });
-        }
+        var bulkResult = seriesIds.ToDictionary(
+            id => id.ToString(),
+            id => new Dictionary<string, int> { ["h264"] = id });
+
+        _mockSonarrService
+            .Setup(x => x.GetBulkCodecDistributionsAsync(It.IsAny<IEnumerable<string>>()))
+            .ReturnsAsync(bulkResult);
 
         _mockAnimeRepository.Setup(x => x.BulkDeleteAllAsync()).Returns(Task.CompletedTask);
         _mockAnimeRepository.Setup(x => x.BulkInsertAsync(It.IsAny<IEnumerable<IAnimeConvertible>>())).Returns(Task.CompletedTask);
@@ -124,11 +124,9 @@ public class AnimeServiceTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        foreach (var id in seriesIds)
-        {
-            _mockSonarrService.Verify(x => x.GetCodecDistributionAsync(id.ToString()), Times.Once);
-        }
-
+        _mockSonarrService.Verify(
+            x => x.GetBulkCodecDistributionsAsync(It.IsAny<IEnumerable<string>>()),
+            Times.Once);
         sonarrSeries.All(s => s.CodecDistribution.ContainsKey("h264")).Should().BeTrue();
     }
 
