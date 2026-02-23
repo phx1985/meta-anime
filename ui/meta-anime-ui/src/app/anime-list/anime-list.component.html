@@ -131,58 +131,79 @@
           </div>
         </div>
 
-        <!-- Row 2: Genre · Watching state · Airing state -->
+        <!-- Row 2: Genre · Watch state pills -->
         <div class="filter-row">
           <div class="filter-field">
             <label class="filter-label" for="filterGenre">{{ 'animeList.filter.genre' | translate }}</label>
             <select id="filterGenre" class="filter-select" [(ngModel)]="filterGenre">
               <option value="">{{ 'animeList.filter.any' | translate }}</option>
-              @for (g of genreList; track g) {
+              @for (g of filteredGenreList(); track g) {
                 <option [value]="g">{{ ('genres.' + g) | translate }}</option>
               }
             </select>
           </div>
 
-          <div class="filter-field">
-            <label class="filter-label" for="filterWatchState">{{ 'animeList.filter.watchState' | translate }}</label>
-            <select id="filterWatchState" class="filter-select" [(ngModel)]="filterWatchState">
-              <option value="">{{ 'animeList.filter.any' | translate }}</option>
+          <div class="filter-field filter-field--pills">
+            <span class="filter-label">{{ 'animeList.filter.watchState' | translate }}</span>
+            <div class="filter-pills">
               @for (s of watchingStates; track s.value) {
-                <option [value]="s.value">{{ s.labelKey | translate }}</option>
+                <button
+                  type="button"
+                  class="filter-pill"
+                  [class.filter-pill--active]="filterWatchState.includes(s.value)"
+                  (click)="filterWatchState = togglePill(filterWatchState, s.value)">
+                  {{ s.labelKey | translate }}
+                </button>
               }
-            </select>
-          </div>
-
-          <div class="filter-field">
-            <label class="filter-label" for="filterAiringStatus">{{ 'animeList.filter.airingStatus' | translate }}</label>
-            <select id="filterAiringStatus" class="filter-select" [(ngModel)]="filterAiringStatus">
-              <option value="">{{ 'animeList.filter.any' | translate }}</option>
-              @for (s of airingStates; track s.value) {
-                <option [value]="s.value">{{ s.labelKey | translate }}</option>
-              }
-            </select>
+            </div>
           </div>
         </div>
 
-        <!-- Row 3: Codec · Has file -->
+        <!-- Row 3: Airing status pills · Codec pills · Has file pills -->
         <div class="filter-row">
-          <div class="filter-field">
-            <label class="filter-label" for="filterCodec">{{ 'animeList.filter.codec' | translate }}</label>
-            <select id="filterCodec" class="filter-select" [(ngModel)]="filterCodec">
-              <option value="">{{ 'animeList.filter.any' | translate }}</option>
-              @for (c of codecOptions; track c.value) {
-                <option [value]="c.value">{{ c.label }}</option>
+          <div class="filter-field filter-field--pills">
+            <span class="filter-label">{{ 'animeList.filter.airingStatus' | translate }}</span>
+            <div class="filter-pills">
+              @for (s of airingStates; track s.value) {
+                <button
+                  type="button"
+                  class="filter-pill"
+                  [class.filter-pill--active]="filterAiringStatus.includes(s.value)"
+                  (click)="filterAiringStatus = togglePill(filterAiringStatus, s.value)">
+                  {{ s.labelKey | translate }}
+                </button>
               }
-            </select>
+            </div>
           </div>
 
-          <div class="filter-field filter-field--compact">
-            <label class="filter-label" for="filterHasFile">{{ 'animeList.filter.hasFile' | translate }}</label>
-            <select id="filterHasFile" class="filter-select" [(ngModel)]="filterHasFile">
-              <option value="any">{{ 'animeList.filter.any' | translate }}</option>
-              <option value="yes">{{ 'animeList.filter.hasFileYes' | translate }}</option>
-              <option value="no">{{ 'animeList.filter.hasFileNo' | translate }}</option>
-            </select>
+          <div class="filter-field filter-field--pills">
+            <span class="filter-label">{{ 'animeList.filter.codec' | translate }}</span>
+            <div class="filter-pills">
+              @for (c of codecOptions; track c.value) {
+                <button
+                  type="button"
+                  class="filter-pill"
+                  [class.filter-pill--active]="filterCodec.includes(c.value)"
+                  (click)="filterCodec = togglePill(filterCodec, c.value)">
+                  {{ c.label }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="filter-field filter-field--pills filter-field--compact">
+            <span class="filter-label">{{ 'animeList.filter.hasFile' | translate }}</span>
+            <div class="filter-pills">
+              <button type="button" class="filter-pill" [class.filter-pill--active]="filterHasFile === 'any'" (click)="filterHasFile = 'any'">
+                {{ 'animeList.filter.any' | translate }}
+              </button>
+              <button type="button" class="filter-pill" [class.filter-pill--active]="filterHasFile === 'yes'" (click)="filterHasFile = 'yes'">
+                {{ 'animeList.filter.hasFileYes' | translate }}
+              </button>
+              <button type="button" class="filter-pill" [class.filter-pill--active]="filterHasFile === 'no'" (click)="filterHasFile = 'no'">
+                {{ 'animeList.filter.hasFileNo' | translate }}
+              </button>
+            </div>
           </div>
 
           <!-- Mobile-only sort controls -->

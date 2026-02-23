@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
@@ -14,6 +14,8 @@ const emptyResponse: PagedResponse<AnimeDetailsResponse> = {
 
 describe('AnimeListComponent', () => {
   let httpMock: HttpTestingController;
+  let fixture: ComponentFixture<AnimeListComponent>;
+  let comp: AnimeListComponent;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -28,6 +30,10 @@ describe('AnimeListComponent', () => {
     }).compileComponents();
 
     httpMock = TestBed.inject(HttpTestingController);
+    fixture = TestBed.createComponent(AnimeListComponent);
+    comp = fixture.componentInstance;
+    // Flush the NSFW settings call made in the constructor
+    httpMock.match(r => r.url.includes('/api/v1/settings')).forEach(r => r.flush([]));
   });
 
   afterEach(() => {
@@ -35,21 +41,17 @@ describe('AnimeListComponent', () => {
   });
 
   it('should create without making HTTP request on init', () => {
-    const fixture = TestBed.createComponent(AnimeListComponent);
-    // No HTTP request should be made until Search is pressed
     httpMock.expectNone(r => r.url.includes('/api/v1/animes'));
-    expect(fixture.componentInstance).toBeTruthy();
+    expect(comp).toBeTruthy();
   });
 
   it('should show search prompt before first search', () => {
-    const fixture = TestBed.createComponent(AnimeListComponent);
     fixture.detectChanges();
-    expect(fixture.componentInstance.searched()).toBe(false);
+    expect(comp.searched()).toBe(false);
   });
 
   it('should load animes when search() is called', async () => {
-    const fixture = TestBed.createComponent(AnimeListComponent);
-    fixture.componentInstance.search();
+    comp.search();
 
     const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
     req.flush({ data: [
@@ -60,14 +62,13 @@ describe('AnimeListComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.animes().length).toBe(2);
-    expect(fixture.componentInstance.animes()[0].title).toBe('Naruto');
-    expect(fixture.componentInstance.animes()[1].title).toBe('One Piece');
+    expect(comp.animes().length).toBe(2);
+    expect(comp.animes()[0].title).toBe('Naruto');
+    expect(comp.animes()[1].title).toBe('One Piece');
   });
 
   it('should show empty message when no animes after search', async () => {
-    const fixture = TestBed.createComponent(AnimeListComponent);
-    fixture.componentInstance.search();
+    comp.search();
     const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
     req.flush(emptyResponse);
 
@@ -81,8 +82,7 @@ describe('AnimeListComponent', () => {
   });
 
   it('should display total count when animes are loaded', async () => {
-    const fixture = TestBed.createComponent(AnimeListComponent);
-    fixture.componentInstance.search();
+    comp.search();
     const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
     req.flush({ data: [{ aniDbId: '1', title: 'Naruto' } as AnimeDetailsResponse],
       page: 1, pageSize: 20, totalCount: 42, totalPages: 3, hasNextPage: true, hasPreviousPage: false } as PagedResponse<AnimeDetailsResponse>);
@@ -90,53 +90,54 @@ describe('AnimeListComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.totalCount()).toBe(42);
+    expect(comp.totalCount()).toBe(42);
   });
 
   it('should default to displayMode 2', () => {
-    const fixture = TestBed.createComponent(AnimeListComponent);
-    expect(fixture.componentInstance.displayMode()).toBe(2);
+    expect(comp.displayMode()).toBe(2);
   });
 
   it('should update displayMode when setDisplayMode is called', () => {
-    const fixture = TestBed.createComponent(AnimeListComponent);
-    fixture.componentInstance.setDisplayMode(3);
-    expect(fixture.componentInstance.displayMode()).toBe(3);
+    comp.setDisplayMode(3);
+    expect(comp.displayMode()).toBe(3);
   });
 
   it('should set allLoaded when hasNextPage is false after search', async () => {
-    const fixture = TestBed.createComponent(AnimeListComponent);
-    fixture.componentInstance.search();
+    comp.search();
     const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
     req.flush({ data: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false });
 
     await fixture.whenStable();
-    expect(fixture.componentInstance.allLoaded()).toBe(true);
+    expect(comp.allLoaded()).toBe(true);
   });
 
   it('should request page size of 20', () => {
-    const fixture = TestBed.createComponent(AnimeListComponent);
-    fixture.componentInstance.search();
+    comp.search();
     const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
     expect(req.request.params.get('pageSize')).toBe('20');
     req.flush(emptyResponse);
   });
 
-  it('should reset filters when reset() is called', async () => {
-    const fixture = TestBed.createComponent(AnimeListComponent);
-    const comp = fixture.componentInstance;
-
+  it('should reset filters and clear results without triggering a search', () => {
     comp.filterGenre = 'Action';
-    comp.filterWatchState = 'watching';
+    comp.filterWatchState = ['watching'];
     comp.filterHasFile = 'yes';
     comp.reset();
 
-    const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
-    req.flush(emptyResponse);
-
-    await fixture.whenStable();
+    // No HTTP call should be made for animes after reset
+    httpMock.expectNone(r => r.url.includes('/api/v1/animes'));
     expect(comp.filterGenre).toBe('');
-    expect(comp.filterWatchState).toBe('');
+    expect(comp.filterWatchState).toEqual([]);
     expect(comp.filterHasFile).toBe('any');
+    expect(comp.searched()).toBe(false);
+    expect(comp.animes().length).toBe(0);
+  });
+
+  it('should send multi-value status params when multiple watch states selected', () => {
+    comp.filterWatchState = ['watching', 'completed'];
+    comp.search();
+    const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
+    expect(req.request.params.getAll('status')).toEqual(['watching', 'completed']);
+    req.flush(emptyResponse);
   });
 });

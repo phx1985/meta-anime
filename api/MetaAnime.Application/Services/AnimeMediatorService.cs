@@ -76,10 +76,10 @@ public class AnimeMediatorService(
             };
             bool sortDescending = filters?.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) == true;
             bool needsInMemoryPostFilter = !string.IsNullOrWhiteSpace(filters?.Genre)
-                                         || !string.IsNullOrWhiteSpace(filters?.Status)
-                                         || !string.IsNullOrWhiteSpace(filters?.AiringStatus)
+                                         || filters?.Status?.Length > 0
+                                         || filters?.AiringStatus?.Length > 0
                                          || filters?.HasFile.HasValue == true
-                                         || !string.IsNullOrWhiteSpace(filters?.Codec)
+                                         || filters?.Codec?.Length > 0
                                          || !showNsfw;
 
             List<string> aniDbIds;
@@ -249,11 +249,12 @@ public class AnimeMediatorService(
             );
         }
 
-        if (!string.IsNullOrWhiteSpace(filters.Status))
+        if (filters.Status?.Length > 0)
         {
             result = result.Where(a =>
-                a.MalAnimes?.Any(m => m.ViewState != null &&
-                    m.ViewState.Equals(filters.Status, StringComparison.OrdinalIgnoreCase)) == true);
+                filters.Status.Any(s =>
+                    a.MalAnimes?.Any(m => m.ViewState != null &&
+                        m.ViewState.Equals(s, StringComparison.OrdinalIgnoreCase)) == true));
         }
 
         if (!string.IsNullOrWhiteSpace(filters.Genre))
@@ -290,27 +291,26 @@ public class AnimeMediatorService(
         }
 
         // AiringStatus maps to the MAL series broadcast status (finished_airing / currently_airing / not_yet_aired)
-        if (!string.IsNullOrWhiteSpace(filters?.AiringStatus))
+        if (filters?.AiringStatus?.Length > 0)
         {
             result = result.Where(a =>
-                a.MalAnimes?.Any(m => m.Status != null &&
-                    m.Status.Contains(filters.AiringStatus, StringComparison.OrdinalIgnoreCase)) == true);
+                filters.AiringStatus.Any(s =>
+                    a.MalAnimes?.Any(m => m.Status != null &&
+                        m.Status.Contains(s, StringComparison.OrdinalIgnoreCase)) == true));
         }
 
         if (filters?.HasFile.HasValue == true)
         {
-            if (filters.HasFile.Value)
-                result = result.Where(a => a.SonarrAnimes?.Any(s => s.Exists) == true);
-            else
-                result = result.Where(a => a.SonarrAnimes == null || !a.SonarrAnimes.Any(s => s.Exists));
+            var wantFiles = filters.HasFile.Value;
+            result = result.Where(a => HasDownloadedFiles(a) == wantFiles);
         }
 
-        if (!string.IsNullOrWhiteSpace(filters?.Codec))
+        if (filters?.Codec?.Length > 0)
         {
             result = result.Where(a =>
                 a.SonarrAnimes?.Any(s =>
                     s.CodecDistribution?.Keys.Any(k =>
-                        k.Contains(filters.Codec, StringComparison.OrdinalIgnoreCase)) == true) == true);
+                        filters.Codec.Any(c => k.Contains(c, StringComparison.OrdinalIgnoreCase))) == true) == true);
         }
 
         if (!showNsfw)
@@ -402,6 +402,15 @@ public class AnimeMediatorService(
         for (int i = 0; i <= s.Length - 3; i++)
             yield return s.Substring(i, 3);
     }
+
+    /// <summary>
+    /// Returns <c>true</c> when the anime has at least one Sonarr series with downloaded episode files
+    /// (determined by non-zero SizeOnDisk or at least one season with available episodes).
+    /// </summary>
+    private static bool HasDownloadedFiles(AnimeDetailsResponse anime) =>
+        anime.SonarrAnimes?.Any(s =>
+            (s.SizeOnDisk != null && s.SizeOnDisk > 0) ||
+            s.SeasonInfo?.Any(si => si.AvailableEpisodes > 0) == true) == true;
 
     public async Task<Result<AnimeStatisticsResponse>> GetStatisticsAsync()
     {

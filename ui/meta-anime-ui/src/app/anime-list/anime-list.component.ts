@@ -6,6 +6,7 @@ import {
   OnDestroy,
   QueryList,
   ViewChildren,
+  computed,
   inject,
   signal,
 } from '@angular/core';
@@ -14,6 +15,7 @@ import { FormsModule } from '@angular/forms';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
+import { SettingsService } from '../services/settings.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
 import { AnimeDetailsResponse, AnimeFilters } from '../models/anime.models';
 import { AnimeCardComponent } from './anime-card/anime-card.component';
@@ -29,6 +31,9 @@ export const GENRE_LIST = [
   'Slice of Life', 'Sports', 'Supernatural', 'Suspense', 'Isekai', 'Mecha', 'Music',
   'Psychological', 'School', 'Seinen', 'Shoujo', 'Shounen', 'Space', 'Military', 'Historical',
 ];
+
+const NSFW_GENRES = ['Ecchi', 'Hentai', 'Erotica', 'Boys Love', 'Girls Love'];
+const SFW_GENRE_LIST = GENRE_LIST.filter(g => !NSFW_GENRES.includes(g));
 
 export const WATCHING_STATES = [
   { value: 'watching',      labelKey: 'animeCard.malStatus.watching' },
@@ -89,9 +94,10 @@ export const CODEC_OPTIONS = [
   ],
 })
 export class AnimeListComponent implements AfterViewInit, OnDestroy {
-  private animeService = inject(AnimeService);
-  private syncSignalR  = inject(SyncSignalRService);
-  private destroyRef   = inject(DestroyRef);
+  private animeService    = inject(AnimeService);
+  private settingsService = inject(SettingsService);
+  private syncSignalR     = inject(SyncSignalRService);
+  private destroyRef      = inject(DestroyRef);
 
   @ViewChildren('animeCard', { read: ElementRef }) cardRefs!: QueryList<ElementRef>;
 
@@ -104,22 +110,27 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   displayMode = signal<DisplayMode>(2);
   layoutState = signal(0);
   searched    = signal(false);
+  showNsfw    = signal(true);
 
   // ── Filter state ──────────────────────────────────────────────────────────
   filterTitle        = '';
   filterGenre        = '';
-  filterWatchState   = '';
-  filterAiringStatus = '';
+  filterWatchState:   string[] = [];
+  filterAiringStatus: string[] = [];
   filterHasFile: 'any' | 'yes' | 'no' = 'any';
-  filterCodec        = '';
+  filterCodec:        string[] = [];
   sortBy             = 'title';
   sortOrder: 'asc' | 'desc' = 'asc';
 
-  readonly genreList      = GENRE_LIST;
   readonly watchingStates = WATCHING_STATES;
   readonly airingStates   = AIRING_STATES;
   readonly sortOptions    = SORT_OPTIONS;
   readonly codecOptions   = CODEC_OPTIONS;
+
+  /** Genre list filtered by NSFW setting: NSFW genres are hidden when showNsfw is false. */
+  readonly filteredGenreList = computed(() =>
+    this.showNsfw() ? GENRE_LIST : SFW_GENRE_LIST
+  );
 
   private currentPage = 1;
   private scrollObserver: IntersectionObserver | null = null;
@@ -128,6 +139,11 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     const saved = localStorage.getItem(DISPLAY_MODE_KEY);
     const n = Number(saved);
     if (saved && (n === 1 || n === 2 || n === 3)) this.displayMode.set(n as DisplayMode);
+
+    // Fetch NSFW setting to filter genre list
+    this.settingsService.getShowNsfw()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(show => this.showNsfw.set(show));
 
     // Auto-refresh when a sync completes while on this page
     this.syncSignalR.syncCompleted$
@@ -165,6 +181,15 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     if (this.searched()) this.loadAnimes(true);
   }
 
+  // ── Pill multi-select toggle ──────────────────────────────────────────────
+
+  /** Toggles a value in a multi-select array. Returns a new array. */
+  togglePill(current: string[], value: string): string[] {
+    return current.includes(value)
+      ? current.filter(v => v !== value)
+      : [...current, value];
+  }
+
   // ── Search / Reset ────────────────────────────────────────────────────────
 
   search(): void {
@@ -172,17 +197,21 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.loadAnimes(true);
   }
 
+  /** Clears all filters and empties the results list without triggering a search. */
   reset(): void {
     this.filterTitle        = '';
     this.filterGenre        = '';
-    this.filterWatchState   = '';
-    this.filterAiringStatus = '';
+    this.filterWatchState   = [];
+    this.filterAiringStatus = [];
     this.filterHasFile      = 'any';
-    this.filterCodec        = '';
+    this.filterCodec        = [];
     this.sortBy             = 'title';
     this.sortOrder          = 'asc';
-    this.searched.set(true);
-    this.loadAnimes(true);
+    this.searched.set(false);
+    this.animes.set([]);
+    this.totalCount.set(0);
+    this.allLoaded.set(false);
+    this.error.set(false);
   }
 
   // ── Private ───────────────────────────────────────────────────────────────
@@ -197,10 +226,10 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     return {
       title:        this.filterTitle        || undefined,
       genre:        this.filterGenre        || undefined,
-      status:       this.filterWatchState   || undefined,
-      airingStatus: this.filterAiringStatus || undefined,
+      status:       this.filterWatchState.length   ? this.filterWatchState   : undefined,
+      airingStatus: this.filterAiringStatus.length ? this.filterAiringStatus : undefined,
       hasFile:      this.resolveHasFile(),
-      codec:        this.filterCodec        || undefined,
+      codec:        this.filterCodec.length        ? this.filterCodec        : undefined,
       sortBy:       this.sortBy,
       sortOrder:    this.sortOrder,
     };

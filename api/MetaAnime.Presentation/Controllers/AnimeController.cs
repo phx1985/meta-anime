@@ -36,14 +36,14 @@ public class AnimeController(IMediator mediator)
         [FromQuery] int pageSize = 100,
         [FromQuery] string? title = null,
         [FromQuery] string? source = null,
-        [FromQuery] string? status = null,
+        [FromQuery] string[]? status = null,
         [FromQuery] string? genre = null,
         [FromQuery] string? sortBy = null,
         [FromQuery] string? sortOrder = null,
         [FromQuery] bool enriched = false,
-        [FromQuery] string? airingStatus = null,
+        [FromQuery] string[]? airingStatus = null,
         [FromQuery] bool? hasFile = null,
-        [FromQuery] string? codec = null)
+        [FromQuery] string[]? codec = null)
     {
         if (page < 1) page = 1;
         if (pageSize < 1 || pageSize > 100) pageSize = 100;
