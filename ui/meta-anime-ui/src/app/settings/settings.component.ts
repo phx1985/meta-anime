@@ -118,14 +118,8 @@ export class SettingsComponent {
   /** Expose formatters to template */
   readonly fmtElapsed = fmtElapsed;
 
-  /** Scroll listener for active-section tracking — cleaned up on destroy */
-  private _scrollListener?: () => void;
-  /** While true, the scroll listener won't override the manually-set active category */
-  private _navScrollLocked = false;
-
   // ── Timing constants ─────────────────────────────────────────────────────
-  private static readonly HIGHLIGHT_DURATION_MS   = 2000;
-  private static readonly OBSERVER_SETUP_DELAY_MS = 120;
+  private static readonly HIGHLIGHT_DURATION_MS = 2000;
 
   /** Locale-aware date formatter — uses current app language */
   fmtDate(iso: string): string {
@@ -146,19 +140,14 @@ export class SettingsComponent {
   }
 
   /** Scroll smoothly to a settings section and briefly highlight it.
-   *  Sets `activeCategory` synchronously so the sidenav active indicator
-   *  updates immediately on click, regardless of scroll position.
-   *  Locks the scroll listener for 600 ms to prevent it from overriding
-   *  the manually-selected category during the smooth-scroll. */
+   *  Sets `activeCategory` synchronously so the sidenav updates immediately on click. */
   scrollToSection(cat: string): void {
     const el = document.getElementById(this.sectionId(cat));
     if (!el) return;
-    this.activeCategory.set(cat);   // immediate nav sync
+    this.activeCategory.set(cat);
     this.highlighted.set(cat);
-    this._navScrollLocked = true;   // prevent scroll listener from overriding
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setTimeout(() => {
-      this._navScrollLocked = false;
       if (this.highlighted() === cat) this.highlighted.set(null);
     }, SettingsComponent.HIGHLIGHT_DURATION_MS);
   }
@@ -174,15 +163,16 @@ export class SettingsComponent {
           this.settings.set(data);
           this.buildForms(data);
           this.loading.set(false);
-          const SCROLL_DELAY_MS = 80;
+          // Set active nav to first category on load
+          const first = this.navItems()[0];
+          if (first) this.activeCategory.set(first);
+          // Scroll to fragment if present (e.g. from toast CTA)
           const fragment = this.route.snapshot.fragment;
           if (fragment) {
             setTimeout(() => {
               document.getElementById(fragment)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, SCROLL_DELAY_MS);
+            }, 80);
           }
-      // Set up scroll-based active-section tracking after DOM renders
-          setTimeout(() => this.setupActiveSectionTracking(), SettingsComponent.OBSERVER_SETUP_DELAY_MS);
         },
         error: () => {
           this.error.set(true);
@@ -208,11 +198,6 @@ export class SettingsComponent {
     this.signalR.syncError$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(err => {
       if (err) this.syncing.set(false);
     });
-
-    // Remove scroll listener on destroy
-    this.destroyRef.onDestroy(() => {
-      if (this._scrollListener) window.removeEventListener('scroll', this._scrollListener);
-    });
   }
 
   private loadSyncStatus(): void {
@@ -234,45 +219,6 @@ export class SettingsComponent {
     }
     this.editing.set(editingInit);
     this.revealed.set(revealedInit);
-  }
-
-  /** Track active section using a scroll listener — correctly handles short last sections */
-  private setupActiveSectionTracking(): void {
-    // Remove any previous listener
-    if (this._scrollListener) window.removeEventListener('scroll', this._scrollListener);
-
-    const NAVBAR_OFFSET = 90; // px — approx sticky navbar height
-
-    // Build a stable ordered list of { cat, el } pairs
-    const sections = this.navItems()
-      .map(cat => ({ cat, el: document.getElementById(this.sectionId(cat)) }))
-      .filter((s): s is { cat: string; el: HTMLElement } => s.el !== null);
-
-    const pick = () => {
-      // While a manual nav click is in progress, don't override activeCategory
-      if (this._navScrollLocked) return;
-
-      // If the page is scrolled near the bottom, activate the last section
-      const scrollBottom = window.scrollY + window.innerHeight;
-      const pageHeight   = document.documentElement.scrollHeight;
-      if (scrollBottom >= pageHeight - 80) {
-        this.activeCategory.set(sections[sections.length - 1]?.cat ?? '');
-        return;
-      }
-      // Find the section whose top edge is closest to (but not below) NAVBAR_OFFSET.
-      let best = sections[0]?.cat ?? '';
-      for (const { cat, el } of sections) {
-        const top = el.getBoundingClientRect().top;
-        if (top <= NAVBAR_OFFSET + 10) {
-          best = cat;
-        }
-      }
-      this.activeCategory.set(best);
-    };
-
-    this._scrollListener = pick;
-    window.addEventListener('scroll', pick, { passive: true });
-    pick(); // run once immediately to set initial state
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

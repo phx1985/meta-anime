@@ -245,6 +245,30 @@
   "lang": {
     "switch": "Français"
   },
+  "notifications": {
+    "center": {
+      "title": "Notifications",
+      "empty": "All caught up!",
+      "markAllRead": "Mark all read",
+      "dismiss": "Dismiss"
+    },
+    "time": {
+      "justNow": "just now",
+      "minutesAgo": "{{n}}m ago",
+      "hoursAgo": "{{n}}h ago",
+      "daysAgo": "{{n}}d ago"
+    },
+    "welcome": {
+      "title": "Welcome to MetaAnime 👋",
+      "message": "MetaAnime aggregates your anime library from Plex, Sonarr and MyAnimeList into one elegant hub. Start by running your first sync.",
+      "action": "Run first sync"
+    },
+    "noSync": {
+      "title": "First sync needed",
+      "message": "Your library has not been synced yet. Run a sync to populate your anime list with metadata.",
+      "action": "Go to Sync"
+    }
+  },
   "toast": {
     "noSync": {
       "title": "No sync yet",

@@ -40,7 +40,7 @@
           <a class="provider-link"
              [href]="malHomeUrl"
              target="_blank" rel="noopener noreferrer"
-             [title]="'MyAnimeList'">
+             title="MyAnimeList">
             <img src="assets/images/mal.svg" alt="MAL" width="18" height="18" />
           </a>
           @if (sonarrHomeUrl()) {
@@ -58,6 +58,106 @@
                title="Plex">
               <img src="assets/images/plex.svg" alt="Plex" width="18" height="18" />
             </a>
+          }
+        </div>
+
+        <span class="navbar-divider" aria-hidden="true"></span>
+
+        <!-- ── Notification bell ── -->
+        <div class="notif-wrapper" (click)="$event.stopPropagation()">
+          <button
+            class="btn-notif"
+            type="button"
+            (click)="toggleNotifCenter($event)"
+            [class.btn-notif--active]="notifCenterOpen()"
+            [attr.aria-expanded]="notifCenterOpen()"
+            [attr.aria-label]="'notifications.center.title' | translate">
+            <!-- Bell SVG -->
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            @if (notifService.unacknowledgedCount() > 0) {
+              <span class="notif-badge notif-badge--{{ notifService.badgeSeverity() }}" aria-hidden="true">
+                {{ notifService.unacknowledgedCount() > 9 ? '9+' : notifService.unacknowledgedCount() }}
+              </span>
+            }
+          </button>
+
+          <!-- Notification center dropdown -->
+          @if (notifCenterOpen()) {
+            <div class="notif-panel" role="dialog" (click)="$event.stopPropagation()">
+              <div class="notif-panel-header">
+                <span class="notif-panel-title">{{ 'notifications.center.title' | translate }}</span>
+                @if (notifService.unacknowledgedCount() > 0) {
+                  <button class="notif-mark-all" type="button" (click)="notifService.acknowledgeAll()">
+                    {{ 'notifications.center.markAllRead' | translate }}
+                  </button>
+                }
+              </div>
+              <div class="notif-panel-body">
+                @if (notifService.unacknowledged().length === 0) {
+                  <div class="notif-empty">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                      <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    <span>{{ 'notifications.center.empty' | translate }}</span>
+                  </div>
+                }
+                @for (notif of notifService.unacknowledged(); track notif.id) {
+                  <div class="notif-item notif-item--{{ notif.severity }}"
+                       [class.notif-item--clickable]="!!notif.action"
+                       (click)="handleNotifClick(notif)">
+                    <!-- Severity icon -->
+                    <div class="notif-item-icon" aria-hidden="true">
+                      @switch (notif.severity) {
+                        @case ('error') {
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+                          </svg>
+                        }
+                        @case ('warning') {
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                          </svg>
+                        }
+                        @case ('success') {
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                          </svg>
+                        }
+                        @default {
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                          </svg>
+                        }
+                      }
+                    </div>
+                    <div class="notif-item-content">
+                      <div class="notif-item-title">{{ notif.titleKey | translate }}</div>
+                      <div class="notif-item-msg">{{ notif.messageKey | translate }}</div>
+                      <div class="notif-item-meta">
+                        <span class="notif-item-time">{{ formatRelTime(notif.timestamp) }}</span>
+                        @if (notif.action) {
+                          <span class="notif-item-action">{{ notif.action.labelKey | translate }} →</span>
+                        }
+                      </div>
+                    </div>
+                    <button class="notif-item-dismiss" type="button"
+                            (click)="$event.stopPropagation(); notifService.acknowledge(notif.id)"
+                            [attr.aria-label]="'notifications.center.dismiss' | translate">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
           }
         </div>
 
@@ -124,28 +224,53 @@
 
 <router-outlet />
 
-<!-- ── No-sync toast ─────────────────────────────────────────────────────── -->
-@if (showNoSyncToast()) {
-  <div class="no-sync-toast" role="alert" aria-live="polite">
-    <div class="no-sync-toast-icon" aria-hidden="true">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/>
-        <line x1="12" y1="8" x2="12" y2="12"/>
-        <line x1="12" y1="16" x2="12.01" y2="16"/>
-      </svg>
+<!-- ── Toast stack (top-right, below navbar) ──────────────────────────────── -->
+<div class="toast-stack" aria-live="polite" aria-atomic="false">
+  @for (toast of notifService.activeToasts(); track toast.id) {
+    <div class="toast-item toast-item--{{ toast.severity }}" role="alert">
+      <!-- Severity icon -->
+      <div class="toast-item-icon" aria-hidden="true">
+        @switch (toast.severity) {
+          @case ('error') {
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+          }
+          @case ('warning') {
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          }
+          @case ('success') {
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          }
+          @default {
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          }
+        }
+      </div>
+      <div class="toast-item-body">
+        <strong class="toast-item-title">{{ toast.titleKey | translate }}</strong>
+        <span class="toast-item-msg">{{ toast.messageKey | translate }}</span>
+      </div>
+      @if (toast.action) {
+        <button class="toast-item-action" type="button" (click)="handleToastAction(toast)">
+          {{ toast.action.labelKey | translate }}
+        </button>
+      }
+      <button class="toast-item-close" type="button"
+              (click)="notifService.dismissToast(toast.id)"
+              aria-label="Dismiss">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
-    <div class="no-sync-toast-body">
-      <strong class="no-sync-toast-title">{{ 'toast.noSync.title' | translate }}</strong>
-      <span class="no-sync-toast-msg">{{ 'toast.noSync.message' | translate }}</span>
-    </div>
-    <button type="button" class="no-sync-toast-cta" (click)="goToSync()">
-      {{ 'toast.noSync.cta' | translate }}
-    </button>
-    <button type="button" class="no-sync-toast-close" (click)="dismissNoSyncToast()"
-            [attr.aria-label]="'toast.noSync.dismiss' | translate">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
-}
+  }
+</div>
+
