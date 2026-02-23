@@ -56,6 +56,11 @@
 
         <!-- Status pills row -->
         <div class="status-pills">
+          @if (mediaType) {
+            <span class="pill pill--media-type">
+              {{ mediaTypeLabel(mediaType) }}
+            </span>
+          }
           @if (malViewState) {
             <span class="pill pill--{{ malViewState }}">
               {{ viewStateLabel(malViewState) }}

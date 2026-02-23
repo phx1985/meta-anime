@@ -113,8 +113,12 @@ export class SettingsComponent {
   /** Expose formatters to template */
   readonly fmtElapsed = fmtElapsed;
 
-  // ── Timing constants ─────────────────────────────────────────────────────
+  // ── Timing / layout constants ──────────────────────────────────────────────
   private static readonly HIGHLIGHT_DURATION_MS = 2000;
+  /** Fallback navbar height in px when `.navbar` cannot be measured */
+  private static readonly DEFAULT_NAVBAR_HEIGHT_PX = 56;
+  /** Extra breathing room above the scroll target */
+  private static readonly SCROLL_OFFSET_PADDING_PX = 8;
 
   /** Locale-aware date formatter — uses current app language */
   fmtDate(iso: string): string {
@@ -134,14 +138,27 @@ export class SettingsComponent {
     return cat === 'sync' ? 'sync-section' : `section-${cat}`;
   }
 
-  /** Scroll smoothly to a settings section and briefly highlight it.
+  /** Scroll smoothly to a settings section, accounting for sticky navbar + mobile subnav.
    *  Sets `activeCategory` synchronously so the sidenav updates immediately on click. */
   scrollToSection(cat: string): void {
     const el = document.getElementById(this.sectionId(cat));
     if (!el) return;
     this.activeCategory.set(cat);
     this.highlighted.set(cat);
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    // Measure sticky headers so their height is subtracted from scroll target
+    const navbar = document.querySelector('.navbar') as HTMLElement | null;
+    const mobileSubnav = document.querySelector('.settings-mobile-subnav') as HTMLElement | null;
+    const subnavVisible = mobileSubnav
+      ? window.getComputedStyle(mobileSubnav).display !== 'none'
+      : false;
+    const offset = (navbar?.offsetHeight ?? SettingsComponent.DEFAULT_NAVBAR_HEIGHT_PX)
+                 + (subnavVisible ? (mobileSubnav?.offsetHeight ?? 0) : 0)
+                 + SettingsComponent.SCROLL_OFFSET_PADDING_PX;
+
+    const y = el.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top: y, behavior: 'smooth' });
+
     setTimeout(() => {
       if (this.highlighted() === cat) this.highlighted.set(null);
     }, SettingsComponent.HIGHLIGHT_DURATION_MS);

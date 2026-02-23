@@ -17,7 +17,8 @@ public sealed record MalAnimeInfo(
     string? EndDate,
     MalAlternativeTitles? AlternativeTitles,
     string? CoverImageUrl,
-    string? Status
+    string? Status,
+    string? MediaType
 )
 {
     public MalAnimeInfo(Anime? anime, string malBaseUrl)
@@ -35,7 +36,8 @@ public sealed record MalAnimeInfo(
             EndDate: null,
             AlternativeTitles: null,
             CoverImageUrl: null,
-            Status: null
+            Status: null,
+            MediaType: null
         )
     { }
 
@@ -65,7 +67,8 @@ public sealed record MalAnimeInfo(
                     malAnime.AlternativeTitles.Synonyms?.ToArray())
                 : null,
             malAnime?.MainPicture?.Large ?? malAnime?.MainPicture?.Medium,
-            malAnime?.Status
+            malAnime?.Status,
+            malAnime?.MediaType
         )
     { }
 }

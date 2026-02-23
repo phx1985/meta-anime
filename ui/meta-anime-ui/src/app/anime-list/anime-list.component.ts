@@ -69,6 +69,15 @@ export const CODEC_OPTIONS = [
   { value: 'mpeg2', label: 'MPEG-2' },
 ];
 
+export const MEDIA_TYPE_OPTIONS = [
+  { value: 'tv',      labelKey: 'animeCard.mediaType.tv' },
+  { value: 'movie',   labelKey: 'animeCard.mediaType.movie' },
+  { value: 'ova',     labelKey: 'animeCard.mediaType.ova' },
+  { value: 'ona',     labelKey: 'animeCard.mediaType.ona' },
+  { value: 'special', labelKey: 'animeCard.mediaType.special' },
+  { value: 'music',   labelKey: 'animeCard.mediaType.music' },
+];
+
 @Component({
   selector: 'app-anime-list',
   standalone: true,
@@ -140,6 +149,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   filterAiringStatus: string[] = [];
   filterHasFile: 'any' | 'yes' | 'no' = 'any';
   filterCodec:        string[] = [];
+  filterMediaType:    string[] = [];
   sortBy             = 'title';
   sortOrder: 'asc' | 'desc' = 'asc';
 
@@ -147,6 +157,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   readonly airingStates   = AIRING_STATES;
   readonly sortOptions    = SORT_OPTIONS;
   readonly codecOptions   = CODEC_OPTIONS;
+  readonly mediaTypeOptions = MEDIA_TYPE_OPTIONS;
 
   /** Genre list filtered by NSFW setting */
   readonly filteredGenreList = computed(() =>
@@ -170,6 +181,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     if (this.filterAiringStatus.length) n++;
     if (this.filterHasFile !== 'any') n++;
     if (this.filterCodec.length) n++;
+    if (this.filterMediaType.length) n++;
     return n;
   }
 
@@ -181,6 +193,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     if (this.filterAiringStatus.length) n++;
     if (this.filterHasFile !== 'any') n++;
     if (this.filterCodec.length) n++;
+    if (this.filterMediaType.length) n++;
     if (this.sortBy !== 'title' || this.sortOrder !== 'asc') n++;
     return n;
   }
@@ -216,6 +229,11 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     if (this.filterCodec.length) {
       parts.push(this.filterCodec
         .map(v => CODEC_OPTIONS.find(c => c.value === v)?.label ?? v)
+        .join(', '));
+    }
+    if (this.filterMediaType.length) {
+      parts.push(this.filterMediaType
+        .map(v => this.translateService.instant(`animeCard.mediaType.${v}`))
         .join(', '));
     }
     const isDefaultSort = this.sortBy === 'title' && this.sortOrder === 'asc';
@@ -342,6 +360,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.filterAiringStatus = [];
     this.filterHasFile      = 'any';
     this.filterCodec        = [];
+    this.filterMediaType    = [];
     this.sortBy             = 'title';
     this.sortOrder          = 'asc';
     this.searched.set(false);
@@ -368,6 +387,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.filterAiringStatus = f.airingStatus  ?? [];
     this.filterHasFile      = f.hasFile      ?? 'any';
     this.filterCodec        = f.codec        ?? [];
+    this.filterMediaType    = f.mediaType    ?? [];
     this.sortBy             = f.sortBy       ?? 'title';
     this.sortOrder          = f.sortOrder    ?? 'asc';
     this.showSavePreset     = false;
@@ -375,7 +395,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     // Open advanced section if the preset uses any advanced filter
     const hasAdvanced = !!(
       f.genre?.length || f.watchState?.length || f.airingStatus?.length ||
-      f.hasFile || f.codec?.length ||
+      f.hasFile || f.codec?.length || f.mediaType?.length ||
       (f.sortBy && f.sortBy !== 'title') || (f.sortOrder && f.sortOrder !== 'asc')
     );
     if (hasAdvanced) this.advancedOpen.set(true);
@@ -426,6 +446,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
       airingStatus:  this.filterAiringStatus.length ? this.filterAiringStatus : undefined,
       hasFile:       this.filterHasFile !== 'any'   ? this.filterHasFile      : undefined,
       codec:         this.filterCodec.length        ? this.filterCodec        : undefined,
+      mediaType:     this.filterMediaType.length    ? this.filterMediaType    : undefined,
       sortBy:        this.sortBy    !== 'title'     ? this.sortBy             : undefined,
       sortOrder:     this.sortOrder !== 'asc'       ? this.sortOrder          : undefined,
     };
@@ -446,6 +467,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
       airingStatus:  this.filterAiringStatus.length ? this.filterAiringStatus : undefined,
       hasFile:       this.resolveHasFile(),
       codec:         this.filterCodec.length        ? this.filterCodec        : undefined,
+      mediaType:     this.filterMediaType.length    ? this.filterMediaType    : undefined,
       sortBy:        this.sortBy,
       sortOrder:     this.sortOrder,
     };

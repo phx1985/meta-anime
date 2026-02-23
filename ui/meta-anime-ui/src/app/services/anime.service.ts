@@ -36,6 +36,7 @@ export class AnimeService {
     if (filters?.airingStatus?.length) filters.airingStatus.forEach(s => (params = params.append('airingStatus', s)));
     if (filters?.hasFile !== undefined) params = params.set('hasFile', filters.hasFile);
     if (filters?.codec?.length) filters.codec.forEach(c => (params = params.append('codec', c)));
+    if (filters?.mediaType?.length) filters.mediaType.forEach(t => (params = params.append('mediaType', t)));
     if (enriched !== undefined) params = params.set('enriched', enriched);
     return this.http.get<PagedResponse<AnimeDetailsResponse>>(this.base, { params });
   }

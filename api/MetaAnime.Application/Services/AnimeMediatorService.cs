@@ -83,6 +83,7 @@ public class AnimeMediatorService(
                                          || filters?.AiringStatus?.Length > 0
                                          || filters?.HasFile.HasValue == true
                                          || filters?.Codec?.Length > 0
+                                         || filters?.MediaType?.Length > 0
                                          || !showNsfw;
 
             List<string> aniDbIds;
@@ -324,6 +325,14 @@ public class AnimeMediatorService(
                 a.SonarrAnimes?.Any(s =>
                     s.CodecDistribution?.Keys.Any(k =>
                         filters.Codec.Any(c => k.Contains(c, StringComparison.OrdinalIgnoreCase))) == true) == true);
+        }
+
+        if (filters?.MediaType?.Length > 0)
+        {
+            result = result.Where(a =>
+                filters.MediaType.Any(t =>
+                    a.MalAnimes?.Any(m => m.MediaType != null &&
+                        m.MediaType.Equals(t, StringComparison.OrdinalIgnoreCase)) == true));
         }
 
         if (!showNsfw)
