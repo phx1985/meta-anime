@@ -5,6 +5,7 @@ public record AnimeFilters(
     string? Source = null,
     string[]? Status = null,
     string[]? Genre = null,
+    string? GenreOperator = "or",
     string? SortBy = null,
     string? SortOrder = null,
     string[]? AiringStatus = null,

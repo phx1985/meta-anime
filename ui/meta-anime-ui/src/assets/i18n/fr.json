@@ -50,9 +50,11 @@
     "cols2": "2 colonnes",
     "cols3": "3 colonnes",
     "filter": {
-      "title": "Titre",
+      "title": "Filtres",
+      "titleSearch": "Titre",
       "titlePlaceholder": "Rechercher par titre…",
       "genre": "Genre",
+      "genreOperator": "Logique genre",
       "watchState": "Statut de visionnage",
       "airingStatus": "Statut de diffusion",
       "hasFile": "Fichiers",
@@ -60,8 +62,11 @@
       "hasFileNo": "Sans fichiers",
       "codec": "Codec",
       "any": "Tous",
+      "clear": "Effacer la sélection",
       "search": "Rechercher",
       "reset": "Réinitialiser",
+      "expandFilters": "Développer les filtres",
+      "collapseFilters": "Réduire les filtres",
       "prompt": "Définissez vos filtres et appuyez sur Rechercher pour explorer votre bibliothèque."
     },
     "sort": {

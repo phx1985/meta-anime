@@ -3,6 +3,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  HostListener,
   OnDestroy,
   QueryList,
   ViewChildren,
@@ -12,7 +13,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
+import { trigger, state, style, animate, transition, query, stagger } from '@angular/animations';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
@@ -84,14 +85,10 @@ export const CODEC_OPTIONS = [
         ], { optional: true }),
       ]),
     ]),
-    trigger('filterPanel', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(-8px)' }),
-        animate('220ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 1, transform: 'none' })),
-      ]),
-      transition(':leave', [
-        animate('180ms cubic-bezier(0.4, 0, 1, 1)', style({ opacity: 0, transform: 'translateY(-8px)' })),
-      ]),
+    trigger('filterCollapse', [
+      state('open',   style({ height: '*',    opacity: 1, overflow: 'hidden' })),
+      state('closed', style({ height: '0px', opacity: 0, overflow: 'hidden' })),
+      transition('open <=> closed', animate('320ms cubic-bezier(0.4, 0, 0.2, 1)')),
     ]),
   ],
 })
@@ -114,9 +111,16 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   searched    = signal(false);
   showNsfw    = signal(true);
 
+  /** Whether the filter body is expanded */
+  filterOpen  = signal(true);
+
+  /** Whether the genre dropdown is open */
+  genreDropdownOpen = false;
+
   // ── Filter state ──────────────────────────────────────────────────────────
   filterTitle        = '';
   filterGenre:        string[] = [];
+  genreOperator: 'or' | 'and' = 'or';
   filterWatchState:   string[] = [];
   filterAiringStatus: string[] = [];
   filterHasFile: 'any' | 'yes' | 'no' = 'any';
@@ -129,10 +133,30 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   readonly sortOptions    = SORT_OPTIONS;
   readonly codecOptions   = CODEC_OPTIONS;
 
-  /** Genre list filtered by NSFW setting: NSFW genres are hidden when showNsfw is false. */
+  /** Genre list filtered by NSFW setting */
   readonly filteredGenreList = computed(() =>
     this.showNsfw() ? GENRE_LIST : SFW_GENRE_LIST
   );
+
+  /** Label shown on the genre dropdown trigger button */
+  readonly genreLabel = computed(() => {
+    const sel = this.filterGenre;
+    if (sel.length === 0) return null;
+    if (sel.length <= 2) return sel.join(', ');
+    return `${sel[0]}, ${sel[1]} +${sel.length - 2}`;
+  });
+
+  /** Count of active (non-default) filters for the badge */
+  readonly activeFilterCount = computed(() => {
+    let n = 0;
+    if (this.filterTitle) n++;
+    if (this.filterGenre.length) n++;
+    if (this.filterWatchState.length) n++;
+    if (this.filterAiringStatus.length) n++;
+    if (this.filterHasFile !== 'any') n++;
+    if (this.filterCodec.length) n++;
+    return n;
+  });
 
   private currentPage = 1;
   private scrollObserver: IntersectionObserver | null = null;
@@ -142,12 +166,10 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     const n = Number(saved);
     if (saved && (n === 1 || n === 2 || n === 3)) this.displayMode.set(n as DisplayMode);
 
-    // Fetch NSFW setting to filter genre list
     this.settingsService.getShowNsfw()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(show => this.showNsfw.set(show));
 
-    // Auto-refresh when a sync completes while on this page
     this.syncSignalR.syncCompleted$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => { if (this.searched()) this.loadAnimes(true); });
@@ -163,6 +185,17 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.scrollObserver?.disconnect();
   }
 
+  // ── Collapse outside click handler ────────────────────────────────────────
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    // Close genre dropdown if click is outside the genre-dropdown wrapper
+    const target = event.target as HTMLElement;
+    if (this.genreDropdownOpen && !target.closest('.genre-dropdown')) {
+      this.genreDropdownOpen = false;
+    }
+  }
+
   // ── Display mode ──────────────────────────────────────────────────────────
 
   setDisplayMode(mode: DisplayMode): void {
@@ -170,6 +203,12 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.displayMode.set(mode);
     this.layoutState.update(v => v + 1);
     localStorage.setItem(DISPLAY_MODE_KEY, String(mode));
+  }
+
+  // ── Filter panel collapse ─────────────────────────────────────────────────
+
+  toggleFilterPanel(): void {
+    this.filterOpen.update(v => !v);
   }
 
   // ── Sort order toggle ─────────────────────────────────────────────────────
@@ -185,24 +224,44 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   // ── Pill multi-select toggle ──────────────────────────────────────────────
 
-  /** Toggles a value in a multi-select array. Returns a new array. */
   togglePill(current: string[], value: string): string[] {
     return current.includes(value)
       ? current.filter(v => v !== value)
       : [...current, value];
   }
 
+  // ── Genre dropdown ────────────────────────────────────────────────────────
+
+  toggleGenreDropdown(event: MouseEvent): void {
+    event.stopPropagation(); // prevent document:click from immediately closing
+    this.genreDropdownOpen = !this.genreDropdownOpen;
+  }
+
+  toggleGenre(genre: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.filterGenre = this.togglePill(this.filterGenre, genre);
+    // Auto-reset operator to OR when ≤ 1 genre selected (operator toggle is hidden)
+    if (this.filterGenre.length <= 1) this.genreOperator = 'or';
+  }
+
+  clearGenres(event: MouseEvent): void {
+    event.stopPropagation();
+    this.filterGenre = [];
+  }
+
   // ── Search / Reset ────────────────────────────────────────────────────────
 
   search(): void {
     this.searched.set(true);
+    this.filterOpen.set(false);   // collapse filter panel on search
+    this.genreDropdownOpen = false;
     this.loadAnimes(true);
   }
 
-  /** Clears all filters and empties the results list without triggering a search. */
   reset(): void {
     this.filterTitle        = '';
     this.filterGenre        = [];
+    this.genreOperator      = 'or';
     this.filterWatchState   = [];
     this.filterAiringStatus = [];
     this.filterHasFile      = 'any';
@@ -210,6 +269,8 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.sortBy             = 'title';
     this.sortOrder          = 'asc';
     this.searched.set(false);
+    this.filterOpen.set(true);
+    this.genreDropdownOpen  = false;
     this.animes.set([]);
     this.totalCount.set(0);
     this.allLoaded.set(false);
@@ -226,14 +287,15 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   private buildFilters(): AnimeFilters {
     return {
-      title:        this.filterTitle        || undefined,
-      genre:        this.filterGenre.length        ? this.filterGenre        : undefined,
-      status:       this.filterWatchState.length   ? this.filterWatchState   : undefined,
-      airingStatus: this.filterAiringStatus.length ? this.filterAiringStatus : undefined,
-      hasFile:      this.resolveHasFile(),
-      codec:        this.filterCodec.length        ? this.filterCodec        : undefined,
-      sortBy:       this.sortBy,
-      sortOrder:    this.sortOrder,
+      title:         this.filterTitle        || undefined,
+      genre:         this.filterGenre.length        ? this.filterGenre        : undefined,
+      genreOperator: this.filterGenre.length > 1    ? this.genreOperator      : undefined,
+      status:        this.filterWatchState.length   ? this.filterWatchState   : undefined,
+      airingStatus:  this.filterAiringStatus.length ? this.filterAiringStatus : undefined,
+      hasFile:       this.resolveHasFile(),
+      codec:         this.filterCodec.length        ? this.filterCodec        : undefined,
+      sortBy:        this.sortBy,
+      sortOrder:     this.sortOrder,
     };
   }
 

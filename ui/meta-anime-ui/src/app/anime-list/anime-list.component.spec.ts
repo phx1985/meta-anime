@@ -120,17 +120,19 @@ describe('AnimeListComponent', () => {
 
   it('should reset filters and clear results without triggering a search', () => {
     comp.filterGenre = ['Action'];
+    comp.genreOperator = 'and';
     comp.filterWatchState = ['watching'];
     comp.filterHasFile = 'yes';
     comp.reset();
 
-    // No HTTP call should be made for animes after reset
     httpMock.expectNone(r => r.url.includes('/api/v1/animes'));
     expect(comp.filterGenre).toEqual([]);
+    expect(comp.genreOperator).toBe('or');
     expect(comp.filterWatchState).toEqual([]);
     expect(comp.filterHasFile).toBe('any');
     expect(comp.searched()).toBe(false);
     expect(comp.animes().length).toBe(0);
+    expect(comp.filterOpen()).toBe(true);
   });
 
   it('should send multi-value status params when multiple watch states selected', () => {
@@ -147,5 +149,21 @@ describe('AnimeListComponent', () => {
     const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
     expect(req.request.params.getAll('genre')).toEqual(['Action', 'Fantasy']);
     req.flush(emptyResponse);
+  });
+
+  it('should send genreOperator=and when AND operator selected with multiple genres', () => {
+    comp.filterGenre = ['Action', 'Fantasy'];
+    comp.genreOperator = 'and';
+    comp.search();
+    const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
+    expect(req.request.params.get('genreOperator')).toBe('and');
+    req.flush(emptyResponse);
+  });
+
+  it('should collapse filter panel when search() is called', () => {
+    comp.filterOpen.set(true);
+    comp.search();
+    expect(comp.filterOpen()).toBe(false);
+    httpMock.expectOne(r => r.url.includes('/api/v1/animes')).flush(emptyResponse);
   });
 });

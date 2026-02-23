@@ -24,6 +24,8 @@ const TRUNCATE_AT = 180;
 })
 export class AnimeCardComponent {
   @Input({ required: true }) anime!: AnimeDetailsResponse;
+  /** Genres actively selected in the parent filter — used to highlight matching tags. */
+  @Input() activeGenres: string[] = [];
 
   private translate = inject(TranslateService);
 

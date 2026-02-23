@@ -267,6 +267,8 @@ public class AnimeMediatorService(
         {
             // Use a HashSet for O(1) genre lookups instead of O(n) inner Any()
             var genreSet = new HashSet<string>(filters.Genre, StringComparer.OrdinalIgnoreCase);
+            bool isAnd = "and".Equals(filters.GenreOperator, StringComparison.OrdinalIgnoreCase);
+
             result = result.Where(a =>
             {
                 if (a.MalAnimes == null || !a.MalAnimes.Any())
@@ -284,8 +286,13 @@ public class AnimeMediatorService(
                     {
                         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                         var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, options);
-                        // Match if the anime has ANY of the selected genres (O(1) HashSet lookup)
-                        return malAnime?.Genres?.Any(g => genreSet.Contains(g.Name)) == true;
+                        var animeGenres = malAnime?.Genres?.Select(g => g.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                        if (animeGenres == null) return false;
+
+                        // OR: any selected genre present; AND: all selected genres present
+                        return isAnd
+                            ? genreSet.All(g => animeGenres.Contains(g))
+                            : genreSet.Any(g => animeGenres.Contains(g));
                     }
                     catch (JsonException ex)
                     {

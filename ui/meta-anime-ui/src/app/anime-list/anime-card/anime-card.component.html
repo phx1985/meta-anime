@@ -86,7 +86,7 @@
       @if (genres.length > 0) {
         <div class="genre-list">
           @for (g of genres; track g) {
-            <span class="genre-tag">{{ translateGenre(g) }}</span>
+            <span class="genre-tag" [class.genre-tag--highlighted]="activeGenres.length > 0 && activeGenres.includes(g)">{{ translateGenre(g) }}</span>
           }
         </div>
       }
