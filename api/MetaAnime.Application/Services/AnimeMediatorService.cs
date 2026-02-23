@@ -73,6 +73,9 @@ public class AnimeMediatorService(
             bool sortDescending = filters?.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) == true;
             bool needsInMemoryPostFilter = !string.IsNullOrWhiteSpace(filters?.Genre)
                                          || !string.IsNullOrWhiteSpace(filters?.Status)
+                                         || !string.IsNullOrWhiteSpace(filters?.AiringStatus)
+                                         || filters?.HasFile.HasValue == true
+                                         || !string.IsNullOrWhiteSpace(filters?.Codec)
                                          || !showNsfw;
 
             List<string> aniDbIds;
@@ -277,6 +280,30 @@ public class AnimeMediatorService(
             });
         }
 
+        // AiringStatus maps to the MAL series broadcast status (finished_airing / currently_airing / not_yet_aired)
+        if (!string.IsNullOrWhiteSpace(filters?.AiringStatus))
+        {
+            result = result.Where(a =>
+                a.MalAnimes?.Any(m => m.Status != null &&
+                    m.Status.Contains(filters.AiringStatus, StringComparison.OrdinalIgnoreCase)) == true);
+        }
+
+        if (filters?.HasFile.HasValue == true)
+        {
+            if (filters.HasFile.Value)
+                result = result.Where(a => a.SonarrAnimes?.Any(s => s.Exists) == true);
+            else
+                result = result.Where(a => a.SonarrAnimes == null || !a.SonarrAnimes.Any(s => s.Exists));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filters?.Codec))
+        {
+            result = result.Where(a =>
+                a.SonarrAnimes?.Any(s =>
+                    s.CodecDistribution?.Keys.Any(k =>
+                        k.Contains(filters.Codec, StringComparison.OrdinalIgnoreCase)) == true) == true);
+        }
+
         if (!showNsfw)
         {
             result = result.Where(a =>
@@ -316,13 +343,23 @@ public class AnimeMediatorService(
         if (filters == null || string.IsNullOrWhiteSpace(filters.SortBy))
             return data.OrderBy(a => a.Title);
 
-        var sortOrder = filters.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var desc = filters.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) == true;
 
         return filters.SortBy.ToLower() switch
         {
-            "title" => sortOrder ? data.OrderByDescending(a => a.Title) : data.OrderBy(a => a.Title),
-            "anidbid" => sortOrder ? data.OrderByDescending(a => a.AniDbId) : data.OrderBy(a => a.AniDbId),
-            _ => data.OrderBy(a => a.Title)
+            "title"      => desc ? data.OrderByDescending(a => a.Title)   : data.OrderBy(a => a.Title),
+            "anidbid"    => desc ? data.OrderByDescending(a => a.AniDbId) : data.OrderBy(a => a.AniDbId),
+            "malscore"   => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MalMean  ?? 0)
+                                 : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MalMean  ?? 0),
+            "myscore"    => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MyScore  ?? 0)
+                                 : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MyScore  ?? 0),
+            "startdate"  => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.StartDate)
+                                 : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.StartDate),
+            "addeddate"  => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.AddedDate)
+                                 : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.AddedDate),
+            "sizeondisk" => desc ? data.OrderByDescending(a => a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0)
+                                 : data.OrderBy(a => a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0),
+            _            => data.OrderBy(a => a.Title)
         };
     }
 

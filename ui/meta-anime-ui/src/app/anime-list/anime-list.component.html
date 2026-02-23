@@ -7,62 +7,226 @@
   </div>
 
   <div class="container py-5">
-    <!-- Title + display mode controls -->
+    <!-- Title + sort + display mode controls -->
     <div class="anime-list-header mb-3">
       <h1 class="anime-list-title mb-0">{{ 'animeList.title' | translate }}</h1>
 
-      <!-- Display mode toggle (visible on large screens only) -->
-      <div class="display-mode-toggle d-none d-lg-flex" role="group" [attr.aria-label]="'animeList.displayMode' | translate">
-        <button
-          type="button"
-          class="mode-btn"
-          [class.mode-btn--active]="displayMode() === 1"
-          (click)="setDisplayMode(1)"
-          [attr.aria-label]="'animeList.cols1' | translate"
-          [attr.aria-pressed]="displayMode() === 1">
-          <!-- single column icon -->
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-            <rect x="2" y="2" width="12" height="3" rx="1"/>
-            <rect x="2" y="7" width="12" height="3" rx="1"/>
-            <rect x="2" y="12" width="12" height="2" rx="1"/>
-          </svg>
-        </button>
-        <button
-          type="button"
-          class="mode-btn"
-          [class.mode-btn--active]="displayMode() === 2"
-          (click)="setDisplayMode(2)"
-          [attr.aria-label]="'animeList.cols2' | translate"
-          [attr.aria-pressed]="displayMode() === 2">
-          <!-- two columns icon -->
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-            <rect x="1" y="2" width="6" height="5" rx="1"/>
-            <rect x="9" y="2" width="6" height="5" rx="1"/>
-            <rect x="1" y="9" width="6" height="5" rx="1"/>
-            <rect x="9" y="9" width="6" height="5" rx="1"/>
-          </svg>
-        </button>
-        <button
-          type="button"
-          class="mode-btn"
-          [class.mode-btn--active]="displayMode() === 3"
-          (click)="setDisplayMode(3)"
-          [attr.aria-label]="'animeList.cols3' | translate"
-          [attr.aria-pressed]="displayMode() === 3">
-          <!-- three columns icon -->
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-            <rect x="1"  y="2" width="4" height="5" rx="1"/>
-            <rect x="6"  y="2" width="4" height="5" rx="1"/>
-            <rect x="11" y="2" width="4" height="5" rx="1"/>
-            <rect x="1"  y="9" width="4" height="5" rx="1"/>
-            <rect x="6"  y="9" width="4" height="5" rx="1"/>
-            <rect x="11" y="9" width="4" height="5" rx="1"/>
-          </svg>
-        </button>
+      <div class="header-controls">
+        <!-- Sort controls -->
+        <div class="sort-controls d-none d-md-flex align-items-center gap-2">
+          <select
+            class="sort-select"
+            [(ngModel)]="sortBy"
+            (ngModelChange)="onSortByChange()"
+            [attr.aria-label]="'animeList.sort.by' | translate">
+            @for (opt of sortOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.labelKey | translate }}</option>
+            }
+          </select>
+          <button
+            type="button"
+            class="mode-btn sort-dir-btn"
+            (click)="toggleSortOrder()"
+            [attr.aria-label]="'animeList.sort.order' | translate"
+            [attr.aria-pressed]="sortOrder === 'desc'">
+            @if (sortOrder === 'asc') {
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <path d="M3 12l5-8 5 8H3z"/>
+              </svg>
+            } @else {
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <path d="M3 4l5 8 5-8H3z"/>
+              </svg>
+            }
+          </button>
+        </div>
+
+        <!-- Display mode toggle (visible on large screens only) -->
+        <div class="display-mode-toggle d-none d-lg-flex" role="group" [attr.aria-label]="'animeList.displayMode' | translate">
+          <button
+            type="button"
+            class="mode-btn"
+            [class.mode-btn--active]="displayMode() === 1"
+            (click)="setDisplayMode(1)"
+            [attr.aria-label]="'animeList.cols1' | translate"
+            [attr.aria-pressed]="displayMode() === 1">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <rect x="2" y="2" width="12" height="3" rx="1"/>
+              <rect x="2" y="7" width="12" height="3" rx="1"/>
+              <rect x="2" y="12" width="12" height="2" rx="1"/>
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="mode-btn"
+            [class.mode-btn--active]="displayMode() === 2"
+            (click)="setDisplayMode(2)"
+            [attr.aria-label]="'animeList.cols2' | translate"
+            [attr.aria-pressed]="displayMode() === 2">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <rect x="1" y="2" width="6" height="5" rx="1"/>
+              <rect x="9" y="2" width="6" height="5" rx="1"/>
+              <rect x="1" y="9" width="6" height="5" rx="1"/>
+              <rect x="9" y="9" width="6" height="5" rx="1"/>
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="mode-btn"
+            [class.mode-btn--active]="displayMode() === 3"
+            (click)="setDisplayMode(3)"
+            [attr.aria-label]="'animeList.cols3' | translate"
+            [attr.aria-pressed]="displayMode() === 3">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <rect x="1"  y="2" width="4" height="5" rx="1"/>
+              <rect x="6"  y="2" width="4" height="5" rx="1"/>
+              <rect x="11" y="2" width="4" height="5" rx="1"/>
+              <rect x="1"  y="9" width="4" height="5" rx="1"/>
+              <rect x="6"  y="9" width="4" height="5" rx="1"/>
+              <rect x="11" y="9" width="4" height="5" rx="1"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
 
-    @if (loading()) {
+    <!-- ── Filter card ──────────────────────────────────────────────────── -->
+    <div class="filter-card mb-4" @filterPanel>
+      <div class="filter-card__body">
+
+        <!-- Row 1: Title search -->
+        <div class="filter-row filter-row--search">
+          <div class="filter-field filter-field--grow">
+            <label class="filter-label" for="filterTitle">{{ 'animeList.filter.title' | translate }}</label>
+            <div class="search-input-wrap">
+              <svg class="search-icon" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <path d="M10 10l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <input
+                id="filterTitle"
+                class="filter-input"
+                type="text"
+                [(ngModel)]="filterTitle"
+                (keydown.enter)="search()"
+                [placeholder]="'animeList.filter.titlePlaceholder' | translate" />
+            </div>
+          </div>
+
+          <div class="filter-actions">
+            <button type="button" class="btn-search" (click)="search()">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <circle cx="6.5" cy="6.5" r="4.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <path d="M10 10l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              {{ 'animeList.filter.search' | translate }}
+            </button>
+            <button type="button" class="btn-reset" (click)="reset()">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <path d="M13.5 2.5A7 7 0 1 0 15 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                <path d="M11 1l2.5 1.5L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              </svg>
+              {{ 'animeList.filter.reset' | translate }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Row 2: Genre · Watching state · Airing state -->
+        <div class="filter-row">
+          <div class="filter-field">
+            <label class="filter-label" for="filterGenre">{{ 'animeList.filter.genre' | translate }}</label>
+            <select id="filterGenre" class="filter-select" [(ngModel)]="filterGenre">
+              <option value="">{{ 'animeList.filter.any' | translate }}</option>
+              @for (g of genreList; track g) {
+                <option [value]="g">{{ ('genres.' + g) | translate }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label" for="filterWatchState">{{ 'animeList.filter.watchState' | translate }}</label>
+            <select id="filterWatchState" class="filter-select" [(ngModel)]="filterWatchState">
+              <option value="">{{ 'animeList.filter.any' | translate }}</option>
+              @for (s of watchingStates; track s.value) {
+                <option [value]="s.value">{{ s.labelKey | translate }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label" for="filterAiringStatus">{{ 'animeList.filter.airingStatus' | translate }}</label>
+            <select id="filterAiringStatus" class="filter-select" [(ngModel)]="filterAiringStatus">
+              <option value="">{{ 'animeList.filter.any' | translate }}</option>
+              @for (s of airingStates; track s.value) {
+                <option [value]="s.value">{{ s.labelKey | translate }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 3: Has file · Codec -->
+        <div class="filter-row">
+          <div class="filter-field">
+            <span class="filter-label">{{ 'animeList.filter.hasFile' | translate }}</span>
+            <div class="pill-group" role="group" [attr.aria-label]="'animeList.filter.hasFile' | translate">
+              <button type="button" class="pill-btn" [class.pill-btn--active]="filterHasFile === 'any'" (click)="filterHasFile = 'any'">
+                {{ 'animeList.filter.any' | translate }}
+              </button>
+              <button type="button" class="pill-btn" [class.pill-btn--active]="filterHasFile === 'yes'" (click)="filterHasFile = 'yes'">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 8l4 4 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
+                {{ 'animeList.filter.hasFileYes' | translate }}
+              </button>
+              <button type="button" class="pill-btn" [class.pill-btn--active]="filterHasFile === 'no'" (click)="filterHasFile = 'no'">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                {{ 'animeList.filter.hasFileNo' | translate }}
+              </button>
+            </div>
+          </div>
+
+          <div class="filter-field">
+            <label class="filter-label" for="filterCodec">{{ 'animeList.filter.codec' | translate }}</label>
+            <select id="filterCodec" class="filter-select" [(ngModel)]="filterCodec">
+              <option value="">{{ 'animeList.filter.any' | translate }}</option>
+              @for (c of codecOptions; track c.value) {
+                <option [value]="c.value">{{ c.label }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Mobile-only sort controls -->
+          <div class="filter-field d-flex d-md-none">
+            <span class="filter-label">{{ 'animeList.sort.by' | translate }}</span>
+            <div class="d-flex align-items-center gap-2">
+              <select class="filter-select" [(ngModel)]="sortBy" (ngModelChange)="onSortByChange()">
+                @for (opt of sortOptions; track opt.value) {
+                  <option [value]="opt.value">{{ opt.labelKey | translate }}</option>
+                }
+              </select>
+              <button type="button" class="mode-btn sort-dir-btn" (click)="toggleSortOrder()">
+                @if (sortOrder === 'asc') {
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 12l5-8 5 8H3z"/></svg>
+                } @else {
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 4l5 8 5-8H3z"/></svg>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ── /Filter card ─────────────────────────────────────────────────── -->
+
+    @if (!searched()) {
+      <!-- Prompt user to press search -->
+      <div class="search-prompt d-flex flex-column align-items-center py-5">
+        <svg width="48" height="48" viewBox="0 0 64 64" fill="none" aria-hidden="true" class="search-prompt__icon mb-3">
+          <circle cx="28" cy="28" r="18" stroke="var(--accent-primary)" stroke-width="3" opacity="0.6"/>
+          <path d="M42 42l12 12" stroke="var(--accent-primary)" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+        </svg>
+        <p class="search-prompt__text text-muted">{{ 'animeList.filter.prompt' | translate }}</p>
+      </div>
+    } @else if (loading()) {
       <div class="d-flex justify-content-center py-5">
         <div class="spinner-border" role="status">
           <span class="visually-hidden">Loading...</span>

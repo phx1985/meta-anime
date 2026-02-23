@@ -67,7 +67,7 @@
   z-index: 1;
 }
 
-// ─── Header row (title + display mode toggle) ─────────────────────────────────
+// ─── Header row (title + sort + display mode toggle) ──────────────────────────
 
 .anime-list-header {
   display: flex;
@@ -82,11 +82,44 @@
   color: var(--accent-primary);
 }
 
-// ─── Total count ──────────────────────────────────────────────────────────────
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
 
-.anime-total-count {
-  font-size: 0.875rem;
-  color: var(--text-muted);
+// ─── Sort controls ────────────────────────────────────────────────────────────
+
+.sort-controls {
+  gap: 0.375rem;
+}
+
+.sort-select {
+  height: 2rem;
+  padding: 0 0.625rem;
+  border: 1px solid var(--card-border);
+  border-radius: 0.375rem;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236c757d'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  padding-right: 1.75rem;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+  }
+}
+
+.sort-dir-btn {
+  flex-shrink: 0;
 }
 
 // ─── Display mode toggle ──────────────────────────────────────────────────────
@@ -121,6 +154,214 @@
     color: #fff;
     border-color: var(--accent-primary);
   }
+}
+
+// ─── Filter card ──────────────────────────────────────────────────────────────
+
+.filter-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px var(--card-shadow);
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.filter-card__body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.filter-row {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.875rem;
+
+  &--search {
+    align-items: flex-end;
+  }
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 160px;
+
+  &--grow {
+    flex: 2;
+    min-width: 220px;
+  }
+}
+
+.filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filter-select,
+.filter-input {
+  height: 2.25rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: 0.5rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+  }
+
+  &::placeholder { color: var(--text-muted); }
+}
+
+.filter-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236c757d'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.625rem center;
+  background-size: 10px 6px;
+  padding-right: 2rem;
+  cursor: pointer;
+}
+
+.search-input-wrap {
+  position: relative;
+
+  .search-icon {
+    position: absolute;
+    left: 0.625rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .filter-input {
+    padding-left: 2rem;
+  }
+}
+
+// ─── Filter actions (Search / Reset buttons) ──────────────────────────────────
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-search,
+.btn-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 2.25rem;
+  padding: 0 1.125rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.1s;
+  border: 1px solid transparent;
+  white-space: nowrap;
+
+  &:active { transform: scale(0.97); }
+}
+
+.btn-search {
+  background: var(--accent-primary);
+  color: #fff;
+  border-color: var(--accent-primary);
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent-primary) 85%, #000 15%);
+    box-shadow: 0 4px 12px rgba(108, 99, 255, 0.35);
+  }
+}
+
+.btn-reset {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--card-border);
+
+  &:hover {
+    background: var(--bg-secondary);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+  }
+}
+
+// ─── Pill group (has-file toggle) ─────────────────────────────────────────────
+
+.pill-group {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--card-border);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  height: 2.25rem;
+}
+
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.75rem;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: none;
+  border-right: 1px solid var(--card-border);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+
+  &:last-child { border-right: none; }
+
+  &:hover {
+    background: var(--bg-primary);
+    color: var(--accent-primary);
+  }
+
+  &--active {
+    background: var(--accent-primary);
+    color: #fff;
+  }
+}
+
+// ─── Search prompt ─────────────────────────────────────────────────────────────
+
+.search-prompt {
+  opacity: 0.7;
+}
+
+.search-prompt__icon {
+  filter: drop-shadow(0 4px 12px rgba(108, 99, 255, 0.25));
+}
+
+.search-prompt__text {
+  font-size: 1rem;
+  text-align: center;
+}
+
+// ─── Total count ──────────────────────────────────────────────────────────────
+
+.anime-total-count {
+  font-size: 0.875rem;
+  color: var(--text-muted);
 }
 
 // ─── Grid layout ──────────────────────────────────────────────────────────────

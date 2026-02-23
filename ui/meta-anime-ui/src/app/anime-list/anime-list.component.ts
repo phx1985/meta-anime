@@ -10,11 +10,12 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
-import { AnimeDetailsResponse } from '../models/anime.models';
+import { AnimeDetailsResponse, AnimeFilters } from '../models/anime.models';
 import { AnimeCardComponent } from './anime-card/anime-card.component';
 
 const PAGE_SIZE = 20;
@@ -22,10 +23,47 @@ const DISPLAY_MODE_KEY = 'meta-anime:displayMode';
 
 export type DisplayMode = 1 | 2 | 3;
 
+export const GENRE_LIST = [
+  'Action', 'Adventure', 'Avant Garde', 'Award Winning', 'Boys Love', 'Comedy', 'Drama',
+  'Ecchi', 'Fantasy', 'Girls Love', 'Gourmet', 'Horror', 'Mystery', 'Romance', 'Sci-Fi',
+  'Slice of Life', 'Sports', 'Supernatural', 'Suspense', 'Isekai', 'Mecha', 'Music',
+  'Psychological', 'School', 'Seinen', 'Shoujo', 'Shounen', 'Space', 'Military', 'Historical',
+];
+
+export const WATCHING_STATES = [
+  { value: 'watching',      labelKey: 'animeCard.malStatus.watching' },
+  { value: 'completed',     labelKey: 'animeCard.malStatus.completed' },
+  { value: 'on_hold',       labelKey: 'animeCard.malStatus.on_hold' },
+  { value: 'dropped',       labelKey: 'animeCard.malStatus.dropped' },
+  { value: 'plan_to_watch', labelKey: 'animeCard.malStatus.plan_to_watch' },
+];
+
+export const AIRING_STATES = [
+  { value: 'finished_airing',  labelKey: 'animeCard.seriesStatus.finished_airing' },
+  { value: 'currently_airing', labelKey: 'animeCard.seriesStatus.currently_airing' },
+  { value: 'not_yet_aired',    labelKey: 'animeCard.seriesStatus.not_yet_aired' },
+];
+
+export const SORT_OPTIONS = [
+  { value: 'title',      labelKey: 'animeList.sort.title' },
+  { value: 'malscore',   labelKey: 'animeList.sort.malScore' },
+  { value: 'myscore',    labelKey: 'animeList.sort.myScore' },
+  { value: 'startdate',  labelKey: 'animeList.sort.startDate' },
+  { value: 'addeddate',  labelKey: 'animeList.sort.addedDate' },
+  { value: 'sizeondisk', labelKey: 'animeList.sort.sizeOnDisk' },
+];
+
+export const CODEC_OPTIONS = [
+  { value: 'hevc',  label: 'H.265 / HEVC' },
+  { value: 'h264',  label: 'H.264 / AVC' },
+  { value: 'av1',   label: 'AV1' },
+  { value: 'mpeg2', label: 'MPEG-2' },
+];
+
 @Component({
   selector: 'app-anime-list',
   standalone: true,
-  imports: [TranslatePipe, AnimeCardComponent],
+  imports: [FormsModule, TranslatePipe, AnimeCardComponent],
   templateUrl: './anime-list.component.html',
   styleUrl: './anime-list.component.scss',
   animations: [
@@ -39,6 +77,15 @@ export type DisplayMode = 1 | 2 | 3;
         ], { optional: true }),
       ]),
     ]),
+    trigger('filterPanel', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(-8px)' }),
+        animate('220ms cubic-bezier(0.4, 0, 0.2, 1)', style({ opacity: 1, transform: 'none' })),
+      ]),
+      transition(':leave', [
+        animate('180ms cubic-bezier(0.4, 0, 1, 1)', style({ opacity: 0, transform: 'translateY(-8px)' })),
+      ]),
+    ]),
   ],
 })
 export class AnimeListComponent implements AfterViewInit, OnDestroy {
@@ -49,29 +96,43 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   @ViewChildren('animeCard', { read: ElementRef }) cardRefs!: QueryList<ElementRef>;
 
   animes      = signal<AnimeDetailsResponse[]>([]);
-  loading     = signal(true);
+  loading     = signal(false);
   loadingMore = signal(false);
   error       = signal(false);
   totalCount  = signal(0);
   allLoaded   = signal(false);
   displayMode = signal<DisplayMode>(2);
   layoutState = signal(0);
+  searched    = signal(false);
+
+  // ── Filter state ──────────────────────────────────────────────────────────
+  filterTitle        = '';
+  filterGenre        = '';
+  filterWatchState   = '';
+  filterAiringStatus = '';
+  filterHasFile: 'any' | 'yes' | 'no' = 'any';
+  filterCodec        = '';
+  sortBy             = 'title';
+  sortOrder: 'asc' | 'desc' = 'asc';
+
+  readonly genreList      = GENRE_LIST;
+  readonly watchingStates = WATCHING_STATES;
+  readonly airingStates   = AIRING_STATES;
+  readonly sortOptions    = SORT_OPTIONS;
+  readonly codecOptions   = CODEC_OPTIONS;
 
   private currentPage = 1;
   private scrollObserver: IntersectionObserver | null = null;
 
   constructor() {
-    // Restore display mode persisted in localStorage
     const saved = localStorage.getItem(DISPLAY_MODE_KEY);
     const n = Number(saved);
     if (saved && (n === 1 || n === 2 || n === 3)) this.displayMode.set(n as DisplayMode);
 
-    this.loadAnimes(true);
-
     // Auto-refresh when a sync completes while on this page
     this.syncSignalR.syncCompleted$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.loadAnimes(true));
+      .subscribe(() => { if (this.searched()) this.loadAnimes(true); });
   }
 
   ngAfterViewInit(): void {
@@ -84,11 +145,65 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.scrollObserver?.disconnect();
   }
 
+  // ── Display mode ──────────────────────────────────────────────────────────
+
   setDisplayMode(mode: DisplayMode): void {
     if (this.displayMode() === mode) return;
     this.displayMode.set(mode);
     this.layoutState.update(v => v + 1);
     localStorage.setItem(DISPLAY_MODE_KEY, String(mode));
+  }
+
+  // ── Sort order toggle ─────────────────────────────────────────────────────
+
+  toggleSortOrder(): void {
+    this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+    if (this.searched()) this.loadAnimes(true);
+  }
+
+  onSortByChange(): void {
+    if (this.searched()) this.loadAnimes(true);
+  }
+
+  // ── Search / Reset ────────────────────────────────────────────────────────
+
+  search(): void {
+    this.searched.set(true);
+    this.loadAnimes(true);
+  }
+
+  reset(): void {
+    this.filterTitle        = '';
+    this.filterGenre        = '';
+    this.filterWatchState   = '';
+    this.filterAiringStatus = '';
+    this.filterHasFile      = 'any';
+    this.filterCodec        = '';
+    this.sortBy             = 'title';
+    this.sortOrder          = 'asc';
+    this.searched.set(true);
+    this.loadAnimes(true);
+  }
+
+  // ── Private ───────────────────────────────────────────────────────────────
+
+  private resolveHasFile(): boolean | undefined {
+    if (this.filterHasFile === 'yes') return true;
+    if (this.filterHasFile === 'no') return false;
+    return undefined;
+  }
+
+  private buildFilters(): AnimeFilters {
+    return {
+      title:        this.filterTitle        || undefined,
+      genre:        this.filterGenre        || undefined,
+      status:       this.filterWatchState   || undefined,
+      airingStatus: this.filterAiringStatus || undefined,
+      hasFile:      this.resolveHasFile(),
+      codec:        this.filterCodec        || undefined,
+      sortBy:       this.sortBy,
+      sortOrder:    this.sortOrder,
+    };
   }
 
   private loadAnimes(reset: boolean): void {
@@ -102,7 +217,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     }
     this.error.set(false);
 
-    this.animeService.getAnimes(this.currentPage, PAGE_SIZE)
+    this.animeService.getAnimes(this.currentPage, PAGE_SIZE, this.buildFilters())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: data => {
@@ -135,13 +250,10 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     const elements = this.cardRefs.toArray();
     if (elements.length === 0) return;
 
-    // Trigger at 50% through the last page batch, clamped within bounds
     const sentinelIdx = Math.min(
       elements.length - 1,
       Math.max(0, elements.length - Math.floor(PAGE_SIZE / 2))
     );
-    // `:host` uses `display: contents` and has no layout box, so IntersectionObserver
-    // requires a real rendered element — use the first child (the <article>).
     const hostEl = elements[sentinelIdx].nativeElement;
     const targetEl = hostEl.firstElementChild;
     if (!targetEl) return;

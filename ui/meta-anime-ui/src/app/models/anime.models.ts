@@ -119,6 +119,9 @@ export interface AnimeFilters {
   genre?: string;
   sortBy?: string;
   sortOrder?: string;
+  airingStatus?: string;
+  hasFile?: boolean;
+  codec?: string;
 }
 
 export interface CreateAnimeRequest {

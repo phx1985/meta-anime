@@ -30,6 +30,9 @@ export class AnimeService {
     if (filters?.genre) params = params.set('genre', filters.genre);
     if (filters?.sortBy) params = params.set('sortBy', filters.sortBy);
     if (filters?.sortOrder) params = params.set('sortOrder', filters.sortOrder);
+    if (filters?.airingStatus) params = params.set('airingStatus', filters.airingStatus);
+    if (filters?.hasFile !== undefined) params = params.set('hasFile', filters.hasFile);
+    if (filters?.codec) params = params.set('codec', filters.codec);
     if (enriched !== undefined) params = params.set('enriched', enriched);
     return this.http.get<PagedResponse<AnimeDetailsResponse>>(this.base, { params });
   }

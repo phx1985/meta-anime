@@ -48,7 +48,32 @@
     "displayMode": "Mode d'affichage",
     "cols1": "1 colonne",
     "cols2": "2 colonnes",
-    "cols3": "3 colonnes"
+    "cols3": "3 colonnes",
+    "filter": {
+      "title": "Titre",
+      "titlePlaceholder": "Rechercher par titre…",
+      "genre": "Genre",
+      "watchState": "Statut de visionnage",
+      "airingStatus": "Statut de diffusion",
+      "hasFile": "Fichiers",
+      "hasFileYes": "Avec fichiers",
+      "hasFileNo": "Sans fichiers",
+      "codec": "Codec",
+      "any": "Tous",
+      "search": "Rechercher",
+      "reset": "Réinitialiser",
+      "prompt": "Définissez vos filtres et appuyez sur Rechercher pour explorer votre bibliothèque."
+    },
+    "sort": {
+      "by": "Trier par",
+      "order": "Ordre de tri",
+      "title": "Titre",
+      "malScore": "Score MAL",
+      "myScore": "Mon score",
+      "startDate": "Date de diffusion",
+      "addedDate": "Date d'ajout",
+      "sizeOnDisk": "Taille sur disque"
+    }
   },
   "animeCard": {
     "altTitles": "Titres alternatifs",

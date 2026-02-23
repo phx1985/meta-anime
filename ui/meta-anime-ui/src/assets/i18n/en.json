@@ -48,7 +48,32 @@
     "displayMode": "Display mode",
     "cols1": "1 column",
     "cols2": "2 columns",
-    "cols3": "3 columns"
+    "cols3": "3 columns",
+    "filter": {
+      "title": "Title",
+      "titlePlaceholder": "Search by title…",
+      "genre": "Genre",
+      "watchState": "Watch status",
+      "airingStatus": "Airing status",
+      "hasFile": "Files",
+      "hasFileYes": "Has files",
+      "hasFileNo": "No files",
+      "codec": "Codec",
+      "any": "Any",
+      "search": "Search",
+      "reset": "Reset",
+      "prompt": "Set your filters and press Search to explore your anime library."
+    },
+    "sort": {
+      "by": "Sort by",
+      "order": "Sort order",
+      "title": "Title",
+      "malScore": "MAL score",
+      "myScore": "My score",
+      "startDate": "Air date",
+      "addedDate": "Date added",
+      "sizeOnDisk": "Size on disk"
+    }
   },
   "animeCard": {
     "altTitles": "Alternative titles",
