@@ -55,7 +55,9 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    this.cardRefs.changes.subscribe(() => this.setupScrollSentinel());
+    this.cardRefs.changes
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.setupScrollSentinel());
   }
 
   ngOnDestroy(): void {
@@ -110,8 +112,11 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     const elements = this.cardRefs.toArray();
     if (elements.length === 0) return;
 
-    // Trigger at 50% through the last page batch
-    const sentinelIdx = Math.max(0, elements.length - Math.floor(PAGE_SIZE / 2));
+    // Trigger at 50% through the last page batch, clamped within bounds
+    const sentinelIdx = Math.min(
+      elements.length - 1,
+      Math.max(0, elements.length - Math.floor(PAGE_SIZE / 2))
+    );
     const targetEl = elements[sentinelIdx].nativeElement;
 
     this.scrollObserver = new IntersectionObserver(
