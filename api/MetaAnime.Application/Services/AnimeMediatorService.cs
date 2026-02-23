@@ -62,6 +62,7 @@ public class AnimeMediatorService(
         try
         {
             bool showNsfw = await IsNsfwAllowedAsync();
+            // Similarity threshold is used only for the in-memory slow-path filter.
             double? similarityThreshold = !string.IsNullOrWhiteSpace(filters?.Title)
                 ? await GetTitleSimilarityThresholdAsync()
                 : null;
@@ -89,7 +90,7 @@ public class AnimeMediatorService(
                 // FAST PATH: push pagination + filtering entirely into the database.
                 // Two targeted SQL queries (COUNT + paged IDs) replace a full-table scan.
                 var pagedResult = await animeMappingService.GetPagedAniDbIdsAsync(
-                    page, pageSize, filters?.Title, sourceFilter, filters?.SortBy, sortDescending, similarityThreshold);
+                    page, pageSize, filters?.Title, sourceFilter, filters?.SortBy, sortDescending);
                 if (pagedResult.IsFailure)
                     return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(pagedResult.Error);
 
@@ -101,10 +102,10 @@ public class AnimeMediatorService(
             }
             else
             {
-                // SLOWER PATH: genre/status require in-memory post-filtering.
-                // Still efficient: only load the title/source-filtered subset of AniDbIds (string IDs, no JSON).
+                // SLOWER PATH: genre/status/etc. require in-memory post-filtering.
+                // ILike pre-filters by title at DB level; fuzzy similarity is applied in-memory below.
                 var filteredResult = await animeMappingService.GetAllFilteredAniDbIdsAsync(
-                    filters?.Title, sourceFilter, similarityThreshold);
+                    filters?.Title, sourceFilter);
                 if (filteredResult.IsFailure)
                     return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(filteredResult.Error);
 
@@ -198,8 +199,8 @@ public class AnimeMediatorService(
 
             if (needsInMemoryPostFilter)
             {
-                // Apply genre/status filter in memory (only over the pre-filtered subset)
-                var filtered = ApplyFilters(animeDtos, filters, malCache, showNsfw);
+                // Apply all in-memory filters including fuzzy title similarity
+                var filtered = ApplyFilters(animeDtos, filters, malCache, showNsfw, similarityThreshold);
                 var sorted = ApplySorting(filtered, filters);
                 totalCount = sorted.Count();
                 var paged = sorted.Skip((page - 1) * pageSize).Take(pageSize);
@@ -221,7 +222,8 @@ public class AnimeMediatorService(
         IEnumerable<AnimeDetailsResponse> data,
         AnimeFilters? filters,
         Dictionary<string, string> malCache,
-        bool showNsfw = true)
+        bool showNsfw = true,
+        double? titleSimilarityThreshold = null)
     {
         if (filters == null && showNsfw)
             return data;
@@ -230,7 +232,12 @@ public class AnimeMediatorService(
 
         if (!string.IsNullOrWhiteSpace(filters.Title))
         {
-            result = result.Where(a => a.Title.Contains(filters.Title, StringComparison.OrdinalIgnoreCase));
+            var query = filters.Title;
+            var threshold = (titleSimilarityThreshold ?? 80) / 100.0;
+            // Accept if the title contains the query as a substring OR meets the trigram similarity threshold.
+            result = result.Where(a =>
+                a.Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                ComputeTrigramSimilarity(a.Title, query) >= threshold);
         }
 
         if (!string.IsNullOrWhiteSpace(filters.Source))
@@ -363,6 +370,37 @@ public class AnimeMediatorService(
                                  : data.OrderBy(a => a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0),
             _            => data.OrderBy(a => a.Title)
         };
+    }
+
+    /// <summary>
+    /// Computes the character-trigram (Dice coefficient) similarity between two strings,
+    /// mirroring what PostgreSQL's <c>similarity()</c> function (pg_trgm) does.
+    /// Returns a value in [0.0, 1.0].
+    /// </summary>
+    private static double ComputeTrigramSimilarity(string a, string b)
+    {
+        if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b)) return 0.0;
+        a = a.ToLowerInvariant();
+        b = b.ToLowerInvariant();
+        if (a == b) return 1.0;
+
+        var trigramsA = GetTrigrams(a);
+        var trigramsB = GetTrigrams(b);
+
+        var setA = new HashSet<string>(trigramsA, StringComparer.Ordinal);
+        var setB = new HashSet<string>(trigramsB, StringComparer.Ordinal);
+
+        int intersection = setA.Count(t => setB.Contains(t));
+        int denominator  = setA.Count + setB.Count;
+        return denominator == 0 ? 0.0 : (2.0 * intersection) / denominator;
+    }
+
+    private static IEnumerable<string> GetTrigrams(string s)
+    {
+        // pad left with two spaces and right with one space (matches pg_trgm behaviour)
+        s = "  " + s + " ";
+        for (int i = 0; i <= s.Length - 3; i++)
+            yield return s.Substring(i, 3);
     }
 
     public async Task<Result<AnimeStatisticsResponse>> GetStatisticsAsync()
