@@ -26,10 +26,16 @@ export class AnimeService {
       .set('pageSize', pageSize);
     if (filters?.title) params = params.set('title', filters.title);
     if (filters?.source) params = params.set('source', filters.source);
-    if (filters?.status) params = params.set('status', filters.status);
-    if (filters?.genre) params = params.set('genre', filters.genre);
+    if (filters?.status?.length) filters.status.forEach(s => (params = params.append('status', s)));
+    if (filters?.genre?.length) {
+      filters.genre.forEach(g => (params = params.append('genre', g)));
+      if (filters.genreOperator) params = params.set('genreOperator', filters.genreOperator);
+    }
     if (filters?.sortBy) params = params.set('sortBy', filters.sortBy);
     if (filters?.sortOrder) params = params.set('sortOrder', filters.sortOrder);
+    if (filters?.airingStatus?.length) filters.airingStatus.forEach(s => (params = params.append('airingStatus', s)));
+    if (filters?.hasFile !== undefined) params = params.set('hasFile', filters.hasFile);
+    if (filters?.codec?.length) filters.codec.forEach(c => (params = params.append('codec', c)));
     if (enriched !== undefined) params = params.set('enriched', enriched);
     return this.http.get<PagedResponse<AnimeDetailsResponse>>(this.base, { params });
   }

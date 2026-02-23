@@ -56,6 +56,7 @@ public class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRepositor
             new(SettingsKeys.AppShowNsfw,      "app", false, false, Get(SettingsKeys.AppShowNsfw),     "boolean"),
             new(SettingsKeys.AppSyncInterval,  "app", false, false, Get(SettingsKeys.AppSyncInterval), "select",
                 SelectOptions: ["hourly", "every6h", "every12h", "daily", "weekly"]),
+            new(SettingsKeys.AppTitleSimilarityThreshold, "app", false, false, Get(SettingsKeys.AppTitleSimilarityThreshold), "number"),
         ];
     }
 }

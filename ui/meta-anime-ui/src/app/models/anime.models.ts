@@ -115,10 +115,14 @@ export interface PagedResponse<T> {
 export interface AnimeFilters {
   title?: string;
   source?: string;
-  status?: string;
-  genre?: string;
+  status?: string[];
+  genre?: string[];
+  genreOperator?: 'or' | 'and';
   sortBy?: string;
   sortOrder?: string;
+  airingStatus?: string[];
+  hasFile?: boolean;
+  codec?: string[];
 }
 
 export interface CreateAnimeRequest {

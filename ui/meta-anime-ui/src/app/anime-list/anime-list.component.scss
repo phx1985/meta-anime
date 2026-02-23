@@ -67,7 +67,7 @@
   z-index: 1;
 }
 
-// ─── Header row (title + display mode toggle) ─────────────────────────────────
+// ─── Header row ───────────────────────────────────────────────────────────────
 
 .anime-list-header {
   display: flex;
@@ -82,14 +82,207 @@
   color: var(--accent-primary);
 }
 
-// ─── Total count ──────────────────────────────────────────────────────────────
+// ─── Filter card ──────────────────────────────────────────────────────────────
 
-.anime-total-count {
-  font-size: 0.875rem;
-  color: var(--text-muted);
+.filter-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px var(--card-shadow);
+  overflow: hidden;
+  backdrop-filter: blur(8px);
 }
 
-// ─── Display mode toggle ──────────────────────────────────────────────────────
+// Clickable header strip
+.filter-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.25rem;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover { background: var(--bg-secondary); }
+  &:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: -2px; }
+}
+
+.filter-card__header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.filter-header-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.filter-header-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.filter-header-summary {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: min(60ch, 55%);
+  line-height: 1.3;
+}
+
+.filter-header-icon {
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--accent-primary);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.filter-chevron {
+  color: var(--text-muted);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  path { stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; fill: none; }
+
+  &--open { transform: rotate(180deg); }
+}
+
+// Collapsible body wrapper — height animated by @filterCollapse
+.filter-card__body {
+  // Angular animates height here
+}
+
+// Inner padded content (overflow: hidden is on the outer wrapper)
+.filter-card__inner {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+// ─── Filter rows ──────────────────────────────────────────────────────────────
+
+.filter-row {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.875rem;
+}
+
+.filter-row--toolbar {
+  align-items: center;
+  border-top: 1px solid var(--card-border);
+  padding-top: 0.875rem;
+  margin-top: 0.125rem;
+  gap: 0.625rem;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 160px;
+
+  &--grow  { flex: 2; min-width: 220px; }
+  &--compact { flex: 0 0 auto; min-width: 0; }
+  &--pills { min-width: 0; flex: 1; }
+}
+
+// Label row — label + OR/AND operator toggle inline
+.filter-label-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 1.25rem;
+}
+
+.filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+// ─── OR / AND operator toggle ─────────────────────────────────────────────────
+
+.operator-toggle {
+  display: inline-flex;
+  border: 1px solid var(--card-border);
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+.op-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  transition: background 0.15s, color 0.15s;
+
+  &:hover { color: var(--accent-primary); }
+
+  &--active {
+    background: var(--accent-primary);
+    color: #fff;
+  }
+}
+
+// ─── Sort + display-mode toolbar ─────────────────────────────────────────────
+
+.sort-select {
+  height: 2rem;
+  padding: 0 0.625rem;
+  border: 1px solid var(--card-border);
+  border-radius: 0.375rem;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236c757d'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  padding-right: 1.75rem;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+  }
+}
+
+.sort-dir-btn { flex-shrink: 0; }
 
 .display-mode-toggle {
   display: flex;
@@ -110,16 +303,340 @@
   cursor: pointer;
   transition: background 0.2s, color 0.2s, border-color 0.2s;
 
-  &:hover {
-    background: var(--bg-secondary);
-    color: var(--accent-primary);
+  &:hover { background: var(--bg-secondary); color: var(--accent-primary); border-color: var(--accent-primary); }
+  &--active { background: var(--accent-primary); color: #fff; border-color: var(--accent-primary); }
+}
+
+// ─── Inputs ───────────────────────────────────────────────────────────────────
+
+.filter-input {
+  height: 2.25rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: 0.5rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:focus {
+    outline: none;
     border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
   }
+
+  &::placeholder { color: var(--text-muted); }
+}
+
+.search-input-wrap {
+  position: relative;
+
+  .search-icon {
+    position: absolute;
+    left: 0.625rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .filter-input { padding-left: 2rem; }
+}
+
+// ─── Genre multi-select dropdown ──────────────────────────────────────────────
+
+.genre-dropdown {
+  position: relative;
+}
+
+.genre-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 2.25rem;
+  padding: 0 0.75rem;
+  width: 100%;
+  border: 1px solid var(--card-border);
+  border-radius: 0.5rem;
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+  text-align: left;
+
+  &--has-value { color: var(--text-primary); }
+  &--open {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+  }
+  &:hover { border-color: var(--accent-primary); color: var(--text-primary); }
+}
+
+.genre-trigger__text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.genre-trigger__chevron {
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  path { stroke: currentColor; stroke-width: 1.5; fill: none; }
+  &--open { transform: rotate(180deg); }
+}
+
+.genre-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem;
+  border: none;
+  background: var(--card-border);
+  border-radius: 50%;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover { background: var(--accent-primary); color: #fff; }
+}
+
+.genre-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 0.625rem;
+  box-shadow: 0 8px 32px var(--card-shadow);
+  animation: genrePanelIn 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes genrePanelIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.genre-panel__inner {
+  max-height: 14rem;
+  overflow-y: auto;
+  padding: 0.375rem;
+  scrollbar-width: thin;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.genre-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+
+  &:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
+
+  &--selected {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #fff;
+  }
+}
+
+.genre-option__check {
+  display: inline-flex;
+  align-items: center;
+  width: 12px;
+  justify-content: center;
+}
+
+// ─── Filter actions (Search / Reset) ─────────────────────────────────────────
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-search,
+.btn-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 2.25rem;
+  padding: 0 1.125rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.1s;
+  border: 1px solid transparent;
+  white-space: nowrap;
+
+  &:active { transform: scale(0.97); }
+}
+
+.btn-search {
+  background: var(--accent-primary);
+  color: #fff;
+  border-color: var(--accent-primary);
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent-primary) 85%, #000 15%);
+    box-shadow: 0 4px 12px rgba(108, 99, 255, 0.35);
+  }
+}
+
+.btn-reset {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--card-border);
+
+  &:hover { background: var(--bg-secondary); color: var(--accent-primary); border-color: var(--accent-primary); }
+}
+
+// ─── Multi-select pill bar ─────────────────────────────────────────────────────
+
+.filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+
+  &:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
 
   &--active {
     background: var(--accent-primary);
-    color: #fff;
     border-color: var(--accent-primary);
+    color: #fff;
+  }
+}
+
+// ─── Search prompt ─────────────────────────────────────────────────────────────
+
+.search-prompt {
+  opacity: 0.7;
+}
+
+.search-prompt__icon {
+  filter: drop-shadow(0 4px 12px rgba(108, 99, 255, 0.25));
+}
+
+.search-prompt__text {
+  font-size: 1rem;
+  text-align: center;
+}
+
+// ─── Total count ──────────────────────────────────────────────────────────────
+
+.anime-total-count {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.elapsed-time {
+  margin-left: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--accent-primary);
+  opacity: 0.75;
+}
+
+// ─── Mobile responsive overrides ──────────────────────────────────────────────
+
+@media (max-width: 639px) {
+  .filter-card__header {
+    padding: 0.75rem 1rem;
+  }
+
+  .filter-card__inner {
+    padding: 1rem;
+    gap: 0.875rem;
+  }
+
+  // Stack all filter rows vertically on small screens
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .filter-row--toolbar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  // All fields go full-width
+  .filter-field,
+  .filter-field--grow,
+  .filter-field--pills,
+  .filter-field--compact {
+    flex: unset;
+    min-width: 0;
+    width: 100%;
+  }
+
+  // Genre panel goes full-width relative to viewport
+  .genre-panel {
+    position: fixed;
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+  }
+
+  // Smaller pill text on mobile
+  .filter-pill {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.55rem;
+  }
+
+  // Make toolbar items wrap and actions full-width
+  .filter-actions {
+    width: 100%;
+    justify-content: stretch;
+
+    .btn-search,
+    .btn-reset {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+
+  .filter-header-summary {
+    max-width: min(40ch, 45%);
+  }
+
+  .filter-field--display-mode {
+    display: none;
   }
 }
 

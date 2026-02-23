@@ -62,6 +62,10 @@ public class AnimeMediatorService(
         try
         {
             bool showNsfw = await IsNsfwAllowedAsync();
+            // Similarity threshold is used only for the in-memory slow-path filter.
+            double? similarityThreshold = !string.IsNullOrWhiteSpace(filters?.Title)
+                ? await GetTitleSimilarityThresholdAsync()
+                : null;
 
             AnimeSource? sourceFilter = filters?.Source?.ToLower() switch
             {
@@ -71,8 +75,14 @@ public class AnimeMediatorService(
                 _ => null
             };
             bool sortDescending = filters?.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) == true;
-            bool needsInMemoryPostFilter = !string.IsNullOrWhiteSpace(filters?.Genre)
-                                         || !string.IsNullOrWhiteSpace(filters?.Status)
+            // Title is always handled in-memory (word-level Levenshtein fuzzy match).
+            // The DB-level ILike pre-filter cannot handle typos, so we bypass it for title searches.
+            bool needsInMemoryPostFilter = !string.IsNullOrWhiteSpace(filters?.Title)
+                                         || filters?.Genre?.Length > 0
+                                         || filters?.Status?.Length > 0
+                                         || filters?.AiringStatus?.Length > 0
+                                         || filters?.HasFile.HasValue == true
+                                         || filters?.Codec?.Length > 0
                                          || !showNsfw;
 
             List<string> aniDbIds;
@@ -95,10 +105,12 @@ public class AnimeMediatorService(
             }
             else
             {
-                // SLOWER PATH: genre/status require in-memory post-filtering.
-                // Still efficient: only load the title/source-filtered subset of AniDbIds (string IDs, no JSON).
+                // SLOWER PATH: genre/status/etc. require in-memory post-filtering.
+                // Title is intentionally NOT passed to the DB: ILike cannot handle typos,
+                // so we fetch all source-filtered IDs and let the word-level Levenshtein
+                // in ApplyFilters perform typo-tolerant fuzzy matching in memory.
                 var filteredResult = await animeMappingService.GetAllFilteredAniDbIdsAsync(
-                    filters?.Title, sourceFilter);
+                    null, sourceFilter);
                 if (filteredResult.IsFailure)
                     return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(filteredResult.Error);
 
@@ -192,8 +204,8 @@ public class AnimeMediatorService(
 
             if (needsInMemoryPostFilter)
             {
-                // Apply genre/status filter in memory (only over the pre-filtered subset)
-                var filtered = ApplyFilters(animeDtos, filters, malCache, showNsfw);
+                // Apply all in-memory filters including fuzzy title similarity
+                var filtered = ApplyFilters(animeDtos, filters, malCache, showNsfw, similarityThreshold);
                 var sorted = ApplySorting(filtered, filters);
                 totalCount = sorted.Count();
                 var paged = sorted.Skip((page - 1) * pageSize).Take(pageSize);
@@ -215,7 +227,8 @@ public class AnimeMediatorService(
         IEnumerable<AnimeDetailsResponse> data,
         AnimeFilters? filters,
         Dictionary<string, string> malCache,
-        bool showNsfw = true)
+        bool showNsfw = true,
+        double? titleSimilarityThreshold = null)
     {
         if (filters == null && showNsfw)
             return data;
@@ -224,7 +237,13 @@ public class AnimeMediatorService(
 
         if (!string.IsNullOrWhiteSpace(filters.Title))
         {
-            result = result.Where(a => a.Title.Contains(filters.Title, StringComparison.OrdinalIgnoreCase));
+            var query = filters.Title;
+            var threshold = (titleSimilarityThreshold ?? 80) / 100.0;
+            // Accept if the title contains the query as a substring OR
+            // the word-level Levenshtein similarity meets the threshold (handles typos).
+            result = result.Where(a =>
+                a.Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                ComputeWordLevelFuzzySimilarity(a.Title, query) >= threshold);
         }
 
         if (!string.IsNullOrWhiteSpace(filters.Source))
@@ -236,17 +255,20 @@ public class AnimeMediatorService(
             );
         }
 
-        if (!string.IsNullOrWhiteSpace(filters.Status))
+        if (filters.Status?.Length > 0)
         {
             result = result.Where(a =>
-                a.MalAnimes?.Any(m => m.ViewState != null && m.ViewState.Contains(filters.Status, StringComparison.OrdinalIgnoreCase)) == true ||
-                a.SonarrAnimes?.Any(s => s.Exists) == true
-            );
+                filters.Status.Any(s =>
+                    a.MalAnimes?.Any(m => m.ViewState != null &&
+                        m.ViewState.Equals(s, StringComparison.OrdinalIgnoreCase)) == true));
         }
 
-        if (!string.IsNullOrWhiteSpace(filters.Genre))
+        if (filters.Genre?.Length > 0)
         {
-            var genreFilter = filters.Genre;
+            // Use a HashSet for O(1) genre lookups instead of O(n) inner Any()
+            var genreSet = new HashSet<string>(filters.Genre, StringComparer.OrdinalIgnoreCase);
+            bool isAnd = "and".Equals(filters.GenreOperator, StringComparison.OrdinalIgnoreCase);
+
             result = result.Where(a =>
             {
                 if (a.MalAnimes == null || !a.MalAnimes.Any())
@@ -264,9 +286,13 @@ public class AnimeMediatorService(
                     {
                         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                         var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, options);
-                        return malAnime?.Genres?.Any(g =>
-                            g.Name.Contains(genreFilter, StringComparison.OrdinalIgnoreCase)
-                        ) == true;
+                        var animeGenres = malAnime?.Genres?.Select(g => g.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                        if (animeGenres == null) return false;
+
+                        // OR: any selected genre present; AND: all selected genres present
+                        return isAnd
+                            ? genreSet.All(g => animeGenres.Contains(g))
+                            : genreSet.Any(g => animeGenres.Contains(g));
                     }
                     catch (JsonException ex)
                     {
@@ -275,6 +301,29 @@ public class AnimeMediatorService(
                     }
                 });
             });
+        }
+
+        // AiringStatus maps to the MAL series broadcast status (finished_airing / currently_airing / not_yet_aired)
+        if (filters?.AiringStatus?.Length > 0)
+        {
+            result = result.Where(a =>
+                filters.AiringStatus.Any(s =>
+                    a.MalAnimes?.Any(m => m.Status != null &&
+                        m.Status.Contains(s, StringComparison.OrdinalIgnoreCase)) == true));
+        }
+
+        if (filters?.HasFile.HasValue == true)
+        {
+            var wantFiles = filters.HasFile.Value;
+            result = result.Where(a => HasDownloadedFiles(a) == wantFiles);
+        }
+
+        if (filters?.Codec?.Length > 0)
+        {
+            result = result.Where(a =>
+                a.SonarrAnimes?.Any(s =>
+                    s.CodecDistribution?.Keys.Any(k =>
+                        filters.Codec.Any(c => k.Contains(c, StringComparison.OrdinalIgnoreCase))) == true) == true);
         }
 
         if (!showNsfw)
@@ -316,15 +365,110 @@ public class AnimeMediatorService(
         if (filters == null || string.IsNullOrWhiteSpace(filters.SortBy))
             return data.OrderBy(a => a.Title);
 
-        var sortOrder = filters.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var desc = filters.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) == true;
 
         return filters.SortBy.ToLower() switch
         {
-            "title" => sortOrder ? data.OrderByDescending(a => a.Title) : data.OrderBy(a => a.Title),
-            "anidbid" => sortOrder ? data.OrderByDescending(a => a.AniDbId) : data.OrderBy(a => a.AniDbId),
-            _ => data.OrderBy(a => a.Title)
+            "title"         => desc ? data.OrderByDescending(a => a.Title)   : data.OrderBy(a => a.Title),
+            "anidbid"       => desc ? data.OrderByDescending(a => a.AniDbId) : data.OrderBy(a => a.AniDbId),
+            "malscore"      => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MalMean  ?? 0)
+                                    : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MalMean  ?? 0),
+            "myscore"       => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MyScore  ?? 0)
+                                    : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MyScore  ?? 0),
+            "startdate"     => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.StartDate)
+                                    : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.StartDate),
+            "enddate"       => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.EndDate)
+                                    : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.EndDate),
+            "addeddate"     => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.AddedDate)
+                                    : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.AddedDate),
+            "sizeondisk"    => desc ? data.OrderByDescending(a => a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0)
+                                    : data.OrderBy(a => a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0),
+            "totalsizedisk" => desc ? data.OrderByDescending(a => a.SonarrAnimes?.Sum(s => s.SizeOnDisk ?? 0) ?? 0)
+                                    : data.OrderBy(a => a.SonarrAnimes?.Sum(s => s.SizeOnDisk ?? 0) ?? 0),
+            _               => data.OrderBy(a => a.Title)
         };
     }
+
+    /// <summary>
+    /// Computes a word-level fuzzy similarity between a search query and an anime title.
+    /// For each word in the query, finds the best-matching word in the title using normalised
+    /// Levenshtein distance, then averages those per-word scores.
+    /// This correctly handles single-character typos (e.g. "dargon ball" ≈ "Dragon Ball Z").
+    /// Returns a value in [0.0, 1.0].
+    /// </summary>
+    private static double ComputeWordLevelFuzzySimilarity(string title, string query)
+    {
+        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(query)) return 0.0;
+
+        var qWords = query.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var tWords = title.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (qWords.Length == 0 || tWords.Length == 0) return 0.0;
+
+        double totalScore = 0;
+        foreach (var qWord in qWords)
+        {
+            double bestWordScore = 0;
+            foreach (var tWord in tWords)
+            {
+                double score = NormalisedLevenshteinSimilarity(qWord, tWord);
+                if (score > bestWordScore) bestWordScore = score;
+                if (bestWordScore >= 1.0) break; // exact match found – no need to check further
+            }
+            totalScore += bestWordScore;
+        }
+
+        return totalScore / qWords.Length;
+    }
+
+    /// <summary>
+    /// Returns 1 − (Levenshtein(a, b) / max(|a|, |b|)), i.e. 1.0 for identical strings.
+    /// </summary>
+    private static double NormalisedLevenshteinSimilarity(string a, string b)
+    {
+        if (a == b) return 1.0;
+        int maxLen = Math.Max(a.Length, b.Length);
+        if (maxLen == 0) return 1.0;
+        // Skip if lengths differ too much to ever reach the caller's 80% threshold
+        int minLen = Math.Min(a.Length, b.Length);
+        if ((double)minLen / maxLen < 0.2) return 0.0;
+        return 1.0 - (double)LevenshteinDistance(a, b) / maxLen;
+    }
+
+    /// <summary>Standard iterative Levenshtein (edit) distance.</summary>
+    private static int LevenshteinDistance(string s, string t)
+    {
+        int m = s.Length, n = t.Length;
+        if (m == 0) return n;
+        if (n == 0) return m;
+
+        var prev = new int[n + 1];
+        var curr = new int[n + 1];
+
+        for (int j = 0; j <= n; j++) prev[j] = j;
+
+        for (int i = 1; i <= m; i++)
+        {
+            curr[0] = i;
+            for (int j = 1; j <= n; j++)
+            {
+                int cost = s[i - 1] == t[j - 1] ? 0 : 1;
+                curr[j] = Math.Min(Math.Min(curr[j - 1] + 1, prev[j] + 1), prev[j - 1] + cost);
+            }
+            Array.Copy(curr, prev, n + 1);
+        }
+
+        return prev[n];
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when the anime has at least one Sonarr series with downloaded episode files
+    /// (determined by non-zero SizeOnDisk or at least one season with available episodes).
+    /// </summary>
+    private static bool HasDownloadedFiles(AnimeDetailsResponse anime) =>
+        anime.SonarrAnimes?.Any(s =>
+            (s.SizeOnDisk != null && s.SizeOnDisk > 0) ||
+            s.SeasonInfo?.Any(si => si.AvailableEpisodes > 0) == true) == true;
 
     public async Task<Result<AnimeStatisticsResponse>> GetStatisticsAsync()
     {
@@ -643,6 +787,18 @@ public class AnimeMediatorService(
     {
         var entry = await propertyBagRepository.GetByKeyAsync(MetaAnime.Core.SettingsKeys.AppShowNsfw);
         return entry?.Value?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    /// <summary>
+    /// Returns the title similarity threshold (0–100) stored in settings.
+    /// Falls back to 80 if the setting is absent or invalid.
+    /// </summary>
+    private async Task<double> GetTitleSimilarityThresholdAsync()
+    {
+        var entry = await propertyBagRepository.GetByKeyAsync(MetaAnime.Core.SettingsKeys.AppTitleSimilarityThreshold);
+        if (double.TryParse(entry?.Value, out var v) && v is >= 1 and <= 100)
+            return v;
+        return 80; // default
     }
 
     /// <summary>

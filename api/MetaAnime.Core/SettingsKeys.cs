@@ -28,8 +28,9 @@ public static class SettingsKeys
     public const string KometaAnimeIdsJsonUrl = "Kometa:AnimeIdsJsonUrl";
 
     // App preferences
-    public const string AppShowNsfw      = "App:ShowNsfw";
-    public const string AppSyncInterval  = "App:SyncInterval";
+    public const string AppShowNsfw                   = "App:ShowNsfw";
+    public const string AppSyncInterval               = "App:SyncInterval";
+    public const string AppTitleSimilarityThreshold   = "App:TitleSimilarityThreshold";
 
     // System (not user-configurable)
     public const string LastSyncDate           = "System:LastSyncDate";

@@ -71,6 +71,7 @@ public class SettingsSeedService(
 
             [SettingsKeys.AppShowNsfw]             = "false",
             [SettingsKeys.AppSyncInterval]         = "daily",
+            [SettingsKeys.AppTitleSimilarityThreshold] = "80",
         };
     }
 }

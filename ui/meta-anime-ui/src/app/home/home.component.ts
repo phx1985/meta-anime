@@ -6,11 +6,12 @@ import { SyncSignalRService } from '../services/sync-signalr.service';
 import { AnimeStatisticsResponse } from '../models/anime.models';
 import { GenreChartComponent } from '../genre-chart/genre-chart.component';
 import { MissingStatsComponent } from '../missing-stats/missing-stats.component';
+import { CountUpDirective } from '../directives/count-up.directive';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [TranslatePipe, GenreChartComponent, MissingStatsComponent],
+  imports: [TranslatePipe, GenreChartComponent, MissingStatsComponent, CountUpDirective],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
@@ -27,13 +28,17 @@ export class HomeComponent {
   constructor() {
     this.loadStats();
 
-    // Auto-refresh when a sync completes while on this page
+    // Auto-refresh when a sync completes while on this page.
+    // resetFirst=true tears down the @if block so directives are recreated
+    // and the count-up animation always fires from 0 regardless of whether
+    // the numeric values actually changed.
     this.syncSignalR.syncCompleted$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.loadStats());
+      .subscribe(() => this.loadStats(true));
   }
 
-  private loadStats(): void {
+  private loadStats(resetFirst = false): void {
+    if (resetFirst) this.stats.set(null);
     this.animeService.getStatistics()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
