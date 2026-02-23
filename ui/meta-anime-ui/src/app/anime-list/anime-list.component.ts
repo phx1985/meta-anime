@@ -10,6 +10,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
@@ -17,6 +18,7 @@ import { AnimeDetailsResponse } from '../models/anime.models';
 import { AnimeCardComponent } from './anime-card/anime-card.component';
 
 const PAGE_SIZE = 20;
+const DISPLAY_MODE_KEY = 'meta-anime:displayMode';
 
 export type DisplayMode = 1 | 2 | 3;
 
@@ -25,7 +27,19 @@ export type DisplayMode = 1 | 2 | 3;
   standalone: true,
   imports: [TranslatePipe, AnimeCardComponent],
   templateUrl: './anime-list.component.html',
-  styleUrl: './anime-list.component.scss'
+  styleUrl: './anime-list.component.scss',
+  animations: [
+    trigger('gridLayout', [
+      transition(':increment', [
+        query('.anime-card', [
+          style({ opacity: 0.7, transform: 'translateY(6px) scale(0.97)' }),
+          stagger(5, [
+            animate('300ms cubic-bezier(0.34, 1.4, 0.64, 1)', style({ opacity: 1, transform: 'none' })),
+          ]),
+        ], { optional: true }),
+      ]),
+    ]),
+  ],
 })
 export class AnimeListComponent implements AfterViewInit, OnDestroy {
   private animeService = inject(AnimeService);
@@ -41,11 +55,17 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   totalCount  = signal(0);
   allLoaded   = signal(false);
   displayMode = signal<DisplayMode>(2);
+  layoutState = signal(0);
 
   private currentPage = 1;
   private scrollObserver: IntersectionObserver | null = null;
 
   constructor() {
+    // Restore display mode persisted in localStorage
+    const saved = localStorage.getItem(DISPLAY_MODE_KEY);
+    const n = Number(saved);
+    if (saved && (n === 1 || n === 2 || n === 3)) this.displayMode.set(n as DisplayMode);
+
     this.loadAnimes(true);
 
     // Auto-refresh when a sync completes while on this page
@@ -65,7 +85,10 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   }
 
   setDisplayMode(mode: DisplayMode): void {
+    if (this.displayMode() === mode) return;
     this.displayMode.set(mode);
+    this.layoutState.update(v => v + 1);
+    localStorage.setItem(DISPLAY_MODE_KEY, String(mode));
   }
 
   private loadAnimes(reset: boolean): void {

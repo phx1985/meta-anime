@@ -291,14 +291,23 @@ $timing-fns: (
   font-weight: 700;
   color: var(--accent-primary);
   line-height: 1.1;
+  position: relative;
+  z-index: 1;
 }
 
-.stat-label {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: 0.3rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+// Provider icon watermark — absolutely placed right of the number, fades toward the right edge
+.stat-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  opacity: 0.22;
+  mask-image: linear-gradient(to right, black 0%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 0%, transparent 100%);
+  pointer-events: none;
+  user-select: none;
 }
 
 .stat-card--matched .stat-value { color: #22c55e; }

@@ -80,7 +80,7 @@
         {{ 'animeList.totalCount' | translate: { count: totalCount() } }}
       </p>
 
-      <div class="anime-grid" [class]="'cols-' + displayMode()">
+      <div class="anime-grid" [class]="'cols-' + displayMode()" [@gridLayout]="layoutState()">
         @for (anime of animes(); track anime.aniDbId) {
           <app-anime-card #animeCard [anime]="anime" />
         }
