@@ -31,21 +31,21 @@
         <div class="stat-card stat-card--plex"
              [attr.data-tooltip]="'home.stats.tooltip.plex' | translate">
           <div class="stat-value">{{ stats()!.plexAnime }}</div>
-          <div class="stat-label">{{ 'home.stats.plex' | translate }}</div>
+          <img class="stat-icon" src="assets/images/plex.svg" alt="Plex" aria-hidden="true" />
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg-4">
         <div class="stat-card stat-card--sonarr"
              [attr.data-tooltip]="'home.stats.tooltip.sonarr' | translate">
           <div class="stat-value">{{ stats()!.sonarrAnime }}</div>
-          <div class="stat-label">{{ 'home.stats.sonarr' | translate }}</div>
+          <img class="stat-icon" src="assets/images/sonarr.svg" alt="Sonarr" aria-hidden="true" />
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg-4">
         <div class="stat-card stat-card--mal"
              [attr.data-tooltip]="'home.stats.tooltip.mal' | translate">
           <div class="stat-value">{{ stats()!.myAnimeListAnime }}</div>
-          <div class="stat-label">{{ 'home.stats.mal' | translate }}</div>
+          <img class="stat-icon" src="assets/images/mal.svg" alt="MyAnimeList" aria-hidden="true" />
         </div>
       </div>
     </div>

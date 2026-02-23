@@ -7,7 +7,60 @@
   </div>
 
   <div class="container py-5">
-    <h1 class="anime-list-title mb-4">{{ 'animeList.title' | translate }}</h1>
+    <!-- Title + display mode controls -->
+    <div class="anime-list-header mb-3">
+      <h1 class="anime-list-title mb-0">{{ 'animeList.title' | translate }}</h1>
+
+      <!-- Display mode toggle (visible on large screens only) -->
+      <div class="display-mode-toggle d-none d-lg-flex" role="group" [attr.aria-label]="'animeList.displayMode' | translate">
+        <button
+          type="button"
+          class="mode-btn"
+          [class.mode-btn--active]="displayMode() === 1"
+          (click)="setDisplayMode(1)"
+          [attr.aria-label]="'animeList.cols1' | translate"
+          [attr.aria-pressed]="displayMode() === 1">
+          <!-- single column icon -->
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <rect x="2" y="2" width="12" height="3" rx="1"/>
+            <rect x="2" y="7" width="12" height="3" rx="1"/>
+            <rect x="2" y="12" width="12" height="2" rx="1"/>
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="mode-btn"
+          [class.mode-btn--active]="displayMode() === 2"
+          (click)="setDisplayMode(2)"
+          [attr.aria-label]="'animeList.cols2' | translate"
+          [attr.aria-pressed]="displayMode() === 2">
+          <!-- two columns icon -->
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <rect x="1" y="2" width="6" height="5" rx="1"/>
+            <rect x="9" y="2" width="6" height="5" rx="1"/>
+            <rect x="1" y="9" width="6" height="5" rx="1"/>
+            <rect x="9" y="9" width="6" height="5" rx="1"/>
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="mode-btn"
+          [class.mode-btn--active]="displayMode() === 3"
+          (click)="setDisplayMode(3)"
+          [attr.aria-label]="'animeList.cols3' | translate"
+          [attr.aria-pressed]="displayMode() === 3">
+          <!-- three columns icon -->
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <rect x="1"  y="2" width="4" height="5" rx="1"/>
+            <rect x="6"  y="2" width="4" height="5" rx="1"/>
+            <rect x="11" y="2" width="4" height="5" rx="1"/>
+            <rect x="1"  y="9" width="4" height="5" rx="1"/>
+            <rect x="6"  y="9" width="4" height="5" rx="1"/>
+            <rect x="11" y="9" width="4" height="5" rx="1"/>
+          </svg>
+        </button>
+      </div>
+    </div>
 
     @if (loading()) {
       <div class="d-flex justify-content-center py-5">
@@ -22,11 +75,32 @@
     } @else if (animes().length === 0) {
       <p class="text-muted">{{ 'animeList.empty' | translate }}</p>
     } @else {
-      <div class="anime-grid">
+      <!-- Total count -->
+      <p class="anime-total-count mb-3">
+        {{ 'animeList.totalCount' | translate: { count: totalCount() } }}
+      </p>
+
+      <div class="anime-grid" [class]="'cols-' + displayMode()" [@gridLayout]="layoutState()">
         @for (anime of animes(); track anime.aniDbId) {
-          <app-anime-card [anime]="anime" />
+          <app-anime-card #animeCard [anime]="anime" />
         }
       </div>
+
+      <!-- Loading more spinner -->
+      @if (loadingMore()) {
+        <div class="d-flex justify-content-center py-4">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">{{ 'animeList.loadingMore' | translate }}</span>
+          </div>
+        </div>
+      }
+
+      <!-- End of results -->
+      @if (allLoaded() && animes().length > 0) {
+        <p class="anime-end-message text-center text-muted py-4">
+          {{ 'animeList.endOfResults' | translate }}
+        </p>
+      }
     }
   </div>
 </div>
