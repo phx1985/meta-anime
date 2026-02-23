@@ -151,11 +151,20 @@ public class AnimeService(
             }
 
             // Enrich each Sonarr series with codec distribution so it is included in the cache.
-            // Runs sequentially to respect the shared DbContext constraint.
-            foreach (var series in sonarrResult.Value)
+            // Runs in parallel (up to 10 concurrent requests) to reduce sync time.
+            using var semaphore = new SemaphoreSlim(10, 10);
+            await Task.WhenAll(sonarrResult.Value.Select(async series =>
             {
-                series.CodecDistribution = await sonarrAnimeSourceService.GetCodecDistributionAsync(series.Id.ToString());
-            }
+                await semaphore.WaitAsync();
+                try
+                {
+                    series.CodecDistribution = await sonarrAnimeSourceService.GetCodecDistributionAsync(series.Id.ToString());
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            }));
             await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Done, 100, sw);
 
             // ── Persist all sources to DB + cache ────────────────────────────────
