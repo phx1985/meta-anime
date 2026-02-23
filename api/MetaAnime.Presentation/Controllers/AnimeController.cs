@@ -44,12 +44,13 @@ public class AnimeController(IMediator mediator)
         [FromQuery] bool enriched = false,
         [FromQuery] string[]? airingStatus = null,
         [FromQuery] bool? hasFile = null,
-        [FromQuery] string[]? codec = null)
+        [FromQuery] string[]? codec = null,
+        [FromQuery] string[]? mediaType = null)
     {
         if (page < 1) page = 1;
         if (pageSize < 1 || pageSize > 100) pageSize = 100;
 
-        var filters = new AnimeFilters(title, source, status, genre, genreOperator, sortBy, sortOrder, airingStatus, hasFile, codec);
+        var filters = new AnimeFilters(title, source, status, genre, genreOperator, sortBy, sortOrder, airingStatus, hasFile, codec, mediaType);
         var result = await mediator.Send(new GetAllAnimesQuery(page, pageSize, filters, enriched));
 
         if (result.IsFailure)
