@@ -38,6 +38,90 @@
       <div class="filter-card__body" [@filterCollapse]="filterOpen() ? 'open' : 'closed'">
         <div class="filter-card__inner">
 
+          <!-- ── Presets ──────────────────────────────────────────────── -->
+          <div class="presets-section">
+
+            <!-- Group 1: Built-in suggestions -->
+            <div class="presets-group">
+              <span class="filter-label">{{ 'animeList.presets.suggestions' | translate }}</span>
+              <div class="preset-chips" role="list">
+                @for (p of presetService.builtInPresets; track p.id) {
+                  <button
+                    type="button"
+                    class="preset-chip preset-chip--builtin"
+                    role="listitem"
+                    [attr.aria-label]="p.labelKey | translate"
+                    (click)="applyPreset(p)">
+                    <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                      <path d="M2 8l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                    {{ p.labelKey | translate }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Group 2: User-saved presets -->
+            <div class="presets-group presets-group--mine">
+              <div class="presets-group__header">
+                <span class="filter-label">{{ 'animeList.presets.myPresets' | translate }}</span>
+                <button type="button" class="btn-save-preset" (click)="openSavePreset()">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                  </svg>
+                  {{ 'animeList.presets.saveAs' | translate }}
+                </button>
+              </div>
+
+              <!-- Save-as-preset inline form -->
+              @if (showSavePreset) {
+                <div class="preset-save-form">
+                  <input
+                    class="preset-name-input"
+                    type="text"
+                    [(ngModel)]="newPresetName"
+                    [placeholder]="'animeList.presets.namePlaceholder' | translate"
+                    (keydown.enter)="confirmSavePreset()"
+                    (keydown.escape)="cancelSavePreset()"
+                    autofocus />
+                  <button type="button" class="btn-preset-confirm" (click)="confirmSavePreset()" [disabled]="!newPresetName.trim()">
+                    {{ 'animeList.presets.save' | translate }}
+                  </button>
+                  <button type="button" class="btn-preset-cancel" (click)="cancelSavePreset()">
+                    {{ 'animeList.presets.cancel' | translate }}
+                  </button>
+                </div>
+              }
+
+              @if (savedPresets().length > 0) {
+                <div class="preset-chips" role="list">
+                  @for (p of savedPresets(); track p.id) {
+                    <button
+                      type="button"
+                      class="preset-chip preset-chip--saved"
+                      role="listitem"
+                      [attr.aria-label]="p.labelKey"
+                      (click)="applyPreset(p)">
+                      {{ p.labelKey }}
+                      <span
+                        class="preset-chip__delete"
+                        role="button"
+                        [attr.aria-label]="'animeList.presets.delete' | translate"
+                        (click)="deletePreset(p.id, $event)">
+                        <svg width="8" height="8" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                          <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                        </svg>
+                      </span>
+                    </button>
+                  }
+                </div>
+              } @else if (!showSavePreset) {
+                <p class="presets-empty">{{ 'animeList.presets.noPresets' | translate }}</p>
+              }
+            </div>
+
+          </div>
+
           <!-- ── Row 1: Title search ──────────────────────────────────── -->
           <div class="filter-row">
             <div class="filter-field filter-field--grow">
@@ -58,181 +142,205 @@
             </div>
           </div>
 
-          <!-- ── Row 2: Genre combo + Watch state ────────────────────── -->
-          <div class="filter-row">
-            <!-- Genre multi-select combo -->
-            <div class="filter-field">
-              <div class="filter-label-row">
-                <span class="filter-label">{{ 'animeList.filter.genre' | translate }}</span>
-                @if (filterGenre().length > 1) {
-                  <!-- OR/AND toggle -->
-                  <div class="operator-toggle" role="radiogroup" [attr.aria-label]="'animeList.filter.genreOperator' | translate">
-                    <button
-                      type="button"
-                      class="op-btn"
-                      [class.op-btn--active]="genreOperator === 'or'"
-                      (click)="genreOperator = 'or'; $event.stopPropagation()"
-                      role="radio"
-                      [attr.aria-checked]="genreOperator === 'or'">
-                      OR
-                    </button>
-                    <button
-                      type="button"
-                      class="op-btn"
-                      [class.op-btn--active]="genreOperator === 'and'"
-                      (click)="genreOperator = 'and'; $event.stopPropagation()"
-                      role="radio"
-                      [attr.aria-checked]="genreOperator === 'and'">
-                      AND
-                    </button>
-                  </div>
-                }
-              </div>
+          <!-- ── Advanced toggle ─────────────────────────────────────── -->
+          <button
+            type="button"
+            class="btn-advanced-toggle"
+            (click)="toggleAdvanced()"
+            [attr.aria-expanded]="advancedOpen()">
+            <svg class="advanced-toggle__chevron" [class.advanced-toggle__chevron--open]="advancedOpen()" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+            {{ (advancedOpen() ? 'animeList.filter.hideAdvanced' : 'animeList.filter.advanced') | translate }}
+            @if (advancedFilterCount > 0) {
+              <span class="filter-badge">{{ advancedFilterCount }}</span>
+            }
+          </button>
 
-              <div class="genre-dropdown">
-                <!-- Trigger button -->
-                <button
-                  type="button"
-                  class="genre-trigger"
-                  [class.genre-trigger--has-value]="filterGenre().length > 0"
-                  [class.genre-trigger--open]="genreDropdownOpen"
-                  (click)="toggleGenreDropdown($event)"
-                  [attr.aria-expanded]="genreDropdownOpen"
-                  [attr.aria-label]="'animeList.filter.genre' | translate">
-                  <span class="genre-trigger__text">
-                    @if (genreLabel()) {
-                      {{ genreLabel() }}
-                    } @else {
-                      {{ 'animeList.filter.any' | translate }}
-                    }
-                  </span>
-                  @if (filterGenre().length > 0) {
-                    <button type="button" class="genre-clear-btn" (click)="clearGenres($event)" [attr.aria-label]="'animeList.filter.clear' | translate">
-                      <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                        <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                      </svg>
-                    </button>
-                  }
-                  <svg class="genre-trigger__chevron" [class.genre-trigger__chevron--open]="genreDropdownOpen" width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                    <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                  </svg>
-                </button>
+          <!-- ── Advanced section (Genre · Watch · Airing · Codec · Sort) ── -->
+          <div [@filterCollapse]="advancedOpen() ? 'open' : 'closed'">
+            <div class="advanced-inner">
 
-                <!-- Dropdown panel -->
-                @if (genreDropdownOpen) {
-                  <div class="genre-panel" role="listbox" [attr.aria-multiselectable]="true">
-                    <div class="genre-panel__inner">
-                      @for (g of filteredGenreList(); track g) {
+              <!-- ── Row 2: Genre combo + Watch state ──────────────────── -->
+              <div class="filter-row">
+                <!-- Genre multi-select combo -->
+                <div class="filter-field">
+                  <div class="filter-label-row">
+                    <span class="filter-label">{{ 'animeList.filter.genre' | translate }}</span>
+                    @if (filterGenre().length > 1) {
+                      <!-- OR/AND toggle -->
+                      <div class="operator-toggle" role="radiogroup" [attr.aria-label]="'animeList.filter.genreOperator' | translate">
                         <button
                           type="button"
-                          class="genre-option"
-                          [class.genre-option--selected]="filterGenre().includes(g)"
-                          role="option"
-                          [attr.aria-selected]="filterGenre().includes(g)"
-                          (click)="toggleGenre(g, $event)">
-                          <span class="genre-option__check" aria-hidden="true">
-                            @if (filterGenre().includes(g)) {
-                              <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M2 8l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-                            }
-                          </span>
-                          {{ ('genres.' + g) | translate }}
+                          class="op-btn"
+                          [class.op-btn--active]="genreOperator === 'or'"
+                          (click)="genreOperator = 'or'; $event.stopPropagation()"
+                          role="radio"
+                          [attr.aria-checked]="genreOperator === 'or'">
+                          OR
+                        </button>
+                        <button
+                          type="button"
+                          class="op-btn"
+                          [class.op-btn--active]="genreOperator === 'and'"
+                          (click)="genreOperator = 'and'; $event.stopPropagation()"
+                          role="radio"
+                          [attr.aria-checked]="genreOperator === 'and'">
+                          AND
+                        </button>
+                      </div>
+                    }
+                  </div>
+
+                  <div class="genre-dropdown">
+                    <!-- Trigger button -->
+                    <button
+                      type="button"
+                      class="genre-trigger"
+                      [class.genre-trigger--has-value]="filterGenre().length > 0"
+                      [class.genre-trigger--open]="genreDropdownOpen"
+                      (click)="toggleGenreDropdown($event)"
+                      [attr.aria-expanded]="genreDropdownOpen"
+                      [attr.aria-label]="'animeList.filter.genre' | translate">
+                      <span class="genre-trigger__text">
+                        @if (genreLabel()) {
+                          {{ genreLabel() }}
+                        } @else {
+                          {{ 'animeList.filter.any' | translate }}
+                        }
+                      </span>
+                      @if (filterGenre().length > 0) {
+                        <button type="button" class="genre-clear-btn" (click)="clearGenres($event)" [attr.aria-label]="'animeList.filter.clear' | translate">
+                          <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                            <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                          </svg>
                         </button>
                       }
-                    </div>
+                      <svg class="genre-trigger__chevron" [class.genre-trigger__chevron--open]="genreDropdownOpen" width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                        <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                      </svg>
+                    </button>
+
+                    <!-- Dropdown panel -->
+                    @if (genreDropdownOpen) {
+                      <div class="genre-panel" role="listbox" [attr.aria-multiselectable]="true">
+                        <div class="genre-panel__inner">
+                          @for (g of filteredGenreList(); track g) {
+                            <button
+                              type="button"
+                              class="genre-option"
+                              [class.genre-option--selected]="filterGenre().includes(g)"
+                              role="option"
+                              [attr.aria-selected]="filterGenre().includes(g)"
+                              (click)="toggleGenre(g, $event)">
+                              <span class="genre-option__check" aria-hidden="true">
+                                @if (filterGenre().includes(g)) {
+                                  <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M2 8l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                                }
+                              </span>
+                              {{ ('genres.' + g) | translate }}
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    }
                   </div>
-                }
-              </div>
-            </div>
+                </div>
 
-            <!-- Watch state pills -->
-            <div class="filter-field filter-field--pills">
-              <span class="filter-label">{{ 'animeList.filter.watchState' | translate }}</span>
-              <div class="filter-pills">
-                @for (s of watchingStates; track s.value) {
-                  <button
-                    type="button"
-                    class="filter-pill"
-                    [class.filter-pill--active]="filterWatchState.includes(s.value)"
-                    (click)="filterWatchState = togglePill(filterWatchState, s.value)">
-                    {{ s.labelKey | translate }}
-                  </button>
-                }
+                <!-- Watch state pills -->
+                <div class="filter-field filter-field--pills">
+                  <span class="filter-label">{{ 'animeList.filter.watchState' | translate }}</span>
+                  <div class="filter-pills">
+                    @for (s of watchingStates; track s.value) {
+                      <button
+                        type="button"
+                        class="filter-pill"
+                        [class.filter-pill--active]="filterWatchState.includes(s.value)"
+                        (click)="filterWatchState = togglePill(filterWatchState, s.value)">
+                        {{ s.labelKey | translate }}
+                      </button>
+                    }
+                  </div>
+                </div>
               </div>
+
+              <!-- ── Row 3: Airing · Codec · Has file ──────────────────── -->
+              <div class="filter-row">
+                <div class="filter-field filter-field--pills">
+                  <span class="filter-label">{{ 'animeList.filter.airingStatus' | translate }}</span>
+                  <div class="filter-pills">
+                    @for (s of airingStates; track s.value) {
+                      <button
+                        type="button"
+                        class="filter-pill"
+                        [class.filter-pill--active]="filterAiringStatus.includes(s.value)"
+                        (click)="filterAiringStatus = togglePill(filterAiringStatus, s.value)">
+                        {{ s.labelKey | translate }}
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <div class="filter-field filter-field--pills">
+                  <span class="filter-label">{{ 'animeList.filter.codec' | translate }}</span>
+                  <div class="filter-pills">
+                    @for (c of codecOptions; track c.value) {
+                      <button
+                        type="button"
+                        class="filter-pill"
+                        [class.filter-pill--active]="filterCodec.includes(c.value)"
+                        (click)="filterCodec = togglePill(filterCodec, c.value)">
+                        {{ c.label }}
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <div class="filter-field filter-field--pills filter-field--compact">
+                  <span class="filter-label">{{ 'animeList.filter.hasFile' | translate }}</span>
+                  <div class="filter-pills">
+                    <button type="button" class="filter-pill" [class.filter-pill--active]="filterHasFile === 'any'" (click)="filterHasFile = 'any'">{{ 'animeList.filter.any' | translate }}</button>
+                    <button type="button" class="filter-pill" [class.filter-pill--active]="filterHasFile === 'yes'" (click)="filterHasFile = 'yes'">{{ 'animeList.filter.hasFileYes' | translate }}</button>
+                    <button type="button" class="filter-pill" [class.filter-pill--active]="filterHasFile === 'no'" (click)="filterHasFile = 'no'">{{ 'animeList.filter.hasFileNo' | translate }}</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ── Row 4: Sort ────────────────────────────────────────── -->
+              <div class="filter-row">
+                <div class="filter-field filter-field--compact">
+                  <span class="filter-label">{{ 'animeList.sort.by' | translate }}</span>
+                  <div class="d-flex align-items-center gap-2">
+                    <select
+                      class="sort-select"
+                      [(ngModel)]="sortBy"
+                      (ngModelChange)="onSortByChange()"
+                      [attr.aria-label]="'animeList.sort.by' | translate">
+                      @for (opt of sortOptions; track opt.value) {
+                        <option [value]="opt.value">{{ opt.labelKey | translate }}</option>
+                      }
+                    </select>
+                    <button
+                      type="button"
+                      class="mode-btn sort-dir-btn"
+                      (click)="toggleSortOrder()"
+                      [attr.aria-label]="'animeList.sort.order' | translate"
+                      [attr.aria-pressed]="sortOrder === 'desc'">
+                      @if (sortOrder === 'asc') {
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 12l5-8 5 8H3z"/></svg>
+                      } @else {
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 4l5 8 5-8H3z"/></svg>
+                      }
+                    </button>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 
-          <!-- ── Row 3: Airing · Codec · Has file ────────────────────── -->
-          <div class="filter-row">
-            <div class="filter-field filter-field--pills">
-              <span class="filter-label">{{ 'animeList.filter.airingStatus' | translate }}</span>
-              <div class="filter-pills">
-                @for (s of airingStates; track s.value) {
-                  <button
-                    type="button"
-                    class="filter-pill"
-                    [class.filter-pill--active]="filterAiringStatus.includes(s.value)"
-                    (click)="filterAiringStatus = togglePill(filterAiringStatus, s.value)">
-                    {{ s.labelKey | translate }}
-                  </button>
-                }
-              </div>
-            </div>
-
-            <div class="filter-field filter-field--pills">
-              <span class="filter-label">{{ 'animeList.filter.codec' | translate }}</span>
-              <div class="filter-pills">
-                @for (c of codecOptions; track c.value) {
-                  <button
-                    type="button"
-                    class="filter-pill"
-                    [class.filter-pill--active]="filterCodec.includes(c.value)"
-                    (click)="filterCodec = togglePill(filterCodec, c.value)">
-                    {{ c.label }}
-                  </button>
-                }
-              </div>
-            </div>
-
-            <div class="filter-field filter-field--pills filter-field--compact">
-              <span class="filter-label">{{ 'animeList.filter.hasFile' | translate }}</span>
-              <div class="filter-pills">
-                <button type="button" class="filter-pill" [class.filter-pill--active]="filterHasFile === 'any'" (click)="filterHasFile = 'any'">{{ 'animeList.filter.any' | translate }}</button>
-                <button type="button" class="filter-pill" [class.filter-pill--active]="filterHasFile === 'yes'" (click)="filterHasFile = 'yes'">{{ 'animeList.filter.hasFileYes' | translate }}</button>
-                <button type="button" class="filter-pill" [class.filter-pill--active]="filterHasFile === 'no'" (click)="filterHasFile = 'no'">{{ 'animeList.filter.hasFileNo' | translate }}</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- ── Row 4: Sort · Display mode · Actions ────────────────── -->
+          <!-- ── Toolbar: Display mode · Search · Reset ────────────────── -->
           <div class="filter-row filter-row--toolbar">
-            <!-- Sort by + direction -->
-            <div class="filter-field filter-field--compact">
-              <span class="filter-label">{{ 'animeList.sort.by' | translate }}</span>
-              <div class="d-flex align-items-center gap-2">
-                <select
-                  class="sort-select"
-                  [(ngModel)]="sortBy"
-                  (ngModelChange)="onSortByChange()"
-                  [attr.aria-label]="'animeList.sort.by' | translate">
-                  @for (opt of sortOptions; track opt.value) {
-                    <option [value]="opt.value">{{ opt.labelKey | translate }}</option>
-                  }
-                </select>
-                <button
-                  type="button"
-                  class="mode-btn sort-dir-btn"
-                  (click)="toggleSortOrder()"
-                  [attr.aria-label]="'animeList.sort.order' | translate"
-                  [attr.aria-pressed]="sortOrder === 'desc'">
-                  @if (sortOrder === 'asc') {
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 12l5-8 5 8H3z"/></svg>
-                  } @else {
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 4l5 8 5-8H3z"/></svg>
-                  }
-                </button>
-              </div>
-            </div>
-
             <!-- Display mode -->
             <div class="filter-field filter-field--compact filter-field--display-mode">
               <span class="filter-label">{{ 'animeList.displayMode' | translate }}</span>

@@ -18,7 +18,8 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
-import { AnimeDetailsResponse, AnimeFilters } from '../models/anime.models';
+import { FilterPresetService } from '../services/filter-preset.service';
+import { AnimeDetailsResponse, AnimeFilters, FilterPreset, SavedFilterState } from '../models/anime.models';
 import { AnimeCardComponent } from './anime-card/anime-card.component';
 
 const PAGE_SIZE = 20;
@@ -98,6 +99,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   private syncSignalR       = inject(SyncSignalRService);
   private destroyRef        = inject(DestroyRef);
   private translateService  = inject(TranslateService);
+  readonly presetService    = inject(FilterPresetService);
 
   @ViewChildren('animeCard', { read: ElementRef }) cardRefs!: QueryList<ElementRef>;
 
@@ -117,8 +119,17 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   /** Whether the filter body is expanded */
   filterOpen  = signal(true);
 
+  /** Whether the advanced filter sub-section is expanded */
+  advancedOpen = signal(false);
+
   /** Whether the genre dropdown is open */
   genreDropdownOpen = false;
+
+  // ── Preset state ──────────────────────────────────────────────────────────
+  savedPresets = signal<FilterPreset[]>([]);
+  /** Whether the "save as preset" inline form is visible */
+  showSavePreset = false;
+  newPresetName  = '';
 
   // ── Filter state ──────────────────────────────────────────────────────────
   filterTitle        = '';
@@ -159,6 +170,18 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     if (this.filterAiringStatus.length) n++;
     if (this.filterHasFile !== 'any') n++;
     if (this.filterCodec.length) n++;
+    return n;
+  }
+
+  /** Count of active advanced filters (drives the badge on the Advanced toggle) */
+  get advancedFilterCount(): number {
+    let n = 0;
+    if (this.filterGenre().length) n++;
+    if (this.filterWatchState.length) n++;
+    if (this.filterAiringStatus.length) n++;
+    if (this.filterHasFile !== 'any') n++;
+    if (this.filterCodec.length) n++;
+    if (this.sortBy !== 'title' || this.sortOrder !== 'asc') n++;
     return n;
   }
 
@@ -211,6 +234,8 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     const n = Number(saved);
     if (saved && (n === 1 || n === 2 || n === 3)) this.displayMode.set(n as DisplayMode);
 
+    this.savedPresets.set(this.presetService.getSavedPresets());
+
     this.settingsService.getShowNsfw()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(show => this.showNsfw.set(show));
@@ -254,6 +279,12 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   toggleFilterPanel(): void {
     this.filterOpen.update(v => !v);
+  }
+
+  // ── Advanced section collapse ─────────────────────────────────────────────
+
+  toggleAdvanced(): void {
+    this.advancedOpen.update(v => !v);
   }
 
   // ── Sort order toggle ─────────────────────────────────────────────────────
@@ -315,7 +346,10 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.sortOrder          = 'asc';
     this.searched.set(false);
     this.filterOpen.set(true);
+    this.advancedOpen.set(false);
     this.genreDropdownOpen  = false;
+    this.showSavePreset     = false;
+    this.newPresetName      = '';
     this.animes.set([]);
     this.totalCount.set(0);
     this.allLoaded.set(false);
@@ -323,7 +357,79 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.searchElapsedMs.set(null);
   }
 
+  // ── Preset management ─────────────────────────────────────────────────────
+
+  applyPreset(preset: FilterPreset): void {
+    const f = preset.filters;
+    this.filterTitle        = f.title        ?? '';
+    this.filterGenre.set(f.genre            ?? []);
+    this.genreOperator      = f.genreOperator ?? 'or';
+    this.filterWatchState   = f.watchState   ?? [];
+    this.filterAiringStatus = f.airingStatus  ?? [];
+    this.filterHasFile      = f.hasFile      ?? 'any';
+    this.filterCodec        = f.codec        ?? [];
+    this.sortBy             = f.sortBy       ?? 'title';
+    this.sortOrder          = f.sortOrder    ?? 'asc';
+    this.showSavePreset     = false;
+    this.newPresetName      = '';
+    // Open advanced section if the preset uses any advanced filter
+    const hasAdvanced = !!(
+      f.genre?.length || f.watchState?.length || f.airingStatus?.length ||
+      f.hasFile || f.codec?.length ||
+      (f.sortBy && f.sortBy !== 'title') || (f.sortOrder && f.sortOrder !== 'asc')
+    );
+    if (hasAdvanced) this.advancedOpen.set(true);
+    this.search();
+  }
+
+  openSavePreset(): void {
+    this.showSavePreset = !this.showSavePreset;
+    if (this.showSavePreset) this.newPresetName = '';
+  }
+
+  confirmSavePreset(): void {
+    const name = this.newPresetName.trim();
+    if (!name) return;
+    const id = `user-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const preset: FilterPreset = {
+      id,
+      labelKey: name,
+      isBuiltIn: false,
+      filters: this.snapshotFilters(),
+    };
+    this.presetService.savePreset(preset);
+    this.savedPresets.set(this.presetService.getSavedPresets());
+    this.showSavePreset = false;
+    this.newPresetName  = '';
+  }
+
+  cancelSavePreset(): void {
+    this.showSavePreset = false;
+    this.newPresetName  = '';
+  }
+
+  deletePreset(id: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.presetService.deletePreset(id);
+    this.savedPresets.set(this.presetService.getSavedPresets());
+  }
+
   // ── Private ───────────────────────────────────────────────────────────────
+
+  /** Returns a serialisable snapshot of the current filter panel state. */
+  private snapshotFilters(): SavedFilterState {
+    return {
+      title:         this.filterTitle        || undefined,
+      genre:         this.filterGenre().length ? this.filterGenre() : undefined,
+      genreOperator: this.filterGenre().length > 1 ? this.genreOperator : undefined,
+      watchState:    this.filterWatchState.length   ? this.filterWatchState   : undefined,
+      airingStatus:  this.filterAiringStatus.length ? this.filterAiringStatus : undefined,
+      hasFile:       this.filterHasFile !== 'any'   ? this.filterHasFile      : undefined,
+      codec:         this.filterCodec.length        ? this.filterCodec        : undefined,
+      sortBy:        this.sortBy    !== 'title'     ? this.sortBy             : undefined,
+      sortOrder:     this.sortOrder !== 'asc'       ? this.sortOrder          : undefined,
+    };
+  }
 
   private resolveHasFile(): boolean | undefined {
     if (this.filterHasFile === 'yes') return true;

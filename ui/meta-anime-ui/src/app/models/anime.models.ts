@@ -125,6 +125,27 @@ export interface AnimeFilters {
   codec?: string[];
 }
 
+/** Serialisable snapshot of the filter panel state for saved presets. */
+export interface SavedFilterState {
+  title?: string;
+  genre?: string[];
+  genreOperator?: 'or' | 'and';
+  watchState?: string[];
+  airingStatus?: string[];
+  hasFile?: 'any' | 'yes' | 'no';
+  codec?: string[];
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface FilterPreset {
+  id: string;
+  /** i18n key for built-in presets, plain label for user presets */
+  labelKey: string;
+  isBuiltIn: boolean;
+  filters: SavedFilterState;
+}
+
 export interface CreateAnimeRequest {
   sourceId: string;
   title: string;
