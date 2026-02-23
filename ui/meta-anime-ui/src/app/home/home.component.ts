@@ -6,11 +6,12 @@ import { SyncSignalRService } from '../services/sync-signalr.service';
 import { AnimeStatisticsResponse } from '../models/anime.models';
 import { GenreChartComponent } from '../genre-chart/genre-chart.component';
 import { MissingStatsComponent } from '../missing-stats/missing-stats.component';
+import { CountUpDirective } from '../directives/count-up.directive';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [TranslatePipe, GenreChartComponent, MissingStatsComponent],
+  imports: [TranslatePipe, GenreChartComponent, MissingStatsComponent, CountUpDirective],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
