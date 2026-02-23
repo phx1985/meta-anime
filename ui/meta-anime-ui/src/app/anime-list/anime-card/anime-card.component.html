@@ -95,31 +95,16 @@
       <div class="meta-row">
         @if (mal?.rating) {
           <div class="scores">
-            <div class="score-badge" [title]="'animeCard.malScore' | translate">
-              <span class="score-num">{{ malScore | number: '1.1-1' }}</span>
-              <span class="score-out">/10</span>
-              <span class="score-src">MAL</span>
-              <svg class="score-arc" viewBox="0 0 36 36" fill="none">
-                <circle class="arc-bg"  cx="18" cy="18" r="15" stroke-width="3"/>
-                <circle class="arc-fill" cx="18" cy="18" r="15" stroke-width="3"
-                        [attr.stroke-dashoffset]="arcCircumference - scorePct(malScore) * (arcCircumference / 100)"
-                        [attr.stroke-dasharray]="arcCircumference + ' ' + arcCircumference"
-                        transform="rotate(-90 18 18)"/>
-              </svg>
-            </div>
+            <app-score-badge
+              [score]="malScore"
+              label="MAL"
+              titleKey="animeCard.malScore" />
             @if (myScore > 0) {
-              <div class="score-badge score-badge--mine" [title]="'animeCard.myScore' | translate">
-                <span class="score-num">{{ myScore }}</span>
-                <span class="score-out">/10</span>
-                <span class="score-src">{{ 'animeCard.myScore' | translate }}</span>
-                <svg class="score-arc" viewBox="0 0 36 36" fill="none">
-                  <circle class="arc-bg"  cx="18" cy="18" r="15" stroke-width="3"/>
-                  <circle class="arc-fill arc-fill--mine" cx="18" cy="18" r="15" stroke-width="3"
-                          [attr.stroke-dashoffset]="arcCircumference - scorePct(myScore) * (arcCircumference / 100)"
-                          [attr.stroke-dasharray]="arcCircumference + ' ' + arcCircumference"
-                          transform="rotate(-90 18 18)"/>
-                </svg>
-              </div>
+              <app-score-badge
+                [score]="myScore"
+                [mine]="true"
+                [label]="'animeCard.myScore' | translate"
+                titleKey="animeCard.myScore" />
             }
           </div>
         }

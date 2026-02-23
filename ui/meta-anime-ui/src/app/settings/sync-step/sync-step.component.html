@@ -1,0 +1,53 @@
+<li class="sync-step"
+    [class.sync-step--done]="step.state === 'done'"
+    [class.sync-step--running]="step.state === 'running'"
+    [class.sync-step--error]="step.state === 'error'"
+    [class.sync-step--pending]="step.state === 'pending'">
+
+  <span class="sync-step-provider" aria-hidden="true">
+    <img [src]="providerImg"
+         [alt]="step.stepKey"
+         width="16" height="16" class="sync-step-provider-img" />
+  </span>
+
+  <span class="sync-step-icon" aria-hidden="true">
+    @switch (step.state) {
+      @case ('done') {
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      }
+      @case ('running') { <span class="mini-spin"></span> }
+      @case ('error') {
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      }
+      @default { <span class="step-dot"></span> }
+    }
+  </span>
+
+  <div class="sync-step-body">
+    <span class="sync-step-label">
+      {{ 'settings.sync.step.' + step.stepKey | translate }}
+    </span>
+    @if (step.state === 'running' || step.state === 'done') {
+      <span class="sync-step-elapsed">{{ fmtElapsed(step.elapsedMs) }}</span>
+    }
+    @if (step.errorMessage) {
+      <span class="sync-step-error">{{ step.errorMessage }}</span>
+    }
+  </div>
+
+  @if (step.state === 'running') {
+    <div class="sync-step-progress" role="progressbar"
+         [attr.aria-valuenow]="step.progressPercent ?? null"
+         aria-valuemin="0" aria-valuemax="100">
+      @if (step.progressPercent !== undefined) {
+        <div class="sync-step-progress-fill" [style.width.%]="step.progressPercent"></div>
+      } @else {
+        <div class="sync-step-progress-fill sync-step-progress-fill--indeterminate"></div>
+      }
+    </div>
+  }
+</li>

@@ -3,16 +3,14 @@ import { CommonModule } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo } from '../../models/anime.models';
+import { ScoreBadgeComponent } from './score-badge/score-badge.component';
 
 const TRUNCATE_AT = 180;
-
-/** Circumference of the score SVG arc (2π × r, r=15) */
-const ARC_CIRCUMFERENCE = 94.25;
 
 @Component({
   selector: 'app-anime-card',
   standalone: true,
-  imports: [CommonModule, TranslatePipe],
+  imports: [CommonModule, TranslatePipe, ScoreBadgeComponent],
   templateUrl: './anime-card.component.html',
   styleUrl: './anime-card.component.scss',
   animations: [
@@ -94,9 +92,6 @@ export class AnimeCardComponent {
     return this.mal?.synopsis ?? this.anime.description ?? '';
   }
 
-  /** Arc circumference constant for score badge SVG */
-  readonly arcCircumference = ARC_CIRCUMFERENCE;
-
   get truncatedDescription(): string {
     const d = this.description;
     if (!d) return '';
@@ -148,11 +143,6 @@ export class AnimeCardComponent {
 
   get myScore(): number {
     return this.mal?.rating?.myScore ?? 0;
-  }
-
-  /** 0–100 percentage for the score arc (scaled from 0–10) */
-  scorePct(score: number): number {
-    return Math.round(Math.min(10, Math.max(0, score)) * 10);
   }
 
   // ── Dates ─────────────────────────────────────────────────────────────────

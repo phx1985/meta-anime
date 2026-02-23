@@ -8,19 +8,12 @@ import { AnimeService } from '../services/anime.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
 import { SyncStep } from '../models/sync-progress.models';
+import { SyncStepComponent } from './sync-step/sync-step.component';
+import { fmtElapsed } from '../utils/format.utils';
 
 /** "Plex:Host" → "Plex_Host" for i18n key lookups */
 function fieldSlug(key: string): string {
   return key.replace(':', '_');
-}
-
-/** Format elapsed ms as "123 ms", "4.5 s", "1m 23s" */
-function fmtElapsed(ms: number): string {
-  if (ms < 1000) return `${ms} ms`;
-  const s = ms / 1000;
-  if (s < 60) return `${s.toFixed(1)} s`;
-  const m = Math.floor(s / 60);
-  return `${m}m ${Math.floor(s % 60)}s`;
 }
 
 /** Map an ngx-translate lang code to a BCP-47 locale for Intl.DateTimeFormat */
@@ -33,7 +26,7 @@ function langToLocale(lang: string): string {
   selector: 'app-settings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule, SyncStepComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss'
 })
