@@ -15,6 +15,8 @@ export interface AppNotification {
 const STORAGE_KEY = 'meta-anime-notifications';
 const MAX_STORED  = 50;
 const TOAST_TTL_MS = 4500;
+/** Exit animation duration — keep in sync with `.toast-item--leaving` in app.scss */
+const TOAST_EXIT_MS = 320;
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
@@ -35,6 +37,7 @@ export class NotificationService {
   });
 
   readonly activeToasts = signal<AppNotification[]>([]);
+  readonly leavingToastIds = signal<ReadonlySet<string>>(new Set<string>());
 
   /** Returns true if a notification with this exact id already exists (prevents duplicates). */
   has(id: string): boolean {
@@ -63,7 +66,13 @@ export class NotificationService {
   }
 
   dismissToast(id: string): void {
-    this.activeToasts.update(t => t.filter(n => n.id !== id));
+    // Already leaving — don't restart the animation
+    if (this.leavingToastIds().has(id)) return;
+    this.leavingToastIds.update(s => new Set([...s, id]));
+    setTimeout(() => {
+      this.activeToasts.update(t => t.filter(n => n.id !== id));
+      this.leavingToastIds.update(s => { const n = new Set(s); n.delete(id); return n; });
+    }, TOAST_EXIT_MS);
   }
 
   private _load(): AppNotification[] {
