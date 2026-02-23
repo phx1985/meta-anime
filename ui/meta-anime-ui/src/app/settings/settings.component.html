@@ -106,7 +106,9 @@
               <!-- Setting rows -->
               <div class="settings-rows">
                 @for (setting of grouped()[cat]; track trackByKey($index, setting)) {
-                  <div class="setting-row" [class.setting-row--editing]="editing()[setting.key]">
+                  <div class="setting-row"
+                       [class.setting-row--editing]="editing()[setting.key]"
+                       [class.setting-row--saved]="isSaved(setting.key)">
 
                     <div class="setting-info">
                       <div class="setting-name">

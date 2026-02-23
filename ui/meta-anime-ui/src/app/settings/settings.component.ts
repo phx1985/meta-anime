@@ -241,9 +241,13 @@ export class SettingsComponent {
       .subscribe({
         next: () => {
           this.savingKey.set(null);
+          this.savedKey.set(setting.key);
           this.settings.update(list =>
             list.map(s => s.key === setting.key ? { ...s, value: next } : s)
           );
+          setTimeout(() => {
+            if (this.savedKey() === setting.key) this.savedKey.set(null);
+          }, 2000);
         },
         error: () => { this.savingKey.set(null); }
       });
