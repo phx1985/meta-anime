@@ -84,8 +84,8 @@ export class App implements OnInit {
 
   handleNotifClick(notif: AppNotification): void {
     this.notifService.acknowledge(notif.id);
+    this.notifCenterOpen.set(false);
     if (notif.action) {
-      this.notifCenterOpen.set(false);
       this.router.navigate(notif.action.route,
         notif.action.fragment ? { fragment: notif.action.fragment } : undefined
       );
