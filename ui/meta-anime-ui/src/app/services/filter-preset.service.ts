@@ -29,18 +29,6 @@ export const BUILT_IN_PRESETS: FilterPreset[] = [
     isBuiltIn: true,
     filters: { watchState: ['plan_to_watch'] },
   },
-  {
-    id: 'builtin-has-files',
-    labelKey: 'animeList.presets.builtIn.hasFiles',
-    isBuiltIn: true,
-    filters: { hasFile: 'yes' },
-  },
-  {
-    id: 'builtin-action-adventure',
-    labelKey: 'animeList.presets.builtIn.actionAdventure',
-    isBuiltIn: true,
-    filters: { genre: ['Action', 'Adventure'], genreOperator: 'or', sortBy: 'malscore', sortOrder: 'desc' },
-  },
 ];
 
 @Injectable({ providedIn: 'root' })
