@@ -41,7 +41,14 @@
   "animeList": {
     "title": "Anime List",
     "error": "Failed to load animes. Please try again later.",
-    "empty": "No animes found."
+    "empty": "No animes found.",
+    "totalCount": "{{count}} anime(s) found",
+    "loadingMore": "Loading more…",
+    "endOfResults": "You've reached the end of the list",
+    "displayMode": "Display mode",
+    "cols1": "1 column",
+    "cols2": "2 columns",
+    "cols3": "3 columns"
   },
   "animeCard": {
     "altTitles": "Alternative titles",

@@ -41,7 +41,14 @@
   "animeList": {
     "title": "Liste des Animes",
     "error": "Échec du chargement des animes. Veuillez réessayer plus tard.",
-    "empty": "Aucun anime trouvé."
+    "empty": "Aucun anime trouvé.",
+    "totalCount": "{{count}} anime(s) trouvé(s)",
+    "loadingMore": "Chargement…",
+    "endOfResults": "Vous avez atteint la fin de la liste",
+    "displayMode": "Mode d'affichage",
+    "cols1": "1 colonne",
+    "cols2": "2 colonnes",
+    "cols3": "3 colonnes"
   },
   "animeCard": {
     "altTitles": "Titres alternatifs",
