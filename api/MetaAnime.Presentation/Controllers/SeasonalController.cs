@@ -31,7 +31,7 @@ public class SeasonalController(IMediator mediator) : ControllerBase
             return BadRequest("season must be one of: winter, spring, summer, fall");
 
         if (year < 1917 || year > DateTime.UtcNow.Year + 1)
-            return BadRequest($"year must be between 1917 and {DateTime.UtcNow.Year + 1}");
+            return BadRequest($"year must be between 1917 and {DateTime.UtcNow.Year + 1}"); // 1917 is the earliest anime in MAL's database
 
         var result = await mediator.Send(new GetSeasonalAnimesQuery(year, season.ToLower(), page, pageSize));
 

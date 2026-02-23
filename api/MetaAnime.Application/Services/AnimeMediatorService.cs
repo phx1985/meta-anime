@@ -803,9 +803,12 @@ public class AnimeMediatorService(
 
             if (mappingsResult.IsSuccess)
             {
-                foreach (var group in mappingsResult.Value.Where(m => m.Anime != null).GroupBy(m => m.AniDbId))
+                // Group mappings by AniDbId: each group represents one unique anime title.
+                // Within a group, entries can belong to different sources (MAL, Plex, Sonarr).
+                // We use the MAL source ID as the lookup key for presence checks.
+                foreach (var aniDbGroup in mappingsResult.Value.Where(m => m.Anime != null).GroupBy(m => m.AniDbId))
                 {
-                    var animes = group.Select(m => m.Anime!).ToList();
+                    var animes = aniDbGroup.Select(m => m.Anime!).ToList();
                     bool hasPlex = animes.Any(a => a.AnimeSource == AnimeSource.Plex);
                     bool hasSonarr = animes.Any(a => a.AnimeSource == AnimeSource.Sonarr);
                     foreach (var malEntry in animes.Where(a => a.AnimeSource == AnimeSource.MyAnimeList))
@@ -835,7 +838,9 @@ public class AnimeMediatorService(
                 );
             });
 
-            // Estimate total: if more pages exist, report at least one extra item beyond current page
+            // MAL's seasonal endpoint does not provide a total count.
+            // Estimate: if a next page exists, report at least one item beyond the current page
+            // so the paging consumer knows to request more; otherwise use the exact item count.
             var estimatedTotal = hasNextPage ? offset + pageSize + 1 : offset + items.Count;
             var totalPages = hasNextPage ? page + 1 : page;
             return Result.Success(new PagedResponse<IEnumerable<SeasonalAnimeResponse>>(
