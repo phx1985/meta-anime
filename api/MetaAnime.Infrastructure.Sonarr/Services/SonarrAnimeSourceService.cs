@@ -6,6 +6,7 @@ using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
 using Microsoft.Extensions.Options;
 using RestSharp;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Text.Json;
 
@@ -114,6 +115,45 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options, IPropert
         }
 
         return codecDistribution;
+    }
+
+    public async Task<Dictionary<string, Dictionary<string, int>>> GetBulkCodecDistributionsAsync(IEnumerable<string> seriesIds)
+    {
+        var ids = seriesIds.ToList();
+        var result = new ConcurrentDictionary<string, Dictionary<string, int>>();
+
+        if (ids.Count == 0)
+            return [];
+
+        var (host, apiKey, _, isConfigured) = await GetSettingsAsync();
+        if (!isConfigured)
+            return [];
+
+        using var semaphore = new SemaphoreSlim(10, 10);
+        await Task.WhenAll(ids.Select(async seriesId =>
+        {
+            await semaphore.WaitAsync();
+            try
+            {
+                var distribution = new Dictionary<string, int>();
+                var episodeFiles = await FetchEpisodeFilesAsync(seriesId, host, apiKey);
+                if (episodeFiles != null)
+                {
+                    foreach (var file in episodeFiles)
+                    {
+                        var codec = file?.MediaInfo?.VideoCodec ?? "Unknown";
+                        distribution[codec] = distribution.GetValueOrDefault(codec, 0) + 1;
+                    }
+                }
+                result[seriesId] = distribution;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }));
+
+        return new Dictionary<string, Dictionary<string, int>>(result);
     }
 
     public async Task<Result<IList<SonarrSeriesCodecResult>>> GetSeriesByCodecAsync(string codec)

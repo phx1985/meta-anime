@@ -6,6 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { SettingsService } from '../services/settings.service';
 import { AnimeService } from '../services/anime.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
+import { NotificationService } from '../services/notification.service';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
 import { SyncStep } from '../models/sync-progress.models';
 import { SyncStepComponent } from './sync-step/sync-step.component';
@@ -34,6 +35,7 @@ export class SettingsComponent {
   private settingsService = inject(SettingsService);
   private animeService    = inject(AnimeService);
   readonly signalR        = inject(SyncSignalRService);
+  private notifService    = inject(NotificationService);
   private fb              = inject(FormBuilder);
   private destroyRef      = inject(DestroyRef);
   private translate       = inject(TranslateService);
@@ -239,9 +241,13 @@ export class SettingsComponent {
       .subscribe({
         next: () => {
           this.savingKey.set(null);
+          this.savedKey.set(setting.key);
           this.settings.update(list =>
             list.map(s => s.key === setting.key ? { ...s, value: next } : s)
           );
+          setTimeout(() => {
+            if (this.savedKey() === setting.key) this.savedKey.set(null);
+          }, 2000);
         },
         error: () => { this.savingKey.set(null); }
       });
@@ -327,6 +333,14 @@ export class SettingsComponent {
     this.syncing.set(true);
     this.signalR.resetSteps();
 
+    this.notifService.push({
+      id: `sync-start-${Date.now()}`,
+      severity: 'info',
+      titleKey: 'notifications.sync.startTitle',
+      messageKey: 'notifications.sync.startMessage',
+      action: { labelKey: 'notifications.sync.viewLog', route: ['/settings'], fragment: 'sync-section' },
+    });
+
     // Scroll the sync card fully into view so the progress log is visible
     // Brief delay lets the sync card begin expanding before we scroll to it
     const SYNC_SCROLL_DELAY_MS = 80;
@@ -338,7 +352,10 @@ export class SettingsComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next:  () => { /* SignalR done event handles syncing flag */ },
-        error: () => { this.syncing.set(false); }
+        error: () => {
+          this.syncing.set(false);
+          this.signalR.markError();
+        }
       });
   }
 

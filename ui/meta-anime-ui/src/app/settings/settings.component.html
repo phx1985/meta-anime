@@ -106,7 +106,9 @@
               <!-- Setting rows -->
               <div class="settings-rows">
                 @for (setting of grouped()[cat]; track trackByKey($index, setting)) {
-                  <div class="setting-row" [class.setting-row--editing]="editing()[setting.key]">
+                  <div class="setting-row"
+                       [class.setting-row--editing]="editing()[setting.key]"
+                       [class.setting-row--saved]="isSaved(setting.key)">
 
                     <div class="setting-info">
                       <div class="setting-name">
@@ -279,35 +281,6 @@
               <h2 class="category-title mb-0">{{ 'settings.sync.card.title' | translate }}</h2>
               <p class="category-desc mb-0">{{ 'settings.sync.card.desc' | translate }}</p>
             </div>
-
-            <div class="sync-card-actions">
-              <div class="last-sync-info">
-                @if (lastSyncDate()) {
-                  <span class="last-sync-label">{{ 'settings.sync.lastSync' | translate }}</span>
-                  <span class="last-sync-value">{{ fmtDate(lastSyncDate()!) }}</span>
-                } @else {
-                  <span class="last-sync-never">{{ 'settings.sync.neverSynced' | translate }}</span>
-                }
-              </div>
-              <button
-                class="btn-sync"
-                [class.btn-sync--active]="syncing()"
-                [disabled]="syncing()"
-                (click)="triggerSync()"
-                [attr.aria-label]="'settings.sync.button' | translate">
-                @if (syncing()) {
-                  <span class="sync-spinner" aria-hidden="true"></span>
-                  {{ 'settings.sync.inProgress' | translate }}
-                } @else {
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-                    <polyline points="1 4 1 10 7 10"/>
-                    <polyline points="23 20 23 14 17 14"/>
-                    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-                  </svg>
-                  {{ 'settings.sync.button' | translate }}
-                }
-              </button>
-            </div>
           </div>
 
           @if (syncIntervalSetting(); as intervalSetting) {
@@ -339,6 +312,42 @@
           }
 
           <div class="sync-progress-body">
+
+            <!-- ── Manual trigger section ──────────────────────────────────── -->
+            <div class="sync-manual-section">
+              <div class="sync-manual-info">
+                <span class="sync-manual-title">{{ 'settings.sync.manual.title' | translate }}</span>
+                <span class="sync-manual-desc">{{ 'settings.sync.manual.desc' | translate }}</span>
+              </div>
+              <div class="sync-manual-controls">
+                <div class="last-sync-info">
+                  @if (lastSyncDate()) {
+                    <span class="last-sync-label">{{ 'settings.sync.lastSync' | translate }}</span>
+                    <span class="last-sync-value">{{ fmtDate(lastSyncDate()!) }}</span>
+                  } @else {
+                    <span class="last-sync-never">{{ 'settings.sync.neverSynced' | translate }}</span>
+                  }
+                </div>
+                <button
+                  class="btn-sync"
+                  [class.btn-sync--active]="syncing()"
+                  [disabled]="syncing()"
+                  (click)="triggerSync()"
+                  [attr.aria-label]="'settings.sync.button' | translate">
+                  @if (syncing()) {
+                    <span class="sync-spinner" aria-hidden="true"></span>
+                    {{ 'settings.sync.inProgress' | translate }}
+                  } @else {
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                      <polyline points="1 4 1 10 7 10"/>
+                      <polyline points="23 20 23 14 17 14"/>
+                      <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                    </svg>
+                    {{ 'settings.sync.button' | translate }}
+                  }
+                </button>
+              </div>
+            </div>
             @if (hasSyncActivity()) {
               <div class="sync-overall-row">
                 @if (syncDone()) {

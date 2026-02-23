@@ -1,5 +1,7 @@
 using FluentAssertions;
 using MetaAnime.Application.Services;
+using MetaAnime.Core.Interfaces.Caching;
+using MetaAnime.Core.Interfaces.Mappers;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
@@ -79,6 +81,53 @@ public class AnimeServiceTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task RefreshData_FetchesCodecDistributionForAllSonarrSeriesInParallel()
+    {
+        // Arrange
+        var seriesIds = Enumerable.Range(1, 5).ToList();
+        var sonarrSeries = seriesIds
+            .Select(id => new SonarrSeries { Id = id, Title = $"Anime {id}", Tags = [1] })
+            .ToList();
+
+        _mockPlexService
+            .Setup(x => x.GetAllAsync())
+            .ReturnsAsync(Result.Success<IList<PlexMedia>>([]));
+
+        _mockMalService
+            .Setup(x => x.GetAllAsync())
+            .ReturnsAsync(Result.Success<IList<MalAnime>>([]));
+
+        _mockSonarrService
+            .Setup(x => x.GetAllAsync())
+            .ReturnsAsync(Result.Success<IList<SonarrSeries>>(sonarrSeries));
+
+        var bulkResult = seriesIds.ToDictionary(
+            id => id.ToString(),
+            id => new Dictionary<string, int> { ["h264"] = id });
+
+        _mockSonarrService
+            .Setup(x => x.GetBulkCodecDistributionsAsync(It.IsAny<IEnumerable<string>>()))
+            .ReturnsAsync(bulkResult);
+
+        _mockAnimeRepository.Setup(x => x.BulkDeleteAllAsync()).Returns(Task.CompletedTask);
+        _mockAnimeRepository.Setup(x => x.BulkInsertAsync(It.IsAny<IEnumerable<IAnimeConvertible>>())).Returns(Task.CompletedTask);
+        _mockAnimeRepository.Setup(x => x.GetAllAsync()).ReturnsAsync(Enumerable.Empty<Anime>());
+
+        _mockCacheService.Setup(x => x.BulkDeleteBySourceAsync(It.IsAny<AnimeSource>())).ReturnsAsync(Result.Success());
+        _mockCacheService.Setup(x => x.BulkInsertAsync(It.IsAny<IEnumerable<ICacheable>>())).ReturnsAsync(Result.Success());
+
+        // Act
+        var result = await _sut.RefreshData();
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        _mockSonarrService.Verify(
+            x => x.GetBulkCodecDistributionsAsync(It.IsAny<IEnumerable<string>>()),
+            Times.Once);
+        sonarrSeries.All(s => s.CodecDistribution.ContainsKey("h264")).Should().BeTrue();
     }
 
     [Fact]

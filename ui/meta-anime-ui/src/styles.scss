@@ -15,6 +15,12 @@
   --gradient-start: #6c63ff;
   --gradient-end: #3ecfcf;
   --hero-text: #ffffff;
+  /* bubble particles */
+  --bubble-border: rgba(108, 99, 255, 0.45);
+  --bubble-shimmer: rgba(255, 255, 255, 0.75);
+  --bubble-body: rgba(108, 99, 255, 0.12);
+  /* bokeh blobs (anime list) */
+  --bokeh-opacity: 0.45;
 }
 
 [data-theme="dark"] {
@@ -32,6 +38,12 @@
   --gradient-start: #3d2b8e;
   --gradient-end: #1a6b6b;
   --hero-text: #ffffff;
+  /* bubble particles */
+  --bubble-border: rgba(255, 255, 255, 0.28);
+  --bubble-shimmer: rgba(255, 255, 255, 0.70);
+  --bubble-body: rgba(255, 255, 255, 0.06);
+  /* bokeh blobs (anime list) */
+  --bokeh-opacity: 0.18;
 }
 
 // Global styles

@@ -430,6 +430,17 @@
 
   &:hover,
   &.setting-row--editing { background: var(--bg-secondary); }
+
+  &.setting-row--saved {
+    animation: savedFlash 2s ease both;
+  }
+}
+
+@keyframes savedFlash {
+  0%   { background: transparent; }
+  12%  { background: rgba(34, 197, 94, 0.13); box-shadow: inset 3px 0 0 #22c55e; }
+  55%  { background: rgba(34, 197, 94, 0.07); box-shadow: inset 3px 0 0 rgba(34, 197, 94, 0.5); }
+  100% { background: transparent; box-shadow: none; }
 }
 
 .setting-info { min-width: 0; }
@@ -692,7 +703,7 @@
   align-items: center;
   gap: 1rem;
   padding: 1.1rem 1.5rem;
-  background: linear-gradient(135deg, #3b3f77, #1e1f42);
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
   color: #fff;
   flex-wrap: wrap;
 }
@@ -702,7 +713,38 @@
   min-width: 0;
 }
 
-.sync-card-actions {
+// ── Manual sync action section (inside sync-progress-body) ───────────────────
+
+.sync-manual-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.9rem 0 1rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.sync-manual-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.sync-manual-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sync-manual-desc {
+  font-size: 0.77rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.sync-manual-controls {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -711,7 +753,7 @@
 }
 
 .sync-progress-body {
-  padding: 0.75rem 1.25rem 1rem;
+  padding: 0.75rem 1.5rem 1rem;
 }
 
 .sync-overall-row {

@@ -1,9 +1,12 @@
-import { Component, inject, signal, OnInit, HostListener } from '@angular/core';
+import { Component, inject, signal, OnInit, HostListener, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { filter } from 'rxjs/operators';
 import { ThemeService } from './services/theme.service';
 import { SettingsService } from './services/settings.service';
 import { NotificationService, AppNotification } from './services/notification.service';
+import { SyncSignalRService } from './services/sync-signalr.service';
 
 @Component({
   selector: 'app-root',
@@ -16,7 +19,9 @@ export class App implements OnInit {
   protected translate       = inject(TranslateService);
   protected notifService    = inject(NotificationService);
   private   settingsService = inject(SettingsService);
+  private   syncSignalR     = inject(SyncSignalRService);
   private   router          = inject(Router);
+  private   destroyRef      = inject(DestroyRef);
 
   protected currentLang     = signal<string>('en');
   protected menuOpen        = signal<boolean>(false);
@@ -32,6 +37,34 @@ export class App implements OnInit {
   }
 
   ngOnInit(): void {
+    // Connect to SignalR hub globally so sync done/error notifications work on any page
+    this.syncSignalR.connect();
+
+    // Sync done → success notification (fires on every transition false→true, not on replay)
+    this.syncSignalR.syncDone$
+      .pipe(filter(v => v), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.notifService.push({
+          id: `sync-done-${Date.now()}`,
+          severity: 'success',
+          titleKey: 'notifications.sync.doneTitle',
+          messageKey: 'notifications.sync.doneMessage',
+        });
+      });
+
+    // Sync error → error notification
+    this.syncSignalR.syncError$
+      .pipe(filter(v => v), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.notifService.push({
+          id: `sync-error-${Date.now()}`,
+          severity: 'error',
+          titleKey: 'notifications.sync.errorTitle',
+          messageKey: 'notifications.sync.errorMessage',
+          action: { labelKey: 'notifications.sync.viewLog', route: ['/settings'], fragment: 'sync-section' },
+        });
+      });
+
     // Push "Welcome" notification once ever (idempotent by fixed id)
     this.notifService.push({
       id: 'welcome-v1',

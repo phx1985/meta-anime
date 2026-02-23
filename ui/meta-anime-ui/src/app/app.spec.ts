@@ -4,6 +4,8 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { provideTranslateService } from '@ngx-translate/core';
 import { App } from './app';
+import { SyncSignalRService } from './services/sync-signalr.service';
+import { of } from 'rxjs';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -14,6 +16,14 @@ describe('App', () => {
         provideHttpClientTesting(),
         provideRouter([]),
         provideTranslateService({ fallbackLang: 'en' }),
+        {
+          provide: SyncSignalRService,
+          useValue: {
+            connect: () => {},
+            syncDone$: of(false),
+            syncError$: of(false),
+          },
+        },
       ],
     }).compileComponents();
   });

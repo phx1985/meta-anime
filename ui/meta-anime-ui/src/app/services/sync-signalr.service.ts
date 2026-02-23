@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { SyncStep, SyncStepState, SyncProgressMessage } from '../models/sync-progress.models';
 
@@ -24,12 +24,15 @@ export class SyncSignalRService implements OnDestroy {
   private readonly _syncDone$        = new BehaviorSubject<boolean>(false);
   private readonly _syncError$       = new BehaviorSubject<boolean>(false);
   private readonly _overallElapsedMs$ = new BehaviorSubject<number>(0);
+  /** Emits void once each time a sync run fully completes. No replay — safe to subscribe on mount. */
+  private readonly _syncCompleted$   = new Subject<void>();
 
   readonly steps$:           Observable<SyncStep[]> = this._steps$.asObservable();
   readonly connected$:       Observable<boolean>    = this._connected$.asObservable();
   readonly syncDone$:        Observable<boolean>    = this._syncDone$.asObservable();
   readonly syncError$:       Observable<boolean>    = this._syncError$.asObservable();
   readonly overallElapsedMs$: Observable<number>   = this._overallElapsedMs$.asObservable();
+  readonly syncCompleted$:   Observable<void>       = this._syncCompleted$.asObservable();
 
   /** Elapsed-time ticker: interval handle + last-tick timestamp for delta calculation */
   private tickerHandle: ReturnType<typeof setInterval> | null = null;
@@ -86,6 +89,12 @@ export class SyncSignalRService implements OnDestroy {
     this.overallStartedAt = null;
   }
 
+  /** Called when the HTTP trigger itself fails (before any SignalR progress arrives). */
+  markError(): void {
+    this._syncError$.next(true);
+    this.stopTicker();
+  }
+
   ngOnDestroy(): void {
     this.disconnect();
   }
@@ -117,6 +126,7 @@ export class SyncSignalRService implements OnDestroy {
 
     if (allDone) {
       this._syncDone$.next(true);
+      this._syncCompleted$.next();
       this.stopTicker();
     } else if (anyError) {
       this._syncError$.next(true);

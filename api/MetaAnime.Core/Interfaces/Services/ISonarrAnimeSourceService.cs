@@ -9,6 +9,12 @@ public interface ISonarrAnimeSourceService<T> : IAnimeSourceService<T>
 {
     Task<Dictionary<string, int>> GetCodecDistributionAsync(string seriesId);
     /// <summary>
+    /// Fetches codec distributions for multiple series in parallel using a single settings
+    /// lookup, avoiding concurrent DbContext access.
+    /// Returns a map of seriesId → per-codec episode-file counts.
+    /// </summary>
+    Task<Dictionary<string, Dictionary<string, int>>> GetBulkCodecDistributionsAsync(IEnumerable<string> seriesIds);
+    /// <summary>
     /// Returns all tagged Sonarr series that have at least one episode file encoded with the
     /// specified codec, together with the per-codec episode-file counts and total size on disk.
     /// </summary>

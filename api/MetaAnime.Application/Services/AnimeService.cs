@@ -151,10 +151,14 @@ public class AnimeService(
             }
 
             // Enrich each Sonarr series with codec distribution so it is included in the cache.
-            // Runs sequentially to respect the shared DbContext constraint.
+            // Settings are fetched once (avoiding concurrent DbContext access); the HTTP calls
+            // to Sonarr run in parallel inside GetBulkCodecDistributionsAsync.
+            var codecDistributions = await sonarrAnimeSourceService.GetBulkCodecDistributionsAsync(
+                sonarrResult.Value.Select(s => s.Id.ToString()));
             foreach (var series in sonarrResult.Value)
             {
-                series.CodecDistribution = await sonarrAnimeSourceService.GetCodecDistributionAsync(series.Id.ToString());
+                if (codecDistributions.TryGetValue(series.Id.ToString(), out var dist))
+                    series.CodecDistribution = dist;
             }
             await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Done, 100, sw);
 

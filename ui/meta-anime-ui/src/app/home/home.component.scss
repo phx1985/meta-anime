@@ -1,4 +1,5 @@
 @use 'sass:math';
+@use 'sass:list';
 
 // Hero Section
 
@@ -58,48 +59,85 @@
 
 $ease-rise: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
+// Per-particle unique drifts so each bubble has its own organic path
+$drifts: (
+  ( 0px,  16px, -12px,  10px, -6px),   // 1
+  (18px, -14px,   8px, -18px, 14px),   // 2
+  (-8px,  10px, -20px,  12px, -4px),   // 3
+  (14px,  -6px,  16px,  -8px, 12px),   // 4
+  (-16px,  20px,  -8px,  18px,-12px),  // 5
+  ( 6px, -18px,  14px, -10px,  8px),   // 6
+  (-12px,   8px, -16px,  20px, -8px),  // 7
+  (20px, -10px,   6px, -14px, 18px),   // 8
+  ( -4px, 14px,  -6px,  16px,-20px),   // 9
+  (10px, -20px,  12px,  -4px, 16px),   // 10
+  (-18px,   6px, -10px,  14px,-16px),  // 11
+  (16px, -12px,  18px,  -6px, 10px),   // 12
+  (-6px,  18px, -14px,   8px,-18px),   // 13
+  (12px,  -8px,  20px, -16px,  4px),   // 14
+);
+
+$timing-fns: (
+  cubic-bezier(0.25, 0.46, 0.45, 0.94),
+  cubic-bezier(0.33, 0.60, 0.50, 0.98),
+  cubic-bezier(0.20, 0.40, 0.55, 0.92),
+  cubic-bezier(0.30, 0.55, 0.45, 0.96),
+  cubic-bezier(0.22, 0.50, 0.52, 0.95),
+  cubic-bezier(0.28, 0.44, 0.48, 0.93),
+  cubic-bezier(0.35, 0.62, 0.42, 0.97),
+  cubic-bezier(0.24, 0.48, 0.56, 0.94),
+  cubic-bezier(0.32, 0.58, 0.46, 0.99),
+  cubic-bezier(0.26, 0.42, 0.54, 0.91),
+  cubic-bezier(0.31, 0.64, 0.44, 0.96),
+  cubic-bezier(0.23, 0.52, 0.50, 0.93),
+  cubic-bezier(0.29, 0.46, 0.47, 0.97),
+  cubic-bezier(0.27, 0.56, 0.53, 0.95),
+);
+
+// Generate one keyframe per particle with its own horizontal drift sequence
+@for $i from 1 through 14 {
+  $d: list.nth($drifts, $i);
+  @keyframes bubbleRise#{$i} {
+    0%   { transform: translateY(0)      translateX(list.nth($d,1)) scale(1.00); opacity: 0; }
+    7%   { opacity: 1; }
+    20%  { transform: translateY(-18vh)  translateX(list.nth($d,2)) scale(1.04); }
+    42%  { transform: translateY(-44vh)  translateX(list.nth($d,3)) scale(0.97); }
+    65%  { transform: translateY(-68vh)  translateX(list.nth($d,4)) scale(1.03); }
+    88%  { transform: translateY(-94vh)  translateX(list.nth($d,5)) scale(0.95); opacity: 0.65; }
+    100% { transform: translateY(-112vh) translateX(list.nth($d,1)) scale(0.88); opacity: 0; }
+  }
+}
+
 .particle {
   position: absolute;
-  bottom: -30px;
+  bottom: -60px;
   display: block;
-  background: rgba(255, 255, 255, 0.22);
-  animation: bubbleRise $ease-rise infinite;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 32% 28%,
+    var(--bubble-shimmer) 0%,
+    var(--bubble-body) 38%,
+    transparent 62%
+  );
+  border: 1px solid var(--bubble-border);
+  box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08);
 
-  @for $i from 1 through 12 {
+  @for $i from 1 through 14 {
     &:nth-child(#{$i}) {
-      $size: 5px + math.random(14) * 1px;
-      $left: ($i - 1) * 8.2% + math.random(6) * 1%;
-      $delay: -(math.random(14)) * 1s;
-      $dur: 10s + math.random(12) * 1s;
-      $r1: 40 + math.random(20);
-      $r2: 40 + math.random(20);
-      $r3: 40 + math.random(20);
-      $r4: 40 + math.random(20);
+      $size: 10px + math.random(22) * 1px;
+      // Truly scattered left positions (not evenly spaced)
+      $left: math.random(96) * 1%;
+      // Long varied delays so appearances feel random, not in waves
+      $delay: -(math.random(22)) * 1s;
+      $dur: 14s + math.random(14) * 1s;
 
       width: $size;
       height: $size;
       left: $left;
-      animation-duration: $dur;
-      animation-delay: $delay;
-      animation-timing-function: $ease-rise;
-      border-radius: $r1 * 1% $r2 * 1% $r3 * 1% $r4 * 1%;
-      opacity: 0.1 + math.random(3) * 0.07;
-
-      @if $size < 10px {
-        filter: blur(0.8px);
-      }
+      animation: bubbleRise#{$i} $dur $delay list.nth($timing-fns, $i) infinite;
+      opacity: 0.60 + math.random(4) * 0.08;
     }
   }
-}
-
-@keyframes bubbleRise {
-  0%   { transform: translateY(0)      translateX(0)    scale(1);    opacity: 0; }
-  8%   { opacity: 1; }
-  30%  { transform: translateY(-30vh)  translateX(12px) scale(1.04); }
-  55%  { transform: translateY(-58vh)  translateX(-8px) scale(0.97); }
-  80%  { transform: translateY(-85vh)  translateX(10px) scale(1.02); }
-  92%  { opacity: 0.6; }
-  100% { transform: translateY(-110vh) translateX(0)    scale(0.9);  opacity: 0; }
 }
 
 // Hero Text - pinned to the absolute bottom of the banner
