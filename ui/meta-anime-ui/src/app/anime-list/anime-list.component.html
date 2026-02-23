@@ -21,7 +21,10 @@
           <svg class="filter-header-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
           </svg>
-          <span class="filter-header-title">{{ 'animeList.filter.title' | translate }}</span>
+          <div class="filter-header-text">
+            <span class="filter-header-title">{{ 'animeList.filter.title' | translate }}</span>
+            <span class="filter-header-summary" [title]="filterSummary">{{ filterSummary }}</span>
+          </div>
           @if (activeFilterCount() > 0) {
             <span class="filter-badge">{{ activeFilterCount() }}</span>
           }
@@ -61,7 +64,7 @@
             <div class="filter-field">
               <div class="filter-label-row">
                 <span class="filter-label">{{ 'animeList.filter.genre' | translate }}</span>
-                @if (filterGenre.length > 1) {
+                @if (filterGenre().length > 1) {
                   <!-- OR/AND toggle -->
                   <div class="operator-toggle" role="radiogroup" [attr.aria-label]="'animeList.filter.genreOperator' | translate">
                     <button
@@ -91,7 +94,7 @@
                 <button
                   type="button"
                   class="genre-trigger"
-                  [class.genre-trigger--has-value]="filterGenre.length > 0"
+                  [class.genre-trigger--has-value]="filterGenre().length > 0"
                   [class.genre-trigger--open]="genreDropdownOpen"
                   (click)="toggleGenreDropdown($event)"
                   [attr.aria-expanded]="genreDropdownOpen"
@@ -103,7 +106,7 @@
                       {{ 'animeList.filter.any' | translate }}
                     }
                   </span>
-                  @if (filterGenre.length > 0) {
+                  @if (filterGenre().length > 0) {
                     <button type="button" class="genre-clear-btn" (click)="clearGenres($event)" [attr.aria-label]="'animeList.filter.clear' | translate">
                       <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                         <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -123,12 +126,12 @@
                         <button
                           type="button"
                           class="genre-option"
-                          [class.genre-option--selected]="filterGenre.includes(g)"
+                          [class.genre-option--selected]="filterGenre().includes(g)"
                           role="option"
-                          [attr.aria-selected]="filterGenre.includes(g)"
+                          [attr.aria-selected]="filterGenre().includes(g)"
                           (click)="toggleGenre(g, $event)">
                           <span class="genre-option__check" aria-hidden="true">
-                            @if (filterGenre.includes(g)) {
+                            @if (filterGenre().includes(g)) {
                               <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M2 8l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
                             }
                           </span>
@@ -287,11 +290,16 @@
     } @else if (animes().length === 0) {
       <p class="text-muted">{{ 'animeList.empty' | translate }}</p>
     } @else {
-      <p class="anime-total-count mb-3">{{ 'animeList.totalCount' | translate: { count: totalCount() } }}</p>
+      <p class="anime-total-count mb-3">
+        {{ 'animeList.totalCount' | translate: { count: totalCount() } }}
+        @if (searchElapsedMs() !== null) {
+          <span class="elapsed-time">({{ searchElapsedMs() }}ms)</span>
+        }
+      </p>
 
       <div class="anime-grid" [class]="'cols-' + displayMode()" [@gridLayout]="layoutState()">
         @for (anime of animes(); track anime.aniDbId) {
-          <app-anime-card #animeCard [anime]="anime" [activeGenres]="filterGenre" />
+          <app-anime-card #animeCard [anime]="anime" [activeGenres]="filterGenre()" />
         }
       </div>
 

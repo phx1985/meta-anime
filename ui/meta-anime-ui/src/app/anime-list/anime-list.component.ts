@@ -14,7 +14,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { trigger, state, style, animate, transition, query, stagger } from '@angular/animations';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
@@ -93,10 +93,11 @@ export const CODEC_OPTIONS = [
   ],
 })
 export class AnimeListComponent implements AfterViewInit, OnDestroy {
-  private animeService    = inject(AnimeService);
-  private settingsService = inject(SettingsService);
-  private syncSignalR     = inject(SyncSignalRService);
-  private destroyRef      = inject(DestroyRef);
+  private animeService      = inject(AnimeService);
+  private settingsService   = inject(SettingsService);
+  private syncSignalR       = inject(SyncSignalRService);
+  private destroyRef        = inject(DestroyRef);
+  private translateService  = inject(TranslateService);
 
   @ViewChildren('animeCard', { read: ElementRef }) cardRefs!: QueryList<ElementRef>;
 
@@ -110,6 +111,8 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   layoutState = signal(0);
   searched    = signal(false);
   showNsfw    = signal(true);
+  /** Elapsed ms for the last search request (null until first search completes) */
+  searchElapsedMs = signal<number | null>(null);
 
   /** Whether the filter body is expanded */
   filterOpen  = signal(true);
@@ -119,7 +122,8 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   // ── Filter state ──────────────────────────────────────────────────────────
   filterTitle        = '';
-  filterGenre:        string[] = [];
+  /** Signal so that computed() consumers (genreLabel, activeFilterCount) react to changes */
+  filterGenre         = signal<string[]>([]);
   genreOperator: 'or' | 'and' = 'or';
   filterWatchState:   string[] = [];
   filterAiringStatus: string[] = [];
@@ -140,7 +144,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   /** Label shown on the genre dropdown trigger button */
   readonly genreLabel = computed(() => {
-    const sel = this.filterGenre;
+    const sel = this.filterGenre();
     if (sel.length === 0) return null;
     if (sel.length <= 2) return sel.join(', ');
     return `${sel[0]}, ${sel[1]} +${sel.length - 2}`;
@@ -150,7 +154,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   readonly activeFilterCount = computed(() => {
     let n = 0;
     if (this.filterTitle) n++;
-    if (this.filterGenre.length) n++;
+    if (this.filterGenre().length) n++;
     if (this.filterWatchState.length) n++;
     if (this.filterAiringStatus.length) n++;
     if (this.filterHasFile !== 'any') n++;
@@ -160,6 +164,47 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   private currentPage = 1;
   private scrollObserver: IntersectionObserver | null = null;
+  private searchStartTime = 0;
+
+  /** Short human-readable summary of the current filter + sort state for the card header */
+  get filterSummary(): string {
+    const parts: string[] = [];
+    if (this.filterTitle) parts.push(`«${this.filterTitle}»`);
+    const genres = this.filterGenre();
+    if (genres.length) {
+      const sep = genres.length > 1 ? ` ${this.genreOperator.toUpperCase()} ` : '';
+      parts.push(genres.join(sep));
+    }
+    if (this.filterWatchState.length) {
+      parts.push(this.filterWatchState
+        .map(v => this.translateService.instant(`animeCard.malStatus.${v}`))
+        .join(', '));
+    }
+    if (this.filterAiringStatus.length) {
+      parts.push(this.filterAiringStatus
+        .map(v => this.translateService.instant(`animeCard.seriesStatus.${v}`))
+        .join(', '));
+    }
+    if (this.filterHasFile !== 'any') {
+      parts.push(this.translateService.instant(
+        this.filterHasFile === 'yes' ? 'animeList.filter.hasFileYes' : 'animeList.filter.hasFileNo'
+      ));
+    }
+    if (this.filterCodec.length) {
+      parts.push(this.filterCodec
+        .map(v => CODEC_OPTIONS.find(c => c.value === v)?.label ?? v)
+        .join(', '));
+    }
+    const isDefaultSort = this.sortBy === 'title' && this.sortOrder === 'asc';
+    if (!isDefaultSort) {
+      const sortOpt = SORT_OPTIONS.find(o => o.value === this.sortBy);
+      const sortLabel = sortOpt ? this.translateService.instant(sortOpt.labelKey) : this.sortBy;
+      parts.push(`${sortLabel} ${this.sortOrder === 'asc' ? '↑' : '↓'}`);
+    }
+    return parts.length === 0
+      ? this.translateService.instant('animeList.filter.noFilterActive')
+      : parts.join(' · ');
+  }
 
   constructor() {
     const saved = localStorage.getItem(DISPLAY_MODE_KEY);
@@ -239,14 +284,14 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   toggleGenre(genre: string, event: MouseEvent): void {
     event.stopPropagation();
-    this.filterGenre = this.togglePill(this.filterGenre, genre);
+    this.filterGenre.update(v => this.togglePill(v, genre));
     // Auto-reset operator to OR when ≤ 1 genre selected (operator toggle is hidden)
-    if (this.filterGenre.length <= 1) this.genreOperator = 'or';
+    if (this.filterGenre().length <= 1) this.genreOperator = 'or';
   }
 
   clearGenres(event: MouseEvent): void {
     event.stopPropagation();
-    this.filterGenre = [];
+    this.filterGenre.set([]);
   }
 
   // ── Search / Reset ────────────────────────────────────────────────────────
@@ -260,7 +305,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   reset(): void {
     this.filterTitle        = '';
-    this.filterGenre        = [];
+    this.filterGenre.set([]);
     this.genreOperator      = 'or';
     this.filterWatchState   = [];
     this.filterAiringStatus = [];
@@ -275,6 +320,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.totalCount.set(0);
     this.allLoaded.set(false);
     this.error.set(false);
+    this.searchElapsedMs.set(null);
   }
 
   // ── Private ───────────────────────────────────────────────────────────────
@@ -287,9 +333,9 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   private buildFilters(): AnimeFilters {
     return {
-      title:         this.filterTitle        || undefined,
-      genre:         this.filterGenre.length        ? this.filterGenre        : undefined,
-      genreOperator: this.filterGenre.length > 1    ? this.genreOperator      : undefined,
+      title:         this.filterTitle               || undefined,
+      genre:         this.filterGenre().length        ? this.filterGenre()        : undefined,
+      genreOperator: this.filterGenre().length > 1    ? this.genreOperator        : undefined,
       status:        this.filterWatchState.length   ? this.filterWatchState   : undefined,
       airingStatus:  this.filterAiringStatus.length ? this.filterAiringStatus : undefined,
       hasFile:       this.resolveHasFile(),
@@ -305,6 +351,8 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
       this.animes.set([]);
       this.allLoaded.set(false);
       this.loading.set(true);
+      this.searchStartTime = Date.now();
+      this.searchElapsedMs.set(null);
     } else {
       this.loadingMore.set(true);
     }
@@ -319,6 +367,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
           this.allLoaded.set(!data.hasNextPage);
           this.loading.set(false);
           this.loadingMore.set(false);
+          if (reset) this.searchElapsedMs.set(Date.now() - this.searchStartTime);
         },
         error: () => {
           this.error.set(true);

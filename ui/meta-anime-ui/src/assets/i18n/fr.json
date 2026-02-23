@@ -67,6 +67,7 @@
       "reset": "Réinitialiser",
       "expandFilters": "Développer les filtres",
       "collapseFilters": "Réduire les filtres",
+      "noFilterActive": "Aucun filtre sélectionné",
       "prompt": "Définissez vos filtres et appuyez sur Rechercher pour explorer votre bibliothèque."
     },
     "sort": {

@@ -67,6 +67,7 @@
       "reset": "Reset",
       "expandFilters": "Expand filters",
       "collapseFilters": "Collapse filters",
+      "noFilterActive": "No filter selected",
       "prompt": "Set your filters and press Search to explore your anime library."
     },
     "sort": {
