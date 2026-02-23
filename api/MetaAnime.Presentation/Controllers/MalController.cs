@@ -13,6 +13,9 @@ public class MalController(
     IAnimeMediatorService animeMediatorService,
     ILogger<MalController> logger) : ControllerBase
 {
+    private static readonly string[] ValidListStatuses =
+        ["watching", "completed", "on_hold", "dropped", "plan_to_watch"];
+
     /// <summary>Adds or updates an anime entry in the authenticated user's MAL list.</summary>
     [HttpPut("list/{animeId}")]
     [Authorize]
@@ -23,9 +26,8 @@ public class MalController(
         if (string.IsNullOrWhiteSpace(animeId))
             return BadRequest("animeId is required");
 
-        var validStatuses = new[] { "watching", "completed", "on_hold", "dropped", "plan_to_watch" };
-        if (!validStatuses.Contains(request.Status))
-            return BadRequest($"status must be one of: {string.Join(", ", validStatuses)}");
+        if (!ValidListStatuses.Contains(request.Status))
+            return BadRequest($"status must be one of: {string.Join(", ", ValidListStatuses)}");
 
         var result = await animeMediatorService.UpdateMalListStatusAsync(
             animeId, request.Status, request.NumWatchedEpisodes, request.Score);

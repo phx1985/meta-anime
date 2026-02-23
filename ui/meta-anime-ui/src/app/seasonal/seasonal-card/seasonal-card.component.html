@@ -61,9 +61,9 @@
 
       <!-- ── Score + date ─────────────────────────────────────────────────── -->
       <div class="meta-row">
-        @if (malScore2 > 0) {
+        @if (displayMalScore > 0) {
           <div class="scores">
-            <app-score-badge [score]="malScore2" label="MAL" titleKey="animeCard.malScore" />
+            <app-score-badge [score]="displayMalScore" label="MAL" titleKey="animeCard.malScore" />
           </div>
         }
         @if (startDate) {

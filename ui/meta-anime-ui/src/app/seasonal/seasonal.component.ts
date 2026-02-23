@@ -97,8 +97,8 @@ export class SeasonalComponent implements AfterViewInit, OnDestroy {
 
   private currentPage = 1;
   private scrollObserver: IntersectionObserver | null = null;
-  private _nextYear   = this._initYear;
   private _nextSeasonIdx: number;
+  private _nextYear: number;
 
   constructor() {
     const seasons: SeasonName[] = ['winter', 'spring', 'summer', 'fall'];

@@ -88,7 +88,7 @@ export class SeasonalCardComponent implements OnInit {
     return t !== key ? t : name;
   }
 
-  get malScore2(): number { return this.anime.malScore ?? 0; }
+  get displayMalScore(): number { return this.anime.malScore ?? 0; }
   get startDate(): string | undefined { return this.anime.startDate; }
   get mediaType(): string | undefined { return this.anime.mediaType; }
 

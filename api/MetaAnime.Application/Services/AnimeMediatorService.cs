@@ -826,8 +826,8 @@ public class AnimeMediatorService(
             var responses = filteredItems.Select(anime =>
             {
                 var malId = anime.Id.ToString();
-                var inMal = malToSources.ContainsKey(malId);
-                var inLibrary = malToSources.TryGetValue(malId, out var sources);
+                // TryGetValue covers both the inMal check and the hasPlex/hasSonarr lookup in one call
+                var inMal = malToSources.TryGetValue(malId, out var sources);
                 return new SeasonalAnimeResponse(
                     MalId: malId,
                     Title: anime.Title,
@@ -840,9 +840,9 @@ public class AnimeMediatorService(
                     Status: anime.Status,
                     MalUrl: $"{myAnimeListHost}/anime/{malId}",
                     InMal: inMal,
-                    InPlex: inLibrary && sources.HasPlex,
+                    InPlex: inMal && sources.HasPlex,
                     PlexUrl: null,
-                    InSonarr: inLibrary && sources.HasSonarr,
+                    InSonarr: inMal && sources.HasSonarr,
                     SonarrUrl: null
                 );
             });
