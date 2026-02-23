@@ -2,6 +2,7 @@
   "nav": {
     "home": "Accueil",
     "animes": "Animes",
+    "seasonal": "Saisonnier",
     "settings": "Paramètres"
   },
   "home": {
@@ -37,6 +38,22 @@
       "plexNotInSonarrDesc": "Séries présentes dans votre bibliothèque Plex mais non suivies par Sonarr."
     },
     "welcome": "Bienvenue sur Meta Anime"
+  },
+  "seasonal": {
+    "title": "Anime Saisonniers",
+    "subtitle": "Parcourez les animes par saison depuis MyAnimeList",
+    "seasonSelect": "Sélectionner une saison",
+    "loading": "Chargement des animes saisonniers…",
+    "error": "Échec du chargement des animes saisonniers. Veuillez réessayer plus tard.",
+    "empty": "Aucun anime trouvé pour cette saison.",
+    "notInPlex": "Absent de votre bibliothèque Plex",
+    "notInSonarr": "Non suivi par Sonarr",
+    "season": {
+      "winter": "Hiver",
+      "spring": "Printemps",
+      "summer": "Été",
+      "fall": "Automne"
+    }
   },
   "animeList": {
     "title": "Liste des Animes",

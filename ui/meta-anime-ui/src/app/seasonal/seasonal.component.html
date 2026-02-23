@@ -1,0 +1,77 @@
+<div class="seasonal-page">
+
+  <!-- Animated bokeh background -->
+  <div class="bokeh" aria-hidden="true">
+    @for (i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]; track i) {
+      <div class="bokeh__blob"></div>
+    }
+  </div>
+
+  <div class="container py-5">
+
+    <!-- Page header -->
+    <div class="seasonal-header mb-4">
+      <h1 class="seasonal-title">{{ 'seasonal.title' | translate }}</h1>
+      <p class="seasonal-subtitle">{{ 'seasonal.subtitle' | translate }}</p>
+    </div>
+
+    <!-- Season tabs -->
+    <div class="season-tabs mb-4" role="tablist" [attr.aria-label]="'seasonal.seasonSelect' | translate">
+      @for (tab of tabs; track tab.year + '-' + tab.season) {
+        <button
+          type="button"
+          class="season-tab"
+          role="tab"
+          [class.season-tab--active]="activeTab().year === tab.year && activeTab().season === tab.season"
+          [attr.aria-selected]="activeTab().year === tab.year && activeTab().season === tab.season"
+          (click)="selectTab(tab)">
+          <span class="tab-season">{{ tab.labelKey | translate }}</span>
+          <span class="tab-year">{{ tab.year }}</span>
+        </button>
+      }
+    </div>
+
+    <!-- Error state -->
+    @if (error()) {
+      <div class="seasonal-error">{{ 'seasonal.error' | translate }}</div>
+    }
+
+    <!-- Loading initial state -->
+    @if (loading()) {
+      <div class="seasonal-loading">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <span>{{ 'seasonal.loading' | translate }}</span>
+      </div>
+    }
+
+    <!-- Anime grid -->
+    @if (!loading() && animes().length > 0) {
+      <div class="seasonal-grid">
+        @for (anime of animes(); track anime.malId) {
+          <div #seasonalCard>
+            <app-seasonal-card [anime]="anime" />
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (!loading() && !error() && animes().length === 0) {
+      <div class="seasonal-empty">{{ 'seasonal.empty' | translate }}</div>
+    }
+
+    <!-- Load-more indicator -->
+    @if (loadingMore()) {
+      <div class="seasonal-load-more">
+        <div class="loading-spinner loading-spinner--sm" aria-hidden="true"></div>
+        <span>{{ 'animeList.loadingMore' | translate }}</span>
+      </div>
+    }
+
+    <!-- End of results -->
+    @if (!loadingMore() && allLoaded() && animes().length > 0) {
+      <div class="seasonal-end">{{ 'animeList.endOfResults' | translate }}</div>
+    }
+
+  </div>
+</div>

@@ -15,4 +15,5 @@ public interface IAnimeMediatorService
     Task<Result<AnimeResponse>> UpdateAsync(Guid id, UpdateAnimeRequest request);
     Task<Result> DeleteAsync(Guid id);
     Task<Result> SyncAllAsync(bool forceRefreshKometaMapping = false);
+    Task<Result<PagedResponse<IEnumerable<SeasonalAnimeResponse>>>> GetSeasonalAnimesAsync(int year, string season, int page, int pageSize);
 }

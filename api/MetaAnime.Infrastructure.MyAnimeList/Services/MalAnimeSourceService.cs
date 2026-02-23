@@ -28,6 +28,16 @@ public class MalAnimeSourceService(IOptions<MalSettings> options, IMalTokenServi
                                                                     "mean, " +
                                                                     "num_episodes, " +
                                                                     "start_season";
+    private const string SEASONAL_FIELDS = "synopsis, " +
+                                           "alternative_titles{en,ja}, " +
+                                           "genres{id,name}, " +
+                                           "main_picture, " +
+                                           "nsfw, " +
+                                           "start_date, " +
+                                           "status, " +
+                                           "media_type, " +
+                                           "mean, " +
+                                           "num_episodes";
     #endregion
 
     #region IMalAnimeSourceService Implementation
@@ -98,6 +108,36 @@ public class MalAnimeSourceService(IOptions<MalSettings> options, IMalTokenServi
 
             var error = JsonSerializer.Deserialize<MalError>(json)!;
             return Result.Failure<MalAnime>(new Error(error.Message));
+        }
+    }
+
+    public async Task<Result<(IList<MalAnime> Items, bool HasNextPage)>> GetSeasonalAsync(int year, string season, int offset, int limit)
+    {
+        if (!isConfigured)
+            return Result.Success<(IList<MalAnime>, bool)>((new List<MalAnime>(), false));
+
+        var token = await malTokenService.GetAccessTokenAsync();
+        if (string.IsNullOrWhiteSpace(token))
+            return Result.Success<(IList<MalAnime>, bool)>((new List<MalAnime>(), false));
+
+        var uri = new Uri($"{baseUrl}/anime/season/{year}/{season}?limit={limit}&offset={offset}&nsfw=true&fields={SEASONAL_FIELDS}&sort=anime_score");
+        var restClient = new RestClient(uri);
+        var restRequest = new RestRequest { Method = Method.Get };
+        restRequest.AddHeader("Authorization", $"Bearer {token}");
+
+        var response = await ExecuteRequestAsync(restClient, restRequest);
+        var json = response.Content!;
+
+        if (response.IsSuccessful)
+        {
+            var result = JsonSerializer.Deserialize<MalResult>(json)!;
+            var items = result.Data.Select(d => d.Node).ToList();
+            return Result.Success<(IList<MalAnime>, bool)>((items, result.Paging.HasNextPage));
+        }
+        else
+        {
+            var error = JsonSerializer.Deserialize<MalError>(json)!;
+            return Result.Failure<(IList<MalAnime>, bool)>(new Error(error.Message));
         }
     }
     #endregion

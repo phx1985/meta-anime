@@ -786,12 +786,75 @@ public class AnimeMediatorService(
         }
     }
 
-    #region Private Helper Methods
+    public async Task<Result<PagedResponse<IEnumerable<SeasonalAnimeResponse>>>> GetSeasonalAnimesAsync(int year, string season, int page, int pageSize)
+    {
+        try
+        {
+            var offset = (page - 1) * pageSize;
+            var seasonalResult = await malAnimeSource.GetSeasonalAsync(year, season, offset, pageSize);
+            if (seasonalResult.IsFailure)
+                return Result.Failure<PagedResponse<IEnumerable<SeasonalAnimeResponse>>>(seasonalResult.Error);
 
-    /// <summary>
-    /// Returns true when NSFW content should be shown (setting is "true"),
-    /// false when it should be filtered out (setting is absent or "false").
-    /// </summary>
+            var (items, hasNextPage) = seasonalResult.Value;
+
+            // Build lookup: MAL source ID -> (HasPlex, HasSonarr) from AnimeMapping table
+            var mappingsResult = await animeMappingService.GetAllAsync(includeAnime: true);
+            var malToSources = new Dictionary<string, (bool HasPlex, bool HasSonarr)>(StringComparer.OrdinalIgnoreCase);
+
+            if (mappingsResult.IsSuccess)
+            {
+                foreach (var group in mappingsResult.Value.Where(m => m.Anime != null).GroupBy(m => m.AniDbId))
+                {
+                    var animes = group.Select(m => m.Anime!).ToList();
+                    bool hasPlex = animes.Any(a => a.AnimeSource == AnimeSource.Plex);
+                    bool hasSonarr = animes.Any(a => a.AnimeSource == AnimeSource.Sonarr);
+                    foreach (var malEntry in animes.Where(a => a.AnimeSource == AnimeSource.MyAnimeList))
+                        malToSources[malEntry.SourceId] = (hasPlex, hasSonarr);
+                }
+            }
+
+            var responses = items.Select(anime =>
+            {
+                var malId = anime.Id.ToString();
+                var inLibrary = malToSources.TryGetValue(malId, out var sources);
+                return new SeasonalAnimeResponse(
+                    MalId: malId,
+                    Title: anime.Title,
+                    Synopsis: anime.Synopsis,
+                    Genres: anime.Genres?.Select(g => g.Name).ToArray(),
+                    CoverImageUrl: anime.MainPicture?.Large ?? anime.MainPicture?.Medium,
+                    MalScore: anime.Mean,
+                    StartDate: anime.StartDate,
+                    MediaType: anime.MediaType,
+                    Status: anime.Status,
+                    MalUrl: $"{myAnimeListHost}/anime/{malId}",
+                    InPlex: inLibrary && sources.HasPlex,
+                    PlexUrl: null,
+                    InSonarr: inLibrary && sources.HasSonarr,
+                    SonarrUrl: null
+                );
+            });
+
+            // Estimate total: if more pages exist, report at least one extra item beyond current page
+            var estimatedTotal = hasNextPage ? offset + pageSize + 1 : offset + items.Count;
+            var totalPages = hasNextPage ? page + 1 : page;
+            return Result.Success(new PagedResponse<IEnumerable<SeasonalAnimeResponse>>(
+                responses,
+                page,
+                pageSize,
+                estimatedTotal,
+                totalPages,
+                hasNextPage,
+                page > 1
+            ));
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<PagedResponse<IEnumerable<SeasonalAnimeResponse>>>(new(Constants.Errors.GetAllAsync, ex.Message));
+        }
+    }
+
+    #region Private Helper Methods
     private async Task<bool> IsNsfwAllowedAsync()
     {
         var entry = await propertyBagRepository.GetByKeyAsync(MetaAnime.Core.SettingsKeys.AppShowNsfw);

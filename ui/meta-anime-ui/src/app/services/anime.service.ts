@@ -8,13 +8,15 @@ import {
   PagedResponse,
   AnimeFilters,
   CreateAnimeRequest,
-  UpdateAnimeRequest
+  UpdateAnimeRequest,
+  SeasonalAnimeItem
 } from '../models/anime.models';
 
 @Injectable({ providedIn: 'root' })
 export class AnimeService {
   private http = inject(HttpClient);
   private base = '/api/v1/animes';
+  private seasonalBase = '/api/v1/seasonal';
 
   getStatistics(): Observable<AnimeStatisticsResponse> {
     return this.http.get<AnimeStatisticsResponse>(`${this.base}/statistics`);
@@ -63,5 +65,14 @@ export class AnimeService {
       params = params.set('forceRefreshKometaMapping', forceRefreshKometaMapping);
     }
     return this.http.post<void>(`${this.base}/sync`, null, { params });
+  }
+
+  getSeasonalAnimes(year: number, season: string, page = 1, pageSize = 20): Observable<PagedResponse<SeasonalAnimeItem>> {
+    const params = new HttpParams()
+      .set('year', year)
+      .set('season', season)
+      .set('page', page)
+      .set('pageSize', pageSize);
+    return this.http.get<PagedResponse<SeasonalAnimeItem>>(this.seasonalBase, { params });
   }
 }

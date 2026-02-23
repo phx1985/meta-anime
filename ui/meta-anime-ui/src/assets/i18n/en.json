@@ -2,6 +2,7 @@
   "nav": {
     "home": "Home",
     "animes": "Animes",
+    "seasonal": "Seasonal",
     "settings": "Settings"
   },
   "home": {
@@ -38,8 +39,23 @@
     },
     "welcome": "Welcome to Meta Anime"
   },
+  "seasonal": {
+    "title": "Seasonal Anime",
+    "subtitle": "Browse anime by season from MyAnimeList",
+    "seasonSelect": "Select season",
+    "loading": "Loading seasonal anime…",
+    "error": "Failed to load seasonal anime. Please try again later.",
+    "empty": "No anime found for this season.",
+    "notInPlex": "Not in your Plex library",
+    "notInSonarr": "Not tracked by Sonarr",
+    "season": {
+      "winter": "Winter",
+      "spring": "Spring",
+      "summer": "Summer",
+      "fall": "Fall"
+    }
+  },
   "animeList": {
-    "title": "Anime List",
     "error": "Failed to load animes. Please try again later.",
     "empty": "No animes found.",
     "totalCount": "{{count}} anime(s) found",

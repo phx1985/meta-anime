@@ -1,0 +1,138 @@
+<article class="seasonal-card" [class.card--expanded]="descExpanded()">
+
+  <!-- ── Blurred backdrop ──────────────────────────────────────────────── -->
+  @if (coverImageUrl) {
+    <div class="cover-backdrop" aria-hidden="true">
+      <img [src]="coverImageUrl" class="backdrop-img" [alt]="''" />
+    </div>
+  }
+
+  <div class="card-main">
+    <!-- ── Cover image ──────────────────────────────────────────────────── -->
+    <div class="card-cover" aria-hidden="true" (click)="openLightbox()" [class.cover--clickable]="!!coverImageUrl">
+      @if (coverImageUrl) {
+        <img [src]="coverImageUrl" [alt]="anime.title" class="cover-img" loading="lazy" />
+      } @else {
+        <div class="cover-placeholder">{{ anime.title.charAt(0) }}</div>
+      }
+    </div>
+
+    <!-- ── Main content ─────────────────────────────────────────────────── -->
+    <div class="card-content">
+
+      <!-- ── Header ──────────────────────────────────────────────────────── -->
+      <div class="card-head">
+        <div class="title-block">
+          <h3 class="card-title">{{ displayTitle }}</h3>
+        </div>
+
+        <!-- Status pills -->
+        <div class="status-pills">
+          @if (mediaType) {
+            <span class="pill pill--media-type">{{ mediaTypeLabel(mediaType) }}</span>
+          }
+          @if (seriesStatus) {
+            <span class="pill pill--series">{{ seriesStatusLabel(seriesStatus) }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- ── Description ──────────────────────────────────────────────────── -->
+      @if (description) {
+        <div class="desc-wrap">
+          <p class="desc-text"
+             [@expandCollapse]="descExpanded() ? 'expanded' : 'collapsed'">{{ description }}</p>
+          @if (description.length > 180) {
+            <button class="desc-toggle" (click)="toggleDesc()">
+              {{ descExpanded() ? ('animeCard.less' | translate) : ('animeCard.more' | translate) }}
+            </button>
+          }
+        </div>
+      }
+
+      <!-- ── Genres ───────────────────────────────────────────────────────── -->
+      @if (genres.length > 0) {
+        <div class="genre-list">
+          @for (g of genres; track g) {
+            <span class="genre-tag">{{ translateGenre(g) }}</span>
+          }
+        </div>
+      }
+
+      <!-- ── Score + date ─────────────────────────────────────────────────── -->
+      <div class="meta-row">
+        @if (malScore > 0) {
+          <div class="scores">
+            <app-score-badge [score]="malScore" label="MAL" titleKey="animeCard.malScore" />
+          </div>
+        }
+        @if (startDate) {
+          <span class="date-range">{{ startDate }}</span>
+        }
+      </div>
+
+    </div><!-- /card-content -->
+  </div><!-- /card-main -->
+
+  <!-- ── Footer ──────────────────────────────────────────────────────────── -->
+  <div class="card-footer">
+    <div class="footer-actions">
+
+      <!-- Plex icon: greyed out with gradient fade if not in Plex -->
+      <a class="action action--plex"
+         [class.action--in-library]="anime.inPlex"
+         [class.action--not-in-library]="!anime.inPlex"
+         [attr.href]="anime.inPlex ? (anime.plexUrl ?? null) : null"
+         [attr.target]="anime.inPlex ? '_blank' : null"
+         rel="noopener noreferrer"
+         [title]="anime.inPlex ? ('animeCard.openPlex' | translate) : ('seasonal.notInPlex' | translate)">
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
+          <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M6.5 5.5l5 2.5-5 2.5V5.5z" fill="currentColor"/>
+        </svg>
+        Plex
+      </a>
+
+      <!-- Sonarr icon: greyed out with gradient fade if not in Sonarr -->
+      <a class="action action--sonarr"
+         [class.action--in-library]="anime.inSonarr"
+         [class.action--not-in-library]="!anime.inSonarr"
+         [attr.href]="anime.inSonarr ? (anime.sonarrUrl ?? null) : null"
+         [attr.target]="anime.inSonarr ? '_blank' : null"
+         rel="noopener noreferrer"
+         [title]="anime.inSonarr ? ('animeCard.openSonarr' | translate) : ('seasonal.notInSonarr' | translate)">
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
+          <rect x="1.5" y="3" width="13" height="9" rx="1.2" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M5.5 13.5h5M8 12v1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        Sonarr
+      </a>
+
+      <!-- MAL link -->
+      @if (malUrl) {
+        <a class="action action--mal action--in-library"
+           [href]="malUrl"
+           target="_blank" rel="noopener noreferrer"
+           [title]="'animeCard.openMal' | translate">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
+            <path d="M3 4h10M3 7h10M3 10h7M3 13h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          MAL
+        </a>
+      }
+    </div>
+  </div>
+
+</article>
+
+<!-- ── Lightbox overlay ──────────────────────────────────────────────────── -->
+@if (showLightbox() && coverImageUrl) {
+  <div class="lightbox-overlay" (click)="closeLightbox()" role="dialog" aria-modal="true">
+    <button class="lightbox-close" type="button" (click)="closeLightbox()" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <img class="lightbox-img" [src]="coverImageUrl" [alt]="anime.title" (click)="$event.stopPropagation()" />
+  </div>
+}
