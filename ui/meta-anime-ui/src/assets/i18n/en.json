@@ -233,6 +233,10 @@
           "daily": "Daily",
           "weekly": "Weekly"
         }
+      },
+      "App_TitleSimilarityThreshold": {
+        "name": "Title Search Similarity (%)",
+        "desc": "Minimum similarity percentage (1–100) for fuzzy title search using pg_trgm. Default: 80."
       }
     },
     "toggle": {

@@ -12,10 +12,12 @@ public interface IAnimeMappingService
         string? titleFilter = null,
         AnimeSource? sourceFilter = null,
         string? sortBy = null,
-        bool sortDescending = false);
+        bool sortDescending = false,
+        double? titleSimilarityThreshold = null);
     Task<Result<List<string>>> GetAllFilteredAniDbIdsAsync(
         string? titleFilter = null,
-        AnimeSource? sourceFilter = null);
+        AnimeSource? sourceFilter = null,
+        double? titleSimilarityThreshold = null);
     Task<Result<IEnumerable<AnimeMapping>>> GetByAniDbIdsAsync(IEnumerable<string> aniDbIds);
     Task<Result> BulkDeleteAllAsync();
     Task<Result> BulkInsertAsync(IEnumerable<AnimeMapping> mappings);

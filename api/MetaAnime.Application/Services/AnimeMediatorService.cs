@@ -62,6 +62,9 @@ public class AnimeMediatorService(
         try
         {
             bool showNsfw = await IsNsfwAllowedAsync();
+            double? similarityThreshold = !string.IsNullOrWhiteSpace(filters?.Title)
+                ? await GetTitleSimilarityThresholdAsync()
+                : null;
 
             AnimeSource? sourceFilter = filters?.Source?.ToLower() switch
             {
@@ -86,7 +89,7 @@ public class AnimeMediatorService(
                 // FAST PATH: push pagination + filtering entirely into the database.
                 // Two targeted SQL queries (COUNT + paged IDs) replace a full-table scan.
                 var pagedResult = await animeMappingService.GetPagedAniDbIdsAsync(
-                    page, pageSize, filters?.Title, sourceFilter, filters?.SortBy, sortDescending);
+                    page, pageSize, filters?.Title, sourceFilter, filters?.SortBy, sortDescending, similarityThreshold);
                 if (pagedResult.IsFailure)
                     return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(pagedResult.Error);
 
@@ -101,7 +104,7 @@ public class AnimeMediatorService(
                 // SLOWER PATH: genre/status require in-memory post-filtering.
                 // Still efficient: only load the title/source-filtered subset of AniDbIds (string IDs, no JSON).
                 var filteredResult = await animeMappingService.GetAllFilteredAniDbIdsAsync(
-                    filters?.Title, sourceFilter);
+                    filters?.Title, sourceFilter, similarityThreshold);
                 if (filteredResult.IsFailure)
                     return Result.Failure<PagedResponse<IEnumerable<AnimeDetailsResponse>>>(filteredResult.Error);
 
@@ -242,9 +245,8 @@ public class AnimeMediatorService(
         if (!string.IsNullOrWhiteSpace(filters.Status))
         {
             result = result.Where(a =>
-                a.MalAnimes?.Any(m => m.ViewState != null && m.ViewState.Contains(filters.Status, StringComparison.OrdinalIgnoreCase)) == true ||
-                a.SonarrAnimes?.Any(s => s.Exists) == true
-            );
+                a.MalAnimes?.Any(m => m.ViewState != null &&
+                    m.ViewState.Equals(filters.Status, StringComparison.OrdinalIgnoreCase)) == true);
         }
 
         if (!string.IsNullOrWhiteSpace(filters.Genre))
@@ -680,6 +682,18 @@ public class AnimeMediatorService(
     {
         var entry = await propertyBagRepository.GetByKeyAsync(MetaAnime.Core.SettingsKeys.AppShowNsfw);
         return entry?.Value?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    /// <summary>
+    /// Returns the title similarity threshold (0–100) stored in settings.
+    /// Falls back to 80 if the setting is absent or invalid.
+    /// </summary>
+    private async Task<double> GetTitleSimilarityThresholdAsync()
+    {
+        var entry = await propertyBagRepository.GetByKeyAsync(MetaAnime.Core.SettingsKeys.AppTitleSimilarityThreshold);
+        if (double.TryParse(entry?.Value, out var v) && v is >= 1 and <= 100)
+            return v;
+        return 80; // default
     }
 
     /// <summary>

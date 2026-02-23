@@ -52,12 +52,13 @@ public class AnimeMappingService(IAnimeMappingRepository mappingRepository) : IA
         string? titleFilter = null,
         AnimeSource? sourceFilter = null,
         string? sortBy = null,
-        bool sortDescending = false)
+        bool sortDescending = false,
+        double? titleSimilarityThreshold = null)
     {
         try
         {
             var result = await mappingRepository.GetPagedAniDbIdsAsync(
-                page, pageSize, titleFilter, sourceFilter, sortBy, sortDescending);
+                page, pageSize, titleFilter, sourceFilter, sortBy, sortDescending, titleSimilarityThreshold);
             return Result.Success(result);
         }
         catch (Exception ex)
@@ -68,11 +69,12 @@ public class AnimeMappingService(IAnimeMappingRepository mappingRepository) : IA
 
     public async Task<Result<List<string>>> GetAllFilteredAniDbIdsAsync(
         string? titleFilter = null,
-        AnimeSource? sourceFilter = null)
+        AnimeSource? sourceFilter = null,
+        double? titleSimilarityThreshold = null)
     {
         try
         {
-            var result = await mappingRepository.GetAllFilteredAniDbIdsAsync(titleFilter, sourceFilter);
+            var result = await mappingRepository.GetAllFilteredAniDbIdsAsync(titleFilter, sourceFilter, titleSimilarityThreshold);
             return Result.Success(result);
         }
         catch (Exception ex)

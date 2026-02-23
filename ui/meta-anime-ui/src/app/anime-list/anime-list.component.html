@@ -164,25 +164,8 @@
           </div>
         </div>
 
-        <!-- Row 3: Has file · Codec -->
+        <!-- Row 3: Codec · Has file -->
         <div class="filter-row">
-          <div class="filter-field">
-            <span class="filter-label">{{ 'animeList.filter.hasFile' | translate }}</span>
-            <div class="pill-group" role="group" [attr.aria-label]="'animeList.filter.hasFile' | translate">
-              <button type="button" class="pill-btn" [class.pill-btn--active]="filterHasFile === 'any'" (click)="filterHasFile = 'any'">
-                {{ 'animeList.filter.any' | translate }}
-              </button>
-              <button type="button" class="pill-btn" [class.pill-btn--active]="filterHasFile === 'yes'" (click)="filterHasFile = 'yes'">
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 8l4 4 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>
-                {{ 'animeList.filter.hasFileYes' | translate }}
-              </button>
-              <button type="button" class="pill-btn" [class.pill-btn--active]="filterHasFile === 'no'" (click)="filterHasFile = 'no'">
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                {{ 'animeList.filter.hasFileNo' | translate }}
-              </button>
-            </div>
-          </div>
-
           <div class="filter-field">
             <label class="filter-label" for="filterCodec">{{ 'animeList.filter.codec' | translate }}</label>
             <select id="filterCodec" class="filter-select" [(ngModel)]="filterCodec">
@@ -190,6 +173,15 @@
               @for (c of codecOptions; track c.value) {
                 <option [value]="c.value">{{ c.label }}</option>
               }
+            </select>
+          </div>
+
+          <div class="filter-field filter-field--compact">
+            <label class="filter-label" for="filterHasFile">{{ 'animeList.filter.hasFile' | translate }}</label>
+            <select id="filterHasFile" class="filter-select" [(ngModel)]="filterHasFile">
+              <option value="any">{{ 'animeList.filter.any' | translate }}</option>
+              <option value="yes">{{ 'animeList.filter.hasFileYes' | translate }}</option>
+              <option value="no">{{ 'animeList.filter.hasFileNo' | translate }}</option>
             </select>
           </div>
 

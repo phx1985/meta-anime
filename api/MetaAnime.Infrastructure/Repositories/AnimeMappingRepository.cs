@@ -34,12 +34,26 @@ public class AnimeMappingRepository(MetaAnimeDbContext dbContext) : IAnimeMappin
         string? titleFilter = null,
         AnimeSource? sourceFilter = null,
         string? sortBy = null,
-        bool sortDescending = false)
+        bool sortDescending = false,
+        double? titleSimilarityThreshold = null)
     {
         IQueryable<AnimeMapping> baseQuery = dbContext.AnimeMappings.AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(titleFilter))
-            baseQuery = baseQuery.Where(am => EF.Functions.ILike(am.Anime!.Title, $"%{titleFilter}%"));
+        {
+            if (titleSimilarityThreshold.HasValue)
+            {
+                // Fuzzy search: use pg_trgm similarity. threshold is 0-100; convert to 0.0-1.0.
+                var threshold = titleSimilarityThreshold.Value / 100.0;
+                baseQuery = baseQuery.Where(am =>
+                    EF.Functions.TrigramsSimilarity(am.Anime!.Title, titleFilter) >= threshold ||
+                    EF.Functions.ILike(am.Anime!.Title, $"%{titleFilter}%"));
+            }
+            else
+            {
+                baseQuery = baseQuery.Where(am => EF.Functions.ILike(am.Anime!.Title, $"%{titleFilter}%"));
+            }
+        }
 
         if (sourceFilter.HasValue)
             baseQuery = baseQuery.Where(am => am.Anime!.AnimeSource == sourceFilter.Value);
@@ -72,12 +86,25 @@ public class AnimeMappingRepository(MetaAnimeDbContext dbContext) : IAnimeMappin
 
     public async Task<List<string>> GetAllFilteredAniDbIdsAsync(
         string? titleFilter = null,
-        AnimeSource? sourceFilter = null)
+        AnimeSource? sourceFilter = null,
+        double? titleSimilarityThreshold = null)
     {
         IQueryable<AnimeMapping> baseQuery = dbContext.AnimeMappings.AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(titleFilter))
-            baseQuery = baseQuery.Where(am => EF.Functions.ILike(am.Anime!.Title, $"%{titleFilter}%"));
+        {
+            if (titleSimilarityThreshold.HasValue)
+            {
+                var threshold = titleSimilarityThreshold.Value / 100.0;
+                baseQuery = baseQuery.Where(am =>
+                    EF.Functions.TrigramsSimilarity(am.Anime!.Title, titleFilter) >= threshold ||
+                    EF.Functions.ILike(am.Anime!.Title, $"%{titleFilter}%"));
+            }
+            else
+            {
+                baseQuery = baseQuery.Where(am => EF.Functions.ILike(am.Anime!.Title, $"%{titleFilter}%"));
+            }
+        }
 
         if (sourceFilter.HasValue)
             baseQuery = baseQuery.Where(am => am.Anime!.AnimeSource == sourceFilter.Value);

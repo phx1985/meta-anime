@@ -233,6 +233,10 @@
           "daily": "Quotidien",
           "weekly": "Hebdomadaire"
         }
+      },
+      "App_TitleSimilarityThreshold": {
+        "name": "Similarité de recherche (%)",
+        "desc": "Pourcentage minimal de similarité (1–100) pour la recherche floue par titre via pg_trgm. Défaut : 80."
       }
     },
     "toggle": {

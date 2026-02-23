@@ -196,6 +196,12 @@
     flex: 2;
     min-width: 220px;
   }
+
+  &--compact {
+    flex: 0 0 auto;
+    min-width: 140px;
+    max-width: 160px;
+  }
 }
 
 .filter-label {
@@ -301,44 +307,6 @@
     background: var(--bg-secondary);
     color: var(--accent-primary);
     border-color: var(--accent-primary);
-  }
-}
-
-// ─── Pill group (has-file toggle) ─────────────────────────────────────────────
-
-.pill-group {
-  display: flex;
-  gap: 0;
-  border: 1px solid var(--card-border);
-  border-radius: 0.5rem;
-  overflow: hidden;
-  height: 2.25rem;
-}
-
-.pill-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0 0.75rem;
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
-  border: none;
-  border-right: 1px solid var(--card-border);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.18s, color 0.18s;
-
-  &:last-child { border-right: none; }
-
-  &:hover {
-    background: var(--bg-primary);
-    color: var(--accent-primary);
-  }
-
-  &--active {
-    background: var(--accent-primary);
-    color: #fff;
   }
 }
 
