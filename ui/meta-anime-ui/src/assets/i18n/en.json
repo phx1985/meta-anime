@@ -43,6 +43,32 @@
     "error": "Failed to load animes. Please try again later.",
     "empty": "No animes found."
   },
+  "animeCard": {
+    "altTitles": "Alternative titles",
+    "more": "more",
+    "less": "less",
+    "malScore": "MAL",
+    "myScore": "Mine",
+    "addedOn": "Added",
+    "plex": "Plex",
+    "openPlex": "Open in Plex",
+    "openSonarr": "Open in Sonarr",
+    "openMal": "Open in MyAnimeList",
+    "malStatus": {
+      "watching": "Watching",
+      "completed": "Completed",
+      "on_hold": "On Hold",
+      "dropped": "Dropped",
+      "plan_to_watch": "Plan to Watch"
+    },
+    "seriesStatus": {
+      "finished_airing": "Finished",
+      "currently_airing": "Airing",
+      "not_yet_aired": "Upcoming"
+    },
+    "noFiles": "No files",
+    "sizeOnDisk": "Size on disk"
+  },
   "settings": {
     "title": "Settings",
     "subtitle": "Manage your integrations and connection settings. Changes take effect immediately.",
@@ -65,18 +91,26 @@
         "title": "Sync in progress",
         "done": "Sync complete",
         "error": "Sync failed — please retry",
-        "dismiss": "Dismiss"
+        "dismiss": "Dismiss",
+        "clearLog": "Clear log"
       },
       "step": {
-        "init":     "Initialising sync",
-        "kometa":   "Loading Kometa mappings",
-        "plex":     "Fetching Plex library",
-        "mal":      "Fetching MyAnimeList entries",
-        "sonarr":   "Fetching Sonarr series",
+        "init": "Initialising sync",
+        "kometa": "Loading Kometa mappings",
+        "plex": "Fetching Plex library",
+        "mal": "Fetching MyAnimeList entries",
+        "sonarr": "Fetching Sonarr series",
         "matching": "Matching & indexing"
       },
       "lastSync": "Last sync",
-      "neverSynced": "Never synced"
+      "neverSynced": "Never synced",
+      "card": {
+        "title": "Synchronization",
+        "desc": "Manually trigger or monitor the background sync. Logs remain visible until cleared."
+      }
+    },
+    "mal": {
+      "tokenRefreshed": "Token refreshed:"
     },
     "category": {
       "plex": {
@@ -94,6 +128,10 @@
       "kometa": {
         "name": "Kometa",
         "desc": "Source of the AniDB ↔ TVDB / TMDB mapping file."
+      },
+      "app": {
+        "name": "App Preferences",
+        "desc": "General application preferences and content filtering options."
       }
     },
     "fields": {
@@ -144,11 +182,33 @@
       "Kometa_AnimeIdsJsonUrl": {
         "name": "Anime IDs JSON URL",
         "desc": "URL of the Kometa Community anime_ids.json AniDB mapping file."
+      },
+      "App_ShowNsfw": {
+        "name": "Show NSFW Content",
+        "desc": "When enabled, adult and explicit content from MyAnimeList will be included in lists and statistics."
+      },
+      "App_SyncInterval": {
+        "name": "Sync Interval",
+        "desc": "How often the background sync job runs to fetch new data from all sources.",
+        "option": {
+          "hourly": "Every Hour",
+          "every6h": "Every 6 Hours",
+          "every12h": "Every 12 Hours",
+          "daily": "Daily",
+          "weekly": "Weekly"
+        }
       }
+    },
+    "toggle": {
+      "on": "Enabled",
+      "off": "Disabled"
     }
   },
   "theme": {
-    "toggle": "Toggle Theme"
+    "toggle": "Toggle Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "followOs": "Sync with OS theme"
   },
   "genres": {
     "Action": "Action",
@@ -184,5 +244,37 @@
   },
   "lang": {
     "switch": "Français"
+  },
+  "notifications": {
+    "center": {
+      "title": "Notifications",
+      "empty": "All caught up!",
+      "markAllRead": "Mark all read",
+      "dismiss": "Dismiss"
+    },
+    "time": {
+      "justNow": "just now",
+      "minutesAgo": "{{n}}m ago",
+      "hoursAgo": "{{n}}h ago",
+      "daysAgo": "{{n}}d ago"
+    },
+    "welcome": {
+      "title": "Welcome to MetaAnime 👋",
+      "message": "MetaAnime aggregates your anime library from Plex, Sonarr and MyAnimeList into one elegant hub. Start by running your first sync.",
+      "action": "Run first sync"
+    },
+    "noSync": {
+      "title": "First sync needed",
+      "message": "Your library has not been synced yet. Run a sync to populate your anime list with metadata.",
+      "action": "Go to Sync"
+    }
+  },
+  "toast": {
+    "noSync": {
+      "title": "No sync yet",
+      "message": "Your library has not been synced. Run a sync to populate your anime list.",
+      "cta": "Go to Sync",
+      "dismiss": "Dismiss"
+    }
   }
 }

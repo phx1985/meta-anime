@@ -64,23 +64,15 @@ public class AnimeMatchingService(
         await NotifyAsync(progressNotifier, "kometa", SyncStepState.Done, 100, sw);
         sw.Restart();
 
-        // ── Step 2: Fetch from sources (Plex, MAL, Sonarr in parallel) ──────
-        await NotifyAsync(progressNotifier, "plex", SyncStepState.Running, 0, sw);
-        await NotifyAsync(progressNotifier, "mal", SyncStepState.Running, 0, sw);
-        await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Running, 0, sw);
-
-        var refreshDataResult = await animeService.RefreshData();
+        // ── Step 2: Fetch from sources (Plex → MAL → Sonarr sequentially) ─────
+        // Per-source Running/Done/Error notifications are emitted inside RefreshData
+        // so the UI sees each provider progress individually.
+        var refreshDataResult = await animeService.RefreshData(progressNotifier);
         if (refreshDataResult.IsFailure)
         {
-            await NotifyAsync(progressNotifier, "plex", SyncStepState.Error, null, sw, refreshDataResult.Error.Message);
-            await NotifyAsync(progressNotifier, "mal", SyncStepState.Error, null, sw, refreshDataResult.Error.Message);
-            await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Error, null, sw, refreshDataResult.Error.Message);
             return Result.Failure(refreshDataResult.Error);
         }
 
-        await NotifyAsync(progressNotifier, "plex", SyncStepState.Done, 100, sw);
-        await NotifyAsync(progressNotifier, "mal", SyncStepState.Done, 100, sw);
-        await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Done, 100, sw);
         sw.Restart();
 
         // ── Step 3: Match anime across sources ───────────────────────────────

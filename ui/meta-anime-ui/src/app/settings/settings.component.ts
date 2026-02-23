@@ -2,22 +2,18 @@ import { Component, inject, signal, computed, DestroyRef, ChangeDetectionStrateg
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ActivatedRoute } from '@angular/router';
 import { SettingsService } from '../services/settings.service';
 import { AnimeService } from '../services/anime.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
 import { SyncStep } from '../models/sync-progress.models';
+import { SyncStepComponent } from './sync-step/sync-step.component';
+import { fmtElapsed } from '../utils/format.utils';
 
 /** "Plex:Host" → "Plex_Host" for i18n key lookups */
 function fieldSlug(key: string): string {
   return key.replace(':', '_');
-}
-
-/** Format elapsed ms as "1m 23s" or "45s" */
-function fmtElapsed(ms: number): string {
-  const s = Math.floor(ms / 1000);
-  if (s < 60) return `${s}s`;
-  return `${Math.floor(s / 60)}m ${s % 60}s`;
 }
 
 /** Map an ngx-translate lang code to a BCP-47 locale for Intl.DateTimeFormat */
@@ -30,7 +26,7 @@ function langToLocale(lang: string): string {
   selector: 'app-settings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, ReactiveFormsModule],
+  imports: [TranslatePipe, ReactiveFormsModule, SyncStepComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss'
 })
@@ -41,6 +37,7 @@ export class SettingsComponent {
   private fb              = inject(FormBuilder);
   private destroyRef      = inject(DestroyRef);
   private translate       = inject(TranslateService);
+  private route           = inject(ActivatedRoute);
 
   // ── Settings load state ───────────────────────────────────────────────────
   loading   = signal(true);
@@ -54,42 +51,68 @@ export class SettingsComponent {
   editing  = signal<Record<string, boolean>>({});
   revealed = signal<Record<string, boolean>>({});
 
-  // ── Sync hub state (driven by SignalR) ────────────────────────────────────
+  // ── Sync state (driven by SignalR) ────────────────────────────────────────
   syncing      = signal(false);
-  showSyncHub  = signal(false);
   lastSyncDate = signal<string | null>(null);
   currentLang  = signal(this.translate.currentLang ?? this.translate.defaultLang ?? 'en');
 
   // Convert SignalR observables → signals for template use
-  syncSteps    = toSignal(this.signalR.steps$,     { initialValue: [] as SyncStep[] });
-  syncDone     = toSignal(this.signalR.syncDone$,  { initialValue: false });
-  syncError    = toSignal(this.signalR.syncError$,  { initialValue: false });
-  hubConnected = toSignal(this.signalR.connected$,  { initialValue: false });
+  syncSteps       = toSignal(this.signalR.steps$,            { initialValue: [] as SyncStep[] });
+  syncDone        = toSignal(this.signalR.syncDone$,         { initialValue: false });
+  syncError       = toSignal(this.signalR.syncError$,        { initialValue: false });
+  hubConnected    = toSignal(this.signalR.connected$,        { initialValue: false });
+  overallElapsed  = toSignal(this.signalR.overallElapsedMs$, { initialValue: 0 });
 
-  /** Provider logo image paths */
+  // ── Floating side navigation ──────────────────────────────────────────────
+  /** Category currently in the top viewport slice (tracked by IntersectionObserver) */
+  activeCategory   = signal<string>('');
+  /** Category recently clicked — gets a bounce highlight for 2 s then clears */
+  highlighted      = signal<string | null>(null);
+
+  /** Provider logo paths — used both in category headers and in step rows */
   readonly providerImages: Record<string, string> = {
-    plex:   'assets/images/plex.svg',
-    sonarr: 'assets/images/sonarr.svg',
-    mal:    'assets/images/mal.svg',
-    kometa: 'assets/images/kometa.png',
+    plex:     'assets/images/plex.svg',
+    sonarr:   'assets/images/sonarr.svg',
+    mal:      'assets/images/mal.svg',
+    kometa:   'assets/images/kometa.png',
+    app:      'assets/images/app.svg',
+    matching: 'assets/images/app.svg',
   };
 
-  /** Settings grouped by category */
+  /** Settings grouped by category — App:SyncInterval and System:* are excluded */
   grouped = computed<SettingsByCategory>(() =>
-    this.settings().reduce((acc, s) => {
-      (acc[s.category] ??= []).push(s);
-      return acc;
-    }, {} as SettingsByCategory)
+    this.settings()
+      .filter(s => s.key !== 'App:SyncInterval' && !s.key.startsWith('System:'))
+      .reduce((acc, s) => {
+        (acc[s.category] ??= []).push(s);
+        return acc;
+      }, {} as SettingsByCategory)
+  );
+
+  /** The App:SyncInterval setting — rendered inside the sync card */
+  syncIntervalSetting = computed(() =>
+    this.settings().find(s => s.key === 'App:SyncInterval')
+  );
+
+  /** Last MAL OAuth token refresh date (from System:MalTokenRefreshedAt) */
+  malTokenRefreshDate = computed(() =>
+    this.settings().find(s => s.key === 'System:MalTokenRefreshedAt')?.value ?? null
   );
 
   /** Ordered category keys */
   categories = computed(() => Object.keys(this.grouped()));
+
+  /** All nav items: categories in order + 'sync' sentinel */
+  navItems = computed<string[]>(() => [...this.categories(), 'sync']);
 
   /** Per-setting reactive forms */
   forms: Record<string, FormGroup> = {};
 
   /** Expose formatters to template */
   readonly fmtElapsed = fmtElapsed;
+
+  // ── Timing constants ─────────────────────────────────────────────────────
+  private static readonly HIGHLIGHT_DURATION_MS = 2000;
 
   /** Locale-aware date formatter — uses current app language */
   fmtDate(iso: string): string {
@@ -99,6 +122,27 @@ export class SettingsComponent {
       year: 'numeric', month: 'short', day: 'numeric',
       hour: '2-digit', minute: '2-digit'
     });
+  }
+
+  /** Whether the step log has any non-pending entries (i.e. a sync has been triggered) */
+  hasSyncActivity = computed(() => this.syncSteps().some(s => s.state !== 'pending'));
+
+  /** DOM id for a nav category */
+  sectionId(cat: string): string {
+    return cat === 'sync' ? 'sync-section' : `section-${cat}`;
+  }
+
+  /** Scroll smoothly to a settings section and briefly highlight it.
+   *  Sets `activeCategory` synchronously so the sidenav updates immediately on click. */
+  scrollToSection(cat: string): void {
+    const el = document.getElementById(this.sectionId(cat));
+    if (!el) return;
+    this.activeCategory.set(cat);
+    this.highlighted.set(cat);
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => {
+      if (this.highlighted() === cat) this.highlighted.set(null);
+    }, SettingsComponent.HIGHLIGHT_DURATION_MS);
   }
 
   constructor() {
@@ -112,6 +156,16 @@ export class SettingsComponent {
           this.settings.set(data);
           this.buildForms(data);
           this.loading.set(false);
+          // Set active nav to first category on load
+          const first = this.navItems()[0];
+          if (first) this.activeCategory.set(first);
+          // Scroll to fragment if present (e.g. from toast CTA)
+          const fragment = this.route.snapshot.fragment;
+          if (fragment) {
+            setTimeout(() => {
+              document.getElementById(fragment)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 80);
+          }
         },
         error: () => {
           this.error.set(true);
@@ -152,7 +206,6 @@ export class SettingsComponent {
     const editingInit:  Record<string, boolean> = {};
     const revealedInit: Record<string, boolean> = {};
     for (const s of settings) {
-      // Pre-fill form with the real value (sensitive values now returned by API)
       this.forms[s.key]   = this.fb.group({ value: [s.value ?? ''] });
       editingInit[s.key]  = false;
       revealedInit[s.key] = false;
@@ -175,6 +228,49 @@ export class SettingsComponent {
 
   toggleReveal(key: string): void {
     this.revealed.update(r => ({ ...r, [key]: !r[key] }));
+  }
+
+  /** Immediately toggle a boolean setting (no edit-mode needed). */
+  toggleBool(setting: SettingDefinition): void {
+    const next = setting.value !== 'true' ? 'true' : 'false';
+    this.savingKey.set(setting.key);
+    this.settingsService.update(setting.key, { value: next })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.savingKey.set(null);
+          this.settings.update(list =>
+            list.map(s => s.key === setting.key ? { ...s, value: next } : s)
+          );
+        },
+        error: () => { this.savingKey.set(null); }
+      });
+  }
+
+  /** Whether a boolean setting is currently enabled */
+  boolValue(setting: SettingDefinition): boolean {
+    return setting.value === 'true';
+  }
+
+  /** Handle select-field change (auto-save on selection). */
+  onSelectChange(setting: SettingDefinition, event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.savingKey.set(setting.key);
+    this.settingsService.update(setting.key, { value })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.savingKey.set(null);
+          this.savedKey.set(setting.key);
+          this.settings.update(list =>
+            list.map(s => s.key === setting.key ? { ...s, value } : s)
+          );
+          setTimeout(() => {
+            if (this.savedKey() === setting.key) this.savedKey.set(null);
+          }, 2000);
+        },
+        error: () => { this.savingKey.set(null); }
+      });
   }
 
   save(setting: SettingDefinition): void {
@@ -224,25 +320,29 @@ export class SettingsComponent {
   trackByCategory(_: number, cat: string): string      { return cat;   }
   trackByStepKey(_: number, s: SyncStep): string       { return s.stepKey; }
 
-  // ── Sync hub ──────────────────────────────────────────────────────────────
+  // ── Sync card ─────────────────────────────────────────────────────────────
   triggerSync(): void {
     if (this.syncing()) return;
 
     this.syncing.set(true);
-    this.showSyncHub.set(true);
     this.signalR.resetSteps();
+
+    // Scroll the sync card fully into view so the progress log is visible
+    // Brief delay lets the sync card begin expanding before we scroll to it
+    const SYNC_SCROLL_DELAY_MS = 80;
+    setTimeout(() => {
+      document.getElementById('sync-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, SYNC_SCROLL_DELAY_MS);
 
     this.animeService.syncAnimes()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        // SignalR drives the step UI; HTTP response is just confirmation
         next:  () => { /* SignalR done event handles syncing flag */ },
         error: () => { this.syncing.set(false); }
       });
   }
 
-  dismissSyncHub(): void {
-    this.showSyncHub.set(false);
+  clearSyncLog(): void {
     this.signalR.resetSteps();
   }
 }

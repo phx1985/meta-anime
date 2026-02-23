@@ -10,18 +10,32 @@ public sealed record MalAnimeInfo(
     string? ViewState,
     DateTime? AddedDate,
     MalProgressionInfo? Progression,
-    MalRatingInfo? Rating
+    MalRatingInfo? Rating,
+    string[]? Genres,
+    string? Synopsis,
+    string? StartDate,
+    string? EndDate,
+    MalAlternativeTitles? AlternativeTitles,
+    string? CoverImageUrl,
+    string? Status
 )
 {
     public MalAnimeInfo(Anime? anime, string malBaseUrl)
         : this(
-            anime?.Title ?? "NO_TITLE",
-            anime?.SourceId,
-            $"{malBaseUrl}/anime/{anime?.SourceId}",
-            null,
-            null,
-            null,
-            null
+            Title: anime?.Title ?? "NO_TITLE",
+            Id: anime?.SourceId,
+            Url: $"{malBaseUrl}/anime/{anime?.SourceId}",
+            ViewState: null,
+            AddedDate: null,
+            Progression: null,
+            Rating: null,
+            Genres: null,
+            Synopsis: anime?.Description,
+            StartDate: null,
+            EndDate: null,
+            AlternativeTitles: null,
+            CoverImageUrl: null,
+            Status: null
         )
     { }
 
@@ -31,7 +45,7 @@ public sealed record MalAnimeInfo(
             malAnime?.Id.ToString(),
             $"{malBaseUrl}/anime/{malAnime?.Id}",
             malAnime?.MyListStatus?.Status,
-            malAnime?.MyListStatus?.CreatedAt,
+            malAnime?.MyListStatus is { } ls && ls.CreatedAt.Year > 1 ? ls.CreatedAt : (DateTime?)null,
             malAnime != null ? new MalProgressionInfo(
                 malAnime.MyListStatus?.NumEpisodesWatched ?? 0,
                 malAnime.NumEpisodes
@@ -39,7 +53,19 @@ public sealed record MalAnimeInfo(
             malAnime != null ? new MalRatingInfo(
                 malAnime.MyListStatus?.Score ?? 0,
                 malAnime.Mean
-            ) : null
+            ) : null,
+            malAnime?.Genres?.Select(g => g.Name).ToArray(),
+            malAnime?.Synopsis,
+            malAnime?.StartDate,
+            malAnime?.EndDate,
+            malAnime?.AlternativeTitles != null
+                ? new MalAlternativeTitles(
+                    malAnime.AlternativeTitles.En,
+                    malAnime.AlternativeTitles.Ja,
+                    malAnime.AlternativeTitles.Synonyms?.ToArray())
+                : null,
+            malAnime?.MainPicture?.Large ?? malAnime?.MainPicture?.Medium,
+            malAnime?.Status
         )
     { }
 }
@@ -52,4 +78,10 @@ public sealed record MalProgressionInfo(
 public sealed record MalRatingInfo(
     int MyScore,
     double MalMean
+);
+
+public sealed record MalAlternativeTitles(
+    string? En,
+    string? Ja,
+    string[]? Synonyms
 );

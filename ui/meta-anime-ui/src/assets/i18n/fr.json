@@ -43,6 +43,32 @@
     "error": "Échec du chargement des animes. Veuillez réessayer plus tard.",
     "empty": "Aucun anime trouvé."
   },
+  "animeCard": {
+    "altTitles": "Titres alternatifs",
+    "more": "plus",
+    "less": "moins",
+    "malScore": "MAL",
+    "myScore": "Moi",
+    "addedOn": "Ajouté",
+    "plex": "Plex",
+    "openPlex": "Ouvrir dans Plex",
+    "openSonarr": "Ouvrir dans Sonarr",
+    "openMal": "Ouvrir dans MyAnimeList",
+    "malStatus": {
+      "watching": "En cours",
+      "completed": "Terminé",
+      "on_hold": "En pause",
+      "dropped": "Abandonné",
+      "plan_to_watch": "À regarder"
+    },
+    "seriesStatus": {
+      "finished_airing": "Terminée",
+      "currently_airing": "En cours",
+      "not_yet_aired": "À venir"
+    },
+    "noFiles": "Aucun fichier",
+    "sizeOnDisk": "Taille sur disque"
+  },
   "settings": {
     "title": "Paramètres",
     "subtitle": "Gérez vos intégrations et paramètres de connexion. Les modifications prennent effet immédiatement.",
@@ -65,18 +91,26 @@
         "title": "Synchronisation en cours",
         "done": "Synchronisation terminée",
         "error": "Échec de la synchronisation — réessayez",
-        "dismiss": "Fermer"
+        "dismiss": "Fermer",
+        "clearLog": "Effacer les logs"
       },
       "step": {
-        "init":     "Initialisation",
-        "kometa":   "Chargement des mappings Kometa",
-        "plex":     "Récupération bibliothèque Plex",
-        "mal":      "Récupération entrées MyAnimeList",
-        "sonarr":   "Récupération séries Sonarr",
+        "init": "Initialisation",
+        "kometa": "Chargement des mappings Kometa",
+        "plex": "Récupération bibliothèque Plex",
+        "mal": "Récupération entrées MyAnimeList",
+        "sonarr": "Récupération séries Sonarr",
         "matching": "Correspondance et indexation"
       },
       "lastSync": "Dernière sync",
-      "neverSynced": "Jamais synchronisé"
+      "neverSynced": "Jamais synchronisé",
+      "card": {
+        "title": "Synchronisation",
+        "desc": "Déclenchez manuellement ou surveillez la synchronisation. Les logs restent visibles jusqu'à effacement."
+      }
+    },
+    "mal": {
+      "tokenRefreshed": "Token actualisé :"
     },
     "category": {
       "plex": {
@@ -94,6 +128,10 @@
       "kometa": {
         "name": "Kometa",
         "desc": "Source du fichier de mapping AniDB ↔ TVDB / TMDB."
+      },
+      "app": {
+        "name": "Préférences",
+        "desc": "Préférences générales de l'application et options de filtrage du contenu."
       }
     },
     "fields": {
@@ -144,11 +182,33 @@
       "Kometa_AnimeIdsJsonUrl": {
         "name": "URL JSON des IDs anime",
         "desc": "URL du fichier anime_ids.json de Kometa Community pour le mapping AniDB."
+      },
+      "App_ShowNsfw": {
+        "name": "Afficher le contenu NSFW",
+        "desc": "Lorsqu'activé, le contenu adulte et explicite de MyAnimeList sera inclus dans les listes et statistiques."
+      },
+      "App_SyncInterval": {
+        "name": "Intervalle de sync",
+        "desc": "Fréquence à laquelle la tâche de synchronisation récupère les données de toutes les sources.",
+        "option": {
+          "hourly": "Toutes les heures",
+          "every6h": "Toutes les 6 heures",
+          "every12h": "Toutes les 12 heures",
+          "daily": "Quotidien",
+          "weekly": "Hebdomadaire"
+        }
       }
+    },
+    "toggle": {
+      "on": "Activé",
+      "off": "Désactivé"
     }
   },
   "theme": {
-    "toggle": "Changer le thème"
+    "toggle": "Changer le thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "followOs": "Suivre le thème du système"
   },
   "genres": {
     "Action": "Action",
@@ -184,5 +244,37 @@
   },
   "lang": {
     "switch": "English"
+  },
+  "notifications": {
+    "center": {
+      "title": "Notifications",
+      "empty": "Tout est à jour !",
+      "markAllRead": "Tout marquer comme lu",
+      "dismiss": "Fermer"
+    },
+    "time": {
+      "justNow": "à l'instant",
+      "minutesAgo": "il y a {{n}}m",
+      "hoursAgo": "il y a {{n}}h",
+      "daysAgo": "il y a {{n}}j"
+    },
+    "welcome": {
+      "title": "Bienvenue sur MetaAnime 👋",
+      "message": "MetaAnime centralise votre bibliothèque anime depuis Plex, Sonarr et MyAnimeList en un seul hub élégant. Commencez par lancer votre première synchronisation.",
+      "action": "Première sync"
+    },
+    "noSync": {
+      "title": "Synchronisation requise",
+      "message": "Votre bibliothèque n'a pas encore été synchronisée. Lancez une sync pour peupler votre liste avec les métadonnées.",
+      "action": "Aller à la sync"
+    }
+  },
+  "toast": {
+    "noSync": {
+      "title": "Aucune synchronisation",
+      "message": "Votre bibliothèque n'a pas encore été synchronisée. Lancez une sync pour voir vos animés.",
+      "cta": "Aller à la sync",
+      "dismiss": "Fermer"
+    }
   }
 }

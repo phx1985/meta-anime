@@ -7,11 +7,9 @@ export interface SyncStep {
   state: SyncStepState;
   /** 0–100, optional */
   progressPercent?: number;
-  /** milliseconds since the step was started */
+  /** milliseconds elapsed for this step (server timestamp when done; ticker-incremented while running) */
   elapsedMs: number;
   errorMessage?: string;
-  /** wall-clock time when this step last transitioned to 'running' */
-  runStartedAt?: number;
 }
 
 /** Raw message received from the SignalR hub */

@@ -16,5 +16,10 @@ public interface IAnimeService
     Task<Result> DeleteAsync(Guid id);
     Task<Result<IEnumerable<Anime>>> GetAllBySourceAsync(AnimeSource source);
     Task<Result<IEnumerable<Anime>>> GetAllAsync();
-    Task<Result<IEnumerable<Anime>>> RefreshData();
+    /// <summary>
+    /// Refreshes anime data from all sources (Plex, MAL, Sonarr) sequentially.
+    /// When a <paramref name="progressNotifier"/> is provided each source step emits
+    /// individual Running / Done / Error SignalR messages for fine-grained progress display.
+    /// </summary>
+    Task<Result<IEnumerable<Anime>>> RefreshData(ISyncProgressNotifier? progressNotifier = null);
 }

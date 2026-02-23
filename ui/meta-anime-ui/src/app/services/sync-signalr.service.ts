@@ -19,18 +19,23 @@ function makeInitialSteps(): SyncStep[] {
 export class SyncSignalRService implements OnDestroy {
   private connection: signalR.HubConnection | null = null;
 
-  private readonly _steps$   = new BehaviorSubject<SyncStep[]>(makeInitialSteps());
-  private readonly _connected$ = new BehaviorSubject<boolean>(false);
-  private readonly _syncDone$  = new BehaviorSubject<boolean>(false);
-  private readonly _syncError$ = new BehaviorSubject<boolean>(false);
+  private readonly _steps$           = new BehaviorSubject<SyncStep[]>(makeInitialSteps());
+  private readonly _connected$       = new BehaviorSubject<boolean>(false);
+  private readonly _syncDone$        = new BehaviorSubject<boolean>(false);
+  private readonly _syncError$       = new BehaviorSubject<boolean>(false);
+  private readonly _overallElapsedMs$ = new BehaviorSubject<number>(0);
 
-  readonly steps$:     Observable<SyncStep[]> = this._steps$.asObservable();
-  readonly connected$: Observable<boolean>    = this._connected$.asObservable();
-  readonly syncDone$:  Observable<boolean>    = this._syncDone$.asObservable();
-  readonly syncError$: Observable<boolean>    = this._syncError$.asObservable();
+  readonly steps$:           Observable<SyncStep[]> = this._steps$.asObservable();
+  readonly connected$:       Observable<boolean>    = this._connected$.asObservable();
+  readonly syncDone$:        Observable<boolean>    = this._syncDone$.asObservable();
+  readonly syncError$:       Observable<boolean>    = this._syncError$.asObservable();
+  readonly overallElapsedMs$: Observable<number>   = this._overallElapsedMs$.asObservable();
 
-  /** Elapsed-time ticker interval handle */
+  /** Elapsed-time ticker: interval handle + last-tick timestamp for delta calculation */
   private tickerHandle: ReturnType<typeof setInterval> | null = null;
+  private lastTickAt   = 0;
+  /** Wall-clock timestamp when the first 'Running' message was received */
+  private overallStartedAt: number | null = null;
 
   connect(): void {
     if (this.connection) return;
@@ -77,6 +82,8 @@ export class SyncSignalRService implements OnDestroy {
     this._steps$.next(makeInitialSteps());
     this._syncDone$.next(false);
     this._syncError$.next(false);
+    this._overallElapsedMs$.next(0);
+    this.overallStartedAt = null;
   }
 
   ngOnDestroy(): void {
@@ -86,6 +93,11 @@ export class SyncSignalRService implements OnDestroy {
   private handleMessage(msg: SyncProgressMessage): void {
     const state = this.mapState(msg.state);
 
+    // Track overall start on first Running message
+    if (state === 'running' && this.overallStartedAt === null) {
+      this.overallStartedAt = Date.now();
+    }
+
     this._steps$.next(
       this._steps$.value.map(s => {
         if (s.stepKey !== msg.stepKey) return s;
@@ -93,9 +105,9 @@ export class SyncSignalRService implements OnDestroy {
           ...s,
           state,
           progressPercent: msg.progressPercent,
+          // Use elapsed from server message (accurate per-step time from Stopwatch)
           elapsedMs: msg.elapsedMs,
           errorMessage: msg.errorMessage,
-          runStartedAt: state === 'running' ? Date.now() : s.runStartedAt,
         };
       })
     );
@@ -124,15 +136,25 @@ export class SyncSignalRService implements OnDestroy {
 
   private startTicker(): void {
     if (this.tickerHandle !== null) return;
+    this.lastTickAt = Date.now();
     this.tickerHandle = setInterval(() => {
-      const now = Date.now();
+      const now   = Date.now();
+      const delta = now - this.lastTickAt;
+      this.lastTickAt = now;
+
+      // Increment per-step elapsed for running steps
       this._steps$.next(
         this._steps$.value.map(s =>
-          s.state === 'running' && s.runStartedAt
-            ? { ...s, elapsedMs: s.elapsedMs + (now - (s.runStartedAt ?? now)) }
+          s.state === 'running'
+            ? { ...s, elapsedMs: s.elapsedMs + delta }
             : s
         )
       );
+
+      // Increment overall elapsed
+      if (this.overallStartedAt !== null) {
+        this._overallElapsedMs$.next(now - this.overallStartedAt);
+      }
     }, 250);
   }
 

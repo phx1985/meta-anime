@@ -1,23 +1,32 @@
-<div class="container py-5">
-  <h1 class="anime-list-title mb-4">{{ 'animeList.title' | translate }}</h1>
+<div class="anime-list-page">
+  <!-- Animated bokeh background -->
+  <div class="bokeh" aria-hidden="true">
+    @for (i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]; track i) {
+      <div class="bokeh__blob"></div>
+    }
+  </div>
 
-  @if (loading()) {
-    <div class="d-flex justify-content-center py-5">
-      <div class="spinner-border" role="status">
-        <span class="visually-hidden">Loading...</span>
+  <div class="container py-5">
+    <h1 class="anime-list-title mb-4">{{ 'animeList.title' | translate }}</h1>
+
+    @if (loading()) {
+      <div class="d-flex justify-content-center py-5">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
       </div>
-    </div>
-  } @else if (error()) {
-    <div class="alert alert-danger" role="alert">
-      {{ 'animeList.error' | translate }}
-    </div>
-  } @else if (animes().length === 0) {
-    <p class="text-muted">{{ 'animeList.empty' | translate }}</p>
-  } @else {
-    <ul class="anime-names-list list-unstyled">
-      @for (anime of animes(); track anime.id) {
-        <li class="anime-name-item">{{ anime.title }}</li>
-      }
-    </ul>
-  }
+    } @else if (error()) {
+      <div class="alert alert-danger" role="alert">
+        {{ 'animeList.error' | translate }}
+      </div>
+    } @else if (animes().length === 0) {
+      <p class="text-muted">{{ 'animeList.empty' | translate }}</p>
+    } @else {
+      <div class="anime-grid">
+        @for (anime of animes(); track anime.aniDbId) {
+          <app-anime-card [anime]="anime" />
+        }
+      </div>
+    }
+  </div>
 </div>

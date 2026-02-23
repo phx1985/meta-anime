@@ -4,6 +4,8 @@ export interface SettingDefinition {
   isSensitive: boolean;
   isRequired: boolean;
   value: string | null;
+  fieldType: string;
+  selectOptions?: string[];
 }
 
 export interface UpdateSettingRequest {

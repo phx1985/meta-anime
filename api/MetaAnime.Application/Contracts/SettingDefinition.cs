@@ -5,5 +5,7 @@ public record SettingDefinition(
     string Category,
     bool IsSensitive,
     bool IsRequired,
-    string? Value
+    string? Value,
+    string FieldType = "text",
+    string[]? SelectOptions = null
 );

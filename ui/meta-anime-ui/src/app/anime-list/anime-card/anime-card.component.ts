@@ -1,0 +1,246 @@
+import { Component, Input, signal, inject, HostListener } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { trigger, state, style, animate, transition } from '@angular/animations';
+import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo } from '../../models/anime.models';
+import { ScoreBadgeComponent } from './score-badge/score-badge.component';
+
+const TRUNCATE_AT = 180;
+
+@Component({
+  selector: 'app-anime-card',
+  standalone: true,
+  imports: [CommonModule, TranslatePipe, ScoreBadgeComponent],
+  templateUrl: './anime-card.component.html',
+  styleUrl: './anime-card.component.scss',
+  animations: [
+    trigger('expandCollapse', [
+      state('collapsed', style({ height: '3.75rem', overflow: 'hidden' })),
+      state('expanded',  style({ height: '*',       overflow: 'hidden' })),
+      transition('collapsed => expanded', animate('380ms cubic-bezier(0.4, 0, 0.2, 1)')),
+      transition('expanded => collapsed', animate('280ms cubic-bezier(0.4, 0, 1, 1)')),
+    ])
+  ]
+})
+export class AnimeCardComponent {
+  @Input({ required: true }) anime!: AnimeDetailsResponse;
+
+  private translate = inject(TranslateService);
+
+  showAltTitles = signal(false);
+  descExpanded = signal(false);
+  showLightbox = signal(false);
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.showLightbox()) this.showLightbox.set(false);
+  }
+
+  // ── Data accessors ────────────────────────────────────────────────────────
+
+  get mal(): MalAnimeInfo | undefined {
+    return this.anime.malAnimes?.[0];
+  }
+
+  get sonarr(): SonarrAnimeInfo | undefined {
+    return this.anime.sonarrAnimes?.[0];
+  }
+
+  get plex() {
+    return this.anime.plexAnimes?.[0];
+  }
+
+  // ── Title / image ─────────────────────────────────────────────────────────
+
+  get coverImageUrl(): string | undefined {
+    return this.mal?.coverImageUrl;
+  }
+
+  /** Best-effort localised title based on current UI language */
+  get displayTitle(): string {
+    const lang = this.translate.currentLang ?? 'en';
+    const alt = this.mal?.alternativeTitles;
+    if (alt) {
+      if (lang === 'ja' && alt.ja) return alt.ja;
+      if (alt.en && alt.en !== this.anime.title) return alt.en;
+    }
+    return this.anime.title;
+  }
+
+  get subtitle(): string | undefined {
+    // Show the original DB title as subtitle when a localized title is shown
+    const dt = this.displayTitle;
+    if (dt !== this.anime.title) return this.anime.title;
+    // Otherwise show Japanese alt as subtitle
+    const ja = this.mal?.alternativeTitles?.ja;
+    return ja && ja !== dt ? ja : undefined;
+  }
+
+  get allAltTitles(): string[] {
+    const alt = this.mal?.alternativeTitles;
+    if (!alt) return [];
+    const titles: string[] = [];
+    if (alt.en) titles.push(alt.en);
+    if (alt.ja) titles.push(alt.ja);
+    if (alt.synonyms) titles.push(...alt.synonyms);
+    return [...new Set(titles)].filter((t) => t !== this.displayTitle);
+  }
+
+  // ── Description ───────────────────────────────────────────────────────────
+
+  get description(): string {
+    return this.mal?.synopsis ?? this.anime.description ?? '';
+  }
+
+  get truncatedDescription(): string {
+    const d = this.description;
+    if (!d) return '';
+    return this.descExpanded() || d.length <= TRUNCATE_AT ? d : d.slice(0, TRUNCATE_AT) + '…';
+  }
+
+  // ── Status ────────────────────────────────────────────────────────────────
+
+  /** MAL list status (watching / completed / on_hold / dropped / plan_to_watch) */
+  get malViewState(): string | undefined {
+    return this.mal?.viewState;
+  }
+
+  /** MAL series airing status (finished_airing / currently_airing / not_yet_aired) */
+  get seriesStatus(): string | undefined {
+    return this.mal?.status;
+  }
+
+  viewStateLabel(state: string): string {
+    const key = `animeCard.malStatus.${state}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : state;
+  }
+
+  seriesStatusLabel(status: string): string {
+    const key = `animeCard.seriesStatus.${status}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : status.replace(/_/g, ' ');
+  }
+
+  // ── Genres ────────────────────────────────────────────────────────────────
+
+  get genres(): string[] {
+    return this.mal?.genres ?? [];
+  }
+
+  /** Translate a genre name — safe for names containing spaces */
+  translateGenre(name: string): string {
+    const key = `genres.${name}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : name;
+  }
+
+  // ── Scores ────────────────────────────────────────────────────────────────
+
+  get malScore(): number {
+    return this.mal?.rating?.malMean ?? 0;
+  }
+
+  get myScore(): number {
+    return this.mal?.rating?.myScore ?? 0;
+  }
+
+  // ── Dates ─────────────────────────────────────────────────────────────────
+
+  get startDate(): string | undefined {
+    return this.mal?.startDate;
+  }
+
+  get endDate(): string | undefined {
+    return this.mal?.endDate;
+  }
+
+  get addedDate(): Date | undefined {
+    const raw = this.mal?.addedDate;
+    if (!raw) return undefined;
+    const d = new Date(raw);
+    return d.getFullYear() > 1 ? d : undefined;
+  }
+
+  // ── Progression ───────────────────────────────────────────────────────────
+
+  get plexProgress(): { watched: number; total: number } | undefined {
+    const p = this.plex?.progression;
+    return p ? { watched: p.viewedEpisodes, total: p.totalEpisodes } : undefined;
+  }
+
+  get malProgress(): { watched: number; total: number } | undefined {
+    const p = this.mal?.progression;
+    return p && p.totalEpisodes > 0 ? { watched: p.episodesWatched, total: p.totalEpisodes } : undefined;
+  }
+
+  // ── Storage / codec ───────────────────────────────────────────────────────
+
+  /** Size on disk with localized unit (GB / Go) */
+  get sizeOnDisk(): string | undefined {
+    const bytes = this.sonarr?.sizeOnDisk;
+    if (!bytes) return undefined;
+    const gb = bytes / 1_073_741_824;
+    const unit = this.translate.currentLang === 'fr' ? 'Go' : 'GB';
+    return `${gb.toFixed(1)} ${unit}`;
+  }
+
+  /** Fixed 3-segment codec breakdown: H.265 / H.264 / Other — null when no files.
+   *  Segments with 0% are omitted so only meaningful codecs are shown. */
+  get codecSegments(): Array<{ label: string; pct: number }> | null {
+    const dist = this.sonarr?.codecDistribution;
+    if (!dist) return null;
+    const total = Object.values(dist).reduce((s, v) => s + v, 0);
+    if (total === 0) return null;
+    let h265 = 0, h264 = 0, other = 0;
+    for (const [codec, count] of Object.entries(dist)) {
+      const c = codec.toLowerCase();
+      // H.265 aliases: hevc, h265, h.265, x265, x.265
+      if (c === 'hevc' || c === 'h265' || c === 'h.265' || c === 'x265' || c === 'x.265') h265 += count;
+      // H.264 aliases: avc, h264, h.264, x264, x.264, avc1
+      else if (c === 'avc' || c === 'h264' || c === 'h.264' || c === 'x264' || c === 'x.264' || c === 'avc1') h264 += count;
+      else other += count;
+    }
+    const pctH265  = Math.round((h265 / total) * 100);
+    const pctH264  = Math.round((h264 / total) * 100);
+    const pctOther = 100 - pctH265 - pctH264; // absorb rounding so segments always sum to 100
+    // Filter out 0% segments — only show codecs that are actually present
+    return [
+      { label: 'H.265', pct: pctH265  },
+      { label: 'H.264', pct: pctH264  },
+      { label: 'Other', pct: pctOther },
+    ].filter(s => s.pct > 0);
+  }
+
+  // ── URLs ──────────────────────────────────────────────────────────────────
+
+  get malUrl(): string | null {
+    return this.mal?.url ?? null;
+  }
+
+  get sonarrUrl(): string | null {
+    return this.sonarr?.url ?? null;
+  }
+
+  get plexUrl(): string | null {
+    return this.plex?.url ?? null;
+  }
+
+  // ── Interaction ───────────────────────────────────────────────────────────
+
+  toggleAltTitles(): void {
+    this.showAltTitles.update((v) => !v);
+  }
+
+  toggleDesc(): void {
+    this.descExpanded.update((v) => !v);
+  }
+
+  openLightbox(): void {
+    if (this.coverImageUrl) this.showLightbox.set(true);
+  }
+
+  closeLightbox(): void {
+    this.showLightbox.set(false);
+  }
+}

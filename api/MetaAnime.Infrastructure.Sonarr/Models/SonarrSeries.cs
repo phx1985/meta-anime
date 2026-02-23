@@ -85,5 +85,8 @@ public partial class SonarrSeries
     public int Id { get; set; }
     [JsonPropertyName("nextAiring")]
     public DateTime? NextAiring { get; set; }
+    /// <summary>Not from Sonarr API — populated by MetaAnime during sync and stored in cache.</summary>
+    [JsonPropertyName("metaCodecDistribution")]
+    public Dictionary<string, int> CodecDistribution { get; set; } = [];
 }
 

@@ -4,6 +4,7 @@ using MetaAnime.Application.Queries;
 using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
+using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Domain.Entities;
 using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.MyAnimeList.Models;
@@ -24,9 +25,9 @@ public class AnimeMediatorService(
     IAnimeMatchingService animeMatchingService,
     IAnimeService animeService,
     ICacheEntryService cacheEntryService,
+    IPropertyBagRepository propertyBagRepository,
     IOptions<MalSettings> malOptions,
     IOptions<SonarrSettings> sonarrOptions,
-    IOptions<PlexSettings> plexOptions,
     ILogger<AnimeMediatorService> logger)
     : IAnimeMediatorService
 {
@@ -35,17 +36,33 @@ public class AnimeMediatorService(
         PropertyNameCaseInsensitive = true
     };
 
+    /// <summary>Genre names that are always treated as NSFW regardless of the MAL <c>nsfw</c> field value.</summary>
+    private static readonly HashSet<string> NsfwGenres = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Ecchi", "Hentai", "Erotica"
+    };
+
     private readonly string myAnimeListHost = malOptions.Value.WebBaseUrl;
     private readonly string sonarrSeriesBaseUrl = !string.IsNullOrWhiteSpace(sonarrOptions.Value.RemoteUrl)
         ? sonarrOptions.Value.RemoteUrl
         : sonarrOptions.Value.Host;
 
-    private readonly string plexBaseUrl = $"{plexOptions.Value.Host}/desktop/#!/server/{plexAnimeSource.GetMachineIdentifierAsync().Result.Value}/details?key=%2Flibrary%2Fmetadata%2F";
+    // Lazily resolved the first time a URL is needed so the constructor stays synchronous.
+    private string? _plexBaseUrl;
+    private async Task<string> GetPlexBaseUrlAsync()
+    {
+        if (_plexBaseUrl is not null) return _plexBaseUrl;
+        var idResult = await plexAnimeSource.GetMachineIdentifierAsync();
+        _plexBaseUrl = $"https://app.plex.tv/desktop/#!/server/{idResult.Value}/details?key=%2Flibrary%2Fmetadata%2F";
+        return _plexBaseUrl;
+    }
 
     public async Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAllAsync(int page = 1, int pageSize = 100, AnimeFilters? filters = null, bool enriched = false)
     {
         try
         {
+            bool showNsfw = await IsNsfwAllowedAsync();
+
             AnimeSource? sourceFilter = filters?.Source?.ToLower() switch
             {
                 "plex" => AnimeSource.Plex,
@@ -55,7 +72,8 @@ public class AnimeMediatorService(
             };
             bool sortDescending = filters?.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) == true;
             bool needsInMemoryPostFilter = !string.IsNullOrWhiteSpace(filters?.Genre)
-                                         || !string.IsNullOrWhiteSpace(filters?.Status);
+                                         || !string.IsNullOrWhiteSpace(filters?.Status)
+                                         || !showNsfw;
 
             List<string> aniDbIds;
             int totalCount;
@@ -142,10 +160,9 @@ public class AnimeMediatorService(
                 }
                 else
                 {
-                    plexAnimes = group
+                    plexAnimes = (await Task.WhenAll(group
                         .Where(m => m.Anime?.AnimeSource == AnimeSource.Plex)
-                        .Select(m => CreatePlexAnimeInfoFromCache(m, plexCache))
-                        .ToList();
+                        .Select(m => CreatePlexAnimeInfoFromCacheAsync(m, plexCache)))).ToList();
                     malAnimes = group
                         .Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList)
                         .Select(m => CreateMalAnimeInfoFromCache(m, malCache))
@@ -156,9 +173,17 @@ public class AnimeMediatorService(
                         .ToList();
                 }
 
+                // Skip entries with no MAL association — they have no metadata to display.
+                if (malAnimes.Count == 0)
+                {
+                    logger.LogDebug(Constants.LogMessages.AnimeMediatorService.NoAnimeMappings, aniDbId);
+                    continue;
+                }
+
                 animeDtos.Add(new AnimeDetailsResponse(
                     aniDbId,
                     group.FirstOrDefault()?.Anime?.Title ?? "NO_TITLE",
+                    group.FirstOrDefault()?.Anime?.Description,
                     [.. plexAnimes],
                     [.. malAnimes],
                     [.. sonarrAnimes]
@@ -168,7 +193,7 @@ public class AnimeMediatorService(
             if (needsInMemoryPostFilter)
             {
                 // Apply genre/status filter in memory (only over the pre-filtered subset)
-                var filtered = ApplyFilters(animeDtos, filters, malCache);
+                var filtered = ApplyFilters(animeDtos, filters, malCache, showNsfw);
                 var sorted = ApplySorting(filtered, filters);
                 totalCount = sorted.Count();
                 var paged = sorted.Skip((page - 1) * pageSize).Take(pageSize);
@@ -189,9 +214,10 @@ public class AnimeMediatorService(
     private IEnumerable<AnimeDetailsResponse> ApplyFilters(
         IEnumerable<AnimeDetailsResponse> data,
         AnimeFilters? filters,
-        Dictionary<string, string> malCache)
+        Dictionary<string, string> malCache,
+        bool showNsfw = true)
     {
-        if (filters == null)
+        if (filters == null && showNsfw)
             return data;
 
         var result = data;
@@ -251,6 +277,37 @@ public class AnimeMediatorService(
             });
         }
 
+        if (!showNsfw)
+        {
+            result = result.Where(a =>
+            {
+                if (a.MalAnimes == null || !a.MalAnimes.Any())
+                    // No MAL data: cannot determine NSFW status; include by default
+                    // (content may only exist in Sonarr/Plex without a MAL entry).
+                    return true;
+
+                // Exclude the anime if *any* of its MAL entries is explicitly NSFW.
+                return !a.MalAnimes.Any(m =>
+                {
+                    if (string.IsNullOrWhiteSpace(m.Id))
+                        return false; // no ID — cannot check; treat as safe
+
+                    if (!malCache.TryGetValue(m.Id, out var malJson) || string.IsNullOrWhiteSpace(malJson))
+                        return false; // no cache entry — treat as safe
+
+                    try
+                    {
+                        var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, JsonOptions);
+                        return malAnime != null && IsNsfwAnime(malAnime);
+                    }
+                    catch (JsonException)
+                    {
+                        return false; // deserialisation error — treat as safe
+                    }
+                });
+            });
+        }
+
         return result;
     }
 
@@ -273,6 +330,8 @@ public class AnimeMediatorService(
     {
         try
         {
+            bool showNsfw = await IsNsfwAllowedAsync();
+
             // Execute all DB-backed queries sequentially — the scoped DbContext does not support concurrent operations.
             var allAnimesResult = await animeService.GetAllAsync();
             if (allAnimesResult.IsFailure)
@@ -338,6 +397,10 @@ public class AnimeMediatorService(
                     }
 
                     if (malAnime == null)
+                        continue;
+
+                    // Skip NSFW entries when NSFW content is disabled
+                    if (!showNsfw && IsNsfwAnime(malAnime))
                         continue;
 
                     foreach (var genre in malAnime.Genres ?? [])
@@ -444,6 +507,7 @@ public class AnimeMediatorService(
             var animeDto = new AnimeDetailsResponse(
                 aniDbId,
                 animeMappings.FirstOrDefault()?.Anime?.Title ?? "NO_TITLE",
+                animeMappings.FirstOrDefault()?.Anime?.Description,
                 [.. plexAnimes],
                 [.. malAnimes],
                 [.. sonarrAnimes]
@@ -570,8 +634,35 @@ public class AnimeMediatorService(
     }
 
     #region Private Helper Methods
-    private PlexAnimeInfo CreatePlexAnimeInfoFromCache(AnimeMapping mapping, Dictionary<string, string> plexCache)
+
+    /// <summary>
+    /// Returns true when NSFW content should be shown (setting is "true"),
+    /// false when it should be filtered out (setting is absent or "false").
+    /// </summary>
+    private async Task<bool> IsNsfwAllowedAsync()
     {
+        var entry = await propertyBagRepository.GetByKeyAsync(MetaAnime.Core.SettingsKeys.AppShowNsfw);
+        return entry?.Value?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    /// <summary>
+    /// Returns true when the MAL anime should be considered NSFW and filtered out.
+    /// Checks the MAL <c>nsfw</c> field AND explicit NSFW genres (Ecchi, Hentai, Erotica).
+    /// </summary>
+    private static bool IsNsfwAnime(MalAnime malAnime)
+    {
+        // MAL API nsfw field: "gray" or "black" = NSFW, "white" = SFW
+        var nsfw = malAnime.Nsfw;
+        if (!string.IsNullOrEmpty(nsfw) && !nsfw.Equals("white", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Some Ecchi/Hentai titles are rated "white" by MAL but carry explicit genres
+        return malAnime.Genres?.Any(g => NsfwGenres.Contains(g.Name)) == true;
+    }
+
+    private async Task<PlexAnimeInfo> CreatePlexAnimeInfoFromCacheAsync(AnimeMapping mapping, Dictionary<string, string> plexCache)
+    {
+        var baseUrl = await GetPlexBaseUrlAsync();
         if (plexCache.TryGetValue(mapping.Anime!.SourceId, out var rawData))
         {
             try
@@ -581,7 +672,7 @@ public class AnimeMediatorService(
                 {
                     return new PlexAnimeInfo(
                         plexMedia,
-                        plexBaseUrl,
+                        baseUrl,
                         plexMedia.ViewedLeafCount,
                         plexMedia.LeafCount
                     );
@@ -591,7 +682,7 @@ public class AnimeMediatorService(
             {
             }
         }
-        return new PlexAnimeInfo(mapping.Anime, plexBaseUrl);
+        return new PlexAnimeInfo(mapping.Anime, baseUrl);
     }
 
     private MalAnimeInfo CreateMalAnimeInfoFromCache(AnimeMapping mapping, Dictionary<string, string> malCache)
@@ -632,7 +723,7 @@ public class AnimeMediatorService(
                     {
                         logger.LogDebug(Constants.LogMessages.AnimeMediatorService.SonarrAnimeSeasons,
                             mapping.Anime.SourceId, sonarrSeries.Title, sonarrSeries.Seasons?.Count ?? 0);
-                        return new SonarrAnimeInfo(sonarrSeries, sonarrSeriesBaseUrl, new Dictionary<string, int>());
+                        return new SonarrAnimeInfo(sonarrSeries, sonarrSeriesBaseUrl, sonarrSeries.CodecDistribution);
                     }
                 }
                 catch (JsonException ex)
@@ -646,6 +737,7 @@ public class AnimeMediatorService(
 
     private async Task<List<PlexAnimeInfo>> FetchPlexAnimeDetailsAsync(IEnumerable<AnimeMapping> mappings)
     {
+        var baseUrl = await GetPlexBaseUrlAsync();
         var tasks = mappings.Select(async mapping =>
         {
             var plexResult = await plexAnimeSource.GetByIdAsync(mapping.Anime!.SourceId);
@@ -653,14 +745,14 @@ public class AnimeMediatorService(
             {
                 return new PlexAnimeInfo(
                     plexResult.Value,
-                    plexBaseUrl,
+                    baseUrl,
                     plexResult.Value.ViewedLeafCount,
                     plexResult.Value.LeafCount
                 );
             }
             else
             {
-                return new PlexAnimeInfo(mapping.Anime, plexBaseUrl);
+                return new PlexAnimeInfo(mapping.Anime, baseUrl);
             }
         });
 

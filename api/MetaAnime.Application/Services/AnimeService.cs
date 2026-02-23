@@ -3,10 +3,12 @@ using MetaAnime.Core.Interfaces.Mappers;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
+using MetaAnime.Core.Sync;
 using MetaAnime.Domain.Entities;
 using MetaAnime.Infrastructure.MyAnimeList.Models;
 using MetaAnime.Infrastructure.Plex.Models;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
+using System.Diagnostics;
 
 namespace MetaAnime.Application.Services;
 
@@ -109,26 +111,54 @@ public class AnimeService(
         }
     }
 
-    public async Task<Result<IEnumerable<Anime>>> RefreshData()
+    public async Task<Result<IEnumerable<Anime>>> RefreshData(ISyncProgressNotifier? progressNotifier = null)
     {
         try
         {
-            // Run sequentially: Sonarr and MAL source services each access
-            // IPropertyBagRepository which uses the scoped DbContext. Running
-            // them concurrently (Task.WhenAll) causes "second operation started
-            // on this context" errors because EF Core DbContext is not thread-safe.
+            // ── Step: Plex ───────────────────────────────────────────────────────
+            // Each source runs sequentially and emits its own Running/Done/Error
+            // SignalR messages so the UI can track per-provider progress.
+            var sw = Stopwatch.StartNew();
+
+            await NotifyAsync(progressNotifier, "plex", SyncStepState.Running, 0, sw);
             var plexResult = await plexAnimeSourceService.GetAllAsync();
             if (plexResult.IsFailure)
+            {
+                await NotifyAsync(progressNotifier, "plex", SyncStepState.Error, null, sw, plexResult.Error.Message);
                 return Result.Failure<IEnumerable<Anime>>(plexResult.Error);
+            }
+            await NotifyAsync(progressNotifier, "plex", SyncStepState.Done, 100, sw);
+            sw.Restart();
 
+            // ── Step: MAL ────────────────────────────────────────────────────────
+            await NotifyAsync(progressNotifier, "mal", SyncStepState.Running, 0, sw);
             var malResult = await malAnimeSourceService.GetAllAsync();
             if (malResult.IsFailure)
+            {
+                await NotifyAsync(progressNotifier, "mal", SyncStepState.Error, null, sw, malResult.Error.Message);
                 return Result.Failure<IEnumerable<Anime>>(malResult.Error);
+            }
+            await NotifyAsync(progressNotifier, "mal", SyncStepState.Done, 100, sw);
+            sw.Restart();
 
+            // ── Step: Sonarr ─────────────────────────────────────────────────────
+            await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Running, 0, sw);
             var sonarrResult = await sonarrAnimeSourceService.GetAllAsync();
             if (sonarrResult.IsFailure)
+            {
+                await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Error, null, sw, sonarrResult.Error.Message);
                 return Result.Failure<IEnumerable<Anime>>(sonarrResult.Error);
+            }
 
+            // Enrich each Sonarr series with codec distribution so it is included in the cache.
+            // Runs sequentially to respect the shared DbContext constraint.
+            foreach (var series in sonarrResult.Value)
+            {
+                series.CodecDistribution = await sonarrAnimeSourceService.GetCodecDistributionAsync(series.Id.ToString());
+            }
+            await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Done, 100, sw);
+
+            // ── Persist all sources to DB + cache ────────────────────────────────
             await animeRepository.BulkDeleteAllAsync();
             await animeRepository.BulkInsertAsync([.. plexResult.Value, .. malResult.Value, .. sonarrResult.Value]);
 
@@ -163,6 +193,16 @@ public class AnimeService(
         {
             return Result.Failure<IEnumerable<Anime>>(new(Constants.Errors.RefreshData, ex.Message));
         }
+    }
+
+    // ── Helper ────────────────────────────────────────────────────────────────
+
+    private static Task NotifyAsync(
+        ISyncProgressNotifier? notifier, string stepKey, SyncStepState state,
+        int? progressPercent, Stopwatch sw, string? errorMessage = null)
+    {
+        if (notifier is null) return Task.CompletedTask;
+        return notifier.NotifyAsync(new SyncProgressUpdate(stepKey, state, progressPercent, sw.ElapsedMilliseconds, errorMessage));
     }
 
     public async Task<Result<Anime?>> GetByIdAsync(Guid id)

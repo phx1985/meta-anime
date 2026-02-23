@@ -20,7 +20,7 @@ export class AnimeService {
     return this.http.get<AnimeStatisticsResponse>(`${this.base}/statistics`);
   }
 
-  getAnimes(page = 1, pageSize = 20, filters?: AnimeFilters, enriched?: boolean): Observable<PagedResponse<AnimeResponse>> {
+  getAnimes(page = 1, pageSize = 20, filters?: AnimeFilters, enriched?: boolean): Observable<PagedResponse<AnimeDetailsResponse>> {
     let params = new HttpParams()
       .set('page', page)
       .set('pageSize', pageSize);
@@ -31,7 +31,7 @@ export class AnimeService {
     if (filters?.sortBy) params = params.set('sortBy', filters.sortBy);
     if (filters?.sortOrder) params = params.set('sortOrder', filters.sortOrder);
     if (enriched !== undefined) params = params.set('enriched', enriched);
-    return this.http.get<PagedResponse<AnimeResponse>>(this.base, { params });
+    return this.http.get<PagedResponse<AnimeDetailsResponse>>(this.base, { params });
   }
 
   getAnime(id: string): Observable<AnimeDetailsResponse> {
