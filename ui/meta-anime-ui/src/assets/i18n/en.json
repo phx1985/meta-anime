@@ -105,7 +105,7 @@
       "lastSync": "Last sync",
       "neverSynced": "Never synced",
       "card": {
-        "title": "Synchronisation",
+        "title": "Synchronization",
         "desc": "Manually trigger or monitor the background sync. Logs remain visible until cleared."
       }
     },
