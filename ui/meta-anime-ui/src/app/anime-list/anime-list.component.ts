@@ -119,6 +119,9 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   /** Whether the filter body is expanded */
   filterOpen  = signal(true);
 
+  /** Whether the advanced filter sub-section is expanded */
+  advancedOpen = signal(false);
+
   /** Whether the genre dropdown is open */
   genreDropdownOpen = false;
 
@@ -167,6 +170,18 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     if (this.filterAiringStatus.length) n++;
     if (this.filterHasFile !== 'any') n++;
     if (this.filterCodec.length) n++;
+    return n;
+  }
+
+  /** Count of active advanced filters (drives the badge on the Advanced toggle) */
+  get advancedFilterCount(): number {
+    let n = 0;
+    if (this.filterGenre().length) n++;
+    if (this.filterWatchState.length) n++;
+    if (this.filterAiringStatus.length) n++;
+    if (this.filterHasFile !== 'any') n++;
+    if (this.filterCodec.length) n++;
+    if (this.sortBy !== 'title' || this.sortOrder !== 'asc') n++;
     return n;
   }
 
@@ -266,6 +281,12 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.filterOpen.update(v => !v);
   }
 
+  // ── Advanced section collapse ─────────────────────────────────────────────
+
+  toggleAdvanced(): void {
+    this.advancedOpen.update(v => !v);
+  }
+
   // ── Sort order toggle ─────────────────────────────────────────────────────
 
   toggleSortOrder(): void {
@@ -325,6 +346,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.sortOrder          = 'asc';
     this.searched.set(false);
     this.filterOpen.set(true);
+    this.advancedOpen.set(false);
     this.genreDropdownOpen  = false;
     this.showSavePreset     = false;
     this.newPresetName      = '';
@@ -350,6 +372,13 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.sortOrder          = f.sortOrder    ?? 'asc';
     this.showSavePreset     = false;
     this.newPresetName      = '';
+    // Open advanced section if the preset uses any advanced filter
+    const hasAdvanced = !!(
+      f.genre?.length || f.watchState?.length || f.airingStatus?.length ||
+      f.hasFile || f.codec?.length ||
+      (f.sortBy && f.sortBy !== 'title') || (f.sortOrder && f.sortOrder !== 'asc')
+    );
+    if (hasAdvanced) this.advancedOpen.set(true);
     this.search();
   }
 

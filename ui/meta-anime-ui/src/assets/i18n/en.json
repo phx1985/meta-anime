@@ -68,10 +68,15 @@
       "expandFilters": "Expand filters",
       "collapseFilters": "Collapse filters",
       "noFilterActive": "No filter selected",
-      "prompt": "Set your filters and press Search to explore your anime library."
+      "prompt": "Set your filters and press Search to explore your anime library.",
+      "advanced": "Advanced filters",
+      "hideAdvanced": "Hide advanced"
     },
     "presets": {
       "label": "Presets",
+      "suggestions": "Suggestions",
+      "myPresets": "My Presets",
+      "noPresets": "No saved presets yet",
       "saveAs": "Save as preset",
       "namePlaceholder": "Preset name…",
       "save": "Save",

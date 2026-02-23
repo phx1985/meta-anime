@@ -68,10 +68,15 @@
       "expandFilters": "Développer les filtres",
       "collapseFilters": "Réduire les filtres",
       "noFilterActive": "Aucun filtre sélectionné",
-      "prompt": "Définissez vos filtres et appuyez sur Rechercher pour explorer votre bibliothèque."
+      "prompt": "Définissez vos filtres et appuyez sur Rechercher pour explorer votre bibliothèque.",
+      "advanced": "Filtres avancés",
+      "hideAdvanced": "Masquer les avancés"
     },
     "presets": {
       "label": "Présélections",
+      "suggestions": "Suggestions",
+      "myPresets": "Mes présélections",
+      "noPresets": "Aucune présélection sauvegardée",
       "saveAs": "Enregistrer comme présélection",
       "namePlaceholder": "Nom de la présélection…",
       "save": "Enregistrer",
