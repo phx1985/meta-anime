@@ -117,7 +117,11 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
       elements.length - 1,
       Math.max(0, elements.length - Math.floor(PAGE_SIZE / 2))
     );
-    const targetEl = elements[sentinelIdx].nativeElement;
+    // `:host` uses `display: contents` and has no layout box, so IntersectionObserver
+    // requires a real rendered element — use the first child (the <article>).
+    const hostEl = elements[sentinelIdx].nativeElement;
+    const targetEl = hostEl.firstElementChild;
+    if (!targetEl) return;
 
     this.scrollObserver = new IntersectionObserver(
       (entries) => {

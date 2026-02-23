@@ -129,6 +129,7 @@
   display: grid;
   align-items: stretch;
   gap: 1.25rem;
+  transition: grid-template-columns 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 
   // Default: 2 columns
   grid-template-columns: repeat(2, 1fr);

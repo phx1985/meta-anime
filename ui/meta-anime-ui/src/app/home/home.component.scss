@@ -304,4 +304,6 @@ $timing-fns: (
 .stat-card--matched .stat-value { color: #22c55e; }
 .stat-card--plex     .stat-value { color: #e5a00d; }
 .stat-card--sonarr   .stat-value { color: #3b82f6; }
-.stat-card--mal      .stat-value { color: #ef4444; }
+.stat-card--mal      .stat-value { color: #2e51a2; }
+
+[data-theme='dark'] .stat-card--mal .stat-value { color: #5b82e0; }
