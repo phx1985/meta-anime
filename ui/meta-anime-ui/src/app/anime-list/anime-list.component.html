@@ -264,7 +264,7 @@
                 </div>
               </div>
 
-              <!-- ── Row 3: Airing · Codec · Has file ──────────────────── -->
+              <!-- ── Row 3: Airing · Media Type · Codec · Has file ──────────── -->
               <div class="filter-row">
                 <div class="filter-field filter-field--pills">
                   <span class="filter-label">{{ 'animeList.filter.airingStatus' | translate }}</span>
@@ -276,6 +276,21 @@
                         [class.filter-pill--active]="filterAiringStatus.includes(s.value)"
                         (click)="filterAiringStatus = togglePill(filterAiringStatus, s.value)">
                         {{ s.labelKey | translate }}
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <div class="filter-field filter-field--pills">
+                  <span class="filter-label">{{ 'animeList.filter.mediaType' | translate }}</span>
+                  <div class="filter-pills">
+                    @for (t of mediaTypeOptions; track t.value) {
+                      <button
+                        type="button"
+                        class="filter-pill"
+                        [class.filter-pill--active]="filterMediaType.includes(t.value)"
+                        (click)="filterMediaType = togglePill(filterMediaType, t.value)">
+                        {{ t.labelKey | translate }}
                       </button>
                     }
                   </div>

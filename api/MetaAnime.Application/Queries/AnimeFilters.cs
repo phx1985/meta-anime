@@ -10,5 +10,6 @@ public record AnimeFilters(
     string? SortOrder = null,
     string[]? AiringStatus = null,
     bool? HasFile = null,
-    string[]? Codec = null
+    string[]? Codec = null,
+    string[]? MediaType = null
 );

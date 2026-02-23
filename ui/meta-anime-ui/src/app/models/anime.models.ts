@@ -53,6 +53,7 @@ export interface MalAnimeInfo {
   alternativeTitles?: MalAlternativeTitles;
   coverImageUrl?: string;
   status?: string;
+  mediaType?: string;
 }
 
 export interface SonarrAnimeInfo {
@@ -123,6 +124,7 @@ export interface AnimeFilters {
   airingStatus?: string[];
   hasFile?: boolean;
   codec?: string[];
+  mediaType?: string[];
 }
 
 /** Serialisable snapshot of the filter panel state for saved presets. */
@@ -134,6 +136,7 @@ export interface SavedFilterState {
   airingStatus?: string[];
   hasFile?: 'any' | 'yes' | 'no';
   codec?: string[];
+  mediaType?: string[];
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }

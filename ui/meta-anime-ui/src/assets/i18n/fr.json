@@ -61,6 +61,7 @@
       "hasFileYes": "Avec fichiers",
       "hasFileNo": "Sans fichiers",
       "codec": "Codec",
+      "mediaType": "Type de média",
       "any": "Tous",
       "clear": "Effacer la sélection",
       "search": "Rechercher",
@@ -128,7 +129,16 @@
       "not_yet_aired": "À venir"
     },
     "noFiles": "Aucun fichier",
-    "sizeOnDisk": "Taille sur disque"
+    "sizeOnDisk": "Taille sur disque",
+    "mediaType": {
+      "tv": "Série TV",
+      "movie": "Film",
+      "ova": "OVA",
+      "ona": "ONA",
+      "special": "Spécial",
+      "music": "Musique",
+      "unknown": "Inconnu"
+    }
   },
   "settings": {
     "title": "Paramètres",

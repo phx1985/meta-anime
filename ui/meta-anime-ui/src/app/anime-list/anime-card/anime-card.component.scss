@@ -267,6 +267,12 @@
     border: 1px solid color-mix(in srgb, var(--text-muted) 20%, transparent);
   }
 
+  &--media-type {
+    background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+    color: var(--accent-primary);
+    border: 1px solid color-mix(in srgb, var(--accent-primary) 25%, transparent);
+  }
+
   &--season {
     background: color-mix(in srgb, var(--accent-primary) 15%, transparent);
     color: var(--accent-primary);

@@ -112,6 +112,17 @@ export class AnimeCardComponent {
     return this.mal?.status;
   }
 
+  /** MAL media type (tv / ova / movie / special / ona / music / unknown) */
+  get mediaType(): string | undefined {
+    return this.mal?.mediaType;
+  }
+
+  mediaTypeLabel(type: string): string {
+    const key = `animeCard.mediaType.${type}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : type.toUpperCase();
+  }
+
   viewStateLabel(state: string): string {
     const key = `animeCard.malStatus.${state}`;
     const t = this.translate.instant(key);
