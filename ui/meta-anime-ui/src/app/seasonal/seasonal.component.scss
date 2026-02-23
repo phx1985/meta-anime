@@ -82,108 +82,134 @@
   margin: 0;
 }
 
-// ─── Season tabs row ─────────────────────────────────────────────────────────
+// ─── Season selector ─────────────────────────────────────────────────────────
 
-.season-tabs-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-// ─── Season tabs ─────────────────────────────────────────────────────────────
-
-.season-tabs {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  flex: 1;
-}
-
-.season-tab {
+.season-selector {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+// ── Year picker ──────────────────────────────────────────────────────────────
+
+.year-picker {
+  display: flex;
   align-items: center;
-  padding: 0.5rem 1.25rem;
-  border-radius: 10px;
+  gap: 0.4rem;
+}
+
+.year-nav {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+
+  svg { width: 14px; height: 14px; }
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent-primary);
+    background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+    transform: scale(1.08);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+}
+
+.year-display {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9px;
   border: 1px solid var(--card-border);
   background: var(--card-bg);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
-  gap: 0.1rem;
-  min-width: 80px;
+  min-width: 90px;
+  transition: border-color 0.15s, background 0.15s;
 
   &:hover {
     border-color: var(--accent-primary);
     background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
-    transform: translateY(-2px);
-  }
-
-  // Active tab permanently shows the hover color; no pointer (clicking does nothing)
-  &--active {
-    border-color: var(--accent-primary);
-    background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 30%, transparent);
-    cursor: default;
-    transform: none;
-
-    &:hover {
-      transform: none;
-    }
   }
 }
 
-.tab-season {
-  font-size: 0.8rem;
+.year-select {
+  // Invisible native select sits on top to capture interaction
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: none;
+}
+
+.year-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.year-chevron {
+  width: 10px;
+  height: 6px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+// ── Season pills ─────────────────────────────────────────────────────────────
+
+.season-pills {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.season-pill {
+  padding: 0.4rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-primary);
-
-  .season-tab--active & {
-    color: var(--accent-primary);
-  }
-}
-
-.tab-year {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-
-  .season-tab--active & {
-    color: var(--accent-primary);
-    opacity: 0.8;
-  }
-}
-
-// ─── Load more seasons button ─────────────────────────────────────────────────
-
-.btn-load-seasons {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.5rem 1rem;
-  border-radius: 10px;
-  border: 1px dashed var(--card-border);
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  font-weight: 600;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
   white-space: nowrap;
-  align-self: stretch;
 
-  &:hover {
+  &:hover:not(.season-pill--active) {
     border-color: var(--accent-primary);
-    color: var(--accent-primary);
     background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+    color: var(--accent-primary);
+    transform: translateY(-1px);
   }
 
-  &__icon {
-    width: 14px;
-    height: 14px;
-    flex-shrink: 0;
+  &--active {
+    border-color: var(--accent-primary);
+    background: color-mix(in srgb, var(--accent-primary) 18%, transparent);
+    color: var(--accent-primary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 25%, transparent);
+    cursor: default;
+    transform: none;
   }
 }
 

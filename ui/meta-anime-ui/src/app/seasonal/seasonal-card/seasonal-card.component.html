@@ -23,7 +23,11 @@
       <!-- ── Header ──────────────────────────────────────────────────────── -->
       <div class="card-head">
         <div class="title-block">
-          <h3 class="card-title">{{ displayTitle }}</h3>
+          <!-- Title clicks open the MAL page -->
+          <h3 class="card-title"
+              [class.card-title--link]="!!malUrl"
+              (click)="openMalPage()"
+              [title]="malUrl ? ('seasonal.openMal' | translate) : ''">{{ displayTitle }}</h3>
         </div>
 
         <!-- Status pills -->
@@ -78,26 +82,35 @@
   <div class="card-footer">
     <div class="footer-actions">
 
-      <!-- Plex icon: greyed out with gradient fade if not in Plex -->
-      <a class="action action--plex"
-         [class.action--in-library]="anime.inPlex"
-         [class.action--not-in-library]="!anime.inPlex"
-         [attr.href]="anime.inPlex ? (anime.plexUrl ?? null) : null"
-         [attr.target]="anime.inPlex ? '_blank' : null"
-         rel="noopener noreferrer"
-         [title]="anime.inPlex ? ('animeCard.openPlex' | translate) : ('seasonal.notInPlex' | translate)">
-        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
-          <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M6.5 5.5l5 2.5-5 2.5V5.5z" fill="currentColor"/>
-        </svg>
-        Plex
-      </a>
+      <!-- Plex: solid brand color + clickable when in Plex, greyed + faded when not -->
+      @if (anime.inPlex && anime.plexUrl) {
+        <a class="action action--plex action--in-library"
+           [href]="anime.plexUrl"
+           target="_blank" rel="noopener noreferrer"
+           [title]="'animeCard.openPlex' | translate">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
+            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M6.5 5.5l5 2.5-5 2.5V5.5z" fill="currentColor"/>
+          </svg>
+          Plex
+        </a>
+      } @else {
+        <span class="action action--plex action--not-in-library"
+              [title]="'seasonal.notInPlex' | translate">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
+            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M6.5 5.5l5 2.5-5 2.5V5.5z" fill="currentColor"/>
+          </svg>
+          Plex
+        </span>
+      }
 
-      <!-- Sonarr: link if in library, or "+" add button -->
+      <!-- Sonarr: solid brand color + clickable when in Sonarr, or "+" add button -->
       @if (anime.inSonarr) {
         <a class="action action--sonarr action--in-library"
            [attr.href]="anime.sonarrUrl ?? null"
-           target="_blank" rel="noopener noreferrer"
+           [attr.target]="anime.sonarrUrl ? '_blank' : null"
+           [attr.rel]="anime.sonarrUrl ? 'noopener noreferrer' : null"
            [title]="'animeCard.openSonarr' | translate">
           <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
             <rect x="1.5" y="3" width="13" height="9" rx="1.2" stroke="currentColor" stroke-width="1.4"/>
@@ -107,14 +120,14 @@
         </a>
       } @else {
         <div class="action-group">
-          <a class="action action--sonarr action--not-in-library"
-             [title]="'seasonal.notInSonarr' | translate">
+          <span class="action action--sonarr action--not-in-library"
+                [title]="'seasonal.notInSonarr' | translate">
             <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
               <rect x="1.5" y="3" width="13" height="9" rx="1.2" stroke="currentColor" stroke-width="1.4"/>
               <path d="M5.5 13.5h5M8 12v1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
             </svg>
             Sonarr
-          </a>
+          </span>
           <button type="button" class="add-btn add-btn--sonarr" (click)="openSonarrModal()"
                   [title]="'seasonal.addToSonarr' | translate">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="add-btn__icon">
@@ -124,28 +137,26 @@
         </div>
       }
 
-      <!-- MAL: link if in MAL list, or "+" add button -->
+      <!-- MAL: solid brand color + clickable when in MAL list, or "+" add button -->
       @if (anime.inMal) {
-        @if (malUrl) {
-          <a class="action action--mal action--in-library"
-             [href]="malUrl"
-             target="_blank" rel="noopener noreferrer"
-             [title]="'animeCard.openMal' | translate">
-            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
-              <path d="M3 4h10M3 7h10M3 10h7M3 13h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-            </svg>
-            MAL
-          </a>
-        }
+        <a class="action action--mal action--in-library"
+           [attr.href]="malUrl ?? null"
+           target="_blank" rel="noopener noreferrer"
+           [title]="'animeCard.openMal' | translate">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
+            <path d="M3 4h10M3 7h10M3 10h7M3 13h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          MAL
+        </a>
       } @else {
         <div class="action-group">
-          <a class="action action--mal action--not-in-library"
-             [title]="'seasonal.notInMal' | translate">
+          <span class="action action--mal action--not-in-library"
+                [title]="'seasonal.notInMal' | translate">
             <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
               <path d="M3 4h10M3 7h10M3 10h7M3 13h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
             </svg>
             MAL
-          </a>
+          </span>
           <button type="button" class="add-btn add-btn--mal" (click)="openMalModal()"
                   [title]="'seasonal.addToMal' | translate">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="add-btn__icon">
@@ -174,7 +185,7 @@
 <!-- ── Add to Sonarr modal ───────────────────────────────────────────────── -->
 @if (showSonarrModal()) {
   <div class="modal-overlay" (click)="closeSonarrModal()" role="dialog" aria-modal="true">
-    <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal modal--wide" (click)="$event.stopPropagation()">
       <div class="modal__head">
         <span class="modal__title">{{ 'seasonal.addToSonarr' | translate }}</span>
         <button class="modal__close" type="button" (click)="closeSonarrModal()" aria-label="Close">
@@ -184,41 +195,98 @@
         </button>
       </div>
 
-      <p class="modal__anime-title">{{ anime.title }}</p>
-
-      @if (sonarrLoadingOptions()) {
-        <div class="modal__loading">
-          <div class="loading-spinner loading-spinner--sm"></div>
-        </div>
-      } @else if (sonarrSuccess()) {
+      @if (sonarrSuccess()) {
         <div class="modal__success">✓ {{ 'seasonal.sonarrAddSuccess' | translate }}</div>
       } @else {
         <div class="modal__body">
-          <label class="modal__label">{{ 'seasonal.rootFolder' | translate }}
-            <select class="modal__select" [ngModel]="sonarrRootFolder()" (ngModelChange)="sonarrRootFolder.set($event)">
-              @for (f of sonarrRootFolders(); track f.id) {
-                <option [value]="f.path">{{ f.path }}</option>
+
+          <!-- Search box -->
+          <label class="modal__label">{{ 'seasonal.sonarrSearch' | translate }}
+            <div class="search-input-wrap">
+              <input class="modal__input"
+                     type="search"
+                     [ngModel]="sonarrSearchTerm()"
+                     (ngModelChange)="onSonarrSearchInput($event)"
+                     [placeholder]="'seasonal.sonarrSearchPlaceholder' | translate"
+                     autocomplete="off" />
+              @if (sonarrSearching()) {
+                <div class="search-spinner"></div>
               }
-            </select>
+            </div>
           </label>
-          <label class="modal__label">{{ 'seasonal.qualityProfile' | translate }}
-            <select class="modal__select" [ngModel]="sonarrProfileId()" (ngModelChange)="sonarrProfileId.set(+$event)">
-              @for (p of sonarrQualityProfiles(); track p.id) {
-                <option [value]="p.id">{{ p.name }}</option>
+
+          @if (sonarrSearchError()) {
+            <p class="modal__error">{{ sonarrSearchError() }}</p>
+          }
+
+          <!-- Search results -->
+          @if (sonarrSearchResults().length > 0) {
+            <div class="search-results">
+              @for (item of sonarrSearchResults(); track item.tvdbId) {
+                <button type="button"
+                        class="search-result"
+                        [class.search-result--selected]="sonarrSelected()?.tvdbId === item.tvdbId"
+                        (click)="selectSonarrResult(item)">
+                  @if (item.remotePoster) {
+                    <img class="search-result__poster" [src]="item.remotePoster" [alt]="item.title" loading="lazy" />
+                  } @else {
+                    <div class="search-result__poster search-result__poster--empty">{{ item.title.charAt(0) }}</div>
+                  }
+                  <div class="search-result__info">
+                    <span class="search-result__title">{{ item.title }}</span>
+                    @if (item.year) {
+                      <span class="search-result__year">{{ item.year }}</span>
+                    }
+                    @if (item.overview) {
+                      <p class="search-result__overview">{{ item.overview }}</p>
+                    }
+                  </div>
+                  @if (sonarrSelected()?.tvdbId === item.tvdbId) {
+                    <svg class="search-result__check" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                      <path d="M3 8l3.5 3.5L13 4"/>
+                    </svg>
+                  }
+                </button>
               }
-            </select>
-          </label>
-          <p class="modal__info">{{ 'seasonal.sonarrAutoSettings' | translate }}</p>
+            </div>
+          }
+
+          <!-- Options (shown when a result is selected) -->
+          @if (sonarrSelected()) {
+            <div class="modal__options">
+              @if (sonarrLoadingOptions()) {
+                <div class="modal__loading"><div class="loading-spinner loading-spinner--sm"></div></div>
+              } @else {
+                <label class="modal__label">{{ 'seasonal.rootFolder' | translate }}
+                  <select class="modal__select" [ngModel]="sonarrRootFolder()" (ngModelChange)="sonarrRootFolder.set($event)">
+                    @for (f of sonarrRootFolders(); track f.id) {
+                      <option [value]="f.path">{{ f.path }}</option>
+                    }
+                  </select>
+                </label>
+                <label class="modal__label">{{ 'seasonal.qualityProfile' | translate }}
+                  <select class="modal__select" [ngModel]="sonarrProfileId()" (ngModelChange)="sonarrProfileId.set(+$event)">
+                    @for (p of sonarrQualityProfiles(); track p.id) {
+                      <option [value]="p.id">{{ p.name }}</option>
+                    }
+                  </select>
+                </label>
+                <p class="modal__info">{{ 'seasonal.sonarrAutoSettings' | translate }}</p>
+              }
+            </div>
+          }
+
           @if (sonarrError()) {
             <p class="modal__error">{{ sonarrError() }}</p>
           }
         </div>
+
         <div class="modal__footer">
           <button class="modal__btn modal__btn--cancel" type="button" (click)="closeSonarrModal()">
             {{ 'common.cancel' | translate }}
           </button>
           <button class="modal__btn modal__btn--confirm" type="button"
-                  [disabled]="sonarrAdding()"
+                  [disabled]="sonarrAdding() || !sonarrSelected()"
                   (click)="confirmAddSonarr()">
             @if (sonarrAdding()) {
               <div class="loading-spinner loading-spinner--sm"></div>

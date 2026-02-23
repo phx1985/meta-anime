@@ -10,6 +10,8 @@ import {
   signal,
   computed,
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
@@ -18,101 +20,80 @@ import { SeasonalAnimeItem, SeasonName } from '../models/anime.models';
 import { SeasonalCardComponent } from './seasonal-card/seasonal-card.component';
 
 const PAGE_SIZE = 20;
-const SEASONS_PER_LOAD = 4;
+const MIN_YEAR = 1963;
 
-export interface SeasonTab {
-  year: number;
+export interface SeasonPill {
   season: SeasonName;
   labelKey: string;
 }
 
-/** Returns the current season name based on the month. */
+const ALL_SEASONS: SeasonPill[] = [
+  { season: 'winter', labelKey: 'seasonal.season.winter' },
+  { season: 'spring', labelKey: 'seasonal.season.spring' },
+  { season: 'summer', labelKey: 'seasonal.season.summer' },
+  { season: 'fall',   labelKey: 'seasonal.season.fall'   },
+];
+
+/** Returns the current season name based on the month (1–12). */
 function getCurrentSeason(month: number): SeasonName {
-  if (month >= 1 && month <= 3) return 'winter';
-  if (month >= 4 && month <= 6) return 'spring';
-  if (month >= 7 && month <= 9) return 'summer';
+  if (month <= 3) return 'winter';
+  if (month <= 6) return 'spring';
+  if (month <= 9) return 'summer';
   return 'fall';
-}
-
-/** Builds N seasons starting from the given year/seasonIdx, going back in time. */
-function buildSeasons(count: number, fromYear: number, fromSeasonIdx: number): SeasonTab[] {
-  const seasons: SeasonName[] = ['winter', 'spring', 'summer', 'fall'];
-  const seasonLabelKeys: Record<SeasonName, string> = {
-    winter: 'seasonal.season.winter',
-    spring: 'seasonal.season.spring',
-    summer: 'seasonal.season.summer',
-    fall:   'seasonal.season.fall',
-  };
-
-  let year = fromYear;
-  let seasonIdx = fromSeasonIdx;
-  const result: SeasonTab[] = [];
-
-  for (let i = 0; i < count; i++) {
-    result.push({ year, season: seasons[seasonIdx], labelKey: seasonLabelKeys[seasons[seasonIdx]] });
-    seasonIdx--;
-    if (seasonIdx < 0) {
-      seasonIdx = 3;
-      year--;
-    }
-  }
-  return result;
 }
 
 @Component({
   selector: 'app-seasonal',
   standalone: true,
-  imports: [TranslatePipe, SeasonalCardComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, SeasonalCardComponent],
   templateUrl: './seasonal.component.html',
   styleUrl: './seasonal.component.scss',
 })
 export class SeasonalComponent implements AfterViewInit, OnDestroy {
-  private animeService   = inject(AnimeService);
+  private animeService    = inject(AnimeService);
   private settingsService = inject(SettingsService);
-  private destroyRef     = inject(DestroyRef);
+  private destroyRef      = inject(DestroyRef);
 
   @ViewChildren('seasonalCard', { read: ElementRef }) cardRefs!: QueryList<ElementRef>;
 
-  // Determine starting point once
-  private readonly _now = new Date();
-  private readonly _initYear = this._now.getFullYear();
-  private readonly _initSeasonIdx: number;
+  private readonly _now        = new Date();
+  private readonly _maxYear    = this._now.getFullYear();
+  private readonly _initSeason = getCurrentSeason(this._now.getMonth() + 1);
 
-  /** All currently loaded season tabs (starts with 4, grows by SEASONS_PER_LOAD). */
-  tabs = signal<SeasonTab[]>([]);
+  // Year picker
+  readonly allSeasons = ALL_SEASONS;
+  readonly minYear    = MIN_YEAR;
+  readonly maxYear    = this._maxYear;
 
-  /** Whether there could be more seasons to load (earliest anime is ~1963). */
-  readonly canLoadMoreSeasons = computed(() => {
-    const last = this.tabs()[this.tabs().length - 1];
-    return last ? last.year > 1963 : false;
-  });
+  /** Array of years from minYear to maxYear (reversed: newest first). Used for <select>. */
+  readonly yearOptions = Array.from(
+    { length: this._maxYear - MIN_YEAR + 1 },
+    (_, i) => this._maxYear - i
+  );
 
-  activeTab    = signal<SeasonTab | null>(null);
+  selectedYear   = signal(this._maxYear);
+  selectedSeason = signal<SeasonName>(this._initSeason);
+
+  readonly canGoPrev = computed(() => this.selectedYear() > MIN_YEAR);
+  readonly canGoNext = computed(() => this.selectedYear() < this._maxYear);
+
   animes       = signal<SeasonalAnimeItem[]>([]);
   loading      = signal(false);
   loadingMore  = signal(false);
   error        = signal(false);
   allLoaded    = signal(false);
-  showNsfw     = signal(false);
 
   private currentPage = 1;
   private scrollObserver: IntersectionObserver | null = null;
-  private _nextSeasonIdx: number;
-  private _nextYear: number;
 
   constructor() {
-    const seasons: SeasonName[] = ['winter', 'spring', 'summer', 'fall'];
-    this._initSeasonIdx = seasons.indexOf(getCurrentSeason(this._now.getMonth() + 1));
-    this._nextSeasonIdx = this._initSeasonIdx;
-    this._nextYear      = this._initYear;
-
-    // Load initial 4 tabs
-    this._appendSeasons(SEASONS_PER_LOAD);
-
-    // Fetch NSFW setting
+    // Fetch NSFW setting (not used locally but kept for future)
     this.settingsService.getShowNsfw()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(v => this.showNsfw.set(v));
+      .subscribe();
+
+    // Initial load
+    this._loadCurrent(true);
   }
 
   ngAfterViewInit(): void {
@@ -125,39 +106,38 @@ export class SeasonalComponent implements AfterViewInit, OnDestroy {
     this.scrollObserver?.disconnect();
   }
 
-  selectTab(tab: SeasonTab): void {
-    const active = this.activeTab();
-    if (active && active.year === tab.year && active.season === tab.season) return;
-    this.activeTab.set(tab);
-    this.loadSeason(tab, true);
+  // ── Year navigation ──────────────────────────────────────────────────────
+  prevYear(): void {
+    if (!this.canGoPrev()) return;
+    this.selectedYear.update(y => y - 1);
+    this._loadCurrent(true);
   }
 
-  loadMoreSeasons(): void {
-    if (!this.canLoadMoreSeasons()) return;
-    this._appendSeasons(SEASONS_PER_LOAD);
+  nextYear(): void {
+    if (!this.canGoNext()) return;
+    this.selectedYear.update(y => y + 1);
+    this._loadCurrent(true);
   }
 
-  private _appendSeasons(count: number): void {
-    const newTabs = buildSeasons(count, this._nextYear, this._nextSeasonIdx);
-    const seasons: SeasonName[] = ['winter', 'spring', 'summer', 'fall'];
-    // Advance the pointer past the newly appended tabs
-    const last = newTabs[newTabs.length - 1];
-    let idx = seasons.indexOf(last.season) - 1;
-    let year = last.year;
-    if (idx < 0) { idx = 3; year--; }
-    this._nextSeasonIdx = idx;
-    this._nextYear = year;
-
-    this.tabs.update(existing => [...existing, ...newTabs]);
-
-    // Auto-select first tab on initial load
-    if (this.activeTab() === null && newTabs.length > 0) {
-      this.activeTab.set(newTabs[0]);
-      this.loadSeason(newTabs[0], true);
-    }
+  setYear(year: number): void {
+    const clamped = Math.max(MIN_YEAR, Math.min(this._maxYear, year));
+    if (clamped === this.selectedYear()) return;
+    this.selectedYear.set(clamped);
+    this._loadCurrent(true);
   }
 
-  private loadSeason(tab: SeasonTab, reset: boolean): void {
+  // ── Season selection ─────────────────────────────────────────────────────
+  selectSeason(season: SeasonName): void {
+    if (this.selectedSeason() === season) return;
+    this.selectedSeason.set(season);
+    this._loadCurrent(true);
+  }
+
+  // ── Loading ──────────────────────────────────────────────────────────────
+  private _loadCurrent(reset: boolean): void {
+    const year   = this.selectedYear();
+    const season = this.selectedSeason();
+
     if (reset) {
       this.currentPage = 1;
       this.animes.set([]);
@@ -168,7 +148,7 @@ export class SeasonalComponent implements AfterViewInit, OnDestroy {
     }
     this.error.set(false);
 
-    this.animeService.getSeasonalAnimes(tab.year, tab.season, this.currentPage, PAGE_SIZE)
+    this.animeService.getSeasonalAnimes(year, season, this.currentPage, PAGE_SIZE)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: data => {
@@ -187,10 +167,8 @@ export class SeasonalComponent implements AfterViewInit, OnDestroy {
 
   private loadNextPage(): void {
     if (this.loadingMore() || this.allLoaded()) return;
-    const tab = this.activeTab();
-    if (!tab) return;
     this.currentPage++;
-    this.loadSeason(tab, false);
+    this._loadCurrent(false);
   }
 
   private setupScrollSentinel(): void {
@@ -206,7 +184,7 @@ export class SeasonalComponent implements AfterViewInit, OnDestroy {
       elements.length - 1,
       Math.max(0, elements.length - Math.floor(PAGE_SIZE / 2))
     );
-    const hostEl = elements[sentinelIdx].nativeElement;
+    const hostEl   = elements[sentinelIdx].nativeElement;
     const targetEl = hostEl.firstElementChild;
     if (!targetEl) return;
 

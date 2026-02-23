@@ -294,6 +294,35 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options, IPropert
         var added = JsonSerializer.Deserialize<SonarrSeries>(addResp.Content!, jsonOptions)!;
         return Result.Success(new SonarrAddedSeries(added.Id, added.Title, added.TitleSlug ?? added.Id.ToString()));
     }
+
+    public async Task<Result<IList<SonarrLookupItem>>> SearchLookupAsync(string term)
+    {
+        var (host, apiKey, _, isConfigured) = await GetSettingsAsync();
+        if (!isConfigured)
+            return Result.Failure<IList<SonarrLookupItem>>(new(Constants.Errors.NotConfigured, "Sonarr is not configured"));
+
+        var client = new RestClient(host);
+        var req = new RestRequest("api/v3/series/lookup");
+        req.AddParameter("apikey", apiKey);
+        req.AddParameter("term", term);
+
+        var resp = await client.ExecuteAsync(req);
+        if (!resp.IsSuccessful || string.IsNullOrEmpty(resp.Content))
+            return Result.Failure<IList<SonarrLookupItem>>(new("sonarr.lookup", resp.Content ?? "Lookup failed"));
+
+        var results = JsonSerializer.Deserialize<SonarrSeries[]>(resp.Content, jsonOptions) ?? [];
+        IList<SonarrLookupItem> items = results.Select(s => new SonarrLookupItem(
+            s.TvdbId,
+            s.Title,
+            s.Year > 0 ? s.Year : null,
+            s.TitleSlug,
+            s.Images?.FirstOrDefault(i => i.CoverType == "poster")?.RemoteUrl
+                ?? s.Images?.FirstOrDefault()?.RemoteUrl,
+            s.Overview
+        )).ToList();
+
+        return Result.Success(items);
+    }
     #endregion
 
     #region Private Methods

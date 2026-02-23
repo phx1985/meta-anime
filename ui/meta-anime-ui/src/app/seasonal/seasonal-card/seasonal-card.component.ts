@@ -9,9 +9,8 @@ import { SeasonalAnimeItem } from '../../models/anime.models';
 import { ScoreBadgeComponent } from '../../anime-list/anime-card/score-badge/score-badge.component';
 import { SonarrService } from '../../services/sonarr.service';
 import { AnimeService } from '../../services/anime.service';
-import { SonarrRootFolder, SonarrQualityProfile } from '../../models/sonarr.models';
-
-const TRUNCATE_AT = 180;
+import { SonarrRootFolder, SonarrQualityProfile, SonarrLookupResult } from '../../models/sonarr.models';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, of, catchError } from 'rxjs';
 
 @Component({
   selector: 'app-seasonal-card',
@@ -40,15 +39,22 @@ export class SeasonalCardComponent implements OnInit {
   showLightbox  = signal(false);
 
   // ── Sonarr add modal ─────────────────────────────────────────────────────
-  showSonarrModal  = signal(false);
-  sonarrRootFolders   = signal<SonarrRootFolder[]>([]);
+  showSonarrModal       = signal(false);
+  sonarrRootFolders     = signal<SonarrRootFolder[]>([]);
   sonarrQualityProfiles = signal<SonarrQualityProfile[]>([]);
-  sonarrLoadingOptions = signal(false);
-  sonarrAdding     = signal(false);
-  sonarrError      = signal('');
-  sonarrSuccess    = signal(false);
-  sonarrRootFolder = signal('');
-  sonarrProfileId  = signal(0);
+  sonarrLoadingOptions  = signal(false);
+  sonarrSearchTerm      = signal('');
+  sonarrSearchResults   = signal<SonarrLookupResult[]>([]);
+  sonarrSearching       = signal(false);
+  sonarrSearchError     = signal('');
+  sonarrSelected        = signal<SonarrLookupResult | null>(null);
+  sonarrAdding          = signal(false);
+  sonarrError           = signal('');
+  sonarrSuccess         = signal(false);
+  sonarrRootFolder      = signal('');
+  sonarrProfileId       = signal(0);
+
+  private sonarrSearch$ = new Subject<string>();
 
   // ── MAL add modal ─────────────────────────────────────────────────────────
   showMalModal  = signal(false);
@@ -67,7 +73,30 @@ export class SeasonalCardComponent implements OnInit {
     { value: 'plan_to_watch', labelKey: 'seasonal.malStatus.plan_to_watch' },
   ];
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Wire up debounced search
+    this.sonarrSearch$
+      .pipe(
+        debounceTime(350),
+        distinctUntilChanged(),
+        switchMap(term => {
+          if (!term.trim()) return of([]);
+          this.sonarrSearching.set(true);
+          this.sonarrSearchError.set('');
+          return this.sonarrService.lookup(term).pipe(
+            catchError(() => {
+              this.sonarrSearchError.set(this.translate.instant('seasonal.sonarrSearchError'));
+              return of([]);
+            })
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(results => {
+        this.sonarrSearchResults.set(results);
+        this.sonarrSearching.set(false);
+      });
+  }
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
@@ -79,7 +108,6 @@ export class SeasonalCardComponent implements OnInit {
   get coverImageUrl(): string | undefined { return this.anime.coverImageUrl; }
   get displayTitle(): string { return this.anime.title; }
   get description(): string { return this.anime.synopsis ?? ''; }
-
   get genres(): string[] { return this.anime.genres ?? []; }
 
   translateGenre(name: string): string {
@@ -108,17 +136,27 @@ export class SeasonalCardComponent implements OnInit {
 
   get malUrl(): string | null { return this.anime.malUrl ?? null; }
 
+  openMalPage(): void {
+    if (this.malUrl) window.open(this.malUrl, '_blank', 'noopener,noreferrer');
+  }
+
   toggleDesc(): void { this.descExpanded.update(v => !v); }
   openLightbox(): void { if (this.coverImageUrl) this.showLightbox.set(true); }
   closeLightbox(): void { this.showLightbox.set(false); }
 
   // ── Sonarr ────────────────────────────────────────────────────────────────
   openSonarrModal(): void {
-    if (this.sonarrLoadingOptions()) return;
     this.sonarrError.set('');
     this.sonarrSuccess.set(false);
+    this.sonarrSelected.set(null);
+    this.sonarrSearchResults.set([]);
+    this.sonarrSearchError.set('');
+    // Pre-fill search with anime title
+    const term = this.anime.title;
+    this.sonarrSearchTerm.set(term);
     this.showSonarrModal.set(true);
 
+    // Load options + auto-search in parallel
     if (this.sonarrRootFolders().length === 0) {
       this.sonarrLoadingOptions.set(true);
       this.sonarrService.getOptions()
@@ -137,16 +175,29 @@ export class SeasonalCardComponent implements OnInit {
           }
         });
     }
+    // Trigger initial search
+    this.sonarrSearch$.next(term);
+  }
+
+  onSonarrSearchInput(term: string): void {
+    this.sonarrSearchTerm.set(term);
+    this.sonarrSelected.set(null);
+    this.sonarrSearch$.next(term);
+  }
+
+  selectSonarrResult(item: SonarrLookupResult): void {
+    this.sonarrSelected.set(item);
   }
 
   closeSonarrModal(): void { this.showSonarrModal.set(false); }
 
   confirmAddSonarr(): void {
-    if (this.sonarrAdding()) return;
+    const selected = this.sonarrSelected();
+    if (!selected || this.sonarrAdding()) return;
     this.sonarrAdding.set(true);
     this.sonarrError.set('');
     this.sonarrService.addSeries({
-      malId: this.anime.malId,
+      tvdbId: selected.tvdbId,
       rootFolderPath: this.sonarrRootFolder(),
       qualityProfileId: this.sonarrProfileId(),
     })
@@ -155,7 +206,6 @@ export class SeasonalCardComponent implements OnInit {
       next: () => {
         this.sonarrSuccess.set(true);
         this.sonarrAdding.set(false);
-        // Update local flag
         (this.anime as { inSonarr: boolean }).inSonarr = true;
         setTimeout(() => this.showSonarrModal.set(false), 1500);
       },

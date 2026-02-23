@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { SonarrCodecSearchResponse, SonarrOptionsResponse, SonarrAddSeriesRequest } from '../models/sonarr.models';
+import { SonarrCodecSearchResponse, SonarrOptionsResponse, SonarrAddSeriesRequest, SonarrLookupResult } from '../models/sonarr.models';
 
 @Injectable({ providedIn: 'root' })
 export class SonarrService {
@@ -16,6 +16,11 @@ export class SonarrService {
 
   getOptions(): Observable<SonarrOptionsResponse> {
     return this.http.get<SonarrOptionsResponse>(`${this.base}/options`);
+  }
+
+  lookup(term: string): Observable<SonarrLookupResult[]> {
+    const params = new HttpParams().set('term', term);
+    return this.http.get<SonarrLookupResult[]>(`${this.base}/lookup`, { params });
   }
 
   addSeries(request: SonarrAddSeriesRequest): Observable<unknown> {

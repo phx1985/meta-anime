@@ -25,6 +25,9 @@ public interface ISonarrAnimeSourceService<T> : IAnimeSourceService<T>
 
     /// <summary>Searches Sonarr for a series by TVDB ID and adds it with the supplied options.</summary>
     Task<Result<SonarrAddedSeries>> AddSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, IList<int> tagIds);
+
+    /// <summary>Searches Sonarr's series lookup API by free-text term (title).</summary>
+    Task<Result<IList<SonarrLookupItem>>> SearchLookupAsync(string term);
 }
 
 /// <summary>Light-weight projection returned by GetSeriesByCodecAsync.</summary>
@@ -48,3 +51,6 @@ public sealed record SonarrQualityProfileInfo(int Id, string Name);
 
 /// <summary>Minimal projection of a Sonarr series returned after successfully adding it.</summary>
 public sealed record SonarrAddedSeries(int Id, string Title, string TitleSlug);
+
+/// <summary>Single result from the Sonarr series lookup API.</summary>
+public sealed record SonarrLookupItem(int TvdbId, string Title, int? Year, string? TitleSlug, string? RemotePoster, string? Overview);

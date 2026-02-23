@@ -2,6 +2,7 @@
 using MetaAnime.Application.Queries;
 using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Shared.Results;
+using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
 
 namespace MetaAnime.Application.Interfaces;
@@ -18,6 +19,7 @@ public interface IAnimeMediatorService
     Task<Result> SyncAllAsync(bool forceRefreshKometaMapping = false);
     Task<Result<PagedResponse<IEnumerable<SeasonalAnimeResponse>>>> GetSeasonalAnimesAsync(int year, string season, int page, int pageSize);
     Task<Result<SonarrOptionsResponse>> GetSonarrOptionsAsync();
-    Task<Result<SonarrSeries>> AddSonarrSeriesAsync(string malId, string rootFolderPath, int qualityProfileId);
+    Task<Result<IList<SonarrLookupItem>>> SearchSonarrLookupAsync(string term);
+    Task<Result<SonarrSeries>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId);
     Task<Result> UpdateMalListStatusAsync(string malId, string status, int numWatchedEpisodes, int score);
 }

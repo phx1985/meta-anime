@@ -799,24 +799,28 @@ public class AnimeMediatorService(
 
             var (items, hasNextPage) = seasonalResult.Value;
 
-            // Build lookup: MAL source ID -> (HasPlex, HasSonarr) from AnimeMapping table
-            var mappingsResult = await animeMappingService.GetAllAsync(includeAnime: true);
-            var malToSources = new Dictionary<string, (bool HasPlex, bool HasSonarr)>(StringComparer.OrdinalIgnoreCase);
+            // Build lookup: MAL source ID -> (HasPlex, PlexId, HasSonarr, SonarrId) from AnimeMapping table
+            var malToSources = new Dictionary<string, (bool HasPlex, string? PlexId, bool HasSonarr, string? SonarrId)>(StringComparer.OrdinalIgnoreCase);
+            bool anyInPlex = false;
 
+            var mappingsResult = await animeMappingService.GetAllAsync(includeAnime: true);
             if (mappingsResult.IsSuccess)
             {
-                // Group mappings by AniDbId: each group represents one unique anime title.
-                // Within a group, entries can belong to different sources (MAL, Plex, Sonarr).
-                // We use the MAL source ID as the lookup key for presence checks.
                 foreach (var aniDbGroup in mappingsResult.Value.Where(m => m.Anime != null).GroupBy(m => m.AniDbId))
                 {
                     var animes = aniDbGroup.Select(m => m.Anime!).ToList();
-                    bool hasPlex = animes.Any(a => a.AnimeSource == AnimeSource.Plex);
-                    bool hasSonarr = animes.Any(a => a.AnimeSource == AnimeSource.Sonarr);
+                    var plexEntry   = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.Plex);
+                    var sonarrEntry = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.Sonarr);
+                    bool hasPlex   = plexEntry != null;
+                    bool hasSonarr = sonarrEntry != null;
+                    if (hasPlex) anyInPlex = true;
                     foreach (var malEntry in animes.Where(a => a.AnimeSource == AnimeSource.MyAnimeList))
-                        malToSources[malEntry.SourceId] = (hasPlex, hasSonarr);
+                        malToSources[malEntry.SourceId] = (hasPlex, plexEntry?.SourceId, hasSonarr, sonarrEntry?.SourceId);
                 }
             }
+
+            // Resolve Plex base URL only if needed
+            string? plexBaseUrl = anyInPlex ? await GetPlexBaseUrlAsync() : null;
 
             // Apply NSFW filtering: skip anime marked as explicit when NSFW is disabled
             var filteredItems = showNsfw
@@ -826,8 +830,14 @@ public class AnimeMediatorService(
             var responses = filteredItems.Select(anime =>
             {
                 var malId = anime.Id.ToString();
-                // TryGetValue covers both the inMal check and the hasPlex/hasSonarr lookup in one call
+                // TryGetValue covers both the inMal check and the source IDs in one call
                 var inMal = malToSources.TryGetValue(malId, out var sources);
+                // plexBaseUrl ends with %2F (URL-encoded "/"), so appending the source ID
+                // directly produces the correct path: .../metadata/{ratingKey}
+                string? plexUrl   = inMal && sources.HasPlex   && plexBaseUrl != null && sources.PlexId != null
+                    ? $"{plexBaseUrl}{sources.PlexId}" : null;
+                string? sonarrUrl = inMal && sources.HasSonarr && sources.SonarrId != null
+                    ? $"{sonarrSeriesBaseUrl.TrimEnd('/')}/series/{sources.SonarrId}" : null;
                 return new SeasonalAnimeResponse(
                     MalId: malId,
                     Title: anime.Title,
@@ -841,15 +851,13 @@ public class AnimeMediatorService(
                     MalUrl: $"{myAnimeListHost}/anime/{malId}",
                     InMal: inMal,
                     InPlex: inMal && sources.HasPlex,
-                    PlexUrl: null,
+                    PlexUrl: plexUrl,
                     InSonarr: inMal && sources.HasSonarr,
-                    SonarrUrl: null
+                    SonarrUrl: sonarrUrl
                 );
             });
 
             // MAL's seasonal endpoint does not provide a total count.
-            // Estimate: if a next page exists, report at least one item beyond the current page
-            // so the paging consumer knows to request more; otherwise use the exact item count.
             var estimatedTotal = hasNextPage ? offset + pageSize + 1 : offset + filteredItems.Count;
             var totalPages = hasNextPage ? page + 1 : page;
             return Result.Success(new PagedResponse<IEnumerable<SeasonalAnimeResponse>>(
@@ -889,21 +897,22 @@ public class AnimeMediatorService(
         }
     }
 
-    public async Task<Result<SonarrSeries>> AddSonarrSeriesAsync(string malId, string rootFolderPath, int qualityProfileId)
+    public async Task<Result<IList<SonarrLookupItem>>> SearchSonarrLookupAsync(string term)
     {
         try
         {
-            // Resolve MAL ID → TVDB ID via Kometa mapping table
-            var kometaMapping = await kometaAnimeMappingRepository.GetByPlatformIdAsync(MetaAnime.Domain.Enums.KometaAnimePlatform.Mal, malId);
-            if (kometaMapping == null)
-                return Result.Failure<SonarrSeries>(new(Constants.Errors.NotFound, $"No TVDB mapping found for MAL ID {malId}"));
+            return await sonarrAnimeSource.SearchLookupAsync(term);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<IList<SonarrLookupItem>>(new(Constants.Errors.GetAllAsync, ex.Message));
+        }
+    }
 
-            var aniDbId = kometaMapping.AniDbId;
-            var tvdbMappings = await kometaAnimeMappingRepository.GetByAniDbIdAsync(aniDbId);
-            var tvdbEntry = tvdbMappings.FirstOrDefault(m => m.PlatformName.Equals("tvdb", StringComparison.OrdinalIgnoreCase));
-            if (tvdbEntry == null || !int.TryParse(tvdbEntry.PlatformId, out var tvdbId))
-                return Result.Failure<SonarrSeries>(new(Constants.Errors.NotFound, $"No TVDB ID found for MAL ID {malId}"));
-
+    public async Task<Result<SonarrSeries>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId)
+    {
+        try
+        {
             // Get the configured tag IDs to apply to the new series
             var optionsResult = await sonarrAnimeSource.GetOptionsAsync();
             var tagIds = optionsResult.IsSuccess ? optionsResult.Value.AnimeTagIds : new List<int>();
@@ -912,7 +921,6 @@ public class AnimeMediatorService(
             if (addResult.IsFailure)
                 return Result.Failure<SonarrSeries>(addResult.Error);
 
-            // Return a minimal SonarrSeries shaped object (the controller just serialises it)
             return Result.Success(new SonarrSeries { Id = addResult.Value.Id, Title = addResult.Value.Title, TitleSlug = addResult.Value.TitleSlug });
         }
         catch (Exception ex)

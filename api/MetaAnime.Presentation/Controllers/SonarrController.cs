@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Interfaces;
+using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Presentation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -49,22 +50,39 @@ public class SonarrController(
         return Ok(result.Value);
     }
 
-    /// <summary>Adds an anime to Sonarr by MAL ID.</summary>
+    /// <summary>Searches Sonarr's series lookup by free-text term.</summary>
+    [HttpGet("lookup")]
+    [Authorize]
+    public async Task<ActionResult<IList<SonarrLookupItem>>> Lookup([FromQuery] string term)
+    {
+        if (string.IsNullOrWhiteSpace(term))
+            return BadRequest("term is required");
+
+        var result = await animeMediatorService.SearchSonarrLookupAsync(term);
+        if (result.IsFailure)
+        {
+            logger.LogError("Sonarr lookup failed for term '{Term}': {Error}", term, result.Error.Message);
+            return StatusCode(500, result.Error.Message);
+        }
+        return Ok(result.Value);
+    }
+
+    /// <summary>Adds an anime series to Sonarr by TVDB ID.</summary>
     [HttpPost("add")]
     [Authorize]
     public async Task<ActionResult> AddSeries([FromBody] SonarrAddSeriesRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.MalId))
-            return BadRequest("malId is required");
+        if (request.TvdbId <= 0)
+            return BadRequest("tvdbId must be a positive integer");
         if (string.IsNullOrWhiteSpace(request.RootFolderPath))
             return BadRequest("rootFolderPath is required");
 
         var result = await animeMediatorService.AddSonarrSeriesAsync(
-            request.MalId, request.RootFolderPath, request.QualityProfileId);
+            request.TvdbId, request.RootFolderPath, request.QualityProfileId);
 
         if (result.IsFailure)
         {
-            logger.LogError("Sonarr add failed for MAL ID '{MalId}': {Error}", request.MalId, result.Error.Message);
+            logger.LogError("Sonarr add failed for TVDB ID '{TvdbId}': {Error}", request.TvdbId, result.Error.Message);
             return StatusCode(500, result.Error.Message);
         }
 
@@ -72,5 +90,5 @@ public class SonarrController(
     }
 }
 
-public sealed record SonarrAddSeriesRequest(string MalId, string RootFolderPath, int QualityProfileId);
+public sealed record SonarrAddSeriesRequest(int TvdbId, string RootFolderPath, int QualityProfileId);
 

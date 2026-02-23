@@ -15,31 +15,59 @@
       <p class="seasonal-subtitle">{{ 'seasonal.subtitle' | translate }}</p>
     </div>
 
-    <!-- Season tabs + load more -->
-    <div class="season-tabs-row mb-4">
-      <div class="season-tabs" role="tablist" [attr.aria-label]="'seasonal.seasonSelect' | translate">
-        @for (tab of tabs(); track tab.year + '-' + tab.season) {
+    <!-- Season selector: year picker + 4 season pills -->
+    <div class="season-selector mb-4">
+
+      <!-- Year picker row -->
+      <div class="year-picker" role="group" [attr.aria-label]="'seasonal.yearSelect' | translate">
+        <button type="button" class="year-nav year-nav--prev"
+                [disabled]="!canGoPrev()"
+                [attr.aria-label]="'seasonal.prevYear' | translate"
+                (click)="prevYear()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M10 3L5 8l5 5"/>
+          </svg>
+        </button>
+
+        <div class="year-display">
+          <select class="year-select"
+                  [ngModel]="selectedYear()"
+                  (ngModelChange)="setYear($event)"
+                  [attr.aria-label]="'seasonal.yearSelect' | translate">
+            @for (y of yearOptions; track y) {
+              <option [value]="y">{{ y }}</option>
+            }
+          </select>
+          <span class="year-text" aria-hidden="true">{{ selectedYear() }}</span>
+          <svg class="year-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <path d="M1 1l4 4 4-4"/>
+          </svg>
+        </div>
+
+        <button type="button" class="year-nav year-nav--next"
+                [disabled]="!canGoNext()"
+                [attr.aria-label]="'seasonal.nextYear' | translate"
+                (click)="nextYear()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M6 3l5 5-5 5"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Season pills -->
+      <div class="season-pills" role="tablist" [attr.aria-label]="'seasonal.seasonSelect' | translate">
+        @for (pill of allSeasons; track pill.season) {
           <button
             type="button"
-            class="season-tab"
+            class="season-pill"
             role="tab"
-            [class.season-tab--active]="activeTab()?.year === tab.year && activeTab()?.season === tab.season"
-            [attr.aria-selected]="activeTab()?.year === tab.year && activeTab()?.season === tab.season"
-            (click)="selectTab(tab)">
-            <span class="tab-season">{{ tab.labelKey | translate }}</span>
-            <span class="tab-year">{{ tab.year }}</span>
+            [class.season-pill--active]="selectedSeason() === pill.season"
+            [attr.aria-selected]="selectedSeason() === pill.season"
+            (click)="selectSeason(pill.season)">
+            {{ pill.labelKey | translate }}
           </button>
         }
       </div>
-
-      @if (canLoadMoreSeasons()) {
-        <button type="button" class="btn-load-seasons" (click)="loadMoreSeasons()">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" class="btn-load-seasons__icon" aria-hidden="true">
-            <path d="M4 8h8M8 4l4 4-4 4"/>
-          </svg>
-          {{ 'seasonal.loadMoreSeasons' | translate }}
-        </button>
-      }
     </div>
 
     <!-- Error state -->

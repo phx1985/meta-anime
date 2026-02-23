@@ -23,8 +23,17 @@ export interface SonarrQualityProfile {
   name: string;
 }
 
+export interface SonarrLookupResult {
+  tvdbId: number;
+  title: string;
+  year?: number;
+  titleSlug?: string;
+  remotePoster?: string;
+  overview?: string;
+}
+
 export interface SonarrAddSeriesRequest {
-  malId: string;
+  tvdbId: number;
   rootFolderPath: string;
   qualityProfileId: number;
 }
