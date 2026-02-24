@@ -52,12 +52,10 @@ export const SEASONAL_SORT_OPTIONS = [
   { value: 'startdate', labelKey: 'seasonal.filter.sort.startDate' },
 ];
 
-/** Per-card stagger delay used by the @gridAnimation leave transition (ms). */
-const FLIP_STAGGER_MS   = 22;
-/** Leave-animation base duration + buffer so the grid has fully reflowed (ms). */
-const FLIP_BASE_DELAY_MS = 400;
-/** Maximum FLIP delay cap — prevents long waits when many cards are leaving (ms). */
-const FLIP_MAX_DELAY_MS  = 850;
+/** Duration of the simultaneous leave (fall) animation (ms). */
+const FLIP_LEAVE_MS      = 300;
+/** Delay before FLIP runs = leave duration + small reflow buffer (ms). */
+const FLIP_BASE_DELAY_MS = FLIP_LEAVE_MS + 50;
 /** Duration of the FLIP slide transition (ms). */
 const FLIP_DURATION_MS   = 380;
 
@@ -84,27 +82,26 @@ function getCurrentSeason(month: number): SeasonName {
     trigger('gridAnimation', [
       transition('* => *', [
         group([
-          // Filtered-out cards fall: stagger from first DOM position → last
-          // (top-left → bottom-right order). Each card slides downward and
-          // slightly left, creating the "top to bottom, right to left" cascade
-          // the user requested when reading the DOM-order visually.
+          // All filtered-out cards fall at exactly the same time — no stagger.
+          // Simultaneous fall keeps the total leave phase short (FLIP_LEAVE_MS)
+          // so the remaining cards appear quickly instead of after a long gap.
           query(':leave', [
-            stagger(22, [
-              animate('320ms cubic-bezier(0.4, 0, 0.9, 0.6)',
-                style({ opacity: 0, transform: 'translateY(64px) translateX(-24px) rotate(-4deg) scale(0.82)' })
-              ),
-            ]),
+            animate(`${FLIP_LEAVE_MS}ms cubic-bezier(0.4, 0, 0.9, 0.6)`,
+              style({ opacity: 0, transform: 'translateY(56px) scale(0.84)', filter: 'blur(3px)' })
+            ),
           ], { optional: true }),
-          // Incoming cards wait hidden while the leaving ones fall
+          // Pre-hide entering cards (blur + fade) while the fall plays.
+          // The blur start-state makes the unblur reveal feel soft.
           query(':enter', [
-            style({ opacity: 0, transform: 'translateY(-18px) scale(0.95)' }),
+            style({ opacity: 0, transform: 'translateY(-6px) scale(0.97)', filter: 'blur(8px)' }),
           ], { optional: true }),
         ]),
-        // After leaves are done, incoming cards rise in with a spring stagger
+        // After the fall is done, entering cards unblur and rise in together.
+        // A gentle stagger (12ms) avoids a single wall-of-cards pop-in.
         query(':enter', [
-          stagger(18, [
-            animate('260ms cubic-bezier(0.34, 1.56, 0.64, 1)',
-              style({ opacity: 1, transform: 'none' })
+          stagger(12, [
+            animate('360ms cubic-bezier(0.4, 0, 0.2, 1)',
+              style({ opacity: 1, transform: 'none', filter: 'blur(0px)' })
             ),
           ]),
         ], { optional: true }),
@@ -159,12 +156,9 @@ export class SeasonalComponent {
     Promise.resolve().then(() => {
       const prevIds = new Set(this._posSnapshot.keys());
       const newIds  = new Set(this.filteredAnimes().map(a => a.malId));
-      const leaving = [...prevIds].filter(id => !newIds.has(id.toString())).length;
-      // Match the stagger timing in @gridAnimation so FLIP starts right after
-      // the last falling card has been removed from the DOM.
-      const delay = leaving > 0
-        ? Math.min(leaving * FLIP_STAGGER_MS + FLIP_BASE_DELAY_MS, FLIP_MAX_DELAY_MS)
-        : 0;
+      const leaving = [...prevIds].filter(id => !newIds.has(id)).length;
+      // Delay matches the leave-fall duration so FLIP fires after the grid reflows.
+      const delay = leaving > 0 ? FLIP_BASE_DELAY_MS : 0;
 
       const run = () => requestAnimationFrame(() => this._applyFlip());
       if (delay > 0) {
