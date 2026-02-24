@@ -90,6 +90,28 @@
       "spring": "Printemps",
       "summer": "Été",
       "fall": "Automne"
+    },
+    "filter": {
+      "title": "Filtres",
+      "expandFilters": "Afficher les filtres",
+      "collapseFilters": "Masquer les filtres",
+      "genre": "Genre",
+      "genreOperator": "Logique des genres",
+      "any": "Tous",
+      "clear": "Effacer la sélection",
+      "reset": "Réinitialiser",
+      "noResults": "Aucun anime ne correspond aux filtres sélectionnés.",
+      "malStatus": {
+        "label": "Statut MAL",
+        "not_in": "Absent de MAL"
+      },
+      "sort": {
+        "by": "Trier par",
+        "order": "Ordre de tri",
+        "title": "Titre",
+        "malScore": "Score MAL",
+        "startDate": "Date de début"
+      }
     }
   },
   "animeList": {

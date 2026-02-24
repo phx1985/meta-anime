@@ -825,7 +825,7 @@ public class AnimeMediatorService(
             // ── Build aniDbId → sources from AnimeMapping ──────────────────────────────
             // Includes both full-sync entries and mini-sync entries written by
             // AddSonarrSeriesAsync / UpdateMalListStatusAsync, so no property bag needed.
-            var aniDbToSources = new Dictionary<string, (bool HasPlex, string? PlexId, bool HasSonarr, string? SonarrId, bool HasMal)>(StringComparer.OrdinalIgnoreCase);
+            var aniDbToSources = new Dictionary<string, (bool HasPlex, string? PlexId, bool HasSonarr, string? SonarrId, bool HasMal, string? MalId)>(StringComparer.OrdinalIgnoreCase);
             bool anyInPlex = false;
             var mappingsResult = await animeMappingService.GetAllAsync(includeAnime: true);
             if (mappingsResult.IsSuccess)
@@ -838,7 +838,7 @@ public class AnimeMediatorService(
                     var malEntry    = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.MyAnimeList);
                     bool hasPlex    = plexEntry != null;
                     if (hasPlex) anyInPlex = true;
-                    aniDbToSources[aniDbGroup.Key] = (hasPlex, plexEntry?.SourceId, sonarrEntry != null, sonarrEntry?.SourceId, malEntry != null);
+                    aniDbToSources[aniDbGroup.Key] = (hasPlex, plexEntry?.SourceId, sonarrEntry != null, sonarrEntry?.SourceId, malEntry != null, malEntry?.SourceId);
                 }
             }
 
@@ -873,6 +873,34 @@ public class AnimeMediatorService(
                 }
             }
 
+            // ── MAL view-state lookup (watching / completed / on_hold / dropped / plan_to_watch) ──
+            var malIdsInLibrary = aniDbToSources.Values
+                .Where(s => s.HasMal && s.MalId != null)
+                .Select(s => s.MalId!)
+                .Distinct()
+                .ToList();
+            var malViewStateById = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (malIdsInLibrary.Count > 0)
+            {
+                var malCacheResult = await cacheEntryService.GetBySourceIdsAsync(malIdsInLibrary);
+                if (malCacheResult.IsSuccess)
+                {
+                    foreach (var entry in malCacheResult.Value.Where(e => e.AnimeSource == AnimeSource.MyAnimeList))
+                    {
+                        try
+                        {
+                            var malAnime = JsonSerializer.Deserialize<MalAnime>(entry.RawData, JsonOptions);
+                            if (malAnime?.MyListStatus?.Status != null)
+                                malViewStateById[entry.SourceId] = malAnime.MyListStatus.Status;
+                        }
+                        catch (JsonException ex)
+                        {
+                            logger.LogWarning(ex, Constants.LogMessages.AnimeMediatorService.MalCacheDeserializeFailed, entry.SourceId);
+                        }
+                    }
+                }
+            }
+
             // ── NSFW filtering ──────────────────────────────────────────────────────────
             var filteredItems = showNsfw ? items : items.Where(anime => !IsNsfwAnime(anime)).ToList();
 
@@ -894,6 +922,7 @@ public class AnimeMediatorService(
                 string? sonarrUrl = inSonarr && sonarrSlug != null
                     ? $"{sonarrSeriesBaseUrl.TrimEnd('/')}/series/{sonarrSlug}" : null;
                 var tvdbId = aniDbId != null && aniDbToTvdb.TryGetValue(aniDbId, out var tId) ? tId : null;
+                string? malViewState = sources.MalId != null && malViewStateById.TryGetValue(sources.MalId, out var vs) ? vs : null;
                 return new SeasonalAnimeResponse(
                     MalId: malId,
                     Title: anime.Title,
@@ -911,7 +940,8 @@ public class AnimeMediatorService(
                     InSonarr: inSonarr,
                     SonarrUrl: sonarrUrl,
                     TvdbId: tvdbId,
-                    EnglishTitle: anime.AlternativeTitles?.En
+                    EnglishTitle: anime.AlternativeTitles?.En,
+                    MalViewState: malViewState
                 );
             });
 

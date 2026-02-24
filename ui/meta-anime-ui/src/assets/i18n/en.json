@@ -90,6 +90,28 @@
       "spring": "Spring",
       "summer": "Summer",
       "fall": "Fall"
+    },
+    "filter": {
+      "title": "Filters",
+      "expandFilters": "Expand filters",
+      "collapseFilters": "Collapse filters",
+      "genre": "Genre",
+      "genreOperator": "Genre logic",
+      "any": "Any",
+      "clear": "Clear selection",
+      "reset": "Reset",
+      "noResults": "No anime match the selected filters.",
+      "malStatus": {
+        "label": "MAL Status",
+        "not_in": "Not in MAL"
+      },
+      "sort": {
+        "by": "Sort by",
+        "order": "Sort order",
+        "title": "Title",
+        "malScore": "MAL Score",
+        "startDate": "Start Date"
+      }
     }
   },
   "animeList": {

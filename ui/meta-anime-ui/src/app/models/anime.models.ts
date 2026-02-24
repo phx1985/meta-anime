@@ -179,6 +179,7 @@ export interface SeasonalAnimeItem {
   sonarrUrl?: string;
   tvdbId?: string;
   englishTitle?: string;
+  malViewState?: string;
 }
 
 export type SeasonName = 'winter' | 'spring' | 'summer' | 'fall';
