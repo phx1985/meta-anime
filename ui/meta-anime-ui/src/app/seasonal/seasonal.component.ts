@@ -597,9 +597,15 @@ export class SeasonalComponent {
     const year   = this.selectedYear();
     const season = this.selectedSeason();
 
-    this.animes.set([]);
-    this.loading.set(true);
     this.error.set(false);
+
+    // On the very first load (no data yet) show the loading spinner.
+    // For subsequent season/year changes keep the existing animes visible so
+    // the @gridAnimation fall+rise plays — making the animation homogeneous
+    // between filter changes and season changes.
+    if (this.animes().length === 0) {
+      this.loading.set(true);
+    }
 
     this.animeService.getSeasonalAnimes(year, season)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -612,6 +618,7 @@ export class SeasonalComponent {
         error: () => {
           this.error.set(true);
           this.loading.set(false);
+          this.animes.set([]); // clear stale data on error so empty state shows
         }
       });
   }

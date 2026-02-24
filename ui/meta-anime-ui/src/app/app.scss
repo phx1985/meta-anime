@@ -481,12 +481,11 @@
   &--warning { border-left-color: #f59e0b; }
   &--error   { border-left-color: #ef4444; }
 
-  // Duration must stay in sync with TOAST_EXIT_MS in notification.service.ts.
-  // The JS _pixelDisintegrate() handles the actual visual disintegration;
-  // this class just hides the real element immediately so there's no double render.
+  // Toast slot stays in layout while pixel particles fly (visibility:hidden keeps
+  // the space; JS _pixelDisintegrate() handles the visual). After TOAST_EXIT_MS
+  // the service removes the item from the array and Angular collapses the slot.
   &--leaving {
-    opacity: 0 !important;
-    transition: opacity 0s !important;
+    visibility: hidden !important;
     pointer-events: none;
   }
 }

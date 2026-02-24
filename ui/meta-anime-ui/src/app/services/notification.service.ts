@@ -15,10 +15,13 @@ export interface AppNotification {
 const STORAGE_KEY = 'meta-anime-notifications';
 const MAX_STORED  = 50;
 const TOAST_TTL_MS = 4500;
-/** Exit animation duration — keep in sync with `.toast-item--leaving` in app.scss */
-const TOAST_EXIT_MS = 820;
-/** Notif-center item dismiss animation duration — keep in sync with `.notif-item--leaving` in app.scss */
-const NOTIF_DISMISS_MS = 750;
+/** Exit animation duration — keep in sync with PIXEL_ANIM_MS in app.ts.
+ *  Toast stays in DOM (visibility:hidden) while pixel particles fly,
+ *  then Angular removes the element and the stack collapses. */
+const TOAST_EXIT_MS = 1400;
+/** Time from dismissNotifItem() call until acknowledge() removes the item.
+ *  Must cover the notifItemCollapse CSS animation (350ms) + buffer. */
+const NOTIF_DISMISS_MS = 400;
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
