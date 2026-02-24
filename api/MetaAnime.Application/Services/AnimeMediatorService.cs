@@ -822,6 +822,35 @@ public class AnimeMediatorService(
             // Resolve Plex base URL only if needed
             string? plexBaseUrl = anyInPlex ? await GetPlexBaseUrlAsync() : null;
 
+            // Load Sonarr cache to resolve TitleSlugs — same approach as CreateSonarrAnimeInfoFromCache
+            // used by the regular anime card, which builds URLs from TitleSlug not the numeric source ID.
+            var sonarrIds = malToSources.Values
+                .Where(s => s.HasSonarr && s.SonarrId != null)
+                .Select(s => s.SonarrId!)
+                .Distinct()
+                .ToList();
+            var sonarrSlugById = new Dictionary<string, string>();
+            if (sonarrIds.Count > 0)
+            {
+                var cacheResult = await cacheEntryService.GetBySourceIdsAsync(sonarrIds);
+                if (cacheResult.IsSuccess)
+                {
+                    foreach (var entry in cacheResult.Value.Where(c => c.AnimeSource == AnimeSource.Sonarr))
+                    {
+                        try
+                        {
+                            var series = JsonSerializer.Deserialize<SonarrSeries>(entry.RawData, JsonOptions);
+                            if (series?.TitleSlug != null)
+                                sonarrSlugById[entry.SourceId] = series.TitleSlug;
+                        }
+                        catch (JsonException ex)
+                        {
+                            logger.LogWarning(ex, Constants.LogMessages.AnimeMediatorService.SonarrCacheDeserializeFailed, entry.SourceId);
+                        }
+                    }
+                }
+            }
+
             // Apply NSFW filtering: skip anime marked as explicit when NSFW is disabled
             var filteredItems = showNsfw
                 ? items
@@ -836,8 +865,11 @@ public class AnimeMediatorService(
                 // directly produces the correct path: .../metadata/{ratingKey}
                 string? plexUrl   = inMal && sources.HasPlex   && plexBaseUrl != null && sources.PlexId != null
                     ? $"{plexBaseUrl}{sources.PlexId}" : null;
-                string? sonarrUrl = inMal && sources.HasSonarr && sources.SonarrId != null
-                    ? $"{sonarrSeriesBaseUrl.TrimEnd('/')}/series/{sources.SonarrId}" : null;
+                // Use TitleSlug from cache (same as regular anime card); fall back to numeric ID
+                var sonarrSlug = inMal && sources.SonarrId != null && sonarrSlugById.TryGetValue(sources.SonarrId, out var slug)
+                    ? slug : sources.SonarrId;
+                string? sonarrUrl = inMal && sources.HasSonarr && sonarrSlug != null
+                    ? $"{sonarrSeriesBaseUrl.TrimEnd('/')}/series/{sonarrSlug}" : null;
                 return new SeasonalAnimeResponse(
                     MalId: malId,
                     Title: anime.Title,
