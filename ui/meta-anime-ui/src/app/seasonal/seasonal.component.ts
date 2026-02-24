@@ -159,7 +159,7 @@ export class SeasonalComponent {
     Promise.resolve().then(() => {
       const prevIds = new Set(this._posSnapshot.keys());
       const newIds  = new Set(this.filteredAnimes().map(a => a.malId));
-      const leaving = [...prevIds].filter(id => !newIds.has(id)).length;
+      const leaving = [...prevIds].filter(id => !newIds.has(id.toString())).length;
       // Match the stagger timing in @gridAnimation so FLIP starts right after
       // the last falling card has been removed from the DOM.
       const delay = leaving > 0
