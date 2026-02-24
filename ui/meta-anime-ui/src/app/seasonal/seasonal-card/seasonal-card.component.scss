@@ -1172,26 +1172,28 @@
   pointer-events: none;
   z-index: 2;
   animation: arcFlicker 2.2s ease-out forwards;
-  // Warm amber/orange multi-layer drop-shadow — creates a realistic plasma corona
+  // Blur + warm amber/orange glow — blur(2px) diffuses the bolt silhouette for a
+  // lighter, more atmospheric feel; the outer drop-shadows add the plasma corona
   filter:
-    drop-shadow(0 0 1px #fff5a0)
-    drop-shadow(0 0 3px #ffd600)
-    drop-shadow(0 0 7px #ff8c00)
-    drop-shadow(0 0 13px rgba(255, 120, 0, 0.55));
+    blur(2px)
+    drop-shadow(0 0 2px rgba(255, 245, 160, 0.70))
+    drop-shadow(0 0 5px rgba(255, 214, 0,   0.50))
+    drop-shadow(0 0 11px rgba(255, 140, 0,  0.35))
+    drop-shadow(0 0 18px rgba(255, 120, 0,  0.20));
 
-  // Main bolt paths: bright pale-yellow core (white-ish for realistic hot-channel look)
-  path { fill: #fff0a0; }
+  // Semi-transparent pale-yellow fill — softer, ghostly channel appearance
+  path { fill: rgba(255, 240, 160, 0.55); }
 
   // Branch paths: thinner glowing strokes departing from the main channel
   .bolt-branch {
     fill: none;
-    stroke: rgba(255, 196, 30, 0.75);
+    stroke: rgba(255, 196, 30, 0.45);
     stroke-width: 1.5;
     stroke-linecap: round;
   }
 
-  // Spark stars: near-white for maximum brightness point
-  &--spark path { fill: #fff8e1; }
+  // Spark stars: near-white, semi-transparent for a delicate energy burst
+  &--spark path { fill: rgba(255, 248, 225, 0.55); }
 
   // ── Main bolts (6) — each with a unique size and position on a different edge ──
   &--1 { width: 18px; height: 28px; top:  -17px; left:   17%;    animation-delay: 0.03s; }
@@ -1216,25 +1218,25 @@
 // 5–6. Two faint after-pulses (residual glow in ionised channel)
 @keyframes arcFlicker {
   0%   { opacity: 0; }
-  // First return stroke — sudden full brightness
-  4%   { opacity: 1; }
+  // First return stroke — soft flash (blurred, so full opacity already looks diffuse)
+  4%   { opacity: 0.55; }
   // Current-zero crossing — channel briefly goes dark
-  9%   { opacity: 0.10; }
+  9%   { opacity: 0.07; }
   // Second stroke — re-ignition along same channel
-  13%  { opacity: 1; }
+  13%  { opacity: 0.55; }
   // Rapid decay after second stroke
   22%  { opacity: 0; }
   // Dark interval (channel de-ionises)
   40%  { opacity: 0; }
   // Third weaker burst
-  44%  { opacity: 0.80; }
-  48%  { opacity: 0.04; }
-  52%  { opacity: 0.58; }
+  44%  { opacity: 0.42; }
+  48%  { opacity: 0.03; }
+  52%  { opacity: 0.30; }
   60%  { opacity: 0; }
   // Long dark
   78%  { opacity: 0; }
   // Final faint afterglow
-  82%  { opacity: 0.40; }
+  82%  { opacity: 0.18; }
   87%  { opacity: 0; }
   100% { opacity: 0; }
 }
