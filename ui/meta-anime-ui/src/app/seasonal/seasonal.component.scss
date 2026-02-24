@@ -220,7 +220,7 @@
   border: 1px solid var(--card-border);
   border-radius: 1rem;
   box-shadow: 0 4px 24px var(--card-shadow);
-  overflow: hidden;
+  // overflow:hidden removed so the genre dropdown panel can overflow the card edge
   backdrop-filter: blur(8px);
 }
 
@@ -232,6 +232,7 @@
   cursor: pointer;
   user-select: none;
   border-bottom: 1px solid transparent;
+  border-radius: 1rem 1rem 0 0; // clip hover background to match card's top corners
   transition: background 0.15s, border-color 0.15s;
 
   &:hover { background: var(--bg-secondary); }
@@ -572,7 +573,7 @@
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  z-index: 200;
+  z-index: 1000;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 0.625rem;

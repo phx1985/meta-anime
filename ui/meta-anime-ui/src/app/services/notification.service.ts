@@ -16,9 +16,9 @@ const STORAGE_KEY = 'meta-anime-notifications';
 const MAX_STORED  = 50;
 const TOAST_TTL_MS = 4500;
 /** Exit animation duration — keep in sync with `.toast-item--leaving` in app.scss */
-const TOAST_EXIT_MS = 460;
+const TOAST_EXIT_MS = 820;
 /** Notif-center item dismiss animation duration — keep in sync with `.notif-item--leaving` in app.scss */
-const NOTIF_DISMISS_MS = 320;
+const NOTIF_DISMISS_MS = 750;
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {

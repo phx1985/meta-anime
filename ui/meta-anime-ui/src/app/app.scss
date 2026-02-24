@@ -354,19 +354,19 @@
   &--clickable { cursor: pointer; }
   &--clickable:hover { background: var(--bg-secondary); }
 
-  // Smooth slide-left + fade when item is acknowledged from the panel
+  // Height collapse after JS pixel disintegration has hidden the content.
+  // The JS _pixelDisintegrate() makes the element invisible first, then this
+  // class collapses the vertical space so the panel reflows smoothly.
   &--leaving {
-    animation: notifItemDismiss 0.32s cubic-bezier(0.4, 0, 0.84, 1) forwards;
+    animation: notifItemCollapse 0.35s cubic-bezier(0.4, 0, 0.84, 1) forwards;
     pointer-events: none;
     overflow: hidden;
   }
 }
 
-@keyframes notifItemDismiss {
-  0%   { opacity: 1; transform: none; max-height: 80px; }
-  40%  { opacity: 0.5; transform: translateX(12px); max-height: 80px; }
-  70%  { opacity: 0; transform: translateX(36px); max-height: 80px; }
-  100% { opacity: 0; transform: translateX(60px); max-height: 0; padding-top: 0; padding-bottom: 0; border-width: 0; }
+@keyframes notifItemCollapse {
+  0%   { opacity: 0; max-height: 120px; padding-top: inherit; padding-bottom: inherit; border-width: inherit; }
+  100% { opacity: 0; max-height: 0;     padding-top: 0;       padding-bottom: 0;       border-width: 0; }
 }
 
 .notif-item-icon {
@@ -481,68 +481,19 @@
   &--warning { border-left-color: #f59e0b; }
   &--error   { border-left-color: #ef4444; }
 
-  // Duration must stay in sync with TOAST_EXIT_MS in notification.service.ts
+  // Duration must stay in sync with TOAST_EXIT_MS in notification.service.ts.
+  // The JS _pixelDisintegrate() handles the actual visual disintegration;
+  // this class just hides the real element immediately so there's no double render.
   &--leaving {
-    animation: toastCubeDisintegrate 0.46s cubic-bezier(0.16, 0, 0.84, 1) forwards;
+    opacity: 0 !important;
+    transition: opacity 0s !important;
     pointer-events: none;
-    // Square-pixel mask via two perpendicular 50/50 gradients intersected
-    -webkit-mask-image:
-      repeating-linear-gradient(90deg, #000 50%, transparent 50%),
-      repeating-linear-gradient(0deg, #000 50%, transparent 50%);
-    mask-image:
-      repeating-linear-gradient(90deg, #000 50%, transparent 50%),
-      repeating-linear-gradient(0deg, #000 50%, transparent 50%);
-    -webkit-mask-composite: source-in; // Chrome/Safari: intersection
-    mask-composite: intersect;         // Firefox
-    -webkit-mask-repeat: repeat;
-    mask-repeat: repeat;
   }
 }
 
 @keyframes toastSlideFromRight {
   from { opacity: 0; transform: translateX(60px); }
   to   { opacity: 1; transform: translateX(0); }
-}
-
-// Futuristic pixel-cube disintegration:
-// Two perpendicular 50/50 repeating gradients intersected → crisp square pixel grid.
-// mask-size drives the pixel block size: 1px ≈ solid → 6px → 12px → 32px (blocks spread).
-// Stages:
-//   0–15%  : brief brightness flash (energy charge)
-//  15–40%  : 6px pixel grid appears with a rightward nudge
-//  40–75%  : blocks grow to 14px, toast slides & skews
-//  75–100% : blocks explode to 36px, full desaturate + blur + scatter
-@keyframes toastCubeDisintegrate {
-  0% {
-    opacity: 1;
-    -webkit-mask-size: 1px 1px; mask-size: 1px 1px;
-    filter: none;
-    transform: none;
-  }
-  15% {
-    opacity: 1;
-    -webkit-mask-size: 1px 1px; mask-size: 1px 1px;
-    filter: brightness(1.5) saturate(2) contrast(1.2);
-    transform: translateX(3px);
-  }
-  40% {
-    opacity: 0.95;
-    -webkit-mask-size: 6px 6px; mask-size: 6px 6px;
-    filter: brightness(1.3) saturate(1.8);
-    transform: translateX(8px) skewX(-3deg);
-  }
-  75% {
-    opacity: 0.55;
-    -webkit-mask-size: 14px 14px; mask-size: 14px 14px;
-    filter: brightness(1.6) saturate(0.8) blur(1.5px);
-    transform: translateX(22px) skewX(-6deg) scale(0.96);
-  }
-  100% {
-    opacity: 0;
-    -webkit-mask-size: 36px 36px; mask-size: 36px 36px;
-    filter: brightness(2.5) saturate(0) blur(5px);
-    transform: translateX(42px) skewX(-10deg) scale(0.88) scaleY(0.92);
-  }
 }
 
 .toast-item-icon {

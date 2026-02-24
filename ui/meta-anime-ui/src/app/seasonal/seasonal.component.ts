@@ -76,9 +76,13 @@ function getCurrentSeason(month: number): SeasonName {
   styleUrl: './seasonal.component.scss',
   animations: [
     trigger('filterCollapse', [
-      state('open',   style({ height: '*',    opacity: 1, overflow: 'hidden' })),
-      state('closed', style({ height: '0px', opacity: 0, overflow: 'hidden' })),
-      transition('open <=> closed', animate('320ms cubic-bezier(0.4, 0, 0.2, 1)')),
+      state('open',   style({ height: '*',    opacity: 1, overflow: 'visible' })),
+      state('closed', style({ height: '0px', opacity: 0, overflow: 'hidden'  })),
+      // Force overflow:hidden during the transition so content doesn't bleed
+      // while animating; once fully open the state settles to overflow:visible
+      // so the genre dropdown panel can escape the card.
+      transition('open => closed', [style({ overflow: 'hidden' }), animate('320ms cubic-bezier(0.4, 0, 0.2, 1)')]),
+      transition('closed => open', [style({ overflow: 'hidden' }), animate('320ms cubic-bezier(0.4, 0, 0.2, 1)')]),
     ]),
     trigger('gridAnimation', [
       transition('* => *', [

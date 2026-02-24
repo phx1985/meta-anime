@@ -152,7 +152,7 @@
                       </div>
                     </div>
                     <button class="notif-item-dismiss" type="button"
-                            (click)="$event.stopPropagation(); notifService.dismissNotifItem(notif.id)"
+                            (click)="onNotifDismiss(notif.id, $event)"
                             [attr.aria-label]="'notifications.center.dismiss' | translate">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -233,6 +233,7 @@
   @for (toast of notifService.activeToasts(); track toast.id) {
     <div class="toast-item toast-item--{{ toast.severity }}"
          [class.toast-item--leaving]="notifService.leavingToastIds().has(toast.id)"
+         [attr.data-toast-id]="toast.id"
          role="alert">
       <!-- Severity icon -->
       <div class="toast-item-icon" aria-hidden="true">
