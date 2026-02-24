@@ -94,24 +94,49 @@
     backdrop-filter: blur(6px);
   }
 
-  // ── Partially-tracked badge (one provider in, one out) ───────────────────────
+  // ── Partially-tracked badge — progress ring + plus ──────────────────────────
   &--partial {
-    // diagonal split: green (top-left) → dark (bottom-right)
-    background: linear-gradient(135deg,
-      rgba(34, 197, 94, 0.22) 45%,
-      rgba(30, 30, 46, 0.82) 55%
-    );
-    border: 1.5px dashed rgba(255, 255, 255, 0.35);
-    color: rgba(255, 255, 255, 0.9);
+    background: rgba(22, 22, 38, 0.88);
+    border: 1.5px solid rgba(251, 191, 36, 0.55);
     cursor: pointer;
     backdrop-filter: blur(6px);
+    // Gentle amber attention pulse
+    animation: partialPulse 2.8s ease-in-out infinite;
+
+    // The progress arc slowly spins to draw the eye
+    .partial-arc {
+      animation: partialArcSpin 5s linear infinite;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
 
     &:hover {
-      transform: scale(1.12);
-      border-color: rgba(255, 255, 255, 0.6);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+      transform: scale(1.18);
+      border-color: #f59e0b;
+      box-shadow:
+        0 0 16px rgba(251, 191, 36, 0.45),
+        0 4px 14px rgba(0, 0, 0, 0.5);
+      animation-play-state: paused;
+
+      .partial-arc { animation-play-state: paused; }
     }
   }
+}
+
+@keyframes partialPulse {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    border-color: rgba(251, 191, 36, 0.45);
+  }
+  50% {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 10px rgba(251, 191, 36, 0.3);
+    border-color: rgba(251, 191, 36, 0.8);
+  }
+}
+
+@keyframes partialArcSpin {
+  from { transform: rotate(-90deg); }
+  to   { transform: rotate(270deg); }
 }
 
 // ─── Blurred backdrop ─────────────────────────────────────────────────────────
@@ -290,6 +315,10 @@
   color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
+  // Default collapsed height matches the Angular animation `state('collapsed')`.
+  // Set in CSS so the card height is stable even before Angular's animation
+  // framework initialises (prevents one row card from inflating its peers).
+  height: 3.75rem;
   overflow: hidden;
   display: block;
 }

@@ -605,7 +605,6 @@
 
 .seasonal-grid {
   display: grid;
-  align-items: start;
   gap: 1.25rem;
   grid-template-columns: repeat(2, 1fr);
 
@@ -617,22 +616,9 @@
     grid-template-columns: repeat(3, 1fr);
   }
 
-  // Each wrapper cell stretches to fill the grid row height
+  // Grid items: plain block so height is determined by card content + grid stretch
   > .seasonal-grid__cell {
-    display: flex;
-    flex-direction: column;
-
-    app-seasonal-card {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    @for $i from 1 through 20 {
-      &:nth-child(#{$i}) app-seasonal-card {
-        animation-delay: #{($i - 1) * 0.04}s;
-      }
-    }
+    min-height: 0;
   }
 }
 

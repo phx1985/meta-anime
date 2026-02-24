@@ -70,13 +70,30 @@ function getCurrentSeason(month: number): SeasonName {
       transition('open <=> closed', animate('320ms cubic-bezier(0.4, 0, 0.2, 1)')),
     ]),
     trigger('gridAnimation', [
-      transition(':increment', [
-        // Only animate newly-entering cells — they start at opacity 0 before the browser
-        // renders them, which prevents the "flash of all items" before the stagger kicks in.
+      transition('* => *', [
+        group([
+          // Filtered-out cards fall: stagger from first DOM position → last
+          // (top-left → bottom-right order). Each card slides downward and
+          // slightly left, creating the "top to bottom, right to left" cascade
+          // the user requested when reading the DOM-order visually.
+          query(':leave', [
+            stagger(22, [
+              animate('320ms cubic-bezier(0.4, 0, 0.9, 0.6)',
+                style({ opacity: 0, transform: 'translateY(64px) translateX(-24px) rotate(-4deg) scale(0.82)' })
+              ),
+            ]),
+          ], { optional: true }),
+          // Incoming cards wait hidden while the leaving ones fall
+          query(':enter', [
+            style({ opacity: 0, transform: 'translateY(-18px) scale(0.95)' }),
+          ], { optional: true }),
+        ]),
+        // After leaves are done, incoming cards rise in with a spring stagger
         query(':enter', [
-          style({ opacity: 0, transform: 'translateY(8px)' }),
-          stagger(20, [
-            animate('280ms cubic-bezier(0.34, 1.4, 0.64, 1)', style({ opacity: 1, transform: 'none' })),
+          stagger(18, [
+            animate('260ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+              style({ opacity: 1, transform: 'none' })
+            ),
           ]),
         ], { optional: true }),
       ]),
