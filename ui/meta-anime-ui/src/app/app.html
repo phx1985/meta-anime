@@ -94,7 +94,7 @@
               <div class="notif-panel-header">
                 <span class="notif-panel-title">{{ 'notifications.center.title' | translate }}</span>
                 @if (notifService.unacknowledgedCount() > 0) {
-                  <button class="notif-mark-all" type="button" (click)="notifService.acknowledgeAll(); notifCenterOpen.set(false)">
+                  <button class="notif-mark-all" type="button" (click)="notifService.dismissAllNotifItems()">
                     {{ 'notifications.center.markAllRead' | translate }}
                   </button>
                 }
@@ -113,6 +113,7 @@
                 @for (notif of notifService.unacknowledged(); track notif.id) {
                   <div class="notif-item notif-item--{{ notif.severity }}"
                        [class.notif-item--clickable]="!!notif.action"
+                       [class.notif-item--leaving]="notifService.leavingNotifIds().has(notif.id)"
                        (click)="handleNotifClick(notif)">
                     <!-- Severity icon -->
                     <div class="notif-item-icon" aria-hidden="true">
@@ -151,7 +152,7 @@
                       </div>
                     </div>
                     <button class="notif-item-dismiss" type="button"
-                            (click)="$event.stopPropagation(); notifService.acknowledge(notif.id); notifCenterOpen.set(false)"
+                            (click)="$event.stopPropagation(); notifService.dismissNotifItem(notif.id)"
                             [attr.aria-label]="'notifications.center.dismiss' | translate">
                       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>

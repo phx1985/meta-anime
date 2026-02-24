@@ -13,7 +13,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { trigger, state, style, animate, transition, query, stagger, group } from '@angular/animations';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
 import { FilterPresetService } from '../services/filter-preset.service';
@@ -111,10 +111,11 @@ function getCurrentSeason(month: number): SeasonName {
   ],
 })
 export class SeasonalComponent {
-  private animeService    = inject(AnimeService);
-  private settingsService = inject(SettingsService);
-  private presetService   = inject(FilterPresetService);
-  private destroyRef      = inject(DestroyRef);
+  private animeService      = inject(AnimeService);
+  private settingsService   = inject(SettingsService);
+  private presetService     = inject(FilterPresetService);
+  private destroyRef        = inject(DestroyRef);
+  private translateService  = inject(TranslateService);
 
   // ── FLIP animation ────────────────────────────────────────────────────────
   @ViewChildren('cell') private cellRefs!: QueryList<ElementRef<HTMLElement>>;
@@ -298,6 +299,33 @@ export class SeasonalComponent {
     if (this.filterMalStatus().length) n++;
     if (this.sortBy() !== 'title' || this.sortOrder() !== 'asc') n++;
     return n;
+  }
+
+  /** Short human-readable summary of current filters for the collapsed header */
+  get filterSummary(): string {
+    const parts: string[] = [];
+    const genres = this.filterGenre();
+    if (genres.length) {
+      const sep = genres.length > 1 ? ` ${this.genreOperator().toUpperCase()} ` : '';
+      parts.push(genres.join(sep));
+    }
+    const malStatuses = this.filterMalStatus();
+    if (malStatuses.length) {
+      parts.push(malStatuses
+        .map(s => this.translateService.instant(
+          s === 'not_in' ? 'seasonal.filter.malStatus.not_in' : `animeCard.malStatus.${s}`
+        ))
+        .join(', '));
+    }
+    const isDefaultSort = this.sortBy() === 'title' && this.sortOrder() === 'asc';
+    if (!isDefaultSort) {
+      const sortOpt = SEASONAL_SORT_OPTIONS.find(o => o.value === this.sortBy());
+      const sortLabel = sortOpt ? this.translateService.instant(sortOpt.labelKey) : this.sortBy();
+      parts.push(`${sortLabel} ${this.sortOrder() === 'asc' ? '↑' : '↓'}`);
+    }
+    return parts.length === 0
+      ? this.translateService.instant('seasonal.filter.noFilterActive')
+      : parts.join(' · ');
   }
 
   /** Filtered and sorted anime list – applied client-side from the already-loaded season data. */

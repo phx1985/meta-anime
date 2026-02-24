@@ -119,7 +119,8 @@
         "cancel": "Cancel",
         "delete": "Delete preset",
         "noPresets": "No saved presets yet"
-      }
+      },
+      "noFilterActive": "No filter active"
     },
     "sonarrAlreadyInLibrary": "Already in Sonarr",
     "partiallyTracked": "Partially tracked — add to more providers"

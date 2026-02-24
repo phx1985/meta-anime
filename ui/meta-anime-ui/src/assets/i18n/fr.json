@@ -119,7 +119,8 @@
         "cancel": "Annuler",
         "delete": "Supprimer le préréglage",
         "noPresets": "Aucun préréglage sauvegardé"
-      }
+      },
+      "noFilterActive": "Aucun filtre actif"
     },
     "sonarrAlreadyInLibrary": "Déjà dans Sonarr",
     "partiallyTracked": "Partiellement suivi — ajouter aux autres fournisseurs"

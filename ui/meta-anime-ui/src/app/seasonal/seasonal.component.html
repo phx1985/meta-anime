@@ -87,7 +87,10 @@
             <svg class="filter-header-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
             </svg>
-            <span class="filter-header-title">{{ 'seasonal.filter.title' | translate }}</span>
+            <div class="filter-header-text">
+              <span class="filter-header-title">{{ 'seasonal.filter.title' | translate }}</span>
+              <span class="filter-header-summary" [title]="filterSummary">{{ filterSummary }}</span>
+            </div>
             @if (activeFilterCount > 0) {
               <span class="filter-badge">{{ activeFilterCount }}</span>
             }
