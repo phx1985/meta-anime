@@ -969,10 +969,29 @@
     flex-direction: column;
     gap: 0.65rem;
     background: color-mix(in srgb, var(--bg-secondary) 15%, transparent);
-    // Independently scrollable so each provider section doesn't overflow the dialog
-    max-height: 55vh;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    // Overflow handled by the dialog body — no inner scroll needed
+  }
+
+  &__enable-hint {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 0.5rem 0;
+    margin: 0;
+  }
+
+  &__chevron {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s;
+    margin-left: 0.1rem;
+
+    &--open {
+      transform: rotate(180deg);
+      color: var(--accent-primary);
+    }
   }
 }
 
@@ -1125,9 +1144,10 @@
   to   { opacity: 1; transform: scale(1);    }
 }
 
-// Neon aura: electric-blue plasma glow that envelops the card after a provider add
+// Neon aura: single electric-blue plasma flash that fades cleanly,
+// followed by a brief secondary "freed" swell — no flicker, no transform conflict.
 .card--neon-aura {
-  animation: neonAura 2.8s ease-out both;
+  animation: neonAura 2.2s ease-out both;
 }
 
 @keyframes neonAura {
@@ -1135,44 +1155,33 @@
     box-shadow: none;
     border-color: var(--card-border);
   }
-  10%  {
+  // Single peak — fast rise
+  12%  {
     box-shadow:
-      0 0 6px 3px rgba(0, 229, 255, 0.95),
-      0 0 20px 8px rgba(0, 191, 255, 0.75),
-      0 0 50px 16px rgba(0, 140, 255, 0.45),
-      0 0 90px 24px rgba(0, 90, 255, 0.22);
+      0 0 8px  4px  rgba(0, 229, 255, 0.92),
+      0 0 22px 8px  rgba(0, 191, 255, 0.65),
+      0 0 55px 16px rgba(0, 140, 255, 0.32),
+      0 0 80px 22px rgba(0, 90,  255, 0.15);
     border-color: #00e5ff;
   }
-  28%  {
+  // Smooth fade
+  72%  {
     box-shadow:
-      0 0 4px 2px rgba(0, 229, 255, 0.65),
-      0 0 14px 6px rgba(0, 191, 255, 0.5),
-      0 0 35px 12px rgba(0, 140, 255, 0.3),
-      0 0 65px 18px rgba(0, 90, 255, 0.14);
-    border-color: rgba(0, 229, 255, 0.65);
+      0 0 3px 1px rgba(0, 229, 255, 0.22),
+      0 0 9px 3px rgba(0, 191, 255, 0.12);
+    border-color: rgba(0, 229, 255, 0.14);
   }
-  46%  {
+  // Brief "freed" swell — card subtly exhales after the glow
+  82%  {
     box-shadow:
-      0 0 8px 3px rgba(0, 229, 255, 1),
-      0 0 24px 9px rgba(0, 191, 255, 0.82),
-      0 0 55px 18px rgba(0, 140, 255, 0.5),
-      0 0 95px 26px rgba(0, 90, 255, 0.24);
-    border-color: #00e5ff;
+      0 0 10px 4px rgba(0, 229, 255, 0.48),
+      0 0 26px 9px rgba(0, 191, 255, 0.26);
+    border-color: rgba(0, 229, 255, 0.42);
   }
-  66%  {
+  94%  {
     box-shadow:
-      0 0 5px 2px rgba(0, 229, 255, 0.5),
-      0 0 16px 6px rgba(0, 191, 255, 0.38),
-      0 0 38px 12px rgba(0, 140, 255, 0.22),
-      0 0 62px 16px rgba(0, 90, 255, 0.1);
-    border-color: rgba(0, 229, 255, 0.45);
-  }
-  85%  {
-    box-shadow:
-      0 0 2px 1px rgba(0, 229, 255, 0.25),
-      0 0 8px 3px rgba(0, 191, 255, 0.18),
-      0 0 18px 6px rgba(0, 140, 255, 0.1);
-    border-color: rgba(0, 229, 255, 0.2);
+      0 0 2px 1px rgba(0, 229, 255, 0.12);
+    border-color: rgba(0, 229, 255, 0.08);
   }
   100% {
     box-shadow: none;

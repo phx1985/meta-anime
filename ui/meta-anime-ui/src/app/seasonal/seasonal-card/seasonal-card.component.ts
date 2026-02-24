@@ -10,7 +10,7 @@ import { ScoreBadgeComponent } from '../../anime-list/anime-card/score-badge/sco
 import { SonarrService } from '../../services/sonarr.service';
 import { AnimeService } from '../../services/anime.service';
 import { SonarrRootFolder, SonarrQualityProfile, SonarrLookupResult, SonarrAddResult } from '../../models/sonarr.models';
-import { Subject, debounceTime, distinctUntilChanged, switchMap, of, catchError } from 'rxjs';
+import { Subject, debounceTime, switchMap, of, catchError } from 'rxjs';
 
 @Component({
   selector: 'app-seasonal-card',
@@ -24,7 +24,17 @@ import { Subject, debounceTime, distinctUntilChanged, switchMap, of, catchError 
       state('expanded',  style({ height: '*',       overflow: 'hidden' })),
       transition('collapsed => expanded', animate('380ms cubic-bezier(0.4, 0, 0.2, 1)')),
       transition('expanded => collapsed', animate('280ms cubic-bezier(0.4, 0, 1, 1)')),
-    ])
+    ]),
+    trigger('accordionExpand', [
+      transition(':enter', [
+        style({ height: '0', opacity: '0', overflow: 'hidden' }),
+        animate('280ms cubic-bezier(0.4, 0, 0.2, 1)', style({ height: '*', opacity: '1' })),
+      ]),
+      transition(':leave', [
+        style({ overflow: 'hidden' }),
+        animate('200ms cubic-bezier(0.4, 0, 1, 1)', style({ height: '0', opacity: '0' })),
+      ]),
+    ]),
   ]
 })
 export class SeasonalCardComponent implements OnInit {
@@ -47,9 +57,12 @@ export class SeasonalCardComponent implements OnInit {
   addBusy             = signal(false);
   addError            = signal('');
   addSuccess          = signal(false);
-  addSonarr           = signal(false);   // user selected to add to Sonarr
-  addMal              = signal(false);   // user selected to add to MAL
-  lastAddedSonarrId   = signal<number | null>(null); // for rollback
+  addSonarr           = signal(false);
+  addMal              = signal(false);
+  lastAddedSonarrId   = signal<number | null>(null);
+
+  /** Which provider accordion is currently expanded (null = all collapsed). */
+  expandedProvider = signal<'sonarr' | 'mal' | null>(null);
 
   // ── Sonarr add state ─────────────────────────────────────────────────────
   sonarrRootFolders     = signal<SonarrRootFolder[]>([]);
@@ -82,7 +95,8 @@ export class SeasonalCardComponent implements OnInit {
     this.sonarrSearch$
       .pipe(
         debounceTime(350),
-        distinctUntilChanged(),
+        // NOTE: distinctUntilChanged intentionally removed — it blocked re-searches
+        // when re-opening the modal for the same anime (same term → no new emission).
         switchMap(term => {
           if (!term.trim()) return of([]);
           this.sonarrSearching.set(true);
@@ -153,77 +167,66 @@ export class SeasonalCardComponent implements OnInit {
   // ── Unified add modal ─────────────────────────────────────────────────────
 
   openAddModal(): void {
-    // Pre-select missing providers
     this.addSonarr.set(!this.anime.inSonarr);
     this.addMal.set(!this.anime.inMal);
     this.addError.set('');
     this.addSuccess.set(false);
     this.lastAddedSonarrId.set(null);
-    // Reset MAL fields
     this.malStatus.set('plan_to_watch');
     this.malEpisodes.set(0);
     this.malScore.set(0);
+
+    // Auto-expand the first missing provider
+    if (!this.anime.inSonarr) {
+      this.expandedProvider.set('sonarr');
+    } else if (!this.anime.inMal) {
+      this.expandedProvider.set('mal');
+    } else {
+      this.expandedProvider.set(null);
+    }
+
     this.showAddModal.set(true);
 
-    // If Sonarr is pre-selected, auto-search + load options
+    // Kick off Sonarr search + options when Sonarr is pre-selected
     if (!this.anime.inSonarr) {
-      const searchTerm = this.getSonarrSearchTerm();
-      this.sonarrSearchTerm.set(searchTerm);
-      this.sonarrSelected.set(null);
-      this.sonarrSearchResults.set([]);
-      this.sonarrSearchError.set('');
-      this.sonarrSearch$.next(searchTerm);
-
-      if (this.sonarrRootFolders().length === 0) {
-        this.sonarrLoadingOptions.set(true);
-        this.sonarrService.getOptions()
-          .pipe(takeUntilDestroyed(this.destroyRef))
-          .subscribe({
-            next: opts => {
-              this.sonarrRootFolders.set(opts.rootFolders);
-              this.sonarrQualityProfiles.set(opts.qualityProfiles);
-              if (opts.rootFolders.length > 0) this.sonarrRootFolder.set(opts.rootFolders[0].path);
-              if (opts.qualityProfiles.length > 0) this.sonarrProfileId.set(opts.qualityProfiles[0].id);
-              this.sonarrLoadingOptions.set(false);
-            },
-            error: () => {
-              this.addError.set(this.translate.instant('seasonal.sonarrOptionsError'));
-              this.sonarrLoadingOptions.set(false);
-            }
-          });
-      }
+      this.initSonarrSection();
     }
   }
 
-  closeAddModal(): void { this.showAddModal.set(false); }
+  closeAddModal(): void {
+    this.showAddModal.set(false);
+    this.expandedProvider.set(null);
+  }
 
+  /**
+   * Toggles the accordion for the given provider (exclusive — closes others).
+   * If the provider is locked (already in library), this is a no-op.
+   */
+  toggleAccordion(provider: 'sonarr' | 'mal'): void {
+    const next = this.expandedProvider() === provider ? null : provider;
+    this.expandedProvider.set(next);
+    // If expanding Sonarr while it is enabled, ensure search is running
+    if (next === 'sonarr' && this.addSonarr()) {
+      this.ensureSonarrSearch();
+    }
+  }
+
+  /**
+   * Toggles the add-toggle for a provider.
+   * When turning ON, also expands that provider's accordion and triggers init.
+   */
   toggleProvider(provider: 'sonarr' | 'mal'): void {
     if (provider === 'sonarr') {
       const next = !this.addSonarr();
       this.addSonarr.set(next);
-      // Trigger search when enabling Sonarr section
-      if (next && this.sonarrSearchResults().length === 0) {
-        const searchTerm = this.getSonarrSearchTerm();
-        this.sonarrSearchTerm.set(searchTerm);
-        this.sonarrSearch$.next(searchTerm);
-        if (this.sonarrRootFolders().length === 0) {
-          this.sonarrLoadingOptions.set(true);
-          this.sonarrService.getOptions()
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-              next: opts => {
-                this.sonarrRootFolders.set(opts.rootFolders);
-                this.sonarrQualityProfiles.set(opts.qualityProfiles);
-                if (opts.rootFolders.length > 0) this.sonarrRootFolder.set(opts.rootFolders[0].path);
-                if (opts.qualityProfiles.length > 0) this.sonarrProfileId.set(opts.qualityProfiles[0].id);
-                this.sonarrLoadingOptions.set(false);
-              },
-              error: () => this.sonarrLoadingOptions.set(false)
-            });
-        }
+      if (next) {
+        this.expandedProvider.set('sonarr');
+        this.initSonarrSection();
       }
     } else {
-      this.addMal.set(!this.addMal());
+      const next = !this.addMal();
+      this.addMal.set(next);
+      if (next) this.expandedProvider.set('mal');
     }
   }
 
@@ -241,7 +244,6 @@ export class SeasonalCardComponent implements OnInit {
 
   confirmAdd(): void {
     if (this.addBusy() || !this.anythingSelected) return;
-    // Capture intent before the async adds so animation logic is deterministic
     const willAddSonarr = !this.anime.inSonarr && this.addSonarr();
     const willAddMal    = !this.anime.inMal    && this.addMal();
     this.addBusy.set(true);
@@ -252,10 +254,8 @@ export class SeasonalCardComponent implements OnInit {
         this.addBusy.set(false);
         setTimeout(() => {
           this.closeAddModal();
-          // Trigger electric-blue neon aura on the card; auto-clear when animation ends
           if (willAddSonarr || willAddMal) {
             this.neonGlow.set(true);
-            // 2900ms slightly outlasts the 2.8s CSS animation so the signal clears cleanly
             setTimeout(() => this.neonGlow.set(false), 2900);
           }
         }, 1500);
@@ -273,6 +273,52 @@ export class SeasonalCardComponent implements OnInit {
     return this.anime.title;
   }
 
+  /** Initialises the Sonarr search term + results and loads options from scratch. */
+  private initSonarrSection(): void {
+    const term = this.getSonarrSearchTerm();
+    this.sonarrSearchTerm.set(term);
+    this.sonarrSelected.set(null);
+    this.sonarrSearchResults.set([]);
+    this.sonarrSearchError.set('');
+    // Emit an empty string first so debounce sees a value change, then the real term.
+    // This ensures the search fires even if the Subject last emitted the same term.
+    this.sonarrSearch$.next('');
+    this.sonarrSearch$.next(term);
+    this.loadSonarrOptions();
+  }
+
+  /** Ensures a Sonarr search is running when results are absent. */
+  private ensureSonarrSearch(): void {
+    if (this.sonarrSearchResults().length === 0 && !this.sonarrSearching()) {
+      const term = this.getSonarrSearchTerm();
+      this.sonarrSearchTerm.set(term);
+      this.sonarrSearch$.next('');
+      this.sonarrSearch$.next(term);
+    }
+    this.loadSonarrOptions();
+  }
+
+  /** Loads Sonarr root folders + quality profiles if not already cached. */
+  private loadSonarrOptions(): void {
+    if (this.sonarrRootFolders().length > 0 || this.sonarrLoadingOptions()) return;
+    this.sonarrLoadingOptions.set(true);
+    this.sonarrService.getOptions()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: opts => {
+          this.sonarrRootFolders.set(opts.rootFolders);
+          this.sonarrQualityProfiles.set(opts.qualityProfiles);
+          if (opts.rootFolders.length > 0) this.sonarrRootFolder.set(opts.rootFolders[0].path);
+          if (opts.qualityProfiles.length > 0) this.sonarrProfileId.set(opts.qualityProfiles[0].id);
+          this.sonarrLoadingOptions.set(false);
+        },
+        error: () => {
+          this.addError.set(this.translate.instant('seasonal.sonarrOptionsError'));
+          this.sonarrLoadingOptions.set(false);
+        }
+      });
+  }
+
   private doAddSonarr(onSuccess: () => void): void {
     if (this.anime.inSonarr || !this.addSonarr()) { onSuccess(); return; }
 
@@ -287,7 +333,7 @@ export class SeasonalCardComponent implements OnInit {
       tvdbId: selected.tvdbId,
       rootFolderPath: this.sonarrRootFolder(),
       qualityProfileId: this.sonarrProfileId(),
-      malId: this.anime.malId,   // sent to backend for property-bag persistence
+      malId: this.anime.malId,
     })
     .pipe(takeUntilDestroyed(this.destroyRef))
     .subscribe({
@@ -319,7 +365,6 @@ export class SeasonalCardComponent implements OnInit {
         onSuccess();
       },
       error: (err) => {
-        // Rollback Sonarr if it was just added in this same session
         const sonarrId = this.lastAddedSonarrId();
         if (sonarrId !== null) {
           this.sonarrService.removeSeries(sonarrId)
@@ -330,8 +375,6 @@ export class SeasonalCardComponent implements OnInit {
                 (this.anime as { sonarrUrl?: string }).sonarrUrl = undefined;
                 this.lastAddedSonarrId.set(null);
               },
-              // If rollback also fails, the UI state flag is reset but the series
-              // may remain in Sonarr — append a note so the user is aware.
               error: () => {
                 (this.anime as { inSonarr: boolean }).inSonarr = false;
                 this.lastAddedSonarrId.set(null);

@@ -63,6 +63,7 @@
     "notTracked": "Non suivi",
     "addSuccess": "Ajouté avec succès !",
     "sonarrNoneSelected": "Veuillez sélectionner une série dans les résultats",
+    "enableToAdd": "Activez le commutateur ci-dessus pour configurer et ajouter ce fournisseur",
     "sonarrSearch": "Recherche Sonarr",
     "sonarrSearchPlaceholder": "Rechercher par titre…",
     "sonarrSearchError": "Échec de la recherche de séries Sonarr.",

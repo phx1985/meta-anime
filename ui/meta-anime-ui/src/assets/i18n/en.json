@@ -63,6 +63,7 @@
     "notTracked": "Not tracked",
     "addSuccess": "Added successfully!",
     "sonarrNoneSelected": "Please select a series from the search results",
+    "enableToAdd": "Toggle the switch above to configure and add this provider",
     "sonarrSearch": "Search Sonarr",
     "sonarrSearchPlaceholder": "Search by title…",
     "sonarrSearchError": "Failed to search Sonarr series.",
