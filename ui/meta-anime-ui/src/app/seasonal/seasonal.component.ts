@@ -475,6 +475,8 @@ export class SeasonalComponent {
     if (status === 'not_in') return active.some(s => s !== 'not_in');
     return active.includes('not_in');
   }
+
+  toggleSortOrder(): void {
     this._beginFilterChange();
     this.sortOrder.update(o => o === 'asc' ? 'desc' : 'asc');
     this.filterVersion.update(v => v + 1);
