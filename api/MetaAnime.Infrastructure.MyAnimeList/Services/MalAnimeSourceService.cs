@@ -134,11 +134,15 @@ public class MalAnimeSourceService(IOptions<MalSettings> options, IMalTokenServi
             var items = result.Data.Select(d => d.Node).ToList();
             return Result.Success<(IList<MalAnime>, bool)>((items, result.Paging.HasNextPage));
         }
-        else
-        {
-            var error = JsonSerializer.Deserialize<MalError>(json)!;
-            return Result.Failure<(IList<MalAnime>, bool)>(new Error(error.Message));
-        }
+
+        // 404 means MAL has no data for this season yet (e.g. a future season) — treat as empty.
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            return Result.Success<(IList<MalAnime>, bool)>((new List<MalAnime>(), false));
+
+        MalError? malError = null;
+        try { malError = JsonSerializer.Deserialize<MalError>(json); }
+        catch (JsonException) { /* Non-JSON body (e.g. HTML gateway error) — fall through to status-code fallback. */ }
+        return Result.Failure<(IList<MalAnime>, bool)>(new Error(malError?.Message ?? response.StatusCode.ToString()));
     }
     public async Task<Result> UpdateListStatusAsync(string animeId, string status, int numWatchedEpisodes, int score)
     {

@@ -49,7 +49,7 @@
     "openMal": "Open on MyAnimeList",
     "loading": "Loading seasonal anime…",
     "error": "Failed to load seasonal anime. Please try again later.",
-    "empty": "No anime found for this season.",
+    "empty": "No anime found for this season. MAL data may not be available yet for this period.",
     "notInPlex": "Not in your Plex library",
     "notInSonarr": "Not tracked by Sonarr",
     "notInMal": "Not in your MAL list",

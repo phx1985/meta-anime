@@ -4,6 +4,56 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
+  isolation: isolate;  // creates its own stacking context
+
+  // ── SSJ2 electric arc hover effect ──────────────────────────────────────────
+  // A conic-gradient segment rotates around the card border on hover,
+  // creating the "plasma arcs" effect (Goku Super Saiyan 2 style).
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 17px;   // card border-radius (14px) + ring width (3px)
+    background: conic-gradient(
+      from 0deg,
+      transparent 0% 68%,
+      rgba(0, 229, 255, 1)   74%,
+      rgba(100, 200, 255, 0.85) 78%,
+      rgba(180, 100, 255, 0.6)  82%,
+      transparent 88% 100%
+    );
+    z-index: -1;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover::before,
+  &.neon-glow-active::before {
+    opacity: 1;
+  }
+
+  &:hover::before {
+    animation: arcRotate 0.55s linear infinite;
+  }
+
+  // ── Post-add neon aura glow ──────────────────────────────────────────────────
+  // Placed on ::after (separate from ::before arc) and NOT on the .seasonal-card
+  // article element, so it never conflicts with the card's own cardIn animation.
+  &.neon-glow-active::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 15px;
+    pointer-events: none;
+    z-index: -1;
+    animation: neonAura 2.2s ease-out forwards;
+  }
+
+  &.neon-glow-active::before {
+    animation: arcRotate 0.35s linear infinite;
+  }
 }
 
 .seasonal-card {
@@ -1144,17 +1194,17 @@
   to   { opacity: 1; transform: scale(1);    }
 }
 
-// Neon aura: single electric-blue plasma flash that fades cleanly,
-// followed by a brief secondary "freed" swell — no flicker, no transform conflict.
-.card--neon-aura {
-  animation: neonAura 2.2s ease-out both;
+// ── SSJ2 arc rotation keyframe (used by :host::before) ──────────────────────
+@keyframes arcRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
+// Neon aura: single electric-blue plasma flash on :host::after after a successful add.
+// Lives on the ::after pseudo-element (NOT the .seasonal-card article) so it never
+// interferes with the card's own cardIn animation — fixes the card-disappearance bug.
 @keyframes neonAura {
-  0%   {
-    box-shadow: none;
-    border-color: var(--card-border);
-  }
+  0%   { box-shadow: none; }
   // Single peak — fast rise
   12%  {
     box-shadow:
@@ -1162,29 +1212,19 @@
       0 0 22px 8px  rgba(0, 191, 255, 0.65),
       0 0 55px 16px rgba(0, 140, 255, 0.32),
       0 0 80px 22px rgba(0, 90,  255, 0.15);
-    border-color: #00e5ff;
   }
   // Smooth fade
   72%  {
     box-shadow:
       0 0 3px 1px rgba(0, 229, 255, 0.22),
       0 0 9px 3px rgba(0, 191, 255, 0.12);
-    border-color: rgba(0, 229, 255, 0.14);
   }
-  // Brief "freed" swell — card subtly exhales after the glow
+  // Brief "freed" swell
   82%  {
     box-shadow:
       0 0 10px 4px rgba(0, 229, 255, 0.48),
       0 0 26px 9px rgba(0, 191, 255, 0.26);
-    border-color: rgba(0, 229, 255, 0.42);
   }
-  94%  {
-    box-shadow:
-      0 0 2px 1px rgba(0, 229, 255, 0.12);
-    border-color: rgba(0, 229, 255, 0.08);
-  }
-  100% {
-    box-shadow: none;
-    border-color: var(--card-border);
-  }
+  94%  { box-shadow: 0 0 2px 1px rgba(0, 229, 255, 0.12); }
+  100% { box-shadow: none; }
 }

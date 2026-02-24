@@ -49,7 +49,7 @@
     "openMal": "Ouvrir sur MyAnimeList",
     "loading": "Chargement des animes saisonniers…",
     "error": "Échec du chargement des animes saisonniers. Veuillez réessayer plus tard.",
-    "empty": "Aucun anime trouvé pour cette saison.",
+    "empty": "Aucun anime trouvé pour cette saison. Les données MAL peuvent ne pas encore être disponibles pour cette période.",
     "notInPlex": "Absent de votre bibliothèque Plex",
     "notInSonarr": "Non suivi par Sonarr",
     "notInMal": "Non dans votre liste MAL",

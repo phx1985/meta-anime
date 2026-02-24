@@ -87,7 +87,7 @@
     @if (!loading() && animes().length > 0) {
       <div class="seasonal-grid">
         @for (anime of animes(); track anime.malId) {
-          <div #seasonalCard class="seasonal-grid__cell">
+          <div class="seasonal-grid__cell">
             <app-seasonal-card [anime]="anime" />
           </div>
         }
@@ -97,19 +97,6 @@
     <!-- Empty state -->
     @if (!loading() && !error() && animes().length === 0) {
       <div class="seasonal-empty">{{ 'seasonal.empty' | translate }}</div>
-    }
-
-    <!-- Load-more indicator -->
-    @if (loadingMore()) {
-      <div class="seasonal-load-more">
-        <div class="loading-spinner loading-spinner--sm" aria-hidden="true"></div>
-        <span>{{ 'animeList.loadingMore' | translate }}</span>
-      </div>
-    }
-
-    <!-- End of results -->
-    @if (!loadingMore() && allLoaded() && animes().length > 0) {
-      <div class="seasonal-end">{{ 'animeList.endOfResults' | translate }}</div>
     }
 
   </div>

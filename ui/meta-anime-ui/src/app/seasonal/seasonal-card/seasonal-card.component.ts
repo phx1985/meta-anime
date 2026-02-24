@@ -1,4 +1,4 @@
-import { Component, Input, signal, inject, HostListener, OnInit } from '@angular/core';
+import { Component, Input, signal, inject, HostListener, HostBinding, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -51,6 +51,10 @@ export class SeasonalCardComponent implements OnInit {
   // ── Neon aura animation signal (set true after a successful add) ──────────
   /** Triggers the electric-blue plasma aura on the card after providers are added. */
   neonGlow = signal(false);
+
+  /** Host class binding — drives the neon aura via :host.neon-glow-active::after pseudo-element. */
+  @HostBinding('class.neon-glow-active')
+  get neonGlowActive(): boolean { return this.neonGlow(); }
 
   // ── Unified add modal ────────────────────────────────────────────────────
   showAddModal        = signal(false);

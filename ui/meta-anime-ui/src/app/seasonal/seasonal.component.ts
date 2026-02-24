@@ -1,11 +1,6 @@
 import {
-  AfterViewInit,
   Component,
   DestroyRef,
-  ElementRef,
-  OnDestroy,
-  QueryList,
-  ViewChildren,
   inject,
   signal,
   computed,
@@ -19,7 +14,7 @@ import { SettingsService } from '../services/settings.service';
 import { SeasonalAnimeItem, SeasonName } from '../models/anime.models';
 import { SeasonalCardComponent } from './seasonal-card/seasonal-card.component';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 100;
 const MIN_YEAR = 1963;
 
 export interface SeasonPill {
@@ -49,12 +44,10 @@ function getCurrentSeason(month: number): SeasonName {
   templateUrl: './seasonal.component.html',
   styleUrl: './seasonal.component.scss',
 })
-export class SeasonalComponent implements AfterViewInit, OnDestroy {
+export class SeasonalComponent {
   private animeService    = inject(AnimeService);
   private settingsService = inject(SettingsService);
   private destroyRef      = inject(DestroyRef);
-
-  @ViewChildren('seasonalCard', { read: ElementRef }) cardRefs!: QueryList<ElementRef>;
 
   private readonly _now        = new Date();
   private readonly _maxYear    = this._now.getFullYear();
@@ -77,14 +70,9 @@ export class SeasonalComponent implements AfterViewInit, OnDestroy {
   readonly canGoPrev = computed(() => this.selectedYear() > MIN_YEAR);
   readonly canGoNext = computed(() => this.selectedYear() < this._maxYear);
 
-  animes       = signal<SeasonalAnimeItem[]>([]);
-  loading      = signal(false);
-  loadingMore  = signal(false);
-  error        = signal(false);
-  allLoaded    = signal(false);
-
-  private currentPage = 1;
-  private scrollObserver: IntersectionObserver | null = null;
+  animes  = signal<SeasonalAnimeItem[]>([]);
+  loading = signal(false);
+  error   = signal(false);
 
   constructor() {
     // Fetch NSFW setting (not used locally but kept for future)
@@ -93,110 +81,60 @@ export class SeasonalComponent implements AfterViewInit, OnDestroy {
       .subscribe();
 
     // Initial load
-    this._loadCurrent(true);
-  }
-
-  ngAfterViewInit(): void {
-    this.cardRefs.changes
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.setupScrollSentinel());
-  }
-
-  ngOnDestroy(): void {
-    this.scrollObserver?.disconnect();
+    this._loadCurrent();
   }
 
   // ── Year navigation ──────────────────────────────────────────────────────
   prevYear(): void {
     if (!this.canGoPrev()) return;
     this.selectedYear.update(y => y - 1);
-    this._loadCurrent(true);
+    this.selectedSeason.set('winter');
+    this._loadCurrent();
   }
 
   nextYear(): void {
     if (!this.canGoNext()) return;
     this.selectedYear.update(y => y + 1);
-    this._loadCurrent(true);
+    this.selectedSeason.set('winter');
+    this._loadCurrent();
   }
 
   setYear(year: number): void {
     const clamped = Math.max(MIN_YEAR, Math.min(this._maxYear, year));
     if (clamped === this.selectedYear()) return;
     this.selectedYear.set(clamped);
-    this._loadCurrent(true);
+    this.selectedSeason.set('winter');
+    this._loadCurrent();
   }
 
   // ── Season selection ─────────────────────────────────────────────────────
   selectSeason(season: SeasonName): void {
     if (this.selectedSeason() === season) return;
     this.selectedSeason.set(season);
-    this._loadCurrent(true);
+    this._loadCurrent();
   }
 
   // ── Loading ──────────────────────────────────────────────────────────────
-  private _loadCurrent(reset: boolean): void {
+  private _loadCurrent(): void {
     const year   = this.selectedYear();
     const season = this.selectedSeason();
 
-    if (reset) {
-      this.currentPage = 1;
-      this.animes.set([]);
-      this.allLoaded.set(false);
-      this.loading.set(true);
-    } else {
-      this.loadingMore.set(true);
-    }
+    this.animes.set([]);
+    this.loading.set(true);
     this.error.set(false);
 
-    this.animeService.getSeasonalAnimes(year, season, this.currentPage, PAGE_SIZE)
+    this.animeService.getSeasonalAnimes(year, season, 1, PAGE_SIZE)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: data => {
-          this.animes.update(existing => [...existing, ...data.data]);
-          this.allLoaded.set(!data.hasNextPage);
+          this.animes.set(data.data);
           this.loading.set(false);
-          this.loadingMore.set(false);
         },
         error: () => {
           this.error.set(true);
           this.loading.set(false);
-          this.loadingMore.set(false);
         }
       });
-  }
-
-  private loadNextPage(): void {
-    if (this.loadingMore() || this.allLoaded()) return;
-    this.currentPage++;
-    this._loadCurrent(false);
-  }
-
-  private setupScrollSentinel(): void {
-    this.scrollObserver?.disconnect();
-    this.scrollObserver = null;
-
-    if (this.allLoaded()) return;
-
-    const elements = this.cardRefs.toArray();
-    if (elements.length === 0) return;
-
-    const sentinelIdx = Math.min(
-      elements.length - 1,
-      Math.max(0, elements.length - Math.floor(PAGE_SIZE / 2))
-    );
-    const hostEl   = elements[sentinelIdx].nativeElement;
-    const targetEl = hostEl.firstElementChild;
-    if (!targetEl) return;
-
-    this.scrollObserver = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !this.loadingMore() && !this.allLoaded()) {
-          this.loadNextPage();
-        }
-      },
-      { threshold: 0 }
-    );
-    this.scrollObserver.observe(targetEl);
   }
 }
 
