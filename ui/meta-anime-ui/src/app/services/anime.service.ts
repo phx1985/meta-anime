@@ -8,13 +8,17 @@ import {
   PagedResponse,
   AnimeFilters,
   CreateAnimeRequest,
-  UpdateAnimeRequest
+  UpdateAnimeRequest,
+  SeasonalAnimeItem
 } from '../models/anime.models';
+import { MalListStatusRequest } from '../models/sonarr.models';
 
 @Injectable({ providedIn: 'root' })
 export class AnimeService {
   private http = inject(HttpClient);
   private base = '/api/v1/animes';
+  private seasonalBase = '/api/v1/seasonal';
+  private malBase = '/api/v1/mal';
 
   getStatistics(): Observable<AnimeStatisticsResponse> {
     return this.http.get<AnimeStatisticsResponse>(`${this.base}/statistics`);
@@ -63,5 +67,16 @@ export class AnimeService {
       params = params.set('forceRefreshKometaMapping', forceRefreshKometaMapping);
     }
     return this.http.post<void>(`${this.base}/sync`, null, { params });
+  }
+
+  getSeasonalAnimes(year: number, season: string): Observable<SeasonalAnimeItem[]> {
+    const params = new HttpParams()
+      .set('year', year)
+      .set('season', season);
+    return this.http.get<SeasonalAnimeItem[]>(this.seasonalBase, { params });
+  }
+
+  updateMalListStatus(malId: string, request: MalListStatusRequest): Observable<void> {
+    return this.http.put<void>(`${this.malBase}/list/${malId}`, request);
   }
 }

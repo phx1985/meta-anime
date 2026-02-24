@@ -9,6 +9,14 @@ namespace MetaAnime.Infrastructure.Repositories;
 
 public class AnimeRepository(MetaAnimeDbContext dbContext) : IAnimeRepository
 {
+    public async Task AddAsync(Anime anime)
+    {
+        anime.Id = Guid.CreateVersion7();
+        // Let EF Core track ExternalAnimeIdentifiers via navigation property
+        await dbContext.Anime.AddAsync(anime);
+        await dbContext.SaveChangesAsync();
+    }
+
     public async Task BulkInsertAsync(IEnumerable<Anime> animes)
     {
         var animeList = animes.ToList();

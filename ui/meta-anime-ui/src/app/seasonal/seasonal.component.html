@@ -1,0 +1,103 @@
+<div class="seasonal-page">
+
+  <!-- Animated bokeh background -->
+  <div class="bokeh" aria-hidden="true">
+    @for (i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]; track i) {
+      <div class="bokeh__blob"></div>
+    }
+  </div>
+
+  <div class="container py-5">
+
+    <!-- Page header -->
+    <div class="seasonal-header mb-4">
+      <h1 class="seasonal-title">{{ 'seasonal.title' | translate }}</h1>
+      <p class="seasonal-subtitle">{{ 'seasonal.subtitle' | translate }}</p>
+    </div>
+
+    <!-- Season selector: year picker + 4 season pills -->
+    <div class="season-selector mb-4">
+
+      <!-- Year picker row -->
+      <div class="year-picker" role="group" [attr.aria-label]="'seasonal.yearSelect' | translate">
+        <button type="button" class="year-nav year-nav--prev"
+                [disabled]="!canGoPrev()"
+                [attr.aria-label]="'seasonal.prevYear' | translate"
+                (click)="prevYear()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M10 3L5 8l5 5"/>
+          </svg>
+        </button>
+
+        <div class="year-display">
+          <select class="year-select"
+                  [ngModel]="selectedYear()"
+                  (ngModelChange)="setYear($event)"
+                  [attr.aria-label]="'seasonal.yearSelect' | translate">
+            @for (y of yearOptions; track y) {
+              <option [value]="y">{{ y }}</option>
+            }
+          </select>
+          <span class="year-text" aria-hidden="true">{{ selectedYear() }}</span>
+          <svg class="year-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+            <path d="M1 1l4 4 4-4"/>
+          </svg>
+        </div>
+
+        <button type="button" class="year-nav year-nav--next"
+                [disabled]="!canGoNext()"
+                [attr.aria-label]="'seasonal.nextYear' | translate"
+                (click)="nextYear()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M6 3l5 5-5 5"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Season pills -->
+      <div class="season-pills" role="tablist" [attr.aria-label]="'seasonal.seasonSelect' | translate">
+        @for (pill of allSeasons; track pill.season) {
+          <button
+            type="button"
+            class="season-pill"
+            role="tab"
+            [class.season-pill--active]="selectedSeason() === pill.season"
+            [attr.aria-selected]="selectedSeason() === pill.season"
+            (click)="selectSeason(pill.season)">
+            {{ pill.labelKey | translate }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Error state -->
+    @if (error()) {
+      <div class="seasonal-error">{{ 'seasonal.error' | translate }}</div>
+    }
+
+    <!-- Loading initial state -->
+    @if (loading()) {
+      <div class="seasonal-loading">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <span>{{ 'seasonal.loading' | translate }}</span>
+      </div>
+    }
+
+    <!-- Anime grid -->
+    @if (!loading() && animes().length > 0) {
+      <div class="seasonal-grid">
+        @for (anime of animes(); track anime.malId) {
+          <div class="seasonal-grid__cell">
+            <app-seasonal-card [anime]="anime" />
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Empty state -->
+    @if (!loading() && !error() && animes().length === 0) {
+      <div class="seasonal-empty">{{ 'seasonal.empty' | translate }}</div>
+    }
+
+  </div>
+</div>

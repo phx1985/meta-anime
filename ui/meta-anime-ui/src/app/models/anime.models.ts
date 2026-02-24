@@ -160,3 +160,25 @@ export interface UpdateAnimeRequest {
   title: string;
   description?: string;
 }
+
+export interface SeasonalAnimeItem {
+  malId: string;
+  title: string;
+  synopsis?: string;
+  genres?: string[];
+  coverImageUrl?: string;
+  malScore: number;
+  startDate?: string;
+  mediaType?: string;
+  status?: string;
+  malUrl?: string;
+  inMal: boolean;
+  inPlex: boolean;
+  plexUrl?: string;
+  inSonarr: boolean;
+  sonarrUrl?: string;
+  tvdbId?: string;
+  englishTitle?: string;
+}
+
+export type SeasonName = 'winter' | 'spring' | 'summer' | 'fall';

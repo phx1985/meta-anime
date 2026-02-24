@@ -28,6 +28,17 @@ public class MalAnimeSourceService(IOptions<MalSettings> options, IMalTokenServi
                                                                     "mean, " +
                                                                     "num_episodes, " +
                                                                     "start_season";
+    private const string SEASONAL_FIELDS = "synopsis, " +
+                                           "alternative_titles{en,ja}, " +
+                                           "genres{id,name}, " +
+                                           "main_picture, " +
+                                           "nsfw, " +
+                                           "start_date, " +
+                                           "start_season{year,season}, " +
+                                           "status, " +
+                                           "media_type, " +
+                                           "mean, " +
+                                           "num_episodes";
     #endregion
 
     #region IMalAnimeSourceService Implementation
@@ -99,6 +110,84 @@ public class MalAnimeSourceService(IOptions<MalSettings> options, IMalTokenServi
             var error = JsonSerializer.Deserialize<MalError>(json)!;
             return Result.Failure<MalAnime>(new Error(error.Message));
         }
+    }
+
+    public async Task<Result<IList<MalAnime>>> GetSeasonalAsync(int year, string season)
+    {
+        if (!isConfigured)
+            return Result.Success<IList<MalAnime>>(new List<MalAnime>());
+
+        var token = await malTokenService.GetAccessTokenAsync();
+        if (string.IsNullOrWhiteSpace(token))
+            return Result.Success<IList<MalAnime>>(new List<MalAnime>());
+
+        // Fetch all pages from MAL (limit=500 per request, loop until no next page)
+        const int perPage = 500;
+        var allItems = new List<MalAnime>();
+        string? nextUrl = $"{baseUrl}/anime/season/{year}/{season}?limit={perPage}&offset=0&nsfw=true&fields={SEASONAL_FIELDS}&sort=anime_score";
+
+        while (nextUrl != null)
+        {
+            var uri = new Uri(nextUrl);
+            var restClient = new RestClient(uri);
+            var restRequest = new RestRequest { Method = Method.Get };
+            restRequest.AddHeader("Authorization", $"Bearer {token}");
+
+            var response = await ExecuteRequestAsync(restClient, restRequest);
+            var json = response.Content!;
+
+            if (response.IsSuccessful)
+            {
+                var result = JsonSerializer.Deserialize<MalResult>(json)!;
+                allItems.AddRange(result.Data.Select(d => d.Node));
+                nextUrl = result.Paging.HasNextPage ? result.Paging.Next : null;
+            }
+            else
+            {
+                // 404 means MAL has no data for this season yet (e.g. a future season) — treat as empty.
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    return Result.Success<IList<MalAnime>>(new List<MalAnime>());
+
+                MalError? malError = null;
+                try { malError = JsonSerializer.Deserialize<MalError>(json); }
+                catch (JsonException) { /* Non-JSON body (e.g. HTML gateway error) — fall through to status-code fallback. */ }
+                return Result.Failure<IList<MalAnime>>(new Error(malError?.Message ?? response.StatusCode.ToString()));
+            }
+        }
+
+        // Strictly filter to only anime whose start_season matches the requested year/season.
+        // MAL's seasonal endpoint may include currently-airing continuations from prior seasons;
+        // this filter ensures we only show series that actually started in this exact season.
+        var filtered = allItems
+            .Where(a => a.StartSeason?.Year == year &&
+                        string.Equals(a.StartSeason?.Season, season, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        return Result.Success<IList<MalAnime>>(filtered);
+    }
+    public async Task<Result> UpdateListStatusAsync(string animeId, string status, int numWatchedEpisodes, int score)
+    {
+        if (!isConfigured)
+            return Result.Failure(new(Constants.Errors.NotConfigured, "MyAnimeList is not configured"));
+
+        var token = await malTokenService.GetAccessTokenAsync();
+        if (string.IsNullOrWhiteSpace(token))
+            return Result.Failure(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
+
+        var uri = new Uri($"{baseUrl}/anime/{animeId}/my_list_status");
+        var restClient = new RestClient(uri);
+        var restRequest = new RestRequest { Method = Method.Patch };
+        restRequest.AddHeader("Authorization", $"Bearer {token}");
+        restRequest.AddParameter("status", status);
+        restRequest.AddParameter("num_watched_episodes", numWatchedEpisodes);
+        restRequest.AddParameter("score", score);
+
+        var response = await ExecuteRequestAsync(restClient, restRequest);
+        if (response.IsSuccessful)
+            return Result.Success();
+
+        var error = JsonSerializer.Deserialize<MalError>(response.Content!, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        return Result.Failure(new Error(error?.Message ?? "Failed to update MAL list status"));
     }
     #endregion
 

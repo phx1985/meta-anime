@@ -26,6 +26,9 @@ public class AnimeMediatorService(
     IAnimeService animeService,
     ICacheEntryService cacheEntryService,
     IPropertyBagRepository propertyBagRepository,
+    IKometaAnimeMappingRepository kometaAnimeMappingRepository,
+    IAnimeRepository animeRepository,
+    IAnimeMappingRepository animeMappingRepository,
     IOptions<MalSettings> malOptions,
     IOptions<SonarrSettings> sonarrOptions,
     ILogger<AnimeMediatorService> logger)
@@ -786,12 +789,298 @@ public class AnimeMediatorService(
         }
     }
 
-    #region Private Helper Methods
+    public async Task<Result<IEnumerable<SeasonalAnimeResponse>>> GetSeasonalAnimesAsync(int year, string season)
+    {
+        try
+        {
+            bool showNsfw = await IsNsfwAllowedAsync();
+            var seasonalResult = await malAnimeSource.GetSeasonalAsync(year, season);
+            if (seasonalResult.IsFailure)
+                return Result.Failure<IEnumerable<SeasonalAnimeResponse>>(seasonalResult.Error);
 
-    /// <summary>
-    /// Returns true when NSFW content should be shown (setting is "true"),
-    /// false when it should be filtered out (setting is absent or "false").
-    /// </summary>
+            var items = seasonalResult.Value;
+            var seasonalMalIds = items.Select(a => a.Id.ToString()).ToList();
+
+            // ── Kometa lookup: seasonal malIds → aniDbId → tvdbId ─────────────────────
+            // Used both for TVDB search pre-fill AND to resolve provider state via aniDbId.
+            var malToAniDb  = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var aniDbToTvdb = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (seasonalMalIds.Count > 0)
+            {
+                var malKometaMappings = await kometaAnimeMappingRepository.GetByPlatformIdsAsync(
+                    MetaAnime.Domain.Enums.KometaAnimePlatform.Mal, seasonalMalIds);
+                if (malKometaMappings.Count > 0)
+                {
+                    foreach (var m in malKometaMappings)
+                        malToAniDb[m.PlatformId] = m.AniDbId;
+
+                    var aniDbIdsForTvdb = malToAniDb.Values.Distinct().ToList();
+                    var tvdbMappings = await kometaAnimeMappingRepository.GetByAniDbIdsAndPlatformAsync(
+                        MetaAnime.Domain.Enums.KometaAnimePlatform.Tvdb, aniDbIdsForTvdb);
+                    foreach (var g in tvdbMappings.GroupBy(m => m.AniDbId, StringComparer.OrdinalIgnoreCase))
+                        aniDbToTvdb[g.Key] = g.First().PlatformId;
+                }
+            }
+
+            // ── Build aniDbId → sources from AnimeMapping ──────────────────────────────
+            // Includes both full-sync entries and mini-sync entries written by
+            // AddSonarrSeriesAsync / UpdateMalListStatusAsync, so no property bag needed.
+            var aniDbToSources = new Dictionary<string, (bool HasPlex, string? PlexId, bool HasSonarr, string? SonarrId, bool HasMal)>(StringComparer.OrdinalIgnoreCase);
+            bool anyInPlex = false;
+            var mappingsResult = await animeMappingService.GetAllAsync(includeAnime: true);
+            if (mappingsResult.IsSuccess)
+            {
+                foreach (var aniDbGroup in mappingsResult.Value.Where(m => m.Anime != null).GroupBy(m => m.AniDbId))
+                {
+                    var animes      = aniDbGroup.Select(m => m.Anime!).ToList();
+                    var plexEntry   = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.Plex);
+                    var sonarrEntry = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.Sonarr);
+                    var malEntry    = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.MyAnimeList);
+                    bool hasPlex    = plexEntry != null;
+                    if (hasPlex) anyInPlex = true;
+                    aniDbToSources[aniDbGroup.Key] = (hasPlex, plexEntry?.SourceId, sonarrEntry != null, sonarrEntry?.SourceId, malEntry != null);
+                }
+            }
+
+            // Resolve Plex base URL only if needed
+            string? plexBaseUrl = anyInPlex ? await GetPlexBaseUrlAsync() : null;
+
+            // ── Sonarr TitleSlug lookup (for building correct Sonarr web UI URLs) ───────
+            var sonarrIds = aniDbToSources.Values
+                .Where(s => s.HasSonarr && s.SonarrId != null)
+                .Select(s => s.SonarrId!)
+                .Distinct()
+                .ToList();
+            var sonarrSlugById = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (sonarrIds.Count > 0)
+            {
+                var cacheResult = await cacheEntryService.GetBySourceIdsAsync(sonarrIds);
+                if (cacheResult.IsSuccess)
+                {
+                    foreach (var entry in cacheResult.Value.Where(e => e.AnimeSource == AnimeSource.Sonarr))
+                    {
+                        try
+                        {
+                            var series = JsonSerializer.Deserialize<SonarrSeries>(entry.RawData, JsonOptions);
+                            if (series?.TitleSlug != null)
+                                sonarrSlugById[entry.SourceId] = series.TitleSlug;
+                        }
+                        catch (JsonException ex)
+                        {
+                            logger.LogWarning(ex, Constants.LogMessages.AnimeMediatorService.SonarrCacheDeserializeFailed, entry.SourceId);
+                        }
+                    }
+                }
+            }
+
+            // ── NSFW filtering ──────────────────────────────────────────────────────────
+            var filteredItems = showNsfw ? items : items.Where(anime => !IsNsfwAnime(anime)).ToList();
+
+            var responses = filteredItems.Select(anime =>
+            {
+                var malId = anime.Id.ToString();
+                malToAniDb.TryGetValue(malId, out var aniDbId);
+                var sources  = aniDbId != null && aniDbToSources.TryGetValue(aniDbId, out var s) ? s : default;
+                var inMal    = sources.HasMal;
+                var inSonarr = sources.HasSonarr;
+                var inPlex   = sources.HasPlex;
+                // plexBaseUrl ends with %2F (URL-encoded "/"), so appending source ID
+                // directly produces the correct path: .../metadata/{ratingKey}
+                string? plexUrl = inPlex && plexBaseUrl != null && sources.PlexId != null
+                    ? $"{plexBaseUrl}{sources.PlexId}" : null;
+                // Use TitleSlug from cache (same as regular anime card); fall back to numeric ID
+                var sonarrSlug = sources.SonarrId != null && sonarrSlugById.TryGetValue(sources.SonarrId, out var slug)
+                    ? slug : sources.SonarrId;
+                string? sonarrUrl = inSonarr && sonarrSlug != null
+                    ? $"{sonarrSeriesBaseUrl.TrimEnd('/')}/series/{sonarrSlug}" : null;
+                var tvdbId = aniDbId != null && aniDbToTvdb.TryGetValue(aniDbId, out var tId) ? tId : null;
+                return new SeasonalAnimeResponse(
+                    MalId: malId,
+                    Title: anime.Title,
+                    Synopsis: anime.Synopsis,
+                    Genres: anime.Genres?.Select(g => g.Name).ToArray(),
+                    CoverImageUrl: anime.MainPicture?.Large ?? anime.MainPicture?.Medium,
+                    MalScore: anime.Mean,
+                    StartDate: anime.StartDate,
+                    MediaType: anime.MediaType,
+                    Status: anime.Status,
+                    MalUrl: $"{myAnimeListHost}/anime/{malId}",
+                    InMal: inMal,
+                    InPlex: inPlex,
+                    PlexUrl: plexUrl,
+                    InSonarr: inSonarr,
+                    SonarrUrl: sonarrUrl,
+                    TvdbId: tvdbId,
+                    EnglishTitle: anime.AlternativeTitles?.En
+                );
+            });
+
+            return Result.Success(responses.AsEnumerable());
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<IEnumerable<SeasonalAnimeResponse>>(new(Constants.Errors.GetAllAsync, ex.Message));
+        }
+    }
+
+    public async Task<Result<SonarrOptionsResponse>> GetSonarrOptionsAsync()
+    {
+        try
+        {
+            var optionsResult = await sonarrAnimeSource.GetOptionsAsync();
+            if (optionsResult.IsFailure)
+                return Result.Failure<SonarrOptionsResponse>(optionsResult.Error);
+
+            var opts = optionsResult.Value;
+            return Result.Success(new SonarrOptionsResponse(
+                opts.RootFolders.Select(f => new SonarrRootFolderDto(f.Id, f.Path, f.FreeSpace)).ToList(),
+                opts.QualityProfiles.Select(p => new SonarrQualityProfileDto(p.Id, p.Name)).ToList(),
+                opts.AnimeTagIds
+            ));
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<SonarrOptionsResponse>(new(Constants.Errors.GetAllAsync, ex.Message));
+        }
+    }
+
+    public async Task<Result<IList<SonarrLookupItem>>> SearchSonarrLookupAsync(string term)
+    {
+        try
+        {
+            return await sonarrAnimeSource.SearchLookupAsync(term);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<IList<SonarrLookupItem>>(new(Constants.Errors.GetAllAsync, ex.Message));
+        }
+    }
+
+    public async Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, string? malId = null)
+    {
+        try
+        {
+            // Get the configured tag IDs to apply to the new series
+            var optionsResult = await sonarrAnimeSource.GetOptionsAsync();
+            var tagIds = optionsResult.IsSuccess ? optionsResult.Value.AnimeTagIds : new List<int>();
+
+            var addResult = await sonarrAnimeSource.AddSeriesAsync(tvdbId, rootFolderPath, qualityProfileId, tagIds);
+            if (addResult.IsFailure)
+                return Result.Failure<SonarrAddResult>(addResult.Error);
+
+            var added = addResult.Value;
+
+            // Construct a SonarrSeries for cache/DB persistence (full JSON including TvdbId)
+            var seriesForSync = new SonarrSeries { Id = added.Id, Title = added.Title, TitleSlug = added.TitleSlug, TvdbId = tvdbId };
+
+            // Write full cache entry for immediate TitleSlug availability
+            await cacheEntryService.AddAsync(Result.Success(seriesForSync.ToCacheEntry()));
+
+            // Mini-sync: write Anime + AnimeMapping so GetSeasonalAnimesAsync reflects the
+            // add immediately without waiting for a full sync.
+            var existingAnime = await animeRepository.GetAnimeAsync(AnimeSource.Sonarr, added.Id.ToString());
+            if (existingAnime == null)
+            {
+                // Look up AniDbId via Kometa (TvdbId → AniDbId)
+                string? aniDbId = null;
+                if (tvdbId != 0)
+                {
+                    var tvdbMappings = await kometaAnimeMappingRepository.GetByPlatformIdsAsync(
+                        MetaAnime.Domain.Enums.KometaAnimePlatform.Tvdb, new[] { tvdbId.ToString() });
+                    aniDbId = tvdbMappings.FirstOrDefault()?.AniDbId;
+                }
+
+                var animeForDb = seriesForSync.ToAnime();
+                await animeRepository.AddAsync(animeForDb);
+
+                if (aniDbId != null)
+                    await animeMappingRepository.AddAsync(new AnimeMapping { AniDbId = aniDbId, AnimeId = animeForDb.Id });
+            }
+
+            var url = !string.IsNullOrEmpty(added.TitleSlug)
+                ? $"{sonarrSeriesBaseUrl.TrimEnd('/')}/series/{added.TitleSlug}"
+                : null;
+            return Result.Success(new SonarrAddResult(added.Id, added.Title, added.TitleSlug, url));
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<SonarrAddResult>(new(Constants.Errors.GetAllAsync, ex.Message));
+        }
+    }
+
+    public async Task<Result> RemoveSonarrSeriesAsync(int sonarrId)
+    {
+        try
+        {
+            var result = await sonarrAnimeSource.RemoveSeriesAsync(sonarrId);
+            if (result.IsSuccess)
+            {
+                await cacheEntryService.RemoveAsync(sonarrId.ToString(), AnimeSource.Sonarr);
+                // Remove any mini-sync Anime record; FK cascade deletes AnimeMapping + ExternalIdentifiers
+                var anime = await animeRepository.GetAnimeAsync(AnimeSource.Sonarr, sonarrId.ToString());
+                if (anime != null)
+                    await animeRepository.DeleteAsync(anime.Id);
+            }
+            return result;
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(new(Constants.Errors.GetAllAsync, ex.Message));
+        }
+    }
+
+    public async Task<Result> UpdateMalListStatusAsync(string malId, string status, int numWatchedEpisodes, int score)
+    {
+        try
+        {
+            var result = await malAnimeSource.UpdateListStatusAsync(malId, status, numWatchedEpisodes, score);
+            if (result.IsFailure)
+                return result;
+
+            // Mini-sync: fetch full anime details and write CacheEntry + Anime + AnimeMapping
+            // so GetSeasonalAnimesAsync reflects the MAL add immediately.
+            var malAnimeResult = await malAnimeSource.GetByIdAsync(malId);
+            if (malAnimeResult.IsSuccess && malAnimeResult.Value != null)
+            {
+                var malAnime = malAnimeResult.Value;
+
+                // Replace any stale cache entry with the fresh fetch
+                var existingCache = await cacheEntryService.GetAsync(AnimeSource.MyAnimeList, malId);
+                if (existingCache.IsSuccess && existingCache.Value != null)
+                    await cacheEntryService.RemoveAsync(malId, AnimeSource.MyAnimeList);
+                await cacheEntryService.AddAsync(Result.Success(malAnime.ToCacheEntry()));
+
+                // Write Anime + AnimeMapping if not already present
+                var existingAnime = await animeRepository.GetAnimeAsync(AnimeSource.MyAnimeList, malId);
+                if (existingAnime == null)
+                {
+                    // Look up AniDbId via Kometa (malId → AniDbId)
+                    var malMappings = await kometaAnimeMappingRepository.GetByPlatformIdsAsync(
+                        MetaAnime.Domain.Enums.KometaAnimePlatform.Mal, new[] { malId });
+                    var aniDbId = malMappings.FirstOrDefault()?.AniDbId;
+
+                    var animeForDb = malAnime.ToAnime();
+                    await animeRepository.AddAsync(animeForDb);
+
+                    if (aniDbId != null)
+                        await animeMappingRepository.AddAsync(new AnimeMapping { AniDbId = aniDbId, AnimeId = animeForDb.Id });
+                }
+            }
+            else
+            {
+                logger.LogWarning("Failed to fetch MAL anime details for mini-sync after adding MAL ID {MalId}: {Error}",
+                    malId, malAnimeResult.IsFailure ? malAnimeResult.Error.Message : "null response");
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(new(Constants.Errors.GetAllAsync, ex.Message));
+        }
+    }
+
+    #region Private Helper Methods
     private async Task<bool> IsNsfwAllowedAsync()
     {
         var entry = await propertyBagRepository.GetByKeyAsync(MetaAnime.Core.SettingsKeys.AppShowNsfw);
@@ -960,6 +1249,7 @@ public class AnimeMediatorService(
 
         return (await Task.WhenAll(tasks)).ToList();
     }
+
     #endregion
 
 }

@@ -29,6 +29,26 @@ public class KometaAnimeMappingRepository(MetaAnimeDbContext dbContext)
                               .Where(kam => kam.PlatformName == platformName && kam.PlatformId == platformId)
                               .FirstOrDefaultAsync();
     }
+
+    public async Task<IList<KometaAnimeMapping>> GetByPlatformIdsAsync(KometaAnimePlatform animePlatform, IEnumerable<string> platformIds)
+    {
+        var platformName = animePlatform.GetPlatformName();
+        var idList = platformIds.ToList();
+        return await dbContext.KometaAnimeMapping
+                              .AsNoTracking()
+                              .Where(kam => kam.PlatformName == platformName && idList.Contains(kam.PlatformId))
+                              .ToListAsync();
+    }
+
+    public async Task<IList<KometaAnimeMapping>> GetByAniDbIdsAndPlatformAsync(KometaAnimePlatform animePlatform, IEnumerable<string> aniDbIds)
+    {
+        var platformName = animePlatform.GetPlatformName();
+        var idList = aniDbIds.ToList();
+        return await dbContext.KometaAnimeMapping
+                              .AsNoTracking()
+                              .Where(kam => kam.PlatformName == platformName && idList.Contains(kam.AniDbId))
+                              .ToListAsync();
+    }
     public async Task BulkDeleteAllAsync()
     {
         await dbContext.KometaAnimeMapping.ExecuteDeleteAsync();
