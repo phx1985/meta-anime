@@ -293,6 +293,144 @@
   gap: 1rem;
 }
 
+// ─── Preset bar ───────────────────────────────────────────────────────────────
+
+.seasonal-presets-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-wrap: nowrap;
+  border-bottom: 1px solid var(--card-border);
+  padding-bottom: 0.875rem;
+}
+
+.presets-chips {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.presets-empty-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+// Reuse .preset-chip, .preset-chip--saved, .preset-chip__delete from anime-list styles.
+// They are declared globally or per-component; redeclare here to avoid cross-component leakage.
+.preset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  height: 1.875rem;
+  padding: 0 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--card-border);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  &:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
+  &:active { transform: scale(0.96); }
+}
+
+.preset-chip__delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--card-border);
+  margin-left: 0.1rem;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+  &:hover { background: #ef4444; color: #fff; }
+  svg path { stroke: currentColor; }
+}
+
+.btn-save-preset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  height: 1.75rem;
+  padding: 0 0.75rem;
+  border: 1px dashed var(--card-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  &:hover { color: var(--accent-primary); border-color: var(--accent-primary); background: rgba(108,99,255,.06); }
+}
+
+.preset-save-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  animation: presetFormIn 0.18s cubic-bezier(.4,0,.2,1);
+}
+
+@keyframes presetFormIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.preset-name-input {
+  flex: 1;
+  min-width: 140px;
+  height: 2rem;
+  padding: 0 0.625rem;
+  border: 1px solid var(--card-border);
+  border-radius: 0.5rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  &:focus { outline: none; border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(108,99,255,.15); }
+  &::placeholder { color: var(--text-muted); }
+}
+
+.btn-preset-confirm,
+.btn-preset-cancel {
+  display: inline-flex;
+  align-items: center;
+  height: 2rem;
+  padding: 0 0.875rem;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+  &:disabled { opacity: 0.45; cursor: default; }
+}
+.btn-preset-confirm {
+  background: var(--accent-primary);
+  color: #fff;
+  border-color: var(--accent-primary);
+  &:not(:disabled):hover { background: color-mix(in srgb, var(--accent-primary) 85%, #000 15%); }
+}
+.btn-preset-cancel {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--card-border);
+  &:hover { background: var(--bg-secondary); color: var(--accent-primary); border-color: var(--accent-primary); }
+}
+
 // ─── Filter field ─────────────────────────────────────────────────────────────
 
 .filter-field {

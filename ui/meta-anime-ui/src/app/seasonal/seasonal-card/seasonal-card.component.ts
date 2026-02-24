@@ -261,7 +261,10 @@ export class SeasonalCardComponent implements OnInit {
     this.sonarrSearch$.next(term);
   }
 
-  selectSonarrResult(item: SonarrLookupResult): void { this.sonarrSelected.set(item); }
+  selectSonarrResult(item: SonarrLookupResult): void {
+    if (item.alreadyInLibrary) return;
+    this.sonarrSelected.set(item);
+  }
 
   get anythingSelected(): boolean {
     return (!this.anime.inSonarr && this.addSonarr()) || (!this.anime.inMal && this.addMal());
@@ -369,7 +372,7 @@ export class SeasonalCardComponent implements OnInit {
         onSuccess();
       },
       error: (err) => {
-        this.addError.set(err?.error ?? this.translate.instant('seasonal.sonarrAddError'));
+        this.addError.set(this._extractErrorMessage(err, 'seasonal.sonarrAddError'));
         this.addBusy.set(false);
       }
     });
@@ -406,9 +409,38 @@ export class SeasonalCardComponent implements OnInit {
               }
             });
         }
-        this.addError.set(err?.error ?? this.translate.instant('seasonal.malAddError'));
+        this.addError.set(this._extractErrorMessage(err, 'seasonal.malAddError'));
         this.addBusy.set(false);
       }
     });
+  }
+
+  /**
+   * Safely extracts a human-readable message from an Angular HttpErrorResponse.
+   * Handles:
+   *  - string body  (our backend returns StatusCode(500, message string))
+   *  - Sonarr-format array  [{errorCode, errorMessage}]
+   *  - ASP.NET problem-details object  {message | title}
+   *  - Fallback to translated key
+   */
+  private _extractErrorMessage(err: unknown, fallbackKey: string): string {
+    const e = err as Record<string, unknown> | null | undefined;
+    if (!e) return this.translate.instant(fallbackKey);
+    const body = e['error'];
+    if (typeof body === 'string' && body.length > 0) return body;
+    if (Array.isArray(body) && body.length > 0) {
+      const first = body[0];
+      if (first !== null && typeof first === 'object') {
+        const obj = first as Record<string, unknown>;
+        const msg = obj['errorMessage'] ?? obj['message'];
+        if (typeof msg === 'string') return msg;
+      }
+    }
+    if (body && typeof body === 'object') {
+      const obj = body as Record<string, unknown>;
+      const msg = obj['message'] ?? obj['title'] ?? obj['errorMessage'];
+      if (typeof msg === 'string') return msg;
+    }
+    return this.translate.instant(fallbackKey);
   }
 }

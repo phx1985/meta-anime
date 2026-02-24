@@ -101,6 +101,50 @@
         <div class="filter-card__body" [@filterCollapse]="filterOpen() ? 'open' : 'closed'">
           <div class="filter-card__inner">
 
+            <!-- ── Preset bar ──────────────────────────────────────────── -->
+            <div class="seasonal-presets-bar">
+              <div class="presets-chips">
+                @for (p of savedPresets(); track p.id) {
+                  <button type="button" class="preset-chip preset-chip--saved" (click)="applyPreset(p)">
+                    {{ p.label }}
+                    <span class="preset-chip__delete" role="button"
+                          [attr.aria-label]="'seasonal.filter.presets.delete' | translate"
+                          (click)="deletePreset(p.id, $event)">
+                      <svg width="8" height="8" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                        <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                      </svg>
+                    </span>
+                  </button>
+                }
+                @if (savedPresets().length === 0 && !showSavePreset) {
+                  <span class="presets-empty-hint">{{ 'seasonal.filter.presets.noPresets' | translate }}</span>
+                }
+              </div>
+              <button type="button" class="btn-save-preset" (click)="openSavePreset()">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                  <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                </svg>
+                {{ 'seasonal.filter.presets.saveAs' | translate }}
+              </button>
+            </div>
+
+            @if (showSavePreset) {
+              <div class="preset-save-form">
+                <input class="preset-name-input" type="text"
+                       [(ngModel)]="newPresetName"
+                       [placeholder]="'seasonal.filter.presets.namePlaceholder' | translate"
+                       (keydown.enter)="confirmSavePreset()"
+                       (keydown.escape)="cancelSavePreset()"
+                       autofocus />
+                <button type="button" class="btn-preset-confirm" (click)="confirmSavePreset()" [disabled]="!newPresetName.trim()">
+                  {{ 'seasonal.filter.presets.save' | translate }}
+                </button>
+                <button type="button" class="btn-preset-cancel" (click)="cancelSavePreset()">
+                  {{ 'seasonal.filter.presets.cancel' | translate }}
+                </button>
+              </div>
+            }
+
             <!-- Filter grid -->
             <div class="filter-grid">
 

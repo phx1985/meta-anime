@@ -111,8 +111,17 @@
         "title": "Title",
         "malScore": "MAL Score",
         "startDate": "Start Date"
+      },
+      "presets": {
+        "saveAs": "Save filters as preset",
+        "namePlaceholder": "Preset name…",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete preset",
+        "noPresets": "No saved presets yet"
       }
     },
+    "sonarrAlreadyInLibrary": "Already in Sonarr",
     "partiallyTracked": "Partially tracked — add to more providers"
   },
   "animeList": {

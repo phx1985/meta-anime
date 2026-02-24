@@ -16,7 +16,8 @@ import { trigger, state, style, animate, transition, query, stagger, group } fro
 import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
-import { SeasonalAnimeItem, SeasonName } from '../models/anime.models';
+import { FilterPresetService } from '../services/filter-preset.service';
+import { SeasonalAnimeItem, SeasonalFilterPreset, SeasonalSavedFilterState, SeasonName } from '../models/anime.models';
 import { SeasonalCardComponent } from './seasonal-card/seasonal-card.component';
 import { GENRE_LIST } from '../anime-list/anime-list.component';
 
@@ -112,6 +113,7 @@ function getCurrentSeason(month: number): SeasonName {
 export class SeasonalComponent {
   private animeService    = inject(AnimeService);
   private settingsService = inject(SettingsService);
+  private presetService   = inject(FilterPresetService);
   private destroyRef      = inject(DestroyRef);
 
   // ── FLIP animation ────────────────────────────────────────────────────────
@@ -268,6 +270,11 @@ export class SeasonalComponent {
   /** Incremented every time a filter/sort changes – drives the stagger animation. */
   filterVersion = signal(0);
 
+  // ── Preset state ──────────────────────────────────────────────────────────
+  savedPresets    = signal<SeasonalFilterPreset[]>([]);
+  showSavePreset  = false;
+  newPresetName   = '';
+
   readonly malStates   = SEASONAL_MAL_STATES;
   readonly sortOptions = SEASONAL_SORT_OPTIONS;
 
@@ -359,6 +366,8 @@ export class SeasonalComponent {
     this.settingsService.getShowNsfw()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(show => this.showNsfw.set(show));
+
+    this.savedPresets.set(this.presetService.getSeasonalPresets());
 
     // Initial load
     this._loadCurrent();
@@ -493,6 +502,61 @@ export class SeasonalComponent {
     this.sortOrder.set('asc');
     this.genreDropdownOpen = false;
     this.filterVersion.update(v => v + 1);
+  }
+
+  // ── Preset methods ────────────────────────────────────────────────────────
+
+  applyPreset(preset: SeasonalFilterPreset): void {
+    const f = preset.filters;
+    this._beginFilterChange();
+    this.filterGenre.set(f.genre          ?? []);
+    this.genreOperator.set(f.genreOperator ?? 'or');
+    this.filterMalStatus.set(f.malStatus  ?? []);
+    this.sortBy.set(f.sortBy              ?? 'title');
+    this.sortOrder.set(f.sortOrder        ?? 'asc');
+    this.genreDropdownOpen = false;
+    this.filterVersion.update(v => v + 1);
+    this.showSavePreset = false;
+  }
+
+  openSavePreset(): void {
+    this.showSavePreset = !this.showSavePreset;
+    if (this.showSavePreset) this.newPresetName = '';
+  }
+
+  confirmSavePreset(): void {
+    const name = this.newPresetName.trim();
+    if (!name) return;
+    const preset: SeasonalFilterPreset = {
+      id: `seasonal-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      label: name,
+      filters: this._snapshotFilterState(),
+    };
+    this.presetService.saveSeasonalPreset(preset);
+    this.savedPresets.set(this.presetService.getSeasonalPresets());
+    this.showSavePreset = false;
+    this.newPresetName  = '';
+  }
+
+  cancelSavePreset(): void {
+    this.showSavePreset = false;
+    this.newPresetName  = '';
+  }
+
+  deletePreset(id: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.presetService.deleteSeasonalPreset(id);
+    this.savedPresets.set(this.presetService.getSeasonalPresets());
+  }
+
+  private _snapshotFilterState(): SeasonalSavedFilterState {
+    return {
+      genre:         this.filterGenre().length      ? this.filterGenre()      : undefined,
+      genreOperator: this.filterGenre().length > 1  ? this.genreOperator()    : undefined,
+      malStatus:     this.filterMalStatus().length  ? this.filterMalStatus()  : undefined,
+      sortBy:        this.sortBy()    !== 'title'   ? this.sortBy()           : undefined,
+      sortOrder:     this.sortOrder() !== 'asc'     ? this.sortOrder()        : undefined,
+    };
   }
 
   // ── Loading ──────────────────────────────────────────────────────────────

@@ -111,8 +111,17 @@
         "title": "Titre",
         "malScore": "Score MAL",
         "startDate": "Date de début"
+      },
+      "presets": {
+        "saveAs": "Sauvegarder les filtres",
+        "namePlaceholder": "Nom du préréglage…",
+        "save": "Sauvegarder",
+        "cancel": "Annuler",
+        "delete": "Supprimer le préréglage",
+        "noPresets": "Aucun préréglage sauvegardé"
       }
     },
+    "sonarrAlreadyInLibrary": "Déjà dans Sonarr",
     "partiallyTracked": "Partiellement suivi — ajouter aux autres fournisseurs"
   },
   "animeList": {

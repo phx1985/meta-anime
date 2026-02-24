@@ -377,6 +377,9 @@
                         <button type="button"
                                 class="result-item"
                                 [class.result-item--active]="sonarrSelected()?.tvdbId === item.tvdbId"
+                                [class.result-item--in-library]="item.alreadyInLibrary"
+                                [disabled]="item.alreadyInLibrary"
+                                [attr.aria-disabled]="item.alreadyInLibrary"
                                 (click)="selectSonarrResult(item)">
                           @if (item.remotePoster) {
                             <img class="result-item__thumb" [src]="item.remotePoster" [alt]="item.title" loading="lazy" />
@@ -386,7 +389,14 @@
                           <div class="result-item__meta">
                             <span class="result-item__title">{{ item.title }}</span>
                             @if (item.year) { <span class="result-item__year">{{ item.year }}</span> }
-                            @if (item.overview) { <p class="result-item__overview">{{ item.overview }}</p> }
+                            @if (item.alreadyInLibrary) {
+                              <span class="result-item__in-library-badge">
+                                <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M3 8l3.5 3.5L13 4"/></svg>
+                                {{ 'seasonal.sonarrAlreadyInLibrary' | translate }}
+                              </span>
+                            } @else if (item.overview) {
+                              <p class="result-item__overview">{{ item.overview }}</p>
+                            }
                           </div>
                           @if (sonarrSelected()?.tvdbId === item.tvdbId) {
                             <svg class="result-item__check" viewBox="0 0 16 16" fill="none" stroke="currentColor"
