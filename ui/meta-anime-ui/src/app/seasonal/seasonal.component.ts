@@ -156,7 +156,7 @@ export class SeasonalComponent {
     Promise.resolve().then(() => {
       const prevIds = new Set(this._posSnapshot.keys());
       const newIds  = new Set(this.filteredAnimes().map(a => a.malId));
-      const leaving = [...prevIds].filter(id => !newIds.has(id)).length;
+      const leaving = [...prevIds].filter(id => !newIds.has(id.toString())).length;
       // Delay matches the leave-fall duration so FLIP fires after the grid reflows.
       const delay = leaving > 0 ? FLIP_BASE_DELAY_MS : 0;
 
