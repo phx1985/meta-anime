@@ -16,7 +16,7 @@ public interface IAnimeMediatorService
     Task<Result<AnimeResponse>> UpdateAsync(Guid id, UpdateAnimeRequest request);
     Task<Result> DeleteAsync(Guid id);
     Task<Result> SyncAllAsync(bool forceRefreshKometaMapping = false);
-    Task<Result<PagedResponse<IEnumerable<SeasonalAnimeResponse>>>> GetSeasonalAnimesAsync(int year, string season, int page, int pageSize);
+    Task<Result<IEnumerable<SeasonalAnimeResponse>>> GetSeasonalAnimesAsync(int year, string season);
     Task<Result<SonarrOptionsResponse>> GetSonarrOptionsAsync();
     Task<Result<IList<SonarrLookupItem>>> SearchSonarrLookupAsync(string term);
     Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, string? malId = null);

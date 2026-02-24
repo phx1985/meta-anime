@@ -14,7 +14,6 @@ import { SettingsService } from '../services/settings.service';
 import { SeasonalAnimeItem, SeasonName } from '../models/anime.models';
 import { SeasonalCardComponent } from './seasonal-card/seasonal-card.component';
 
-const PAGE_SIZE = 100;
 const MIN_YEAR = 1963;
 
 export interface SeasonPill {
@@ -123,11 +122,11 @@ export class SeasonalComponent {
     this.loading.set(true);
     this.error.set(false);
 
-    this.animeService.getSeasonalAnimes(year, season, 1, PAGE_SIZE)
+    this.animeService.getSeasonalAnimes(year, season)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: data => {
-          this.animes.set(data.data);
+          this.animes.set(data);
           this.loading.set(false);
         },
         error: () => {

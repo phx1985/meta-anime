@@ -789,17 +789,16 @@ public class AnimeMediatorService(
         }
     }
 
-    public async Task<Result<PagedResponse<IEnumerable<SeasonalAnimeResponse>>>> GetSeasonalAnimesAsync(int year, string season, int page, int pageSize)
+    public async Task<Result<IEnumerable<SeasonalAnimeResponse>>> GetSeasonalAnimesAsync(int year, string season)
     {
         try
         {
             bool showNsfw = await IsNsfwAllowedAsync();
-            var offset = (page - 1) * pageSize;
-            var seasonalResult = await malAnimeSource.GetSeasonalAsync(year, season, offset, pageSize);
+            var seasonalResult = await malAnimeSource.GetSeasonalAsync(year, season);
             if (seasonalResult.IsFailure)
-                return Result.Failure<PagedResponse<IEnumerable<SeasonalAnimeResponse>>>(seasonalResult.Error);
+                return Result.Failure<IEnumerable<SeasonalAnimeResponse>>(seasonalResult.Error);
 
-            var (items, hasNextPage) = seasonalResult.Value;
+            var items = seasonalResult.Value;
             var seasonalMalIds = items.Select(a => a.Id.ToString()).ToList();
 
             // ── Kometa lookup: seasonal malIds → aniDbId → tvdbId ─────────────────────
@@ -916,22 +915,11 @@ public class AnimeMediatorService(
                 );
             });
 
-            // MAL's seasonal endpoint does not provide a total count.
-            var estimatedTotal = hasNextPage ? offset + pageSize + 1 : offset + filteredItems.Count;
-            var totalPages = hasNextPage ? page + 1 : page;
-            return Result.Success(new PagedResponse<IEnumerable<SeasonalAnimeResponse>>(
-                responses,
-                page,
-                pageSize,
-                estimatedTotal,
-                totalPages,
-                hasNextPage,
-                page > 1
-            ));
+            return Result.Success(responses.AsEnumerable());
         }
         catch (Exception ex)
         {
-            return Result.Failure<PagedResponse<IEnumerable<SeasonalAnimeResponse>>>(new(Constants.Errors.GetAllAsync, ex.Message));
+            return Result.Failure<IEnumerable<SeasonalAnimeResponse>>(new(Constants.Errors.GetAllAsync, ex.Message));
         }
     }
 

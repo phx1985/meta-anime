@@ -14,15 +14,10 @@ public class SeasonalController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
     [Authorize]
-    public async Task<ActionResult<PagedResponse<IEnumerable<SeasonalAnimeResponse>>>> GetSeasonal(
+    public async Task<ActionResult<IEnumerable<SeasonalAnimeResponse>>> GetSeasonal(
         [FromQuery] int year,
-        [FromQuery] string season,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] string season)
     {
-        if (page < 1) page = 1;
-        if (pageSize < 1 || pageSize > 100) pageSize = 20;
-
         if (string.IsNullOrWhiteSpace(season))
             return BadRequest("season is required (winter, spring, summer, fall)");
 
@@ -31,9 +26,9 @@ public class SeasonalController(IMediator mediator) : ControllerBase
             return BadRequest("season must be one of: winter, spring, summer, fall");
 
         if (year < 1917 || year > DateTime.UtcNow.Year + 1)
-            return BadRequest($"year must be between 1917 and {DateTime.UtcNow.Year + 1}"); // 1917 is the earliest anime in MAL's database
+            return BadRequest($"year must be between 1917 and {DateTime.UtcNow.Year + 1}");
 
-        var result = await mediator.Send(new GetSeasonalAnimesQuery(year, season.ToLower(), page, pageSize));
+        var result = await mediator.Send(new GetSeasonalAnimesQuery(year, season.ToLower()));
 
         if (result.IsFailure)
             return StatusCode(500, result.Error.Message);

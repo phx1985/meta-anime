@@ -56,6 +56,16 @@ export class SeasonalCardComponent implements OnInit {
   @HostBinding('class.neon-glow-active')
   get neonGlowActive(): boolean { return this.neonGlow(); }
 
+  /**
+   * Elevate the card's stacking context above sibling cards when a modal or lightbox is open.
+   * Without this, cards later in the DOM (same z-index: 0 stacking context) paint over the
+   * fixed dialog-backdrop, because the backdrop is inside the card's own stacking context.
+   */
+  @HostBinding('style.zIndex')
+  get hostZIndex(): string | null {
+    return (this.showAddModal() || this.showLightbox()) ? '1090' : null;
+  }
+
   // ── Unified add modal ────────────────────────────────────────────────────
   showAddModal        = signal(false);
   addBusy             = signal(false);

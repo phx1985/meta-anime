@@ -69,13 +69,11 @@ export class AnimeService {
     return this.http.post<void>(`${this.base}/sync`, null, { params });
   }
 
-  getSeasonalAnimes(year: number, season: string, page = 1, pageSize = 20): Observable<PagedResponse<SeasonalAnimeItem>> {
+  getSeasonalAnimes(year: number, season: string): Observable<SeasonalAnimeItem[]> {
     const params = new HttpParams()
       .set('year', year)
-      .set('season', season)
-      .set('page', page)
-      .set('pageSize', pageSize);
-    return this.http.get<PagedResponse<SeasonalAnimeItem>>(this.seasonalBase, { params });
+      .set('season', season);
+    return this.http.get<SeasonalAnimeItem[]>(this.seasonalBase, { params });
   }
 
   updateMalListStatus(malId: string, request: MalListStatusRequest): Observable<void> {

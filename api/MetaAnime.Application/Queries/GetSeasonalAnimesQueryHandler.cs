@@ -6,10 +6,10 @@ using MetaAnime.Core.Interfaces.Shared.Results;
 namespace MetaAnime.Application.Queries;
 
 public class GetSeasonalAnimesQueryHandler(IAnimeMediatorService animeMediatorService)
-    : IRequestHandler<GetSeasonalAnimesQuery, Result<PagedResponse<IEnumerable<SeasonalAnimeResponse>>>>
+    : IRequestHandler<GetSeasonalAnimesQuery, Result<IEnumerable<SeasonalAnimeResponse>>>
 {
-    public async Task<Result<PagedResponse<IEnumerable<SeasonalAnimeResponse>>>> Handle(GetSeasonalAnimesQuery request, CancellationToken cancellationToken)
+    public async Task<Result<IEnumerable<SeasonalAnimeResponse>>> Handle(GetSeasonalAnimesQuery request, CancellationToken cancellationToken)
     {
-        return await animeMediatorService.GetSeasonalAnimesAsync(request.Year, request.Season, request.Page, request.PageSize);
+        return await animeMediatorService.GetSeasonalAnimesAsync(request.Year, request.Season);
     }
 }

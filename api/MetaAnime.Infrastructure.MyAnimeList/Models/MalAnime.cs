@@ -29,6 +29,8 @@ public partial class MalAnime
     public int Rank { get; set; }
     [JsonPropertyName("start_date")]
     public string StartDate { get; set; }
+    [JsonPropertyName("start_season")]
+    public MalStartSeason? StartSeason { get; set; }
     [JsonPropertyName("status")]
     public string Status { get; set; }
     [JsonPropertyName("synopsis")]
@@ -37,4 +39,12 @@ public partial class MalAnime
     public string Title { get; set; }
     [JsonPropertyName("num_episodes")]
     public int NumEpisodes { get; set; }
+}
+
+public class MalStartSeason
+{
+    [JsonPropertyName("year")]
+    public int Year { get; set; }
+    [JsonPropertyName("season")]
+    public string? Season { get; set; }
 }
