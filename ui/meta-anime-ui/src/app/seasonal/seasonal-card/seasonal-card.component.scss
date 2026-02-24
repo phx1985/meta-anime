@@ -1164,72 +1164,130 @@
 }
 
 // ─── Lightning bolt arcs — shown during neon-glow-active ─────────────────────
-// SVG lightning bolts are absolutely positioned relative to :host and appear
-// only while neonGlowActive is true. They are rendered via @if in the template
-// (outside the card's overflow:hidden article), so they extend beyond the border.
+// 10 unique SVG bolt/spark elements, absolutely positioned around :host.
+// Rendered via @if (outside the card's overflow:hidden article element) so they
+// extend beyond the card border. Each has a unique shape, size, and stagger delay.
 .lightning-arc {
   position: absolute;
-  width: 13px;
-  height: 20px;
   pointer-events: none;
-  fill: #ffe44d;
-  filter: drop-shadow(0 0 3px #ffc107) drop-shadow(0 0 7px #ff8c00);
   z-index: 2;
   animation: arcFlicker 2.2s ease-out forwards;
+  // Warm amber/orange multi-layer drop-shadow — creates a realistic plasma corona
+  filter:
+    drop-shadow(0 0 1px #fff5a0)
+    drop-shadow(0 0 3px #ffd600)
+    drop-shadow(0 0 7px #ff8c00)
+    drop-shadow(0 0 13px rgba(255, 120, 0, 0.55));
 
-  // Staggered delays + unique rotations per arc
-  &--1 { top:  -14px; left:  18%;  transform: rotate(-12deg); animation-delay: 0.04s; }
-  &--2 { top:  -14px; right: 22%;  transform: rotate(14deg);  animation-delay: 0.32s; }
-  &--3 { top:   22%;  right: -14px; transform: rotate(96deg);  animation-delay: 0.16s; }
-  &--4 { bottom: 28%; right: -14px; transform: rotate(84deg);  animation-delay: 0.44s; }
-  &--5 { bottom: -14px; left: 28%; transform: rotate(175deg); animation-delay: 0.22s; }
-  &--6 { top:   42%;  left: -14px; transform: rotate(-94deg); animation-delay: 0.52s; }
+  // Main bolt paths: bright pale-yellow core (white-ish for realistic hot-channel look)
+  path { fill: #fff0a0; }
+
+  // Branch paths: thinner glowing strokes departing from the main channel
+  .bolt-branch {
+    fill: none;
+    stroke: rgba(255, 196, 30, 0.75);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  // Spark stars: near-white for maximum brightness point
+  &--spark path { fill: #fff8e1; }
+
+  // ── Main bolts (6) — each with a unique size and position on a different edge ──
+  &--1 { width: 18px; height: 28px; top:  -17px; left:   17%;    animation-delay: 0.03s; }
+  &--2 { width: 14px; height: 22px; top:  -14px; right:  22%;    animation-delay: 0.29s; }
+  &--3 { width: 26px; height: 14px; top:   22%;  right: -16px;   animation-delay: 0.11s; }
+  &--4 { width: 14px; height: 22px; bottom: 28%; right: -14px;   animation-delay: 0.44s; }
+  &--5 { width: 18px; height: 26px; bottom: -16px; left: 26%;    animation-delay: 0.20s; }
+  &--6 { width: 24px; height: 12px; top:   47%;  left:  -14px;   animation-delay: 0.51s; }
+  // ── Small secondary bolts (2) ──
+  &--7 { width: 11px; height: 18px; top:  -11px; left:   43%;    animation-delay: 0.64s; }
+  &--8 { width: 11px; height: 18px; bottom: -11px; right: 18%;   animation-delay: 0.07s; }
+  // ── Spark stars (2) ──
+  &--9  { width: 10px; height: 10px; top:  -5px;  left:  31%;    animation-delay: 0.15s; }
+  &--10 { width:  8px; height:  8px; top:   11%;  right: -4px;   animation-delay: 0.37s; }
 }
 
-// Lightning flicker: each bolt flashes in, fades, re-ignites briefly, then vanishes.
-// Using `scale` as a standalone property so it doesn't clobber the per-bolt rotation.
+// Realistic multi-stroke lightning flicker:
+// 1. Hard snap to full brightness (like a lightning return stroke)
+// 2. Quick dim (current drop after initial stroke)
+// 3. Restrike to full (dart-leader / return stroke sequence)
+// 4. Fade to dark (channel cools)
+// 5–6. Two faint after-pulses (residual glow in ionised channel)
 @keyframes arcFlicker {
-  0%   { opacity: 0;    scale: 0.6; }
-  7%   { opacity: 1;    scale: 1.2; }
-  11%  { opacity: 0.1;  scale: 1;   }
-  15%  { opacity: 0.95; scale: 1;   }
-  22%  { opacity: 0;    scale: 0.9; }
-  40%  { opacity: 0;                }
-  44%  { opacity: 0.85; scale: 1.1; }
-  47%  { opacity: 0.05; scale: 1;   }
-  51%  { opacity: 0.75; }
-  60%  { opacity: 0;    }
-  79%  { opacity: 0;    }
-  83%  { opacity: 0.55; scale: 1.05; }
-  86%  { opacity: 0;    }
-  100% { opacity: 0;    scale: 1;   }
+  0%   { opacity: 0; }
+  // First return stroke — sudden full brightness
+  4%   { opacity: 1; }
+  // Current-zero crossing — channel briefly goes dark
+  9%   { opacity: 0.10; }
+  // Second stroke — re-ignition along same channel
+  13%  { opacity: 1; }
+  // Rapid decay after second stroke
+  22%  { opacity: 0; }
+  // Dark interval (channel de-ionises)
+  40%  { opacity: 0; }
+  // Third weaker burst
+  44%  { opacity: 0.80; }
+  48%  { opacity: 0.04; }
+  52%  { opacity: 0.58; }
+  60%  { opacity: 0; }
+  // Long dark
+  78%  { opacity: 0; }
+  // Final faint afterglow
+  82%  { opacity: 0.40; }
+  87%  { opacity: 0; }
+  100% { opacity: 0; }
 }
 
-// Neon aura: single electric-blue plasma flash on :host::after after a successful add.
-// Lives on the ::after pseudo-element (NOT the .seasonal-card article) so it never
-// interferes with the card's own cardIn animation — fixes the card-disappearance bug.
+// Neon aura: electric-blue plasma discharge on :host::after after a successful add.
+// Lives on ::after (NOT the .seasonal-card article) — fixes card-disappearance bug.
+// White-hot initial burst → sustained blue plasma → secondary surge → "freed" swell.
 @keyframes neonAura {
   0%   { box-shadow: none; }
-  // Single peak — fast rise
-  12%  {
+  // White-hot initial discharge — instantaneous channel formation
+  5%   {
     box-shadow:
-      0 0 8px  4px  rgba(0, 229, 255, 0.92),
-      0 0 22px 8px  rgba(0, 191, 255, 0.65),
-      0 0 55px 16px rgba(0, 140, 255, 0.32),
-      0 0 80px 22px rgba(0, 90,  255, 0.15);
+      0 0 0px  2px  rgba(255, 255, 255, 0.92),
+      0 0 10px 5px  rgba(0, 245, 255, 1),
+      0 0 30px 12px rgba(0, 191, 255, 0.82),
+      0 0 65px 22px rgba(0, 120, 255, 0.45),
+      0 0 100px 35px rgba(0, 60, 255, 0.20);
   }
-  // Smooth fade
-  72%  {
+  // Peak sustained blue plasma glow
+  10%  {
+    box-shadow:
+      0 0 2px  3px  rgba(200, 245, 255, 0.88),
+      0 0 10px 5px  rgba(0, 229, 255, 0.92),
+      0 0 26px 10px rgba(0, 191, 255, 0.65),
+      0 0 55px 20px rgba(0, 140, 255, 0.38),
+      0 0 85px 30px rgba(0, 80, 255, 0.18);
+  }
+  // Quick dip between pulses
+  20%  {
+    box-shadow:
+      0 0 3px 2px rgba(0, 229, 255, 0.38),
+      0 0 10px 4px rgba(0, 180, 255, 0.18);
+  }
+  // Secondary surge — residual plasma oscillation
+  28%  {
+    box-shadow:
+      0 0 5px  3px  rgba(0, 240, 255, 0.82),
+      0 0 18px 7px  rgba(0, 200, 255, 0.52),
+      0 0 38px 14px rgba(0, 130, 255, 0.28);
+  }
+  // Long smooth fade
+  62%  {
     box-shadow:
       0 0 3px 1px rgba(0, 229, 255, 0.22),
-      0 0 9px 3px rgba(0, 191, 255, 0.12);
+      0 0 8px 3px rgba(0, 191, 255, 0.10);
   }
-  // Brief "freed" swell
-  82%  {
+  // "Freed" swell — plasma exhales as the field collapses
+  80%  {
     box-shadow:
-      0 0 10px 4px rgba(0, 229, 255, 0.48),
-      0 0 26px 9px rgba(0, 191, 255, 0.26);
+      0 0 8px  4px  rgba(0, 229, 255, 0.52),
+      0 0 24px 9px  rgba(0, 191, 255, 0.28),
+      0 0 42px 14px rgba(0, 120, 255, 0.14);
   }
-  94%  { box-shadow: 0 0 2px 1px rgba(0, 229, 255, 0.12); }
+  93%  { box-shadow: 0 0 2px 1px rgba(0, 229, 255, 0.14); }
   100% { box-shadow: none; }
 }
