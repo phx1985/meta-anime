@@ -94,21 +94,17 @@
     backdrop-filter: blur(6px);
   }
 
-  // ── Partially-tracked badge — progress ring + plus ──────────────────────────
+  // ── Partially-tracked badge — missing provider icon + "+" ───────────────────
   &--partial {
     background: rgba(22, 22, 38, 0.88);
     border: 1.5px solid rgba(251, 191, 36, 0.55);
     cursor: pointer;
     backdrop-filter: blur(6px);
-    // Gentle amber attention pulse
     animation: partialPulse 2.8s ease-in-out infinite;
 
-    // The progress arc slowly spins to draw the eye
-    .partial-arc {
-      animation: partialArcSpin 5s linear infinite;
-      transform-box: fill-box;
-      transform-origin: center;
-    }
+    // SVG is slightly larger than the plain +/✓ badges to keep the
+    // provider icon + "+" readable at badge size.
+    svg { width: 15px; height: 15px; }
 
     &:hover {
       transform: scale(1.18);
@@ -117,8 +113,6 @@
         0 0 16px rgba(251, 191, 36, 0.45),
         0 4px 14px rgba(0, 0, 0, 0.5);
       animation-play-state: paused;
-
-      .partial-arc { animation-play-state: paused; }
     }
   }
 }
@@ -132,11 +126,6 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 10px rgba(251, 191, 36, 0.3);
     border-color: rgba(251, 191, 36, 0.8);
   }
-}
-
-@keyframes partialArcSpin {
-  from { transform: rotate(-90deg); }
-  to   { transform: rotate(270deg); }
 }
 
 // ─── Blurred backdrop ─────────────────────────────────────────────────────────

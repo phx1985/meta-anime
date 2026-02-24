@@ -801,24 +801,19 @@ public class AnimeMediatorService(
             var items = seasonalResult.Value;
             var seasonalMalIds = items.Select(a => a.Id.ToString()).ToList();
 
-            // ── Kometa lookup: seasonal malIds → aniDbId → tvdbId ─────────────────────
-            // Used both for TVDB search pre-fill AND to resolve provider state via aniDbId.
+            // ── Kometa lookup: seasonal malIds → aniDbId + tvdbId ────────────────────────
+            // Single self-join query treats the Kometa mapping as the sole source of truth.
+            // TvdbId drives the exact `tvdb:XXXXX` Sonarr lookup; AniDbId drives provider state.
             var malToAniDb  = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             var aniDbToTvdb = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             if (seasonalMalIds.Count > 0)
             {
-                var malKometaMappings = await kometaAnimeMappingRepository.GetByPlatformIdsAsync(
-                    MetaAnime.Domain.Enums.KometaAnimePlatform.Mal, seasonalMalIds);
-                if (malKometaMappings.Count > 0)
+                var kometaMappings = await kometaAnimeMappingRepository.GetMalMappingsWithTvdbAsync(seasonalMalIds);
+                foreach (var (malId, aniDbId, tvdbId) in kometaMappings)
                 {
-                    foreach (var m in malKometaMappings)
-                        malToAniDb[m.PlatformId] = m.AniDbId;
-
-                    var aniDbIdsForTvdb = malToAniDb.Values.Distinct().ToList();
-                    var tvdbMappings = await kometaAnimeMappingRepository.GetByAniDbIdsAndPlatformAsync(
-                        MetaAnime.Domain.Enums.KometaAnimePlatform.Tvdb, aniDbIdsForTvdb);
-                    foreach (var g in tvdbMappings.GroupBy(m => m.AniDbId, StringComparer.OrdinalIgnoreCase))
-                        aniDbToTvdb[g.Key] = g.First().PlatformId;
+                    malToAniDb[malId] = aniDbId;
+                    if (tvdbId != null)
+                        aniDbToTvdb[aniDbId] = tvdbId;
                 }
             }
 

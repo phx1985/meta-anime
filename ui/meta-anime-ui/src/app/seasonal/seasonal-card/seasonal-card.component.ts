@@ -157,6 +157,12 @@ export class SeasonalCardComponent implements OnInit {
   /** True when at least one writable provider does not have this anime. */
   get anyMissing(): boolean { return !this.anime.inSonarr || !this.anime.inMal; }
 
+  /** True when Sonarr is the only missing provider (MAL has it, Sonarr does not). */
+  get sonarrMissing(): boolean { return this.partiallyTracked && !this.anime.inSonarr; }
+
+  /** True when MAL is the only missing provider (Sonarr has it, MAL does not). */
+  get malMissing(): boolean { return this.partiallyTracked && !this.anime.inMal; }
+
   translateGenre(name: string): string {
     const key = `genres.${name}`;
     const t = this.translate.instant(key);
