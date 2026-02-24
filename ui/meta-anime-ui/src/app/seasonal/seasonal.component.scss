@@ -620,6 +620,12 @@
   > .seasonal-grid__cell {
     min-height: 0;
   }
+
+  // Applied dynamically during FLIP animations only (via JS); removed afterwards
+  // to avoid holding GPU composite layers permanently.
+  > .seasonal-grid__cell.flip-active {
+    will-change: transform;
+  }
 }
 
 // ─── Loading / error / empty states ─────────────────────────────────────────

@@ -230,7 +230,7 @@
     @if (!loading() && filteredAnimes().length > 0) {
       <div class="seasonal-grid" [@gridAnimation]="filterVersion()">
         @for (anime of filteredAnimes(); track anime.malId) {
-          <div class="seasonal-grid__cell">
+          <div class="seasonal-grid__cell" #cell [attr.data-mal-id]="anime.malId">
             <app-seasonal-card [anime]="anime" [activeGenres]="filterGenre()" />
           </div>
         }
