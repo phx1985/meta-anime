@@ -222,6 +222,10 @@
   box-shadow: 0 4px 24px var(--card-shadow);
   // overflow:hidden removed so the genre dropdown panel can overflow the card edge
   backdrop-filter: blur(8px);
+  // Explicit stacking context so the genre-panel (z-index:1000) sits above the
+  // seasonal card grid (which has its own positioned elements).
+  position: relative;
+  z-index: 2;
 }
 
 .filter-card__header {
@@ -599,6 +603,7 @@
 .genre-option {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.3rem;
   padding: 0.25rem 0.6rem;
   border-radius: 999px;

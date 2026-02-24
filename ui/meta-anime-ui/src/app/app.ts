@@ -57,9 +57,9 @@ export class App implements OnInit, AfterViewInit {
   /** Minimum pixel block rows (used for short elements). */
   private static readonly PX_MIN_ROWS = 4;
   /** Target pixel block width (px). Grid density = element_width / this. */
-  private static readonly PX_BLOCK_TARGET_W = 22;
+  private static readonly PX_BLOCK_TARGET_W = 8;
   /** Target pixel block height (px). Grid density = element_height / this. */
-  private static readonly PX_BLOCK_TARGET_H = 16;
+  private static readonly PX_BLOCK_TARGET_H = 6;
 
   // ── Stagger / duration ───────────────────────────────────────────────────────
   /** Per-column delay increment (ms) for the right-to-left stagger. */
@@ -299,9 +299,15 @@ export class App implements OnInit, AfterViewInit {
     // Capture element's background for block colour; fallback to card variable
     const bgColor = getComputedStyle(el).backgroundColor || 'var(--card-bg)';
 
-    // Hide the real element immediately — the JS overlay IS the animation
-    el.style.setProperty('opacity', '0', 'important');
-    el.style.setProperty('transition', 'none', 'important');
+    // Gradually fade the original element while pixel blocks fly off.
+    // This creates the "turning to dust" look: the element is still
+    // partially visible as blocks spawn right-to-left, then dissolves.
+    // We must set the transition property FIRST, then trigger opacity in
+    // the next rAF so the browser registers the transition before the change.
+    el.style.setProperty('transition', 'opacity 0.65s ease-out', 'important');
+    requestAnimationFrame(() => {
+      el.style.setProperty('opacity', '0', 'important');
+    });
 
     const container = document.createElement('div');
     container.style.cssText =

@@ -191,11 +191,11 @@
                                   [class.genre-option--selected]="filterGenre().includes(g)"
                                   role="option" [attr.aria-selected]="filterGenre().includes(g)"
                                   (click)="toggleGenre(g, $event)">
-                            <span class="genre-option__check" aria-hidden="true">
-                              @if (filterGenre().includes(g)) {
+                            @if (filterGenre().includes(g)) {
+                              <span class="genre-option__check" aria-hidden="true">
                                 <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M2 8l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-                              }
-                            </span>
+                              </span>
+                            }
                             {{ ('genres.' + g) | translate }}
                           </button>
                         }
