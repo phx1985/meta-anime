@@ -28,6 +28,9 @@ public interface ISonarrAnimeSourceService<T> : IAnimeSourceService<T>
 
     /// <summary>Searches Sonarr's series lookup API by free-text term (title).</summary>
     Task<Result<IList<SonarrLookupItem>>> SearchLookupAsync(string term);
+
+    /// <summary>Removes a Sonarr series by its Sonarr series ID (does not delete episode files).</summary>
+    Task<Result> RemoveSeriesAsync(int sonarrId);
 }
 
 /// <summary>Light-weight projection returned by GetSeriesByCodecAsync.</summary>

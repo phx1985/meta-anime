@@ -941,7 +941,7 @@ public class AnimeMediatorService(
         }
     }
 
-    public async Task<Result<SonarrSeries>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId)
+    public async Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId)
     {
         try
         {
@@ -951,13 +951,37 @@ public class AnimeMediatorService(
 
             var addResult = await sonarrAnimeSource.AddSeriesAsync(tvdbId, rootFolderPath, qualityProfileId, tagIds);
             if (addResult.IsFailure)
-                return Result.Failure<SonarrSeries>(addResult.Error);
+                return Result.Failure<SonarrAddResult>(addResult.Error);
 
-            return Result.Success(new SonarrSeries { Id = addResult.Value.Id, Title = addResult.Value.Title, TitleSlug = addResult.Value.TitleSlug });
+            var added = addResult.Value;
+
+            // Save the new series to the Sonarr cache for immediate TitleSlug availability
+            var seriesForCache = new SonarrSeries { Id = added.Id, Title = added.Title, TitleSlug = added.TitleSlug };
+            await cacheEntryService.AddAsync(Result.Success(seriesForCache.ToCacheEntry()));
+
+            var url = !string.IsNullOrEmpty(added.TitleSlug)
+                ? $"{sonarrSeriesBaseUrl.TrimEnd('/')}/series/{added.TitleSlug}"
+                : null;
+            return Result.Success(new SonarrAddResult(added.Id, added.Title, added.TitleSlug, url));
         }
         catch (Exception ex)
         {
-            return Result.Failure<SonarrSeries>(new(Constants.Errors.GetAllAsync, ex.Message));
+            return Result.Failure<SonarrAddResult>(new(Constants.Errors.GetAllAsync, ex.Message));
+        }
+    }
+
+    public async Task<Result> RemoveSonarrSeriesAsync(int sonarrId)
+    {
+        try
+        {
+            var result = await sonarrAnimeSource.RemoveSeriesAsync(sonarrId);
+            if (result.IsSuccess)
+                await cacheEntryService.RemoveAsync(sonarrId.ToString(), AnimeSource.Sonarr);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(new(Constants.Errors.GetAllAsync, ex.Message));
         }
     }
 

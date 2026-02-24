@@ -38,6 +38,13 @@ export interface SonarrAddSeriesRequest {
   qualityProfileId: number;
 }
 
+export interface SonarrAddResult {
+  sonarrId: number;
+  title: string;
+  titleSlug?: string;
+  sonarrUrl?: string;
+}
+
 export interface MalListStatusRequest {
   status: string;
   numWatchedEpisodes: number;

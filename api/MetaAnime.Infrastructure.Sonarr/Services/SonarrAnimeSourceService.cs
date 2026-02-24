@@ -323,6 +323,22 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options, IPropert
 
         return Result.Success(items);
     }
+
+    public async Task<Result> RemoveSeriesAsync(int sonarrId)
+    {
+        var (host, apiKey, _, isConfigured) = await GetSettingsAsync();
+        if (!isConfigured)
+            return Result.Failure(new(Constants.Errors.NotConfigured, "Sonarr is not configured"));
+
+        var client = new RestClient(host);
+        var req = new RestRequest($"api/v3/series/{sonarrId}", Method.Delete);
+        req.AddQueryParameter("apikey", apiKey);
+        req.AddQueryParameter("deleteFiles", "false");
+        var resp = await client.ExecuteAsync(req);
+        return resp.IsSuccessful
+            ? Result.Success()
+            : Result.Failure(new("sonarr.remove", $"Failed to remove series (HTTP {(int)resp.StatusCode}): {resp.Content ?? "no details"}"));
+    }
     #endregion
 
     #region Private Methods

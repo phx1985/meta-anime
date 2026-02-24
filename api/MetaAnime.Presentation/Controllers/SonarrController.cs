@@ -70,7 +70,7 @@ public class SonarrController(
     /// <summary>Adds an anime series to Sonarr by TVDB ID.</summary>
     [HttpPost("add")]
     [Authorize]
-    public async Task<ActionResult> AddSeries([FromBody] SonarrAddSeriesRequest request)
+    public async Task<ActionResult<SonarrAddResult>> AddSeries([FromBody] SonarrAddSeriesRequest request)
     {
         if (request.TvdbId <= 0)
             return BadRequest("tvdbId must be a positive integer");
@@ -87,6 +87,20 @@ public class SonarrController(
         }
 
         return Ok(result.Value);
+    }
+
+    /// <summary>Removes a series from Sonarr by its numeric series ID (used for rollback; does not delete files).</summary>
+    [HttpDelete("series/{sonarrId:int}")]
+    [Authorize]
+    public async Task<ActionResult> RemoveSeries(int sonarrId)
+    {
+        var result = await animeMediatorService.RemoveSonarrSeriesAsync(sonarrId);
+        if (result.IsFailure)
+        {
+            logger.LogError("Sonarr remove failed for series '{SonarrId}': {Error}", sonarrId, result.Error.Message);
+            return StatusCode(500, result.Error.Message);
+        }
+        return NoContent();
     }
 }
 
