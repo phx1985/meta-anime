@@ -171,6 +171,29 @@
 
 </article>
 
+<!-- ── Lightning bolt arcs — only during neon-glow-active ─────────────────── -->
+@if (neonGlowActive) {
+  <!-- Classic zigzag lightning bolt: M x0,y0 L ... Z -->
+  <svg class="lightning-arc lightning-arc--1" viewBox="0 0 13 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M 9 0 L 3 10 L 6.5 10 L 1.5 20 L 11 9 L 7 9 Z"/>
+  </svg>
+  <svg class="lightning-arc lightning-arc--2" viewBox="0 0 13 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M 9 0 L 3 10 L 6.5 10 L 1.5 20 L 11 9 L 7 9 Z"/>
+  </svg>
+  <svg class="lightning-arc lightning-arc--3" viewBox="0 0 13 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M 9 0 L 3 10 L 6.5 10 L 1.5 20 L 11 9 L 7 9 Z"/>
+  </svg>
+  <svg class="lightning-arc lightning-arc--4" viewBox="0 0 13 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M 9 0 L 3 10 L 6.5 10 L 1.5 20 L 11 9 L 7 9 Z"/>
+  </svg>
+  <svg class="lightning-arc lightning-arc--5" viewBox="0 0 13 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M 9 0 L 3 10 L 6.5 10 L 1.5 20 L 11 9 L 7 9 Z"/>
+  </svg>
+  <svg class="lightning-arc lightning-arc--6" viewBox="0 0 13 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M 9 0 L 3 10 L 6.5 10 L 1.5 20 L 11 9 L 7 9 Z"/>
+  </svg>
+}
+
 <!-- ── Lightbox overlay ──────────────────────────────────────────────────── -->
 @if (showLightbox() && coverImageUrl) {
   <div class="lightbox-overlay" (click)="closeLightbox()" role="dialog" aria-modal="true">

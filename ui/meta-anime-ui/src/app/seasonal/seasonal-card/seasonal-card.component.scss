@@ -11,45 +11,6 @@
   // always renders above sibling cards that are later in the DOM.
   z-index: 0;
 
-  // ── SSJ2 electrical arc border effect ─────────────────────────────────────
-  // Multiple sharp arc segments positioned at irregular intervals simulate
-  // electrical discharge points. The animation uses steps(1, end) so the
-  // gradient "snaps" to new positions rather than smoothly rotating —
-  // creating a crackling, jumping arc effect like Goku SSJ2.
-  // Runs on hover AND during neon-glow-active (integrated into the core aura).
-  &::before {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border-radius: 18px;   // card border-radius (14px) + ring width (4px)
-    background: conic-gradient(
-      from 0deg,
-      transparent 0deg 60deg,
-      rgba(0, 229, 255, 1)    62deg, rgba(0, 229, 255, 0.3) 64deg, transparent 66deg,
-      transparent 118deg,
-      rgba(0, 229, 255, 0.88) 120deg, rgba(0, 200, 255, 0.2) 122deg, transparent 124deg,
-      transparent 170deg,
-      rgba(0, 200, 255, 0.75) 172deg, transparent 174deg,
-      transparent 228deg,
-      rgba(0, 229, 255, 0.92) 230deg, rgba(0, 229, 255, 0.2) 232deg, transparent 234deg,
-      transparent 290deg,
-      rgba(0, 200, 255, 0.65) 292deg, transparent 294deg,
-      transparent 338deg,
-      rgba(0, 229, 255, 0.82) 340deg, transparent 342deg,
-      transparent 360deg
-    );
-    z-index: -1;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s;
-  }
-
-  &:hover::before,
-  &.neon-glow-active::before {
-    opacity: 1;
-    animation: electricArc 0.55s steps(1, end) infinite;
-  }
-
   // ── Post-add neon aura glow ──────────────────────────────────────────────
   // Placed on ::after (separate from ::before arc) so it never conflicts
   // with the card's own cardIn animation — fixes the card-disappearance bug.
@@ -1202,25 +1163,46 @@
   to   { opacity: 1; transform: scale(1);    }
 }
 
-// ── SSJ2 electrical arc keyframe ─────────────────────────────────────────────
-// Uses steps(1, end) so the conic-gradient jumps to a new rotation angle at
-// each keyframe rather than interpolating smoothly. Combined with the irregular
-// angle offsets and brightness flickers, this produces a snapping, crackling
-// electrical-discharge look — not a smooth spin.
-@keyframes electricArc {
-  0%   { transform: rotate(0deg);   filter: brightness(1.0) saturate(1.4); }
-  8%   { transform: rotate(47deg);  filter: brightness(2.3) saturate(2.2); }
-  17%  { transform: rotate(93deg);  filter: brightness(1.1) saturate(1.1); }
-  25%  { transform: rotate(141deg); filter: brightness(1.9) saturate(1.8); }
-  33%  { transform: rotate(186deg); filter: brightness(1.0) saturate(1.0); }
-  42%  { transform: rotate(224deg); filter: brightness(2.6) saturate(2.5); }
-  50%  { transform: rotate(268deg); filter: brightness(1.2) saturate(1.3); }
-  58%  { transform: rotate(305deg); filter: brightness(2.1) saturate(2.0); }
-  67%  { transform: rotate(341deg); filter: brightness(1.1) saturate(1.1); }
-  75%  { transform: rotate(19deg);  filter: brightness(2.4) saturate(2.3); }
-  83%  { transform: rotate(74deg);  filter: brightness(1.4) saturate(1.5); }
-  92%  { transform: rotate(119deg); filter: brightness(2.0) saturate(1.9); }
-  100% { transform: rotate(0deg);   filter: brightness(1.0) saturate(1.4); }
+// ─── Lightning bolt arcs — shown during neon-glow-active ─────────────────────
+// SVG lightning bolts are absolutely positioned relative to :host and appear
+// only while neonGlowActive is true. They are rendered via @if in the template
+// (outside the card's overflow:hidden article), so they extend beyond the border.
+.lightning-arc {
+  position: absolute;
+  width: 13px;
+  height: 20px;
+  pointer-events: none;
+  fill: #ffe44d;
+  filter: drop-shadow(0 0 3px #ffc107) drop-shadow(0 0 7px #ff8c00);
+  z-index: 2;
+  animation: arcFlicker 2.2s ease-out forwards;
+
+  // Staggered delays + unique rotations per arc
+  &--1 { top:  -14px; left:  18%;  transform: rotate(-12deg); animation-delay: 0.04s; }
+  &--2 { top:  -14px; right: 22%;  transform: rotate(14deg);  animation-delay: 0.32s; }
+  &--3 { top:   22%;  right: -14px; transform: rotate(96deg);  animation-delay: 0.16s; }
+  &--4 { bottom: 28%; right: -14px; transform: rotate(84deg);  animation-delay: 0.44s; }
+  &--5 { bottom: -14px; left: 28%; transform: rotate(175deg); animation-delay: 0.22s; }
+  &--6 { top:   42%;  left: -14px; transform: rotate(-94deg); animation-delay: 0.52s; }
+}
+
+// Lightning flicker: each bolt flashes in, fades, re-ignites briefly, then vanishes.
+// Using `scale` as a standalone property so it doesn't clobber the per-bolt rotation.
+@keyframes arcFlicker {
+  0%   { opacity: 0;    scale: 0.6; }
+  7%   { opacity: 1;    scale: 1.2; }
+  11%  { opacity: 0.1;  scale: 1;   }
+  15%  { opacity: 0.95; scale: 1;   }
+  22%  { opacity: 0;    scale: 0.9; }
+  40%  { opacity: 0;                }
+  44%  { opacity: 0.85; scale: 1.1; }
+  47%  { opacity: 0.05; scale: 1;   }
+  51%  { opacity: 0.75; }
+  60%  { opacity: 0;    }
+  79%  { opacity: 0;    }
+  83%  { opacity: 0.55; scale: 1.05; }
+  86%  { opacity: 0;    }
+  100% { opacity: 0;    scale: 1;   }
 }
 
 // Neon aura: single electric-blue plasma flash on :host::after after a successful add.
