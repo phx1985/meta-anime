@@ -93,6 +93,25 @@
     cursor: default;
     backdrop-filter: blur(6px);
   }
+
+  // ── Partially-tracked badge (one provider in, one out) ───────────────────────
+  &--partial {
+    // diagonal split: green (top-left) → dark (bottom-right)
+    background: linear-gradient(135deg,
+      rgba(34, 197, 94, 0.22) 45%,
+      rgba(30, 30, 46, 0.82) 55%
+    );
+    border: 1.5px dashed rgba(255, 255, 255, 0.35);
+    color: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+
+    &:hover {
+      transform: scale(1.12);
+      border-color: rgba(255, 255, 255, 0.6);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+  }
 }
 
 // ─── Blurred backdrop ─────────────────────────────────────────────────────────
@@ -309,6 +328,16 @@
   padding: 0.1rem 0.45rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+
+  // Highlighted when the genre matches an active filter selection
+  &--highlighted {
+    background: var(--accent-primary);
+    color: #fff;
+    border-color: var(--accent-primary);
+    box-shadow: 0 1px 6px rgba(108, 99, 255, 0.4);
+    transform: scale(1.04);
+  }
 }
 
 // ─── Scores + dates ───────────────────────────────────────────────────────────

@@ -7,7 +7,7 @@
     </div>
   }
 
-  <!-- ── Top-right action badge (+ or ✓) ─────────────────────────────────── -->
+  <!-- ── Top-right action badge (✓ / half-split / +) ─────────────────────── -->
   @if (allTracked) {
     <div class="corner-badge corner-badge--tracked"
          [title]="'seasonal.allTracked' | translate"
@@ -16,6 +16,21 @@
         <path d="M3 8l3.5 3.5L13 4"/>
       </svg>
     </div>
+  } @else if (partiallyTracked) {
+    <button type="button" class="corner-badge corner-badge--partial"
+            (click)="openAddModal()"
+            [title]="'seasonal.partiallyTracked' | translate"
+            aria-label="Partially tracked - add to more providers">
+      <!-- Diagonal split: upper-left = checkmark fragment (green), lower-right = plus fragment (white) -->
+      <svg viewBox="0 0 16 16" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <!-- diagonal divider (dashed) -->
+        <line x1="3" y1="13.5" x2="13" y2="2.5" stroke="currentColor" stroke-width="0.65" stroke-dasharray="1.5 1.5" opacity="0.55"/>
+        <!-- checkmark in upper-left half -->
+        <path d="M2 6.5l2.5 2.5 4-5" stroke="#22c55e" stroke-width="2.2"/>
+        <!-- plus in lower-right half -->
+        <path d="M9.5 10.5v3.5M7.5 12.5h4" stroke="rgba(255,255,255,0.88)" stroke-width="2.2"/>
+      </svg>
+    </button>
   } @else {
     <button type="button" class="corner-badge corner-badge--add"
             (click)="openAddModal()"
@@ -75,7 +90,7 @@
       @if (genres.length > 0) {
         <div class="genre-list">
           @for (g of genres; track g) {
-            <span class="genre-tag">{{ translateGenre(g) }}</span>
+            <span class="genre-tag" [class.genre-tag--highlighted]="activeGenres.length > 0 && activeGenres.includes(g)">{{ translateGenre(g) }}</span>
           }
         </div>
       }

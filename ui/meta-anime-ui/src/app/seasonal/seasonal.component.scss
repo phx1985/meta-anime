@@ -605,7 +605,7 @@
 
 .seasonal-grid {
   display: grid;
-  align-items: stretch;
+  align-items: start;
   gap: 1.25rem;
   grid-template-columns: repeat(2, 1fr);
 

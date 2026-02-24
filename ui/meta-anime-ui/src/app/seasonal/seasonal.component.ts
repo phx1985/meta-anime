@@ -71,9 +71,11 @@ function getCurrentSeason(month: number): SeasonName {
     ]),
     trigger('gridAnimation', [
       transition(':increment', [
-        query('.seasonal-grid__cell', [
-          style({ opacity: 0, transform: 'translateY(8px) scale(0.97)' }),
-          stagger(25, [
+        // Only animate newly-entering cells — they start at opacity 0 before the browser
+        // renders them, which prevents the "flash of all items" before the stagger kicks in.
+        query(':enter', [
+          style({ opacity: 0, transform: 'translateY(8px)' }),
+          stagger(20, [
             animate('280ms cubic-bezier(0.34, 1.4, 0.64, 1)', style({ opacity: 1, transform: 'none' })),
           ]),
         ], { optional: true }),

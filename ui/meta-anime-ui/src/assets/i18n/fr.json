@@ -112,7 +112,8 @@
         "malScore": "Score MAL",
         "startDate": "Date de début"
       }
-    }
+    },
+    "partiallyTracked": "Partiellement suivi — ajouter aux autres fournisseurs"
   },
   "animeList": {
     "title": "Liste des Animes",

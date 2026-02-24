@@ -39,6 +39,8 @@ import { Subject, debounceTime, switchMap, of, catchError } from 'rxjs';
 })
 export class SeasonalCardComponent implements OnInit {
   @Input({ required: true }) anime!: SeasonalAnimeItem;
+  /** Genres selected in the parent filter — highlights matching genre tags on the card. */
+  @Input() activeGenres: string[] = [];
 
   private translate    = inject(TranslateService);
   private sonarrService = inject(SonarrService);
@@ -148,6 +150,9 @@ export class SeasonalCardComponent implements OnInit {
 
   /** True when the anime is tracked in both Sonarr and MAL. */
   get allTracked(): boolean { return this.anime.inSonarr && this.anime.inMal; }
+
+  /** True when the anime is tracked in exactly one of Sonarr / MAL (but not both). */
+  get partiallyTracked(): boolean { return this.anime.inSonarr !== this.anime.inMal; }
 
   /** True when at least one writable provider does not have this anime. */
   get anyMissing(): boolean { return !this.anime.inSonarr || !this.anime.inMal; }
