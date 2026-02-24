@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, HostListener, DestroyRef, ViewChild, ElementRef, AfterViewInit, effect } from '@angular/core';
+import { Component, inject, signal, OnInit, HostListener, DestroyRef, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -36,87 +36,8 @@ export class App implements OnInit, AfterViewInit {
   protected sonarrHomeUrl = signal<string | null>(null);
   protected readonly malHomeUrl = 'https://myanimelist.net';
 
-  /**
-   * Total duration of the JS pixel animation container (ms).
-   * = PX_MAX_STAGGER_MS + max(PX_DURATION_MIN_MS + PX_DURATION_JITTER) + PX_DELAY_JITTER_MS + buffer
-   */
-  private static readonly PIXEL_ANIM_MS = 1400;
-  /**
-   * Delay (ms) before collapsing a notif-item's DOM slot after pixel animation.
-   * Must be ≥ PX_MAX_STAGGER_MS + PX_DURATION_MIN_MS + PX_DURATION_JITTER
-   * so all particles have finished their opacity fade (Phase 5 of the spec).
-   */
-  private static readonly NOTIF_PIXEL_SETTLE_MS = 1310;
-  /** IDs for which a pixel disintegration is already running (dedup guard). */
-  private readonly _animatingPixelIds = new Set<string>();
-
-  // ── Pixel grid sizing ────────────────────────────────────────────────────────
-  /** Minimum pixel block columns. */
-  private static readonly PX_MIN_COLS = 8;
-  /** Minimum pixel block rows. */
-  private static readonly PX_MIN_ROWS = 4;
-  /** Target pixel block width (px). */
-  private static readonly PX_BLOCK_TARGET_W = 8;
-  /** Target pixel block height (px). */
-  private static readonly PX_BLOCK_TARGET_H = 6;
-
-  // ── Stagger (Phase 2) ────────────────────────────────────────────────────────
-  /**
-   * Maximum right-to-left stagger delay (ms).
-   * Rightmost column = 0 ms delay; leftmost column = this value.
-   * Delay formula: delay = (1 - colNorm) * PX_MAX_STAGGER_MS + jitter
-   */
-  private static readonly PX_MAX_STAGGER_MS = 600;
-  /** Random per-block delay jitter (ms) added on top of the stagger. */
-  private static readonly PX_DELAY_JITTER_MS = 30;
-  /** Minimum flight duration per block (ms). */
-  private static readonly PX_DURATION_MIN_MS = 380;
-  /** Random additional flight duration per block (ms). */
-  private static readonly PX_DURATION_JITTER = 300;
-
-  // ── Parabolic trajectory (Phase 3) ───────────────────────────────────────────
-  /**
-   * Fraction of the animation timeline at which a block reaches its apex.
-   * 0.25 = the upward burst peaks at 25% of the total flight duration.
-   */
-  private static readonly PX_PEAK_FRACTION = 0.25;
-  /** Minimum upward burst height (px). The block rises this far at peak. */
-  private static readonly PX_BURST_UP_MIN = 18;
-  /** Random additional upward burst (px). */
-  private static readonly PX_BURST_UP_JITTER = 28;
-  /** Half-angle of horizontal fan spread (rad). Blocks spread ±this from rightward. */
-  private static readonly PX_SPREAD_HALF_RAD = 0.28;
-  /** Minimum horizontal speed (px over full duration). */
-  private static readonly PX_SPEED_MIN = 60;
-  /** Random extra horizontal speed (px). */
-  private static readonly PX_SPEED_JITTER = 180;
-  /** Constant rightward bias added to horizontal movement (px). */
-  private static readonly PX_RIGHTWARD_BIAS = 15;
-  /** Base downward drop for the top rows (px). */
-  private static readonly PX_GRAVITY_BASE = 55;
-  /** Additional downward drop per row (px/row). Lower rows fall further. */
-  private static readonly PX_GRAVITY_PER_ROW = 8;
-  /** Maximum total rotation per block (±deg). */
-  private static readonly PX_MAX_ROT_DEG = 540;
-  /** Fraction of total rotation applied at the trajectory apex. */
-  private static readonly PX_PEAK_ROT_FRACTION = 0.08;
-
   constructor() {
     this.translate.use('en');
-
-    // Pixel disintegration for every toast that enters "leaving" state.
-    // The CSS .toast-item--leaving just sets opacity:0 immediately so the
-    // real DOM element vanishes; we recreate it as flying pixel blocks.
-    effect(() => {
-      const leaving = this.notifService.leavingToastIds();
-      leaving.forEach(id => {
-        if (this._animatingPixelIds.has(id)) return;
-        this._animatingPixelIds.add(id);
-        const el = document.querySelector(`[data-toast-id="${CSS.escape(id)}"]`) as HTMLElement | null;
-        if (el) this._pixelDisintegrate(el);
-      });
-      if (leaving.size === 0) this._animatingPixelIds.clear();
-    });
   }
 
   ngOnInit(): void {
@@ -268,141 +189,10 @@ export class App implements OnInit, AfterViewInit {
     this.translate.use(next);
   }
 
-  /**
-   * Called when the user clicks the × button on a notification-center item.
-   * Runs the pixel disintegration on the item element, then after a short
-   * delay tells the service to collapse the DOM slot (height → 0).
-   */
+  /** Called when the user clicks × on a notification-center item. */
   onNotifDismiss(id: string, event: MouseEvent): void {
     event.stopPropagation();
-    if (this._animatingPixelIds.has(id)) return;
-    this._animatingPixelIds.add(id);
-    const btn = event.currentTarget as HTMLElement;
-    const item = btn.closest('.notif-item') as HTMLElement | null;
-    if (item) this._pixelDisintegrate(item);
-    // Wait for pixel blocks to visually depart before the service collapses height
-    setTimeout(() => {
-      this.notifService.dismissNotifItem(id);
-      this._animatingPixelIds.delete(id);
-    }, App.NOTIF_PIXEL_SETTLE_MS);
-  }
-
-  /**
-   * Spec-compliant pixel-block disintegration (Thanos-snap, right-to-left wave).
-   *
-   * Phase 1  — Seamless overlay: build the full particle grid off-DOM first.
-   *            Once complete, atomically hide the original element (visibility:hidden
-   *            preserves its layout space) and attach the grid. Frame 0 is invisible.
-   *
-   * Phase 2  — Right-to-left stagger: rightmost column starts at 0 ms delay,
-   *            leftmost at PX_MAX_STAGGER_MS (600 ms). Delay is strictly proportional
-   *            to normalised X position so the disintegration sweeps as a smooth wave.
-   *
-   * Phase 3  — Parabolic physics: each block bursts slightly upward (initial velocity),
-   *            reaches a peak at PX_PEAK_FRACTION of its flight time, then gravity
-   *            accelerates it downward.  Horizontal travel is rightward with a fan spread.
-   *            The easing on each keyframe reflects physical momentum:
-   *              0% → peak : ease-out (fast burst, slowing at apex)
-   *              peak → 100%: ease-in  (slow at apex, accelerating under gravity)
-   *
-   * Phase 4  — Smooth dissolve: scale 1→0 and opacity 1→0 continuously throughout
-   *            the parabolic flight so particles organically shrink into nothingness.
-   *
-   * Phase 5  — Graceful DOM collapse: the original element (visibility:hidden) keeps
-   *            its exact height in layout while all blocks fly.  The caller is
-   *            responsible for invoking the service collapse method after
-   *            NOTIF_PIXEL_SETTLE_MS (≥ max stagger + max duration) so that the
-   *            final leftmost particle has fully faded before the height collapses.
-   */
-  private _pixelDisintegrate(el: HTMLElement): void {
-    const rect = el.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-
-    const COLS   = Math.max(App.PX_MIN_COLS, Math.round(rect.width  / App.PX_BLOCK_TARGET_W));
-    const ROWS   = Math.max(App.PX_MIN_ROWS, Math.round(rect.height / App.PX_BLOCK_TARGET_H));
-    const blockW = rect.width  / COLS;
-    const blockH = rect.height / ROWS;
-
-    // Sample the element's computed background as block fill colour.
-    const bgColor = getComputedStyle(el).backgroundColor || 'var(--card-bg)';
-
-    // Build the full particle grid completely off-DOM (Phase 1).
-    const container = document.createElement('div');
-    container.style.cssText =
-      `position:fixed;left:${rect.left}px;top:${rect.top}px;` +
-      `width:${rect.width}px;height:${rect.height}px;` +
-      `pointer-events:none;z-index:999999;overflow:visible;`;
-
-    for (let row = 0; row < ROWS; row++) {
-      for (let col = 0; col < COLS; col++) {
-        const block = document.createElement('div');
-
-        // Phase 2: Right-to-left stagger.
-        // colNorm: 0 = leftmost column (max delay), 1 = rightmost (0 ms delay).
-        // When COLS === 1 treat as rightmost so single-column elements start immediately.
-        const colNorm  = COLS > 1 ? col / (COLS - 1) : 1;
-        const delay    = (1 - colNorm) * App.PX_MAX_STAGGER_MS
-                       + Math.random() * App.PX_DELAY_JITTER_MS;
-        const duration = App.PX_DURATION_MIN_MS + Math.random() * App.PX_DURATION_JITTER;
-
-        // Phase 3: Parabolic trajectory.
-        const upBurst  = App.PX_BURST_UP_MIN  + Math.random() * App.PX_BURST_UP_JITTER;
-        const angle    = (Math.random() - 0.5) * 2 * App.PX_SPREAD_HALF_RAD;
-        const speed    = App.PX_SPEED_MIN + Math.random() * App.PX_SPEED_JITTER;
-        const dxFull   = Math.cos(angle) * speed + App.PX_RIGHTWARD_BIAS;
-        const dyFall   = App.PX_GRAVITY_BASE + row * App.PX_GRAVITY_PER_ROW;
-        // At the peak the block has travelled PX_PEAK_FRACTION of its full X distance.
-        const dxPeak   = dxFull * App.PX_PEAK_FRACTION;
-        const rot      = (Math.random() - 0.5) * App.PX_MAX_ROT_DEG;
-
-        block.style.cssText =
-          `position:absolute;` +
-          `left:${col * blockW}px;top:${row * blockH}px;` +
-          // +0.5 px plugs sub-pixel gaps between adjacent blocks
-          `width:${blockW + 0.5}px;height:${blockH + 0.5}px;` +
-          `background:${bgColor};` +
-          `box-shadow:inset 0 0 0 0.5px rgba(255,255,255,0.08);` +
-          `border-radius:1px;`;
-
-        block.animate(
-          [
-            // 0% — at rest, full size and opacity.
-            // ease-out: burst starts fast and decelerates toward the apex.
-            { offset: 0,
-              opacity: 1,
-              transform: 'translate(0,0) rotate(0deg) scale(1)',
-              easing: 'cubic-bezier(0.25, 1, 0.5, 1)' },
-            // peak — upward burst + partial rightward travel; slight brightness flash.
-            // ease-in: slow at apex, then gravity accelerates the block downward.
-            { offset: App.PX_PEAK_FRACTION,
-              opacity: 0.82,
-              transform: `translate(${dxPeak}px,${-upBurst}px) rotate(${rot * App.PX_PEAK_ROT_FRACTION}deg) scale(1)`,
-              filter: 'brightness(1.25)',
-              easing: 'cubic-bezier(0.5, 0, 0.75, 0)' },
-            // 100% — gravity has pulled the block down; fully faded and shrunk (Phase 4).
-            { offset: 1.0,
-              opacity: 0,
-              transform: `translate(${dxFull}px,${dyFall}px) rotate(${rot}deg) scale(0)`,
-              filter: 'brightness(0.4) saturate(0) blur(0.5px)' },
-          ],
-          { duration, delay, fill: 'forwards' }
-        );
-
-        container.appendChild(block);
-      }
-    }
-
-    // Phase 1 (spec): particle grid is fully built — now atomically:
-    //   1. Hide the real element; visibility:hidden preserves its layout space (Phase 5).
-    //   2. Attach the pixel overlay at the exact viewport position.
-    // Both happen in the same JS microtask so the browser paints them together,
-    // resulting in zero visible change at frame 0.
-    el.style.setProperty('visibility', 'hidden', 'important');
-    document.body.appendChild(container);
-
-    setTimeout(() => {
-      if (document.body.contains(container)) document.body.removeChild(container);
-    }, App.PIXEL_ANIM_MS);
+    this.notifService.dismissNotifItem(id);
   }
 }
 

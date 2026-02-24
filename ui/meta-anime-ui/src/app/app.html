@@ -233,7 +233,6 @@
   @for (toast of notifService.activeToasts(); track toast.id) {
     <div class="toast-item toast-item--{{ toast.severity }}"
          [class.toast-item--leaving]="notifService.leavingToastIds().has(toast.id)"
-         [attr.data-toast-id]="toast.id"
          role="alert">
       <!-- Severity icon -->
       <div class="toast-item-icon" aria-hidden="true">

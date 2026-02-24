@@ -354,19 +354,18 @@
   &--clickable { cursor: pointer; }
   &--clickable:hover { background: var(--bg-secondary); }
 
-  // Height collapse after JS pixel disintegration has hidden the content.
-  // The JS _pixelDisintegrate() makes the element invisible first, then this
-  // class collapses the vertical space so the panel reflows smoothly.
+  // Slide left + fade when dismissed
   &--leaving {
-    animation: notifItemCollapse 0.35s cubic-bezier(0.4, 0, 0.84, 1) forwards;
+    animation: notifItemDismiss 0.4s ease-in forwards;
     pointer-events: none;
     overflow: hidden;
   }
 }
 
-@keyframes notifItemCollapse {
-  0%   { opacity: 0; max-height: 120px; padding-top: inherit; padding-bottom: inherit; border-width: inherit; }
-  100% { opacity: 0; max-height: 0;     padding-top: 0;       padding-bottom: 0;       border-width: 0; }
+@keyframes notifItemDismiss {
+  0%   { opacity: 1; transform: translateX(0);      max-height: 120px; padding-top: 0.75rem; padding-bottom: 0.75rem; border-bottom-width: 1px; }
+  55%  { opacity: 0; transform: translateX(-50px);  max-height: 120px; padding-top: 0.75rem; padding-bottom: 0.75rem; border-bottom-width: 1px; }
+  100% { opacity: 0; transform: translateX(-50px);  max-height: 0;     padding-top: 0;       padding-bottom: 0;       border-bottom-width: 0; }
 }
 
 .notif-item-icon {
@@ -481,11 +480,9 @@
   &--warning { border-left-color: #f59e0b; }
   &--error   { border-left-color: #ef4444; }
 
-  // Toast slot stays in layout while pixel particles fly (visibility:hidden keeps
-  // the space; JS _pixelDisintegrate() handles the visual). After TOAST_EXIT_MS
-  // the service removes the item from the array and Angular collapses the slot.
+  // Slide left + fade on dismiss
   &--leaving {
-    visibility: hidden !important;
+    animation: toastSlideToLeft 0.32s ease-in forwards;
     pointer-events: none;
   }
 }
@@ -493,6 +490,11 @@
 @keyframes toastSlideFromRight {
   from { opacity: 0; transform: translateX(60px); }
   to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastSlideToLeft {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-60px); }
 }
 
 .toast-item-icon {
