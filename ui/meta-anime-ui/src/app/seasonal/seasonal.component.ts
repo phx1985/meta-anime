@@ -310,14 +310,31 @@ export class SeasonalComponent {
     }
 
     // MAL status filter
+    // Design:
+    //  • 'not_in'  pill → matches animes NOT in the user's MAL list (inMal = false)
+    //  • status pills  → matches animes IN the user's MAL list with a specific view state
+    //
+    // The two groups are mutually exclusive (an anime can't both be "not in MAL" and
+    // have a MAL status). `toggleMalStatus` enforces this invariant in the UI so both
+    // groups are never active at the same time. The filter below reflects that:
     const malStatuses = this.filterMalStatus();
     if (malStatuses.length > 0) {
-      result = result.filter(a =>
-        malStatuses.some(s => {
-          if (s === 'not_in') return !a.inMal;
-          return a.malViewState === s;
-        })
-      );
+      const notInSelected = malStatuses.includes('not_in');
+      const statusSelected = malStatuses.filter(s => s !== 'not_in');
+
+      result = result.filter(a => {
+        // ── Not-in-MAL branch ──────────────────────────────────────────────
+        if (!a.inMal) return notInSelected;
+
+        // ── In-MAL branch ─────────────────────────────────────────────────
+        if (statusSelected.length === 0) return false; // only 'not_in' active
+
+        // If the anime is in MAL but malViewState is missing (cache miss /
+        // data gap), keep it visible rather than hiding it silently.
+        if (!a.malViewState) return true;
+
+        return statusSelected.some(s => a.malViewState === s);
+      });
     }
 
     // Sort
@@ -419,9 +436,19 @@ export class SeasonalComponent {
 
   toggleMalStatus(status: string): void {
     this._beginFilterChange();
-    this.filterMalStatus.update(v =>
-      v.includes(status) ? v.filter(s => s !== status) : [...v, status]
-    );
+    this.filterMalStatus.update(current => {
+      if (current.includes(status)) {
+        // Deselect: remove this pill
+        return current.filter(s => s !== status);
+      }
+      // Select: enforce mutual exclusivity between 'not_in' and the status pills.
+      //  • Selecting 'not_in'  → clear all status pills first
+      //  • Selecting a status  → clear 'not_in' first
+      if (status === 'not_in') {
+        return ['not_in'];
+      }
+      return [...current.filter(s => s !== 'not_in'), status];
+    });
     this.filterVersion.update(v => v + 1);
   }
 
@@ -440,7 +467,14 @@ export class SeasonalComponent {
     this.filterVersion.update(v => v + 1);
   }
 
-  toggleSortOrder(): void {
+  /** Returns true when this MAL status pill should be visually muted (its group is excluded). */
+  isMalStatusMuted(status: string): boolean {
+    const active = this.filterMalStatus();
+    if (active.length === 0 || active.includes(status)) return false;
+    // 'not_in' is muted when any real status is active, and vice versa
+    if (status === 'not_in') return active.some(s => s !== 'not_in');
+    return active.includes('not_in');
+  }
     this._beginFilterChange();
     this.sortOrder.update(o => o === 'asc' ? 'desc' : 'asc');
     this.filterVersion.update(v => v + 1);

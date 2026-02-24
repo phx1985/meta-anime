@@ -163,8 +163,13 @@
                 <span class="filter-label">{{ 'seasonal.filter.malStatus.label' | translate }}</span>
                 <div class="filter-pills">
                   @for (s of malStates; track s.value) {
+                    <!-- Visual separator between 'not_in' and the status pills -->
+                    @if (s.value === 'watching') {
+                      <span class="filter-pills__sep" aria-hidden="true"></span>
+                    }
                     <button type="button" class="filter-pill"
                             [class.filter-pill--active]="filterMalStatus().includes(s.value)"
+                            [class.filter-pill--muted]="isMalStatusMuted(s.value)"
                             (click)="toggleMalStatus(s.value)">
                       {{ s.labelKey | translate }}
                     </button>

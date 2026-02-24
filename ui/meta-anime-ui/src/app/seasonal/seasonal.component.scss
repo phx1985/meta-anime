@@ -476,6 +476,17 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.3rem;
+  align-items: center;
+}
+
+// Visual separator between the 'not_in' pill and the status pills
+.filter-pills__sep {
+  display: block;
+  width: 1px;
+  height: 1.4rem;
+  background: var(--card-border);
+  margin: 0 0.15rem;
+  flex-shrink: 0;
 }
 
 .filter-pill {
@@ -489,7 +500,7 @@
   font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
   white-space: nowrap;
 
   &:hover { border-color: var(--accent-primary); color: var(--accent-primary); }
@@ -498,6 +509,11 @@
     background: var(--accent-primary);
     border-color: var(--accent-primary);
     color: #fff;
+  }
+
+  // Dimmed when another mutually-exclusive pill is active
+  &--muted {
+    opacity: 0.38;
   }
 }
 
