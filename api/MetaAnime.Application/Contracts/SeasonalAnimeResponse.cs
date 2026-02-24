@@ -15,5 +15,7 @@ public sealed record SeasonalAnimeResponse(
     bool InPlex,
     string? PlexUrl,
     bool InSonarr,
-    string? SonarrUrl
+    string? SonarrUrl,
+    string? TvdbId,
+    string? EnglishTitle
 );

@@ -74,11 +74,6 @@
     cursor: default;
     backdrop-filter: blur(6px);
   }
-
-  // Warp-in animation when badge first appears after add
-  &--warp {
-    animation: warpIn 0.65s cubic-bezier(0.34, 1.6, 0.64, 1) both;
-  }
 }
 
 // ─── Blurred backdrop ─────────────────────────────────────────────────────────
@@ -391,11 +386,6 @@
     filter: grayscale(1);
     -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0) 100%);
     mask-image: linear-gradient(to right, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0) 100%);
-  }
-
-  // Warp-in animation when provider becomes in-library after manual add
-  &--warp-in {
-    animation: warpIn 0.65s cubic-bezier(0.34, 1.6, 0.64, 1) both;
   }
 }
 
@@ -979,6 +969,10 @@
     flex-direction: column;
     gap: 0.65rem;
     background: color-mix(in srgb, var(--bg-secondary) 15%, transparent);
+    // Independently scrollable so each provider section doesn't overflow the dialog
+    max-height: 55vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 }
 
@@ -1131,11 +1125,57 @@
   to   { opacity: 1; transform: scale(1);    }
 }
 
-// Warp-in: used when + transitions to ✓, and when provider pills become active
-@keyframes warpIn {
-  0%   { transform: scale(0) rotate(-180deg); opacity: 0; filter: blur(4px); }
-  50%  { filter: blur(0px); }
-  70%  { transform: scale(1.25) rotate(8deg); opacity: 1; }
-  85%  { transform: scale(0.92) rotate(-3deg); }
-  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+// Neon aura: electric-blue plasma glow that envelops the card after a provider add
+.card--neon-aura {
+  animation: neonAura 2.8s ease-out both;
+}
+
+@keyframes neonAura {
+  0%   {
+    box-shadow: none;
+    border-color: var(--card-border);
+  }
+  10%  {
+    box-shadow:
+      0 0 6px 3px rgba(0, 229, 255, 0.95),
+      0 0 20px 8px rgba(0, 191, 255, 0.75),
+      0 0 50px 16px rgba(0, 140, 255, 0.45),
+      0 0 90px 24px rgba(0, 90, 255, 0.22);
+    border-color: #00e5ff;
+  }
+  28%  {
+    box-shadow:
+      0 0 4px 2px rgba(0, 229, 255, 0.65),
+      0 0 14px 6px rgba(0, 191, 255, 0.5),
+      0 0 35px 12px rgba(0, 140, 255, 0.3),
+      0 0 65px 18px rgba(0, 90, 255, 0.14);
+    border-color: rgba(0, 229, 255, 0.65);
+  }
+  46%  {
+    box-shadow:
+      0 0 8px 3px rgba(0, 229, 255, 1),
+      0 0 24px 9px rgba(0, 191, 255, 0.82),
+      0 0 55px 18px rgba(0, 140, 255, 0.5),
+      0 0 95px 26px rgba(0, 90, 255, 0.24);
+    border-color: #00e5ff;
+  }
+  66%  {
+    box-shadow:
+      0 0 5px 2px rgba(0, 229, 255, 0.5),
+      0 0 16px 6px rgba(0, 191, 255, 0.38),
+      0 0 38px 12px rgba(0, 140, 255, 0.22),
+      0 0 62px 16px rgba(0, 90, 255, 0.1);
+    border-color: rgba(0, 229, 255, 0.45);
+  }
+  85%  {
+    box-shadow:
+      0 0 2px 1px rgba(0, 229, 255, 0.25),
+      0 0 8px 3px rgba(0, 191, 255, 0.18),
+      0 0 18px 6px rgba(0, 140, 255, 0.1);
+    border-color: rgba(0, 229, 255, 0.2);
+  }
+  100% {
+    box-shadow: none;
+    border-color: var(--card-border);
+  }
 }

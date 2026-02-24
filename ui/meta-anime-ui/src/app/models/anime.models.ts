@@ -177,6 +177,8 @@ export interface SeasonalAnimeItem {
   plexUrl?: string;
   inSonarr: boolean;
   sonarrUrl?: string;
+  tvdbId?: string;
+  englishTitle?: string;
 }
 
 export type SeasonName = 'winter' | 'spring' | 'summer' | 'fall';

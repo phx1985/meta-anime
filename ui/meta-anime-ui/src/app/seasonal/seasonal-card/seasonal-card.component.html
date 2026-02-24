@@ -1,4 +1,4 @@
-<article class="seasonal-card" [class.card--expanded]="descExpanded()">
+<article class="seasonal-card" [class.card--expanded]="descExpanded()" [class.card--neon-aura]="neonGlow()">
 
   <!-- ── Blurred backdrop ──────────────────────────────────────────────────── -->
   @if (coverImageUrl) {
@@ -10,7 +10,6 @@
   <!-- ── Top-right action badge (+ or ✓) ─────────────────────────────────── -->
   @if (allTracked) {
     <div class="corner-badge corner-badge--tracked"
-         [class.corner-badge--warp]="badgeWarpIn()"
          [title]="'seasonal.allTracked' | translate"
          aria-label="Fully tracked">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -126,7 +125,6 @@
       <!-- Sonarr: solid brand color + link when in library, greyed when not -->
       @if (anime.inSonarr) {
         <a class="action action--sonarr action--in-library"
-           [class.action--warp-in]="sonarrWarpIn()"
            [attr.href]="anime.sonarrUrl ?? null"
            [attr.target]="anime.sonarrUrl ? '_blank' : null"
            [attr.rel]="anime.sonarrUrl ? 'noopener noreferrer' : null"
@@ -151,7 +149,6 @@
       <!-- MAL: solid brand color + link when in library, greyed when not -->
       @if (anime.inMal) {
         <a class="action action--mal action--in-library"
-           [class.action--warp-in]="malWarpIn()"
            [attr.href]="malUrl ?? null"
            target="_blank" rel="noopener noreferrer"
            [title]="'animeCard.openMal' | translate">

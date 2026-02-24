@@ -38,13 +38,9 @@ export class SeasonalCardComponent implements OnInit {
   descExpanded  = signal(false);
   showLightbox  = signal(false);
 
-  // ── Warp animation signals ────────────────────────────────────────────────
-  /** Triggers the warp-in animation on the ✓ badge after modal closes. */
-  badgeWarpIn     = signal(false);
-  /** Triggers the warp-in animation on the Sonarr footer pill after add. */
-  sonarrWarpIn    = signal(false);
-  /** Triggers the warp-in animation on the MAL footer pill after add. */
-  malWarpIn       = signal(false);
+  // ── Neon aura animation signal (set true after a successful add) ──────────
+  /** Triggers the electric-blue plasma aura on the card after providers are added. */
+  neonGlow = signal(false);
 
   // ── Unified add modal ────────────────────────────────────────────────────
   showAddModal        = signal(false);
@@ -171,11 +167,12 @@ export class SeasonalCardComponent implements OnInit {
 
     // If Sonarr is pre-selected, auto-search + load options
     if (!this.anime.inSonarr) {
-      this.sonarrSearchTerm.set(this.anime.title);
+      const searchTerm = this.getSonarrSearchTerm();
+      this.sonarrSearchTerm.set(searchTerm);
       this.sonarrSelected.set(null);
       this.sonarrSearchResults.set([]);
       this.sonarrSearchError.set('');
-      this.sonarrSearch$.next(this.anime.title);
+      this.sonarrSearch$.next(searchTerm);
 
       if (this.sonarrRootFolders().length === 0) {
         this.sonarrLoadingOptions.set(true);
@@ -206,8 +203,9 @@ export class SeasonalCardComponent implements OnInit {
       this.addSonarr.set(next);
       // Trigger search when enabling Sonarr section
       if (next && this.sonarrSearchResults().length === 0) {
-        this.sonarrSearchTerm.set(this.anime.title);
-        this.sonarrSearch$.next(this.anime.title);
+        const searchTerm = this.getSonarrSearchTerm();
+        this.sonarrSearchTerm.set(searchTerm);
+        this.sonarrSearch$.next(searchTerm);
         if (this.sonarrRootFolders().length === 0) {
           this.sonarrLoadingOptions.set(true);
           this.sonarrService.getOptions()
@@ -254,13 +252,25 @@ export class SeasonalCardComponent implements OnInit {
         this.addBusy.set(false);
         setTimeout(() => {
           this.closeAddModal();
-          // Trigger warp animations on the badge and footer pills
-          if (willAddSonarr) { this.sonarrWarpIn.set(true); setTimeout(() => this.sonarrWarpIn.set(false), 800); }
-          if (willAddMal)    { this.malWarpIn.set(true);    setTimeout(() => this.malWarpIn.set(false),    800); }
-          if (this.allTracked) { this.badgeWarpIn.set(true); setTimeout(() => this.badgeWarpIn.set(false), 800); }
+          // Trigger electric-blue neon aura on the card; auto-clear when animation ends
+          if (willAddSonarr || willAddMal) {
+            this.neonGlow.set(true);
+            // 2900ms slightly outlasts the 2.8s CSS animation so the signal clears cleanly
+            setTimeout(() => this.neonGlow.set(false), 2900);
+          }
         }, 1500);
       });
     });
+  }
+
+  /** Returns the best search term for Sonarr lookup:
+   *  1. `tvdb:XXXXX` when TVDB ID is known (exact match in Sonarr)
+   *  2. English title if available
+   *  3. Default title */
+  private getSonarrSearchTerm(): string {
+    if (this.anime.tvdbId) return `tvdb:${this.anime.tvdbId}`;
+    if (this.anime.englishTitle?.trim()) return this.anime.englishTitle.trim();
+    return this.anime.title;
   }
 
   private doAddSonarr(onSuccess: () => void): void {
