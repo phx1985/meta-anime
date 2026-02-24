@@ -29,4 +29,5 @@ public interface IAnimeMappingRepository
     Task<IEnumerable<AnimeMapping>> GetByAniDbIdsAsync(IEnumerable<string> aniDbIds);
     Task BulkDeleteAllAsync();
     Task BulkInsertAsync(IEnumerable<AnimeMapping> mappings);
+    Task AddAsync(AnimeMapping mapping);
 }

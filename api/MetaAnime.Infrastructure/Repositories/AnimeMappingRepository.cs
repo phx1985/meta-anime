@@ -22,6 +22,13 @@ public class AnimeMappingRepository(MetaAnimeDbContext dbContext) : IAnimeMappin
         await dbContext.SaveChangesAsync();
     }
 
+    public async Task AddAsync(AnimeMapping mapping)
+    {
+        mapping.Id = Guid.CreateVersion7();
+        await dbContext.AnimeMappings.AddAsync(mapping);
+        await dbContext.SaveChangesAsync();
+    }
+
     public async Task<IEnumerable<AnimeMapping>> GetAllAsync(bool includeAnime = false)
     {
         return includeAnime
