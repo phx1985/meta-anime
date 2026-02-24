@@ -258,7 +258,7 @@ export class SeasonalComponent {
   showNsfw = signal(true);
 
   // ── Filter state ──────────────────────────────────────────────────────────
-  filterOpen        = signal(true);
+  filterOpen        = signal(false);
   genreDropdownOpen = false;
 
   filterGenre     = signal<string[]>([]);
@@ -517,6 +517,7 @@ export class SeasonalComponent {
     this.genreDropdownOpen = false;
     this.filterVersion.update(v => v + 1);
     this.showSavePreset = false;
+    this.filterOpen.set(false);
   }
 
   openSavePreset(): void {
