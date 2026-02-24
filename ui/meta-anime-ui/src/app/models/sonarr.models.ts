@@ -36,6 +36,7 @@ export interface SonarrAddSeriesRequest {
   tvdbId: number;
   rootFolderPath: string;
   qualityProfileId: number;
+  malId?: string;
 }
 
 export interface SonarrAddResult {

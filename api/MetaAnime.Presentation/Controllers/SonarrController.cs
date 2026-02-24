@@ -78,7 +78,7 @@ public class SonarrController(
             return BadRequest("rootFolderPath is required");
 
         var result = await animeMediatorService.AddSonarrSeriesAsync(
-            request.TvdbId, request.RootFolderPath, request.QualityProfileId);
+            request.TvdbId, request.RootFolderPath, request.QualityProfileId, request.MalId);
 
         if (result.IsFailure)
         {
@@ -104,5 +104,5 @@ public class SonarrController(
     }
 }
 
-public sealed record SonarrAddSeriesRequest(int TvdbId, string RootFolderPath, int QualityProfileId);
+public sealed record SonarrAddSeriesRequest(int TvdbId, string RootFolderPath, int QualityProfileId, string? MalId = null);
 

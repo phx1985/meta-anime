@@ -801,6 +801,8 @@ public class AnimeMediatorService(
 
             // Build lookup: MAL source ID -> (HasPlex, PlexId, HasSonarr, SonarrId) from AnimeMapping table
             var malToSources = new Dictionary<string, (bool HasPlex, string? PlexId, bool HasSonarr, string? SonarrId)>(StringComparer.OrdinalIgnoreCase);
+            // inMalIds tracks which MAL IDs are explicitly in the user's MAL list (distinct from "known to system")
+            var inMalIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             bool anyInPlex = false;
 
             var mappingsResult = await animeMappingService.GetAllAsync(includeAnime: true);
@@ -815,12 +817,29 @@ public class AnimeMediatorService(
                     bool hasSonarr = sonarrEntry != null;
                     if (hasPlex) anyInPlex = true;
                     foreach (var malEntry in animes.Where(a => a.AnimeSource == AnimeSource.MyAnimeList))
+                    {
                         malToSources[malEntry.SourceId] = (hasPlex, plexEntry?.SourceId, hasSonarr, sonarrEntry?.SourceId);
+                        inMalIds.Add(malEntry.SourceId);
+                    }
                 }
             }
 
             // Resolve Plex base URL only if needed
             string? plexBaseUrl = anyInPlex ? await GetPlexBaseUrlAsync() : null;
+
+            // Augment malToSources with manually-added entries from the property bag
+            // (these are set when the user adds from the seasonal page; AnimeMapping is only updated on full sync)
+            var seasonalSonarrAdded = await GetSeasonalSonarrAddedAsync();
+            var seasonalMalAdded    = await GetSeasonalMalAddedAsync();
+
+            foreach (var (manualMalId, manualSonarrId) in seasonalSonarrAdded)
+            {
+                if (!malToSources.ContainsKey(manualMalId))
+                    malToSources[manualMalId] = (false, null, true, manualSonarrId);
+            }
+
+            foreach (var manualMalId in seasonalMalAdded)
+                inMalIds.Add(manualMalId);
 
             // Load Sonarr cache to resolve TitleSlugs — same approach as CreateSonarrAnimeInfoFromCache
             // used by the regular anime card, which builds URLs from TitleSlug not the numeric source ID.
@@ -859,16 +878,18 @@ public class AnimeMediatorService(
             var responses = filteredItems.Select(anime =>
             {
                 var malId = anime.Id.ToString();
-                // TryGetValue covers both the inMal check and the source IDs in one call
-                var inMal = malToSources.TryGetValue(malId, out var sources);
+                malToSources.TryGetValue(malId, out var sources);
+                var inMal     = inMalIds.Contains(malId);
+                var inSonarr  = sources.HasSonarr;
+                var inPlex    = sources.HasPlex;
                 // plexBaseUrl ends with %2F (URL-encoded "/"), so appending the source ID
                 // directly produces the correct path: .../metadata/{ratingKey}
-                string? plexUrl   = inMal && sources.HasPlex   && plexBaseUrl != null && sources.PlexId != null
+                string? plexUrl   = inPlex && plexBaseUrl != null && sources.PlexId != null
                     ? $"{plexBaseUrl}{sources.PlexId}" : null;
                 // Use TitleSlug from cache (same as regular anime card); fall back to numeric ID
-                var sonarrSlug = inMal && sources.SonarrId != null && sonarrSlugById.TryGetValue(sources.SonarrId, out var slug)
+                var sonarrSlug = sources.SonarrId != null && sonarrSlugById.TryGetValue(sources.SonarrId, out var slug)
                     ? slug : sources.SonarrId;
-                string? sonarrUrl = inMal && sources.HasSonarr && sonarrSlug != null
+                string? sonarrUrl = inSonarr && sonarrSlug != null
                     ? $"{sonarrSeriesBaseUrl.TrimEnd('/')}/series/{sonarrSlug}" : null;
                 return new SeasonalAnimeResponse(
                     MalId: malId,
@@ -882,9 +903,9 @@ public class AnimeMediatorService(
                     Status: anime.Status,
                     MalUrl: $"{myAnimeListHost}/anime/{malId}",
                     InMal: inMal,
-                    InPlex: inMal && sources.HasPlex,
+                    InPlex: inPlex,
                     PlexUrl: plexUrl,
-                    InSonarr: inMal && sources.HasSonarr,
+                    InSonarr: inSonarr,
                     SonarrUrl: sonarrUrl
                 );
             });
@@ -941,7 +962,7 @@ public class AnimeMediatorService(
         }
     }
 
-    public async Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId)
+    public async Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, string? malId = null)
     {
         try
         {
@@ -958,6 +979,11 @@ public class AnimeMediatorService(
             // Save the new series to the Sonarr cache for immediate TitleSlug availability
             var seriesForCache = new SonarrSeries { Id = added.Id, Title = added.Title, TitleSlug = added.TitleSlug };
             await cacheEntryService.AddAsync(Result.Success(seriesForCache.ToCacheEntry()));
+
+            // Persist malId→sonarrId mapping in property bag so GetSeasonalAnimesAsync
+            // reflects the add immediately (AnimeMapping is only updated on full sync).
+            if (!string.IsNullOrWhiteSpace(malId))
+                await AddSeasonalSonarrMappingAsync(malId, added.Id.ToString());
 
             var url = !string.IsNullOrEmpty(added.TitleSlug)
                 ? $"{sonarrSeriesBaseUrl.TrimEnd('/')}/series/{added.TitleSlug}"
@@ -976,7 +1002,11 @@ public class AnimeMediatorService(
         {
             var result = await sonarrAnimeSource.RemoveSeriesAsync(sonarrId);
             if (result.IsSuccess)
+            {
                 await cacheEntryService.RemoveAsync(sonarrId.ToString(), AnimeSource.Sonarr);
+                // Remove any seasonal manual-add mapping for this Sonarr ID
+                await RemoveSeasonalSonarrMappingBySonarrIdAsync(sonarrId.ToString());
+            }
             return result;
         }
         catch (Exception ex)
@@ -989,7 +1019,10 @@ public class AnimeMediatorService(
     {
         try
         {
-            return await malAnimeSource.UpdateListStatusAsync(malId, status, numWatchedEpisodes, score);
+            var result = await malAnimeSource.UpdateListStatusAsync(malId, status, numWatchedEpisodes, score);
+            if (result.IsSuccess)
+                await AddSeasonalMalMappingAsync(malId);
+            return result;
         }
         catch (Exception ex)
         {
@@ -1166,6 +1199,82 @@ public class AnimeMediatorService(
 
         return (await Task.WhenAll(tasks)).ToList();
     }
+
+    // ── Seasonal manual-add property bag helpers ──────────────────────────────
+
+    /// <summary>Reads the malId→sonarrId dictionary from the property bag.</summary>
+    private async Task<Dictionary<string, string>> GetSeasonalSonarrAddedAsync()
+    {
+        var entry = await propertyBagRepository.GetByKeyAsync(MetaAnime.Core.SettingsKeys.SeasonalSonarrAdded);
+        if (entry?.Value == null) return [];
+        try { return JsonSerializer.Deserialize<Dictionary<string, string>>(entry.Value, JsonOptions) ?? []; }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "Failed to deserialize seasonal Sonarr mapping from property bag");
+            return [];
+        }
+    }
+
+    /// <summary>Reads the set of MAL IDs manually added to MAL from the property bag.</summary>
+    private async Task<HashSet<string>> GetSeasonalMalAddedAsync()
+    {
+        var entry = await propertyBagRepository.GetByKeyAsync(MetaAnime.Core.SettingsKeys.SeasonalMalAdded);
+        if (entry?.Value == null) return [];
+        try { return new HashSet<string>(JsonSerializer.Deserialize<List<string>>(entry.Value, JsonOptions) ?? [], StringComparer.OrdinalIgnoreCase); }
+        catch (JsonException ex)
+        {
+            logger.LogWarning(ex, "Failed to deserialize seasonal MAL mapping from property bag");
+            return [];
+        }
+    }
+
+    /// <summary>Persists a malId→sonarrId mapping to the property bag after a Sonarr add from the seasonal page.</summary>
+    private async Task AddSeasonalSonarrMappingAsync(string malId, string sonarrId)
+    {
+        try
+        {
+            var map = await GetSeasonalSonarrAddedAsync();
+            map[malId] = sonarrId;
+            await propertyBagRepository.UpsertAsync(MetaAnime.Core.SettingsKeys.SeasonalSonarrAdded, JsonSerializer.Serialize(map));
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to persist seasonal Sonarr mapping for MAL ID {MalId}", malId);
+        }
+    }
+
+    /// <summary>Removes a sonarrId from the seasonal Sonarr mapping property bag (called on rollback/delete).</summary>
+    private async Task RemoveSeasonalSonarrMappingBySonarrIdAsync(string sonarrId)
+    {
+        try
+        {
+            var map = await GetSeasonalSonarrAddedAsync();
+            var keysToRemove = map.Where(kv => kv.Value == sonarrId).Select(kv => kv.Key).ToList();
+            if (keysToRemove.Count == 0) return;
+            foreach (var key in keysToRemove) map.Remove(key);
+            await propertyBagRepository.UpsertAsync(MetaAnime.Core.SettingsKeys.SeasonalSonarrAdded, JsonSerializer.Serialize(map));
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to remove seasonal Sonarr mapping for Sonarr ID {SonarrId}", sonarrId);
+        }
+    }
+
+    /// <summary>Persists a MAL ID to the seasonal MAL-added set in the property bag after a MAL add from the seasonal page.</summary>
+    private async Task AddSeasonalMalMappingAsync(string malId)
+    {
+        try
+        {
+            var set = await GetSeasonalMalAddedAsync();
+            if (set.Add(malId))
+                await propertyBagRepository.UpsertAsync(MetaAnime.Core.SettingsKeys.SeasonalMalAdded, JsonSerializer.Serialize(set.ToList()));
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to persist seasonal MAL mapping for MAL ID {MalId}", malId);
+        }
+    }
+
     #endregion
 
 }

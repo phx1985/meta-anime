@@ -38,6 +38,14 @@ export class SeasonalCardComponent implements OnInit {
   descExpanded  = signal(false);
   showLightbox  = signal(false);
 
+  // ── Warp animation signals ────────────────────────────────────────────────
+  /** Triggers the warp-in animation on the ✓ badge after modal closes. */
+  badgeWarpIn     = signal(false);
+  /** Triggers the warp-in animation on the Sonarr footer pill after add. */
+  sonarrWarpIn    = signal(false);
+  /** Triggers the warp-in animation on the MAL footer pill after add. */
+  malWarpIn       = signal(false);
+
   // ── Unified add modal ────────────────────────────────────────────────────
   showAddModal        = signal(false);
   addBusy             = signal(false);
@@ -235,13 +243,22 @@ export class SeasonalCardComponent implements OnInit {
 
   confirmAdd(): void {
     if (this.addBusy() || !this.anythingSelected) return;
+    // Capture intent before the async adds so animation logic is deterministic
+    const willAddSonarr = !this.anime.inSonarr && this.addSonarr();
+    const willAddMal    = !this.anime.inMal    && this.addMal();
     this.addBusy.set(true);
     this.addError.set('');
     this.doAddSonarr(() => {
       this.doAddMal(() => {
         this.addSuccess.set(true);
         this.addBusy.set(false);
-        setTimeout(() => this.closeAddModal(), 1500);
+        setTimeout(() => {
+          this.closeAddModal();
+          // Trigger warp animations on the badge and footer pills
+          if (willAddSonarr) { this.sonarrWarpIn.set(true); setTimeout(() => this.sonarrWarpIn.set(false), 800); }
+          if (willAddMal)    { this.malWarpIn.set(true);    setTimeout(() => this.malWarpIn.set(false),    800); }
+          if (this.allTracked) { this.badgeWarpIn.set(true); setTimeout(() => this.badgeWarpIn.set(false), 800); }
+        }, 1500);
       });
     });
   }
@@ -260,6 +277,7 @@ export class SeasonalCardComponent implements OnInit {
       tvdbId: selected.tvdbId,
       rootFolderPath: this.sonarrRootFolder(),
       qualityProfileId: this.sonarrProfileId(),
+      malId: this.anime.malId,   // sent to backend for property-bag persistence
     })
     .pipe(takeUntilDestroyed(this.destroyRef))
     .subscribe({

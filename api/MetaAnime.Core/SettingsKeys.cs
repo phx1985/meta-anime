@@ -35,4 +35,10 @@ public static class SettingsKeys
     // System (not user-configurable)
     public const string LastSyncDate           = "System:LastSyncDate";
     public const string MalTokenRefreshedAt    = "System:MalTokenRefreshedAt";
+
+    // Seasonal manual-add tracking (JSON in property bag; not user-configurable via Settings UI)
+    // Seasonal:SonarrAdded  — JSON Dictionary<malId, sonarrId> of manually added Sonarr series
+    // Seasonal:MalAdded     — JSON List<malId> of manually added MAL entries
+    public const string SeasonalSonarrAdded    = "Seasonal:SonarrAdded";
+    public const string SeasonalMalAdded       = "Seasonal:MalAdded";
 }

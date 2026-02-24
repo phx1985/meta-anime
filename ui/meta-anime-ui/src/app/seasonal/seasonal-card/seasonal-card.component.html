@@ -1,14 +1,35 @@
 <article class="seasonal-card" [class.card--expanded]="descExpanded()">
 
-  <!-- ── Blurred backdrop ──────────────────────────────────────────────── -->
+  <!-- ── Blurred backdrop ──────────────────────────────────────────────────── -->
   @if (coverImageUrl) {
     <div class="cover-backdrop" aria-hidden="true">
       <img [src]="coverImageUrl" class="backdrop-img" [alt]="''" />
     </div>
   }
 
+  <!-- ── Top-right action badge (+ or ✓) ─────────────────────────────────── -->
+  @if (allTracked) {
+    <div class="corner-badge corner-badge--tracked"
+         [class.corner-badge--warp]="badgeWarpIn()"
+         [title]="'seasonal.allTracked' | translate"
+         aria-label="Fully tracked">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 8l3.5 3.5L13 4"/>
+      </svg>
+    </div>
+  } @else {
+    <button type="button" class="corner-badge corner-badge--add"
+            (click)="openAddModal()"
+            [title]="'seasonal.addToProviders' | translate"
+            aria-label="Add to providers">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M8 3v10M3 8h10"/>
+      </svg>
+    </button>
+  }
+
   <div class="card-main">
-    <!-- ── Cover image ──────────────────────────────────────────────────── -->
+    <!-- ── Cover image ──────────────────────────────────────────────────────── -->
     <div class="card-cover" aria-hidden="true" (click)="openLightbox()" [class.cover--clickable]="!!coverImageUrl">
       @if (coverImageUrl) {
         <img [src]="coverImageUrl" [alt]="anime.title" class="cover-img" loading="lazy" />
@@ -17,35 +38,15 @@
       }
     </div>
 
-    <!-- ── Main content ─────────────────────────────────────────────────── -->
+    <!-- ── Main content ─────────────────────────────────────────────────────── -->
     <div class="card-content">
 
-      <!-- ── Header ──────────────────────────────────────────────────────── -->
+      <!-- ── Header ──────────────────────────────────────────────────────────── -->
       <div class="card-head">
-        <!-- Title row: title + action button (+ or ✓) -->
-        <div class="title-row">
-          <h3 class="card-title"
-              [class.card-title--link]="!!malUrl"
-              (click)="openMalPage()"
-              [title]="malUrl ? ('seasonal.openMal' | translate) : ''">{{ displayTitle }}</h3>
-
-          @if (allTracked) {
-            <!-- All writable providers → show "fully tracked" badge -->
-            <div class="all-tracked-badge" [title]="'seasonal.allTracked' | translate" aria-label="Fully tracked">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 8l3.5 3.5L13 4"/>
-              </svg>
-            </div>
-          } @else {
-            <!-- At least one provider missing → show "add" button -->
-            <button type="button" class="add-all-btn" (click)="openAddModal()"
-                    [title]="'seasonal.addToProviders' | translate" aria-label="Add to providers">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                <path d="M8 3v10M3 8h10"/>
-              </svg>
-            </button>
-          }
-        </div>
+        <h3 class="card-title"
+            [class.card-title--link]="!!malUrl"
+            (click)="openMalPage()"
+            [title]="malUrl ? ('seasonal.openMal' | translate) : ''">{{ displayTitle }}</h3>
 
         <!-- Status pills -->
         <div class="status-pills">
@@ -58,7 +59,7 @@
         </div>
       </div>
 
-      <!-- ── Description ──────────────────────────────────────────────────── -->
+      <!-- ── Description ──────────────────────────────────────────────────────── -->
       @if (description) {
         <div class="desc-wrap">
           <p class="desc-text"
@@ -71,7 +72,7 @@
         </div>
       }
 
-      <!-- ── Genres ───────────────────────────────────────────────────────── -->
+      <!-- ── Genres ───────────────────────────────────────────────────────────── -->
       @if (genres.length > 0) {
         <div class="genre-list">
           @for (g of genres; track g) {
@@ -80,7 +81,7 @@
         </div>
       }
 
-      <!-- ── Score + date ─────────────────────────────────────────────────── -->
+      <!-- ── Score + date ─────────────────────────────────────────────────────── -->
       <div class="meta-row">
         @if (displayMalScore > 0) {
           <div class="scores">
@@ -95,7 +96,7 @@
     </div><!-- /card-content -->
   </div><!-- /card-main -->
 
-  <!-- ── Footer ──────────────────────────────────────────────────────────── -->
+  <!-- ── Footer ──────────────────────────────────────────────────────────────── -->
   <div class="card-footer">
     <div class="footer-actions">
 
@@ -125,6 +126,7 @@
       <!-- Sonarr: solid brand color + link when in library, greyed when not -->
       @if (anime.inSonarr) {
         <a class="action action--sonarr action--in-library"
+           [class.action--warp-in]="sonarrWarpIn()"
            [attr.href]="anime.sonarrUrl ?? null"
            [attr.target]="anime.sonarrUrl ? '_blank' : null"
            [attr.rel]="anime.sonarrUrl ? 'noopener noreferrer' : null"
@@ -149,6 +151,7 @@
       <!-- MAL: solid brand color + link when in library, greyed when not -->
       @if (anime.inMal) {
         <a class="action action--mal action--in-library"
+           [class.action--warp-in]="malWarpIn()"
            [attr.href]="malUrl ?? null"
            target="_blank" rel="noopener noreferrer"
            [title]="'animeCard.openMal' | translate">
@@ -192,18 +195,8 @@
       <!-- Mobile drag handle -->
       <div class="dialog__sheet-handle" aria-hidden="true"></div>
 
-      <!-- Header -->
+      <!-- Header (no provider logos — redundant with the section logos below) -->
       <div class="dialog__header dialog__header--add">
-        <div class="dialog__provider-logos">
-          <img src="assets/images/sonarr.svg"
-               class="dialog__prov-logo"
-               [class.dialog__prov-logo--dimmed]="anime.inSonarr"
-               alt="Sonarr" />
-          <img src="assets/images/mal.svg"
-               class="dialog__prov-logo"
-               [class.dialog__prov-logo--dimmed]="anime.inMal"
-               alt="MyAnimeList" />
-        </div>
         <div class="dialog__header-text">
           <h2 id="add-dialog-title" class="dialog__add-title">{{ 'seasonal.addToProviders' | translate }}</h2>
           <p class="dialog__action-label">{{ 'seasonal.chooseProviders' | translate }}</p>
