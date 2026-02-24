@@ -285,7 +285,7 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options, IPropert
         };
 
         var addReq = new RestRequest("api/v3/series", Method.Post);
-        addReq.AddParameter("apikey", apiKey);
+        addReq.AddQueryParameter("apikey", apiKey);
         addReq.AddJsonBody(addPayload);
         var addResp = await client.ExecuteAsync(addReq);
         if (!addResp.IsSuccessful)

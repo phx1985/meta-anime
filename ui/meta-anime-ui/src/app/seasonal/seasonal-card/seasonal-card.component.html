@@ -182,67 +182,100 @@
   </div>
 }
 
-<!-- ── Add to Sonarr modal ───────────────────────────────────────────────── -->
+<!-- ── Add to Sonarr dialog ──────────────────────────────────────────────── -->
 @if (showSonarrModal()) {
-  <div class="modal-overlay" (click)="closeSonarrModal()" role="dialog" aria-modal="true">
-    <div class="modal modal--wide" (click)="$event.stopPropagation()">
-      <div class="modal__head">
-        <span class="modal__title">{{ 'seasonal.addToSonarr' | translate }}</span>
-        <button class="modal__close" type="button" (click)="closeSonarrModal()" aria-label="Close">
+  <div class="dialog-backdrop" (click)="closeSonarrModal()" role="dialog" aria-modal="true"
+       aria-labelledby="sonarr-dialog-title">
+    <div class="dialog dialog--wide" (click)="$event.stopPropagation()">
+
+      <!-- Mobile drag handle -->
+      <div class="dialog__sheet-handle" aria-hidden="true"></div>
+
+      <!-- Provider header -->
+      <div class="dialog__header dialog__header--sonarr">
+        <div class="dialog__provider-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="dialog__header-text">
+          <h2 id="sonarr-dialog-title" class="dialog__provider-name">Sonarr</h2>
+          <p class="dialog__action-label">{{ 'seasonal.addToSonarr' | translate }}</p>
+        </div>
+        <button class="dialog__close-btn" type="button" (click)="closeSonarrModal()" aria-label="Close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
             <path d="M18 6L6 18M6 6l12 12"/>
           </svg>
         </button>
       </div>
 
-      @if (sonarrSuccess()) {
-        <div class="modal__success">✓ {{ 'seasonal.sonarrAddSuccess' | translate }}</div>
-      } @else {
-        <div class="modal__body">
+      <!-- Anime context -->
+      <div class="dialog__context">
+        @if (coverImageUrl) {
+          <img [src]="coverImageUrl" [alt]="anime.title" class="dialog__context-thumb" />
+        }
+        <span class="dialog__context-title">{{ anime.title }}</span>
+      </div>
 
-          <!-- Search box -->
-          <label class="modal__label">{{ 'seasonal.sonarrSearch' | translate }}
-            <div class="search-input-wrap">
-              <input class="modal__input"
+      @if (sonarrSuccess()) {
+        <div class="dialog__success-state">
+          <div class="success-circle success-circle--sonarr">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path class="success-check" d="M6 16l7 7 13-13"/>
+            </svg>
+          </div>
+          <p class="success-message">{{ 'seasonal.sonarrAddSuccess' | translate }}</p>
+        </div>
+      } @else {
+        <div class="dialog__body">
+
+          <!-- Search -->
+          <div class="field">
+            <label class="field__label">{{ 'seasonal.sonarrSearch' | translate }}</label>
+            <div class="search-wrap">
+              <svg class="search-wrap__icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                <circle cx="8" cy="8" r="5.5"/>
+                <path d="M14 14l3.5 3.5" stroke-linecap="round"/>
+              </svg>
+              <input class="search-wrap__input"
                      type="search"
                      [ngModel]="sonarrSearchTerm()"
                      (ngModelChange)="onSonarrSearchInput($event)"
                      [placeholder]="'seasonal.sonarrSearchPlaceholder' | translate"
                      autocomplete="off" />
               @if (sonarrSearching()) {
-                <div class="search-spinner"></div>
+                <div class="search-wrap__spinner"></div>
               }
             </div>
-          </label>
+          </div>
 
           @if (sonarrSearchError()) {
-            <p class="modal__error">{{ sonarrSearchError() }}</p>
+            <p class="field__error">{{ sonarrSearchError() }}</p>
           }
 
-          <!-- Search results -->
+          <!-- Results -->
           @if (sonarrSearchResults().length > 0) {
-            <div class="search-results">
+            <div class="result-list">
               @for (item of sonarrSearchResults(); track item.tvdbId) {
                 <button type="button"
-                        class="search-result"
-                        [class.search-result--selected]="sonarrSelected()?.tvdbId === item.tvdbId"
+                        class="result-item"
+                        [class.result-item--active]="sonarrSelected()?.tvdbId === item.tvdbId"
                         (click)="selectSonarrResult(item)">
                   @if (item.remotePoster) {
-                    <img class="search-result__poster" [src]="item.remotePoster" [alt]="item.title" loading="lazy" />
+                    <img class="result-item__thumb" [src]="item.remotePoster" [alt]="item.title" loading="lazy" />
                   } @else {
-                    <div class="search-result__poster search-result__poster--empty">{{ item.title.charAt(0) }}</div>
+                    <div class="result-item__thumb result-item__thumb--empty">{{ item.title.charAt(0) }}</div>
                   }
-                  <div class="search-result__info">
-                    <span class="search-result__title">{{ item.title }}</span>
-                    @if (item.year) {
-                      <span class="search-result__year">{{ item.year }}</span>
-                    }
-                    @if (item.overview) {
-                      <p class="search-result__overview">{{ item.overview }}</p>
-                    }
+                  <div class="result-item__meta">
+                    <span class="result-item__title">{{ item.title }}</span>
+                    @if (item.year) { <span class="result-item__year">{{ item.year }}</span> }
+                    @if (item.overview) { <p class="result-item__overview">{{ item.overview }}</p> }
                   </div>
                   @if (sonarrSelected()?.tvdbId === item.tvdbId) {
-                    <svg class="search-result__check" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                    <svg class="result-item__check" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                         stroke-width="2.5" stroke-linecap="round">
                       <path d="M3 8l3.5 3.5L13 4"/>
                     </svg>
                   }
@@ -251,45 +284,48 @@
             </div>
           }
 
-          <!-- Options (shown when a result is selected) -->
+          <!-- Options (only when a result is selected) -->
           @if (sonarrSelected()) {
-            <div class="modal__options">
+            <div class="options-panel">
               @if (sonarrLoadingOptions()) {
-                <div class="modal__loading"><div class="loading-spinner loading-spinner--sm"></div></div>
+                <div class="options-panel__loading"><div class="spinner spinner--sm"></div></div>
               } @else {
-                <label class="modal__label">{{ 'seasonal.rootFolder' | translate }}
-                  <select class="modal__select" [ngModel]="sonarrRootFolder()" (ngModelChange)="sonarrRootFolder.set($event)">
+                <div class="field">
+                  <label class="field__label">{{ 'seasonal.rootFolder' | translate }}</label>
+                  <select class="field__select" [ngModel]="sonarrRootFolder()" (ngModelChange)="sonarrRootFolder.set($event)">
                     @for (f of sonarrRootFolders(); track f.id) {
                       <option [value]="f.path">{{ f.path }}</option>
                     }
                   </select>
-                </label>
-                <label class="modal__label">{{ 'seasonal.qualityProfile' | translate }}
-                  <select class="modal__select" [ngModel]="sonarrProfileId()" (ngModelChange)="sonarrProfileId.set(+$event)">
+                </div>
+                <div class="field">
+                  <label class="field__label">{{ 'seasonal.qualityProfile' | translate }}</label>
+                  <select class="field__select" [ngModel]="sonarrProfileId()" (ngModelChange)="sonarrProfileId.set(+$event)">
                     @for (p of sonarrQualityProfiles(); track p.id) {
                       <option [value]="p.id">{{ p.name }}</option>
                     }
                   </select>
-                </label>
-                <p class="modal__info">{{ 'seasonal.sonarrAutoSettings' | translate }}</p>
+                </div>
+                <p class="options-panel__note">{{ 'seasonal.sonarrAutoSettings' | translate }}</p>
               }
             </div>
           }
 
           @if (sonarrError()) {
-            <p class="modal__error">{{ sonarrError() }}</p>
+            <p class="field__error">{{ sonarrError() }}</p>
           }
         </div>
 
-        <div class="modal__footer">
-          <button class="modal__btn modal__btn--cancel" type="button" (click)="closeSonarrModal()">
+        <div class="dialog__footer">
+          <button class="btn btn--ghost" type="button" (click)="closeSonarrModal()">
             {{ 'common.cancel' | translate }}
           </button>
-          <button class="modal__btn modal__btn--confirm" type="button"
+          <button class="btn btn--sonarr" type="button"
                   [disabled]="sonarrAdding() || !sonarrSelected()"
+                  [attr.aria-busy]="sonarrAdding() || null"
                   (click)="confirmAddSonarr()">
             @if (sonarrAdding()) {
-              <div class="loading-spinner loading-spinner--sm"></div>
+              <div class="spinner spinner--sm spinner--white"></div>
             } @else {
               {{ 'common.add' | translate }}
             }
@@ -300,53 +336,87 @@
   </div>
 }
 
-<!-- ── Add to MAL modal ──────────────────────────────────────────────────── -->
+<!-- ── Add to MAL dialog ─────────────────────────────────────────────────── -->
 @if (showMalModal()) {
-  <div class="modal-overlay" (click)="closeMalModal()" role="dialog" aria-modal="true">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <div class="modal__head">
-        <span class="modal__title">{{ 'seasonal.addToMal' | translate }}</span>
-        <button class="modal__close" type="button" (click)="closeMalModal()" aria-label="Close">
+  <div class="dialog-backdrop" (click)="closeMalModal()" role="dialog" aria-modal="true"
+       aria-labelledby="mal-dialog-title">
+    <div class="dialog" (click)="$event.stopPropagation()">
+
+      <!-- Mobile drag handle -->
+      <div class="dialog__sheet-handle" aria-hidden="true"></div>
+
+      <!-- Provider header -->
+      <div class="dialog__header dialog__header--mal">
+        <div class="dialog__provider-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 6h16M4 10h16M4 14h11M4 18h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="dialog__header-text">
+          <h2 id="mal-dialog-title" class="dialog__provider-name">MyAnimeList</h2>
+          <p class="dialog__action-label">{{ 'seasonal.addToMal' | translate }}</p>
+        </div>
+        <button class="dialog__close-btn" type="button" (click)="closeMalModal()" aria-label="Close">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
             <path d="M18 6L6 18M6 6l12 12"/>
           </svg>
         </button>
       </div>
 
-      <p class="modal__anime-title">{{ anime.title }}</p>
+      <!-- Anime context -->
+      <div class="dialog__context">
+        @if (coverImageUrl) {
+          <img [src]="coverImageUrl" [alt]="anime.title" class="dialog__context-thumb" />
+        }
+        <span class="dialog__context-title">{{ anime.title }}</span>
+      </div>
 
       @if (malSuccess()) {
-        <div class="modal__success">✓ {{ 'seasonal.malAddSuccess' | translate }}</div>
+        <div class="dialog__success-state">
+          <div class="success-circle success-circle--mal">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path class="success-check" d="M6 16l7 7 13-13"/>
+            </svg>
+          </div>
+          <p class="success-message">{{ 'seasonal.malAddSuccess' | translate }}</p>
+        </div>
       } @else {
-        <div class="modal__body">
-          <label class="modal__label">{{ 'seasonal.malStatusLabel' | translate }}
-            <select class="modal__select" [ngModel]="malStatus()" (ngModelChange)="malStatus.set($event)">
+        <div class="dialog__body">
+          <div class="field">
+            <label class="field__label">{{ 'seasonal.malStatusLabel' | translate }}</label>
+            <select class="field__select" [ngModel]="malStatus()" (ngModelChange)="malStatus.set($event)">
               @for (s of malStatuses; track s.value) {
                 <option [value]="s.value">{{ s.labelKey | translate }}</option>
               }
             </select>
-          </label>
-          <label class="modal__label">{{ 'seasonal.episodesWatched' | translate }}
-            <input class="modal__input" type="number" min="0"
-                   [ngModel]="malEpisodes()" (ngModelChange)="malEpisodes.set(+$event)" />
-          </label>
-          <label class="modal__label">{{ 'seasonal.score' | translate }}
-            <input class="modal__input" type="number" min="0" max="10"
-                   [ngModel]="malScore()" (ngModelChange)="malScore.set(+$event)" />
-          </label>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label class="field__label">{{ 'seasonal.episodesWatched' | translate }}</label>
+              <input class="field__input" type="number" min="0"
+                     [ngModel]="malEpisodes()" (ngModelChange)="malEpisodes.set(+$event)" />
+            </div>
+            <div class="field">
+              <label class="field__label">{{ 'seasonal.score' | translate }}</label>
+              <input class="field__input" type="number" min="0" max="10"
+                     [ngModel]="malScore()" (ngModelChange)="malScore.set(+$event)" />
+            </div>
+          </div>
           @if (malError()) {
-            <p class="modal__error">{{ malError() }}</p>
+            <p class="field__error">{{ malError() }}</p>
           }
         </div>
-        <div class="modal__footer">
-          <button class="modal__btn modal__btn--cancel" type="button" (click)="closeMalModal()">
+        <div class="dialog__footer">
+          <button class="btn btn--ghost" type="button" (click)="closeMalModal()">
             {{ 'common.cancel' | translate }}
           </button>
-          <button class="modal__btn modal__btn--confirm" type="button"
+          <button class="btn btn--mal" type="button"
                   [disabled]="malAdding()"
+                  [attr.aria-busy]="malAdding() || null"
                   (click)="confirmAddMal()">
             @if (malAdding()) {
-              <div class="loading-spinner loading-spinner--sm"></div>
+              <div class="spinner spinner--sm spinner--white"></div>
             } @else {
               {{ 'common.add' | translate }}
             }
