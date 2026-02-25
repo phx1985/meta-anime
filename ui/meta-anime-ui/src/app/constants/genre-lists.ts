@@ -23,8 +23,8 @@ export const DEMOGRAPHIC_LIST = [
   'Josei', 'Kids', 'Seinen', 'Shoujo', 'Shounen',
 ];
 
-export const NSFW_GENRES  = ['Ecchi', 'Hentai', 'Erotica', 'Boys Love', 'Girls Love'];
-export const NSFW_THEMES  = ['Magical Sex Shift'];
+export const NSFW_GENRES  = ['Ecchi', 'Hentai', 'Erotica'];
+export const NSFW_THEMES: string[]  = [];
 
 export const SFW_GENRE_LIST  = GENRE_LIST.filter(g => !NSFW_GENRES.includes(g));
 export const SFW_THEME_LIST  = THEME_LIST.filter(t => !NSFW_THEMES.includes(t));

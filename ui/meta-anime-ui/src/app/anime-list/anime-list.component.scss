@@ -536,7 +536,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
   padding: 0.3rem 0.75rem;
   border-radius: 999px;
   border: 1px solid var(--card-border);
@@ -583,15 +582,6 @@
     &:hover { border-color: #f59e0b; color: #d97706; }
     &.fp-option--selected { background: #f59e0b; border-color: #f59e0b; color: #fff; box-shadow: 0 2px 8px rgba(245,158,11,.3); }
   }
-}
-
-.fp-option__check {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 12px;
-  height: 12px;
-  flex-shrink: 0;
 }
 
 .fp-popup__footer {

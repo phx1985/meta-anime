@@ -419,11 +419,6 @@
                     [class.fp-option--nsfw]="item.nsfw"
                     role="option" [attr.aria-selected]="filterGenre().includes(item.key)"
                     (click)="toggleGenre(item.key, $event)">
-              <span class="fp-option__check" aria-hidden="true">
-                @if (filterGenre().includes(item.key)) {
-                  <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 8l4 4 8-8"/></svg>
-                }
-              </span>
               {{ item.label }}
             </button>
           }
@@ -471,11 +466,6 @@
                     [class.fp-option--nsfw]="item.nsfw"
                     role="option" [attr.aria-selected]="filterTheme().includes(item.key)"
                     (click)="toggleTheme(item.key, $event)">
-              <span class="fp-option__check" aria-hidden="true">
-                @if (filterTheme().includes(item.key)) {
-                  <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 8l4 4 8-8"/></svg>
-                }
-              </span>
               {{ item.label }}
             </button>
           }
@@ -512,11 +502,6 @@
                   [class.fp-option--selected]="filterDemographic().includes(item.key)"
                   role="option" [attr.aria-selected]="filterDemographic().includes(item.key)"
                   (click)="toggleDemographic(item.key, $event)">
-            <span class="fp-option__check" aria-hidden="true">
-              @if (filterDemographic().includes(item.key)) {
-                <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 8l4 4 8-8"/></svg>
-              }
-            </span>
             {{ item.label }}
           </button>
         }

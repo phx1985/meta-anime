@@ -202,20 +202,20 @@ export class SeasonalComponent {
     this.translateService.currentLang || this.translateService.defaultLang || 'en'
   );
 
-  /** Genre list: NSFW-filtered + sorted alphabetically by translated label. */
+  /** Genre list: NSFW-filtered + sorted alphabetically (NSFW items last). */
   readonly sortedGenreList = computed(() => {
     this.langSignal();
     return (this.showNsfw() ? GENRE_LIST : SFW_GENRE_LIST)
       .map(k => ({ key: k, label: this.translateService.instant(`genres.${k}`), nsfw: NSFW_GENRES.includes(k) }))
-      .sort((a, b) => a.label.localeCompare(b.label));
+      .sort((a, b) => (a.nsfw !== b.nsfw ? (a.nsfw ? 1 : -1) : a.label.localeCompare(b.label)));
   });
 
-  /** Theme list: NSFW-filtered + sorted alphabetically by translated label. */
+  /** Theme list: NSFW-filtered + sorted alphabetically (NSFW items last). */
   readonly sortedThemeList = computed(() => {
     this.langSignal();
     return (this.showNsfw() ? THEME_LIST : SFW_THEME_LIST)
       .map(k => ({ key: k, label: this.translateService.instant(`genres.${k}`), nsfw: NSFW_THEMES.includes(k) }))
-      .sort((a, b) => a.label.localeCompare(b.label));
+      .sort((a, b) => (a.nsfw !== b.nsfw ? (a.nsfw ? 1 : -1) : a.label.localeCompare(b.label)));
   });
 
   /** Demographic list: sorted alphabetically by translated label. */

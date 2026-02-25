@@ -45,6 +45,19 @@ public class AnimeMediatorService(
         "Ecchi", "Hentai", "Erotica"
     };
 
+    /// <summary>Maps filter codec tokens to all equivalent codec strings that may appear in file metadata.</summary>
+    private static readonly Dictionary<string, string[]> CodecAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["h264"]  = ["h264", "x264", "avc"],
+        ["hevc"]  = ["hevc", "h265", "x265"],
+        ["av1"]   = ["av1"],
+        ["mpeg2"] = ["mpeg2", "mpeg-2"],
+    };
+
+    /// <summary>Returns all alias strings for a codec filter token (falls back to the token itself).</summary>
+    private static IEnumerable<string> GetCodecAliases(string codec) =>
+        CodecAliases.TryGetValue(codec, out var aliases) ? aliases : [codec];
+
     private readonly string myAnimeListHost = malOptions.Value.WebBaseUrl;
     private readonly string sonarrSeriesBaseUrl = !string.IsNullOrWhiteSpace(sonarrOptions.Value.RemoteUrl)
         ? sonarrOptions.Value.RemoteUrl
@@ -407,7 +420,8 @@ public class AnimeMediatorService(
             result = result.Where(a =>
                 a.SonarrAnimes?.Any(s =>
                     s.CodecDistribution?.Keys.Any(k =>
-                        filters.Codec.Any(c => k.Contains(c, StringComparison.OrdinalIgnoreCase))) == true) == true);
+                        filters.Codec.Any(c => GetCodecAliases(c)
+                            .Any(alias => k.Contains(alias, StringComparison.OrdinalIgnoreCase)))) == true) == true);
         }
 
         if (filters?.MediaType?.Length > 0)
