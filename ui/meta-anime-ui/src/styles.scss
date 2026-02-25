@@ -1,17 +1,17 @@
 // CSS Custom Properties for theming
 :root,
 [data-theme="light"] {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8f9fa;
-  --text-primary: #1a1a2e;
-  --text-secondary: #495057;
-  --text-muted: #6c757d;
+  --bg-primary: #f8f6f2;
+  --bg-secondary: #e9ecf1;
+  --text-primary: #2c2d3e;
+  --text-secondary: #4a5568;
+  --text-muted: #8896aa;
   --accent-primary: #6c63ff;
-  --navbar-bg: rgba(255, 255, 255, 0.92);
+  --navbar-bg: rgba(240, 237, 255, 0.93);
   --navbar-border: rgba(0, 0, 0, 0.08);
   --card-bg: #ffffff;
   --card-border: rgba(0, 0, 0, 0.08);
-  --card-shadow: rgba(0, 0, 0, 0.12);
+  --card-shadow: rgba(100, 88, 128, 0.15);
   --gradient-start: #6c63ff;
   --gradient-end: #3ecfcf;
   --hero-text: #ffffff;
