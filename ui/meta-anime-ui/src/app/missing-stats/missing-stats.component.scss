@@ -29,8 +29,14 @@
 }
 
 @keyframes popFadeIn {
-  from { opacity: 0; transform: translateY(24px) scale(0.96); }
-  to   { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 // ── Row list ───────────────────────────────────────────────────────────────────
@@ -53,28 +59,52 @@
   border-left: 3px solid transparent;
   background: var(--bg-secondary);
   animation: slideIn 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) both;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 
   &:hover {
     transform: translateX(4px);
     box-shadow: 0 4px 14px var(--card-shadow);
   }
 
-  &:nth-child(1) { animation-delay: 0.05s; }
-  &:nth-child(2) { animation-delay: 0.12s; }
-  &:nth-child(3) { animation-delay: 0.19s; }
-  &:nth-child(4) { animation-delay: 0.26s; }
+  &:nth-child(1) {
+    animation-delay: 0.05s;
+  }
+  &:nth-child(2) {
+    animation-delay: 0.12s;
+  }
+  &:nth-child(3) {
+    animation-delay: 0.19s;
+  }
+  &:nth-child(4) {
+    animation-delay: 0.26s;
+  }
 
   // Accent left-border per pair
-  &.gap-row--sonarr-mal  { border-left-color: #35C5F4; }
-  &.gap-row--mal-plex    { border-left-color: #2E51A2; }
-  &.gap-row--plex-mal    { border-left-color: #E5A00D; }
-  &.gap-row--plex-sonarr { border-left-color: #E5A00D; }
+  &.gap-row--sonarr-mal {
+    border-left-color: #35c5f4;
+  }
+  &.gap-row--mal-plex {
+    border-left-color: #2e51a2;
+  }
+  &.gap-row--plex-mal {
+    border-left-color: #e5a00d;
+  }
+  &.gap-row--plex-sonarr {
+    border-left-color: #e5a00d;
+  }
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateX(-14px); }
-  to   { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 // ── Icon pair: [source] + [ghost-target] ──────────────────────────────────────
@@ -115,19 +145,19 @@
     // Mask: left 45% fully visible → dissolve → right 15% invisible
     mask-image: linear-gradient(
       to right,
-      rgba(0,0,0,0.85) 0%,
-      rgba(0,0,0,0.6)  38%,
-      rgba(0,0,0,0.25) 60%,
-      rgba(0,0,0,0.06) 80%,
-      transparent      100%
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.6) 38%,
+      rgba(0, 0, 0, 0.25) 60%,
+      rgba(0, 0, 0, 0.06) 80%,
+      transparent 100%
     );
     -webkit-mask-image: linear-gradient(
       to right,
-      rgba(0,0,0,0.85) 0%,
-      rgba(0,0,0,0.6)  38%,
-      rgba(0,0,0,0.25) 60%,
-      rgba(0,0,0,0.06) 80%,
-      transparent      100%
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.6) 38%,
+      rgba(0, 0, 0, 0.25) 60%,
+      rgba(0, 0, 0, 0.06) 80%,
+      transparent 100%
     );
   }
 }
@@ -155,5 +185,7 @@
   text-align: right;
   color: #ef4444;
 
-  &.gap-count--zero { color: #22c55e; }
+  &.gap-count--zero {
+    color: #22c55e;
+  }
 }

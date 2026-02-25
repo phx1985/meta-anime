@@ -56,10 +56,10 @@ public class AnimeSyncJob(
 
     private static string MapIntervalToCron(string interval) => interval switch
     {
-        "hourly"   => Cron.Hourly(),
-        "every6h"  => "0 */6 * * *",
+        "hourly" => Cron.Hourly(),
+        "every6h" => "0 */6 * * *",
         "every12h" => "0 */12 * * *",
-        "weekly"   => Cron.Weekly(),
-        _          => Cron.Daily(), // "daily" is the default
+        "weekly" => Cron.Weekly(),
+        _ => Cron.Daily(), // "daily" is the default
     };
 }

@@ -1,4 +1,14 @@
-import { Component, inject, signal, OnInit, HostListener, DestroyRef, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  signal,
+  OnInit,
+  HostListener,
+  DestroyRef,
+  ViewChild,
+  ElementRef,
+  AfterViewInit,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -12,27 +22,27 @@ import { SyncSignalRService } from './services/sync-signalr.service';
   selector: 'app-root',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
 })
 export class App implements OnInit, AfterViewInit {
-  protected themeService    = inject(ThemeService);
-  protected translate       = inject(TranslateService);
-  protected notifService    = inject(NotificationService);
-  private   settingsService = inject(SettingsService);
-  private   syncSignalR     = inject(SyncSignalRService);
-  private   router          = inject(Router);
-  private   destroyRef      = inject(DestroyRef);
+  protected themeService = inject(ThemeService);
+  protected translate = inject(TranslateService);
+  protected notifService = inject(NotificationService);
+  private settingsService = inject(SettingsService);
+  private syncSignalR = inject(SyncSignalRService);
+  private router = inject(Router);
+  private destroyRef = inject(DestroyRef);
 
   @ViewChild('navbarEl', { read: ElementRef }) private navbarEl?: ElementRef<HTMLElement>;
 
-  protected currentLang     = signal<string>('en');
-  protected menuOpen        = signal<boolean>(false);
+  protected currentLang = signal<string>('en');
+  protected menuOpen = signal<boolean>(false);
   protected notifCenterOpen = signal<boolean>(false);
   /** Dynamic top offset for the toast stack — tracks the actual navbar height */
-  protected toastTopPx      = signal<number>(72); // ~4.5rem default
+  protected toastTopPx = signal<number>(72); // ~4.5rem default
 
   /** Provider home-page URLs (populated from settings) */
-  protected plexHomeUrl   = signal<string | null>(null);
+  protected plexHomeUrl = signal<string | null>(null);
   protected sonarrHomeUrl = signal<string | null>(null);
   protected readonly malHomeUrl = 'https://myanimelist.net';
 
@@ -46,7 +56,10 @@ export class App implements OnInit, AfterViewInit {
 
     // Sync done → success notification (fires on every transition false→true, not on replay)
     this.syncSignalR.syncDone$
-      .pipe(filter(v => v), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        filter((v) => v),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe(() => {
         this.notifService.push({
           id: `sync-done-${Date.now()}`,
@@ -58,14 +71,21 @@ export class App implements OnInit, AfterViewInit {
 
     // Sync error → error notification
     this.syncSignalR.syncError$
-      .pipe(filter(v => v), takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        filter((v) => v),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe(() => {
         this.notifService.push({
           id: `sync-error-${Date.now()}`,
           severity: 'error',
           titleKey: 'notifications.sync.errorTitle',
           messageKey: 'notifications.sync.errorMessage',
-          action: { labelKey: 'notifications.sync.viewLog', route: ['/settings'], fragment: 'sync-section' },
+          action: {
+            labelKey: 'notifications.sync.viewLog',
+            route: ['/settings'],
+            fragment: 'sync-section',
+          },
         });
       });
 
@@ -75,36 +95,49 @@ export class App implements OnInit, AfterViewInit {
       severity: 'info',
       titleKey: 'notifications.welcome.title',
       messageKey: 'notifications.welcome.message',
-      action: { labelKey: 'notifications.welcome.action', route: ['/settings'], fragment: 'sync-section' },
+      action: {
+        labelKey: 'notifications.welcome.action',
+        route: ['/settings'],
+        fragment: 'sync-section',
+      },
     });
 
     // Push "no sync yet" warning if library has never been synced
     this.settingsService.getSyncStatus().subscribe({
-      next: status => {
+      next: (status) => {
         if (!status.lastSyncDate) {
           this.notifService.push({
             id: 'no-sync-needed',
             severity: 'warning',
             titleKey: 'notifications.noSync.title',
             messageKey: 'notifications.noSync.message',
-            action: { labelKey: 'notifications.noSync.action', route: ['/settings'], fragment: 'sync-section' },
+            action: {
+              labelKey: 'notifications.noSync.action',
+              route: ['/settings'],
+              fragment: 'sync-section',
+            },
           });
         }
       },
-      error: () => { /* non-critical */ }
+      error: () => {
+        /* non-critical */
+      },
     });
 
     // Load provider URLs for navbar quick-links
     this.settingsService.getAll().subscribe({
-      next: settings => {
-        const plexHost  = settings.find(s => s.key === 'Plex:Host')?.value ?? null;
-        const sonarrUrl = settings.find(s => s.key === 'Sonarr:RemoteUrl')?.value
-                       || settings.find(s => s.key === 'Sonarr:Host')?.value
-                       || null;
-        if (plexHost)  this.plexHomeUrl.set('https://app.plex.tv');
+      next: (settings) => {
+        const plexHost = settings.find((s) => s.key === 'Plex:Host')?.value ?? null;
+        const sonarrUrl =
+          settings.find((s) => s.key === 'Sonarr:RemoteUrl')?.value ||
+          settings.find((s) => s.key === 'Sonarr:Host')?.value ||
+          null;
+        if (plexHost) this.plexHomeUrl.set('https://app.plex.tv');
         if (sonarrUrl) this.sonarrHomeUrl.set(sonarrUrl);
       },
-      error: () => { /* non-critical */ }
+      error: () => {
+        /* non-critical */
+      },
     });
   }
 
@@ -116,15 +149,16 @@ export class App implements OnInit, AfterViewInit {
 
   toggleNotifCenter(event: Event): void {
     event.stopPropagation();
-    this.notifCenterOpen.update(v => !v);
+    this.notifCenterOpen.update((v) => !v);
   }
 
   handleNotifClick(notif: AppNotification): void {
     this.notifService.acknowledge(notif.id);
     this.notifCenterOpen.set(false);
     if (notif.action) {
-      this.router.navigate(notif.action.route,
-        notif.action.fragment ? { fragment: notif.action.fragment } : undefined
+      this.router.navigate(
+        notif.action.route,
+        notif.action.fragment ? { fragment: notif.action.fragment } : undefined,
       );
     }
   }
@@ -133,8 +167,9 @@ export class App implements OnInit, AfterViewInit {
     this.notifService.acknowledge(toast.id);
     this.notifService.dismissToast(toast.id);
     if (toast.action) {
-      this.router.navigate(toast.action.route,
-        toast.action.fragment ? { fragment: toast.action.fragment } : undefined
+      this.router.navigate(
+        toast.action.route,
+        toast.action.fragment ? { fragment: toast.action.fragment } : undefined,
       );
     }
   }
@@ -142,13 +177,18 @@ export class App implements OnInit, AfterViewInit {
   /** Human-readable relative timestamp — language-agnostic short form */
   formatRelTime(ts: number): string {
     const diff = Date.now() - ts;
-    if (diff < 60_000)     return this.translate.instant('notifications.time.justNow');
-    if (diff < 3_600_000)  return this.translate.instant('notifications.time.minutesAgo',
-                                    { n: Math.floor(diff / 60_000) });
-    if (diff < 86_400_000) return this.translate.instant('notifications.time.hoursAgo',
-                                    { n: Math.floor(diff / 3_600_000) });
-    return this.translate.instant('notifications.time.daysAgo',
-             { n: Math.floor(diff / 86_400_000) });
+    if (diff < 60_000) return this.translate.instant('notifications.time.justNow');
+    if (diff < 3_600_000)
+      return this.translate.instant('notifications.time.minutesAgo', {
+        n: Math.floor(diff / 60_000),
+      });
+    if (diff < 86_400_000)
+      return this.translate.instant('notifications.time.hoursAgo', {
+        n: Math.floor(diff / 3_600_000),
+      });
+    return this.translate.instant('notifications.time.daysAgo', {
+      n: Math.floor(diff / 86_400_000),
+    });
   }
 
   /** Duration of the CSS `.navbar-collapse` max-height transition — keep in sync with app.scss */
@@ -173,7 +213,7 @@ export class App implements OnInit, AfterViewInit {
   }
 
   toggleMenu(): void {
-    this.menuOpen.update(v => !v);
+    this.menuOpen.update((v) => !v);
     // Measure after the CSS max-height transition completes
     setTimeout(() => this.syncToastTop(), App.NAVBAR_COLLAPSE_MS);
   }
@@ -195,4 +235,3 @@ export class App implements OnInit, AfterViewInit {
     this.notifService.dismissNotifItem(id);
   }
 }
-

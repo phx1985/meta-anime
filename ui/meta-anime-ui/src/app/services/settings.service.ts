@@ -29,7 +29,7 @@ export class SettingsService {
   /** Returns whether NSFW content is enabled (App:ShowNsfw setting). */
   getShowNsfw(): Observable<boolean> {
     return this.getAll().pipe(
-      map(settings => settings.find(s => s.key === 'App:ShowNsfw')?.value === 'true')
+      map((settings) => settings.find((s) => s.key === 'App:ShowNsfw')?.value === 'true'),
     );
   }
 }

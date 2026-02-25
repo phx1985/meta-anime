@@ -9,7 +9,7 @@ import {
   AnimeFilters,
   CreateAnimeRequest,
   UpdateAnimeRequest,
-  SeasonalAnimeItem
+  SeasonalAnimeItem,
 } from '../models/anime.models';
 import { MalListStatusRequest } from '../models/sonarr.models';
 
@@ -24,31 +24,38 @@ export class AnimeService {
     return this.http.get<AnimeStatisticsResponse>(`${this.base}/statistics`);
   }
 
-  getAnimes(page = 1, pageSize = 20, filters?: AnimeFilters, enriched?: boolean): Observable<PagedResponse<AnimeDetailsResponse>> {
-    let params = new HttpParams()
-      .set('page', page)
-      .set('pageSize', pageSize);
+  getAnimes(
+    page = 1,
+    pageSize = 20,
+    filters?: AnimeFilters,
+    enriched?: boolean,
+  ): Observable<PagedResponse<AnimeDetailsResponse>> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (filters?.title) params = params.set('title', filters.title);
     if (filters?.source) params = params.set('source', filters.source);
-    if (filters?.status?.length) filters.status.forEach(s => (params = params.append('status', s)));
+    if (filters?.status?.length)
+      filters.status.forEach((s) => (params = params.append('status', s)));
     if (filters?.genre?.length) {
-      filters.genre.forEach(g => (params = params.append('genre', g)));
+      filters.genre.forEach((g) => (params = params.append('genre', g)));
       if (filters.genreOperator) params = params.set('genreOperator', filters.genreOperator);
     }
     if (filters?.theme?.length) {
-      filters.theme.forEach(t => (params = params.append('theme', t)));
+      filters.theme.forEach((t) => (params = params.append('theme', t)));
       if (filters.themeOperator) params = params.set('themeOperator', filters.themeOperator);
     }
     if (filters?.demographic?.length) {
-      filters.demographic.forEach(d => (params = params.append('demographic', d)));
-      if (filters.demographicOperator) params = params.set('demographicOperator', filters.demographicOperator);
+      filters.demographic.forEach((d) => (params = params.append('demographic', d)));
+      if (filters.demographicOperator)
+        params = params.set('demographicOperator', filters.demographicOperator);
     }
     if (filters?.sortBy) params = params.set('sortBy', filters.sortBy);
     if (filters?.sortOrder) params = params.set('sortOrder', filters.sortOrder);
-    if (filters?.airingStatus?.length) filters.airingStatus.forEach(s => (params = params.append('airingStatus', s)));
+    if (filters?.airingStatus?.length)
+      filters.airingStatus.forEach((s) => (params = params.append('airingStatus', s)));
     if (filters?.hasFile !== undefined) params = params.set('hasFile', filters.hasFile);
-    if (filters?.codec?.length) filters.codec.forEach(c => (params = params.append('codec', c)));
-    if (filters?.mediaType?.length) filters.mediaType.forEach(t => (params = params.append('mediaType', t)));
+    if (filters?.codec?.length) filters.codec.forEach((c) => (params = params.append('codec', c)));
+    if (filters?.mediaType?.length)
+      filters.mediaType.forEach((t) => (params = params.append('mediaType', t)));
     if (enriched !== undefined) params = params.set('enriched', enriched);
     return this.http.get<PagedResponse<AnimeDetailsResponse>>(this.base, { params });
   }
@@ -78,9 +85,7 @@ export class AnimeService {
   }
 
   getSeasonalAnimes(year: number, season: string): Observable<SeasonalAnimeItem[]> {
-    const params = new HttpParams()
-      .set('year', year)
-      .set('season', season);
+    const params = new HttpParams().set('year', year).set('season', season);
     return this.http.get<SeasonalAnimeItem[]>(this.seasonalBase, { params });
   }
 

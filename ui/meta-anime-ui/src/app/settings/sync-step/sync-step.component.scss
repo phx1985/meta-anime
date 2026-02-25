@@ -14,9 +14,16 @@
   transition: color 0.3s ease;
   flex-wrap: wrap;
 
-  &.sync-step--done    { color: #22c55e; }
-  &.sync-step--running { color: var(--text-primary); font-weight: 500; }
-  &.sync-step--error   { color: #ef4444; }
+  &.sync-step--done {
+    color: #22c55e;
+  }
+  &.sync-step--running {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+  &.sync-step--error {
+    color: #ef4444;
+  }
 }
 
 .sync-step-body {
@@ -109,15 +116,30 @@
   opacity: 0.8;
 }
 
-.sync-step--pending .sync-step-provider-img { opacity: 0.35; }
-.sync-step--running .sync-step-provider-img { opacity: 1; }
-.sync-step--done    .sync-step-provider-img { opacity: 0.9; }
+.sync-step--pending .sync-step-provider-img {
+  opacity: 0.35;
+}
+.sync-step--running .sync-step-provider-img {
+  opacity: 1;
+}
+.sync-step--done .sync-step-provider-img {
+  opacity: 0.9;
+}
 
 // Indeterminate progress animation
 @keyframes indeterminate {
-  0%   { transform: translateX(-100%); width: 40%; }
-  50%  { transform: translateX(60%);   width: 60%; }
-  100% { transform: translateX(260%);  width: 40%; }
+  0% {
+    transform: translateX(-100%);
+    width: 40%;
+  }
+  50% {
+    transform: translateX(60%);
+    width: 60%;
+  }
+  100% {
+    transform: translateX(260%);
+    width: 40%;
+  }
 }
 
 .sync-step-progress-fill--indeterminate {
@@ -126,5 +148,7 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { FilterPreset, SeasonalFilterPreset } from '../models/anime.models';
 
-const PRESETS_KEY          = 'meta-anime:filterPresets';
+const PRESETS_KEY = 'meta-anime:filterPresets';
 const SEASONAL_PRESETS_KEY = 'meta-anime:seasonalFilterPresets';
 
 /** Built-in filter suggestions shown to every user. */
@@ -53,7 +53,7 @@ export class FilterPresetService {
 
   deletePreset(id: string): void {
     // Only user-saved presets can be deleted (built-in presets are never in localStorage)
-    const presets = this.getSavedPresets().filter(p => p.id !== id && !p.isBuiltIn);
+    const presets = this.getSavedPresets().filter((p) => p.id !== id && !p.isBuiltIn);
     localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
   }
 
@@ -69,13 +69,13 @@ export class FilterPresetService {
   }
 
   saveSeasonalPreset(preset: SeasonalFilterPreset): void {
-    const presets = this.getSeasonalPresets().filter(p => p.id !== preset.id);
+    const presets = this.getSeasonalPresets().filter((p) => p.id !== preset.id);
     presets.push(preset);
     localStorage.setItem(SEASONAL_PRESETS_KEY, JSON.stringify(presets));
   }
 
   deleteSeasonalPreset(id: string): void {
-    const presets = this.getSeasonalPresets().filter(p => p.id !== id);
+    const presets = this.getSeasonalPresets().filter((p) => p.id !== id);
     localStorage.setItem(SEASONAL_PRESETS_KEY, JSON.stringify(presets));
   }
 }

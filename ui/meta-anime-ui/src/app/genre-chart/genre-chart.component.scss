@@ -11,8 +11,14 @@
 }
 
 @keyframes popFadeIn {
-  from { opacity: 0; transform: translateY(24px) scale(0.96); }
-  to   { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .chart-header {
@@ -55,7 +61,10 @@
   cursor: pointer;
   color: var(--text-muted);
   background: transparent;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
 
   &:hover {
     color: var(--accent-primary);

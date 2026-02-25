@@ -20,14 +20,14 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options, IPropert
 
     private async Task<(string host, string apiKey, List<string> tags, bool isConfigured)> GetSettingsAsync()
     {
-        var hostEntry   = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrHost);
+        var hostEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrHost);
         var apiKeyEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrApiKey);
-        var tagsEntry   = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrAnimeTags);
+        var tagsEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrAnimeTags);
 
-        var host    = hostEntry?.Value   ?? options.Value.Host   ?? string.Empty;
-        var apiKey  = apiKeyEntry?.Value ?? options.Value.ApiKey ?? string.Empty;
-        var tagsStr = tagsEntry?.Value   ?? options.Value.AnimeTags ?? string.Empty;
-        var tags    = tagsStr.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+        var host = hostEntry?.Value ?? options.Value.Host ?? string.Empty;
+        var apiKey = apiKeyEntry?.Value ?? options.Value.ApiKey ?? string.Empty;
+        var tagsStr = tagsEntry?.Value ?? options.Value.AnimeTags ?? string.Empty;
+        var tags = tagsStr.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
         var isConfigured = !string.IsNullOrWhiteSpace(host) && !string.IsNullOrWhiteSpace(apiKey);
 
         return (host, apiKey, tags, isConfigured);

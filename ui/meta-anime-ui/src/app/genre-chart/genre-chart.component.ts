@@ -1,32 +1,57 @@
 import {
-  Component, Input, OnChanges, SimpleChanges,
-  ElementRef, ViewChild, AfterViewInit, OnDestroy, inject, DestroyRef
+  Component,
+  Input,
+  OnChanges,
+  SimpleChanges,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  OnDestroy,
+  inject,
+  DestroyRef,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import {
-  Chart, ArcElement, BarElement, CategoryScale, LinearScale,
-  Tooltip, Legend, DoughnutController, BarController,
-  ChartConfiguration
+  Chart,
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+  DoughnutController,
+  BarController,
+  ChartConfiguration,
 } from 'chart.js';
 import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
 import { ThemeService } from '../services/theme.service';
 
-Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend, DoughnutController, BarController, ChartDataLabels);
+Chart.register(
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+  DoughnutController,
+  BarController,
+  ChartDataLabels,
+);
 
 @Component({
   selector: 'app-genre-chart',
   standalone: true,
   imports: [TranslatePipe],
   templateUrl: './genre-chart.component.html',
-  styleUrl: './genre-chart.component.scss'
+  styleUrl: './genre-chart.component.scss',
 })
 export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy {
   @Input() genreStats: { [key: string]: number } = {};
   @ViewChild('chartCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
 
-  themeService  = inject(ThemeService);
-  private translate  = inject(TranslateService);
+  themeService = inject(ThemeService);
+  private translate = inject(TranslateService);
   private destroyRef = inject(DestroyRef);
 
   chartType: 'doughnut' | 'bar' = 'doughnut';
@@ -34,9 +59,21 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
   private ready = false;
 
   readonly PALETTE = [
-    '#6c63ff', '#3ecfcf', '#e5a00d', '#ef4444', '#22c55e',
-    '#3b82f6', '#a855f7', '#ec4899', '#f97316', '#14b8a6',
-    '#84cc16', '#06b6d4', '#f59e0b', '#8b5cf6', '#10b981'
+    '#6c63ff',
+    '#3ecfcf',
+    '#e5a00d',
+    '#ef4444',
+    '#22c55e',
+    '#3b82f6',
+    '#a855f7',
+    '#ec4899',
+    '#f97316',
+    '#14b8a6',
+    '#84cc16',
+    '#06b6d4',
+    '#f59e0b',
+    '#8b5cf6',
+    '#10b981',
   ];
 
   ngAfterViewInit(): void {
@@ -90,16 +127,18 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
     this.chart?.destroy();
 
     const rawEntries = this.entries;
-    const rawLabels  = rawEntries.map(([k]) => k);
-    const labels     = rawLabels.map(k => this.translateGenre(k));
-    const data       = rawEntries.map(([, v]) => v);
-    const total      = data.reduce((a, b) => a + b, 0);
-    const colors     = labels.map((_, i) => this.PALETTE[i % this.PALETTE.length]);
-    const isDark     = this.themeService.isDarkTheme();
-    const textColor  = isDark ? '#e8e8f0' : '#1a1a2e';
-    const gridColor  = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+    const rawLabels = rawEntries.map(([k]) => k);
+    const labels = rawLabels.map((k) => this.translateGenre(k));
+    const data = rawEntries.map(([, v]) => v);
+    const total = data.reduce((a, b) => a + b, 0);
+    const colors = labels.map((_, i) => this.PALETTE[i % this.PALETTE.length]);
+    const isDark = this.themeService.isDarkTheme();
+    const textColor = isDark ? '#e8e8f0' : '#1a1a2e';
+    const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
 
-    const tooltipCallbacks = { label: (ctx: Parameters<typeof this.tooltipLabel>[0]) => this.tooltipLabel(ctx) };
+    const tooltipCallbacks = {
+      label: (ctx: Parameters<typeof this.tooltipLabel>[0]) => this.tooltipLabel(ctx),
+    };
 
     // Legend with count suffix: "Action (123)"
     const legendWithCount = {
@@ -118,10 +157,10 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
             lineWidth: 0,
             index: i,
             hidden: false,
-            fontColor: textColor
+            fontColor: textColor,
           }));
-        }
-      }
+        },
+      },
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -130,7 +169,18 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
     if (this.chartType === 'doughnut') {
       const doughnutConfig: ChartConfiguration<'doughnut'> = {
         type: 'doughnut',
-        data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: isDark ? '#1a1a2e' : '#fff', hoverOffset: 12 }] },
+        data: {
+          labels,
+          datasets: [
+            {
+              data,
+              backgroundColor: colors,
+              borderWidth: 2,
+              borderColor: isDark ? '#1a1a2e' : '#fff',
+              hoverOffset: 12,
+            },
+          ],
+        },
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -151,16 +201,19 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
               display: (ctx: Context) => {
                 const pct = total > 0 ? (ctx.dataset.data[ctx.dataIndex] as number) / total : 0;
                 return pct > 0.04;
-              }
-            } as never
-          }
-        }
+              },
+            } as never,
+          },
+        },
       };
       config = doughnutConfig as unknown as ChartConfiguration;
     } else {
       const barConfig: ChartConfiguration<'bar'> = {
         type: 'bar',
-        data: { labels, datasets: [{ data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
+        data: {
+          labels,
+          datasets: [{ data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }],
+        },
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -178,14 +231,14 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
               formatter: (value: number) => {
                 const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
                 return `${pct}%`;
-              }
-            } as never
+              },
+            } as never,
           },
           scales: {
             x: { ticks: { color: textColor }, grid: { color: gridColor } },
-            y: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } }
-          }
-        }
+            y: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } },
+          },
+        },
       };
       config = barConfig as unknown as ChartConfiguration;
     }

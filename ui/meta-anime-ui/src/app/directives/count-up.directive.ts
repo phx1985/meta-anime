@@ -11,7 +11,7 @@ import { Directive, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges } fro
  */
 @Directive({
   selector: '[countUp]',
-  standalone: true
+  standalone: true,
 })
 export class CountUpDirective implements OnChanges, OnDestroy {
   @Input() countUp: number | null = null;
