@@ -36,13 +36,17 @@ export const GENRE_LIST = [
 export const THEME_LIST = [
   'Adult Cast', 'Anthropomorphic', 'CGDCT', 'Childcare', 'Combat Sports', 'Crossdressing',
   'Delinquents', 'Detective', 'Educational', 'Gag Humor', 'Gore', 'Harem', 'High Stakes Game',
-  'Historical', 'Idols (Female)', 'Idols (Male)', 'Isekai', 'Iyashikei', 'Josei', 'Kids',
-  'Love Polygon', 'Magical Sex Shift', 'Mahou Shoujo', 'Martial Arts', 'Mecha', 'Medical',
-  'Military', 'Music', 'Mythology', 'Organized Crime', 'Otaku Culture', 'Parody',
+  'Historical', 'Idols (Female)', 'Idols (Male)', 'Isekai', 'Iyashikei',
+  'Love Polygon', 'Love Status Quo', 'Magical Sex Shift', 'Mahou Shoujo', 'Martial Arts', 'Mecha',
+  'Medical', 'Military', 'Music', 'Mythology', 'Organized Crime', 'Otaku Culture', 'Parody',
   'Performing Arts', 'Pets', 'Psychological', 'Racing', 'Reincarnation', 'Reverse Harem',
-  'Romantic Subtext', 'Samurai', 'School', 'Seinen', 'Shoujo', 'Shounen', 'Showbiz', 'Space',
-  'Strategy Game', 'Super Power', 'Survival', 'Team Sports', 'Time Travel', 'Vampire',
-  'Video Game', 'Visual Arts', 'Workplace',
+  'Samurai', 'School', 'Showbiz', 'Space', 'Strategy Game', 'Super Power', 'Survival',
+  'Team Sports', 'Time Travel', 'Urban Fantasy', 'Vampire', 'Video Game', 'Villainess',
+  'Visual Arts', 'Workplace',
+];
+
+export const DEMOGRAPHIC_LIST = [
+  'Josei', 'Kids', 'Seinen', 'Shoujo', 'Shounen',
 ];
 
 const NSFW_GENRES = ['Ecchi', 'Hentai', 'Erotica', 'Boys Love', 'Girls Love'];
@@ -154,6 +158,9 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   /** Whether the theme dropdown is open */
   themeDropdownOpen = false;
 
+  /** Whether the demographic dropdown is open */
+  demographicDropdownOpen = false;
+
   // ── Preset state ──────────────────────────────────────────────────────────
   savedPresets = signal<FilterPreset[]>([]);
   /** Whether the "save as preset" inline form is visible */
@@ -168,6 +175,9 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   /** Signal so that computed() consumers (themeLabel, filteredThemeList) react to changes */
   filterTheme         = signal<string[]>([]);
   themeOperator: 'or' | 'and' = 'or';
+  /** Signal so that computed() consumers (demographicLabel) react to changes */
+  filterDemographic   = signal<string[]>([]);
+  demographicOperator: 'or' | 'and' = 'or';
   filterWatchState:   string[] = [];
   filterAiringStatus: string[] = [];
   filterHasFile: 'any' | 'yes' | 'no' = 'any';
@@ -208,12 +218,23 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     return `${sel[0]}, ${sel[1]} +${sel.length - 2}`;
   });
 
+  /** Label shown on the demographic dropdown trigger button */
+  readonly demographicLabel = computed(() => {
+    const sel = this.filterDemographic();
+    if (sel.length === 0) return null;
+    if (sel.length <= 2) return sel.join(', ');
+    return `${sel[0]}, ${sel[1]} +${sel.length - 2}`;
+  });
+
+  readonly demographicOptions = DEMOGRAPHIC_LIST;
+
   /** Count of active (non-default) filters for the badge */
   get activeFilterCount(): number {
     let n = 0;
     if (this.filterTitle) n++;
     if (this.filterGenre().length) n++;
     if (this.filterTheme().length) n++;
+    if (this.filterDemographic().length) n++;
     if (this.filterWatchState.length) n++;
     if (this.filterAiringStatus.length) n++;
     if (this.filterHasFile !== 'any') n++;
@@ -227,6 +248,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     let n = 0;
     if (this.filterGenre().length) n++;
     if (this.filterTheme().length) n++;
+    if (this.filterDemographic().length) n++;
     if (this.filterWatchState.length) n++;
     if (this.filterAiringStatus.length) n++;
     if (this.filterHasFile !== 'any') n++;
@@ -253,6 +275,11 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     if (themes.length) {
       const sep = themes.length > 1 ? ` ${this.themeOperator.toUpperCase()} ` : '';
       parts.push(themes.join(sep));
+    }
+    const demographics = this.filterDemographic();
+    if (demographics.length) {
+      const sep = demographics.length > 1 ? ` ${this.demographicOperator.toUpperCase()} ` : '';
+      parts.push(demographics.join(sep));
     }
     if (this.filterWatchState.length) {
       parts.push(this.filterWatchState
@@ -328,6 +355,9 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     if (this.themeDropdownOpen && !target.closest('.theme-dropdown')) {
       this.themeDropdownOpen = false;
     }
+    if (this.demographicDropdownOpen && !target.closest('.demographic-dropdown')) {
+      this.demographicDropdownOpen = false;
+    }
   }
 
   // ── Display mode ──────────────────────────────────────────────────────────
@@ -375,7 +405,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   toggleGenreDropdown(event: MouseEvent): void {
     event.stopPropagation(); // prevent document:click from immediately closing
     this.genreDropdownOpen = !this.genreDropdownOpen;
-    if (this.genreDropdownOpen) this.themeDropdownOpen = false;
+    if (this.genreDropdownOpen) { this.themeDropdownOpen = false; this.demographicDropdownOpen = false; }
   }
 
   toggleGenre(genre: string, event: MouseEvent): void {
@@ -395,7 +425,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   toggleThemeDropdown(event: MouseEvent): void {
     event.stopPropagation();
     this.themeDropdownOpen = !this.themeDropdownOpen;
-    if (this.themeDropdownOpen) this.genreDropdownOpen = false;
+    if (this.themeDropdownOpen) { this.genreDropdownOpen = false; this.demographicDropdownOpen = false; }
   }
 
   toggleTheme(theme: string, event: MouseEvent): void {
@@ -409,6 +439,25 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.filterTheme.set([]);
   }
 
+  // ── Demographic dropdown ──────────────────────────────────────────────────
+
+  toggleDemographicDropdown(event: MouseEvent): void {
+    event.stopPropagation();
+    this.demographicDropdownOpen = !this.demographicDropdownOpen;
+    if (this.demographicDropdownOpen) { this.genreDropdownOpen = false; this.themeDropdownOpen = false; }
+  }
+
+  toggleDemographic(demographic: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.filterDemographic.update(v => this.togglePill(v, demographic));
+    if (this.filterDemographic().length <= 1) this.demographicOperator = 'or';
+  }
+
+  clearDemographics(event: MouseEvent): void {
+    event.stopPropagation();
+    this.filterDemographic.set([]);
+  }
+
   // ── Search / Reset ────────────────────────────────────────────────────────
 
   search(): void {
@@ -416,6 +465,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.filterOpen.set(false);   // collapse filter panel on search
     this.genreDropdownOpen = false;
     this.themeDropdownOpen = false;
+    this.demographicDropdownOpen = false;
     this.loadAnimes(true);
   }
 
@@ -425,6 +475,8 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.genreOperator      = 'or';
     this.filterTheme.set([]);
     this.themeOperator      = 'or';
+    this.filterDemographic.set([]);
+    this.demographicOperator = 'or';
     this.filterWatchState   = [];
     this.filterAiringStatus = [];
     this.filterHasFile      = 'any';
@@ -435,8 +487,9 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.searched.set(false);
     this.filterOpen.set(true);
     this.advancedOpen.set(false);
-    this.genreDropdownOpen  = false;
-    this.themeDropdownOpen  = false;
+    this.genreDropdownOpen       = false;
+    this.themeDropdownOpen       = false;
+    this.demographicDropdownOpen = false;
     this.showSavePreset     = false;
     this.newPresetName      = '';
     this.animes.set([]);
@@ -455,6 +508,8 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.genreOperator      = f.genreOperator ?? 'or';
     this.filterTheme.set(f.theme            ?? []);
     this.themeOperator      = f.themeOperator ?? 'or';
+    this.filterDemographic.set(f.demographic ?? []);
+    this.demographicOperator = f.demographicOperator ?? 'or';
     this.filterWatchState   = f.watchState   ?? [];
     this.filterAiringStatus = f.airingStatus  ?? [];
     this.filterHasFile      = f.hasFile      ?? 'any';
@@ -466,7 +521,8 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.newPresetName      = '';
     // Open advanced section if the preset uses any advanced filter
     const hasAdvanced = !!(
-      f.genre?.length || f.theme?.length || f.watchState?.length || f.airingStatus?.length ||
+      f.genre?.length || f.theme?.length || f.demographic?.length ||
+      f.watchState?.length || f.airingStatus?.length ||
       f.hasFile || f.codec?.length || f.mediaType?.length ||
       (f.sortBy && f.sortBy !== 'title') || (f.sortOrder && f.sortOrder !== 'asc')
     );
@@ -511,18 +567,20 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   /** Returns a serialisable snapshot of the current filter panel state. */
   private snapshotFilters(): SavedFilterState {
     return {
-      title:         this.filterTitle        || undefined,
-      genre:         this.filterGenre().length ? this.filterGenre() : undefined,
-      genreOperator: this.filterGenre().length > 1 ? this.genreOperator : undefined,
-      theme:         this.filterTheme().length ? this.filterTheme() : undefined,
-      themeOperator: this.filterTheme().length > 1 ? this.themeOperator : undefined,
-      watchState:    this.filterWatchState.length   ? this.filterWatchState   : undefined,
-      airingStatus:  this.filterAiringStatus.length ? this.filterAiringStatus : undefined,
-      hasFile:       this.filterHasFile !== 'any'   ? this.filterHasFile      : undefined,
-      codec:         this.filterCodec.length        ? this.filterCodec        : undefined,
-      mediaType:     this.filterMediaType.length    ? this.filterMediaType    : undefined,
-      sortBy:        this.sortBy    !== 'title'     ? this.sortBy             : undefined,
-      sortOrder:     this.sortOrder !== 'asc'       ? this.sortOrder          : undefined,
+      title:               this.filterTitle        || undefined,
+      genre:               this.filterGenre().length ? this.filterGenre() : undefined,
+      genreOperator:       this.filterGenre().length > 1 ? this.genreOperator : undefined,
+      theme:               this.filterTheme().length ? this.filterTheme() : undefined,
+      themeOperator:       this.filterTheme().length > 1 ? this.themeOperator : undefined,
+      demographic:         this.filterDemographic().length ? this.filterDemographic() : undefined,
+      demographicOperator: this.filterDemographic().length > 1 ? this.demographicOperator : undefined,
+      watchState:          this.filterWatchState.length   ? this.filterWatchState   : undefined,
+      airingStatus:        this.filterAiringStatus.length ? this.filterAiringStatus : undefined,
+      hasFile:             this.filterHasFile !== 'any'   ? this.filterHasFile      : undefined,
+      codec:               this.filterCodec.length        ? this.filterCodec        : undefined,
+      mediaType:           this.filterMediaType.length    ? this.filterMediaType    : undefined,
+      sortBy:              this.sortBy    !== 'title'     ? this.sortBy             : undefined,
+      sortOrder:           this.sortOrder !== 'asc'       ? this.sortOrder          : undefined,
     };
   }
 
@@ -534,18 +592,20 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   private buildFilters(): AnimeFilters {
     return {
-      title:         this.filterTitle               || undefined,
-      genre:         this.filterGenre().length        ? this.filterGenre()        : undefined,
-      genreOperator: this.filterGenre().length > 1    ? this.genreOperator        : undefined,
-      theme:         this.filterTheme().length        ? this.filterTheme()        : undefined,
-      themeOperator: this.filterTheme().length > 1    ? this.themeOperator        : undefined,
-      status:        this.filterWatchState.length   ? this.filterWatchState   : undefined,
-      airingStatus:  this.filterAiringStatus.length ? this.filterAiringStatus : undefined,
-      hasFile:       this.resolveHasFile(),
-      codec:         this.filterCodec.length        ? this.filterCodec        : undefined,
-      mediaType:     this.filterMediaType.length    ? this.filterMediaType    : undefined,
-      sortBy:        this.sortBy,
-      sortOrder:     this.sortOrder,
+      title:               this.filterTitle               || undefined,
+      genre:               this.filterGenre().length        ? this.filterGenre()        : undefined,
+      genreOperator:       this.filterGenre().length > 1    ? this.genreOperator        : undefined,
+      theme:               this.filterTheme().length        ? this.filterTheme()        : undefined,
+      themeOperator:       this.filterTheme().length > 1    ? this.themeOperator        : undefined,
+      demographic:         this.filterDemographic().length  ? this.filterDemographic()  : undefined,
+      demographicOperator: this.filterDemographic().length > 1 ? this.demographicOperator : undefined,
+      status:              this.filterWatchState.length   ? this.filterWatchState   : undefined,
+      airingStatus:        this.filterAiringStatus.length ? this.filterAiringStatus : undefined,
+      hasFile:             this.resolveHasFile(),
+      codec:               this.filterCodec.length        ? this.filterCodec        : undefined,
+      mediaType:           this.filterMediaType.length    ? this.filterMediaType    : undefined,
+      sortBy:              this.sortBy,
+      sortOrder:           this.sortOrder,
     };
   }
 

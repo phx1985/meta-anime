@@ -13,5 +13,7 @@ public record AnimeFilters(
     string[]? Codec = null,
     string[]? MediaType = null,
     string[]? Theme = null,
-    string? ThemeOperator = "or"
+    string? ThemeOperator = "or",
+    string[]? Demographic = null,
+    string? DemographicOperator = "or"
 );

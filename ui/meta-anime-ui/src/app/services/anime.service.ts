@@ -39,6 +39,10 @@ export class AnimeService {
       filters.theme.forEach(t => (params = params.append('theme', t)));
       if (filters.themeOperator) params = params.set('themeOperator', filters.themeOperator);
     }
+    if (filters?.demographic?.length) {
+      filters.demographic.forEach(d => (params = params.append('demographic', d)));
+      if (filters.demographicOperator) params = params.set('demographicOperator', filters.demographicOperator);
+    }
     if (filters?.sortBy) params = params.set('sortBy', filters.sortBy);
     if (filters?.sortOrder) params = params.set('sortOrder', filters.sortOrder);
     if (filters?.airingStatus?.length) filters.airingStatus.forEach(s => (params = params.append('airingStatus', s)));

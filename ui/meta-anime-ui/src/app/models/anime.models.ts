@@ -121,6 +121,8 @@ export interface AnimeFilters {
   genreOperator?: 'or' | 'and';
   theme?: string[];
   themeOperator?: 'or' | 'and';
+  demographic?: string[];
+  demographicOperator?: 'or' | 'and';
   sortBy?: string;
   sortOrder?: string;
   airingStatus?: string[];
@@ -136,6 +138,8 @@ export interface SavedFilterState {
   genreOperator?: 'or' | 'and';
   theme?: string[];
   themeOperator?: 'or' | 'and';
+  demographic?: string[];
+  demographicOperator?: 'or' | 'and';
   watchState?: string[];
   airingStatus?: string[];
   hasFile?: 'any' | 'yes' | 'no';
@@ -194,6 +198,8 @@ export interface SeasonalSavedFilterState {
   genreOperator?: 'or' | 'and';
   theme?: string[];
   themeOperator?: 'or' | 'and';
+  demographic?: string[];
+  demographicOperator?: 'or' | 'and';
   malStatus?: string[];
   mediaType?: string[];
   sortBy?: string;

@@ -259,6 +259,60 @@
                 </div>
               </div>
 
+              <!-- Demographic -->
+              <div class="filter-field">
+                <div class="filter-label-row">
+                  <span class="filter-label">{{ 'seasonal.filter.demographic' | translate }}</span>
+                  @if (filterDemographic().length > 1) {
+                    <div class="operator-toggle" role="radiogroup" [attr.aria-label]="'seasonal.filter.demographicOperator' | translate">
+                      <button type="button" class="op-btn" [class.op-btn--active]="demographicOperator() === 'or'"
+                              (click)="setDemographicOperator('or', $event)" role="radio" [attr.aria-checked]="demographicOperator() === 'or'">OR</button>
+                      <button type="button" class="op-btn" [class.op-btn--active]="demographicOperator() === 'and'"
+                              (click)="setDemographicOperator('and', $event)" role="radio" [attr.aria-checked]="demographicOperator() === 'and'">AND</button>
+                    </div>
+                  }
+                </div>
+                <div class="demographic-dropdown">
+                  <button type="button" class="genre-trigger"
+                          [class.genre-trigger--has-value]="filterDemographic().length > 0"
+                          [class.genre-trigger--open]="demographicDropdownOpen"
+                          (click)="toggleDemographicDropdown($event)"
+                          [attr.aria-expanded]="demographicDropdownOpen"
+                          [attr.aria-label]="'seasonal.filter.demographic' | translate">
+                    <span class="genre-trigger__text">
+                      @if (demographicLabel()) { {{ demographicLabel() }} } @else { {{ 'seasonal.filter.any' | translate }} }
+                    </span>
+                    @if (filterDemographic().length > 0) {
+                      <button type="button" class="genre-clear-btn" (click)="clearDemographics($event)" [attr.aria-label]="'seasonal.filter.clear' | translate">
+                        <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                      </button>
+                    }
+                    <svg class="genre-trigger__chevron" [class.genre-trigger__chevron--open]="demographicDropdownOpen" width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                      <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                  </button>
+                  @if (demographicDropdownOpen) {
+                    <div class="genre-panel" role="listbox" [attr.aria-multiselectable]="true">
+                      <div class="genre-panel__inner">
+                        @for (d of demographicOptions; track d) {
+                          <button type="button" class="genre-option"
+                                  [class.genre-option--selected]="filterDemographic().includes(d)"
+                                  role="option" [attr.aria-selected]="filterDemographic().includes(d)"
+                                  (click)="toggleDemographic(d, $event)">
+                            @if (filterDemographic().includes(d)) {
+                              <span class="genre-option__check" aria-hidden="true">
+                                <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M2 8l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                              </span>
+                            }
+                            {{ ('genres.' + d) | translate }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+
               <!-- MAL status -->
               <div class="filter-field filter-field--pills">
                 <span class="filter-label">{{ 'seasonal.filter.malStatus.label' | translate }}</span>
