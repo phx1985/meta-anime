@@ -353,6 +353,19 @@
 
   &--clickable { cursor: pointer; }
   &--clickable:hover { background: var(--bg-secondary); }
+
+  // Slide left + fade when dismissed
+  &--leaving {
+    animation: notifItemDismiss 0.4s ease-in forwards;
+    pointer-events: none;
+    overflow: hidden;
+  }
+}
+
+@keyframes notifItemDismiss {
+  0%   { opacity: 1; transform: translateX(0);      max-height: 120px; padding-top: 0.75rem; padding-bottom: 0.75rem; border-bottom-width: 1px; }
+  55%  { opacity: 0; transform: translateX(-50px);  max-height: 120px; padding-top: 0.75rem; padding-bottom: 0.75rem; border-bottom-width: 1px; }
+  100% { opacity: 0; transform: translateX(-50px);  max-height: 0;     padding-top: 0;       padding-bottom: 0;       border-bottom-width: 0; }
 }
 
 .notif-item-icon {
@@ -467,9 +480,9 @@
   &--warning { border-left-color: #f59e0b; }
   &--error   { border-left-color: #ef4444; }
 
-  // keep duration in sync with TOAST_EXIT_MS in notification.service.ts
+  // Slide right + fade on dismiss
   &--leaving {
-    animation: toastSlideToRight 0.32s cubic-bezier(0.4, 0, 1, 1) forwards;
+    animation: toastSlideToRight 0.32s ease-in forwards;
     pointer-events: none;
   }
 }
@@ -481,7 +494,7 @@
 
 @keyframes toastSlideToRight {
   from { opacity: 1; transform: translateX(0); }
-  to   { opacity: 0; transform: translateX(80px); }
+  to   { opacity: 0; transform: translateX(60px); }
 }
 
 .toast-item-icon {

@@ -93,6 +93,67 @@
     cursor: default;
     backdrop-filter: blur(6px);
   }
+
+  // ── Partially-tracked — ghost/outline badge with service logo + green "+" ──
+  &--partial {
+    // CSS custom property — overridden per service modifier below
+    --brand-rgb: 53, 197, 244;
+    background: transparent;
+    border: 1.5px solid rgba(var(--brand-rgb), 0.55);
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    width: 32px;
+    height: 32px;
+    overflow: visible;
+    transition: background 0.18s ease, border-color 0.2s ease,
+                box-shadow 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.5, 0.64, 1);
+
+    &.corner-badge--sonarr { --brand-rgb: 53, 197, 244; }
+    &.corner-badge--mal    { --brand-rgb: 84, 129, 232; }
+
+    &:hover {
+      background: rgba(var(--brand-rgb), 0.12);
+      border-color: rgb(var(--brand-rgb));
+      box-shadow: 0 0 14px rgba(var(--brand-rgb), 0.35), 0 3px 10px rgba(0, 0, 0, 0.35);
+      transform: scale(1.18);
+    }
+    &:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+  }
+}
+
+.partial-logo-wrap {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.partial-logo {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+
+.partial-plus {
+  position: absolute;
+  bottom: -5px;
+  right: -6px;
+  width: 11px;
+  height: 11px;
+  background: #22c55e;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 // ─── Blurred backdrop ─────────────────────────────────────────────────────────
@@ -271,6 +332,10 @@
   color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
+  // Default collapsed height matches the Angular animation `state('collapsed')`.
+  // Set in CSS so the card height is stable even before Angular's animation
+  // framework initialises (prevents one row card from inflating its peers).
+  height: 3.75rem;
   overflow: hidden;
   display: block;
 }
@@ -309,6 +374,16 @@
   padding: 0.1rem 0.45rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+
+  // Highlighted when the genre matches an active filter selection
+  &--highlighted {
+    background: var(--accent-primary);
+    color: #fff;
+    border-color: var(--accent-primary);
+    box-shadow: 0 1px 6px rgba(108, 99, 255, 0.4);
+    transform: scale(1.04);
+  }
 }
 
 // ─── Scores + dates ───────────────────────────────────────────────────────────
@@ -562,6 +637,7 @@
 .dialog__body {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch; // smooth scroll on iOS
   overscroll-behavior: contain;
   padding: 1rem 1.25rem;
   display: flex;
@@ -750,6 +826,12 @@
   background: var(--bg-secondary);
   scrollbar-width: thin;
   scrollbar-color: var(--card-border) transparent;
+
+  // On small mobile screens, limit height so the options panel (root folder +
+  // quality profile) is always visible above the fold of the dialog body.
+  @media (max-width: 480px) {
+    max-height: 140px;
+  }
 }
 
 .result-item {
@@ -827,6 +909,22 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
     line-height: 1.4;
+  }
+
+  &--in-library {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &__in-library-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #22c55e;
+    margin-top: 0.1rem;
   }
 
   &__check {

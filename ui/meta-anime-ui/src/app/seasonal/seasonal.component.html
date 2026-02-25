@@ -70,6 +70,201 @@
       </div>
     </div>
 
+    <!-- ── Filter card ──────────────────────────────────────────────────── -->
+    @if (!loading() && !error() && animes().length > 0) {
+      <div class="filter-card mb-4">
+
+        <!-- Card header — always visible, toggles body -->
+        <div class="filter-card__header"
+             (click)="toggleFilterPanel()"
+             role="button"
+             [attr.aria-expanded]="filterOpen()"
+             [attr.aria-label]="(filterOpen() ? 'seasonal.filter.collapseFilters' : 'seasonal.filter.expandFilters') | translate"
+             tabindex="0"
+             (keydown.enter)="toggleFilterPanel()"
+             (keydown.space)="$event.preventDefault(); toggleFilterPanel()">
+          <div class="filter-card__header-left">
+            <svg class="filter-header-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+            </svg>
+            <div class="filter-header-text">
+              <span class="filter-header-title">{{ 'seasonal.filter.title' | translate }}</span>
+              <span class="filter-header-summary" [title]="filterSummary">{{ filterSummary }}</span>
+            </div>
+            @if (activeFilterCount > 0) {
+              <span class="filter-badge">{{ activeFilterCount }}</span>
+            }
+          </div>
+          <svg class="filter-chevron" [class.filter-chevron--open]="filterOpen()" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M4 6l4 4 4-4"/>
+          </svg>
+        </div>
+
+        <!-- Collapsible body -->
+        <div class="filter-card__body" [@filterCollapse]="filterOpen() ? 'open' : 'closed'">
+          <div class="filter-card__inner">
+
+            <!-- ── Preset bar ──────────────────────────────────────────── -->
+            <div class="seasonal-presets-bar">
+              <div class="presets-chips">
+                @for (p of savedPresets(); track p.id) {
+                  <button type="button" class="preset-chip preset-chip--saved" (click)="applyPreset(p)">
+                    {{ p.label }}
+                    <span class="preset-chip__delete" role="button"
+                          [attr.aria-label]="'seasonal.filter.presets.delete' | translate"
+                          (click)="deletePreset(p.id, $event)">
+                      <svg width="8" height="8" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                        <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                      </svg>
+                    </span>
+                  </button>
+                }
+                @if (savedPresets().length === 0 && !showSavePreset) {
+                  <span class="presets-empty-hint">{{ 'seasonal.filter.presets.noPresets' | translate }}</span>
+                }
+              </div>
+              <button type="button" class="btn-save-preset" (click)="openSavePreset()">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                  <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                </svg>
+                {{ 'seasonal.filter.presets.saveAs' | translate }}
+              </button>
+            </div>
+
+            @if (showSavePreset) {
+              <div class="preset-save-form">
+                <input class="preset-name-input" type="text"
+                       [(ngModel)]="newPresetName"
+                       [placeholder]="'seasonal.filter.presets.namePlaceholder' | translate"
+                       (keydown.enter)="confirmSavePreset()"
+                       (keydown.escape)="cancelSavePreset()"
+                       autofocus />
+                <button type="button" class="btn-preset-confirm" (click)="confirmSavePreset()" [disabled]="!newPresetName.trim()">
+                  {{ 'seasonal.filter.presets.save' | translate }}
+                </button>
+                <button type="button" class="btn-preset-cancel" (click)="cancelSavePreset()">
+                  {{ 'seasonal.filter.presets.cancel' | translate }}
+                </button>
+              </div>
+            }
+
+            <!-- Filter grid -->
+            <div class="filter-grid">
+
+              <!-- Genre -->
+              <div class="filter-field">
+                <div class="filter-label-row">
+                  <span class="filter-label">{{ 'seasonal.filter.genre' | translate }}</span>
+                  @if (filterGenre().length > 1) {
+                    <div class="operator-toggle" role="radiogroup" [attr.aria-label]="'seasonal.filter.genreOperator' | translate">
+                      <button type="button" class="op-btn" [class.op-btn--active]="genreOperator() === 'or'"
+                              (click)="setGenreOperator('or', $event)" role="radio" [attr.aria-checked]="genreOperator() === 'or'">OR</button>
+                      <button type="button" class="op-btn" [class.op-btn--active]="genreOperator() === 'and'"
+                              (click)="setGenreOperator('and', $event)" role="radio" [attr.aria-checked]="genreOperator() === 'and'">AND</button>
+                    </div>
+                  }
+                </div>
+                <div class="genre-dropdown">
+                  <button type="button" class="genre-trigger"
+                          [class.genre-trigger--has-value]="filterGenre().length > 0"
+                          [class.genre-trigger--open]="genreDropdownOpen"
+                          (click)="toggleGenreDropdown($event)"
+                          [attr.aria-expanded]="genreDropdownOpen"
+                          [attr.aria-label]="'seasonal.filter.genre' | translate">
+                    <span class="genre-trigger__text">
+                      @if (genreLabel()) { {{ genreLabel() }} } @else { {{ 'seasonal.filter.any' | translate }} }
+                    </span>
+                    @if (filterGenre().length > 0) {
+                      <button type="button" class="genre-clear-btn" (click)="clearGenres($event)" [attr.aria-label]="'seasonal.filter.clear' | translate">
+                        <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                      </button>
+                    }
+                    <svg class="genre-trigger__chevron" [class.genre-trigger__chevron--open]="genreDropdownOpen" width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                      <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                  </button>
+                  @if (genreDropdownOpen) {
+                    <div class="genre-panel" role="listbox" [attr.aria-multiselectable]="true">
+                      <div class="genre-panel__inner">
+                        @for (g of filteredGenreList(); track g) {
+                          <button type="button" class="genre-option"
+                                  [class.genre-option--selected]="filterGenre().includes(g)"
+                                  role="option" [attr.aria-selected]="filterGenre().includes(g)"
+                                  (click)="toggleGenre(g, $event)">
+                            @if (filterGenre().includes(g)) {
+                              <span class="genre-option__check" aria-hidden="true">
+                                <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M2 8l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                              </span>
+                            }
+                            {{ ('genres.' + g) | translate }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- MAL status -->
+              <div class="filter-field filter-field--pills">
+                <span class="filter-label">{{ 'seasonal.filter.malStatus.label' | translate }}</span>
+                <div class="filter-pills">
+                  @for (s of malStates; track s.value) {
+                    <!-- Visual separator between 'not_in' and the status pills -->
+                    @if (s.value === 'watching') {
+                      <span class="filter-pills__sep" aria-hidden="true"></span>
+                    }
+                    <button type="button" class="filter-pill"
+                            [class.filter-pill--active]="filterMalStatus().includes(s.value)"
+                            [class.filter-pill--muted]="isMalStatusMuted(s.value)"
+                            (click)="toggleMalStatus(s.value)">
+                      {{ s.labelKey | translate }}
+                    </button>
+                  }
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Footer: Sort + Reset -->
+            <div class="filter-footer">
+              <div class="filter-footer__left">
+                <div class="filter-field filter-field--compact">
+                  <span class="filter-label">{{ 'seasonal.filter.sort.by' | translate }}</span>
+                  <div class="d-flex align-items-center gap-2">
+                    <select class="sort-select" [ngModel]="sortBy()" (ngModelChange)="setSortBy($event)" [attr.aria-label]="'seasonal.filter.sort.by' | translate">
+                      @for (opt of sortOptions; track opt.value) {
+                        <option [value]="opt.value">{{ opt.labelKey | translate }}</option>
+                      }
+                    </select>
+                    <button type="button" class="mode-btn sort-dir-btn" (click)="toggleSortOrder()"
+                            [attr.aria-label]="'seasonal.filter.sort.order' | translate" [attr.aria-pressed]="sortOrder() === 'desc'">
+                      @if (sortOrder() === 'asc') {
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 12l5-8 5 8H3z"/></svg>
+                      } @else {
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 4l5 8 5-8H3z"/></svg>
+                      }
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="filter-footer__actions">
+                <button type="button" class="btn-reset" (click)="resetFilters()">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                    <path d="M13.5 2.5A7 7 0 1 0 15 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                    <path d="M11 1l2.5 1.5L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  </svg>
+                  {{ 'seasonal.filter.reset' | translate }}
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    }
+    <!-- ── /Filter card ─────────────────────────────────────────────────── -->
+
     <!-- Error state -->
     @if (error()) {
       <div class="seasonal-error">{{ 'seasonal.error' | translate }}</div>
@@ -84,20 +279,32 @@
     }
 
     <!-- Anime grid -->
-    @if (!loading() && animes().length > 0) {
-      <div class="seasonal-grid">
-        @for (anime of animes(); track anime.malId) {
+    @if (!loading() && filteredAnimes().length > 0) {
+      <p class="seasonal-result-count mb-2">
+        {{ 'seasonal.resultCount' | translate: { count: filteredAnimes().length } }}
+        @if (fetchElapsedMs() !== null) {
+          <span class="seasonal-elapsed-time">({{ fetchElapsedMs() }}ms)</span>
+        }
+      </p>
+      <div class="seasonal-grid" [@gridAnimation]="displayedAnimes().length">
+        @for (anime of displayedAnimes(); track anime.malId) {
           <div class="seasonal-grid__cell">
-            <app-seasonal-card [anime]="anime" />
+            <app-seasonal-card [anime]="anime" [activeGenres]="filterGenre()" />
           </div>
         }
       </div>
     }
 
-    <!-- Empty state -->
+    <!-- No results after filtering -->
+    @if (!loading() && !error() && animes().length > 0 && filteredAnimes().length === 0) {
+      <div class="seasonal-empty">{{ 'seasonal.filter.noResults' | translate }}</div>
+    }
+
+    <!-- Empty state (no data from API) -->
     @if (!loading() && !error() && animes().length === 0) {
       <div class="seasonal-empty">{{ 'seasonal.empty' | translate }}</div>
     }
 
   </div>
 </div>
+

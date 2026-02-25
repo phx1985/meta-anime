@@ -188,4 +188,11 @@ export class App implements OnInit, AfterViewInit {
     this.currentLang.set(next);
     this.translate.use(next);
   }
+
+  /** Called when the user clicks × on a notification-center item. */
+  onNotifDismiss(id: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.notifService.dismissNotifItem(id);
+  }
 }
+

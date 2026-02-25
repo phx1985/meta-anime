@@ -15,8 +15,11 @@ export interface AppNotification {
 const STORAGE_KEY = 'meta-anime-notifications';
 const MAX_STORED  = 50;
 const TOAST_TTL_MS = 4500;
-/** Exit animation duration — keep in sync with `.toast-item--leaving` in app.scss */
-const TOAST_EXIT_MS = 320;
+/** Exit animation duration — keep in sync with toastSlideToLeft in app.scss. */
+const TOAST_EXIT_MS = 350;
+/** Time from dismissNotifItem() call until acknowledge() removes the item.
+ *  Must cover the notifItemDismiss CSS animation (400ms). */
+const NOTIF_DISMISS_MS = 420;
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
@@ -38,6 +41,7 @@ export class NotificationService {
 
   readonly activeToasts = signal<AppNotification[]>([]);
   readonly leavingToastIds = signal<ReadonlySet<string>>(new Set<string>());
+  readonly leavingNotifIds = signal<ReadonlySet<string>>(new Set<string>());
 
   /** Returns true if a notification with this exact id already exists (prevents duplicates). */
   has(id: string): boolean {
@@ -63,6 +67,26 @@ export class NotificationService {
   acknowledgeAll(): void {
     this.notifications.update(list => list.map(n => ({ ...n, acknowledged: true })));
     this._save();
+  }
+
+  /** Animate a notif-center item out then acknowledge it (keeps the panel open). */
+  dismissNotifItem(id: string): void {
+    if (this.leavingNotifIds().has(id)) return;
+    this.leavingNotifIds.update(s => new Set([...s, id]));
+    setTimeout(() => {
+      this.acknowledge(id);
+      this.leavingNotifIds.update(s => { const n = new Set(s); n.delete(id); return n; });
+    }, NOTIF_DISMISS_MS);
+  }
+
+  /** Animate all unacknowledged notif-center items out then acknowledge them. */
+  dismissAllNotifItems(): void {
+    const ids = this.unacknowledged().map(n => n.id);
+    ids.forEach(id => this.leavingNotifIds.update(s => new Set([...s, id])));
+    setTimeout(() => {
+      this.acknowledgeAll();
+      this.leavingNotifIds.update(() => new Set<string>());
+    }, NOTIF_DISMISS_MS);
   }
 
   dismissToast(id: string): void {

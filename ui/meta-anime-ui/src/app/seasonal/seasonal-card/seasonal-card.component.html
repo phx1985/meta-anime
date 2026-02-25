@@ -7,7 +7,7 @@
     </div>
   }
 
-  <!-- ── Top-right action badge (+ or ✓) ─────────────────────────────────── -->
+  <!-- ── Top-right action badge (✓ / half-progress / +) ─────────────────── -->
   @if (allTracked) {
     <div class="corner-badge corner-badge--tracked"
          [title]="'seasonal.allTracked' | translate"
@@ -16,6 +16,26 @@
         <path d="M3 8l3.5 3.5L13 4"/>
       </svg>
     </div>
+  } @else if (partiallyTracked) {
+    <!-- Ghost/outline badge: service logo + miniature green "+" in the corner.
+         Communicates exactly which provider is missing.
+         Border + hover tint use the service brand color. -->
+    <button type="button"
+            class="corner-badge corner-badge--partial"
+            [class.corner-badge--sonarr]="sonarrMissing"
+            [class.corner-badge--mal]="malMissing"
+            (click)="openAddModal()"
+            [title]="(sonarrMissing ? 'seasonal.addToSonarr' : 'seasonal.addToMal') | translate"
+            [attr.aria-label]="(sonarrMissing ? 'seasonal.addToSonarr' : 'seasonal.addToMal') | translate">
+      <span class="partial-logo-wrap">
+        @if (sonarrMissing) {
+          <img class="partial-logo" src="assets/images/sonarr.svg" alt="" aria-hidden="true" />
+        } @else {
+          <img class="partial-logo" src="assets/images/mal.svg"    alt="" aria-hidden="true" />
+        }
+        <span class="partial-plus" aria-hidden="true">+</span>
+      </span>
+    </button>
   } @else {
     <button type="button" class="corner-badge corner-badge--add"
             (click)="openAddModal()"
@@ -75,7 +95,7 @@
       @if (genres.length > 0) {
         <div class="genre-list">
           @for (g of genres; track g) {
-            <span class="genre-tag">{{ translateGenre(g) }}</span>
+            <span class="genre-tag" [class.genre-tag--highlighted]="activeGenres.length > 0 && activeGenres.includes(g)">{{ translateGenre(g) }}</span>
           }
         </div>
       }
@@ -357,6 +377,9 @@
                         <button type="button"
                                 class="result-item"
                                 [class.result-item--active]="sonarrSelected()?.tvdbId === item.tvdbId"
+                                [class.result-item--in-library]="item.alreadyInLibrary"
+                                [disabled]="item.alreadyInLibrary"
+                                [attr.aria-disabled]="item.alreadyInLibrary"
                                 (click)="selectSonarrResult(item)">
                           @if (item.remotePoster) {
                             <img class="result-item__thumb" [src]="item.remotePoster" [alt]="item.title" loading="lazy" />
@@ -366,7 +389,14 @@
                           <div class="result-item__meta">
                             <span class="result-item__title">{{ item.title }}</span>
                             @if (item.year) { <span class="result-item__year">{{ item.year }}</span> }
-                            @if (item.overview) { <p class="result-item__overview">{{ item.overview }}</p> }
+                            @if (item.alreadyInLibrary) {
+                              <span class="result-item__in-library-badge">
+                                <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M3 8l3.5 3.5L13 4"/></svg>
+                                {{ 'seasonal.sonarrAlreadyInLibrary' | translate }}
+                              </span>
+                            } @else if (item.overview) {
+                              <p class="result-item__overview">{{ item.overview }}</p>
+                            }
                           </div>
                           @if (sonarrSelected()?.tvdbId === item.tvdbId) {
                             <svg class="result-item__check" viewBox="0 0 16 16" fill="none" stroke="currentColor"

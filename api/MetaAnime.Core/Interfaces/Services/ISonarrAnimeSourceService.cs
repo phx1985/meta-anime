@@ -56,4 +56,5 @@ public sealed record SonarrQualityProfileInfo(int Id, string Name);
 public sealed record SonarrAddedSeries(int Id, string Title, string TitleSlug);
 
 /// <summary>Single result from the Sonarr series lookup API.</summary>
-public sealed record SonarrLookupItem(int TvdbId, string Title, int? Year, string? TitleSlug, string? RemotePoster, string? Overview);
+/// <param name="AlreadyInLibrary">True when Sonarr already tracks this series (Id > 0).</param>
+public sealed record SonarrLookupItem(int TvdbId, string Title, int? Year, string? TitleSlug, string? RemotePoster, string? Overview, bool AlreadyInLibrary = false);

@@ -179,6 +179,22 @@ export interface SeasonalAnimeItem {
   sonarrUrl?: string;
   tvdbId?: string;
   englishTitle?: string;
+  malViewState?: string;
 }
 
 export type SeasonName = 'winter' | 'spring' | 'summer' | 'fall';
+
+/** Serialisable snapshot of the seasonal filter panel state for saved presets. */
+export interface SeasonalSavedFilterState {
+  genre?: string[];
+  genreOperator?: 'or' | 'and';
+  malStatus?: string[];
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface SeasonalFilterPreset {
+  id: string;
+  label: string;
+  filters: SeasonalSavedFilterState;
+}

@@ -30,6 +30,8 @@ export interface SonarrLookupResult {
   titleSlug?: string;
   remotePoster?: string;
   overview?: string;
+  /** True when Sonarr already has this series in its library. */
+  alreadyInLibrary?: boolean;
 }
 
 export interface SonarrAddSeriesRequest {

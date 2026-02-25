@@ -318,7 +318,8 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options, IPropert
             s.TitleSlug,
             s.Images?.FirstOrDefault(i => i.CoverType == "poster")?.RemoteUrl
                 ?? s.Images?.FirstOrDefault()?.RemoteUrl,
-            s.Overview
+            s.Overview,
+            AlreadyInLibrary: s.Id > 0
         )).ToList();
 
         return Result.Success(items);
