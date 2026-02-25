@@ -519,7 +519,18 @@
   "notFound": {
     "ariaLabel": "404 – Page not found",
     "title": "Page Not Found!",
-    "subtitle": "This page wandered off into another dimension.",
+    "subtitle": {
+      "dimension":    "This page wandered off into another dimension.",
+      "trainingArc":  "This page is on a training arc — it'll be back stronger.",
+      "plotTwist":    "Plot twist: this page doesn't exist.",
+      "houdini":      "Seems like this page pulled a Houdini on us.",
+      "void":         "This URL leads to the void. The void stares back.",
+      "kamehameha":   "Loading failed… maybe try a Kamehameha?",
+      "timeline":     "Our server searched every timeline. Nothing.",
+      "questGone":    "Error 404: the page went on a quest and never returned.",
+      "uncharted":    "You've discovered uncharted territory.",
+      "endOfInternet":"You've reached the end of the internet. Just kidding. But this page is gone."
+    },
     "goHome": "Go Back Home",
     "characters": {
       "goku": {

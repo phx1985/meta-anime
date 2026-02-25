@@ -1,14 +1,5 @@
-// Manga-stylised 404 page.
-// Speed lines are pure CSS — no image assets required.
-
-@use 'sass:list';
-@use 'sass:math';
-
-// ── Variables ──────────────────────────────────────────────────────────────
-$panel-border: 4px solid #1a1a1a;
-$panel-border-dark: 4px solid #e0e0e0;
-$accent: #e63946;
-$speed-line-count: 24;
+// 404 page — styled to match the site's global theme.
+// Bokeh particles share the same blob definitions as the anime-list page.
 
 // ── Page shell ─────────────────────────────────────────────────────────────
 .not-found-page {
@@ -18,318 +9,183 @@ $speed-line-count: 24;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: var(--bs-body-bg, #fff);
-  font-family: 'Bangers', 'Impact', 'Arial Black', cursive, sans-serif;
+  background-color: var(--bg-primary);
   padding: 2rem 1rem;
 }
 
-// ── CSS speed lines (radial sunburst) ──────────────────────────────────────
-.speed-lines {
-  position: absolute;
+// ── Bokeh layer (identical blob config to anime-list) ───────────────────────
+.bokeh {
+  position: fixed;
   inset: 0;
-  pointer-events: none;
   z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
 
+.bokeh__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(5px);
+  opacity: var(--bokeh-opacity, 0.25);
+  animation: bokehFloat404 linear infinite;
+
+  &:nth-child(1)  { width: 8px;  height: 8px;  left: 8%;  top: 12%; animation-duration: 18s; animation-delay: 0s;    background: var(--accent-primary); }
+  &:nth-child(2)  { width: 6px;  height: 6px;  left: 22%; top: 28%; animation-duration: 24s; animation-delay: -5s;   background: #a855f7; }
+  &:nth-child(3)  { width: 10px; height: 10px; left: 35%; top: 8%;  animation-duration: 20s; animation-delay: -3s;   background: #22c55e; }
+  &:nth-child(4)  { width: 7px;  height: 7px;  left: 52%; top: 18%; animation-duration: 28s; animation-delay: -10s;  background: var(--accent-primary); }
+  &:nth-child(5)  { width: 9px;  height: 9px;  left: 66%; top: 5%;  animation-duration: 22s; animation-delay: -8s;   background: #f59e0b; }
+  &:nth-child(6)  { width: 5px;  height: 5px;  left: 78%; top: 30%; animation-duration: 16s; animation-delay: -2s;   background: #a855f7; }
+  &:nth-child(7)  { width: 8px;  height: 8px;  left: 90%; top: 15%; animation-duration: 26s; animation-delay: -14s;  background: var(--accent-primary); }
+  &:nth-child(8)  { width: 6px;  height: 6px;  left: 12%; top: 50%; animation-duration: 30s; animation-delay: -7s;   background: #22c55e; }
+  &:nth-child(9)  { width: 11px; height: 11px; left: 28%; top: 65%; animation-duration: 19s; animation-delay: -11s;  background: var(--accent-primary); }
+  &:nth-child(10) { width: 7px;  height: 7px;  left: 44%; top: 45%; animation-duration: 23s; animation-delay: -4s;   background: #f59e0b; }
+  &:nth-child(11) { width: 9px;  height: 9px;  left: 58%; top: 72%; animation-duration: 21s; animation-delay: -9s;   background: #a855f7; }
+  &:nth-child(12) { width: 6px;  height: 6px;  left: 72%; top: 55%; animation-duration: 27s; animation-delay: -16s;  background: #22c55e; }
+  &:nth-child(13) { width: 8px;  height: 8px;  left: 85%; top: 68%; animation-duration: 17s; animation-delay: -1s;   background: var(--accent-primary); }
+  &:nth-child(14) { width: 5px;  height: 5px;  left: 5%;  top: 78%; animation-duration: 29s; animation-delay: -6s;   background: #f59e0b; }
+  &:nth-child(15) { width: 10px; height: 10px; left: 18%; top: 88%; animation-duration: 25s; animation-delay: -13s;  background: #a855f7; }
+  &:nth-child(16) { width: 7px;  height: 7px;  left: 38%; top: 82%; animation-duration: 20s; animation-delay: -3s;   background: var(--accent-primary); }
+  &:nth-child(17) { width: 6px;  height: 6px;  left: 55%; top: 92%; animation-duration: 22s; animation-delay: -18s;  background: #22c55e; }
+  &:nth-child(18) { width: 9px;  height: 9px;  left: 68%; top: 83%; animation-duration: 31s; animation-delay: -5s;   background: var(--accent-primary); }
+  &:nth-child(19) { width: 5px;  height: 5px;  left: 82%; top: 90%; animation-duration: 15s; animation-delay: -12s;  background: #f59e0b; }
+  &:nth-child(20) { width: 8px;  height: 8px;  left: 94%; top: 48%; animation-duration: 24s; animation-delay: -7s;   background: #a855f7; }
+}
+
+@keyframes bokehFloat404 {
+  0%   { transform: translate(0, 0) scale(1);           opacity: calc(var(--bokeh-opacity, 0.25) * 0.65); }
+  25%  { transform: translate(14px, -20px) scale(1.3);  opacity: var(--bokeh-opacity, 0.25); }
+  50%  { transform: translate(-10px, 18px) scale(0.8);  opacity: calc(var(--bokeh-opacity, 0.25) * 0.7); }
+  75%  { transform: translate(18px, 8px) scale(1.2);    opacity: calc(var(--bokeh-opacity, 0.25) * 0.9); }
+  100% { transform: translate(0, 0) scale(1);           opacity: calc(var(--bokeh-opacity, 0.25) * 0.65); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bokeh__blob { animation: none; opacity: calc(var(--bokeh-opacity, 0.25) * 0.5); }
+}
+
+// ── Content card ────────────────────────────────────────────────────────────
+.not-found-card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  max-width: 560px;
+  width: 100%;
+  text-align: center;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 8px 32px var(--card-shadow);
+  border-radius: 1.25rem;
+  padding: 3rem 2.5rem;
+}
+
+// ── Glowing error code ───────────────────────────────────────────────────────
+.error-code {
+  font-size: clamp(5rem, 18vw, 9rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--accent-primary) 60%, transparent));
+}
+
+// ── Title & subtitle ─────────────────────────────────────────────────────────
+.not-found-title {
+  font-size: clamp(1.3rem, 4vw, 1.75rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.not-found-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+// ── Speech bubble ────────────────────────────────────────────────────────────
+.speech-bubble {
+  width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--card-border);
+  border-radius: 0.875rem;
+  padding: 1rem 1.25rem;
+  text-align: left;
+  position: relative;
+
+  // Pointing-up notch
   &::before {
     content: '';
     position: absolute;
-    inset: 0;
-
-    // Build a conic-gradient with alternating transparent / semi-opaque slivers
-    // to simulate manga speed lines radiating from the centre.
-    $stops: ();
-    @for $i from 0 through ($speed-line-count - 1) {
-      $angle: math.div(360deg, $speed-line-count);
-      $start: $i * $angle;
-      $mid: $start + math.div($angle, 4);
-      $end: $start + math.div($angle, 2);
-      $stops: list.append($stops, transparent #{$start}, comma);
-      $stops: list.append($stops, rgba(0, 0, 0, 0.06) #{$mid}, comma);
-      $stops: list.append($stops, transparent #{$end}, comma);
-    }
-
-    background: conic-gradient(from 0deg at 50% 50%, #{$stops});
-    opacity: 0.7;
-  }
-}
-
-[data-theme='dark'] .speed-lines::before {
-  background-image: conic-gradient(
-    from 0deg at 50% 50%,
-    // Re-use the same pattern with a lighter tint for dark backgrounds.
-    transparent 0deg,
-    rgba(255, 255, 255, 0.05) 7.5deg,
-    transparent 15deg,
-    rgba(255, 255, 255, 0.05) 22.5deg,
-    transparent 30deg,
-    rgba(255, 255, 255, 0.05) 37.5deg,
-    transparent 45deg,
-    rgba(255, 255, 255, 0.05) 52.5deg,
-    transparent 60deg,
-    rgba(255, 255, 255, 0.05) 67.5deg,
-    transparent 75deg,
-    rgba(255, 255, 255, 0.05) 82.5deg,
-    transparent 90deg,
-    rgba(255, 255, 255, 0.05) 97.5deg,
-    transparent 105deg,
-    rgba(255, 255, 255, 0.05) 112.5deg,
-    transparent 120deg,
-    rgba(255, 255, 255, 0.05) 127.5deg,
-    transparent 135deg,
-    rgba(255, 255, 255, 0.05) 142.5deg,
-    transparent 150deg,
-    rgba(255, 255, 255, 0.05) 157.5deg,
-    transparent 165deg,
-    rgba(255, 255, 255, 0.05) 172.5deg,
-    transparent 180deg,
-    rgba(255, 255, 255, 0.05) 187.5deg,
-    transparent 195deg,
-    rgba(255, 255, 255, 0.05) 202.5deg,
-    transparent 210deg,
-    rgba(255, 255, 255, 0.05) 217.5deg,
-    transparent 225deg,
-    rgba(255, 255, 255, 0.05) 232.5deg,
-    transparent 240deg,
-    rgba(255, 255, 255, 0.05) 247.5deg,
-    transparent 255deg,
-    rgba(255, 255, 255, 0.05) 262.5deg,
-    transparent 270deg,
-    rgba(255, 255, 255, 0.05) 277.5deg,
-    transparent 285deg,
-    rgba(255, 255, 255, 0.05) 292.5deg,
-    transparent 300deg,
-    rgba(255, 255, 255, 0.05) 307.5deg,
-    transparent 315deg,
-    rgba(255, 255, 255, 0.05) 322.5deg,
-    transparent 330deg,
-    rgba(255, 255, 255, 0.05) 337.5deg,
-    transparent 345deg,
-    rgba(255, 255, 255, 0.05) 352.5deg,
-    transparent 360deg
-  );
-}
-
-// ── Manga panel grid ────────────────────────────────────────────────────────
-.manga-panel {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  gap: 0;
-  grid-template-areas:
-    'code   character'
-    'quote  action';
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
-  max-width: 760px;
-  width: 100%;
-  border: $panel-border;
-  box-shadow: 8px 8px 0 #1a1a1a;
-
-  @media (max-width: 580px) {
-    grid-template-areas:
-      'code'
-      'character'
-      'quote'
-      'action';
-    grid-template-columns: 1fr;
-  }
-}
-
-[data-theme='dark'] .manga-panel {
-  border-color: #e0e0e0;
-  box-shadow: 8px 8px 0 #e0e0e0;
-}
-
-// ── Individual panels ───────────────────────────────────────────────────────
-.panel {
-  padding: 1.5rem;
-  border: $panel-border;
-
-  [data-theme='dark'] & {
-    border-color: #e0e0e0;
+    top: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 9px solid transparent;
+    border-right: 9px solid transparent;
+    border-bottom: 9px solid var(--card-border);
   }
 
-  &--code {
-    grid-area: code;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: $accent;
-  }
-
-  &--character {
-    grid-area: character;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    overflow: hidden;
-    min-height: 220px;
-    background: var(--bs-secondary-bg, #f8f9fa);
-  }
-
-  &--quote {
-    grid-area: quote;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bs-body-bg, #fff);
-  }
-
-  &--action {
-    grid-area: action;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    background: var(--bs-body-bg, #fff);
-  }
-}
-
-// ── Error code ──────────────────────────────────────────────────────────────
-.error-code {
-  font-size: clamp(4rem, 12vw, 8rem);
-  font-weight: 900;
-  color: #fff;
-  letter-spacing: 0.05em;
-  text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
-  line-height: 1;
-  // Slight italic skew — classic manga impact text style
-  transform: skewX(-6deg);
-  display: block;
-}
-
-// ── Character image ─────────────────────────────────────────────────────────
-.character-img {
-  width: 100%;
-  height: 100%;
-  max-height: 280px;
-  object-fit: cover;
-  object-position: top center;
-  display: block;
-  // Sepia + contrast boost for a classic manga print feel
-  filter: contrast(1.1) saturate(0.9);
-}
-
-// ── Speech bubble ───────────────────────────────────────────────────────────
-.speech-bubble {
-  position: relative;
-  background: #fff;
-  border: 3px solid #1a1a1a;
-  border-radius: 1rem;
-  padding: 1rem 1.25rem;
-  max-width: 280px;
-  text-align: center;
-
-  // Tail pointing right
   &::after {
     content: '';
     position: absolute;
-    right: -18px;
-    top: 50%;
-    transform: translateY(-50%);
-    border: 9px solid transparent;
-    border-left-color: #1a1a1a;
-  }
-
-  &::before {
-    content: '';
-    position: absolute;
-    right: -13px;
-    top: 50%;
-    transform: translateY(-50%);
-    border: 7px solid transparent;
-    border-left-color: #fff;
-    z-index: 1;
-  }
-
-  [data-theme='dark'] & {
-    background: #2a2a2a;
-    border-color: #e0e0e0;
-    color: #f0f0f0;
-
-    &::after {
-      border-left-color: #e0e0e0;
-    }
-
-    &::before {
-      border-left-color: #2a2a2a;
-    }
+    top: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 7px solid var(--bg-secondary);
   }
 }
 
 .character-name {
-  font-family: 'Bangers', 'Impact', cursive, sans-serif;
-  font-size: 1.1rem;
-  letter-spacing: 0.08em;
-  color: $accent;
-  margin-bottom: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+  margin-bottom: 0.35rem;
 }
 
 .character-quote {
-  font-family: 'Segoe UI', Arial, sans-serif;
   font-size: 0.875rem;
   font-style: italic;
-  line-height: 1.45;
+  line-height: 1.5;
+  color: var(--text-primary);
   margin: 0;
-  color: var(--bs-body-color, #212529);
 }
 
-// ── Action section ──────────────────────────────────────────────────────────
-.not-found-title {
-  font-size: clamp(1.4rem, 4vw, 2rem);
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  margin: 0;
-  color: var(--bs-body-color, #212529);
-  text-align: center;
-}
-
-.not-found-subtitle {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  font-size: 0.95rem;
-  margin: 0;
-  color: var(--bs-secondary-color, #6c757d);
-  text-align: center;
-}
-
+// ── CTA button ───────────────────────────────────────────────────────────────
 .btn-go-home {
   display: inline-block;
-  padding: 0.6rem 1.6rem;
-  background: $accent;
+  padding: 0.65rem 2rem;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
   color: #fff;
-  font-family: 'Bangers', 'Impact', cursive, sans-serif;
-  font-size: 1.1rem;
-  letter-spacing: 0.1em;
-  border: 3px solid #1a1a1a;
-  box-shadow: 4px 4px 0 #1a1a1a;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 2rem;
   text-decoration: none;
-  transition: transform 0.12s, box-shadow 0.12s;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent-primary) 40%, transparent);
 
   &:hover,
   &:focus-visible {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0 #1a1a1a;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--accent-primary) 55%, transparent);
     color: #fff;
+    opacity: 0.92;
   }
 
   &:active {
-    transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0 #1a1a1a;
-  }
-
-  [data-theme='dark'] & {
-    border-color: #e0e0e0;
-    box-shadow: 4px 4px 0 #e0e0e0;
-
-    &:hover,
-    &:focus-visible {
-      box-shadow: 6px 6px 0 #e0e0e0;
-    }
-
-    &:active {
-      box-shadow: 2px 2px 0 #e0e0e0;
-    }
+    transform: translateY(0);
   }
 }
+

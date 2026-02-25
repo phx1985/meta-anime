@@ -1,35 +1,31 @@
-<div class="not-found-page" aria-label="{{ 'notFound.ariaLabel' | translate }}">
-  <!-- CSS speed lines generated via ::before pseudo-element on .speed-lines -->
-  <div class="speed-lines" aria-hidden="true"></div>
+<div class="not-found-page" [attr.aria-label]="'notFound.ariaLabel' | translate">
 
-  <div class="manga-panel">
-    <!-- Error code panel -->
-    <div class="panel panel--code" role="presentation">
-      <span class="error-code" aria-hidden="true">404</span>
+  <!-- Bokeh background — mirrors the anime-list page aesthetic -->
+  <div class="bokeh" aria-hidden="true">
+    @for (i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]; track i) {
+      <div class="bokeh__blob"></div>
+    }
+  </div>
+
+  <div class="not-found-card">
+
+    <!-- Glowing error code -->
+    <div class="error-code" aria-hidden="true">404</div>
+
+    <!-- Page title -->
+    <h1 class="not-found-title">{{ 'notFound.title' | translate }}</h1>
+
+    <!-- Randomly picked subtitle sentence -->
+    <p class="not-found-subtitle">{{ subtitleKey() | translate }}</p>
+
+    <!-- Speech bubble — character name + quote -->
+    <div class="speech-bubble" role="status">
+      <p class="character-name">{{ character().nameKey | translate }}</p>
+      <p class="character-quote">{{ character().quoteKey | translate }}</p>
     </div>
 
-    <!-- Character image panel -->
-    <div class="panel panel--character">
-      <img
-        class="character-img"
-        [src]="character().imagePath"
-        [alt]="character().nameKey | translate"
-      />
-    </div>
+    <!-- Back home CTA -->
+    <a class="btn-go-home" routerLink="/">{{ 'notFound.goHome' | translate }}</a>
 
-    <!-- Speech bubble -->
-    <div class="panel panel--quote">
-      <div class="speech-bubble" role="status">
-        <p class="character-name">{{ character().nameKey | translate }}</p>
-        <p class="character-quote">{{ character().quoteKey | translate }}</p>
-      </div>
-    </div>
-
-    <!-- Action panel -->
-    <div class="panel panel--action">
-      <h1 class="not-found-title">{{ 'notFound.title' | translate }}</h1>
-      <p class="not-found-subtitle">{{ 'notFound.subtitle' | translate }}</p>
-      <a class="btn-go-home" routerLink="/">{{ 'notFound.goHome' | translate }}</a>
-    </div>
   </div>
 </div>

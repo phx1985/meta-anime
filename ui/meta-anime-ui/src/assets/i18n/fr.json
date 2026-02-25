@@ -519,7 +519,18 @@
   "notFound": {
     "ariaLabel": "404 – Page introuvable",
     "title": "Page Introuvable !",
-    "subtitle": "Cette page s'est égarée dans une autre dimension.",
+    "subtitle": {
+      "dimension":    "Cette page s'est égarée dans une autre dimension.",
+      "trainingArc":  "Cette page est en arc d'entraînement — elle reviendra plus forte.",
+      "plotTwist":    "Coup de théâtre : cette page n'existe pas.",
+      "houdini":      "Cette page a fait un tour de Houdini.",
+      "void":         "Cette URL mène au vide. Le vide vous observe en retour.",
+      "kamehameha":   "Chargement échoué… essayez peut-être un Kamehameha ?",
+      "timeline":     "Notre serveur a fouillé toutes les timelines. Rien.",
+      "questGone":    "Erreur 404 : la page est partie en quête et n'est jamais revenue.",
+      "uncharted":    "Vous avez découvert un territoire inexploré.",
+      "endOfInternet":"Vous avez atteint la fin d'internet. Sans rire. Mais cette page a disparu."
+    },
     "goHome": "Retour à l'accueil",
     "characters": {
       "goku": {
