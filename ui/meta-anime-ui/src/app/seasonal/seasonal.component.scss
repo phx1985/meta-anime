@@ -794,12 +794,21 @@
   > .seasonal-grid__cell {
     min-height: 0;
   }
+}
 
-  // Applied dynamically during FLIP animations only (via JS); removed afterwards
-  // to avoid holding GPU composite layers permanently.
-  > .seasonal-grid__cell.flip-active {
-    will-change: transform;
-  }
+// ─── Result count + elapsed time (matching anime-list style) ────────────────
+
+.seasonal-result-count {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.seasonal-elapsed-time {
+  margin-left: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--accent-primary);
+  opacity: 0.75;
 }
 
 // ─── Loading / error / empty states ─────────────────────────────────────────

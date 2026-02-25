@@ -123,7 +123,8 @@
       "noFilterActive": "No filter active"
     },
     "sonarrAlreadyInLibrary": "Already in Sonarr",
-    "partiallyTracked": "Partially tracked — add to more providers"
+    "partiallyTracked": "Partially tracked — add to more providers",
+    "resultCount": "{{count}} result(s)"
   },
   "animeList": {
     "title": "Anime List",

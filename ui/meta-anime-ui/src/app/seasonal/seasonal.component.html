@@ -280,9 +280,15 @@
 
     <!-- Anime grid -->
     @if (!loading() && filteredAnimes().length > 0) {
+      <p class="seasonal-result-count mb-2">
+        {{ 'seasonal.resultCount' | translate: { count: filteredAnimes().length } }}
+        @if (fetchElapsedMs() !== null) {
+          <span class="seasonal-elapsed-time">({{ fetchElapsedMs() }}ms)</span>
+        }
+      </p>
       <div class="seasonal-grid" [@gridAnimation]="filterVersion()">
         @for (anime of filteredAnimes(); track anime.malId) {
-          <div class="seasonal-grid__cell" #cell [attr.data-mal-id]="anime.malId">
+          <div class="seasonal-grid__cell">
             <app-seasonal-card [anime]="anime" [activeGenres]="filterGenre()" />
           </div>
         }

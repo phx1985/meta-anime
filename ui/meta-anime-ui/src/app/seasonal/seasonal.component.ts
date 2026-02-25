@@ -1,18 +1,15 @@
 import {
   Component,
   DestroyRef,
-  ElementRef,
   HostListener,
   inject,
   signal,
   computed,
-  ViewChildren,
-  QueryList,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { trigger, state, style, animate, transition, query, stagger, group } from '@angular/animations';
+import { trigger, state, style, animate, transition, query, stagger } from '@angular/animations';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
@@ -53,13 +50,6 @@ export const SEASONAL_SORT_OPTIONS = [
   { value: 'startdate', labelKey: 'seasonal.filter.sort.startDate' },
 ];
 
-/** Duration of the simultaneous leave (fall) animation (ms). */
-const FLIP_LEAVE_MS      = 300;
-/** Delay before FLIP runs = leave duration + small reflow buffer (ms). */
-const FLIP_BASE_DELAY_MS = FLIP_LEAVE_MS + 50;
-/** Duration of the FLIP slide transition (ms). */
-const FLIP_DURATION_MS   = 380;
-
 /** Returns the current season name based on the month (1–12). */
 function getCurrentSeason(month: number): SeasonName {
   if (month <= 3) return 'winter';
@@ -86,24 +76,11 @@ function getCurrentSeason(month: number): SeasonName {
     ]),
     trigger('gridAnimation', [
       transition('* => *', [
-        group([
-          // All filtered-out cards fall at exactly the same time — no stagger.
-          // Simultaneous fall keeps the total leave phase short (FLIP_LEAVE_MS)
-          // so the remaining cards appear quickly instead of after a long gap.
-          query(':leave', [
-            animate(`${FLIP_LEAVE_MS}ms cubic-bezier(0.4, 0, 0.9, 0.6)`,
-              style({ opacity: 0, transform: 'translateY(56px) scale(0.84)', filter: 'blur(3px)' })
-            ),
-          ], { optional: true }),
-          // Pre-hide entering cards (blur + fade) while the fall plays.
-          // The blur start-state makes the unblur reveal feel soft.
-          query(':enter', [
-            style({ opacity: 0, transform: 'translateY(-6px) scale(0.97)', filter: 'blur(8px)' }),
-          ], { optional: true }),
-        ]),
-        // After the fall is done, entering cards unblur and rise in together.
-        // A gentle stagger (12ms) avoids a single wall-of-cards pop-in.
+        // Cards entering (new in filtered/sorted list or fresh load) blur-rise in.
+        // This is the same animation used on first load: fade from opacity 0 +
+        // slight Y offset + blur, then smooth rise with a gentle stagger.
         query(':enter', [
+          style({ opacity: 0, transform: 'translateY(-6px) scale(0.97)', filter: 'blur(8px)' }),
           stagger(12, [
             animate('360ms cubic-bezier(0.4, 0, 0.2, 1)',
               style({ opacity: 1, transform: 'none', filter: 'blur(0px)' })
@@ -120,119 +97,6 @@ export class SeasonalComponent {
   private presetService     = inject(FilterPresetService);
   private destroyRef        = inject(DestroyRef);
   private translateService  = inject(TranslateService);
-
-  // ── FLIP animation ────────────────────────────────────────────────────────
-  @ViewChildren('cell') private cellRefs!: QueryList<ElementRef<HTMLElement>>;
-  private readonly _posSnapshot = new Map<number, DOMRect>();
-  private _flipTimeoutId: ReturnType<typeof setTimeout> | null = null;
-
-  /**
-   * Captures the current rendered position of every grid cell, keyed by malId.
-   * Must be called *before* any signal changes so Angular hasn't yet re-rendered.
-   */
-  private _snapshotPositions(): void {
-    this._posSnapshot.clear();
-    if (!this.cellRefs) return;
-    this.cellRefs.forEach(ref => {
-      const el = ref.nativeElement;
-      const id = parseInt(el.dataset['malId'] ?? '', 10);
-      if (!isNaN(id)) {
-        // Hint the browser to promote this cell to a composite layer now,
-        // so the GPU is ready before the FLIP transition starts.
-        el.classList.add('flip-active');
-        this._posSnapshot.set(id, el.getBoundingClientRect());
-      }
-    });
-  }
-
-  /**
-   * Snapshot current positions then schedule a FLIP after Angular has re-rendered.
-   * For pure sort changes (no cards leave) the FLIP runs in the very next rAF.
-   * For filter changes some cards fall away first; the FLIP is delayed until the
-   * staggered fall animation has finished so the grid has fully reflowed.
-   */
-  private _beginFilterChange(): void {
-    if (this._flipTimeoutId !== null) {
-      clearTimeout(this._flipTimeoutId);
-      this._flipTimeoutId = null;
-    }
-    this._snapshotPositions();
-
-    // Defer leave-count computation: signals update synchronously in the current
-    // call stack so by the time this microtask runs filteredAnimes() is fresh.
-    Promise.resolve().then(() => {
-      const prevIds = new Set(this._posSnapshot.keys());
-      const newIds  = new Set(this.filteredAnimes().map(a => a.malId));
-      const leaving = [...prevIds].filter(id => !newIds.has(id.toString())).length;
-      // Delay matches the leave-fall duration so FLIP fires after the grid reflows.
-      const delay = leaving > 0 ? FLIP_BASE_DELAY_MS : 0;
-
-      const run = () => requestAnimationFrame(() => this._applyFlip());
-      if (delay > 0) {
-        this._flipTimeoutId = setTimeout(run, delay);
-      } else {
-        run();
-      }
-    });
-  }
-
-  /**
-   * FLIP — play phase.
-   * For each cell that was rendered before AND after the filter change, compute
-   * the translation delta (old grid position → new grid position) and apply a
-   * smooth CSS transition so the card slides rather than snapping.
-   * Newly entering cards (no snapshot entry) are left untouched — Angular's
-   * @gridAnimation rise animation handles them.
-   */
-  private _applyFlip(): void {
-    this._flipTimeoutId = null;
-    if (this._posSnapshot.size === 0 || !this.cellRefs) return;
-
-    this.cellRefs.forEach(ref => {
-      const el = ref.nativeElement;
-      const id = parseInt(el.dataset['malId'] ?? '', 10);
-      const oldRect = this._posSnapshot.get(id);
-      if (!oldRect) return; // `:enter` card — Angular animation handles it
-
-      const newRect = el.getBoundingClientRect();
-      const dx = oldRect.left - newRect.left;
-      const dy = oldRect.top  - newRect.top;
-      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
-        // Position unchanged — remove GPU hint; no transition needed.
-        el.classList.remove('flip-active');
-        return;
-      }
-
-      // Invert: jump the element back to its perceived old position (no transition).
-      // The explicit `transition: none` ensures no easing runs during the jump.
-      el.style.transition = 'none';
-      el.style.transform  = `translate(${dx}px, ${dy}px)`;
-      // Forcing a layout read (getBoundingClientRect) flushes pending style
-      // recalculations so the browser commits the "transition: none" +
-      // the translate transform BEFORE we switch the transition back on.
-      // Without this flush the browser would batch the two style changes and
-      // never see an intermediate state to animate FROM.
-      el.getBoundingClientRect();
-
-      // Play: animate from the old position to the natural new position.
-      el.style.transition = `transform ${FLIP_DURATION_MS}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
-      el.style.transform  = '';
-
-      // Clean up inline styles once the transition finishes.
-      // A timeout fallback ensures cleanup even if the transition is interrupted
-      // (e.g. element removed from the DOM before transitionend fires).
-      const safeCleanup = () => {
-        el.style.transition = '';
-        el.classList.remove('flip-active');
-        el.removeEventListener('transitionend', safeCleanup);
-        clearTimeout(fallbackId);
-      };
-      const fallbackId = setTimeout(safeCleanup, FLIP_DURATION_MS + 100);
-      el.addEventListener('transitionend', safeCleanup);
-    });
-
-    this._posSnapshot.clear();
-  }
 
   private readonly _now        = new Date();
   private readonly _maxYear    = this._now.getFullYear();
@@ -258,6 +122,9 @@ export class SeasonalComponent {
   animes  = signal<SeasonalAnimeItem[]>([]);
   loading = signal(false);
   error   = signal(false);
+  /** Elapsed time (ms) for the last successful seasonal data fetch. */
+  fetchElapsedMs = signal<number | null>(null);
+  private fetchStartTime = 0;
 
   // ── NSFW ──────────────────────────────────────────────────────────────────
   showNsfw = signal(true);
@@ -457,7 +324,6 @@ export class SeasonalComponent {
   }
 
   toggleGenre(genre: string, event: MouseEvent): void {
-    this._beginFilterChange();
     event.stopPropagation();
     this.filterGenre.update(v =>
       v.includes(genre) ? v.filter(g => g !== genre) : [...v, genre]
@@ -467,7 +333,6 @@ export class SeasonalComponent {
   }
 
   clearGenres(event: MouseEvent): void {
-    this._beginFilterChange();
     event.stopPropagation();
     this.filterGenre.set([]);
     this.filterVersion.update(v => v + 1);
@@ -476,7 +341,6 @@ export class SeasonalComponent {
   // ── MAL status pills ──────────────────────────────────────────────────────
 
   toggleMalStatus(status: string): void {
-    this._beginFilterChange();
     this.filterMalStatus.update(current => {
       if (current.includes(status)) {
         // Deselect: remove this pill
@@ -496,14 +360,12 @@ export class SeasonalComponent {
   // ── Sort ──────────────────────────────────────────────────────────────────
 
   setGenreOperator(op: 'or' | 'and', event: MouseEvent): void {
-    this._beginFilterChange();
     event.stopPropagation();
     this.genreOperator.set(op);
     this.filterVersion.update(v => v + 1);
   }
 
   setSortBy(value: string): void {
-    this._beginFilterChange();
     this.sortBy.set(value);
     this.filterVersion.update(v => v + 1);
   }
@@ -518,7 +380,6 @@ export class SeasonalComponent {
   }
 
   toggleSortOrder(): void {
-    this._beginFilterChange();
     this.sortOrder.update(o => o === 'asc' ? 'desc' : 'asc');
     this.filterVersion.update(v => v + 1);
   }
@@ -526,7 +387,6 @@ export class SeasonalComponent {
   // ── Reset ─────────────────────────────────────────────────────────────────
 
   resetFilters(): void {
-    this._beginFilterChange();
     this.filterGenre.set([]);
     this.genreOperator.set('or');
     this.filterMalStatus.set([]);
@@ -540,7 +400,6 @@ export class SeasonalComponent {
 
   applyPreset(preset: SeasonalFilterPreset): void {
     const f = preset.filters;
-    this._beginFilterChange();
     this.filterGenre.set(f.genre          ?? []);
     this.genreOperator.set(f.genreOperator ?? 'or');
     this.filterMalStatus.set(f.malStatus  ?? []);
@@ -598,21 +457,24 @@ export class SeasonalComponent {
     const season = this.selectedSeason();
 
     this.error.set(false);
+    this.fetchElapsedMs.set(null);
 
     // On the very first load (no data yet) show the loading spinner.
     // For subsequent season/year changes keep the existing animes visible so
-    // the @gridAnimation fall+rise plays — making the animation homogeneous
+    // the @gridAnimation blur-rise plays — making the animation homogeneous
     // between filter changes and season changes.
     if (this.animes().length === 0) {
       this.loading.set(true);
     }
 
+    this.fetchStartTime = Date.now();
     this.animeService.getSeasonalAnimes(year, season)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: data => {
           this.animes.set(data);
           this.loading.set(false);
+          this.fetchElapsedMs.set(Date.now() - this.fetchStartTime);
           this.filterVersion.update(v => v + 1);
         },
         error: () => {

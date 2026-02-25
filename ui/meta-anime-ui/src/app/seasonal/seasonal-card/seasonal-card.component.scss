@@ -637,6 +637,7 @@
 .dialog__body {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch; // smooth scroll on iOS
   overscroll-behavior: contain;
   padding: 1rem 1.25rem;
   display: flex;
@@ -825,6 +826,12 @@
   background: var(--bg-secondary);
   scrollbar-width: thin;
   scrollbar-color: var(--card-border) transparent;
+
+  // On small mobile screens, limit height so the options panel (root folder +
+  // quality profile) is always visible above the fold of the dialog body.
+  @media (max-width: 480px) {
+    max-height: 140px;
+  }
 }
 
 .result-item {

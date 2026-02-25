@@ -480,9 +480,9 @@
   &--warning { border-left-color: #f59e0b; }
   &--error   { border-left-color: #ef4444; }
 
-  // Slide left + fade on dismiss
+  // Slide right + fade on dismiss
   &--leaving {
-    animation: toastSlideToLeft 0.32s ease-in forwards;
+    animation: toastSlideToRight 0.32s ease-in forwards;
     pointer-events: none;
   }
 }
@@ -492,9 +492,9 @@
   to   { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes toastSlideToLeft {
+@keyframes toastSlideToRight {
   from { opacity: 1; transform: translateX(0); }
-  to   { opacity: 0; transform: translateX(-60px); }
+  to   { opacity: 0; transform: translateX(60px); }
 }
 
 .toast-item-icon {
