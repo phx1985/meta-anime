@@ -7,7 +7,7 @@ Meta Anime is a full-stack application (Angular UI + ASP.NET Core API) that aggr
 * **Multi-Source Aggregation** — fetches data from Sonarr, Plex, and MyAnimeList
 * **Intelligent Matching** — cross-references anime using external IDs (Tvdb, Imdb, Tmdb) and Kometa mapping files
 * **Advanced Filtering** — filter by genre, theme, and demographic with an elegant popup picker; selected filters displayed as pills on each card
-* **Genre / Theme / Demographic Pills** — at-a-glance tags on every anime card, with NSFW content visually distinguished
+* **Genre / Theme / Demographic Pills** — at-a-glance classification tags displayed directly on every anime card
 * **Background Sync** — scheduled Hangfire jobs keep metadata up to date
 * **Aspire Orchestration** — one command starts PostgreSQL, the API, and the Angular UI with live reload
 * **Developer Dashboard** — real-time logs, traces, and metrics via the Aspire Dashboard
