@@ -14,7 +14,7 @@ namespace MetaAnime.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/settings")]
-public class SettingsController(IMediator mediator) : ControllerBase
+public class SettingsController(IMediator mediator, IRecurringJobManager recurringJobManager) : ControllerBase
 {
     /// <summary>
     /// Returns all settings definitions with their current values.
@@ -65,8 +65,7 @@ public class SettingsController(IMediator mediator) : ControllerBase
         // Re-schedule the sync job whenever the sync interval setting changes
         if (key == SettingsKeys.AppSyncInterval)
         {
-            var jobManager = HttpContext.RequestServices.GetRequiredService<IRecurringJobManager>();
-            await AnimeSyncJob.ScheduleAsync(jobManager, HttpContext.RequestServices);
+            await AnimeSyncJob.ScheduleAsync(recurringJobManager, HttpContext.RequestServices);
         }
 
         return Ok(result.Value);

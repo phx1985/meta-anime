@@ -9,7 +9,7 @@ import {
   Tooltip, Legend, DoughnutController, BarController,
   ChartConfiguration
 } from 'chart.js';
-import ChartDataLabels from 'chartjs-plugin-datalabels';
+import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
 import { ThemeService } from '../services/theme.service';
 
 Chart.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend, DoughnutController, BarController, ChartDataLabels);
@@ -148,8 +148,7 @@ export class GenreChartComponent implements OnChanges, AfterViewInit, OnDestroy 
                 return `${pct}%`;
               },
               // Hide labels for very small slices to avoid clutter
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              display: (ctx: any) => {
+              display: (ctx: Context) => {
                 const pct = total > 0 ? (ctx.dataset.data[ctx.dataIndex] as number) / total : 0;
                 return pct > 0.04;
               }

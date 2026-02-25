@@ -254,7 +254,7 @@ public class AnimeMediatorService(
 
         var result = data;
 
-        if (!string.IsNullOrWhiteSpace(filters.Title))
+        if (!string.IsNullOrWhiteSpace(filters?.Title))
         {
             var query = filters.Title;
             var threshold = (titleSimilarityThreshold ?? 80) / 100.0;
@@ -265,16 +265,17 @@ public class AnimeMediatorService(
                 ComputeWordLevelFuzzySimilarity(a.Title, query) >= threshold);
         }
 
-        if (!string.IsNullOrWhiteSpace(filters.Source))
+        if (!string.IsNullOrWhiteSpace(filters?.Source))
         {
+            var source = filters.Source;
             result = result.Where(a =>
-                (filters.Source.Equals("plex", StringComparison.OrdinalIgnoreCase) && a.PlexAnimes?.Any() == true) ||
-                (filters.Source.Equals("mal", StringComparison.OrdinalIgnoreCase) && a.MalAnimes?.Any() == true) ||
-                (filters.Source.Equals("sonarr", StringComparison.OrdinalIgnoreCase) && a.SonarrAnimes?.Any() == true)
+                (source.Equals("plex", StringComparison.OrdinalIgnoreCase) && a.PlexAnimes?.Any() == true) ||
+                (source.Equals("mal", StringComparison.OrdinalIgnoreCase) && a.MalAnimes?.Any() == true) ||
+                (source.Equals("sonarr", StringComparison.OrdinalIgnoreCase) && a.SonarrAnimes?.Any() == true)
             );
         }
 
-        if (filters.Status?.Length > 0)
+        if (filters?.Status?.Length > 0)
         {
             result = result.Where(a =>
                 filters.Status.Any(s =>
@@ -282,7 +283,7 @@ public class AnimeMediatorService(
                         m.ViewState.Equals(s, StringComparison.OrdinalIgnoreCase)) == true));
         }
 
-        if (filters.Genre?.Length > 0)
+        if (filters?.Genre?.Length > 0)
         {
             // Use a HashSet for O(1) genre lookups instead of O(n) inner Any()
             var genreSet = new HashSet<string>(filters.Genre, StringComparer.OrdinalIgnoreCase);
@@ -1014,7 +1015,7 @@ public class AnimeMediatorService(
                 string? malViewState = sources.MalId != null && malViewStateById.TryGetValue(sources.MalId, out var vs) ? vs : null;
                 return new SeasonalAnimeResponse(
                     MalId: malId,
-                    Title: anime.Title,
+                    Title: anime.Title ?? string.Empty,
                     Synopsis: anime.Synopsis,
                     Genres: anime.Genres?.Select(g => g.Name).ToArray(),
                     CoverImageUrl: anime.MainPicture?.Large ?? anime.MainPicture?.Medium,
