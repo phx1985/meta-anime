@@ -9,7 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { trigger, state, style, animate, transition, query, stagger } from '@angular/animations';
+import { trigger, state, style, animate, transition } from '@angular/animations';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
@@ -74,20 +74,18 @@ function getCurrentSeason(month: number): SeasonName {
       transition('open => closed', [style({ overflow: 'hidden' }), animate('320ms cubic-bezier(0.4, 0, 0.2, 1)')]),
       transition('closed => open', [style({ overflow: 'hidden' }), animate('320ms cubic-bezier(0.4, 0, 0.2, 1)')]),
     ]),
-    trigger('gridAnimation', [
+    // Per-card trigger: transition('* => *') fires on EVERY cell whenever
+    // filterVersion changes — including for "staying" items that Angular's
+    // parent query(:enter) would miss (the root cause of the OR→AND gap).
+    // The delay param is set to $index * 12ms in the template, giving a
+    // natural stagger without relying on the stagger() helper.
+    trigger('cardEnter', [
       transition('* => *', [
-        // Cards entering (new in filtered/sorted list or fresh load) blur-rise in.
-        // This is the same animation used on first load: fade from opacity 0 +
-        // slight Y offset + blur, then smooth rise with a gentle stagger.
-        query(':enter', [
-          style({ opacity: 0, transform: 'translateY(-6px) scale(0.97)', filter: 'blur(8px)' }),
-          stagger(12, [
-            animate('360ms cubic-bezier(0.4, 0, 0.2, 1)',
-              style({ opacity: 1, transform: 'none', filter: 'blur(0px)' })
-            ),
-          ]),
-        ], { optional: true }),
-      ]),
+        style({ opacity: 0, transform: 'translateY(-6px) scale(0.97)', filter: 'blur(8px)' }),
+        animate('360ms {{ delay }}ms cubic-bezier(0.4, 0, 0.2, 1)',
+          style({ opacity: 1, transform: 'none', filter: 'blur(0px)' })
+        ),
+      ], { params: { delay: 0 } }),
     ]),
   ],
 })
