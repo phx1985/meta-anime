@@ -1,0 +1,179 @@
+<!-- ── Overlay backdrop ─────────────────────────────────────────────────── -->
+<div
+  class="lucky-overlay"
+  [class.lucky-overlay--reduced-motion]="prefersReducedMotion"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-label]="'luckyPick.ariaLabel' | translate"
+  (click)="close()"
+>
+  <div class="lucky-container" (click)="$event.stopPropagation()">
+
+    <!-- ── Close button ──────────────────────────────────────────────────── -->
+    <button
+      class="lucky-close"
+      type="button"
+      (click)="close()"
+      [attr.aria-label]="'luckyPick.close' | translate"
+    >
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <!-- ── Spinning box ──────────────────────────────────────────────────── -->
+    @if (isSpinning()) {
+      <div class="lucky-spin-scene" aria-hidden="true">
+        <div class="lucky-cube" [class.lucky-cube--reduced]="prefersReducedMotion">
+          <div class="lucky-cube__face lucky-cube__face--front">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <div class="lucky-cube__face lucky-cube__face--back">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <div class="lucky-cube__face lucky-cube__face--left">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div class="lucky-cube__face lucky-cube__face--right">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </div>
+          <div class="lucky-cube__face lucky-cube__face--top">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div class="lucky-cube__face lucky-cube__face--bottom">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+        </div>
+        <p class="lucky-spin-label">{{ 'luckyPick.searching' | translate }}</p>
+      </div>
+    }
+
+    <!-- ── Result card ───────────────────────────────────────────────────── -->
+    @if (isResult()) {
+      <div class="lucky-result" role="region" [attr.aria-label]="'luckyPick.resultAriaLabel' | translate">
+        @if (coverImageUrl) {
+          <div class="lucky-result__backdrop" aria-hidden="true">
+            <img [src]="coverImageUrl" alt="" class="lucky-result__backdrop-img" />
+          </div>
+        }
+        <div class="lucky-result__body">
+          @if (coverImageUrl) {
+            <img [src]="coverImageUrl" [alt]="title" class="lucky-result__cover" />
+          } @else {
+            <div class="lucky-result__cover lucky-result__cover--placeholder">
+              {{ title.charAt(0) }}
+            </div>
+          }
+          <div class="lucky-result__info">
+            <h2 class="lucky-result__title">{{ title }}</h2>
+            @if (synopsis) {
+              <p class="lucky-result__synopsis">{{ synopsis }}</p>
+            }
+            <div class="lucky-result__actions">
+              @if (plexUrl) {
+                <a
+                  [href]="plexUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="lucky-btn lucky-btn--primary"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                  </svg>
+                  {{ 'luckyPick.watchNow' | translate }}
+                </a>
+              }
+              @if (malUrl) {
+                <a
+                  [href]="malUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="lucky-btn lucky-btn--secondary"
+                >
+                  {{ 'luckyPick.viewDetails' | translate }}
+                </a>
+              }
+              <button
+                type="button"
+                class="lucky-btn lucky-btn--ghost"
+                (click)="tryAgain()"
+              >
+                {{ 'luckyPick.tryAgain' | translate }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ── No-match state ────────────────────────────────────────────────── -->
+    @if (isNoMatch()) {
+      <div class="lucky-message" role="status">
+        <div class="lucky-message__icon" aria-hidden="true">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            <line x1="8" y1="11" x2="14" y2="11"/>
+          </svg>
+        </div>
+        <h2 class="lucky-message__title">{{ 'luckyPick.noMatch.title' | translate }}</h2>
+        <p class="lucky-message__desc">{{ 'luckyPick.noMatch.desc' | translate }}</p>
+        <div class="lucky-message__actions">
+          <a
+            routerLink="/settings"
+            fragment="app-preferences"
+            class="lucky-btn lucky-btn--secondary"
+            (click)="close()"
+          >
+            {{ 'luckyPick.noMatch.adjustSettings' | translate }}
+          </a>
+          <button type="button" class="lucky-btn lucky-btn--ghost" (click)="close()">
+            {{ 'luckyPick.close' | translate }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- ── Error state ───────────────────────────────────────────────────── -->
+    @if (isError()) {
+      <div class="lucky-message" role="alert">
+        <div class="lucky-message__icon lucky-message__icon--error" aria-hidden="true">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <h2 class="lucky-message__title">{{ 'luckyPick.error.title' | translate }}</h2>
+        <p class="lucky-message__desc">{{ 'luckyPick.error.desc' | translate }}</p>
+        <div class="lucky-message__actions">
+          <button type="button" class="lucky-btn lucky-btn--primary" (click)="tryAgain()">
+            {{ 'luckyPick.error.retry' | translate }}
+          </button>
+          <button type="button" class="lucky-btn lucky-btn--ghost" (click)="close()">
+            {{ 'luckyPick.close' | translate }}
+          </button>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

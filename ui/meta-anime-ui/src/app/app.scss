@@ -259,6 +259,32 @@
   }
 }
 
+// ── Lucky Pick button ──────────────────────────────────────────────────────────
+.btn-lucky {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--navbar-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    background: rgba(108, 99, 255, 0.06);
+    outline: none;
+  }
+}
+
 .notif-badge {
   position: absolute;
   bottom: 1px;

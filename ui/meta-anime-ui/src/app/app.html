@@ -92,6 +92,29 @@
 
         <span class="navbar-divider" aria-hidden="true"></span>
 
+        <!-- ── I'm Feeling Lucky button ── -->
+        <button
+          class="btn-lucky"
+          type="button"
+          (click)="openLuckyPick()"
+          [attr.aria-label]="'luckyPick.buttonLabel' | translate"
+          [title]="'luckyPick.buttonLabel' | translate"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+          </svg>
+        </button>
+
+        <span class="navbar-divider" aria-hidden="true"></span>
+
         <!-- ── Notification bell ── -->
         <div class="notif-wrapper" (click)="$event.stopPropagation()">
           <button
@@ -460,3 +483,8 @@
     </div>
   }
 </div>
+
+<!-- ── Lucky Pick overlay ────────────────────────────────────────────────── -->
+@if (luckyPickOpen()) {
+  <app-lucky-pick (closed)="closeLuckyPick()" />
+}

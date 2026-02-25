@@ -471,6 +471,111 @@
                       </div>
                     </div>
                   </div>
+                  <!-- ── Lucky Pick preferences ─────────────────────────────── -->
+                  <div id="app-preferences">
+                  <div
+                    class="setting-row"
+                    [class.setting-row--saved]="luckyPrefsSaved()"
+                  >
+                    <div class="setting-info">
+                      <div class="setting-name">
+                        {{ 'userPreferences.luckyPick.onlyFinished.name' | translate }}
+                      </div>
+                      <div class="setting-desc">
+                        {{ 'userPreferences.luckyPick.onlyFinished.desc' | translate }}
+                      </div>
+                    </div>
+                    <div class="setting-value-area">
+                      <div class="display-row">
+                        <button
+                          type="button"
+                          class="toggle-switch"
+                          [class.toggle-switch--on]="userPrefs.luckyOnlyFinished()"
+                          (click)="toggleLuckyOnlyFinished()"
+                          role="switch"
+                          [attr.aria-checked]="userPrefs.luckyOnlyFinished()"
+                          [attr.aria-label]="'userPreferences.luckyPick.onlyFinished.name' | translate"
+                        >
+                          <span class="toggle-thumb"></span>
+                        </button>
+                        <span class="toggle-label">
+                          {{
+                            (userPrefs.luckyOnlyFinished()
+                              ? 'settings.toggle.on'
+                              : 'settings.toggle.off'
+                            ) | translate
+                          }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="setting-row" [class.setting-row--saved]="luckyPrefsSaved()">
+                    <div class="setting-info">
+                      <div class="setting-name">
+                        {{ 'userPreferences.luckyPick.onlyPlanToWatch.name' | translate }}
+                      </div>
+                      <div class="setting-desc">
+                        {{ 'userPreferences.luckyPick.onlyPlanToWatch.desc' | translate }}
+                      </div>
+                    </div>
+                    <div class="setting-value-area">
+                      <div class="display-row">
+                        <button
+                          type="button"
+                          class="toggle-switch"
+                          [class.toggle-switch--on]="userPrefs.luckyOnlyPlanToWatch()"
+                          (click)="toggleLuckyOnlyPlanToWatch()"
+                          role="switch"
+                          [attr.aria-checked]="userPrefs.luckyOnlyPlanToWatch()"
+                          [attr.aria-label]="'userPreferences.luckyPick.onlyPlanToWatch.name' | translate"
+                        >
+                          <span class="toggle-thumb"></span>
+                        </button>
+                        <span class="toggle-label">
+                          {{
+                            (userPrefs.luckyOnlyPlanToWatch()
+                              ? 'settings.toggle.on'
+                              : 'settings.toggle.off'
+                            ) | translate
+                          }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="setting-row" [class.setting-row--saved]="luckyPrefsSaved()">
+                    <div class="setting-info">
+                      <div class="setting-name">
+                        {{ 'userPreferences.luckyPick.onlyWithFiles.name' | translate }}
+                      </div>
+                      <div class="setting-desc">
+                        {{ 'userPreferences.luckyPick.onlyWithFiles.desc' | translate }}
+                      </div>
+                    </div>
+                    <div class="setting-value-area">
+                      <div class="display-row">
+                        <button
+                          type="button"
+                          class="toggle-switch"
+                          [class.toggle-switch--on]="userPrefs.luckyOnlyWithFiles()"
+                          (click)="toggleLuckyOnlyWithFiles()"
+                          role="switch"
+                          [attr.aria-checked]="userPrefs.luckyOnlyWithFiles()"
+                          [attr.aria-label]="'userPreferences.luckyPick.onlyWithFiles.name' | translate"
+                        >
+                          <span class="toggle-thumb"></span>
+                        </button>
+                        <span class="toggle-label">
+                          {{
+                            (userPrefs.luckyOnlyWithFiles()
+                              ? 'settings.toggle.on'
+                              : 'settings.toggle.off'
+                            ) | translate
+                          }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  </div>
                 }
               </div>
             </div>

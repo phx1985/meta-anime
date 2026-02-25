@@ -583,6 +583,40 @@
     "autoApplyLastFilters": {
       "name": "Réappliquer automatiquement les derniers filtres",
       "desc": "Lorsqu'activé, vos derniers filtres de recherche anime seront automatiquement restaurés et appliqués à l'ouverture de la page Liste des Animes."
+    },
+    "luckyPick": {
+      "onlyFinished": {
+        "name": "Je me sens chanceux — Uniquement les animes terminés",
+        "desc": "Lorsqu'activé, la sélection surprise choisit uniquement parmi les séries dont la diffusion est terminée."
+      },
+      "onlyPlanToWatch": {
+        "name": "Je me sens chanceux — Uniquement À regarder",
+        "desc": "Lorsqu'activé, la sélection surprise choisit uniquement parmi les animes de votre liste « À regarder »."
+      },
+      "onlyWithFiles": {
+        "name": "Je me sens chanceux — Uniquement avec fichiers locaux",
+        "desc": "Lorsqu'activé, la sélection surprise choisit uniquement les animes disposant de fichiers locaux dans Sonarr."
+      }
+    }
+  },
+  "luckyPick": {
+    "buttonLabel": "Je me sens chanceux",
+    "ariaLabel": "Superposition de sélection surprise d'anime",
+    "resultAriaLabel": "Anime recommandé",
+    "searching": "Recherche de votre prochain anime…",
+    "watchNow": "Regarder maintenant",
+    "viewDetails": "Voir sur MAL",
+    "tryAgain": "Réessayer",
+    "close": "Fermer",
+    "noMatch": {
+      "title": "Aucun résultat",
+      "desc": "Aucun de vos animes ne correspond aux paramètres de sélection surprise actuels.",
+      "adjustSettings": "Ajuster les paramètres"
+    },
+    "error": {
+      "title": "Connexion perdue",
+      "desc": "Impossible de joindre le serveur. Veuillez vérifier votre connexion.",
+      "retry": "Réessayer"
     }
   }
 }

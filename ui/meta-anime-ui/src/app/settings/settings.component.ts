@@ -72,6 +72,10 @@ export class SettingsComponent {
   autoApplySaved = signal(false);
   private autoApplySavedTimer: ReturnType<typeof setTimeout> | null = null;
 
+  // ── Lucky Pick preferences flash ──────────────────────────────────────────
+  luckyPrefsSaved = signal(false);
+  private luckyPrefsSavedTimer: ReturnType<typeof setTimeout> | null = null;
+
   // ── Sync state (driven by SignalR) ────────────────────────────────────────
   syncing = signal(false);
   lastSyncDate = signal<string | null>(null);
@@ -392,6 +396,30 @@ export class SettingsComponent {
     if (this.autoApplySavedTimer) clearTimeout(this.autoApplySavedTimer);
     this.autoApplySaved.set(true);
     this.autoApplySavedTimer = setTimeout(() => this.autoApplySaved.set(false), 2000);
+  }
+
+  /** Toggle Lucky Pick "only finished" preference. */
+  toggleLuckyOnlyFinished(): void {
+    this.userPrefs.setLuckyOnlyFinished(!this.userPrefs.luckyOnlyFinished());
+    this.flashLuckyPrefs();
+  }
+
+  /** Toggle Lucky Pick "only plan to watch" preference. */
+  toggleLuckyOnlyPlanToWatch(): void {
+    this.userPrefs.setLuckyOnlyPlanToWatch(!this.userPrefs.luckyOnlyPlanToWatch());
+    this.flashLuckyPrefs();
+  }
+
+  /** Toggle Lucky Pick "only with files" preference. */
+  toggleLuckyOnlyWithFiles(): void {
+    this.userPrefs.setLuckyOnlyWithFiles(!this.userPrefs.luckyOnlyWithFiles());
+    this.flashLuckyPrefs();
+  }
+
+  private flashLuckyPrefs(): void {
+    if (this.luckyPrefsSavedTimer) clearTimeout(this.luckyPrefsSavedTimer);
+    this.luckyPrefsSaved.set(true);
+    this.luckyPrefsSavedTimer = setTimeout(() => this.luckyPrefsSaved.set(false), 2000);
   }
 
   trackByKey(_: number, s: SettingDefinition): string {
