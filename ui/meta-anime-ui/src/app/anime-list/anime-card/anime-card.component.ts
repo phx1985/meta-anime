@@ -4,6 +4,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo } from '../../models/anime.models';
 import { ScoreBadgeComponent } from './score-badge/score-badge.component';
+import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../../constants/genre-lists';
 
 const TRUNCATE_AT = 180;
 
@@ -26,6 +27,8 @@ export class AnimeCardComponent {
   @Input({ required: true }) anime!: AnimeDetailsResponse;
   /** Genres actively selected in the parent filter — used to highlight matching tags. */
   @Input() activeGenres: string[] = [];
+  @Input() activeThemes: string[] = [];
+  @Input() activeDemographics: string[] = [];
 
   private translate = inject(TranslateService);
 
@@ -137,9 +140,19 @@ export class AnimeCardComponent {
 
   // ── Genres ────────────────────────────────────────────────────────────────
 
-  get genres(): string[] {
-    return this.mal?.genres ?? [];
-  }
+  private get allMalGenres(): string[] { return this.mal?.genres ?? []; }
+
+  /** MAL genre-category entries only. */
+  get pureGenres(): string[] { return this.allMalGenres.filter(g => GENRE_LIST.includes(g)); }
+
+  /** MAL theme entries only. */
+  get themes(): string[] { return this.allMalGenres.filter(g => THEME_LIST.includes(g)); }
+
+  /** MAL demographic entries only. */
+  get demographics(): string[] { return this.allMalGenres.filter(g => DEMOGRAPHIC_LIST.includes(g)); }
+
+  /** @deprecated Use pureGenres — kept for any existing template references. */
+  get genres(): string[] { return this.allMalGenres; }
 
   /** Translate a genre name — safe for names containing spaces */
   translateGenre(name: string): string {

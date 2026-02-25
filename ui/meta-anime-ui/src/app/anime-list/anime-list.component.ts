@@ -3,7 +3,6 @@ import {
   Component,
   DestroyRef,
   ElementRef,
-  HostListener,
   OnDestroy,
   QueryList,
   ViewChildren,
@@ -27,32 +26,18 @@ const DISPLAY_MODE_KEY = 'meta-anime:displayMode';
 
 export type DisplayMode = 1 | 2 | 3;
 
-export const GENRE_LIST = [
-  'Action', 'Adventure', 'Avant Garde', 'Award Winning', 'Boys Love', 'Comedy', 'Drama',
-  'Ecchi', 'Erotica', 'Fantasy', 'Girls Love', 'Gourmet', 'Hentai', 'Horror', 'Mystery',
-  'Romance', 'Sci-Fi', 'Slice of Life', 'Sports', 'Supernatural', 'Suspense',
-];
-
-export const THEME_LIST = [
-  'Adult Cast', 'Anthropomorphic', 'CGDCT', 'Childcare', 'Combat Sports', 'Crossdressing',
-  'Delinquents', 'Detective', 'Educational', 'Gag Humor', 'Gore', 'Harem', 'High Stakes Game',
-  'Historical', 'Idols (Female)', 'Idols (Male)', 'Isekai', 'Iyashikei',
-  'Love Polygon', 'Love Status Quo', 'Magical Sex Shift', 'Mahou Shoujo', 'Martial Arts', 'Mecha',
-  'Medical', 'Military', 'Music', 'Mythology', 'Organized Crime', 'Otaku Culture', 'Parody',
-  'Performing Arts', 'Pets', 'Psychological', 'Racing', 'Reincarnation', 'Reverse Harem',
-  'Samurai', 'School', 'Showbiz', 'Space', 'Strategy Game', 'Super Power', 'Survival',
-  'Team Sports', 'Time Travel', 'Urban Fantasy', 'Vampire', 'Video Game', 'Villainess',
-  'Visual Arts', 'Workplace',
-];
-
-export const DEMOGRAPHIC_LIST = [
-  'Josei', 'Kids', 'Seinen', 'Shoujo', 'Shounen',
-];
-
-const NSFW_GENRES = ['Ecchi', 'Hentai', 'Erotica', 'Boys Love', 'Girls Love'];
-const NSFW_THEMES = ['Magical Sex Shift'];
-const SFW_GENRE_LIST = GENRE_LIST.filter(g => !NSFW_GENRES.includes(g));
-const SFW_THEME_LIST = THEME_LIST.filter(t => !NSFW_THEMES.includes(t));
+export {
+  GENRE_LIST,
+  THEME_LIST,
+  DEMOGRAPHIC_LIST,
+} from '../constants/genre-lists';
+import {
+  GENRE_LIST,
+  THEME_LIST,
+  DEMOGRAPHIC_LIST,
+  SFW_GENRE_LIST,
+  SFW_THEME_LIST,
+} from '../constants/genre-lists';
 
 export const WATCHING_STATES = [
   { value: 'watching',      labelKey: 'animeCard.malStatus.watching' },
@@ -160,6 +145,11 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   /** Whether the demographic dropdown is open */
   demographicDropdownOpen = false;
+
+  /** Search text inside each filter popup */
+  genreSearch      = '';
+  themeSearch      = '';
+  demographicSearch = '';
 
   // ── Preset state ──────────────────────────────────────────────────────────
   savedPresets = signal<FilterPreset[]>([]);
@@ -345,20 +335,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   // ── Collapse outside click handler ────────────────────────────────────────
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    // Close genre dropdown if click is outside the genre-dropdown wrapper
-    const target = event.target as HTMLElement;
-    if (this.genreDropdownOpen && !target.closest('.genre-dropdown')) {
-      this.genreDropdownOpen = false;
-    }
-    if (this.themeDropdownOpen && !target.closest('.theme-dropdown')) {
-      this.themeDropdownOpen = false;
-    }
-    if (this.demographicDropdownOpen && !target.closest('.demographic-dropdown')) {
-      this.demographicDropdownOpen = false;
-    }
-  }
+  // Popup close-on-backdrop handled inline in template; nothing to close via document:click.
 
   // ── Display mode ──────────────────────────────────────────────────────────
 

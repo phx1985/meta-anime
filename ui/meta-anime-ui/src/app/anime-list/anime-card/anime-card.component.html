@@ -87,11 +87,25 @@
         </div>
       }
 
-      <!-- ── Genres ────────────────────────────────────────────────────── -->
-      @if (genres.length > 0) {
+      <!-- ── Genres / Themes / Demographics ────────────────────────────── -->
+      @if (pureGenres.length > 0) {
         <div class="genre-list">
-          @for (g of genres; track g) {
+          @for (g of pureGenres; track g) {
             <span class="genre-tag" [class.genre-tag--highlighted]="activeGenres.length > 0 && activeGenres.includes(g)">{{ translateGenre(g) }}</span>
+          }
+        </div>
+      }
+      @if (themes.length > 0) {
+        <div class="genre-list genre-list--themes">
+          @for (t of themes; track t) {
+            <span class="genre-tag genre-tag--theme" [class.genre-tag--highlighted]="activeThemes.length > 0 && activeThemes.includes(t)">{{ translateGenre(t) }}</span>
+          }
+        </div>
+      }
+      @if (demographics.length > 0) {
+        <div class="genre-list genre-list--demographics">
+          @for (d of demographics; track d) {
+            <span class="genre-tag genre-tag--demographic" [class.genre-tag--highlighted]="activeDemographics.length > 0 && activeDemographics.includes(d)">{{ translateGenre(d) }}</span>
           }
         </div>
       }

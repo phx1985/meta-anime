@@ -1,7 +1,6 @@
 import {
   Component,
   DestroyRef,
-  HostListener,
   inject,
   signal,
   computed,
@@ -16,14 +15,10 @@ import { SettingsService } from '../services/settings.service';
 import { FilterPresetService } from '../services/filter-preset.service';
 import { SeasonalAnimeItem, SeasonalFilterPreset, SeasonalSavedFilterState, SeasonName } from '../models/anime.models';
 import { SeasonalCardComponent } from './seasonal-card/seasonal-card.component';
-import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST, MEDIA_TYPE_OPTIONS } from '../anime-list/anime-list.component';
+import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST, SFW_GENRE_LIST, SFW_THEME_LIST } from '../constants/genre-lists';
+import { MEDIA_TYPE_OPTIONS } from '../anime-list/anime-list.component';
 
 const MIN_YEAR = 1963;
-
-const NSFW_GENRES = ['Ecchi', 'Hentai', 'Erotica', 'Boys Love', 'Girls Love'];
-const NSFW_THEMES = ['Magical Sex Shift'];
-const SFW_GENRE_LIST = GENRE_LIST.filter(g => !NSFW_GENRES.includes(g));
-const SFW_THEME_LIST = THEME_LIST.filter(t => !NSFW_THEMES.includes(t));
 
 export interface SeasonPill {
   season: SeasonName;
@@ -133,6 +128,11 @@ export class SeasonalComponent {
   genreDropdownOpen    = false;
   themeDropdownOpen    = false;
   demographicDropdownOpen = false;
+
+  /** Search text inside each filter popup */
+  genreSearch       = '';
+  themeSearch       = '';
+  demographicSearch = '';
 
   filterGenre       = signal<string[]>([]);
   genreOperator     = signal<'or' | 'and'>('or');
@@ -393,21 +393,7 @@ export class SeasonalComponent {
     this.filterOpen.update(v => !v);
   }
 
-  // ── Genre dropdown ────────────────────────────────────────────────────────
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    const target = event.target as HTMLElement;
-    if (this.genreDropdownOpen && !target.closest('.genre-dropdown')) {
-      this.genreDropdownOpen = false;
-    }
-    if (this.themeDropdownOpen && !target.closest('.theme-dropdown')) {
-      this.themeDropdownOpen = false;
-    }
-    if (this.demographicDropdownOpen && !target.closest('.demographic-dropdown')) {
-      this.demographicDropdownOpen = false;
-    }
-  }
+  // ── Genre / Theme / Demographic popups ───────────────────────────────────
 
   toggleGenreDropdown(event: MouseEvent): void {
     event.stopPropagation();
