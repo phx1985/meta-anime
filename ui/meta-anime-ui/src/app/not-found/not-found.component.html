@@ -1,0 +1,35 @@
+<div class="not-found-page" aria-label="{{ 'notFound.ariaLabel' | translate }}">
+  <!-- CSS speed lines generated via ::before pseudo-element on .speed-lines -->
+  <div class="speed-lines" aria-hidden="true"></div>
+
+  <div class="manga-panel">
+    <!-- Error code panel -->
+    <div class="panel panel--code" role="presentation">
+      <span class="error-code" aria-hidden="true">404</span>
+    </div>
+
+    <!-- Character image panel -->
+    <div class="panel panel--character">
+      <img
+        class="character-img"
+        [src]="character().imagePath"
+        [alt]="character().nameKey | translate"
+      />
+    </div>
+
+    <!-- Speech bubble -->
+    <div class="panel panel--quote">
+      <div class="speech-bubble" role="status">
+        <p class="character-name">{{ character().nameKey | translate }}</p>
+        <p class="character-quote">{{ character().quoteKey | translate }}</p>
+      </div>
+    </div>
+
+    <!-- Action panel -->
+    <div class="panel panel--action">
+      <h1 class="not-found-title">{{ 'notFound.title' | translate }}</h1>
+      <p class="not-found-subtitle">{{ 'notFound.subtitle' | translate }}</p>
+      <a class="btn-go-home" routerLink="/">{{ 'notFound.goHome' | translate }}</a>
+    </div>
+  </div>
+</div>

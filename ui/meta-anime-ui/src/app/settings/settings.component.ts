@@ -14,6 +14,7 @@ import { SettingsService } from '../services/settings.service';
 import { AnimeService } from '../services/anime.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
 import { NotificationService } from '../services/notification.service';
+import { UserPreferencesService } from '../services/user-preferences.service';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
 import { SyncStep } from '../models/sync-progress.models';
 import { SyncStepComponent } from './sync-step/sync-step.component';
@@ -53,6 +54,7 @@ export class SettingsComponent {
   private destroyRef = inject(DestroyRef);
   private translate = inject(TranslateService);
   private route = inject(ActivatedRoute);
+  readonly userPrefs = inject(UserPreferencesService);
 
   // ── Settings load state ───────────────────────────────────────────────────
   loading = signal(true);

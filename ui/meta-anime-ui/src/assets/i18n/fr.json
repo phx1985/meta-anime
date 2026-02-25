@@ -515,5 +515,59 @@
     "cancel": "Annuler",
     "add": "Ajouter",
     "confirm": "Confirmer"
+  },
+  "notFound": {
+    "ariaLabel": "404 – Page introuvable",
+    "title": "Page Introuvable !",
+    "subtitle": "Cette page s'est égarée dans une autre dimension.",
+    "goHome": "Retour à l'accueil",
+    "characters": {
+      "goku": {
+        "name": "Goku",
+        "quote": "J'ai cherché cette page dans tout l'univers… elle a disparu. Même l'Ultra Instinct ne peut pas la trouver."
+      },
+      "luffy": {
+        "name": "Monkey D. Luffy",
+        "quote": "Je serai Roi des Pirates ! Mais d'abord, où est cette page ?! Même mon Haki ne la détecte pas !"
+      },
+      "naruto": {
+        "name": "Naruto Uzumaki",
+        "quote": "Croyez-y ! J'ai envoyé mille doubles pour trouver cette page et ils sont tous revenus bredouilles, dattebayo !"
+      },
+      "sailorMoon": {
+        "name": "Sailor Moon",
+        "quote": "Au nom de la Lune, je punirai celui qui a supprimé cette page !"
+      },
+      "edwardElric": {
+        "name": "Edward Elric",
+        "quote": "L'Échange Équivalent signifie qu'il devrait y avoir QUELQUE CHOSE ici. Mais il n'y a rien ! Absolument rien !"
+      },
+      "lelouch": {
+        "name": "Lelouch vi Britannia",
+        "quote": "Moi, Lelouch vi Britannia, j'ordonne à cette page d'… exister. Hmm. Mon Geass est sans effet ici."
+      },
+      "mikasa": {
+        "name": "Mikasa Ackerman",
+        "quote": "J'ai fouillé chaque recoin de ce serveur. La page n'est pas là. Elle ne l'a jamais été."
+      },
+      "tanjiro": {
+        "name": "Tanjiro Kamado",
+        "quote": "Malgré tout mon entraînement, je n'ai pas pu localiser cette page. Je l'ai sentie une fois, mais la trace a disparu."
+      },
+      "spike": {
+        "name": "Spike Spiegel",
+        "quote": "Quoi qu'il arrive, ça arrive. Et apparemment, ce qui est arrivé c'est que cette page a disparu. À bientôt, Page Spatiale."
+      },
+      "light": {
+        "name": "Light Yagami",
+        "quote": "J'ai calculé chaque URL possible et n'ai rien trouvé. Une page aussi insaisissable pourrait-elle être… la justice ?"
+      }
+    }
+  },
+  "userPreferences": {
+    "autoApplyLastFilters": {
+      "name": "Réappliquer automatiquement les derniers filtres",
+      "desc": "Lorsqu'activé, vos derniers filtres de recherche anime seront automatiquement restaurés et appliqués à l'ouverture de la page Liste des Animes."
+    }
   }
 }

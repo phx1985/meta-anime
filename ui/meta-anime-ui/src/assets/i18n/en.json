@@ -515,5 +515,59 @@
     "cancel": "Cancel",
     "add": "Add",
     "confirm": "Confirm"
+  },
+  "notFound": {
+    "ariaLabel": "404 – Page not found",
+    "title": "Page Not Found!",
+    "subtitle": "This page wandered off into another dimension.",
+    "goHome": "Go Back Home",
+    "characters": {
+      "goku": {
+        "name": "Goku",
+        "quote": "I searched the entire universe for this page… it's gone. Even Ultra Instinct couldn't find it."
+      },
+      "luffy": {
+        "name": "Monkey D. Luffy",
+        "quote": "I'm gonna be King of the Pirates! But first, where IS this page?! Even my Haki can't sense it!"
+      },
+      "naruto": {
+        "name": "Naruto Uzumaki",
+        "quote": "Believe it! I tried a thousand shadow clones to find this page and they ALL came back empty-handed, dattebayo!"
+      },
+      "sailorMoon": {
+        "name": "Sailor Moon",
+        "quote": "In the name of the Moon, I shall punish whoever deleted this page!"
+      },
+      "edwardElric": {
+        "name": "Edward Elric",
+        "quote": "Equivalent Exchange means there should be SOMETHING here. But there's nothing! Nothing at all!"
+      },
+      "lelouch": {
+        "name": "Lelouch vi Britannia",
+        "quote": "I, Lelouch vi Britannia, command this page to… exist. Hmm. My Geass has no power here."
+      },
+      "mikasa": {
+        "name": "Mikasa Ackerman",
+        "quote": "I searched every corner of this server. The page isn't here. It never was."
+      },
+      "tanjiro": {
+        "name": "Tanjiro Kamado",
+        "quote": "With all my training, I still couldn't locate this page. I could smell it once, but the scent has vanished."
+      },
+      "spike": {
+        "name": "Spike Spiegel",
+        "quote": "Whatever happens, happens. And apparently, what happened is this page disappeared. See you, Space Page."
+      },
+      "light": {
+        "name": "Light Yagami",
+        "quote": "I calculated every possible URL and still found nothing. Could a page this elusive truly be… justice?"
+      }
+    }
+  },
+  "userPreferences": {
+    "autoApplyLastFilters": {
+      "name": "Auto-apply Last Search Filters",
+      "desc": "When enabled, your last used anime search filters will be automatically restored and applied when you open the Anime List page."
+    }
   }
 }

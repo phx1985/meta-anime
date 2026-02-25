@@ -7,6 +7,7 @@ import {
   QueryList,
   ViewChildren,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -18,6 +19,7 @@ import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
 import { FilterPresetService } from '../services/filter-preset.service';
+import { UserPreferencesService } from '../services/user-preferences.service';
 import {
   AnimeDetailsResponse,
   AnimeFilters,
@@ -131,6 +133,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   private destroyRef = inject(DestroyRef);
   private translateService = inject(TranslateService);
   readonly presetService = inject(FilterPresetService);
+  readonly userPrefs = inject(UserPreferencesService);
 
   @ViewChildren('animeCard', { read: ElementRef }) cardRefs!: QueryList<ElementRef>;
 
@@ -394,6 +397,20 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.syncSignalR.syncCompleted$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       if (this.searched()) this.loadAnimes(true);
     });
+
+    // Restore and auto-apply the last used filters when the setting is enabled.
+    if (this.userPrefs.autoApplyLastFilters()) {
+      const raw = this.userPrefs.loadLastFilters();
+      if (raw) {
+        try {
+          const restored = JSON.parse(raw) as SavedFilterState;
+          this.applyFilterState(restored);
+          this.search();
+        } catch {
+          // Corrupt storage entry — silently discard.
+        }
+      }
+    }
   }
 
   ngAfterViewInit(): void {
@@ -518,6 +535,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   // ── Search / Reset ────────────────────────────────────────────────────────
 
   search(): void {
+    this.userPrefs.saveLastFilters(JSON.stringify(this.snapshotFilters()));
     this.searched.set(true);
     this.filterOpen.set(false); // collapse filter panel on search
     this.genreDropdownOpen = false;
@@ -559,24 +577,11 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   // ── Preset management ─────────────────────────────────────────────────────
 
   applyPreset(preset: FilterPreset): void {
-    const f = preset.filters;
-    this.filterTitle = f.title ?? '';
-    this.filterGenre.set(f.genre ?? []);
-    this.genreOperator = f.genreOperator ?? 'or';
-    this.filterTheme.set(f.theme ?? []);
-    this.themeOperator = f.themeOperator ?? 'or';
-    this.filterDemographic.set(f.demographic ?? []);
-    this.demographicOperator = f.demographicOperator ?? 'or';
-    this.filterWatchState = f.watchState ?? [];
-    this.filterAiringStatus = f.airingStatus ?? [];
-    this.filterHasFile = f.hasFile ?? 'any';
-    this.filterCodec = f.codec ?? [];
-    this.filterMediaType = f.mediaType ?? [];
-    this.sortBy = f.sortBy ?? 'title';
-    this.sortOrder = f.sortOrder ?? 'asc';
+    this.applyFilterState(preset.filters);
     this.showSavePreset = false;
     this.newPresetName = '';
     // Open advanced section if the preset uses any advanced filter
+    const f = preset.filters;
     const hasAdvanced = !!(
       f.genre?.length ||
       f.theme?.length ||
@@ -591,6 +596,24 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     );
     if (hasAdvanced) this.advancedOpen.set(true);
     this.search();
+  }
+
+  /** Applies a serialised filter snapshot to the current UI state. */
+  applyFilterState(f: SavedFilterState): void {
+    this.filterTitle = f.title ?? '';
+    this.filterGenre.set(f.genre ?? []);
+    this.genreOperator = f.genreOperator ?? 'or';
+    this.filterTheme.set(f.theme ?? []);
+    this.themeOperator = f.themeOperator ?? 'or';
+    this.filterDemographic.set(f.demographic ?? []);
+    this.demographicOperator = f.demographicOperator ?? 'or';
+    this.filterWatchState = f.watchState ?? [];
+    this.filterAiringStatus = f.airingStatus ?? [];
+    this.filterHasFile = f.hasFile ?? 'any';
+    this.filterCodec = f.codec ?? [];
+    this.filterMediaType = f.mediaType ?? [];
+    this.sortBy = f.sortBy ?? 'title';
+    this.sortOrder = f.sortOrder ?? 'asc';
   }
 
   openSavePreset(): void {
