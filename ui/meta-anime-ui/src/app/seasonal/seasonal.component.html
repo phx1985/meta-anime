@@ -286,10 +286,9 @@
           <span class="seasonal-elapsed-time">({{ fetchElapsedMs() }}ms)</span>
         }
       </p>
-      <div class="seasonal-grid">
-        @for (anime of filteredAnimes(); track anime.malId; let i = $index) {
-          <div class="seasonal-grid__cell"
-               [@cardEnter]="{ value: filterVersion(), params: { delay: i * 12 } }">
+      <div class="seasonal-grid" [@gridAnimation]="displayedAnimes().length">
+        @for (anime of displayedAnimes(); track anime.malId) {
+          <div class="seasonal-grid__cell">
             <app-seasonal-card [anime]="anime" [activeGenres]="filterGenre()" />
           </div>
         }

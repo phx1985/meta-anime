@@ -9,7 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { trigger, state, style, animate, transition } from '@angular/animations';
+import { trigger, state, style, animate, transition, query, stagger } from '@angular/animations';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
@@ -74,18 +74,17 @@ function getCurrentSeason(month: number): SeasonName {
       transition('open => closed', [style({ overflow: 'hidden' }), animate('320ms cubic-bezier(0.4, 0, 0.2, 1)')]),
       transition('closed => open', [style({ overflow: 'hidden' }), animate('320ms cubic-bezier(0.4, 0, 0.2, 1)')]),
     ]),
-    // Per-card trigger: transition('* => *') fires on EVERY cell whenever
-    // filterVersion changes — including for "staying" items that Angular's
-    // parent query(:enter) would miss (the root cause of the OR→AND gap).
-    // The delay param is set to $index * 12ms in the template, giving a
-    // natural stagger without relying on the stagger() helper.
-    trigger('cardEnter', [
+    trigger('gridAnimation', [
       transition('* => *', [
-        style({ opacity: 0, transform: 'translateY(-6px) scale(0.97)', filter: 'blur(8px)' }),
-        animate('360ms {{ delay }}ms cubic-bezier(0.4, 0, 0.2, 1)',
-          style({ opacity: 1, transform: 'none', filter: 'blur(0px)' })
-        ),
-      ], { params: { delay: 0 } }),
+        query(':enter', [
+          style({ opacity: 0, transform: 'translateY(-6px) scale(0.97)', filter: 'blur(8px)' }),
+          stagger(12, [
+            animate('360ms cubic-bezier(0.4, 0, 0.2, 1)',
+              style({ opacity: 1, transform: 'none', filter: 'blur(0px)' })
+            )
+          ])
+        ], { optional: true })
+      ])
     ]),
   ],
 })
@@ -137,8 +136,12 @@ export class SeasonalComponent {
   sortBy          = signal('title');
   sortOrder       = signal<'asc' | 'desc'>('asc');
 
-  /** Incremented every time a filter/sort changes – drives the stagger animation. */
-  filterVersion = signal(0);
+  /** Displayed animes — populated asynchronously via _applyFilteredResults()
+   *  so items are always :enter when they appear, giving a consistent blur-rise
+   *  animation on first load AND on every filter/sort/preset change. */
+  displayedAnimes = signal<SeasonalAnimeItem[]>([]);
+  /** Guard for rapid filter changes — only the last change animates in. */
+  private _filterAnimTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // ── Preset state ──────────────────────────────────────────────────────────
   savedPresets    = signal<SeasonalFilterPreset[]>([]);
@@ -327,13 +330,13 @@ export class SeasonalComponent {
       v.includes(genre) ? v.filter(g => g !== genre) : [...v, genre]
     );
     if (this.filterGenre().length <= 1) this.genreOperator.set('or');
-    this.filterVersion.update(v => v + 1);
+    this._applyFilteredResults();
   }
 
   clearGenres(event: MouseEvent): void {
     event.stopPropagation();
     this.filterGenre.set([]);
-    this.filterVersion.update(v => v + 1);
+    this._applyFilteredResults();
   }
 
   // ── MAL status pills ──────────────────────────────────────────────────────
@@ -352,7 +355,7 @@ export class SeasonalComponent {
       }
       return [...current.filter(s => s !== 'not_in'), status];
     });
-    this.filterVersion.update(v => v + 1);
+    this._applyFilteredResults();
   }
 
   // ── Sort ──────────────────────────────────────────────────────────────────
@@ -360,12 +363,12 @@ export class SeasonalComponent {
   setGenreOperator(op: 'or' | 'and', event: MouseEvent): void {
     event.stopPropagation();
     this.genreOperator.set(op);
-    this.filterVersion.update(v => v + 1);
+    this._applyFilteredResults();
   }
 
   setSortBy(value: string): void {
     this.sortBy.set(value);
-    this.filterVersion.update(v => v + 1);
+    this._applyFilteredResults();
   }
 
   /** Returns true when this MAL status pill should be visually muted (its group is excluded). */
@@ -379,7 +382,7 @@ export class SeasonalComponent {
 
   toggleSortOrder(): void {
     this.sortOrder.update(o => o === 'asc' ? 'desc' : 'asc');
-    this.filterVersion.update(v => v + 1);
+    this._applyFilteredResults();
   }
 
   // ── Reset ─────────────────────────────────────────────────────────────────
@@ -391,7 +394,7 @@ export class SeasonalComponent {
     this.sortBy.set('title');
     this.sortOrder.set('asc');
     this.genreDropdownOpen = false;
-    this.filterVersion.update(v => v + 1);
+    this._applyFilteredResults();
   }
 
   // ── Preset methods ────────────────────────────────────────────────────────
@@ -404,7 +407,7 @@ export class SeasonalComponent {
     this.sortBy.set(f.sortBy              ?? 'title');
     this.sortOrder.set(f.sortOrder        ?? 'asc');
     this.genreDropdownOpen = false;
-    this.filterVersion.update(v => v + 1);
+    this._applyFilteredResults();
     this.showSavePreset = false;
     this.filterOpen.set(false);
   }
@@ -449,6 +452,23 @@ export class SeasonalComponent {
     };
   }
 
+  // ── Animation helper ─────────────────────────────────────────────────────
+  /** Clear the grid instantly and repopulate it in the next event-loop tick.
+   *  Because all items are removed from the DOM and re-added, Angular marks
+   *  every card as :enter — so query(':enter') in @gridAnimation always fires
+   *  the blur-rise stagger, regardless of whether the items were there before.
+   *  A clearTimeout guard prevents rapid changes from causing multiple flashes. */
+  private _applyFilteredResults(): void {
+    if (this._filterAnimTimeout !== null) {
+      clearTimeout(this._filterAnimTimeout);
+    }
+    this.displayedAnimes.set([]);
+    this._filterAnimTimeout = setTimeout(() => {
+      this._filterAnimTimeout = null;
+      this.displayedAnimes.set(this.filteredAnimes());
+    }, 0);
+  }
+
   // ── Loading ──────────────────────────────────────────────────────────────
   private _loadCurrent(): void {
     const year   = this.selectedYear();
@@ -473,12 +493,13 @@ export class SeasonalComponent {
           this.animes.set(data);
           this.loading.set(false);
           this.fetchElapsedMs.set(Date.now() - this.fetchStartTime);
-          this.filterVersion.update(v => v + 1);
+          this._applyFilteredResults();
         },
         error: () => {
           this.error.set(true);
           this.loading.set(false);
-          this.animes.set([]); // clear stale data on error so empty state shows
+          this.animes.set([]);           // clear stale data on error so empty state shows
+          this.displayedAnimes.set([]);  // clear displayed grid immediately
         }
       });
   }
