@@ -1,0 +1,289 @@
+// 404 page — styled to match the site's global theme.
+// Bokeh particles share the same blob definitions as the anime-list page.
+
+// ── Page shell ─────────────────────────────────────────────────────────────
+.not-found-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+  padding: 2rem 1rem;
+}
+
+// ── Bokeh layer (identical blob config to anime-list) ───────────────────────
+.bokeh {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bokeh__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(5px);
+  opacity: var(--bokeh-opacity, 0.25);
+  animation: bokehFloat404 linear infinite;
+
+  &:nth-child(1)  { width: 8px;  height: 8px;  left: 8%;  top: 12%; animation-duration: 18s; animation-delay: 0s;    background: var(--accent-primary); }
+  &:nth-child(2)  { width: 6px;  height: 6px;  left: 22%; top: 28%; animation-duration: 24s; animation-delay: -5s;   background: #a855f7; }
+  &:nth-child(3)  { width: 10px; height: 10px; left: 35%; top: 8%;  animation-duration: 20s; animation-delay: -3s;   background: #22c55e; }
+  &:nth-child(4)  { width: 7px;  height: 7px;  left: 52%; top: 18%; animation-duration: 28s; animation-delay: -10s;  background: var(--accent-primary); }
+  &:nth-child(5)  { width: 9px;  height: 9px;  left: 66%; top: 5%;  animation-duration: 22s; animation-delay: -8s;   background: #f59e0b; }
+  &:nth-child(6)  { width: 5px;  height: 5px;  left: 78%; top: 30%; animation-duration: 16s; animation-delay: -2s;   background: #a855f7; }
+  &:nth-child(7)  { width: 8px;  height: 8px;  left: 90%; top: 15%; animation-duration: 26s; animation-delay: -14s;  background: var(--accent-primary); }
+  &:nth-child(8)  { width: 6px;  height: 6px;  left: 12%; top: 50%; animation-duration: 30s; animation-delay: -7s;   background: #22c55e; }
+  &:nth-child(9)  { width: 11px; height: 11px; left: 28%; top: 65%; animation-duration: 19s; animation-delay: -11s;  background: var(--accent-primary); }
+  &:nth-child(10) { width: 7px;  height: 7px;  left: 44%; top: 45%; animation-duration: 23s; animation-delay: -4s;   background: #f59e0b; }
+  &:nth-child(11) { width: 9px;  height: 9px;  left: 58%; top: 72%; animation-duration: 21s; animation-delay: -9s;   background: #a855f7; }
+  &:nth-child(12) { width: 6px;  height: 6px;  left: 72%; top: 55%; animation-duration: 27s; animation-delay: -16s;  background: #22c55e; }
+  &:nth-child(13) { width: 8px;  height: 8px;  left: 85%; top: 68%; animation-duration: 17s; animation-delay: -1s;   background: var(--accent-primary); }
+  &:nth-child(14) { width: 5px;  height: 5px;  left: 5%;  top: 78%; animation-duration: 29s; animation-delay: -6s;   background: #f59e0b; }
+  &:nth-child(15) { width: 10px; height: 10px; left: 18%; top: 88%; animation-duration: 25s; animation-delay: -13s;  background: #a855f7; }
+  &:nth-child(16) { width: 7px;  height: 7px;  left: 38%; top: 82%; animation-duration: 20s; animation-delay: -3s;   background: var(--accent-primary); }
+  &:nth-child(17) { width: 6px;  height: 6px;  left: 55%; top: 92%; animation-duration: 22s; animation-delay: -18s;  background: #22c55e; }
+  &:nth-child(18) { width: 9px;  height: 9px;  left: 68%; top: 83%; animation-duration: 31s; animation-delay: -5s;   background: var(--accent-primary); }
+  &:nth-child(19) { width: 5px;  height: 5px;  left: 82%; top: 90%; animation-duration: 15s; animation-delay: -12s;  background: #f59e0b; }
+  &:nth-child(20) { width: 8px;  height: 8px;  left: 94%; top: 48%; animation-duration: 24s; animation-delay: -7s;   background: #a855f7; }
+}
+
+@keyframes bokehFloat404 {
+  0%   { transform: translate(0, 0) scale(1);           opacity: calc(var(--bokeh-opacity, 0.25) * 0.65); }
+  25%  { transform: translate(14px, -20px) scale(1.3);  opacity: var(--bokeh-opacity, 0.25); }
+  50%  { transform: translate(-10px, 18px) scale(0.8);  opacity: calc(var(--bokeh-opacity, 0.25) * 0.7); }
+  75%  { transform: translate(18px, 8px) scale(1.2);    opacity: calc(var(--bokeh-opacity, 0.25) * 0.9); }
+  100% { transform: translate(0, 0) scale(1);           opacity: calc(var(--bokeh-opacity, 0.25) * 0.65); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bokeh__blob { animation: none; opacity: calc(var(--bokeh-opacity, 0.25) * 0.5); }
+}
+
+// ── Content card ────────────────────────────────────────────────────────────
+.not-found-card {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  max-width: 560px;
+  width: 100%;
+  text-align: center;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 8px 32px var(--card-shadow);
+  border-radius: 1.25rem;
+  padding: 3rem 2.5rem;
+}
+
+// ── Glowing error code ───────────────────────────────────────────────────────
+// The ghost layers (cyan + neon-pink) are generated via ::before and ::after
+// using the data-text attribute — "404" only needs to appear once in the HTML.
+.error-code {
+  position: relative;
+  font-size: clamp(5rem, 18vw, 9rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  // Base gradient fill
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 24px color-mix(in srgb, var(--accent-primary) 70%, transparent));
+  // Whole-element jitter every 5 s
+  animation: glitch404Shake 5s steps(1) infinite;
+
+  // ── Cyan ghost layer ───────────────────────────────────────────────────
+  &::before {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    // Neon cyan
+    background: linear-gradient(135deg, #00e5ff, #18ffff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    // Start hidden and un-shifted; animation takes over
+    opacity: 0;
+    transform: translateX(0);
+    animation: glitch404Cyan 5s steps(1) infinite;
+  }
+
+  // ── Neon-pink ghost layer ──────────────────────────────────────────────
+  &::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    // Neon pink
+    background: linear-gradient(135deg, #ff1a8c, #ff6ec7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    opacity: 0;
+    transform: translateX(0);
+    animation: glitch404Pink 5s steps(1) infinite;
+  }
+}
+
+// ── Shake: the whole element jitters briefly ────────────────────────────────
+@keyframes glitch404Shake {
+  // Silent for ~88% of the cycle, then jitter in frames 88–94
+  0%,   87.9% { transform: translate(0, 0) skewX(0deg); }
+  88%          { transform: translate(-3px,  1px) skewX(-1deg); }
+  88.5%        { transform: translate( 3px, -2px) skewX( 1.5deg); }
+  89%          { transform: translate(-2px,  2px) skewX(-0.5deg); }
+  89.5%        { transform: translate( 2px, -1px) skewX( 0.8deg); }
+  90%          { transform: translate(-1px,  1px) skewX(-0.3deg); }
+  90.5%        { transform: translate( 1px, -1px) skewX( 0.3deg); }
+  91%,  100%   { transform: translate(0, 0) skewX(0deg); }
+}
+
+// ── Cyan ghost: slides RIGHT, revealed in horizontal slices ────────────────
+@keyframes glitch404Cyan {
+  0%,   87.9%  { opacity: 0; transform: translateX(0);    clip-path: inset(0 0 100% 0); }
+  // Frame 1 — top slice pops in
+  88%           { opacity: 1; transform: translateX(4px);  clip-path: inset(0% 0 68% 0); }
+  // Frame 2 — mid slice
+  88.8%         { opacity: 1; transform: translateX(5px);  clip-path: inset(30% 0 40% 0); }
+  // Frame 3 — bottom slice
+  89.6%         { opacity: 1; transform: translateX(3px);  clip-path: inset(62% 0 0% 0); }
+  // Frame 4 — multi-band chaos
+  90.4%         { opacity: 1; transform: translateX(6px);
+                  clip-path: polygon(
+                    0 0,   100% 0,   100% 22%, 0 22%,
+                    0 45%,  100% 45%, 100% 60%, 0 60%,
+                    0 78%,  100% 78%, 100% 100%, 0 100%
+                  ); }
+  91%,  100%   { opacity: 0; transform: translateX(0);    clip-path: inset(0 0 100% 0); }
+}
+
+// ── Pink ghost: slides LEFT, different slice pattern ─────────────────────────
+@keyframes glitch404Pink {
+  0%,   87.9%  { opacity: 0; transform: translateX(0);    clip-path: inset(0 0 100% 0); }
+  88.4%         { opacity: 1; transform: translateX(-5px); clip-path: inset(15% 0 55% 0); }
+  89.2%         { opacity: 1; transform: translateX(-4px); clip-path: inset(50% 0 10% 0); }
+  90%           { opacity: 1; transform: translateX(-6px); clip-path: inset(5% 0 70% 0); }
+  90.8%         { opacity: 1; transform: translateX(-3px);
+                  clip-path: polygon(
+                    0 10%,  100% 10%,  100% 35%, 0 35%,
+                    0 55%,  100% 55%,  100% 72%, 0 72%,
+                    0 88%,  100% 88%,  100% 100%, 0 100%
+                  ); }
+  91%,  100%   { opacity: 0; transform: translateX(0);    clip-path: inset(0 0 100% 0); }
+}
+
+// ── Respect user's motion preferences ────────────────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  .error-code,
+  .error-code::before,
+  .error-code::after {
+    animation: none;
+  }
+  .error-code::before,
+  .error-code::after {
+    display: none;
+  }
+}
+
+
+// ── Title & subtitle ─────────────────────────────────────────────────────────
+.not-found-title {
+  font-size: clamp(1.3rem, 4vw, 1.75rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.not-found-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+// ── Speech bubble ────────────────────────────────────────────────────────────
+.speech-bubble {
+  width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--card-border);
+  border-radius: 0.875rem;
+  padding: 1rem 1.25rem;
+  text-align: left;
+  position: relative;
+
+  // Pointing-up notch
+  &::before {
+    content: '';
+    position: absolute;
+    top: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 9px solid transparent;
+    border-right: 9px solid transparent;
+    border-bottom: 9px solid var(--card-border);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 7px solid var(--bg-secondary);
+  }
+}
+
+.character-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+  margin-bottom: 0.35rem;
+}
+
+.character-quote {
+  font-size: 0.875rem;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+// ── CTA button ───────────────────────────────────────────────────────────────
+.btn-go-home {
+  display: inline-block;
+  padding: 0.65rem 2rem;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 2rem;
+  text-decoration: none;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent-primary) 40%, transparent);
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--accent-primary) 55%, transparent);
+    color: #fff;
+    opacity: 0.92;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+

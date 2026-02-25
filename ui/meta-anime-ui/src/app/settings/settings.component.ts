@@ -14,6 +14,7 @@ import { SettingsService } from '../services/settings.service';
 import { AnimeService } from '../services/anime.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
 import { NotificationService } from '../services/notification.service';
+import { UserPreferencesService } from '../services/user-preferences.service';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
 import { SyncStep } from '../models/sync-progress.models';
 import { SyncStepComponent } from './sync-step/sync-step.component';
@@ -53,6 +54,7 @@ export class SettingsComponent {
   private destroyRef = inject(DestroyRef);
   private translate = inject(TranslateService);
   private route = inject(ActivatedRoute);
+  readonly userPrefs = inject(UserPreferencesService);
 
   // ── Settings load state ───────────────────────────────────────────────────
   loading = signal(true);
@@ -65,6 +67,10 @@ export class SettingsComponent {
   // ── Row-level edit / reveal state (signals — required in zoneless app) ────
   editing = signal<Record<string, boolean>>({});
   revealed = signal<Record<string, boolean>>({});
+
+  // ── Auto-apply flash ──────────────────────────────────────────────────────
+  autoApplySaved = signal(false);
+  private autoApplySavedTimer: ReturnType<typeof setTimeout> | null = null;
 
   // ── Sync state (driven by SignalR) ────────────────────────────────────────
   syncing = signal(false);
@@ -182,6 +188,11 @@ export class SettingsComponent {
   constructor() {
     // Connect to SignalR hub on component init
     this.signalR.connect();
+
+    // Clear the auto-apply flash timer if the component is destroyed while it is running
+    this.destroyRef.onDestroy(() => {
+      if (this.autoApplySavedTimer) clearTimeout(this.autoApplySavedTimer);
+    });
 
     this.settingsService
       .getAll()
@@ -373,6 +384,14 @@ export class SettingsComponent {
   }
   hasError(key: string): boolean {
     return this.errorKey() === key;
+  }
+
+  /** Toggle auto-apply preference and briefly flash the setting row green. */
+  toggleAutoApply(): void {
+    this.userPrefs.setAutoApplyLastFilters(!this.userPrefs.autoApplyLastFilters());
+    if (this.autoApplySavedTimer) clearTimeout(this.autoApplySavedTimer);
+    this.autoApplySaved.set(true);
+    this.autoApplySavedTimer = setTimeout(() => this.autoApplySaved.set(false), 2000);
   }
 
   trackByKey(_: number, s: SettingDefinition): string {

@@ -437,6 +437,41 @@
                     </div>
                   </div>
                 }
+                @if (cat === 'app') {
+                  <div class="setting-row" [class.setting-row--saved]="autoApplySaved()">
+                    <div class="setting-info">
+                      <div class="setting-name">
+                        {{ 'userPreferences.autoApplyLastFilters.name' | translate }}
+                      </div>
+                      <div class="setting-desc">
+                        {{ 'userPreferences.autoApplyLastFilters.desc' | translate }}
+                      </div>
+                    </div>
+                    <div class="setting-value-area">
+                      <div class="display-row">
+                        <button
+                          type="button"
+                          class="toggle-switch"
+                          [class.toggle-switch--on]="userPrefs.autoApplyLastFilters()"
+                          (click)="toggleAutoApply()"
+                          role="switch"
+                          [attr.aria-checked]="userPrefs.autoApplyLastFilters()"
+                          [attr.aria-label]="'userPreferences.autoApplyLastFilters.name' | translate"
+                        >
+                          <span class="toggle-thumb"></span>
+                        </button>
+                        <span class="toggle-label">
+                          {{
+                            (userPrefs.autoApplyLastFilters()
+                              ? 'settings.toggle.on'
+                              : 'settings.toggle.off'
+                            ) | translate
+                          }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                }
               </div>
             </div>
           }

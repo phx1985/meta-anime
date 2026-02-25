@@ -168,7 +168,11 @@
       "noFilterActive": "No filter selected",
       "prompt": "Set your filters and press Search to explore your anime library.",
       "advanced": "Advanced filters",
-      "hideAdvanced": "Hide advanced"
+      "hideAdvanced": "Hide advanced",
+      "infoAriaLabel": "Filter info",
+      "infoAutoApplyOn": "Auto-apply last filters is ON — your previous search filters are restored automatically each time you open this page.",
+      "infoAutoApplyOff": "Auto-apply last filters is OFF — filters start fresh on every visit. Enable it in Settings to restore your last search automatically.",
+      "infoGoToSettings": "Go to Settings to change this"
     },
     "presets": {
       "label": "Presets",
@@ -515,5 +519,70 @@
     "cancel": "Cancel",
     "add": "Add",
     "confirm": "Confirm"
+  },
+  "notFound": {
+    "ariaLabel": "404 – Page not found",
+    "title": "Oops — This Page Has Gone Off-Script!",
+    "subtitle": {
+      "dimension":    "This page wandered off into another dimension, and frankly it seems quite happy there with no intention of coming back.",
+      "trainingArc":  "This page is on a training arc — it'll be back stronger, wiser, and with a brand-new power-up you never saw coming.",
+      "plotTwist":    "Plot twist: this page doesn't exist. The real page was the friends we made along the way. Spoiler: they're gone too.",
+      "houdini":      "Seems like this page pulled a Houdini on us. One moment it was here, the next — poof — gone without so much as a curtain call.",
+      "void":         "This URL leads to the void. The void stares back. Then the void shrugs and goes back to watching anime. Classic void.",
+      "kamehameha":   "Loading failed… maybe try a Kamehameha? If that doesn't work, a Rasengan, a Getsuga Tenshō, or just hitting Ctrl+R might do.",
+      "timeline":     "Our server searched every timeline across the multiverse, consulted three oracles, and still found absolutely nothing here.",
+      "questGone":    "Error 404: the page went on a quest and never returned. Rumour has it, it found a great anime recommendation and got sidetracked.",
+      "uncharted":    "You've discovered uncharted territory. Plant a flag, name it after yourself, and enjoy the solitude — there's nothing else here.",
+      "endOfInternet":"You've reached the end of the internet. Just kidding. But this page is gone, probably binge-watching something in another tab."
+    },
+    "goHome": "Go Back Home",
+    "characters": {
+      "goku": {
+        "name": "Goku",
+        "quote": "I searched the entire universe for this page… it's gone. Even Ultra Instinct couldn't find it."
+      },
+      "luffy": {
+        "name": "Monkey D. Luffy",
+        "quote": "I'm gonna be King of the Pirates! But first, where IS this page?! Even my Haki can't sense it!"
+      },
+      "naruto": {
+        "name": "Naruto Uzumaki",
+        "quote": "Believe it! I tried a thousand shadow clones to find this page and they ALL came back empty-handed, dattebayo!"
+      },
+      "sailorMoon": {
+        "name": "Sailor Moon",
+        "quote": "In the name of the Moon, I shall punish whoever deleted this page!"
+      },
+      "edwardElric": {
+        "name": "Edward Elric",
+        "quote": "Equivalent Exchange means there should be SOMETHING here. But there's nothing! Nothing at all!"
+      },
+      "lelouch": {
+        "name": "Lelouch vi Britannia",
+        "quote": "I, Lelouch vi Britannia, command this page to… exist. Hmm. My Geass has no power here."
+      },
+      "mikasa": {
+        "name": "Mikasa Ackerman",
+        "quote": "I searched every corner of this server. The page isn't here. It never was."
+      },
+      "tanjiro": {
+        "name": "Tanjiro Kamado",
+        "quote": "With all my training, I still couldn't locate this page. I could smell it once, but the scent has vanished."
+      },
+      "spike": {
+        "name": "Spike Spiegel",
+        "quote": "Whatever happens, happens. And apparently, what happened is this page disappeared. See you, Space Page."
+      },
+      "light": {
+        "name": "Light Yagami",
+        "quote": "I calculated every possible URL and still found nothing. Could a page this elusive truly be… justice?"
+      }
+    }
+  },
+  "userPreferences": {
+    "autoApplyLastFilters": {
+      "name": "Auto-apply Last Search Filters",
+      "desc": "When enabled, your last used anime search filters will be automatically restored and applied when you open the Anime List page."
+    }
   }
 }
