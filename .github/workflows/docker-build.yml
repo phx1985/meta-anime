@@ -13,6 +13,8 @@ jobs:
   docker-build:
     name: Build Docker Image
     runs-on: ubuntu-latest
+    # Cancel if this job takes longer than 15 minutes
+    timeout-minutes: 15
     
     permissions:
       contents: read
@@ -58,6 +60,8 @@ jobs:
   docker-debug-build:
     name: Build Debug Docker Image
     runs-on: ubuntu-latest
+    # Cancel if this job takes longer than 15 minutes
+    timeout-minutes: 15
     
     permissions:
       contents: read
@@ -83,6 +87,8 @@ jobs:
   docker-lint:
     name: Lint Dockerfiles
     runs-on: ubuntu-latest
+    # Linting is fast, cancel if it takes longer than 5 minutes
+    timeout-minutes: 5
     
     permissions:
       contents: read
