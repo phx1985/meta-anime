@@ -22,43 +22,24 @@
       </svg>
     </button>
 
-    <!-- ── Spinning box ──────────────────────────────────────────────────── -->
+    <!-- ── Spinning animation ─────────────────────────────────────────── -->
     @if (isSpinning()) {
       <div class="lucky-spin-scene" aria-hidden="true">
-        <div class="lucky-cube" [class.lucky-cube--reduced]="prefersReducedMotion">
-          <div class="lucky-cube__face lucky-cube__face--front">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-              <line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-          </div>
-          <div class="lucky-cube__face lucky-cube__face--back">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <div class="lucky-orb">
+          <!-- Outer ring -->
+          <div class="lucky-orb__ring lucky-orb__ring--outer"></div>
+          <!-- Mid ring -->
+          <div class="lucky-orb__ring lucky-orb__ring--mid"></div>
+          <!-- Inner ring -->
+          <div class="lucky-orb__ring lucky-orb__ring--inner"></div>
+          <!-- Orbiting dots -->
+          <div class="lucky-orb__dot lucky-orb__dot--1"></div>
+          <div class="lucky-orb__dot lucky-orb__dot--2"></div>
+          <div class="lucky-orb__dot lucky-orb__dot--3"></div>
+          <!-- Central glow -->
+          <div class="lucky-orb__center">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-          </div>
-          <div class="lucky-cube__face lucky-cube__face--left">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-          </div>
-          <div class="lucky-cube__face lucky-cube__face--right">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-            </svg>
-          </div>
-          <div class="lucky-cube__face lucky-cube__face--top">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-          </div>
-          <div class="lucky-cube__face lucky-cube__face--bottom">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
           </div>
         </div>
@@ -139,7 +120,7 @@
         <div class="lucky-message__actions">
           <a
             routerLink="/settings"
-            fragment="app-preferences"
+            fragment="lucky-pick-preferences"
             class="lucky-btn lucky-btn--secondary"
             (click)="close()"
           >

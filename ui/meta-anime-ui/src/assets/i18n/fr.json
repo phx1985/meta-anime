@@ -585,23 +585,24 @@
       "desc": "Lorsqu'activé, vos derniers filtres de recherche anime seront automatiquement restaurés et appliqués à l'ouverture de la page Liste des Animes."
     },
     "luckyPick": {
+      "groupTitle": "Je me sens chanceux",
       "onlyFinished": {
         "name": "Je me sens chanceux — Uniquement les animes terminés",
-        "desc": "Lorsqu'activé, la sélection surprise choisit uniquement parmi les séries dont la diffusion est terminée."
+        "desc": "Lorsqu'activé, la sélection aléatoire choisit uniquement parmi les séries dont la diffusion est terminée."
       },
       "onlyPlanToWatch": {
         "name": "Je me sens chanceux — Uniquement À regarder",
-        "desc": "Lorsqu'activé, la sélection surprise choisit uniquement parmi les animes de votre liste « À regarder »."
+        "desc": "Lorsqu'activé, la sélection aléatoire choisit uniquement parmi les animes de votre liste « À regarder »."
       },
       "onlyWithFiles": {
         "name": "Je me sens chanceux — Uniquement avec fichiers locaux",
-        "desc": "Lorsqu'activé, la sélection surprise choisit uniquement les animes disposant de fichiers locaux dans Sonarr."
+        "desc": "Lorsqu'activé, la sélection aléatoire choisit uniquement les animes disposant de fichiers locaux dans Sonarr."
       }
     }
   },
   "luckyPick": {
     "buttonLabel": "Je me sens chanceux",
-    "ariaLabel": "Superposition de sélection surprise d'anime",
+    "ariaLabel": "Superposition de sélection aléatoire d'anime",
     "resultAriaLabel": "Anime recommandé",
     "searching": "Recherche de votre prochain anime…",
     "watchNow": "Regarder maintenant",
@@ -610,7 +611,7 @@
     "close": "Fermer",
     "noMatch": {
       "title": "Aucun résultat",
-      "desc": "Aucun de vos animes ne correspond aux paramètres de sélection surprise actuels.",
+      "desc": "Aucun de vos animes ne correspond aux paramètres de sélection aléatoire actuels.",
       "adjustSettings": "Ajuster les paramètres"
     },
     "error": {

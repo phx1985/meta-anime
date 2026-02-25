@@ -766,6 +766,36 @@
 
 // ── Boolean toggle switch ─────────────────────────────────────────────────────
 
+// ── Preference group (used for Lucky Pick settings cluster) ───────────────────
+.pref-group {
+  margin-top: 0.5rem;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  overflow: hidden;
+
+  .setting-row {
+    border-bottom: 1px solid var(--card-border);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}
+
+.pref-group__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: rgba(108, 99, 255, 0.07);
+  border-bottom: 1px solid var(--card-border);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+}
+
 .toggle-switch {
   position: relative;
   display: inline-block;
