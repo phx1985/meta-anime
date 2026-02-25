@@ -68,6 +68,10 @@ export class SettingsComponent {
   editing = signal<Record<string, boolean>>({});
   revealed = signal<Record<string, boolean>>({});
 
+  // ── Auto-apply flash ──────────────────────────────────────────────────────
+  autoApplySaved = signal(false);
+  private autoApplySavedTimer: ReturnType<typeof setTimeout> | null = null;
+
   // ── Sync state (driven by SignalR) ────────────────────────────────────────
   syncing = signal(false);
   lastSyncDate = signal<string | null>(null);
@@ -184,6 +188,11 @@ export class SettingsComponent {
   constructor() {
     // Connect to SignalR hub on component init
     this.signalR.connect();
+
+    // Clear the auto-apply flash timer if the component is destroyed while it is running
+    this.destroyRef.onDestroy(() => {
+      if (this.autoApplySavedTimer) clearTimeout(this.autoApplySavedTimer);
+    });
 
     this.settingsService
       .getAll()
@@ -375,6 +384,14 @@ export class SettingsComponent {
   }
   hasError(key: string): boolean {
     return this.errorKey() === key;
+  }
+
+  /** Toggle auto-apply preference and briefly flash the setting row green. */
+  toggleAutoApply(): void {
+    this.userPrefs.setAutoApplyLastFilters(!this.userPrefs.autoApplyLastFilters());
+    if (this.autoApplySavedTimer) clearTimeout(this.autoApplySavedTimer);
+    this.autoApplySaved.set(true);
+    this.autoApplySavedTimer = setTimeout(() => this.autoApplySaved.set(false), 2000);
   }
 
   trackByKey(_: number, s: SettingDefinition): string {

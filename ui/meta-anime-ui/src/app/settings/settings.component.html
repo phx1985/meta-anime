@@ -438,7 +438,7 @@
                   </div>
                 }
                 @if (cat === 'app') {
-                  <div class="setting-row">
+                  <div class="setting-row" [class.setting-row--saved]="autoApplySaved()">
                     <div class="setting-info">
                       <div class="setting-name">
                         {{ 'userPreferences.autoApplyLastFilters.name' | translate }}
@@ -453,7 +453,7 @@
                           type="button"
                           class="toggle-switch"
                           [class.toggle-switch--on]="userPrefs.autoApplyLastFilters()"
-                          (click)="userPrefs.setAutoApplyLastFilters(!userPrefs.autoApplyLastFilters())"
+                          (click)="toggleAutoApply()"
                           role="switch"
                           [attr.aria-checked]="userPrefs.autoApplyLastFilters()"
                           [attr.aria-label]="'userPreferences.autoApplyLastFilters.name' | translate"

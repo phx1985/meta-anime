@@ -312,6 +312,13 @@
   flex: 1;
 }
 
+// Title row — keeps the "Filters" text and (i) icon on the same baseline
+.filter-header-title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
 .filter-header-title {
   font-size: 0.875rem;
   font-weight: 600;
@@ -350,17 +357,31 @@
 }
 
 // ── Filter info icon & popover ────────────────────────────────────────────────
+// The wrapper is inline so it sits right next to the "Filters" label.
+// The popover is always in the DOM but hidden with visibility/opacity — this
+// lets CSS :hover show it without needing JS, while the --open class locks
+// it open on click (for keyboard / mobile).
 .filter-info-wrap {
   position: relative;
-  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+
+  // Show popover on hover or when click-locked open
+  &:hover .filter-info-popover,
+  &.filter-info-wrap--open .filter-info-popover {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-20%) translateY(0);
+    pointer-events: auto;
+  }
 }
 
 .filter-info-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.25rem;
+  height: 1.25rem;
   border: none;
   background: transparent;
   color: var(--text-muted);
@@ -379,26 +400,32 @@
 
 .filter-info-popover {
   position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
+  top: calc(100% + 8px);
+  left: 0;
+  transform: translateX(-20%) translateY(-4px);
   z-index: 200;
-  min-width: 220px;
-  max-width: 280px;
+  min-width: 230px;
+  max-width: 290px;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 0.625rem;
   padding: 0.75rem 0.875rem;
   box-shadow: 0 6px 20px var(--card-shadow);
-  animation: fadeInDown 0.15s ease;
+  // Hidden by default; shown via :hover or --open class
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease,
+    transform 0.15s ease;
 
-  // Notch pointing up
+  // Notch pointing up (offset to align with icon)
   &::before {
     content: '';
     position: absolute;
     top: -7px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 1.1rem;
     border-left: 7px solid transparent;
     border-right: 7px solid transparent;
     border-bottom: 7px solid var(--card-border);
@@ -408,8 +435,7 @@
     content: '';
     position: absolute;
     top: -5px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 1.1rem;
     border-left: 5px solid transparent;
     border-right: 5px solid transparent;
     border-bottom: 5px solid var(--card-bg);
@@ -433,11 +459,6 @@
       text-decoration: underline;
     }
   }
-}
-
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 

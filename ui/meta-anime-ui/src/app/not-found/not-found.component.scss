@@ -82,81 +82,113 @@
 }
 
 // ── Glowing error code ───────────────────────────────────────────────────────
+// The ghost layers (cyan + neon-pink) are generated via ::before and ::after
+// using the data-text attribute — "404" only needs to appear once in the HTML.
 .error-code {
   position: relative;
   font-size: clamp(5rem, 18vw, 9rem);
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.02em;
+  // Base gradient fill
   background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--accent-primary) 60%, transparent));
-  animation: glitchShake 5s infinite;
+  filter: drop-shadow(0 0 24px color-mix(in srgb, var(--accent-primary) 70%, transparent));
+  // Whole-element jitter every 5 s
+  animation: glitch404Shake 5s steps(1) infinite;
 
-  // Cyan channel ghost
+  // ── Cyan ghost layer ───────────────────────────────────────────────────
   &::before {
     content: attr(data-text);
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, #22d3ee, #6ee7b7);
+    // Neon cyan
+    background: linear-gradient(135deg, #00e5ff, #18ffff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%);
-    transform: translateX(-3px);
+    // Start hidden and un-shifted; animation takes over
     opacity: 0;
-    animation: glitchCyan 5s infinite;
+    transform: translateX(0);
+    animation: glitch404Cyan 5s steps(1) infinite;
   }
 
-  // Magenta channel ghost
+  // ── Neon-pink ghost layer ──────────────────────────────────────────────
   &::after {
     content: attr(data-text);
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, #f43f5e, #a855f7);
+    // Neon pink
+    background: linear-gradient(135deg, #ff1a8c, #ff6ec7);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    clip-path: polygon(0 55%, 100% 55%, 100% 75%, 0 75%);
-    transform: translateX(3px);
     opacity: 0;
-    animation: glitchMagenta 5s infinite;
+    transform: translateX(0);
+    animation: glitch404Pink 5s steps(1) infinite;
   }
 }
 
-@keyframes glitchShake {
-  0%, 89%, 100%  { transform: translate(0, 0); }
-  90%            { transform: translate(-2px, 1px); }
-  91%            { transform: translate(2px, -1px); }
-  92%            { transform: translate(-1px, 2px); }
-  93%            { transform: translate(1px, -2px); }
-  94%            { transform: translate(0, 0); }
+// ── Shake: the whole element jitters briefly ────────────────────────────────
+@keyframes glitch404Shake {
+  // Silent for ~88% of the cycle, then jitter in frames 88–94
+  0%,   87.9% { transform: translate(0, 0) skewX(0deg); }
+  88%          { transform: translate(-3px,  1px) skewX(-1deg); }
+  88.5%        { transform: translate( 3px, -2px) skewX( 1.5deg); }
+  89%          { transform: translate(-2px,  2px) skewX(-0.5deg); }
+  89.5%        { transform: translate( 2px, -1px) skewX( 0.8deg); }
+  90%          { transform: translate(-1px,  1px) skewX(-0.3deg); }
+  90.5%        { transform: translate( 1px, -1px) skewX( 0.3deg); }
+  91%,  100%   { transform: translate(0, 0) skewX(0deg); }
 }
 
-@keyframes glitchCyan {
-  0%, 88%, 96%, 100% { opacity: 0; clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%); }
-  89%               { opacity: 0.75; clip-path: polygon(0 15%, 100% 15%, 100% 38%, 0 38%); transform: translateX(-4px); }
-  90%               { opacity: 0.6;  clip-path: polygon(0 25%, 100% 25%, 100% 45%, 0 45%); transform: translateX(-2px); }
-  91%, 95%          { opacity: 0; }
-  92%               { opacity: 0.5;  clip-path: polygon(0 10%, 100% 10%, 100% 30%, 0 30%); transform: translateX(-3px); }
+// ── Cyan ghost: slides RIGHT, revealed in horizontal slices ────────────────
+@keyframes glitch404Cyan {
+  0%,   87.9%  { opacity: 0; transform: translateX(0);    clip-path: inset(0 0 100% 0); }
+  // Frame 1 — top slice pops in
+  88%           { opacity: 1; transform: translateX(4px);  clip-path: inset(0% 0 68% 0); }
+  // Frame 2 — mid slice
+  88.8%         { opacity: 1; transform: translateX(5px);  clip-path: inset(30% 0 40% 0); }
+  // Frame 3 — bottom slice
+  89.6%         { opacity: 1; transform: translateX(3px);  clip-path: inset(62% 0 0% 0); }
+  // Frame 4 — multi-band chaos
+  90.4%         { opacity: 1; transform: translateX(6px);
+                  clip-path: polygon(
+                    0 0,   100% 0,   100% 22%, 0 22%,
+                    0 45%,  100% 45%, 100% 60%, 0 60%,
+                    0 78%,  100% 78%, 100% 100%, 0 100%
+                  ); }
+  91%,  100%   { opacity: 0; transform: translateX(0);    clip-path: inset(0 0 100% 0); }
 }
 
-@keyframes glitchMagenta {
-  0%, 88%, 96%, 100% { opacity: 0; clip-path: polygon(0 55%, 100% 55%, 100% 75%, 0 75%); }
-  90%               { opacity: 0.7;  clip-path: polygon(0 50%, 100% 50%, 100% 70%, 0 70%); transform: translateX(4px); }
-  91%               { opacity: 0.55; clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%); transform: translateX(2px); }
-  92%, 95%          { opacity: 0; }
-  93%               { opacity: 0.45; clip-path: polygon(0 48%, 100% 48%, 100% 65%, 0 65%); transform: translateX(3px); }
+// ── Pink ghost: slides LEFT, different slice pattern ─────────────────────────
+@keyframes glitch404Pink {
+  0%,   87.9%  { opacity: 0; transform: translateX(0);    clip-path: inset(0 0 100% 0); }
+  88.4%         { opacity: 1; transform: translateX(-5px); clip-path: inset(15% 0 55% 0); }
+  89.2%         { opacity: 1; transform: translateX(-4px); clip-path: inset(50% 0 10% 0); }
+  90%           { opacity: 1; transform: translateX(-6px); clip-path: inset(5% 0 70% 0); }
+  90.8%         { opacity: 1; transform: translateX(-3px);
+                  clip-path: polygon(
+                    0 10%,  100% 10%,  100% 35%, 0 35%,
+                    0 55%,  100% 55%,  100% 72%, 0 72%,
+                    0 88%,  100% 88%,  100% 100%, 0 100%
+                  ); }
+  91%,  100%   { opacity: 0; transform: translateX(0);    clip-path: inset(0 0 100% 0); }
 }
 
+// ── Respect user's motion preferences ────────────────────────────────────────
 @media (prefers-reduced-motion: reduce) {
   .error-code,
   .error-code::before,
-  .error-code::after { animation: none; }
+  .error-code::after {
+    animation: none;
+  }
   .error-code::before,
-  .error-code::after  { display: none; }
+  .error-code::after {
+    display: none;
+  }
 }
 
 
