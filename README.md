@@ -1,16 +1,15 @@
 # Meta Anime
 
-Meta Anime is a full-stack application (Angular UI + ASP.NET Core API) that aggregates, cross-references, and manages anime metadata from multiple sources — Sonarr, Plex, MyAnimeList (MAL), and Kometa.
+Meta Anime is a self-hosted, full-stack dashboard (Angular UI + ASP.NET Core API) that unifies your anime library across **Plex**, **Sonarr**, and **MyAnimeList** into a single, searchable interface — powered by [Kometa](https://github.com/Kometa-Team/Kometa) ID mappings for accurate cross-platform matching.
 
 ## 🚀 Features
 
-* **Multi-Source Aggregation** — fetches data from Sonarr, Plex, and MyAnimeList
-* **Intelligent Matching** — cross-references anime using external IDs (Tvdb, Imdb, Tmdb) and Kometa mapping files
-* **Background Sync** — scheduled Hangfire jobs keep metadata up to date
-* **Aspire Orchestration** — one command starts PostgreSQL, the API, and the Angular UI with live reload
-* **Developer Dashboard** — real-time logs, traces, and metrics via the Aspire Dashboard
-* **Secure** — API Key authentication (`X-Api-Key` header)
-* **Swagger / OpenAPI** — interactive API docs at `<api-url>/swagger`
+* **Unified Anime Dashboard** — one view showing how many titles you have across Plex, Sonarr, and MAL, with a genre-distribution chart and a coverage-gap summary (e.g. titles in Sonarr not on MAL, or in Plex but not in Sonarr).
+* **Cross-Source Anime Library** — browse and search your entire collection with rich metadata pulled from all three sources simultaneously; filter by genre, theme, demographic, media type, codec, airing status, and MAL watch state.
+* **Seasonal Anime Browser** — explore any season by year and add titles directly to Sonarr (with quality profile and root-folder selection) and to your MAL list — all without leaving the app.
+* **Intelligent Cross-Platform Matching** — uses Kometa's AniDB ID mappings together with TVDB, IMDB, and TMDB identifiers to reliably link the same title across Plex, Sonarr, and MAL.
+* **Background Sync** — Hangfire-powered scheduled jobs keep all source data fresh automatically; trigger a manual sync at any time from the Settings page with real-time progress updates via SignalR.
+* **In-App Settings** — configure every integration (Sonarr, Plex, MAL, Kometa) directly from the UI without editing config files.
 
 ## 🛠️ Tech Stack
 
@@ -194,4 +193,10 @@ The API automatically creates the migrations history table and runs all EF Core 
 ## 📄 License
 
 [MIT](LICENSE)
+
+---
+
+## 🙏 Acknowledgments
+
+* [**Kometa**](https://github.com/Kometa-Team/Kometa) — Meta Anime uses Kometa's anime ID mapping files to cross-reference AniDB, MAL, Plex, and other platform identifiers. Thank you to the Kometa team for maintaining this invaluable community resource!
 
