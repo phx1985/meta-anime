@@ -13,6 +13,7 @@ jobs:
   docker-build:
     name: Build Docker Image
     runs-on: ubuntu-latest
+    timeout-minutes: 15 # <-- ADD THIS TO PREVENT RUNAWAY ACTION TIME
     
     permissions:
       contents: read
@@ -58,6 +59,7 @@ jobs:
   docker-debug-build:
     name: Build Debug Docker Image
     runs-on: ubuntu-latest
+    timeout-minutes: 15 # <-- ADD THIS TO PREVENT RUNAWAY ACTION TIME
     
     permissions:
       contents: read
@@ -83,6 +85,7 @@ jobs:
   docker-lint:
     name: Lint Dockerfiles
     runs-on: ubuntu-latest
+    timeout-minutes: 5 # <-- ADD THIS TO PREVENT RUNAWAY ACTION TIME
     
     permissions:
       contents: read
