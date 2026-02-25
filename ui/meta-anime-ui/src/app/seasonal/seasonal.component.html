@@ -156,53 +156,86 @@
                 <div class="filter-label-row">
                   <span class="filter-label">{{ 'seasonal.filter.genre' | translate }}</span>
                   @if (filterGenre().length > 1) {
-                    <div class="operator-toggle" role="radiogroup" [attr.aria-label]="'seasonal.filter.genreOperator' | translate">
-                      <button type="button" class="op-btn" [class.op-btn--active]="genreOperator() === 'or'"
-                              (click)="setGenreOperator('or', $event)" role="radio" [attr.aria-checked]="genreOperator() === 'or'">OR</button>
-                      <button type="button" class="op-btn" [class.op-btn--active]="genreOperator() === 'and'"
-                              (click)="setGenreOperator('and', $event)" role="radio" [attr.aria-checked]="genreOperator() === 'and'">AND</button>
+                    <div class="operator-toggle" role="radiogroup">
+                      <button type="button" class="op-btn" [class.op-btn--active]="genreOperator() === 'or'" (click)="setGenreOperator('or', $event)">OR</button>
+                      <button type="button" class="op-btn" [class.op-btn--active]="genreOperator() === 'and'" (click)="setGenreOperator('and', $event)">AND</button>
                     </div>
                   }
                 </div>
-                <div class="genre-dropdown">
-                  <button type="button" class="genre-trigger"
-                          [class.genre-trigger--has-value]="filterGenre().length > 0"
-                          [class.genre-trigger--open]="genreDropdownOpen"
-                          (click)="toggleGenreDropdown($event)"
-                          [attr.aria-expanded]="genreDropdownOpen"
-                          [attr.aria-label]="'seasonal.filter.genre' | translate">
-                    <span class="genre-trigger__text">
-                      @if (genreLabel()) { {{ genreLabel() }} } @else { {{ 'seasonal.filter.any' | translate }} }
-                    </span>
-                    @if (filterGenre().length > 0) {
-                      <button type="button" class="genre-clear-btn" (click)="clearGenres($event)" [attr.aria-label]="'seasonal.filter.clear' | translate">
-                        <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                      </button>
-                    }
-                    <svg class="genre-trigger__chevron" [class.genre-trigger__chevron--open]="genreDropdownOpen" width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                      <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                    </svg>
-                  </button>
-                  @if (genreDropdownOpen) {
-                    <div class="genre-panel" role="listbox" [attr.aria-multiselectable]="true">
-                      <div class="genre-panel__inner">
-                        @for (g of filteredGenreList(); track g) {
-                          <button type="button" class="genre-option"
-                                  [class.genre-option--selected]="filterGenre().includes(g)"
-                                  role="option" [attr.aria-selected]="filterGenre().includes(g)"
-                                  (click)="toggleGenre(g, $event)">
-                            @if (filterGenre().includes(g)) {
-                              <span class="genre-option__check" aria-hidden="true">
-                                <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M2 8l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
-                              </span>
-                            }
-                            {{ ('genres.' + g) | translate }}
-                          </button>
-                        }
-                      </div>
+                <button type="button" class="fp-trigger"
+                        [class.fp-trigger--has-value]="filterGenre().length > 0"
+                        [class.fp-trigger--open]="genreDropdownOpen"
+                        (click)="toggleGenreDropdown($event)">
+                  <span class="fp-trigger__text">
+                    @if (genreLabel()) { {{ genreLabel() }} } @else { {{ 'seasonal.filter.any' | translate }} }
+                  </span>
+                  @if (filterGenre().length > 0) {
+                    <button type="button" class="fp-trigger__clear" (click)="clearGenres($event)">
+                      <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
+                    </button>
+                  }
+                  <svg class="fp-trigger__chevron" [class.fp-trigger__chevron--open]="genreDropdownOpen" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Theme -->
+              <div class="filter-field">
+                <div class="filter-label-row">
+                  <span class="filter-label">{{ 'seasonal.filter.theme' | translate }}</span>
+                  @if (filterTheme().length > 1) {
+                    <div class="operator-toggle" role="radiogroup">
+                      <button type="button" class="op-btn" [class.op-btn--active]="themeOperator() === 'or'" (click)="setThemeOperator('or', $event)">OR</button>
+                      <button type="button" class="op-btn" [class.op-btn--active]="themeOperator() === 'and'" (click)="setThemeOperator('and', $event)">AND</button>
                     </div>
                   }
                 </div>
+                <button type="button" class="fp-trigger"
+                        [class.fp-trigger--has-value]="filterTheme().length > 0"
+                        [class.fp-trigger--open]="themeDropdownOpen"
+                        (click)="toggleThemeDropdown($event)">
+                  <span class="fp-trigger__text">
+                    @if (themeLabel()) { {{ themeLabel() }} } @else { {{ 'seasonal.filter.any' | translate }} }
+                  </span>
+                  @if (filterTheme().length > 0) {
+                    <button type="button" class="fp-trigger__clear" (click)="clearThemes($event)">
+                      <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
+                    </button>
+                  }
+                  <svg class="fp-trigger__chevron" [class.fp-trigger__chevron--open]="themeDropdownOpen" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Demographic -->
+              <div class="filter-field">
+                <div class="filter-label-row">
+                  <span class="filter-label">{{ 'seasonal.filter.demographic' | translate }}</span>
+                  @if (filterDemographic().length > 1) {
+                    <div class="operator-toggle" role="radiogroup">
+                      <button type="button" class="op-btn" [class.op-btn--active]="demographicOperator() === 'or'" (click)="setDemographicOperator('or', $event)">OR</button>
+                      <button type="button" class="op-btn" [class.op-btn--active]="demographicOperator() === 'and'" (click)="setDemographicOperator('and', $event)">AND</button>
+                    </div>
+                  }
+                </div>
+                <button type="button" class="fp-trigger"
+                        [class.fp-trigger--has-value]="filterDemographic().length > 0"
+                        [class.fp-trigger--open]="demographicDropdownOpen"
+                        (click)="toggleDemographicDropdown($event)">
+                  <span class="fp-trigger__text">
+                    @if (demographicLabel()) { {{ demographicLabel() }} } @else { {{ 'seasonal.filter.any' | translate }} }
+                  </span>
+                  @if (filterDemographic().length > 0) {
+                    <button type="button" class="fp-trigger__clear" (click)="clearDemographics($event)">
+                      <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
+                    </button>
+                  }
+                  <svg class="fp-trigger__chevron" [class.fp-trigger__chevron--open]="demographicDropdownOpen" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
               </div>
 
               <!-- MAL status -->
@@ -303,7 +336,10 @@
       <div class="seasonal-grid" [@gridAnimation]="displayedAnimes().length">
         @for (anime of displayedAnimes(); track anime.malId) {
           <div class="seasonal-grid__cell">
-            <app-seasonal-card [anime]="anime" [activeGenres]="filterGenre()" />
+            <app-seasonal-card [anime]="anime"
+              [activeGenres]="filterGenre()"
+              [activeThemes]="filterTheme()"
+              [activeDemographics]="filterDemographic()" />
           </div>
         }
       </div>
@@ -321,4 +357,135 @@
 
   </div>
 </div>
+
+<!-- ── Genre / Theme / Demographic filter popups (fixed overlay) ─────────── -->
+
+@if (genreDropdownOpen) {
+  <div class="fp-backdrop" (click)="genreDropdownOpen = false" role="dialog" aria-modal="true">
+    <div class="fp-popup" (click)="$event.stopPropagation()">
+      <div class="fp-popup__header">
+        <span class="fp-popup__title">{{ 'seasonal.filter.genre' | translate }}</span>
+        @if (filterGenre().length > 1) {
+          <div class="fp-popup__ops">
+            <button type="button" class="op-btn" [class.op-btn--active]="genreOperator() === 'or'" (click)="setGenreOperator('or', $event)">OR</button>
+            <button type="button" class="op-btn" [class.op-btn--active]="genreOperator() === 'and'" (click)="setGenreOperator('and', $event)">AND</button>
+          </div>
+        }
+        <button type="button" class="fp-popup__close" (click)="genreDropdownOpen = false" aria-label="Close">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l12 12M14 2L2 14"/></svg>
+        </button>
+      </div>
+      <div class="fp-popup__search">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l3 3" stroke-linecap="round"/></svg>
+        <input class="fp-popup__search-input" type="search" [(ngModel)]="genreSearch" placeholder="Filter..." autocomplete="off" />
+        @if (genreSearch) {
+          <button type="button" class="fp-popup__search-clear" (click)="genreSearch = ''">
+            <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l12 12M14 2L2 14"/></svg>
+          </button>
+        }
+      </div>
+      <div class="fp-popup__body" role="listbox" aria-multiselectable="true">
+        @for (item of sortedGenreList(); track item.key) {
+          @if (!genreSearch || item.label.toLowerCase().includes(genreSearch.toLowerCase()) || item.key.toLowerCase().includes(genreSearch.toLowerCase())) {
+            <button type="button" class="fp-option"
+                    [class.fp-option--selected]="filterGenre().includes(item.key)"
+                    [class.fp-option--nsfw]="item.nsfw"
+                    role="option" [attr.aria-selected]="filterGenre().includes(item.key)"
+                    (click)="toggleGenre(item.key, $event)">
+              {{ item.label }}
+            </button>
+          }
+        }
+      </div>
+      <div class="fp-popup__footer">
+        @if (filterGenre().length > 0) {
+          <button type="button" class="fp-popup__clear-all" (click)="clearGenres($event)">{{ 'seasonal.filter.clear' | translate }} ({{ filterGenre().length }})</button>
+        }
+        <button type="button" class="fp-popup__done" (click)="genreDropdownOpen = false">Done</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (themeDropdownOpen) {
+  <div class="fp-backdrop" (click)="themeDropdownOpen = false" role="dialog" aria-modal="true">
+    <div class="fp-popup fp-popup--theme" (click)="$event.stopPropagation()">
+      <div class="fp-popup__header">
+        <span class="fp-popup__title">{{ 'seasonal.filter.theme' | translate }}</span>
+        @if (filterTheme().length > 1) {
+          <div class="fp-popup__ops">
+            <button type="button" class="op-btn" [class.op-btn--active]="themeOperator() === 'or'" (click)="setThemeOperator('or', $event)">OR</button>
+            <button type="button" class="op-btn" [class.op-btn--active]="themeOperator() === 'and'" (click)="setThemeOperator('and', $event)">AND</button>
+          </div>
+        }
+        <button type="button" class="fp-popup__close" (click)="themeDropdownOpen = false" aria-label="Close">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l12 12M14 2L2 14"/></svg>
+        </button>
+      </div>
+      <div class="fp-popup__search">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l3 3" stroke-linecap="round"/></svg>
+        <input class="fp-popup__search-input" type="search" [(ngModel)]="themeSearch" placeholder="Filter..." autocomplete="off" />
+        @if (themeSearch) {
+          <button type="button" class="fp-popup__search-clear" (click)="themeSearch = ''">
+            <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l12 12M14 2L2 14"/></svg>
+          </button>
+        }
+      </div>
+      <div class="fp-popup__body" role="listbox" aria-multiselectable="true">
+        @for (item of sortedThemeList(); track item.key) {
+          @if (!themeSearch || item.label.toLowerCase().includes(themeSearch.toLowerCase()) || item.key.toLowerCase().includes(themeSearch.toLowerCase())) {
+            <button type="button" class="fp-option"
+                    [class.fp-option--selected]="filterTheme().includes(item.key)"
+                    [class.fp-option--nsfw]="item.nsfw"
+                    role="option" [attr.aria-selected]="filterTheme().includes(item.key)"
+                    (click)="toggleTheme(item.key, $event)">
+              {{ item.label }}
+            </button>
+          }
+        }
+      </div>
+      <div class="fp-popup__footer">
+        @if (filterTheme().length > 0) {
+          <button type="button" class="fp-popup__clear-all" (click)="clearThemes($event)">{{ 'seasonal.filter.clear' | translate }} ({{ filterTheme().length }})</button>
+        }
+        <button type="button" class="fp-popup__done" (click)="themeDropdownOpen = false">Done</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (demographicDropdownOpen) {
+  <div class="fp-backdrop" (click)="demographicDropdownOpen = false" role="dialog" aria-modal="true">
+    <div class="fp-popup fp-popup--demographic" (click)="$event.stopPropagation()">
+      <div class="fp-popup__header">
+        <span class="fp-popup__title">{{ 'seasonal.filter.demographic' | translate }}</span>
+        @if (filterDemographic().length > 1) {
+          <div class="fp-popup__ops">
+            <button type="button" class="op-btn" [class.op-btn--active]="demographicOperator() === 'or'" (click)="setDemographicOperator('or', $event)">OR</button>
+            <button type="button" class="op-btn" [class.op-btn--active]="demographicOperator() === 'and'" (click)="setDemographicOperator('and', $event)">AND</button>
+          </div>
+        }
+        <button type="button" class="fp-popup__close" (click)="demographicDropdownOpen = false" aria-label="Close">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l12 12M14 2L2 14"/></svg>
+        </button>
+      </div>
+      <div class="fp-popup__body fp-popup__body--no-search" role="listbox" aria-multiselectable="true">
+        @for (item of sortedDemographicList(); track item.key) {
+          <button type="button" class="fp-option"
+                  [class.fp-option--selected]="filterDemographic().includes(item.key)"
+                  role="option" [attr.aria-selected]="filterDemographic().includes(item.key)"
+                  (click)="toggleDemographic(item.key, $event)">
+            {{ item.label }}
+          </button>
+        }
+      </div>
+      <div class="fp-popup__footer">
+        @if (filterDemographic().length > 0) {
+          <button type="button" class="fp-popup__clear-all" (click)="clearDemographics($event)">{{ 'seasonal.filter.clear' | translate }} ({{ filterDemographic().length }})</button>
+        }
+        <button type="button" class="fp-popup__done" (click)="demographicDropdownOpen = false">Done</button>
+      </div>
+    </div>
+  </div>
+}
 

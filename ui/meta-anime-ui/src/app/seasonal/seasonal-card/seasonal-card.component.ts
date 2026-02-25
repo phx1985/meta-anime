@@ -7,6 +7,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DestroyRef } from '@angular/core';
 import { SeasonalAnimeItem } from '../../models/anime.models';
 import { ScoreBadgeComponent } from '../../anime-list/anime-card/score-badge/score-badge.component';
+import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../../constants/genre-lists';
 import { SonarrService } from '../../services/sonarr.service';
 import { AnimeService } from '../../services/anime.service';
 import { SonarrRootFolder, SonarrQualityProfile, SonarrLookupResult, SonarrAddResult } from '../../models/sonarr.models';
@@ -41,6 +42,8 @@ export class SeasonalCardComponent implements OnInit {
   @Input({ required: true }) anime!: SeasonalAnimeItem;
   /** Genres selected in the parent filter — highlights matching genre tags on the card. */
   @Input() activeGenres: string[] = [];
+  @Input() activeThemes: string[] = [];
+  @Input() activeDemographics: string[] = [];
 
   private translate    = inject(TranslateService);
   private sonarrService = inject(SonarrService);
@@ -141,7 +144,17 @@ export class SeasonalCardComponent implements OnInit {
   get coverImageUrl(): string | undefined { return this.anime.coverImageUrl; }
   get displayTitle(): string { return this.anime.title; }
   get description(): string { return this.anime.synopsis ?? ''; }
-  get genres(): string[] { return this.anime.genres ?? []; }
+
+  private get allMalGenres(): string[] { return this.anime.genres ?? []; }
+  /** MAL genre-category entries only. */
+  get pureGenres(): string[] { return this.allMalGenres.filter(g => GENRE_LIST.includes(g)); }
+  /** MAL theme entries only. */
+  get themes(): string[] { return this.allMalGenres.filter(g => THEME_LIST.includes(g)); }
+  /** MAL demographic entries only. */
+  get demographics(): string[] { return this.allMalGenres.filter(g => DEMOGRAPHIC_LIST.includes(g)); }
+  /** @deprecated kept for any external references */
+  get genres(): string[] { return this.allMalGenres; }
+
   get displayMalScore(): number { return this.anime.malScore ?? 0; }
   get startDate(): string | undefined { return this.anime.startDate; }
   get mediaType(): string | undefined { return this.anime.mediaType; }

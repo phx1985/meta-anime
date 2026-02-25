@@ -1,7 +1,6 @@
 import {
   Component,
   DestroyRef,
-  HostListener,
   inject,
   signal,
   computed,
@@ -16,12 +15,10 @@ import { SettingsService } from '../services/settings.service';
 import { FilterPresetService } from '../services/filter-preset.service';
 import { SeasonalAnimeItem, SeasonalFilterPreset, SeasonalSavedFilterState, SeasonName } from '../models/anime.models';
 import { SeasonalCardComponent } from './seasonal-card/seasonal-card.component';
-import { GENRE_LIST, MEDIA_TYPE_OPTIONS } from '../anime-list/anime-list.component';
+import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST, SFW_GENRE_LIST, SFW_THEME_LIST, NSFW_GENRES, NSFW_THEMES } from '../constants/genre-lists';
+import { MEDIA_TYPE_OPTIONS } from '../anime-list/anime-list.component';
 
 const MIN_YEAR = 1963;
-
-const NSFW_GENRES = ['Ecchi', 'Hentai', 'Erotica', 'Boys Love', 'Girls Love'];
-const SFW_GENRE_LIST = GENRE_LIST.filter(g => !NSFW_GENRES.includes(g));
 
 export interface SeasonPill {
   season: SeasonName;
@@ -127,13 +124,24 @@ export class SeasonalComponent {
   showNsfw = signal(true);
 
   // ── Filter state ──────────────────────────────────────────────────────────
-  filterOpen        = signal(false);
-  genreDropdownOpen = false;
+  filterOpen           = signal(false);
+  genreDropdownOpen    = false;
+  themeDropdownOpen    = false;
+  demographicDropdownOpen = false;
 
-  filterGenre     = signal<string[]>([]);
-  genreOperator   = signal<'or' | 'and'>('or');
-  filterMalStatus = signal<string[]>([]);
-  filterMediaType = signal<string[]>([]);
+  /** Search text inside each filter popup */
+  genreSearch       = '';
+  themeSearch       = '';
+  demographicSearch = '';
+
+  filterGenre       = signal<string[]>([]);
+  genreOperator     = signal<'or' | 'and'>('or');
+  filterTheme       = signal<string[]>([]);
+  themeOperator     = signal<'or' | 'and'>('or');
+  filterDemographic = signal<string[]>([]);
+  demographicOperator = signal<'or' | 'and'>('or');
+  filterMalStatus   = signal<string[]>([]);
+  filterMediaType   = signal<string[]>([]);
   sortBy          = signal('title');
   sortOrder       = signal<'asc' | 'desc'>('asc');
 
@@ -158,18 +166,78 @@ export class SeasonalComponent {
     this.showNsfw() ? GENRE_LIST : SFW_GENRE_LIST
   );
 
+  /** Theme list filtered by NSFW setting */
+  readonly filteredThemeList = computed(() =>
+    this.showNsfw() ? THEME_LIST : SFW_THEME_LIST
+  );
+
   /** Label shown on the genre dropdown trigger button */
   readonly genreLabel = computed(() => {
+    this.langSignal();
     const sel = this.filterGenre();
     if (sel.length === 0) return null;
-    if (sel.length <= 2) return sel.join(', ');
-    return `${sel[0]}, ${sel[1]} +${sel.length - 2}`;
+    const t = (k: string) => this.translateService.instant(`genres.${k}`);
+    if (sel.length <= 2) return sel.map(t).join(', ');
+    return `${t(sel[0])}, ${t(sel[1])} +${sel.length - 2}`;
+  });
+
+  /** Label shown on the theme dropdown trigger button */
+  readonly themeLabel = computed(() => {
+    this.langSignal();
+    const sel = this.filterTheme();
+    if (sel.length === 0) return null;
+    const t = (k: string) => this.translateService.instant(`genres.${k}`);
+    if (sel.length <= 2) return sel.map(t).join(', ');
+    return `${t(sel[0])}, ${t(sel[1])} +${sel.length - 2}`;
+  });
+
+  /** Label shown on the demographic dropdown trigger button */
+  readonly demographicLabel = computed(() => {
+    this.langSignal();
+    const sel = this.filterDemographic();
+    if (sel.length === 0) return null;
+    const t = (k: string) => this.translateService.instant(`genres.${k}`);
+    if (sel.length <= 2) return sel.map(t).join(', ');
+    return `${t(sel[0])}, ${t(sel[1])} +${sel.length - 2}`;
+  });
+
+  readonly demographicOptions = DEMOGRAPHIC_LIST;
+
+  /** Reactive language tag — changes when the user switches language. */
+  private readonly langSignal = signal(
+    this.translateService.currentLang || this.translateService.defaultLang || 'en'
+  );
+
+  /** Genre list: NSFW-filtered + sorted alphabetically (NSFW items last). */
+  readonly sortedGenreList = computed(() => {
+    this.langSignal();
+    return (this.showNsfw() ? GENRE_LIST : SFW_GENRE_LIST)
+      .map(k => ({ key: k, label: this.translateService.instant(`genres.${k}`), nsfw: NSFW_GENRES.includes(k) }))
+      .sort((a, b) => (a.nsfw !== b.nsfw ? (a.nsfw ? 1 : -1) : a.label.localeCompare(b.label)));
+  });
+
+  /** Theme list: NSFW-filtered + sorted alphabetically (NSFW items last). */
+  readonly sortedThemeList = computed(() => {
+    this.langSignal();
+    return (this.showNsfw() ? THEME_LIST : SFW_THEME_LIST)
+      .map(k => ({ key: k, label: this.translateService.instant(`genres.${k}`), nsfw: NSFW_THEMES.includes(k) }))
+      .sort((a, b) => (a.nsfw !== b.nsfw ? (a.nsfw ? 1 : -1) : a.label.localeCompare(b.label)));
+  });
+
+  /** Demographic list: sorted alphabetically by translated label. */
+  readonly sortedDemographicList = computed(() => {
+    this.langSignal();
+    return DEMOGRAPHIC_LIST
+      .map(k => ({ key: k, label: this.translateService.instant(`genres.${k}`) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
   });
 
   /** Count of active (non-default) filters for the badge */
   get activeFilterCount(): number {
     let n = 0;
     if (this.filterGenre().length) n++;
+    if (this.filterTheme().length) n++;
+    if (this.filterDemographic().length) n++;
     if (this.filterMalStatus().length) n++;
     if (this.filterMediaType().length) n++;
     if (this.sortBy() !== 'title' || this.sortOrder() !== 'asc') n++;
@@ -182,7 +250,17 @@ export class SeasonalComponent {
     const genres = this.filterGenre();
     if (genres.length) {
       const sep = genres.length > 1 ? ` ${this.genreOperator().toUpperCase()} ` : '';
-      parts.push(genres.join(sep));
+      parts.push(genres.map(k => this.translateService.instant(`genres.${k}`)).join(sep));
+    }
+    const themes = this.filterTheme();
+    if (themes.length) {
+      const sep = themes.length > 1 ? ` ${this.themeOperator().toUpperCase()} ` : '';
+      parts.push(themes.map(k => this.translateService.instant(`genres.${k}`)).join(sep));
+    }
+    const demographics = this.filterDemographic();
+    if (demographics.length) {
+      const sep = demographics.length > 1 ? ` ${this.demographicOperator().toUpperCase()} ` : '';
+      parts.push(demographics.map(k => this.translateService.instant(`genres.${k}`)).join(sep));
     }
     const malStatuses = this.filterMalStatus();
     if (malStatuses.length) {
@@ -222,6 +300,30 @@ export class SeasonalComponent {
         return isAnd
           ? genres.every(g => animeGenres.includes(g.toLowerCase()))
           : genres.some(g => animeGenres.includes(g.toLowerCase()));
+      });
+    }
+
+    // Theme filter (themes are stored in the same genres array in MAL data)
+    const themes = this.filterTheme();
+    if (themes.length > 0) {
+      const isAnd = this.themeOperator() === 'and';
+      result = result.filter(a => {
+        const animeGenres = (a.genres ?? []).map(g => g.toLowerCase());
+        return isAnd
+          ? themes.every(t => animeGenres.includes(t.toLowerCase()))
+          : themes.some(t => animeGenres.includes(t.toLowerCase()));
+      });
+    }
+
+    // Demographic filter (demographics are stored in the same genres array in MAL data)
+    const demographics = this.filterDemographic();
+    if (demographics.length > 0) {
+      const isAnd = this.demographicOperator() === 'and';
+      result = result.filter(a => {
+        const animeGenres = (a.genres ?? []).map(g => g.toLowerCase());
+        return isAnd
+          ? demographics.every(d => animeGenres.includes(d.toLowerCase()))
+          : demographics.some(d => animeGenres.includes(d.toLowerCase()));
       });
     }
 
@@ -284,6 +386,10 @@ export class SeasonalComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(show => this.showNsfw.set(show));
 
+    this.translateService.onLangChange
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(e => this.langSignal.set(e.lang));
+
     this.savedPresets.set(this.presetService.getSeasonalPresets());
 
     // Initial load
@@ -326,19 +432,12 @@ export class SeasonalComponent {
     this.filterOpen.update(v => !v);
   }
 
-  // ── Genre dropdown ────────────────────────────────────────────────────────
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    const target = event.target as HTMLElement;
-    if (this.genreDropdownOpen && !target.closest('.genre-dropdown')) {
-      this.genreDropdownOpen = false;
-    }
-  }
+  // ── Genre / Theme / Demographic popups ───────────────────────────────────
 
   toggleGenreDropdown(event: MouseEvent): void {
     event.stopPropagation();
     this.genreDropdownOpen = !this.genreDropdownOpen;
+    if (this.genreDropdownOpen) { this.themeDropdownOpen = false; this.demographicDropdownOpen = false; }
   }
 
   toggleGenre(genre: string, event: MouseEvent): void {
@@ -353,6 +452,52 @@ export class SeasonalComponent {
   clearGenres(event: MouseEvent): void {
     event.stopPropagation();
     this.filterGenre.set([]);
+    this._applyFilteredResults();
+  }
+
+  // ── Theme dropdown ────────────────────────────────────────────────────────
+
+  toggleThemeDropdown(event: MouseEvent): void {
+    event.stopPropagation();
+    this.themeDropdownOpen = !this.themeDropdownOpen;
+    if (this.themeDropdownOpen) { this.genreDropdownOpen = false; this.demographicDropdownOpen = false; }
+  }
+
+  toggleTheme(theme: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.filterTheme.update(v =>
+      v.includes(theme) ? v.filter(t => t !== theme) : [...v, theme]
+    );
+    if (this.filterTheme().length <= 1) this.themeOperator.set('or');
+    this._applyFilteredResults();
+  }
+
+  clearThemes(event: MouseEvent): void {
+    event.stopPropagation();
+    this.filterTheme.set([]);
+    this._applyFilteredResults();
+  }
+
+  // ── Demographic dropdown ──────────────────────────────────────────────────
+
+  toggleDemographicDropdown(event: MouseEvent): void {
+    event.stopPropagation();
+    this.demographicDropdownOpen = !this.demographicDropdownOpen;
+    if (this.demographicDropdownOpen) { this.genreDropdownOpen = false; this.themeDropdownOpen = false; }
+  }
+
+  toggleDemographic(demographic: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.filterDemographic.update(v =>
+      v.includes(demographic) ? v.filter(d => d !== demographic) : [...v, demographic]
+    );
+    if (this.filterDemographic().length <= 1) this.demographicOperator.set('or');
+    this._applyFilteredResults();
+  }
+
+  clearDemographics(event: MouseEvent): void {
+    event.stopPropagation();
+    this.filterDemographic.set([]);
     this._applyFilteredResults();
   }
 
@@ -392,6 +537,18 @@ export class SeasonalComponent {
     this._applyFilteredResults();
   }
 
+  setThemeOperator(op: 'or' | 'and', event: MouseEvent): void {
+    event.stopPropagation();
+    this.themeOperator.set(op);
+    this._applyFilteredResults();
+  }
+
+  setDemographicOperator(op: 'or' | 'and', event: MouseEvent): void {
+    event.stopPropagation();
+    this.demographicOperator.set(op);
+    this._applyFilteredResults();
+  }
+
   setSortBy(value: string): void {
     this.sortBy.set(value);
     this._applyFilteredResults();
@@ -416,11 +573,17 @@ export class SeasonalComponent {
   resetFilters(): void {
     this.filterGenre.set([]);
     this.genreOperator.set('or');
+    this.filterTheme.set([]);
+    this.themeOperator.set('or');
+    this.filterDemographic.set([]);
+    this.demographicOperator.set('or');
     this.filterMalStatus.set([]);
     this.filterMediaType.set([]);
     this.sortBy.set('title');
     this.sortOrder.set('asc');
-    this.genreDropdownOpen = false;
+    this.genreDropdownOpen       = false;
+    this.themeDropdownOpen       = false;
+    this.demographicDropdownOpen = false;
     this._applyFilteredResults();
   }
 
@@ -430,11 +593,17 @@ export class SeasonalComponent {
     const f = preset.filters;
     this.filterGenre.set(f.genre          ?? []);
     this.genreOperator.set(f.genreOperator ?? 'or');
+    this.filterTheme.set(f.theme          ?? []);
+    this.themeOperator.set(f.themeOperator ?? 'or');
+    this.filterDemographic.set(f.demographic ?? []);
+    this.demographicOperator.set(f.demographicOperator ?? 'or');
     this.filterMalStatus.set(f.malStatus  ?? []);
     this.filterMediaType.set(f.mediaType  ?? []);
     this.sortBy.set(f.sortBy              ?? 'title');
     this.sortOrder.set(f.sortOrder        ?? 'asc');
-    this.genreDropdownOpen = false;
+    this.genreDropdownOpen       = false;
+    this.themeDropdownOpen       = false;
+    this.demographicDropdownOpen = false;
     this._applyFilteredResults();
     this.showSavePreset = false;
     this.filterOpen.set(false);
@@ -472,12 +641,16 @@ export class SeasonalComponent {
 
   private _snapshotFilterState(): SeasonalSavedFilterState {
     return {
-      genre:         this.filterGenre().length      ? this.filterGenre()      : undefined,
-      genreOperator: this.filterGenre().length > 1  ? this.genreOperator()    : undefined,
-      malStatus:     this.filterMalStatus().length  ? this.filterMalStatus()  : undefined,
-      mediaType:     this.filterMediaType().length  ? this.filterMediaType()  : undefined,
-      sortBy:        this.sortBy()    !== 'title'   ? this.sortBy()           : undefined,
-      sortOrder:     this.sortOrder() !== 'asc'     ? this.sortOrder()        : undefined,
+      genre:              this.filterGenre().length      ? this.filterGenre()      : undefined,
+      genreOperator:      this.filterGenre().length > 1  ? this.genreOperator()    : undefined,
+      theme:              this.filterTheme().length      ? this.filterTheme()      : undefined,
+      themeOperator:      this.filterTheme().length > 1  ? this.themeOperator()    : undefined,
+      demographic:        this.filterDemographic().length ? this.filterDemographic() : undefined,
+      demographicOperator: this.filterDemographic().length > 1 ? this.demographicOperator() : undefined,
+      malStatus:          this.filterMalStatus().length  ? this.filterMalStatus()  : undefined,
+      mediaType:          this.filterMediaType().length  ? this.filterMediaType()  : undefined,
+      sortBy:             this.sortBy()    !== 'title'   ? this.sortBy()           : undefined,
+      sortOrder:          this.sortOrder() !== 'asc'     ? this.sortOrder()        : undefined,
     };
   }
 

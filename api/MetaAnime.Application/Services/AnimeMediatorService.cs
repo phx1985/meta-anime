@@ -45,6 +45,19 @@ public class AnimeMediatorService(
         "Ecchi", "Hentai", "Erotica"
     };
 
+    /// <summary>Maps filter codec tokens to all equivalent codec strings that may appear in file metadata.</summary>
+    private static readonly Dictionary<string, string[]> CodecAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["h264"]  = ["h264", "x264", "avc"],
+        ["hevc"]  = ["hevc", "h265", "x265"],
+        ["av1"]   = ["av1"],
+        ["mpeg2"] = ["mpeg2", "mpeg-2"],
+    };
+
+    /// <summary>Returns all alias strings for a codec filter token (falls back to the token itself).</summary>
+    private static IEnumerable<string> GetCodecAliases(string codec) =>
+        CodecAliases.TryGetValue(codec, out var aliases) ? aliases : [codec];
+
     private readonly string myAnimeListHost = malOptions.Value.WebBaseUrl;
     private readonly string sonarrSeriesBaseUrl = !string.IsNullOrWhiteSpace(sonarrOptions.Value.RemoteUrl)
         ? sonarrOptions.Value.RemoteUrl
@@ -82,6 +95,8 @@ public class AnimeMediatorService(
             // The DB-level ILike pre-filter cannot handle typos, so we bypass it for title searches.
             bool needsInMemoryPostFilter = !string.IsNullOrWhiteSpace(filters?.Title)
                                          || filters?.Genre?.Length > 0
+                                         || filters?.Theme?.Length > 0
+                                         || filters?.Demographic?.Length > 0
                                          || filters?.Status?.Length > 0
                                          || filters?.AiringStatus?.Length > 0
                                          || filters?.HasFile.HasValue == true
@@ -307,6 +322,84 @@ public class AnimeMediatorService(
             });
         }
 
+        if (filters?.Theme?.Length > 0)
+        {
+            // Theme filtering works identically to genre filtering — both are stored in the MAL Genres array.
+            var themeSet = new HashSet<string>(filters.Theme, StringComparer.OrdinalIgnoreCase);
+            bool isAnd = "and".Equals(filters.ThemeOperator, StringComparison.OrdinalIgnoreCase);
+
+            result = result.Where(a =>
+            {
+                if (a.MalAnimes == null || !a.MalAnimes.Any())
+                    return false;
+
+                return a.MalAnimes.Any(m =>
+                {
+                    if (string.IsNullOrWhiteSpace(m.Id))
+                        return false;
+
+                    if (!malCache.TryGetValue(m.Id, out var malJson) || string.IsNullOrWhiteSpace(malJson))
+                        return false;
+
+                    try
+                    {
+                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, options);
+                        var animeGenres = malAnime?.Genres?.Select(g => g.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                        if (animeGenres == null) return false;
+
+                        return isAnd
+                            ? themeSet.All(t => animeGenres.Contains(t))
+                            : themeSet.Any(t => animeGenres.Contains(t));
+                    }
+                    catch (JsonException ex)
+                    {
+                        logger.LogWarning(Constants.LogMessages.AnimeMediatorService.MalDeserializeFailedGenreFilter, m.Id, ex.Message);
+                        return false;
+                    }
+                });
+            });
+        }
+
+        if (filters?.Demographic?.Length > 0)
+        {
+            // Demographic filtering works identically to genre/theme filtering — stored in the MAL Genres array.
+            var demographicSet = new HashSet<string>(filters.Demographic, StringComparer.OrdinalIgnoreCase);
+            bool isAnd = "and".Equals(filters.DemographicOperator, StringComparison.OrdinalIgnoreCase);
+
+            result = result.Where(a =>
+            {
+                if (a.MalAnimes == null || !a.MalAnimes.Any())
+                    return false;
+
+                return a.MalAnimes.Any(m =>
+                {
+                    if (string.IsNullOrWhiteSpace(m.Id))
+                        return false;
+
+                    if (!malCache.TryGetValue(m.Id, out var malJson) || string.IsNullOrWhiteSpace(malJson))
+                        return false;
+
+                    try
+                    {
+                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, options);
+                        var animeGenres = malAnime?.Genres?.Select(g => g.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                        if (animeGenres == null) return false;
+
+                        return isAnd
+                            ? demographicSet.All(d => animeGenres.Contains(d))
+                            : demographicSet.Any(d => animeGenres.Contains(d));
+                    }
+                    catch (JsonException ex)
+                    {
+                        logger.LogWarning(Constants.LogMessages.AnimeMediatorService.MalDeserializeFailedGenreFilter, m.Id, ex.Message);
+                        return false;
+                    }
+                });
+            });
+        }
+
         // AiringStatus maps to the MAL series broadcast status (finished_airing / currently_airing / not_yet_aired)
         if (filters?.AiringStatus?.Length > 0)
         {
@@ -327,7 +420,8 @@ public class AnimeMediatorService(
             result = result.Where(a =>
                 a.SonarrAnimes?.Any(s =>
                     s.CodecDistribution?.Keys.Any(k =>
-                        filters.Codec.Any(c => k.Contains(c, StringComparison.OrdinalIgnoreCase))) == true) == true);
+                        filters.Codec.Any(c => GetCodecAliases(c)
+                            .Any(alias => k.Contains(alias, StringComparison.OrdinalIgnoreCase)))) == true) == true);
         }
 
         if (filters?.MediaType?.Length > 0)
