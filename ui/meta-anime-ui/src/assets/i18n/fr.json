@@ -253,7 +253,7 @@
     "reveal": "Afficher la valeur",
     "hide": "Masquer la valeur",
     "sync": {
-      "button": "Forcer la sync",
+      "button": "Synchro manuelle",
       "inProgress": "Synchronisation…",
       "hub": {
         "title": "Synchronisation en cours",
