@@ -196,26 +196,32 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   /** Label shown on the genre dropdown trigger button */
   readonly genreLabel = computed(() => {
+    this.langSignal();
     const sel = this.filterGenre();
     if (sel.length === 0) return null;
-    if (sel.length <= 2) return sel.join(', ');
-    return `${sel[0]}, ${sel[1]} +${sel.length - 2}`;
+    const t = (k: string) => this.translateService.instant(`genres.${k}`);
+    if (sel.length <= 2) return sel.map(t).join(', ');
+    return `${t(sel[0])}, ${t(sel[1])} +${sel.length - 2}`;
   });
 
   /** Label shown on the theme dropdown trigger button */
   readonly themeLabel = computed(() => {
+    this.langSignal();
     const sel = this.filterTheme();
     if (sel.length === 0) return null;
-    if (sel.length <= 2) return sel.join(', ');
-    return `${sel[0]}, ${sel[1]} +${sel.length - 2}`;
+    const t = (k: string) => this.translateService.instant(`genres.${k}`);
+    if (sel.length <= 2) return sel.map(t).join(', ');
+    return `${t(sel[0])}, ${t(sel[1])} +${sel.length - 2}`;
   });
 
   /** Label shown on the demographic dropdown trigger button */
   readonly demographicLabel = computed(() => {
+    this.langSignal();
     const sel = this.filterDemographic();
     if (sel.length === 0) return null;
-    if (sel.length <= 2) return sel.join(', ');
-    return `${sel[0]}, ${sel[1]} +${sel.length - 2}`;
+    const t = (k: string) => this.translateService.instant(`genres.${k}`);
+    if (sel.length <= 2) return sel.map(t).join(', ');
+    return `${t(sel[0])}, ${t(sel[1])} +${sel.length - 2}`;
   });
 
   readonly demographicOptions = DEMOGRAPHIC_LIST;
@@ -290,17 +296,17 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     const genres = this.filterGenre();
     if (genres.length) {
       const sep = genres.length > 1 ? ` ${this.genreOperator.toUpperCase()} ` : '';
-      parts.push(genres.join(sep));
+      parts.push(genres.map(k => this.translateService.instant(`genres.${k}`)).join(sep));
     }
     const themes = this.filterTheme();
     if (themes.length) {
       const sep = themes.length > 1 ? ` ${this.themeOperator.toUpperCase()} ` : '';
-      parts.push(themes.join(sep));
+      parts.push(themes.map(k => this.translateService.instant(`genres.${k}`)).join(sep));
     }
     const demographics = this.filterDemographic();
     if (demographics.length) {
       const sep = demographics.length > 1 ? ` ${this.demographicOperator.toUpperCase()} ` : '';
-      parts.push(demographics.join(sep));
+      parts.push(demographics.map(k => this.translateService.instant(`genres.${k}`)).join(sep));
     }
     if (this.filterWatchState.length) {
       parts.push(this.filterWatchState
