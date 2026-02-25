@@ -358,20 +358,33 @@
 
 // ── Filter info icon & popover ────────────────────────────────────────────────
 // The wrapper is inline so it sits right next to the "Filters" label.
-// The popover is always in the DOM but hidden with visibility/opacity — this
-// lets CSS :hover show it without needing JS, while the --open class locks
-// it open on click (for keyboard / mobile).
+// The popover is always in the DOM but hidden with visibility/opacity — shown
+// purely by CSS :hover.  An invisible ::after bridge covers the gap between the
+// button and the popover so the hover state is maintained while the mouse
+// travels downward to reach the popup links.
 .filter-info-wrap {
   position: relative;
   display: inline-flex;
   align-items: center;
 
-  // Show popover on hover or when click-locked open
-  &:hover .filter-info-popover,
-  &.filter-info-wrap--open .filter-info-popover {
+  // Show popover on hover
+  &:hover .filter-info-popover {
     opacity: 1;
     visibility: visible;
     transform: translateX(-20%) translateY(0);
+    pointer-events: auto;
+  }
+
+  // Invisible bridge: fills the gap between the button and the popover so
+  // moving the mouse down to click the link doesn't accidentally leave the
+  // hover zone and close the tooltip.
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: -0.5rem;
+    right: -0.5rem;
+    height: 12px; // matches the 8px gap + a small margin
     pointer-events: auto;
   }
 }

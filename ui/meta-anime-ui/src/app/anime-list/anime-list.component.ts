@@ -154,9 +154,6 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   /** Whether the filter body is expanded */
   filterOpen = signal(true);
 
-  /** Whether the filter info popover is visible */
-  filterInfoOpen = signal(false);
-
   /** Whether the advanced filter sub-section is expanded */
   advancedOpen = signal(false);
 
