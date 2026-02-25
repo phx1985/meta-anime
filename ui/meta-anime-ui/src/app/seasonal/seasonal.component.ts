@@ -16,7 +16,7 @@ import { SettingsService } from '../services/settings.service';
 import { FilterPresetService } from '../services/filter-preset.service';
 import { SeasonalAnimeItem, SeasonalFilterPreset, SeasonalSavedFilterState, SeasonName } from '../models/anime.models';
 import { SeasonalCardComponent } from './seasonal-card/seasonal-card.component';
-import { GENRE_LIST } from '../anime-list/anime-list.component';
+import { GENRE_LIST, MEDIA_TYPE_OPTIONS } from '../anime-list/anime-list.component';
 
 const MIN_YEAR = 1963;
 
@@ -133,6 +133,7 @@ export class SeasonalComponent {
   filterGenre     = signal<string[]>([]);
   genreOperator   = signal<'or' | 'and'>('or');
   filterMalStatus = signal<string[]>([]);
+  filterMediaType = signal<string[]>([]);
   sortBy          = signal('title');
   sortOrder       = signal<'asc' | 'desc'>('asc');
 
@@ -148,8 +149,9 @@ export class SeasonalComponent {
   showSavePreset  = false;
   newPresetName   = '';
 
-  readonly malStates   = SEASONAL_MAL_STATES;
-  readonly sortOptions = SEASONAL_SORT_OPTIONS;
+  readonly malStates         = SEASONAL_MAL_STATES;
+  readonly sortOptions       = SEASONAL_SORT_OPTIONS;
+  readonly mediaTypeOptions  = MEDIA_TYPE_OPTIONS;
 
   /** Genre list filtered by NSFW setting */
   readonly filteredGenreList = computed(() =>
@@ -169,6 +171,7 @@ export class SeasonalComponent {
     let n = 0;
     if (this.filterGenre().length) n++;
     if (this.filterMalStatus().length) n++;
+    if (this.filterMediaType().length) n++;
     if (this.sortBy() !== 'title' || this.sortOrder() !== 'asc') n++;
     return n;
   }
@@ -187,6 +190,12 @@ export class SeasonalComponent {
         .map(s => this.translateService.instant(
           s === 'not_in' ? 'seasonal.filter.malStatus.not_in' : `animeCard.malStatus.${s}`
         ))
+        .join(', '));
+    }
+    const mediaTypes = this.filterMediaType();
+    if (mediaTypes.length) {
+      parts.push(mediaTypes
+        .map(t => this.translateService.instant(`animeCard.mediaType.${t}`))
         .join(', '));
     }
     const isDefaultSort = this.sortBy() === 'title' && this.sortOrder() === 'asc';
@@ -242,6 +251,14 @@ export class SeasonalComponent {
 
         return statusSelected.some(s => a.malViewState === s);
       });
+    }
+
+    // Media type filter
+    const mediaTypes = this.filterMediaType();
+    if (mediaTypes.length > 0) {
+      result = result.filter(a =>
+        mediaTypes.some(t => (a.mediaType ?? '').toLowerCase() === t.toLowerCase())
+      );
     }
 
     // Sort
@@ -358,6 +375,15 @@ export class SeasonalComponent {
     this._applyFilteredResults();
   }
 
+  // ── Media type pills ──────────────────────────────────────────────────────
+
+  toggleMediaType(type: string): void {
+    this.filterMediaType.update(current =>
+      current.includes(type) ? current.filter(t => t !== type) : [...current, type]
+    );
+    this._applyFilteredResults();
+  }
+
   // ── Sort ──────────────────────────────────────────────────────────────────
 
   setGenreOperator(op: 'or' | 'and', event: MouseEvent): void {
@@ -391,6 +417,7 @@ export class SeasonalComponent {
     this.filterGenre.set([]);
     this.genreOperator.set('or');
     this.filterMalStatus.set([]);
+    this.filterMediaType.set([]);
     this.sortBy.set('title');
     this.sortOrder.set('asc');
     this.genreDropdownOpen = false;
@@ -404,6 +431,7 @@ export class SeasonalComponent {
     this.filterGenre.set(f.genre          ?? []);
     this.genreOperator.set(f.genreOperator ?? 'or');
     this.filterMalStatus.set(f.malStatus  ?? []);
+    this.filterMediaType.set(f.mediaType  ?? []);
     this.sortBy.set(f.sortBy              ?? 'title');
     this.sortOrder.set(f.sortOrder        ?? 'asc');
     this.genreDropdownOpen = false;
@@ -447,6 +475,7 @@ export class SeasonalComponent {
       genre:         this.filterGenre().length      ? this.filterGenre()      : undefined,
       genreOperator: this.filterGenre().length > 1  ? this.genreOperator()    : undefined,
       malStatus:     this.filterMalStatus().length  ? this.filterMalStatus()  : undefined,
+      mediaType:     this.filterMediaType().length  ? this.filterMediaType()  : undefined,
       sortBy:        this.sortBy()    !== 'title'   ? this.sortBy()           : undefined,
       sortOrder:     this.sortOrder() !== 'asc'     ? this.sortOrder()        : undefined,
     };

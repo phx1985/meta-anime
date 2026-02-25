@@ -224,6 +224,20 @@
                 </div>
               </div>
 
+              <!-- Media type -->
+              <div class="filter-field filter-field--pills">
+                <span class="filter-label">{{ 'seasonal.filter.mediaType' | translate }}</span>
+                <div class="filter-pills">
+                  @for (t of mediaTypeOptions; track t.value) {
+                    <button type="button" class="filter-pill"
+                            [class.filter-pill--active]="filterMediaType().includes(t.value)"
+                            (click)="toggleMediaType(t.value)">
+                      {{ t.labelKey | translate }}
+                    </button>
+                  }
+                </div>
+              </div>
+
             </div>
 
             <!-- Footer: Sort + Reset -->
