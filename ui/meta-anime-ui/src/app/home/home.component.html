@@ -1,0 +1,58 @@
+<div class="home-container">
+  <header class="home-header">
+    <h1>{{ 'HOME.TITLE' | translate }}</h1>
+  </header>
+
+  <section class="search-panel">
+    <div class="search-row">
+      <input
+        class="search-input"
+        type="text"
+        [placeholder]="'HOME.SEARCH_PLACEHOLDER' | translate"
+        [value]="filter().title"
+        (input)="updateFilter({ title: $any($event.target).value })"
+      />
+    </div>
+
+    <div class="filter-row">
+      <div class="filter-group">
+        <label class="filter-label">{{ 'HOME.GENRE_LABEL' | translate }}</label>
+        <select
+          class="filter-select"
+          [value]="filter().genre"
+          (change)="updateFilter({ genre: $any($event.target).value })"
+        >
+          <option value="">{{ 'HOME.GENRE_ALL' | translate }}</option>
+          @for (genre of genres; track genre) {
+            <option [value]="genre">{{ genre }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label class="filter-label">{{ 'HOME.YEAR_LABEL' | translate }}</label>
+        <select
+          class="filter-select"
+          [value]="filter().year"
+          (change)="updateFilter({ year: $any($event.target).value })"
+        >
+          <option value="">{{ 'HOME.YEAR_ALL' | translate }}</option>
+          @for (year of years; track year) {
+            <option [value]="year">{{ year }}</option>
+          }
+        </select>
+      </div>
+
+      <button class="search-btn" [disabled]="!isSearchEnabled()" (click)="search()">
+        {{ 'HOME.SEARCH_BUTTON' | translate }}
+      </button>
+    </div>
+  </section>
+
+  @if (hasSearched()) {
+    <section class="results-section">
+      <h2>{{ 'HOME.RESULTS_TITLE' | translate }}</h2>
+      <p class="no-results">{{ 'HOME.NO_RESULTS' | translate }}</p>
+    </section>
+  }
+</div>

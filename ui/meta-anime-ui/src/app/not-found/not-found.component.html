@@ -1,0 +1,31 @@
+<div class="page-404">
+  <div class="speed-lines" aria-hidden="true"></div>
+
+  <div class="manga-panel">
+    <div class="panel-border">
+      <div class="error-code">{{ 'NOT_FOUND.TITLE' | translate }}</div>
+
+      <div class="character-section">
+        <div class="character-image-wrapper">
+          <img
+            class="character-image"
+            [src]="character().imagePath"
+            [alt]="character().nameKey | translate"
+            (error)="$any($event.target).style.display='none'"
+          />
+          <div class="character-placeholder" aria-hidden="true">？</div>
+        </div>
+
+        <div class="speech-bubble">
+          <p class="quote">&#8220;{{ character().quoteKey | translate }}&#8221;</p>
+          <span class="character-name">— {{ character().nameKey | translate }}</span>
+        </div>
+      </div>
+
+      <h1 class="subtitle">{{ 'NOT_FOUND.SUBTITLE' | translate }}</h1>
+      <p class="description">{{ 'NOT_FOUND.DESCRIPTION' | translate }}</p>
+
+      <a class="go-back-btn" routerLink="/">{{ 'NOT_FOUND.GO_BACK' | translate }}</a>
+    </div>
+  </div>
+</div>
