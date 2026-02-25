@@ -412,18 +412,19 @@
         }
       </div>
       <div class="fp-popup__body" role="listbox" aria-multiselectable="true">
-        @for (g of filteredGenreList(); track g) {
-          @if (!genreSearch || g.toLowerCase().includes(genreSearch.toLowerCase())) {
+        @for (item of sortedGenreList(); track item.key) {
+          @if (!genreSearch || item.label.toLowerCase().includes(genreSearch.toLowerCase()) || item.key.toLowerCase().includes(genreSearch.toLowerCase())) {
             <button type="button" class="fp-option"
-                    [class.fp-option--selected]="filterGenre().includes(g)"
-                    role="option" [attr.aria-selected]="filterGenre().includes(g)"
-                    (click)="toggleGenre(g, $event)">
+                    [class.fp-option--selected]="filterGenre().includes(item.key)"
+                    [class.fp-option--nsfw]="item.nsfw"
+                    role="option" [attr.aria-selected]="filterGenre().includes(item.key)"
+                    (click)="toggleGenre(item.key, $event)">
               <span class="fp-option__check" aria-hidden="true">
-                @if (filterGenre().includes(g)) {
+                @if (filterGenre().includes(item.key)) {
                   <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 8l4 4 8-8"/></svg>
                 }
               </span>
-              {{ ('genres.' + g) | translate }}
+              {{ item.label }}
             </button>
           }
         }
@@ -463,18 +464,19 @@
         }
       </div>
       <div class="fp-popup__body" role="listbox" aria-multiselectable="true">
-        @for (t of filteredThemeList(); track t) {
-          @if (!themeSearch || t.toLowerCase().includes(themeSearch.toLowerCase())) {
+        @for (item of sortedThemeList(); track item.key) {
+          @if (!themeSearch || item.label.toLowerCase().includes(themeSearch.toLowerCase()) || item.key.toLowerCase().includes(themeSearch.toLowerCase())) {
             <button type="button" class="fp-option"
-                    [class.fp-option--selected]="filterTheme().includes(t)"
-                    role="option" [attr.aria-selected]="filterTheme().includes(t)"
-                    (click)="toggleTheme(t, $event)">
+                    [class.fp-option--selected]="filterTheme().includes(item.key)"
+                    [class.fp-option--nsfw]="item.nsfw"
+                    role="option" [attr.aria-selected]="filterTheme().includes(item.key)"
+                    (click)="toggleTheme(item.key, $event)">
               <span class="fp-option__check" aria-hidden="true">
-                @if (filterTheme().includes(t)) {
+                @if (filterTheme().includes(item.key)) {
                   <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 8l4 4 8-8"/></svg>
                 }
               </span>
-              {{ ('genres.' + t) | translate }}
+              {{ item.label }}
             </button>
           }
         }
@@ -505,17 +507,17 @@
         </button>
       </div>
       <div class="fp-popup__body fp-popup__body--no-search" role="listbox" aria-multiselectable="true">
-        @for (d of demographicOptions; track d) {
+        @for (item of sortedDemographicList(); track item.key) {
           <button type="button" class="fp-option"
-                  [class.fp-option--selected]="filterDemographic().includes(d)"
-                  role="option" [attr.aria-selected]="filterDemographic().includes(d)"
-                  (click)="toggleDemographic(d, $event)">
+                  [class.fp-option--selected]="filterDemographic().includes(item.key)"
+                  role="option" [attr.aria-selected]="filterDemographic().includes(item.key)"
+                  (click)="toggleDemographic(item.key, $event)">
             <span class="fp-option__check" aria-hidden="true">
-              @if (filterDemographic().includes(d)) {
+              @if (filterDemographic().includes(item.key)) {
                 <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M2 8l4 4 8-8"/></svg>
               }
             </span>
-            {{ ('genres.' + d) | translate }}
+            {{ item.label }}
           </button>
         }
       </div>

@@ -37,6 +37,8 @@ import {
   DEMOGRAPHIC_LIST,
   SFW_GENRE_LIST,
   SFW_THEME_LIST,
+  NSFW_GENRES,
+  NSFW_THEMES,
 } from '../constants/genre-lists';
 
 export const WATCHING_STATES = [
@@ -218,6 +220,35 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   readonly demographicOptions = DEMOGRAPHIC_LIST;
 
+  /** Reactive language tag — changes when the user switches language. */
+  private readonly langSignal = signal(
+    this.translateService.currentLang || this.translateService.defaultLang || 'en'
+  );
+
+  /** Genre list: NSFW-filtered + sorted alphabetically by translated label. */
+  readonly sortedGenreList = computed(() => {
+    this.langSignal();
+    return (this.showNsfw() ? GENRE_LIST : SFW_GENRE_LIST)
+      .map(k => ({ key: k, label: this.translateService.instant(`genres.${k}`), nsfw: NSFW_GENRES.includes(k) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  });
+
+  /** Theme list: NSFW-filtered + sorted alphabetically by translated label. */
+  readonly sortedThemeList = computed(() => {
+    this.langSignal();
+    return (this.showNsfw() ? THEME_LIST : SFW_THEME_LIST)
+      .map(k => ({ key: k, label: this.translateService.instant(`genres.${k}`), nsfw: NSFW_THEMES.includes(k) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  });
+
+  /** Demographic list: sorted alphabetically by translated label. */
+  readonly sortedDemographicList = computed(() => {
+    this.langSignal();
+    return DEMOGRAPHIC_LIST
+      .map(k => ({ key: k, label: this.translateService.instant(`genres.${k}`) }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  });
+
   /** Count of active (non-default) filters for the badge */
   get activeFilterCount(): number {
     let n = 0;
@@ -317,6 +348,10 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.settingsService.getShowNsfw()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(show => this.showNsfw.set(show));
+
+    this.translateService.onLangChange
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(e => this.langSignal.set(e.lang));
 
     this.syncSignalR.syncCompleted$
       .pipe(takeUntilDestroyed(this.destroyRef))

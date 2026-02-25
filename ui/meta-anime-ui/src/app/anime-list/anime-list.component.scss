@@ -535,6 +535,7 @@
 .fp-option {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.3rem;
   padding: 0.3rem 0.75rem;
   border-radius: 999px;
@@ -556,10 +557,25 @@
     box-shadow: 0 2px 8px rgba(108, 99, 255, 0.3);
   }
 
+  // NSFW pills: pink border
+  &--nsfw:not(.fp-option--selected) {
+    border-color: #f472b6;
+    color: #f472b6;
+  }
+  &--nsfw:hover:not(.fp-option--selected) {
+    border-color: #ec4899;
+    color: #ec4899;
+  }
+  &--nsfw.fp-option--selected {
+    background: #ec4899;
+    border-color: #ec4899;
+    box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3);
+  }
+
   // Theme popup: teal accent
   .fp-popup--theme & {
-    &:hover { border-color: #14b8a6; color: #14b8a6; }
-    &.fp-option--selected { background: #14b8a6; border-color: #14b8a6; box-shadow: 0 2px 8px rgba(20,184,166,.3); }
+    &:hover:not(.fp-option--nsfw) { border-color: #14b8a6; color: #14b8a6; }
+    &.fp-option--selected:not(.fp-option--nsfw) { background: #14b8a6; border-color: #14b8a6; box-shadow: 0 2px 8px rgba(20,184,166,.3); }
   }
 
   // Demographic popup: amber accent
