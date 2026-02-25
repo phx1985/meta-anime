@@ -6,6 +6,8 @@ Meta Anime is a full-stack application (Angular UI + ASP.NET Core API) that aggr
 
 * **Multi-Source Aggregation** — fetches data from Sonarr, Plex, and MyAnimeList
 * **Intelligent Matching** — cross-references anime using external IDs (Tvdb, Imdb, Tmdb) and Kometa mapping files
+* **Advanced Filtering** — filter by genre, theme, and demographic with an elegant popup picker; selected filters displayed as pills on each card
+* **Genre / Theme / Demographic Pills** — at-a-glance tags on every anime card, with NSFW content visually distinguished
 * **Background Sync** — scheduled Hangfire jobs keep metadata up to date
 * **Aspire Orchestration** — one command starts PostgreSQL, the API, and the Angular UI with live reload
 * **Developer Dashboard** — real-time logs, traces, and metrics via the Aspire Dashboard
@@ -194,4 +196,10 @@ The API automatically creates the migrations history table and runs all EF Core 
 ## 📄 License
 
 [MIT](LICENSE)
+
+---
+
+## 🙏 Acknowledgments
+
+* [**Kometa**](https://github.com/Kometa-Team/Kometa) — Meta Anime uses Kometa's anime ID mapping files to cross-reference AniDB, MAL, Plex, and other platform identifiers. Thank you to the Kometa team for maintaining this invaluable community resource!
 
