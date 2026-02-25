@@ -120,7 +120,8 @@
         "delete": "Delete preset",
         "noPresets": "No saved presets yet"
       },
-      "noFilterActive": "No filter active"
+      "noFilterActive": "No filter active",
+      "mediaType": "Media type"
     },
     "sonarrAlreadyInLibrary": "Already in Sonarr",
     "partiallyTracked": "Partially tracked — add to more providers",

@@ -4,6 +4,7 @@
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   transition: background 0.3s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .navbar-brand {

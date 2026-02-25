@@ -120,7 +120,8 @@
         "delete": "Supprimer le préréglage",
         "noPresets": "Aucun préréglage sauvegardé"
       },
-      "noFilterActive": "Aucun filtre actif"
+      "noFilterActive": "Aucun filtre actif",
+      "mediaType": "Type de média"
     },
     "sonarrAlreadyInLibrary": "Déjà dans Sonarr",
     "partiallyTracked": "Partiellement suivi — ajouter aux autres fournisseurs",

@@ -189,6 +189,7 @@ export interface SeasonalSavedFilterState {
   genre?: string[];
   genreOperator?: 'or' | 'and';
   malStatus?: string[];
+  mediaType?: string[];
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }
