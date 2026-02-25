@@ -119,6 +119,8 @@ export interface AnimeFilters {
   status?: string[];
   genre?: string[];
   genreOperator?: 'or' | 'and';
+  theme?: string[];
+  themeOperator?: 'or' | 'and';
   sortBy?: string;
   sortOrder?: string;
   airingStatus?: string[];
@@ -132,6 +134,8 @@ export interface SavedFilterState {
   title?: string;
   genre?: string[];
   genreOperator?: 'or' | 'and';
+  theme?: string[];
+  themeOperator?: 'or' | 'and';
   watchState?: string[];
   airingStatus?: string[];
   hasFile?: 'any' | 'yes' | 'no';
@@ -188,6 +192,8 @@ export type SeasonName = 'winter' | 'spring' | 'summer' | 'fall';
 export interface SeasonalSavedFilterState {
   genre?: string[];
   genreOperator?: 'or' | 'and';
+  theme?: string[];
+  themeOperator?: 'or' | 'and';
   malStatus?: string[];
   mediaType?: string[];
   sortBy?: string;

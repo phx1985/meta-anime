@@ -205,6 +205,60 @@
                 </div>
               </div>
 
+              <!-- Theme -->
+              <div class="filter-field">
+                <div class="filter-label-row">
+                  <span class="filter-label">{{ 'seasonal.filter.theme' | translate }}</span>
+                  @if (filterTheme().length > 1) {
+                    <div class="operator-toggle" role="radiogroup" [attr.aria-label]="'seasonal.filter.themeOperator' | translate">
+                      <button type="button" class="op-btn" [class.op-btn--active]="themeOperator() === 'or'"
+                              (click)="setThemeOperator('or', $event)" role="radio" [attr.aria-checked]="themeOperator() === 'or'">OR</button>
+                      <button type="button" class="op-btn" [class.op-btn--active]="themeOperator() === 'and'"
+                              (click)="setThemeOperator('and', $event)" role="radio" [attr.aria-checked]="themeOperator() === 'and'">AND</button>
+                    </div>
+                  }
+                </div>
+                <div class="theme-dropdown">
+                  <button type="button" class="genre-trigger"
+                          [class.genre-trigger--has-value]="filterTheme().length > 0"
+                          [class.genre-trigger--open]="themeDropdownOpen"
+                          (click)="toggleThemeDropdown($event)"
+                          [attr.aria-expanded]="themeDropdownOpen"
+                          [attr.aria-label]="'seasonal.filter.theme' | translate">
+                    <span class="genre-trigger__text">
+                      @if (themeLabel()) { {{ themeLabel() }} } @else { {{ 'seasonal.filter.any' | translate }} }
+                    </span>
+                    @if (filterTheme().length > 0) {
+                      <button type="button" class="genre-clear-btn" (click)="clearThemes($event)" [attr.aria-label]="'seasonal.filter.clear' | translate">
+                        <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                      </button>
+                    }
+                    <svg class="genre-trigger__chevron" [class.genre-trigger__chevron--open]="themeDropdownOpen" width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                      <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                    </svg>
+                  </button>
+                  @if (themeDropdownOpen) {
+                    <div class="genre-panel" role="listbox" [attr.aria-multiselectable]="true">
+                      <div class="genre-panel__inner">
+                        @for (t of filteredThemeList(); track t) {
+                          <button type="button" class="genre-option"
+                                  [class.genre-option--selected]="filterTheme().includes(t)"
+                                  role="option" [attr.aria-selected]="filterTheme().includes(t)"
+                                  (click)="toggleTheme(t, $event)">
+                            @if (filterTheme().includes(t)) {
+                              <span class="genre-option__check" aria-hidden="true">
+                                <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M2 8l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+                              </span>
+                            }
+                            {{ ('genres.' + t) | translate }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+
               <!-- MAL status -->
               <div class="filter-field filter-field--pills">
                 <span class="filter-label">{{ 'seasonal.filter.malStatus.label' | translate }}</span>

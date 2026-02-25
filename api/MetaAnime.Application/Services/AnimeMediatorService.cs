@@ -82,6 +82,7 @@ public class AnimeMediatorService(
             // The DB-level ILike pre-filter cannot handle typos, so we bypass it for title searches.
             bool needsInMemoryPostFilter = !string.IsNullOrWhiteSpace(filters?.Title)
                                          || filters?.Genre?.Length > 0
+                                         || filters?.Theme?.Length > 0
                                          || filters?.Status?.Length > 0
                                          || filters?.AiringStatus?.Length > 0
                                          || filters?.HasFile.HasValue == true
@@ -297,6 +298,45 @@ public class AnimeMediatorService(
                         return isAnd
                             ? genreSet.All(g => animeGenres.Contains(g))
                             : genreSet.Any(g => animeGenres.Contains(g));
+                    }
+                    catch (JsonException ex)
+                    {
+                        logger.LogWarning(Constants.LogMessages.AnimeMediatorService.MalDeserializeFailedGenreFilter, m.Id, ex.Message);
+                        return false;
+                    }
+                });
+            });
+        }
+
+        if (filters?.Theme?.Length > 0)
+        {
+            // Theme filtering works identically to genre filtering — both are stored in the MAL Genres array.
+            var themeSet = new HashSet<string>(filters.Theme, StringComparer.OrdinalIgnoreCase);
+            bool isAnd = "and".Equals(filters.ThemeOperator, StringComparison.OrdinalIgnoreCase);
+
+            result = result.Where(a =>
+            {
+                if (a.MalAnimes == null || !a.MalAnimes.Any())
+                    return false;
+
+                return a.MalAnimes.Any(m =>
+                {
+                    if (string.IsNullOrWhiteSpace(m.Id))
+                        return false;
+
+                    if (!malCache.TryGetValue(m.Id, out var malJson) || string.IsNullOrWhiteSpace(malJson))
+                        return false;
+
+                    try
+                    {
+                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, options);
+                        var animeGenres = malAnime?.Genres?.Select(g => g.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                        if (animeGenres == null) return false;
+
+                        return isAnd
+                            ? themeSet.All(t => animeGenres.Contains(t))
+                            : themeSet.Any(t => animeGenres.Contains(t));
                     }
                     catch (JsonException ex)
                     {
