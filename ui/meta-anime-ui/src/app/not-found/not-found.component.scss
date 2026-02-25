@@ -83,6 +83,7 @@
 
 // ── Glowing error code ───────────────────────────────────────────────────────
 .error-code {
+  position: relative;
   font-size: clamp(5rem, 18vw, 9rem);
   font-weight: 900;
   line-height: 1;
@@ -92,7 +93,72 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   filter: drop-shadow(0 0 18px color-mix(in srgb, var(--accent-primary) 60%, transparent));
+  animation: glitchShake 5s infinite;
+
+  // Cyan channel ghost
+  &::before {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #22d3ee, #6ee7b7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%);
+    transform: translateX(-3px);
+    opacity: 0;
+    animation: glitchCyan 5s infinite;
+  }
+
+  // Magenta channel ghost
+  &::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #f43f5e, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    clip-path: polygon(0 55%, 100% 55%, 100% 75%, 0 75%);
+    transform: translateX(3px);
+    opacity: 0;
+    animation: glitchMagenta 5s infinite;
+  }
 }
+
+@keyframes glitchShake {
+  0%, 89%, 100%  { transform: translate(0, 0); }
+  90%            { transform: translate(-2px, 1px); }
+  91%            { transform: translate(2px, -1px); }
+  92%            { transform: translate(-1px, 2px); }
+  93%            { transform: translate(1px, -2px); }
+  94%            { transform: translate(0, 0); }
+}
+
+@keyframes glitchCyan {
+  0%, 88%, 96%, 100% { opacity: 0; clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%); }
+  89%               { opacity: 0.75; clip-path: polygon(0 15%, 100% 15%, 100% 38%, 0 38%); transform: translateX(-4px); }
+  90%               { opacity: 0.6;  clip-path: polygon(0 25%, 100% 25%, 100% 45%, 0 45%); transform: translateX(-2px); }
+  91%, 95%          { opacity: 0; }
+  92%               { opacity: 0.5;  clip-path: polygon(0 10%, 100% 10%, 100% 30%, 0 30%); transform: translateX(-3px); }
+}
+
+@keyframes glitchMagenta {
+  0%, 88%, 96%, 100% { opacity: 0; clip-path: polygon(0 55%, 100% 55%, 100% 75%, 0 75%); }
+  90%               { opacity: 0.7;  clip-path: polygon(0 50%, 100% 50%, 100% 70%, 0 70%); transform: translateX(4px); }
+  91%               { opacity: 0.55; clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%); transform: translateX(2px); }
+  92%, 95%          { opacity: 0; }
+  93%               { opacity: 0.45; clip-path: polygon(0 48%, 100% 48%, 100% 65%, 0 65%); transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .error-code,
+  .error-code::before,
+  .error-code::after { animation: none; }
+  .error-code::before,
+  .error-code::after  { display: none; }
+}
+
 
 // ── Title & subtitle ─────────────────────────────────────────────────────────
 .not-found-title {

@@ -168,7 +168,11 @@
       "noFilterActive": "Aucun filtre sélectionné",
       "prompt": "Définissez vos filtres et appuyez sur Rechercher pour explorer votre bibliothèque.",
       "advanced": "Filtres avancés",
-      "hideAdvanced": "Masquer les avancés"
+      "hideAdvanced": "Masquer les avancés",
+      "infoAriaLabel": "Infos sur les filtres",
+      "infoAutoApplyOn": "Réapplication automatique activée — vos derniers filtres de recherche sont restaurés automatiquement à chaque ouverture de cette page.",
+      "infoAutoApplyOff": "Réapplication automatique désactivée — les filtres repartent de zéro à chaque visite. Activez-la dans les Paramètres pour restaurer votre dernière recherche.",
+      "infoGoToSettings": "Aller aux Paramètres pour modifier"
     },
     "presets": {
       "label": "Présélections",
@@ -516,20 +520,20 @@
     "add": "Ajouter",
     "confirm": "Confirmer"
   },
-  "notFound": {
+    "notFound": {
     "ariaLabel": "404 – Page introuvable",
-    "title": "Page Introuvable !",
+    "title": "Oups — Cette page a totalement disparu de la carte !",
     "subtitle": {
-      "dimension":    "Cette page s'est égarée dans une autre dimension.",
-      "trainingArc":  "Cette page est en arc d'entraînement — elle reviendra plus forte.",
-      "plotTwist":    "Coup de théâtre : cette page n'existe pas.",
-      "houdini":      "Cette page a fait un tour de Houdini.",
-      "void":         "Cette URL mène au vide. Le vide vous observe en retour.",
-      "kamehameha":   "Chargement échoué… essayez peut-être un Kamehameha ?",
-      "timeline":     "Notre serveur a fouillé toutes les timelines. Rien.",
-      "questGone":    "Erreur 404 : la page est partie en quête et n'est jamais revenue.",
-      "uncharted":    "Vous avez découvert un territoire inexploré.",
-      "endOfInternet":"Vous avez atteint la fin d'internet. Sans rire. Mais cette page a disparu."
+      "dimension":    "Cette page s'est égarée dans une autre dimension et, franchement, elle semble très à l'aise là-bas sans intention de revenir.",
+      "trainingArc":  "Cette page est en arc d'entraînement — elle reviendra plus forte, plus sage, avec une nouvelle puissance que vous n'avez pas vue venir.",
+      "plotTwist":    "Coup de théâtre : cette page n'existe pas. La vraie page, c'était les amis que l'on s'est faits en chemin. Spoiler : eux aussi ont disparu.",
+      "houdini":      "Cette page a fait un tour de Houdini. Un instant elle était là, la seconde d'après — pouf — envolée, sans même un salut final.",
+      "void":         "Cette URL mène au vide. Le vide vous observe en retour. Puis il hausse les épaules et retourne regarder des animes. Classique.",
+      "kamehameha":   "Chargement échoué… essayez peut-être un Kamehameha ? Sinon un Rasengan, un Getsuga Tenshō, ou simplement Ctrl+R pourrait marcher.",
+      "timeline":     "Notre serveur a fouillé toutes les timelines du multivers, consulté trois oracles, et n'a absolument rien trouvé ici.",
+      "questGone":    "Erreur 404 : la page est partie en quête et n'est jamais revenue. On dit qu'elle a trouvé une super recommandation d'anime en chemin.",
+      "uncharted":    "Vous avez découvert un territoire inexploré. Plantez un drapeau, donnez-lui votre nom, profitez de la solitude — il n'y a rien d'autre ici.",
+      "endOfInternet":"Vous avez atteint la fin d'internet. Sans rire. Mais cette page a disparu, probablement en train de binge-watcher quelque chose dans un autre onglet."
     },
     "goHome": "Retour à l'accueil",
     "characters": {

@@ -50,6 +50,41 @@
           @if (activeFilterCount > 0) {
             <span class="filter-badge">{{ activeFilterCount }}</span>
           }
+          <!-- Info icon with auto-apply popover -->
+          <div class="filter-info-wrap">
+            <button
+              type="button"
+              class="filter-info-btn"
+              [attr.aria-label]="'animeList.filter.infoAriaLabel' | translate"
+              [attr.aria-expanded]="filterInfoOpen()"
+              (click)="$event.stopPropagation(); filterInfoOpen.set(!filterInfoOpen())"
+              (keydown.escape)="filterInfoOpen.set(false)"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="16" x2="12" y2="12"/>
+                <line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+            </button>
+            @if (filterInfoOpen()) {
+              <div
+                class="filter-info-popover"
+                role="tooltip"
+                (click)="$event.stopPropagation()"
+              >
+                @if (userPrefs.autoApplyLastFilters()) {
+                  <p class="filter-info-popover__text">{{ 'animeList.filter.infoAutoApplyOn' | translate }}</p>
+                } @else {
+                  <p class="filter-info-popover__text">{{ 'animeList.filter.infoAutoApplyOff' | translate }}</p>
+                }
+                <a
+                  class="filter-info-popover__link"
+                  routerLink="/settings"
+                  (click)="filterInfoOpen.set(false)"
+                >{{ 'animeList.filter.infoGoToSettings' | translate }}</a>
+              </div>
+            }
+          </div>
         </div>
         <svg
           class="filter-chevron"

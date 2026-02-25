@@ -168,7 +168,11 @@
       "noFilterActive": "No filter selected",
       "prompt": "Set your filters and press Search to explore your anime library.",
       "advanced": "Advanced filters",
-      "hideAdvanced": "Hide advanced"
+      "hideAdvanced": "Hide advanced",
+      "infoAriaLabel": "Filter info",
+      "infoAutoApplyOn": "Auto-apply last filters is ON — your previous search filters are restored automatically each time you open this page.",
+      "infoAutoApplyOff": "Auto-apply last filters is OFF — filters start fresh on every visit. Enable it in Settings to restore your last search automatically.",
+      "infoGoToSettings": "Go to Settings to change this"
     },
     "presets": {
       "label": "Presets",
@@ -518,18 +522,18 @@
   },
   "notFound": {
     "ariaLabel": "404 – Page not found",
-    "title": "Page Not Found!",
+    "title": "Oops — This Page Has Gone Off-Script!",
     "subtitle": {
-      "dimension":    "This page wandered off into another dimension.",
-      "trainingArc":  "This page is on a training arc — it'll be back stronger.",
-      "plotTwist":    "Plot twist: this page doesn't exist.",
-      "houdini":      "Seems like this page pulled a Houdini on us.",
-      "void":         "This URL leads to the void. The void stares back.",
-      "kamehameha":   "Loading failed… maybe try a Kamehameha?",
-      "timeline":     "Our server searched every timeline. Nothing.",
-      "questGone":    "Error 404: the page went on a quest and never returned.",
-      "uncharted":    "You've discovered uncharted territory.",
-      "endOfInternet":"You've reached the end of the internet. Just kidding. But this page is gone."
+      "dimension":    "This page wandered off into another dimension, and frankly it seems quite happy there with no intention of coming back.",
+      "trainingArc":  "This page is on a training arc — it'll be back stronger, wiser, and with a brand-new power-up you never saw coming.",
+      "plotTwist":    "Plot twist: this page doesn't exist. The real page was the friends we made along the way. Spoiler: they're gone too.",
+      "houdini":      "Seems like this page pulled a Houdini on us. One moment it was here, the next — poof — gone without so much as a curtain call.",
+      "void":         "This URL leads to the void. The void stares back. Then the void shrugs and goes back to watching anime. Classic void.",
+      "kamehameha":   "Loading failed… maybe try a Kamehameha? If that doesn't work, a Rasengan, a Getsuga Tenshō, or just hitting Ctrl+R might do.",
+      "timeline":     "Our server searched every timeline across the multiverse, consulted three oracles, and still found absolutely nothing here.",
+      "questGone":    "Error 404: the page went on a quest and never returned. Rumour has it, it found a great anime recommendation and got sidetracked.",
+      "uncharted":    "You've discovered uncharted territory. Plant a flag, name it after yourself, and enjoy the solitude — there's nothing else here.",
+      "endOfInternet":"You've reached the end of the internet. Just kidding. But this page is gone, probably binge-watching something in another tab."
     },
     "goHome": "Go Back Home",
     "characters": {

@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { trigger, state, style, animate, transition, query, stagger } from '@angular/animations';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
@@ -88,7 +89,7 @@ export const MEDIA_TYPE_OPTIONS = [
 @Component({
   selector: 'app-anime-list',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, AnimeCardComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, AnimeCardComponent],
   templateUrl: './anime-list.component.html',
   styleUrl: './anime-list.component.scss',
   animations: [
@@ -152,6 +153,9 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   /** Whether the filter body is expanded */
   filterOpen = signal(true);
+
+  /** Whether the filter info popover is visible */
+  filterInfoOpen = signal(false);
 
   /** Whether the advanced filter sub-section is expanded */
   advancedOpen = signal(false);

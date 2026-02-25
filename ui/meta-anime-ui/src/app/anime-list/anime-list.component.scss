@@ -349,6 +349,98 @@
   line-height: 1;
 }
 
+// ── Filter info icon & popover ────────────────────────────────────────────────
+.filter-info-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.filter-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s, background 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--accent-primary);
+    background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+    outline: none;
+  }
+}
+
+.filter-info-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  min-width: 220px;
+  max-width: 280px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 0.625rem;
+  padding: 0.75rem 0.875rem;
+  box-shadow: 0 6px 20px var(--card-shadow);
+  animation: fadeInDown 0.15s ease;
+
+  // Notch pointing up
+  &::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 7px solid var(--card-border);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 5px solid var(--card-bg);
+  }
+
+  &__text {
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    margin: 0 0 0.5rem;
+  }
+
+  &__link {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent-primary);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+
 .filter-chevron {
   color: var(--text-muted);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
