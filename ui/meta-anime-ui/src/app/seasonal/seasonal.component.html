@@ -287,7 +287,7 @@
         }
       </p>
       <div class="seasonal-grid" [@gridAnimation]="filterVersion()">
-        @for (anime of filteredAnimes(); track anime.malId) {
+        @for (anime of filteredAnimes(); track anime.malId + '_' + filterVersion()) {
           <div class="seasonal-grid__cell">
             <app-seasonal-card [anime]="anime" [activeGenres]="filterGenre()" />
           </div>
