@@ -65,9 +65,14 @@
   justify-content: center;
   padding: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  transition: transform 0.18s cubic-bezier(0.34, 1.5, 0.64, 1), box-shadow 0.15s;
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.5, 0.64, 1),
+    box-shadow 0.15s;
 
-  svg { width: 13px; height: 13px; }
+  svg {
+    width: 13px;
+    height: 13px;
+  }
 
   // ── Add button ──────────────────────────────────────────────────────────────
   &--add {
@@ -105,19 +110,31 @@
     width: 32px;
     height: 32px;
     overflow: visible;
-    transition: background 0.18s ease, border-color 0.2s ease,
-                box-shadow 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.5, 0.64, 1);
+    transition:
+      background 0.18s ease,
+      border-color 0.2s ease,
+      box-shadow 0.18s ease,
+      transform 0.18s cubic-bezier(0.34, 1.5, 0.64, 1);
 
-    &.corner-badge--sonarr { --brand-rgb: 53, 197, 244; }
-    &.corner-badge--mal    { --brand-rgb: 84, 129, 232; }
+    &.corner-badge--sonarr {
+      --brand-rgb: 53, 197, 244;
+    }
+    &.corner-badge--mal {
+      --brand-rgb: 84, 129, 232;
+    }
 
     &:hover {
       background: rgba(var(--brand-rgb), 0.12);
       border-color: rgb(var(--brand-rgb));
-      box-shadow: 0 0 14px rgba(var(--brand-rgb), 0.35), 0 3px 10px rgba(0, 0, 0, 0.35);
+      box-shadow:
+        0 0 14px rgba(var(--brand-rgb), 0.35),
+        0 3px 10px rgba(0, 0, 0, 0.35);
       transform: scale(1.18);
     }
-    &:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+    }
   }
 }
 
@@ -199,11 +216,14 @@
   position: relative;
   overflow: hidden;
   background: var(--bg-secondary);
-  transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1),
-              min-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.35s ease;
+  transition:
+    width 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    min-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.35s ease;
 
-  &.cover--clickable { cursor: pointer; }
+  &.cover--clickable {
+    cursor: pointer;
+  }
 
   .card--expanded & {
     width: 0;
@@ -283,7 +303,10 @@
   &--link {
     cursor: pointer;
     transition: color 0.15s;
-    &:hover { color: var(--accent-primary); text-decoration: underline dotted; }
+    &:hover {
+      color: var(--accent-primary);
+      text-decoration: underline dotted;
+    }
   }
 }
 
@@ -353,7 +376,9 @@
   opacity: 0.8;
   transition: opacity 0.15s;
 
-  &:hover { opacity: 1; }
+  &:hover {
+    opacity: 1;
+  }
 }
 
 // ─── Genre tags ───────────────────────────────────────────────────────────────
@@ -363,7 +388,9 @@
   flex-wrap: wrap;
   gap: 0.25rem;
 
-  & + .genre-list { margin-top: 0.15rem; }
+  & + .genre-list {
+    margin-top: 0.15rem;
+  }
 }
 
 .genre-tag {
@@ -376,7 +403,10 @@
   padding: 0.1rem 0.45rem;
   letter-spacing: 0.02em;
   white-space: nowrap;
-  transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s,
+    transform 0.15s;
 
   // Highlighted when the genre matches an active filter selection
   &--highlighted {
@@ -468,7 +498,11 @@
   border: 1px solid var(--card-border);
   color: var(--text-muted);
   background: transparent;
-  transition: color 0.15s, border-color 0.15s, background 0.15s, transform 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.15s;
   line-height: 1;
 
   // ── In-library variant: solid brand color, clickable ──────────────────────
@@ -508,8 +542,18 @@
     cursor: default;
     pointer-events: none;
     filter: grayscale(1);
-    -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0) 100%);
-    mask-image: linear-gradient(to right, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.45) 45%, rgba(0,0,0,0) 100%);
+    -webkit-mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.45) 0%,
+      rgba(0, 0, 0, 0.45) 45%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.45) 0%,
+      rgba(0, 0, 0, 0.45) 45%,
+      rgba(0, 0, 0, 0) 100%
+    );
   }
 }
 
@@ -548,11 +592,13 @@
   max-height: min(88vh, calc(100dvh - 2rem));
   display: flex;
   flex-direction: column;
-  overflow: hidden;   // children handle their own overflow
+  overflow: hidden; // children handle their own overflow
   box-shadow: 0 32px 80px rgba(0, 0, 0, 0.55);
   animation: dialogEnter 0.3s cubic-bezier(0.34, 1.3, 0.64, 1) both;
 
-  &--wide { width: min(580px, 100%); }
+  &--wide {
+    width: min(580px, 100%);
+  }
 
   @media (max-width: 600px) {
     width: 100%;
@@ -572,7 +618,9 @@
   margin: 0.6rem auto 0;
   flex-shrink: 0;
 
-  @media (max-width: 600px) { display: block; }
+  @media (max-width: 600px) {
+    display: block;
+  }
 }
 
 // Dialog header — no provider logos, just title + close
@@ -584,7 +632,12 @@
   flex-shrink: 0;
 
   &--add {
-    background: linear-gradient(to right, rgba(53, 197, 244, 0.07), rgba(46, 81, 162, 0.07), transparent);
+    background: linear-gradient(
+      to right,
+      rgba(53, 197, 244, 0.07),
+      rgba(46, 81, 162, 0.07),
+      transparent
+    );
     border-bottom: 1px solid color-mix(in srgb, var(--card-border) 80%, transparent);
   }
 }
@@ -621,9 +674,15 @@
   justify-content: center;
   color: var(--text-muted);
   flex-shrink: 0;
-  transition: background 0.15s, transform 0.18s, color 0.15s;
+  transition:
+    background 0.15s,
+    transform 0.18s,
+    color 0.15s;
 
-  svg { width: 13px; height: 13px; }
+  svg {
+    width: 13px;
+    height: 13px;
+  }
 
   &:hover {
     background: var(--bg-secondary);
@@ -711,7 +770,10 @@
   justify-content: center;
   animation: successPop 0.5s cubic-bezier(0.34, 1.6, 0.64, 1) both;
 
-  svg { width: 36px; height: 36px; }
+  svg {
+    width: 36px;
+    height: 36px;
+  }
 
   .success-check {
     stroke-dasharray: 54;
@@ -722,19 +784,25 @@
   &--sonarr {
     background: rgba(53, 197, 244, 0.12);
     color: #35c5f4;
-    box-shadow: 0 0 0 2px rgba(53, 197, 244, 0.25), 0 0 24px rgba(53, 197, 244, 0.15);
+    box-shadow:
+      0 0 0 2px rgba(53, 197, 244, 0.25),
+      0 0 24px rgba(53, 197, 244, 0.15);
   }
 
   &--mal {
     background: rgba(46, 81, 162, 0.12);
     color: #5479d3;
-    box-shadow: 0 0 0 2px rgba(46, 81, 162, 0.25), 0 0 24px rgba(46, 81, 162, 0.1);
+    box-shadow:
+      0 0 0 2px rgba(46, 81, 162, 0.25),
+      0 0 24px rgba(46, 81, 162, 0.1);
   }
 
   &--add {
     background: rgba(34, 197, 94, 0.12);
     color: #22c55e;
-    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.25), 0 0 24px rgba(34, 197, 94, 0.12);
+    box-shadow:
+      0 0 0 2px rgba(34, 197, 94, 0.25),
+      0 0 24px rgba(34, 197, 94, 0.12);
   }
 }
 
@@ -762,7 +830,8 @@
     letter-spacing: 0.04em;
   }
 
-  &__select, &__input {
+  &__select,
+  &__input {
     width: 100%;
     padding: 0.45rem 0.7rem;
     border-radius: 8px;
@@ -771,7 +840,9 @@
     color: var(--text-primary);
     font-size: 0.84rem;
     outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
     min-width: 0;
 
     &:focus {
@@ -791,7 +862,9 @@
   display: flex;
   gap: 0.75rem;
 
-  @media (max-width: 400px) { flex-direction: column; }
+  @media (max-width: 400px) {
+    flex-direction: column;
+  }
 }
 
 // ─── Search input ─────────────────────────────────────────────────────────────
@@ -820,7 +893,9 @@
     color: var(--text-primary);
     font-size: 0.84rem;
     outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
 
     &:focus {
       border-color: var(--accent-primary);
@@ -875,9 +950,13 @@
   cursor: pointer;
   text-align: left;
   width: 100%;
-  transition: background 0.12s, border-color 0.12s;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
 
-  &:hover:not(&--active) { background: color-mix(in srgb, var(--accent-primary) 7%, transparent); }
+  &:hover:not(&--active) {
+    background: color-mix(in srgb, var(--accent-primary) 7%, transparent);
+  }
 
   &--active {
     background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
@@ -1000,7 +1079,10 @@
   font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.12s;
   border: 1px solid transparent;
   line-height: 1;
 
@@ -1008,32 +1090,46 @@
     background: transparent;
     color: var(--text-secondary);
     border-color: var(--card-border);
-    &:hover { background: var(--bg-secondary); color: var(--text-primary); }
+    &:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
   }
 
   &--sonarr {
     background: #35c5f4;
     color: #0d1117;
     border-color: #35c5f4;
-    &:hover:not(:disabled) { background: #55d0f6; }
+    &:hover:not(:disabled) {
+      background: #55d0f6;
+    }
   }
 
   &--mal {
     background: #2e51a2;
     color: #fff;
     border-color: #2e51a2;
-    &:hover:not(:disabled) { background: #3b64c6; }
+    &:hover:not(:disabled) {
+      background: #3b64c6;
+    }
   }
 
   &--add {
     background: #22c55e;
     color: #fff;
     border-color: #22c55e;
-    &:hover:not(:disabled) { background: #16a34a; }
+    &:hover:not(:disabled) {
+      background: #16a34a;
+    }
   }
 
-  &:active:not(:disabled) { transform: scale(0.97); }
-  &:disabled { opacity: 0.55; cursor: default; }
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
 }
 
 // ─── Provider section cards (in unified add dialog) ────────────────────────
@@ -1061,8 +1157,12 @@
     background: color-mix(in srgb, var(--bg-secondary) 40%, transparent);
     user-select: none;
 
-    &--clickable { cursor: pointer; }
-    &--clickable:hover { background: color-mix(in srgb, var(--bg-secondary) 70%, transparent); }
+    &--clickable {
+      cursor: pointer;
+    }
+    &--clickable:hover {
+      background: color-mix(in srgb, var(--bg-secondary) 70%, transparent);
+    }
   }
 
   &__logo {
@@ -1106,7 +1206,10 @@
     justify-content: center;
     flex-shrink: 0;
 
-    svg { width: 12px; height: 12px; }
+    svg {
+      width: 12px;
+      height: 12px;
+    }
   }
 
   &__body {
@@ -1132,7 +1235,9 @@
     height: 16px;
     flex-shrink: 0;
     color: var(--text-muted);
-    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s;
+    transition:
+      transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+      color 0.15s;
     margin-left: 0.1rem;
 
     &--open {
@@ -1167,7 +1272,9 @@
 
   &--on {
     background: var(--accent-primary);
-    &::after { transform: translateX(16px); }
+    &::after {
+      transform: translateX(16px);
+    }
   }
 }
 
@@ -1185,8 +1292,14 @@
   animation: spin 0.75s linear infinite;
   flex-shrink: 0;
 
-  &--sm  { width: 16px; height: 16px; }
-  &--md  { width: 22px; height: 22px; }
+  &--sm {
+    width: 16px;
+    height: 16px;
+  }
+  &--md {
+    width: 22px;
+    height: 22px;
+  }
 
   &--white {
     border-color: rgba(255, 255, 255, 0.3);
@@ -1194,8 +1307,11 @@
   }
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
-
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .lightbox-overlay {
   position: fixed;
@@ -1234,9 +1350,14 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s, transform 0.15s;
+  transition:
+    background 0.15s,
+    transform 0.15s;
 
-  svg { width: 18px; height: 18px; }
+  svg {
+    width: 18px;
+    height: 18px;
+  }
 
   &:hover {
     background: rgba(255, 255, 255, 0.22);
@@ -1247,48 +1368,93 @@
 // ─── Keyframe animations ──────────────────────────────────────────────────────
 
 @keyframes backdropIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes dialogEnter {
-  from { opacity: 0; transform: scale(0.88) translateY(-12px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 @keyframes dialogSlideUp {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 @keyframes successPop {
-  0%   { transform: scale(0.4); opacity: 0; }
-  60%  { transform: scale(1.15); opacity: 1; }
-  100% { transform: scale(1);   opacity: 1; }
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes checkDraw {
-  to { stroke-dashoffset: 0; }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes cardIn {
-  from { opacity: 0; transform: translateY(12px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes lightboxIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes lightboxImgIn {
-  from { opacity: 0; transform: scale(0.88); }
-  to   { opacity: 1; transform: scale(1);    }
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 // ─── Lightning bolt arcs — shown during neon-glow-active ─────────────────────
@@ -1302,15 +1468,14 @@
   animation: arcFlicker 2.2s ease-out forwards;
   // Blur + warm amber/orange glow — blur(2px) diffuses the bolt silhouette for a
   // lighter, more atmospheric feel; the outer drop-shadows add the plasma corona
-  filter:
-    blur(2px)
-    drop-shadow(0 0 2px rgba(255, 245, 160, 0.70))
-    drop-shadow(0 0 5px rgba(255, 214, 0,   0.50))
-    drop-shadow(0 0 11px rgba(255, 140, 0,  0.35))
-    drop-shadow(0 0 18px rgba(255, 120, 0,  0.20));
+  filter: blur(2px) drop-shadow(0 0 2px rgba(255, 245, 160, 0.7))
+    drop-shadow(0 0 5px rgba(255, 214, 0, 0.5)) drop-shadow(0 0 11px rgba(255, 140, 0, 0.35))
+    drop-shadow(0 0 18px rgba(255, 120, 0, 0.2));
 
   // Semi-transparent pale-yellow fill — softer, ghostly channel appearance
-  path { fill: rgba(255, 240, 160, 0.55); }
+  path {
+    fill: rgba(255, 240, 160, 0.55);
+  }
 
   // Branch paths: thinner glowing strokes departing from the main channel
   .bolt-branch {
@@ -1321,21 +1486,83 @@
   }
 
   // Spark stars: near-white, semi-transparent for a delicate energy burst
-  &--spark path { fill: rgba(255, 248, 225, 0.55); }
+  &--spark path {
+    fill: rgba(255, 248, 225, 0.55);
+  }
 
   // ── Main bolts (6) — each with a unique size and position on a different edge ──
-  &--1 { width: 18px; height: 28px; top:  -17px; left:   17%;    animation-delay: 0.03s; }
-  &--2 { width: 14px; height: 22px; top:  -14px; right:  22%;    animation-delay: 0.29s; }
-  &--3 { width: 26px; height: 14px; top:   22%;  right: -16px;   animation-delay: 0.11s; }
-  &--4 { width: 14px; height: 22px; bottom: 28%; right: -14px;   animation-delay: 0.44s; }
-  &--5 { width: 18px; height: 26px; bottom: -16px; left: 26%;    animation-delay: 0.20s; }
-  &--6 { width: 24px; height: 12px; top:   47%;  left:  -14px;   animation-delay: 0.51s; }
+  &--1 {
+    width: 18px;
+    height: 28px;
+    top: -17px;
+    left: 17%;
+    animation-delay: 0.03s;
+  }
+  &--2 {
+    width: 14px;
+    height: 22px;
+    top: -14px;
+    right: 22%;
+    animation-delay: 0.29s;
+  }
+  &--3 {
+    width: 26px;
+    height: 14px;
+    top: 22%;
+    right: -16px;
+    animation-delay: 0.11s;
+  }
+  &--4 {
+    width: 14px;
+    height: 22px;
+    bottom: 28%;
+    right: -14px;
+    animation-delay: 0.44s;
+  }
+  &--5 {
+    width: 18px;
+    height: 26px;
+    bottom: -16px;
+    left: 26%;
+    animation-delay: 0.2s;
+  }
+  &--6 {
+    width: 24px;
+    height: 12px;
+    top: 47%;
+    left: -14px;
+    animation-delay: 0.51s;
+  }
   // ── Small secondary bolts (2) ──
-  &--7 { width: 11px; height: 18px; top:  -11px; left:   43%;    animation-delay: 0.64s; }
-  &--8 { width: 11px; height: 18px; bottom: -11px; right: 18%;   animation-delay: 0.07s; }
+  &--7 {
+    width: 11px;
+    height: 18px;
+    top: -11px;
+    left: 43%;
+    animation-delay: 0.64s;
+  }
+  &--8 {
+    width: 11px;
+    height: 18px;
+    bottom: -11px;
+    right: 18%;
+    animation-delay: 0.07s;
+  }
   // ── Spark stars (2) ──
-  &--9  { width: 10px; height: 10px; top:  -5px;  left:  31%;    animation-delay: 0.15s; }
-  &--10 { width:  8px; height:  8px; top:   11%;  right: -4px;   animation-delay: 0.37s; }
+  &--9 {
+    width: 10px;
+    height: 10px;
+    top: -5px;
+    left: 31%;
+    animation-delay: 0.15s;
+  }
+  &--10 {
+    width: 8px;
+    height: 8px;
+    top: 11%;
+    right: -4px;
+    animation-delay: 0.37s;
+  }
 }
 
 // Realistic multi-stroke lightning flicker:
@@ -1345,79 +1572,113 @@
 // 4. Fade to dark (channel cools)
 // 5–6. Two faint after-pulses (residual glow in ionised channel)
 @keyframes arcFlicker {
-  0%   { opacity: 0; }
+  0% {
+    opacity: 0;
+  }
   // First return stroke — soft flash (blurred, so full opacity already looks diffuse)
-  4%   { opacity: 0.55; }
+  4% {
+    opacity: 0.55;
+  }
   // Current-zero crossing — channel briefly goes dark
-  9%   { opacity: 0.07; }
+  9% {
+    opacity: 0.07;
+  }
   // Second stroke — re-ignition along same channel
-  13%  { opacity: 0.55; }
+  13% {
+    opacity: 0.55;
+  }
   // Rapid decay after second stroke
-  22%  { opacity: 0; }
+  22% {
+    opacity: 0;
+  }
   // Dark interval (channel de-ionises)
-  40%  { opacity: 0; }
+  40% {
+    opacity: 0;
+  }
   // Third weaker burst
-  44%  { opacity: 0.42; }
-  48%  { opacity: 0.03; }
-  52%  { opacity: 0.30; }
-  60%  { opacity: 0; }
+  44% {
+    opacity: 0.42;
+  }
+  48% {
+    opacity: 0.03;
+  }
+  52% {
+    opacity: 0.3;
+  }
+  60% {
+    opacity: 0;
+  }
   // Long dark
-  78%  { opacity: 0; }
+  78% {
+    opacity: 0;
+  }
   // Final faint afterglow
-  82%  { opacity: 0.18; }
-  87%  { opacity: 0; }
-  100% { opacity: 0; }
+  82% {
+    opacity: 0.18;
+  }
+  87% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 // Neon aura: electric-blue plasma discharge on :host::after after a successful add.
 // Lives on ::after (NOT the .seasonal-card article) — fixes card-disappearance bug.
 // White-hot initial burst → sustained blue plasma → secondary surge → "freed" swell.
 @keyframes neonAura {
-  0%   { box-shadow: none; }
+  0% {
+    box-shadow: none;
+  }
   // White-hot initial discharge — instantaneous channel formation
-  5%   {
+  5% {
     box-shadow:
-      0 0 0px  2px  rgba(255, 255, 255, 0.92),
-      0 0 10px 5px  rgba(0, 245, 255, 1),
+      0 0 0px 2px rgba(255, 255, 255, 0.92),
+      0 0 10px 5px rgba(0, 245, 255, 1),
       0 0 30px 12px rgba(0, 191, 255, 0.82),
       0 0 65px 22px rgba(0, 120, 255, 0.45),
-      0 0 100px 35px rgba(0, 60, 255, 0.20);
+      0 0 100px 35px rgba(0, 60, 255, 0.2);
   }
   // Peak sustained blue plasma glow
-  10%  {
+  10% {
     box-shadow:
-      0 0 2px  3px  rgba(200, 245, 255, 0.88),
-      0 0 10px 5px  rgba(0, 229, 255, 0.92),
+      0 0 2px 3px rgba(200, 245, 255, 0.88),
+      0 0 10px 5px rgba(0, 229, 255, 0.92),
       0 0 26px 10px rgba(0, 191, 255, 0.65),
       0 0 55px 20px rgba(0, 140, 255, 0.38),
       0 0 85px 30px rgba(0, 80, 255, 0.18);
   }
   // Quick dip between pulses
-  20%  {
+  20% {
     box-shadow:
       0 0 3px 2px rgba(0, 229, 255, 0.38),
       0 0 10px 4px rgba(0, 180, 255, 0.18);
   }
   // Secondary surge — residual plasma oscillation
-  28%  {
+  28% {
     box-shadow:
-      0 0 5px  3px  rgba(0, 240, 255, 0.82),
-      0 0 18px 7px  rgba(0, 200, 255, 0.52),
+      0 0 5px 3px rgba(0, 240, 255, 0.82),
+      0 0 18px 7px rgba(0, 200, 255, 0.52),
       0 0 38px 14px rgba(0, 130, 255, 0.28);
   }
   // Long smooth fade
-  62%  {
+  62% {
     box-shadow:
       0 0 3px 1px rgba(0, 229, 255, 0.22),
-      0 0 8px 3px rgba(0, 191, 255, 0.10);
+      0 0 8px 3px rgba(0, 191, 255, 0.1);
   }
   // "Freed" swell — plasma exhales as the field collapses
-  80%  {
+  80% {
     box-shadow:
-      0 0 8px  4px  rgba(0, 229, 255, 0.52),
-      0 0 24px 9px  rgba(0, 191, 255, 0.28),
+      0 0 8px 4px rgba(0, 229, 255, 0.52),
+      0 0 24px 9px rgba(0, 191, 255, 0.28),
       0 0 42px 14px rgba(0, 120, 255, 0.14);
   }
-  93%  { box-shadow: 0 0 2px 1px rgba(0, 229, 255, 0.14); }
-  100% { box-shadow: none; }
+  93% {
+    box-shadow: 0 0 2px 1px rgba(0, 229, 255, 0.14);
+  }
+  100% {
+    box-shadow: none;
+  }
 }

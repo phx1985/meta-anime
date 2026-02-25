@@ -48,9 +48,9 @@ public class AnimeMediatorService(
     /// <summary>Maps filter codec tokens to all equivalent codec strings that may appear in file metadata.</summary>
     private static readonly Dictionary<string, string[]> CodecAliases = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["h264"]  = ["h264", "x264", "avc"],
-        ["hevc"]  = ["hevc", "h265", "x265"],
-        ["av1"]   = ["av1"],
+        ["h264"] = ["h264", "x264", "avc"],
+        ["hevc"] = ["hevc", "h265", "x265"],
+        ["av1"] = ["av1"],
         ["mpeg2"] = ["mpeg2", "mpeg-2"],
     };
 
@@ -254,7 +254,7 @@ public class AnimeMediatorService(
 
         var result = data;
 
-        if (!string.IsNullOrWhiteSpace(filters.Title))
+        if (!string.IsNullOrWhiteSpace(filters?.Title))
         {
             var query = filters.Title;
             var threshold = (titleSimilarityThreshold ?? 80) / 100.0;
@@ -265,16 +265,17 @@ public class AnimeMediatorService(
                 ComputeWordLevelFuzzySimilarity(a.Title, query) >= threshold);
         }
 
-        if (!string.IsNullOrWhiteSpace(filters.Source))
+        if (!string.IsNullOrWhiteSpace(filters?.Source))
         {
+            var source = filters.Source;
             result = result.Where(a =>
-                (filters.Source.Equals("plex", StringComparison.OrdinalIgnoreCase) && a.PlexAnimes?.Any() == true) ||
-                (filters.Source.Equals("mal", StringComparison.OrdinalIgnoreCase) && a.MalAnimes?.Any() == true) ||
-                (filters.Source.Equals("sonarr", StringComparison.OrdinalIgnoreCase) && a.SonarrAnimes?.Any() == true)
+                (source.Equals("plex", StringComparison.OrdinalIgnoreCase) && a.PlexAnimes?.Any() == true) ||
+                (source.Equals("mal", StringComparison.OrdinalIgnoreCase) && a.MalAnimes?.Any() == true) ||
+                (source.Equals("sonarr", StringComparison.OrdinalIgnoreCase) && a.SonarrAnimes?.Any() == true)
             );
         }
 
-        if (filters.Status?.Length > 0)
+        if (filters?.Status?.Length > 0)
         {
             result = result.Where(a =>
                 filters.Status.Any(s =>
@@ -282,7 +283,7 @@ public class AnimeMediatorService(
                         m.ViewState.Equals(s, StringComparison.OrdinalIgnoreCase)) == true));
         }
 
-        if (filters.Genre?.Length > 0)
+        if (filters?.Genre?.Length > 0)
         {
             // Use a HashSet for O(1) genre lookups instead of O(n) inner Any()
             var genreSet = new HashSet<string>(filters.Genre, StringComparer.OrdinalIgnoreCase);
@@ -475,23 +476,23 @@ public class AnimeMediatorService(
 
         return filters.SortBy.ToLower() switch
         {
-            "title"         => desc ? data.OrderByDescending(a => a.Title)   : data.OrderBy(a => a.Title),
-            "anidbid"       => desc ? data.OrderByDescending(a => a.AniDbId) : data.OrderBy(a => a.AniDbId),
-            "malscore"      => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MalMean  ?? 0)
-                                    : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MalMean  ?? 0),
-            "myscore"       => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MyScore  ?? 0)
-                                    : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MyScore  ?? 0),
-            "startdate"     => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.StartDate)
-                                    : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.StartDate),
-            "enddate"       => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.EndDate)
-                                    : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.EndDate),
-            "addeddate"     => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.AddedDate)
-                                    : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.AddedDate),
-            "sizeondisk"    => desc ? data.OrderByDescending(a => a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0)
-                                    : data.OrderBy(a => a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0),
+            "title" => desc ? data.OrderByDescending(a => a.Title) : data.OrderBy(a => a.Title),
+            "anidbid" => desc ? data.OrderByDescending(a => a.AniDbId) : data.OrderBy(a => a.AniDbId),
+            "malscore" => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MalMean ?? 0)
+                                : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MalMean ?? 0),
+            "myscore" => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MyScore ?? 0)
+                               : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MyScore ?? 0),
+            "startdate" => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.StartDate)
+                                 : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.StartDate),
+            "enddate" => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.EndDate)
+                               : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.EndDate),
+            "addeddate" => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.AddedDate)
+                                 : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.AddedDate),
+            "sizeondisk" => desc ? data.OrderByDescending(a => a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0)
+                                  : data.OrderBy(a => a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0),
             "totalsizedisk" => desc ? data.OrderByDescending(a => a.SonarrAnimes?.Sum(s => s.SizeOnDisk ?? 0) ?? 0)
-                                    : data.OrderBy(a => a.SonarrAnimes?.Sum(s => s.SizeOnDisk ?? 0) ?? 0),
-            _               => data.OrderBy(a => a.Title)
+                                     : data.OrderBy(a => a.SonarrAnimes?.Sum(s => s.SizeOnDisk ?? 0) ?? 0),
+            _ => data.OrderBy(a => a.Title)
         };
     }
 
@@ -611,18 +612,18 @@ public class AnimeMediatorService(
                     return new
                     {
                         HasSonarr = sources.Contains(AnimeSource.Sonarr),
-                        HasMal    = sources.Contains(AnimeSource.MyAnimeList),
-                        HasPlex   = sources.Contains(AnimeSource.Plex),
-                        Count     = sources.Count
+                        HasMal = sources.Contains(AnimeSource.MyAnimeList),
+                        HasPlex = sources.Contains(AnimeSource.Plex),
+                        Count = sources.Count
                     };
                 })
                 .ToList();
 
-            var matchedCount    = mappingGroups.Count(g => g.Count > 1);
-            var sonarrNotInMal  = mappingGroups.Count(g => g.HasSonarr && !g.HasMal);
-            var malNotInPlex    = mappingGroups.Count(g => g.HasMal    && !g.HasPlex);
-            var plexNotInMal    = mappingGroups.Count(g => g.HasPlex   && !g.HasMal);
-            var plexNotInSonarr = mappingGroups.Count(g => g.HasPlex   && !g.HasSonarr);
+            var matchedCount = mappingGroups.Count(g => g.Count > 1);
+            var sonarrNotInMal = mappingGroups.Count(g => g.HasSonarr && !g.HasMal);
+            var malNotInPlex = mappingGroups.Count(g => g.HasMal && !g.HasPlex);
+            var plexNotInMal = mappingGroups.Count(g => g.HasPlex && !g.HasMal);
+            var plexNotInSonarr = mappingGroups.Count(g => g.HasPlex && !g.HasSonarr);
 
             var genreStats = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var malEpisodesWatched = 0;
@@ -898,7 +899,7 @@ public class AnimeMediatorService(
             // ── Kometa lookup: seasonal malIds → aniDbId + tvdbId ────────────────────────
             // Single self-join query treats the Kometa mapping as the sole source of truth.
             // TvdbId drives the exact `tvdb:XXXXX` Sonarr lookup; AniDbId drives provider state.
-            var malToAniDb  = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var malToAniDb = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             var aniDbToTvdb = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             if (seasonalMalIds.Count > 0)
             {
@@ -921,11 +922,11 @@ public class AnimeMediatorService(
             {
                 foreach (var aniDbGroup in mappingsResult.Value.Where(m => m.Anime != null).GroupBy(m => m.AniDbId))
                 {
-                    var animes      = aniDbGroup.Select(m => m.Anime!).ToList();
-                    var plexEntry   = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.Plex);
+                    var animes = aniDbGroup.Select(m => m.Anime!).ToList();
+                    var plexEntry = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.Plex);
                     var sonarrEntry = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.Sonarr);
-                    var malEntry    = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.MyAnimeList);
-                    bool hasPlex    = plexEntry != null;
+                    var malEntry = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.MyAnimeList);
+                    bool hasPlex = plexEntry != null;
                     if (hasPlex) anyInPlex = true;
                     aniDbToSources[aniDbGroup.Key] = (hasPlex, plexEntry?.SourceId, sonarrEntry != null, sonarrEntry?.SourceId, malEntry != null, malEntry?.SourceId);
                 }
@@ -997,10 +998,10 @@ public class AnimeMediatorService(
             {
                 var malId = anime.Id.ToString();
                 malToAniDb.TryGetValue(malId, out var aniDbId);
-                var sources  = aniDbId != null && aniDbToSources.TryGetValue(aniDbId, out var s) ? s : default;
-                var inMal    = sources.HasMal;
+                var sources = aniDbId != null && aniDbToSources.TryGetValue(aniDbId, out var s) ? s : default;
+                var inMal = sources.HasMal;
                 var inSonarr = sources.HasSonarr;
-                var inPlex   = sources.HasPlex;
+                var inPlex = sources.HasPlex;
                 // plexBaseUrl ends with %2F (URL-encoded "/"), so appending source ID
                 // directly produces the correct path: .../metadata/{ratingKey}
                 string? plexUrl = inPlex && plexBaseUrl != null && sources.PlexId != null
@@ -1014,7 +1015,7 @@ public class AnimeMediatorService(
                 string? malViewState = sources.MalId != null && malViewStateById.TryGetValue(sources.MalId, out var vs) ? vs : null;
                 return new SeasonalAnimeResponse(
                     MalId: malId,
-                    Title: anime.Title,
+                    Title: anime.Title ?? string.Empty,
                     Synopsis: anime.Synopsis,
                     Genres: anime.Genres?.Select(g => g.Name).ToArray(),
                     CoverImageUrl: anime.MainPicture?.Large ?? anime.MainPicture?.Medium,

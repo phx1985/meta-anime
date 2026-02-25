@@ -1,5 +1,4 @@
 <div class="settings-page container py-5">
-
   <!-- ── Page header ───────────────────────────────────────────────────────── -->
   <div class="settings-header mb-5">
     <div class="settings-header-text">
@@ -20,7 +19,6 @@
       {{ 'settings.error' | translate }}
     </div>
   } @else {
-
     <!-- ── Mobile sticky subnav (replaces hidden sidenav on small screens) ──── -->
     <nav class="settings-mobile-subnav" aria-label="Settings navigation">
       @for (cat of navItems(); track cat) {
@@ -29,16 +27,34 @@
           class="settings-mobile-subnav__btn"
           [class.settings-mobile-subnav__btn--active]="activeCategory() === cat"
           (click)="scrollToSection(cat)"
-          [attr.aria-label]="cat !== 'sync' ? ('settings.category.' + cat + '.name' | translate) : ('settings.sync.card.title' | translate)">
+          [attr.aria-label]="
+            cat !== 'sync'
+              ? ('settings.category.' + cat + '.name' | translate)
+              : ('settings.sync.card.title' | translate)
+          "
+        >
           @if (cat !== 'sync') {
-            <img [src]="providerImages[cat]" [alt]="cat" width="20" height="20"
-                 class="settings-mobile-subnav__icon" aria-hidden="true" />
+            <img
+              [src]="providerImages[cat]"
+              [alt]="cat"
+              width="20"
+              height="20"
+              class="settings-mobile-subnav__icon"
+              aria-hidden="true"
+            />
           } @else {
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2" aria-hidden="true">
-              <polyline points="1 4 1 10 7 10"/>
-              <polyline points="23 20 23 14 17 14"/>
-              <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <polyline points="1 4 1 10 7 10" />
+              <polyline points="23 20 23 14 17 14" />
+              <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
             </svg>
           }
         </button>
@@ -46,7 +62,6 @@
     </nav>
 
     <div class="settings-layout">
-
       <!-- ── Floating vertical side nav ─────────────────────────────────────── -->
       <nav class="settings-sidenav" aria-label="Settings navigation">
         <ul class="sidenav-list">
@@ -57,21 +72,31 @@
                 class="sidenav-btn"
                 [class.sidenav-btn--active]="activeCategory() === cat"
                 [class.sidenav-btn--highlighted]="highlighted() === cat"
-                (click)="scrollToSection(cat)">
-
+                (click)="scrollToSection(cat)"
+              >
                 @if (cat !== 'sync') {
                   <img
                     [src]="providerImages[cat]"
                     [alt]="cat"
-                    width="18" height="18"
+                    width="18"
+                    height="18"
                     class="sidenav-icon"
-                    aria-hidden="true" />
+                    aria-hidden="true"
+                  />
                 } @else {
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                       stroke-width="2" class="sidenav-icon" aria-hidden="true">
-                    <polyline points="1 4 1 10 7 10"/>
-                    <polyline points="23 20 23 14 17 14"/>
-                    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="sidenav-icon"
+                    aria-hidden="true"
+                  >
+                    <polyline points="1 4 1 10 7 10" />
+                    <polyline points="23 20 23 14 17 14" />
+                    <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
                   </svg>
                 }
 
@@ -94,7 +119,6 @@
 
       <!-- ── Main settings content ───────────────────────────────────────────── -->
       <div class="settings-main">
-
         <!-- Main settings grid — disabled while sync is in progress -->
         <div [class.settings-grid--disabled]="syncing()">
           @for (cat of categories(); track trackByCategory($index, cat)) {
@@ -102,24 +126,43 @@
               class="settings-card mb-4"
               [id]="'section-' + cat"
               [class.settings-card--highlighted]="highlighted() === cat"
-              [class.settings-card--dimmed]="highlighted() !== null && highlighted() !== cat">
-
+              [class.settings-card--dimmed]="highlighted() !== null && highlighted() !== cat"
+            >
               <!-- Category header with real provider logo -->
               <div class="settings-card-header settings-card-header--{{ cat }}">
                 <div class="provider-logo" aria-hidden="true">
-                  <img [src]="providerImages[cat]" [alt]="cat" width="36" height="36" class="provider-logo-img" />
+                  <img
+                    [src]="providerImages[cat]"
+                    [alt]="cat"
+                    width="36"
+                    height="36"
+                    class="provider-logo-img"
+                  />
                 </div>
                 <div class="category-header-text">
-                  <h2 class="category-title mb-0">{{ 'settings.category.' + cat + '.name' | translate }}</h2>
-                  <p class="category-desc mb-0">{{ 'settings.category.' + cat + '.desc' | translate }}</p>
+                  <h2 class="category-title mb-0">
+                    {{ 'settings.category.' + cat + '.name' | translate }}
+                  </h2>
+                  <p class="category-desc mb-0">
+                    {{ 'settings.category.' + cat + '.desc' | translate }}
+                  </p>
                 </div>
 
                 <!-- MAL: last token refresh date badge -->
                 @if (cat === 'mal' && malTokenRefreshDate()) {
                   <div class="mal-token-badge">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="2.5" aria-hidden="true">
-                      <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.5"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"
+                      />
                     </svg>
                     {{ 'settings.mal.tokenRefreshed' | translate }}
                     {{ fmtDate(malTokenRefreshDate()!) }}
@@ -130,18 +173,26 @@
               <!-- Setting rows -->
               <div class="settings-rows">
                 @for (setting of grouped()[cat]; track trackByKey($index, setting)) {
-                  <div class="setting-row"
-                       [class.setting-row--editing]="editing()[setting.key]"
-                       [class.setting-row--saved]="isSaved(setting.key)">
-
+                  <div
+                    class="setting-row"
+                    [class.setting-row--editing]="editing()[setting.key]"
+                    [class.setting-row--saved]="isSaved(setting.key)"
+                  >
                     <div class="setting-info">
                       <div class="setting-name">
                         {{ 'settings.fields.' + slug(setting.key) + '.name' | translate }}
                         @if (setting.isSensitive) {
-                          <span class="badge-sensitive" [attr.aria-label]="'settings.sensitive' | translate" role="img">🔒</span>
+                          <span
+                            class="badge-sensitive"
+                            [attr.aria-label]="'settings.sensitive' | translate"
+                            role="img"
+                            >🔒</span
+                          >
                         }
                       </div>
-                      <div class="setting-desc">{{ 'settings.fields.' + slug(setting.key) + '.desc' | translate }}</div>
+                      <div class="setting-desc">
+                        {{ 'settings.fields.' + slug(setting.key) + '.desc' | translate }}
+                      </div>
                     </div>
 
                     <div class="setting-value-area">
@@ -155,11 +206,17 @@
                             (click)="toggleBool(setting)"
                             role="switch"
                             [attr.aria-checked]="boolValue(setting)"
-                            [attr.aria-label]="'settings.fields.' + slug(setting.key) + '.name' | translate">
+                            [attr.aria-label]="
+                              'settings.fields.' + slug(setting.key) + '.name' | translate
+                            "
+                          >
                             <span class="toggle-thumb"></span>
                           </button>
                           <span class="toggle-label">
-                            {{ (boolValue(setting) ? 'settings.toggle.on' : 'settings.toggle.off') | translate }}
+                            {{
+                              (boolValue(setting) ? 'settings.toggle.on' : 'settings.toggle.off')
+                                | translate
+                            }}
                           </span>
                         </div>
                       } @else if (setting.fieldType === 'select') {
@@ -168,15 +225,24 @@
                             class="setting-select"
                             [disabled]="isSaving(setting.key)"
                             (change)="onSelectChange(setting, $event)"
-                            [attr.aria-label]="'settings.fields.' + slug(setting.key) + '.name' | translate">
+                            [attr.aria-label]="
+                              'settings.fields.' + slug(setting.key) + '.name' | translate
+                            "
+                          >
                             @for (opt of setting.selectOptions ?? []; track opt) {
                               <option [value]="opt" [selected]="setting.value === opt">
-                                {{ 'settings.fields.' + slug(setting.key) + '.option.' + opt | translate }}
+                                {{
+                                  'settings.fields.' + slug(setting.key) + '.option.' + opt
+                                    | translate
+                                }}
                               </option>
                             }
                           </select>
                           @if (isSaving(setting.key)) {
-                            <span class="spinner-border spinner-border-sm select-spinner" role="status"></span>
+                            <span
+                              class="spinner-border spinner-border-sm select-spinner"
+                              role="status"
+                            ></span>
                           }
                           @if (isSaved(setting.key)) {
                             <span class="badge-saved">&#10003;</span>
@@ -192,7 +258,9 @@
                                 {{ setting.value }}
                               }
                             } @else {
-                              <span class="text-muted fst-italic">{{ 'settings.notSet' | translate }}</span>
+                              <span class="text-muted fst-italic">{{
+                                'settings.notSet' | translate
+                              }}</span>
                             }
                           </span>
                           <div class="display-actions">
@@ -201,78 +269,168 @@
                                 type="button"
                                 class="btn-icon"
                                 (click)="toggleReveal(setting.key)"
-                                [attr.aria-label]="(revealed()[setting.key] ? 'settings.hide' : 'settings.reveal') | translate">
+                                [attr.aria-label]="
+                                  (revealed()[setting.key] ? 'settings.hide' : 'settings.reveal')
+                                    | translate
+                                "
+                              >
                                 @if (revealed()[setting.key]) {
-                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
-                                    <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
-                                    <path d="M14.12 14.12a3 3 0 11-4.24-4.24"/>
-                                    <line x1="1" y1="1" x2="23" y2="23"/>
+                                  <svg
+                                    width="15"
+                                    height="15"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    aria-hidden="true"
+                                  >
+                                    <path
+                                      d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"
+                                    />
+                                    <path
+                                      d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"
+                                    />
+                                    <path d="M14.12 14.12a3 3 0 11-4.24-4.24" />
+                                    <line x1="1" y1="1" x2="23" y2="23" />
                                   </svg>
                                 } @else {
-                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                    <circle cx="12" cy="12" r="3"/>
+                                  <svg
+                                    width="15"
+                                    height="15"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    aria-hidden="true"
+                                  >
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
                                   </svg>
                                 }
                               </button>
                             }
                             @if (isSaved(setting.key)) {
-                              <span class="badge-saved">&#10003; {{ 'settings.saved' | translate }}</span>
+                              <span class="badge-saved"
+                                >&#10003; {{ 'settings.saved' | translate }}</span
+                              >
                             }
-                            <button class="btn btn-sm btn-outline-secondary edit-btn" (click)="toggleEdit(setting.key)">
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            <button
+                              class="btn btn-sm btn-outline-secondary edit-btn"
+                              (click)="toggleEdit(setting.key)"
+                            >
+                              <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                aria-hidden="true"
+                              >
+                                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                               </svg>
                               {{ 'settings.edit' | translate }}
                             </button>
                           </div>
                         </div>
                       } @else {
-                        <form [formGroup]="forms[setting.key]" (ngSubmit)="save(setting)" class="edit-form">
+                        <form
+                          [formGroup]="forms[setting.key]"
+                          (ngSubmit)="save(setting)"
+                          class="edit-form"
+                        >
                           <div class="input-with-eye">
                             <input
-                              [type]="setting.isSensitive && !revealed()[setting.key] ? 'password' : 'text'"
+                              [type]="
+                                setting.isSensitive && !revealed()[setting.key]
+                                  ? 'password'
+                                  : 'text'
+                              "
                               formControlName="value"
                               class="form-control form-control-sm setting-input"
-                              [placeholder]="setting.isSensitive ? ('settings.sensitiveHint' | translate) : ('settings.fields.' + slug(setting.key) + '.name' | translate)"
-                              [attr.aria-label]="'settings.fields.' + slug(setting.key) + '.name' | translate" />
+                              [placeholder]="
+                                setting.isSensitive
+                                  ? ('settings.sensitiveHint' | translate)
+                                  : ('settings.fields.' + slug(setting.key) + '.name' | translate)
+                              "
+                              [attr.aria-label]="
+                                'settings.fields.' + slug(setting.key) + '.name' | translate
+                              "
+                            />
                             @if (setting.isSensitive) {
                               <button
                                 type="button"
                                 class="btn-icon eye-btn"
                                 (click)="toggleReveal(setting.key)"
-                                [attr.aria-label]="(revealed()[setting.key] ? 'settings.hide' : 'settings.reveal') | translate">
+                                [attr.aria-label]="
+                                  (revealed()[setting.key] ? 'settings.hide' : 'settings.reveal')
+                                    | translate
+                                "
+                              >
                                 @if (revealed()[setting.key]) {
-                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/>
-                                    <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/>
-                                    <path d="M14.12 14.12a3 3 0 11-4.24-4.24"/>
-                                    <line x1="1" y1="1" x2="23" y2="23"/>
+                                  <svg
+                                    width="15"
+                                    height="15"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    aria-hidden="true"
+                                  >
+                                    <path
+                                      d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"
+                                    />
+                                    <path
+                                      d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"
+                                    />
+                                    <path d="M14.12 14.12a3 3 0 11-4.24-4.24" />
+                                    <line x1="1" y1="1" x2="23" y2="23" />
                                   </svg>
                                 } @else {
-                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                    <circle cx="12" cy="12" r="3"/>
+                                  <svg
+                                    width="15"
+                                    height="15"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    aria-hidden="true"
+                                  >
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
                                   </svg>
                                 }
                               </button>
                             }
                           </div>
                           <div class="edit-actions">
-                            <button type="submit" class="btn btn-sm btn-primary" [disabled]="isSaving(setting.key)">
+                            <button
+                              type="submit"
+                              class="btn btn-sm btn-primary"
+                              [disabled]="isSaving(setting.key)"
+                            >
                               @if (isSaving(setting.key)) {
-                                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                                <span
+                                  class="spinner-border spinner-border-sm me-1"
+                                  role="status"
+                                ></span>
                               }
                               {{ 'settings.save' | translate }}
                             </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" (click)="cancelEdit(setting.key)" [disabled]="isSaving(setting.key)">
+                            <button
+                              type="button"
+                              class="btn btn-sm btn-outline-secondary"
+                              (click)="cancelEdit(setting.key)"
+                              [disabled]="isSaving(setting.key)"
+                            >
                               {{ 'settings.cancel' | translate }}
                             </button>
                           </div>
                           @if (hasError(setting.key)) {
-                            <div class="text-danger small mt-1">{{ 'settings.saveError' | translate }}</div>
+                            <div class="text-danger small mt-1">
+                              {{ 'settings.saveError' | translate }}
+                            </div>
                           }
                         </form>
                       }
@@ -282,7 +440,8 @@
               </div>
             </div>
           }
-        </div><!-- /settings-grid -->
+        </div>
+        <!-- /settings-grid -->
 
         <!-- ── Dedicated Sync Card ─────────────────────────────────────────────── -->
         <div
@@ -291,14 +450,22 @@
           [class.sync-card--error]="syncError()"
           [class.settings-card--highlighted]="highlighted() === 'sync'"
           [class.settings-card--dimmed]="highlighted() !== null && highlighted() !== 'sync'"
-          id="sync-section">
-
+          id="sync-section"
+        >
           <div class="settings-card-header settings-card-header--sync">
             <div class="provider-logo" aria-hidden="true">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <polyline points="1 4 1 10 7 10"/>
-                <polyline points="23 20 23 14 17 14"/>
-                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <polyline points="1 4 1 10 7 10" />
+                <polyline points="23 20 23 14 17 14" />
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
               </svg>
             </div>
             <div class="sync-card-title-block">
@@ -310,15 +477,20 @@
           @if (syncIntervalSetting(); as intervalSetting) {
             <div class="sync-interval-row">
               <div class="sync-interval-info">
-                <span class="sync-interval-label">{{ 'settings.fields.App_SyncInterval.name' | translate }}</span>
-                <span class="sync-interval-desc">{{ 'settings.fields.App_SyncInterval.desc' | translate }}</span>
+                <span class="sync-interval-label">{{
+                  'settings.fields.App_SyncInterval.name' | translate
+                }}</span>
+                <span class="sync-interval-desc">{{
+                  'settings.fields.App_SyncInterval.desc' | translate
+                }}</span>
               </div>
               <div class="sync-interval-control">
                 <select
                   class="setting-select"
                   [disabled]="isSaving(intervalSetting.key) || syncing()"
                   (change)="onSelectChange(intervalSetting, $event)"
-                  [attr.aria-label]="'settings.fields.App_SyncInterval.name' | translate">
+                  [attr.aria-label]="'settings.fields.App_SyncInterval.name' | translate"
+                >
                   @for (opt of intervalSetting.selectOptions ?? []; track opt) {
                     <option [value]="opt" [selected]="intervalSetting.value === opt">
                       {{ 'settings.fields.App_SyncInterval.option.' + opt | translate }}
@@ -326,7 +498,10 @@
                   }
                 </select>
                 @if (isSaving(intervalSetting.key)) {
-                  <span class="spinner-border spinner-border-sm select-spinner" role="status"></span>
+                  <span
+                    class="spinner-border spinner-border-sm select-spinner"
+                    role="status"
+                  ></span>
                 }
                 @if (isSaved(intervalSetting.key)) {
                   <span class="badge-saved">&#10003;</span>
@@ -336,11 +511,12 @@
           }
 
           <div class="sync-progress-body">
-
             <!-- ── Manual trigger section ──────────────────────────────────── -->
             <div class="sync-manual-section">
               <div class="sync-manual-info">
-                <span class="sync-manual-title">{{ 'settings.sync.manual.title' | translate }}</span>
+                <span class="sync-manual-title">{{
+                  'settings.sync.manual.title' | translate
+                }}</span>
                 <span class="sync-manual-desc">{{ 'settings.sync.manual.desc' | translate }}</span>
               </div>
               <div class="sync-manual-controls">
@@ -349,7 +525,9 @@
                     <span class="last-sync-label">{{ 'settings.sync.lastSync' | translate }}</span>
                     <span class="last-sync-value">{{ fmtDate(lastSyncDate()!) }}</span>
                   } @else {
-                    <span class="last-sync-never">{{ 'settings.sync.neverSynced' | translate }}</span>
+                    <span class="last-sync-never">{{
+                      'settings.sync.neverSynced' | translate
+                    }}</span>
                   }
                 </div>
                 <button
@@ -357,15 +535,26 @@
                   [class.btn-sync--active]="syncing()"
                   [disabled]="syncing()"
                   (click)="triggerSync()"
-                  [attr.aria-label]="'settings.sync.button' | translate">
+                  [attr.aria-label]="'settings.sync.button' | translate"
+                >
                   @if (syncing()) {
                     <span class="sync-spinner" aria-hidden="true"></span>
                     {{ 'settings.sync.inProgress' | translate }}
                   } @else {
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-                      <polyline points="1 4 1 10 7 10"/>
-                      <polyline points="23 20 23 14 17 14"/>
-                      <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.2"
+                      aria-hidden="true"
+                    >
+                      <polyline points="1 4 1 10 7 10" />
+                      <polyline points="23 20 23 14 17 14" />
+                      <path
+                        d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"
+                      />
                     </svg>
                     {{ 'settings.sync.button' | translate }}
                   }
@@ -376,12 +565,31 @@
               <div class="sync-overall-row">
                 @if (syncDone()) {
                   <span class="sync-overall-badge sync-overall-badge--done">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
                     {{ 'settings.sync.hub.done' | translate }}
                   </span>
                 } @else if (syncError()) {
                   <span class="sync-overall-badge sync-overall-badge--error">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="3"
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
                     {{ 'settings.sync.hub.error' | translate }}
                   </span>
                 } @else {
@@ -392,9 +600,21 @@
                 }
 
                 @if (overallElapsed() > 0) {
-                  <span class="sync-overall-timer" [class.sync-overall-timer--done]="syncDone() || syncError()">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-                      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                  <span
+                    class="sync-overall-timer"
+                    [class.sync-overall-timer--done]="syncDone() || syncError()"
+                  >
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2.2"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
                     </svg>
                     {{ fmtElapsed(overallElapsed()) }}
                   </span>
@@ -404,9 +624,19 @@
                   type="button"
                   class="sync-log-clear"
                   (click)="clearSyncLog()"
-                  [attr.aria-label]="'settings.sync.hub.clearLog' | translate">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  [attr.aria-label]="'settings.sync.hub.clearLog' | translate"
+                >
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    aria-hidden="true"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
                   {{ 'settings.sync.hub.clearLog' | translate }}
                 </button>
@@ -419,9 +649,11 @@
               }
             </ol>
           </div>
-        </div><!-- /sync-card -->
-
-      </div><!-- /settings-main -->
-    </div><!-- /settings-layout -->
+        </div>
+        <!-- /sync-card -->
+      </div>
+      <!-- /settings-main -->
+    </div>
+    <!-- /settings-layout -->
   }
 </div>

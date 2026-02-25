@@ -1,6 +1,6 @@
 // CSS Custom Properties for theming
 :root,
-[data-theme="light"] {
+[data-theme='light'] {
   --bg-primary: #f8f6f2;
   --bg-secondary: #e9ecf1;
   --text-primary: #2c2d3e;
@@ -23,7 +23,7 @@
   --bokeh-opacity: 0.45;
 }
 
-[data-theme="dark"] {
+[data-theme='dark'] {
   --bg-primary: #0f0f1a;
   --bg-secondary: #1a1a2e;
   --text-primary: #e8e8f0;
@@ -40,14 +40,16 @@
   --hero-text: #ffffff;
   /* bubble particles */
   --bubble-border: rgba(255, 255, 255, 0.28);
-  --bubble-shimmer: rgba(255, 255, 255, 0.70);
+  --bubble-shimmer: rgba(255, 255, 255, 0.7);
   --bubble-body: rgba(255, 255, 255, 0.06);
   /* bokeh blobs (anime list) */
   --bokeh-opacity: 0.18;
 }
 
 // Global styles
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -58,8 +60,14 @@ html {
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family:
+    'Segoe UI',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -68,7 +76,7 @@ body {
 .btn-outline-secondary {
   color: var(--text-secondary);
   border-color: var(--card-border);
-  
+
   &:hover {
     background-color: var(--card-bg);
     color: var(--accent-primary);

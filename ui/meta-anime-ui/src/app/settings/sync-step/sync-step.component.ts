@@ -6,12 +6,12 @@ import { fmtElapsed } from '../../utils/format.utils';
 
 /** Provider logo paths keyed by step key */
 const PROVIDER_IMAGES: Record<string, string> = {
-  plex:     'assets/images/plex.svg',
-  sonarr:   'assets/images/sonarr.svg',
-  mal:      'assets/images/mal.svg',
-  kometa:   'assets/images/kometa.png',
+  plex: 'assets/images/plex.svg',
+  sonarr: 'assets/images/sonarr.svg',
+  mal: 'assets/images/mal.svg',
+  kometa: 'assets/images/kometa.png',
   matching: 'assets/images/app.svg',
-  app:      'assets/images/app.svg',
+  app: 'assets/images/app.svg',
 };
 
 /**

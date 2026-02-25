@@ -2,10 +2,10 @@ import { Injectable, signal, effect } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  private readonly STORAGE_KEY    = 'meta-anime-theme';
-  private readonly FOLLOW_OS_KEY  = 'meta-anime-follow-os';
+  private readonly STORAGE_KEY = 'meta-anime-theme';
+  private readonly FOLLOW_OS_KEY = 'meta-anime-follow-os';
 
-  readonly isDarkTheme   = signal<boolean>(this.loadTheme());
+  readonly isDarkTheme = signal<boolean>(this.loadTheme());
   readonly followOsTheme = signal<boolean>(this.loadFollowOs());
 
   private readonly mediaQuery: MediaQueryList | null =
@@ -41,7 +41,7 @@ export class ThemeService {
     if (this.followOsTheme()) {
       this.setFollowOsTheme(false);
     }
-    this.isDarkTheme.update(v => !v);
+    this.isDarkTheme.update((v) => !v);
     localStorage.setItem(this.STORAGE_KEY, this.isDarkTheme() ? 'dark' : 'light');
   }
 

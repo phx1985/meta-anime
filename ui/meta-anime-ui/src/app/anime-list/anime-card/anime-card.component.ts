@@ -17,11 +17,11 @@ const TRUNCATE_AT = 180;
   animations: [
     trigger('expandCollapse', [
       state('collapsed', style({ height: '3.75rem', overflow: 'hidden' })),
-      state('expanded',  style({ height: '*',       overflow: 'hidden' })),
+      state('expanded', style({ height: '*', overflow: 'hidden' })),
       transition('collapsed => expanded', animate('380ms cubic-bezier(0.4, 0, 0.2, 1)')),
       transition('expanded => collapsed', animate('280ms cubic-bezier(0.4, 0, 1, 1)')),
-    ])
-  ]
+    ]),
+  ],
 })
 export class AnimeCardComponent {
   @Input({ required: true }) anime!: AnimeDetailsResponse;
@@ -140,19 +140,29 @@ export class AnimeCardComponent {
 
   // ── Genres ────────────────────────────────────────────────────────────────
 
-  private get allMalGenres(): string[] { return this.mal?.genres ?? []; }
+  private get allMalGenres(): string[] {
+    return this.mal?.genres ?? [];
+  }
 
   /** MAL genre-category entries only. */
-  get pureGenres(): string[] { return this.allMalGenres.filter(g => GENRE_LIST.includes(g)); }
+  get pureGenres(): string[] {
+    return this.allMalGenres.filter((g) => GENRE_LIST.includes(g));
+  }
 
   /** MAL theme entries only. */
-  get themes(): string[] { return this.allMalGenres.filter(g => THEME_LIST.includes(g)); }
+  get themes(): string[] {
+    return this.allMalGenres.filter((g) => THEME_LIST.includes(g));
+  }
 
   /** MAL demographic entries only. */
-  get demographics(): string[] { return this.allMalGenres.filter(g => DEMOGRAPHIC_LIST.includes(g)); }
+  get demographics(): string[] {
+    return this.allMalGenres.filter((g) => DEMOGRAPHIC_LIST.includes(g));
+  }
 
   /** @deprecated Use pureGenres — kept for any existing template references. */
-  get genres(): string[] { return this.allMalGenres; }
+  get genres(): string[] {
+    return this.allMalGenres;
+  }
 
   /** Translate a genre name — safe for names containing spaces */
   translateGenre(name: string): string {
@@ -197,7 +207,9 @@ export class AnimeCardComponent {
 
   get malProgress(): { watched: number; total: number } | undefined {
     const p = this.mal?.progression;
-    return p && p.totalEpisodes > 0 ? { watched: p.episodesWatched, total: p.totalEpisodes } : undefined;
+    return p && p.totalEpisodes > 0
+      ? { watched: p.episodesWatched, total: p.totalEpisodes }
+      : undefined;
   }
 
   // ── Storage / codec ───────────────────────────────────────────────────────
@@ -218,24 +230,35 @@ export class AnimeCardComponent {
     if (!dist) return null;
     const total = Object.values(dist).reduce((s, v) => s + v, 0);
     if (total === 0) return null;
-    let h265 = 0, h264 = 0, other = 0;
+    let h265 = 0,
+      h264 = 0,
+      other = 0;
     for (const [codec, count] of Object.entries(dist)) {
       const c = codec.toLowerCase();
       // H.265 aliases: hevc, h265, h.265, x265, x.265
-      if (c === 'hevc' || c === 'h265' || c === 'h.265' || c === 'x265' || c === 'x.265') h265 += count;
+      if (c === 'hevc' || c === 'h265' || c === 'h.265' || c === 'x265' || c === 'x.265')
+        h265 += count;
       // H.264 aliases: avc, h264, h.264, x264, x.264, avc1
-      else if (c === 'avc' || c === 'h264' || c === 'h.264' || c === 'x264' || c === 'x.264' || c === 'avc1') h264 += count;
+      else if (
+        c === 'avc' ||
+        c === 'h264' ||
+        c === 'h.264' ||
+        c === 'x264' ||
+        c === 'x.264' ||
+        c === 'avc1'
+      )
+        h264 += count;
       else other += count;
     }
-    const pctH265  = Math.round((h265 / total) * 100);
-    const pctH264  = Math.round((h264 / total) * 100);
+    const pctH265 = Math.round((h265 / total) * 100);
+    const pctH264 = Math.round((h264 / total) * 100);
     const pctOther = 100 - pctH265 - pctH264; // absorb rounding so segments always sum to 100
     // Filter out 0% segments — only show codecs that are actually present
     return [
-      { label: 'H.265', pct: pctH265  },
-      { label: 'H.264', pct: pctH264  },
+      { label: 'H.265', pct: pctH265 },
+      { label: 'H.264', pct: pctH264 },
       { label: 'Other', pct: pctOther },
-    ].filter(s => s.pct > 0);
+    ].filter((s) => s.pct > 0);
   }
 
   // ── URLs ──────────────────────────────────────────────────────────────────

@@ -24,11 +24,7 @@
 .hero-vignette {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 35%,
-    rgba(0, 0, 0, 0.5) 100%
-  );
+  background: linear-gradient(to bottom, transparent 35%, rgba(0, 0, 0, 0.5) 100%);
   z-index: 1;
   pointer-events: none;
 }
@@ -61,50 +57,80 @@ $ease-rise: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
 // Per-particle unique drifts so each bubble has its own organic path
 $drifts: (
-  ( 0px,  16px, -12px,  10px, -6px),   // 1
-  (18px, -14px,   8px, -18px, 14px),   // 2
-  (-8px,  10px, -20px,  12px, -4px),   // 3
-  (14px,  -6px,  16px,  -8px, 12px),   // 4
-  (-16px,  20px,  -8px,  18px,-12px),  // 5
-  ( 6px, -18px,  14px, -10px,  8px),   // 6
-  (-12px,   8px, -16px,  20px, -8px),  // 7
-  (20px, -10px,   6px, -14px, 18px),   // 8
-  ( -4px, 14px,  -6px,  16px,-20px),   // 9
-  (10px, -20px,  12px,  -4px, 16px),   // 10
-  (-18px,   6px, -10px,  14px,-16px),  // 11
-  (16px, -12px,  18px,  -6px, 10px),   // 12
-  (-6px,  18px, -14px,   8px,-18px),   // 13
-  (12px,  -8px,  20px, -16px,  4px),   // 14
+  (0px, 16px, -12px, 10px, -6px),
+  // 1
+  (18px, -14px, 8px, -18px, 14px),
+  // 2
+  (-8px, 10px, -20px, 12px, -4px),
+  // 3
+  (14px, -6px, 16px, -8px, 12px),
+  // 4
+  (-16px, 20px, -8px, 18px, -12px),
+  // 5
+  (6px, -18px, 14px, -10px, 8px),
+  // 6
+  (-12px, 8px, -16px, 20px, -8px),
+  // 7
+  (20px, -10px, 6px, -14px, 18px),
+  // 8
+  (-4px, 14px, -6px, 16px, -20px),
+  // 9
+  (10px, -20px, 12px, -4px, 16px),
+  // 10
+  (-18px, 6px, -10px, 14px, -16px),
+  // 11
+  (16px, -12px, 18px, -6px, 10px),
+  // 12
+  (-6px, 18px, -14px, 8px, -18px),
+  // 13
+  (12px, -8px, 20px, -16px, 4px) // 14
 );
 
 $timing-fns: (
   cubic-bezier(0.25, 0.46, 0.45, 0.94),
-  cubic-bezier(0.33, 0.60, 0.50, 0.98),
-  cubic-bezier(0.20, 0.40, 0.55, 0.92),
-  cubic-bezier(0.30, 0.55, 0.45, 0.96),
-  cubic-bezier(0.22, 0.50, 0.52, 0.95),
+  cubic-bezier(0.33, 0.6, 0.5, 0.98),
+  cubic-bezier(0.2, 0.4, 0.55, 0.92),
+  cubic-bezier(0.3, 0.55, 0.45, 0.96),
+  cubic-bezier(0.22, 0.5, 0.52, 0.95),
   cubic-bezier(0.28, 0.44, 0.48, 0.93),
   cubic-bezier(0.35, 0.62, 0.42, 0.97),
   cubic-bezier(0.24, 0.48, 0.56, 0.94),
   cubic-bezier(0.32, 0.58, 0.46, 0.99),
   cubic-bezier(0.26, 0.42, 0.54, 0.91),
   cubic-bezier(0.31, 0.64, 0.44, 0.96),
-  cubic-bezier(0.23, 0.52, 0.50, 0.93),
+  cubic-bezier(0.23, 0.52, 0.5, 0.93),
   cubic-bezier(0.29, 0.46, 0.47, 0.97),
-  cubic-bezier(0.27, 0.56, 0.53, 0.95),
+  cubic-bezier(0.27, 0.56, 0.53, 0.95)
 );
 
 // Generate one keyframe per particle with its own horizontal drift sequence
 @for $i from 1 through 14 {
   $d: list.nth($drifts, $i);
   @keyframes bubbleRise#{$i} {
-    0%   { transform: translateY(0)      translateX(list.nth($d,1)) scale(1.00); opacity: 0; }
-    7%   { opacity: 1; }
-    20%  { transform: translateY(-18vh)  translateX(list.nth($d,2)) scale(1.04); }
-    42%  { transform: translateY(-44vh)  translateX(list.nth($d,3)) scale(0.97); }
-    65%  { transform: translateY(-68vh)  translateX(list.nth($d,4)) scale(1.03); }
-    88%  { transform: translateY(-94vh)  translateX(list.nth($d,5)) scale(0.95); opacity: 0.65; }
-    100% { transform: translateY(-112vh) translateX(list.nth($d,1)) scale(0.88); opacity: 0; }
+    0% {
+      transform: translateY(0) translateX(list.nth($d, 1)) scale(1);
+      opacity: 0;
+    }
+    7% {
+      opacity: 1;
+    }
+    20% {
+      transform: translateY(-18vh) translateX(list.nth($d, 2)) scale(1.04);
+    }
+    42% {
+      transform: translateY(-44vh) translateX(list.nth($d, 3)) scale(0.97);
+    }
+    65% {
+      transform: translateY(-68vh) translateX(list.nth($d, 4)) scale(1.03);
+    }
+    88% {
+      transform: translateY(-94vh) translateX(list.nth($d, 5)) scale(0.95);
+      opacity: 0.65;
+    }
+    100% {
+      transform: translateY(-112vh) translateX(list.nth($d, 1)) scale(0.88);
+      opacity: 0;
+    }
   }
 }
 
@@ -120,7 +146,9 @@ $timing-fns: (
     transparent 62%
   );
   border: 1px solid var(--bubble-border);
-  box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    inset 0 0 6px rgba(255, 255, 255, 0.15),
+    0 2px 6px rgba(0, 0, 0, 0.08);
 
   @for $i from 1 through 14 {
     &:nth-child(#{$i}) {
@@ -135,7 +163,7 @@ $timing-fns: (
       height: $size;
       left: $left;
       animation: bubbleRise#{$i} $dur $delay list.nth($timing-fns, $i) infinite;
-      opacity: 0.60 + math.random(4) * 0.08;
+      opacity: 0.6 + math.random(4) * 0.08;
     }
   }
 }
@@ -170,8 +198,14 @@ $timing-fns: (
 }
 
 @keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 // Stats Section
@@ -206,8 +240,9 @@ $timing-fns: (
   animation: popFadeIn 0.55s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 
   // Elegant spring-bounce on hover
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
-              box-shadow 0.3s ease;
+  transition:
+    transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s ease;
 
   &:hover {
     transform: translateY(-7px) scale(1.04);
@@ -236,7 +271,9 @@ $timing-fns: (
     text-align: center;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
     z-index: 100;
   }
 
@@ -251,7 +288,9 @@ $timing-fns: (
     border-top-color: rgba(15, 15, 25, 0.92);
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
     z-index: 100;
   }
 
@@ -310,9 +349,19 @@ $timing-fns: (
   user-select: none;
 }
 
-.stat-card--matched .stat-value { color: #22c55e; }
-.stat-card--plex     .stat-value { color: #e5a00d; }
-.stat-card--sonarr   .stat-value { color: #3b82f6; }
-.stat-card--mal      .stat-value { color: #2e51a2; }
+.stat-card--matched .stat-value {
+  color: #22c55e;
+}
+.stat-card--plex .stat-value {
+  color: #e5a00d;
+}
+.stat-card--sonarr .stat-value {
+  color: #3b82f6;
+}
+.stat-card--mal .stat-value {
+  color: #2e51a2;
+}
 
-[data-theme='dark'] .stat-card--mal .stat-value { color: #5b82e0; }
+[data-theme='dark'] .stat-card--mal .stat-value {
+  color: #5b82e0;
+}

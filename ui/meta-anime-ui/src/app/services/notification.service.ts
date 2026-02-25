@@ -13,7 +13,7 @@ export interface AppNotification {
 }
 
 const STORAGE_KEY = 'meta-anime-notifications';
-const MAX_STORED  = 50;
+const MAX_STORED = 50;
 const TOAST_TTL_MS = 4500;
 /** Exit animation duration — keep in sync with toastSlideToLeft in app.scss. */
 const TOAST_EXIT_MS = 350;
@@ -25,17 +25,15 @@ const NOTIF_DISMISS_MS = 420;
 export class NotificationService {
   readonly notifications = signal<AppNotification[]>(this._load());
 
-  readonly unacknowledged = computed(() =>
-    this.notifications().filter(n => !n.acknowledged)
-  );
+  readonly unacknowledged = computed(() => this.notifications().filter((n) => !n.acknowledged));
 
   readonly unacknowledgedCount = computed(() => this.unacknowledged().length);
 
   readonly badgeSeverity = computed<NotifSeverity>(() => {
     const unread = this.unacknowledged();
-    if (unread.some(n => n.severity === 'error'))   return 'error';
-    if (unread.some(n => n.severity === 'warning')) return 'warning';
-    if (unread.some(n => n.severity === 'success')) return 'success';
+    if (unread.some((n) => n.severity === 'error')) return 'error';
+    if (unread.some((n) => n.severity === 'warning')) return 'warning';
+    if (unread.some((n) => n.severity === 'success')) return 'success';
     return 'info';
   });
 
@@ -45,44 +43,48 @@ export class NotificationService {
 
   /** Returns true if a notification with this exact id already exists (prevents duplicates). */
   has(id: string): boolean {
-    return this.notifications().some(n => n.id === id);
+    return this.notifications().some((n) => n.id === id);
   }
 
   push(notif: Omit<AppNotification, 'timestamp' | 'acknowledged'>): void {
     if (this.has(notif.id)) return;
     const full: AppNotification = { ...notif, timestamp: Date.now(), acknowledged: false };
-    this.notifications.update(list => [full, ...list].slice(0, MAX_STORED));
+    this.notifications.update((list) => [full, ...list].slice(0, MAX_STORED));
     this._save();
-    this.activeToasts.update(t => [...t, full]);
+    this.activeToasts.update((t) => [...t, full]);
     setTimeout(() => this.dismissToast(full.id), TOAST_TTL_MS);
   }
 
   acknowledge(id: string): void {
-    this.notifications.update(list =>
-      list.map(n => n.id === id ? { ...n, acknowledged: true } : n)
+    this.notifications.update((list) =>
+      list.map((n) => (n.id === id ? { ...n, acknowledged: true } : n)),
     );
     this._save();
   }
 
   acknowledgeAll(): void {
-    this.notifications.update(list => list.map(n => ({ ...n, acknowledged: true })));
+    this.notifications.update((list) => list.map((n) => ({ ...n, acknowledged: true })));
     this._save();
   }
 
   /** Animate a notif-center item out then acknowledge it (keeps the panel open). */
   dismissNotifItem(id: string): void {
     if (this.leavingNotifIds().has(id)) return;
-    this.leavingNotifIds.update(s => new Set([...s, id]));
+    this.leavingNotifIds.update((s) => new Set([...s, id]));
     setTimeout(() => {
       this.acknowledge(id);
-      this.leavingNotifIds.update(s => { const n = new Set(s); n.delete(id); return n; });
+      this.leavingNotifIds.update((s) => {
+        const n = new Set(s);
+        n.delete(id);
+        return n;
+      });
     }, NOTIF_DISMISS_MS);
   }
 
   /** Animate all unacknowledged notif-center items out then acknowledge them. */
   dismissAllNotifItems(): void {
-    const ids = this.unacknowledged().map(n => n.id);
-    ids.forEach(id => this.leavingNotifIds.update(s => new Set([...s, id])));
+    const ids = this.unacknowledged().map((n) => n.id);
+    ids.forEach((id) => this.leavingNotifIds.update((s) => new Set([...s, id])));
     setTimeout(() => {
       this.acknowledgeAll();
       this.leavingNotifIds.update(() => new Set<string>());
@@ -92,10 +94,14 @@ export class NotificationService {
   dismissToast(id: string): void {
     // Already leaving — don't restart the animation
     if (this.leavingToastIds().has(id)) return;
-    this.leavingToastIds.update(s => new Set([...s, id]));
+    this.leavingToastIds.update((s) => new Set([...s, id]));
     setTimeout(() => {
-      this.activeToasts.update(t => t.filter(n => n.id !== id));
-      this.leavingToastIds.update(s => { const n = new Set(s); n.delete(id); return n; });
+      this.activeToasts.update((t) => t.filter((n) => n.id !== id));
+      this.leavingToastIds.update((s) => {
+        const n = new Set(s);
+        n.delete(id);
+        return n;
+      });
     }, TOAST_EXIT_MS);
   }
 
@@ -111,6 +117,8 @@ export class NotificationService {
   private _save(): void {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.notifications()));
-    } catch { /* quota exceeded — ignore */ }
+    } catch {
+      /* quota exceeded — ignore */
+    }
   }
 }

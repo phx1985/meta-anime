@@ -8,7 +8,7 @@ import { CountUpDirective } from '../directives/count-up.directive';
   standalone: true,
   imports: [TranslatePipe, CountUpDirective],
   templateUrl: './missing-stats.component.html',
-  styleUrl: './missing-stats.component.scss'
+  styleUrl: './missing-stats.component.scss',
 })
 export class MissingStatsComponent {
   @Input() stats!: AnimeStatisticsResponse;

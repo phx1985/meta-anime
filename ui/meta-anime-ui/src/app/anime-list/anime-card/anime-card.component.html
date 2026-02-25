@@ -1,5 +1,4 @@
 <article class="anime-card" [class.card--expanded]="descExpanded()">
-
   <!-- ── Blurred backdrop (visible when synopsis expanded) ──────────────── -->
   @if (coverImageUrl) {
     <div class="cover-backdrop" aria-hidden="true">
@@ -9,7 +8,12 @@
 
   <div class="card-main">
     <!-- ── Cover image ────────────────────────────────────────────────── -->
-    <div class="card-cover" aria-hidden="true" (click)="openLightbox()" [class.cover--clickable]="!!coverImageUrl">
+    <div
+      class="card-cover"
+      aria-hidden="true"
+      (click)="openLightbox()"
+      [class.cover--clickable]="!!coverImageUrl"
+    >
       @if (coverImageUrl) {
         <img [src]="coverImageUrl" [alt]="anime.title" class="cover-img" loading="lazy" />
       } @else {
@@ -19,7 +23,6 @@
 
     <!-- ── Main content ───────────────────────────────────────────────── -->
     <div class="card-content">
-
       <!-- ── Header: title + status pills + alt-titles ──────────────── -->
       <div class="card-head">
         <div class="head-top">
@@ -39,8 +42,16 @@
                 [attr.aria-expanded]="showAltTitles()"
                 [title]="'animeCard.altTitles' | translate"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="13" height="13">
-                  <path d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 0 2H4a1 1 0 0 1-1-1zm0 4a1 1 0 0 1 1-1h12a1 1 0 0 1 0 2H4a1 1 0 0 1-1-1zm0 4a1 1 0 0 1 1-1h7a1 1 0 0 1 0 2H4a1 1 0 0 1-1-1z"/>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  width="13"
+                  height="13"
+                >
+                  <path
+                    d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 0 2H4a1 1 0 0 1-1-1zm0 4a1 1 0 0 1 1-1h12a1 1 0 0 1 0 2H4a1 1 0 0 1-1-1zm0 4a1 1 0 0 1 1-1h7a1 1 0 0 1 0 2H4a1 1 0 0 1-1-1z"
+                  />
                 </svg>
               </button>
               @if (showAltTitles()) {
@@ -77,8 +88,9 @@
       <!-- ── Description ──────────────────────────────────────────────── -->
       @if (description) {
         <div class="desc-wrap">
-          <p class="desc-text"
-             [@expandCollapse]="descExpanded() ? 'expanded' : 'collapsed'">{{ description }}</p>
+          <p class="desc-text" [@expandCollapse]="descExpanded() ? 'expanded' : 'collapsed'">
+            {{ description }}
+          </p>
           @if (description.length > 180) {
             <button class="desc-toggle" (click)="toggleDesc()">
               {{ descExpanded() ? ('animeCard.less' | translate) : ('animeCard.more' | translate) }}
@@ -91,21 +103,35 @@
       @if (pureGenres.length > 0) {
         <div class="genre-list">
           @for (g of pureGenres; track g) {
-            <span class="genre-tag" [class.genre-tag--highlighted]="activeGenres.length > 0 && activeGenres.includes(g)">{{ translateGenre(g) }}</span>
+            <span
+              class="genre-tag"
+              [class.genre-tag--highlighted]="activeGenres.length > 0 && activeGenres.includes(g)"
+              >{{ translateGenre(g) }}</span
+            >
           }
         </div>
       }
       @if (themes.length > 0) {
         <div class="genre-list genre-list--themes">
           @for (t of themes; track t) {
-            <span class="genre-tag genre-tag--theme" [class.genre-tag--highlighted]="activeThemes.length > 0 && activeThemes.includes(t)">{{ translateGenre(t) }}</span>
+            <span
+              class="genre-tag genre-tag--theme"
+              [class.genre-tag--highlighted]="activeThemes.length > 0 && activeThemes.includes(t)"
+              >{{ translateGenre(t) }}</span
+            >
           }
         </div>
       }
       @if (demographics.length > 0) {
         <div class="genre-list genre-list--demographics">
           @for (d of demographics; track d) {
-            <span class="genre-tag genre-tag--demographic" [class.genre-tag--highlighted]="activeDemographics.length > 0 && activeDemographics.includes(d)">{{ translateGenre(d) }}</span>
+            <span
+              class="genre-tag genre-tag--demographic"
+              [class.genre-tag--highlighted]="
+                activeDemographics.length > 0 && activeDemographics.includes(d)
+              "
+              >{{ translateGenre(d) }}</span
+            >
           }
         </div>
       }
@@ -114,23 +140,23 @@
       <div class="meta-row">
         @if (mal?.rating) {
           <div class="scores">
-            <app-score-badge
-              [score]="malScore"
-              label="MAL"
-              titleKey="animeCard.malScore" />
+            <app-score-badge [score]="malScore" label="MAL" titleKey="animeCard.malScore" />
             @if (myScore > 0) {
               <app-score-badge
                 [score]="myScore"
                 [mine]="true"
                 [label]="'animeCard.myScore' | translate"
-                titleKey="animeCard.myScore" />
+                titleKey="animeCard.myScore"
+              />
             }
           </div>
         }
         @if (startDate) {
           <span class="date-range">
             {{ startDate }}
-            @if (endDate) { <span class="date-arrow">→</span> {{ endDate }} }
+            @if (endDate) {
+              <span class="date-arrow">→</span> {{ endDate }}
+            }
           </span>
         }
         @if (addedDate) {
@@ -139,9 +165,10 @@
           </span>
         }
       </div>
-
-    </div><!-- /card-content -->
-  </div><!-- /card-main -->
+    </div>
+    <!-- /card-content -->
+  </div>
+  <!-- /card-main -->
 
   <!-- ── Progress strip (MAL + Plex on one line) ─────────────────────── -->
   @if (malProgress || plexProgress) {
@@ -149,18 +176,31 @@
       @if (malProgress) {
         <span class="prog-item prog-item--mal">
           <svg class="prog-icon" viewBox="0 0 24 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <text x="0" y="9" font-size="9.5" font-weight="800" font-family="Arial,sans-serif" fill="#2e51a2">MAL</text>
+            <text
+              x="0"
+              y="9"
+              font-size="9.5"
+              font-weight="800"
+              font-family="Arial,sans-serif"
+              fill="#2e51a2"
+            >
+              MAL
+            </text>
           </svg>
-          <span class="prog-count">{{ malProgress?.watched }}&thinsp;/&thinsp;{{ malProgress?.total }}</span>
+          <span class="prog-count"
+            >{{ malProgress?.watched }}&thinsp;/&thinsp;{{ malProgress?.total }}</span
+          >
         </span>
       }
       @if (plexProgress) {
         <span class="prog-item prog-item--plex">
           <svg class="prog-icon" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="6" cy="6" r="5.5" stroke="#e5a00d" stroke-width="1"/>
-            <path d="M4.5 3.5l4.5 2.5-4.5 2.5V3.5z" fill="#e5a00d"/>
+            <circle cx="6" cy="6" r="5.5" stroke="#e5a00d" stroke-width="1" />
+            <path d="M4.5 3.5l4.5 2.5-4.5 2.5V3.5z" fill="#e5a00d" />
           </svg>
-          <span class="prog-count">{{ plexProgress?.watched }}&thinsp;/&thinsp;{{ plexProgress?.total }}</span>
+          <span class="prog-count"
+            >{{ plexProgress?.watched }}&thinsp;/&thinsp;{{ plexProgress?.total }}</span
+          >
         </span>
       }
     </div>
@@ -169,35 +209,62 @@
   <!-- ── Footer ──────────────────────────────────────────────────────── -->
   <div class="card-footer">
     <div class="footer-actions">
-      <a class="action action--plex"
-         [attr.href]="plexUrl"
-         [class.action--disabled]="!plexUrl"
-         target="_blank" rel="noopener noreferrer"
-         [title]="'animeCard.openPlex' | translate">
+      <a
+        class="action action--plex"
+        [attr.href]="plexUrl"
+        [class.action--disabled]="!plexUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        [title]="'animeCard.openPlex' | translate"
+      >
         <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
-          <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M6.5 5.5l5 2.5-5 2.5V5.5z" fill="currentColor"/>
+          <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4" />
+          <path d="M6.5 5.5l5 2.5-5 2.5V5.5z" fill="currentColor" />
         </svg>
         Plex
       </a>
-      <a class="action action--sonarr"
-         [attr.href]="sonarrUrl"
-         [class.action--disabled]="!sonarrUrl"
-         target="_blank" rel="noopener noreferrer"
-         [title]="'animeCard.openSonarr' | translate">
+      <a
+        class="action action--sonarr"
+        [attr.href]="sonarrUrl"
+        [class.action--disabled]="!sonarrUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        [title]="'animeCard.openSonarr' | translate"
+      >
         <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
-          <rect x="1.5" y="3" width="13" height="9" rx="1.2" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M5.5 13.5h5M8 12v1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <rect
+            x="1.5"
+            y="3"
+            width="13"
+            height="9"
+            rx="1.2"
+            stroke="currentColor"
+            stroke-width="1.4"
+          />
+          <path
+            d="M5.5 13.5h5M8 12v1.5"
+            stroke="currentColor"
+            stroke-width="1.4"
+            stroke-linecap="round"
+          />
         </svg>
         Sonarr
       </a>
-      <a class="action action--mal"
-         [attr.href]="malUrl"
-         [class.action--disabled]="!malUrl"
-         target="_blank" rel="noopener noreferrer"
-         [title]="'animeCard.openMal' | translate">
+      <a
+        class="action action--mal"
+        [attr.href]="malUrl"
+        [class.action--disabled]="!malUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        [title]="'animeCard.openMal' | translate"
+      >
         <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
-          <path d="M3 4h10M3 7h10M3 10h7M3 13h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <path
+            d="M3 4h10M3 7h10M3 10h7M3 13h5"
+            stroke="currentColor"
+            stroke-width="1.4"
+            stroke-linecap="round"
+          />
         </svg>
         MAL
       </a>
@@ -217,11 +284,19 @@
           }
           @if (sizeOnDisk) {
             <span class="codec-pill codec-pill--size" [title]="'animeCard.sizeOnDisk' | translate">
-              <svg class="codec-size-icon" width="10" height="10" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <ellipse cx="12" cy="5" rx="9" ry="3"/>
-                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
-                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+              <svg
+                class="codec-size-icon"
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
               </svg>
               <span class="codec-pill-pct">{{ sizeOnDisk }}</span>
             </span>
@@ -230,25 +305,43 @@
       </div>
     } @else if (sonarr) {
       <span class="codec-pill codec-pill--no-files" [title]="'animeCard.noFiles' | translate">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
-          <polyline points="13 2 13 9 20 9"/>
+        <svg
+          width="10"
+          height="10"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+          <polyline points="13 2 13 9 20 9" />
         </svg>
         <span class="codec-pill-name">{{ 'animeCard.noFiles' | translate }}</span>
       </span>
     }
   </div>
-
 </article>
 
 <!-- ── Lightbox overlay (outside article, teleported to body) ──────────── -->
 @if (showLightbox() && coverImageUrl) {
   <div class="lightbox-overlay" (click)="closeLightbox()" role="dialog" aria-modal="true">
     <button class="lightbox-close" type="button" (click)="closeLightbox()" aria-label="Close">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
-        <path d="M18 6L6 18M6 6l12 12"/>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.2"
+        stroke-linecap="round"
+      >
+        <path d="M18 6L6 18M6 6l12 12" />
       </svg>
     </button>
-    <img class="lightbox-img" [src]="coverImageUrl" [alt]="anime.title" (click)="$event.stopPropagation()" />
+    <img
+      class="lightbox-img"
+      [src]="coverImageUrl"
+      [alt]="anime.title"
+      (click)="$event.stopPropagation()"
+    />
   </div>
 }

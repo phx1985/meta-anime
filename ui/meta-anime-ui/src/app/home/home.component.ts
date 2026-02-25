@@ -13,12 +13,12 @@ import { CountUpDirective } from '../directives/count-up.directive';
   standalone: true,
   imports: [TranslatePipe, GenreChartComponent, MissingStatsComponent, CountUpDirective],
   templateUrl: './home.component.html',
-  styleUrl: './home.component.scss'
+  styleUrl: './home.component.scss',
 })
 export class HomeComponent {
   private animeService = inject(AnimeService);
-  private syncSignalR  = inject(SyncSignalRService);
-  private destroyRef   = inject(DestroyRef);
+  private syncSignalR = inject(SyncSignalRService);
+  private destroyRef = inject(DestroyRef);
 
   stats = signal<AnimeStatisticsResponse | null>(null);
 
@@ -39,11 +39,12 @@ export class HomeComponent {
 
   private loadStats(resetFirst = false): void {
     if (resetFirst) this.stats.set(null);
-    this.animeService.getStatistics()
+    this.animeService
+      .getStatistics()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: data => this.stats.set(data),
-        error: () => this.stats.set(null)
+        next: (data) => this.stats.set(data),
+        error: () => this.stats.set(null),
       });
   }
 }

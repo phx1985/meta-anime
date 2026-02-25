@@ -53,24 +53,24 @@ public class SettingsSeedService(
 
         return new Dictionary<string, string?>
         {
-            [SettingsKeys.PlexHost]               = plex.Host,
-            [SettingsKeys.PlexToken]               = plex.Token,
-            [SettingsKeys.PlexAnimeSections]       = plex.AnimeSections,
+            [SettingsKeys.PlexHost] = plex.Host,
+            [SettingsKeys.PlexToken] = plex.Token,
+            [SettingsKeys.PlexAnimeSections] = plex.AnimeSections,
 
-            [SettingsKeys.SonarrHost]              = sonarr.Host,
-            [SettingsKeys.SonarrApiKey]            = sonarr.ApiKey,
-            [SettingsKeys.SonarrAnimeTags]         = sonarr.AnimeTags,
-            [SettingsKeys.SonarrRemoteUrl]         = sonarr.RemoteUrl,
+            [SettingsKeys.SonarrHost] = sonarr.Host,
+            [SettingsKeys.SonarrApiKey] = sonarr.ApiKey,
+            [SettingsKeys.SonarrAnimeTags] = sonarr.AnimeTags,
+            [SettingsKeys.SonarrRemoteUrl] = sonarr.RemoteUrl,
 
-            [SettingsKeys.MalApiToken]             = mal.ApiToken,
-            [SettingsKeys.MalClientId]             = mal.ClientId,
-            [SettingsKeys.MalClientSecret]         = mal.ClientSecret,
-            [SettingsKeys.MalRefreshToken]         = mal.RefreshToken,
+            [SettingsKeys.MalApiToken] = mal.ApiToken,
+            [SettingsKeys.MalClientId] = mal.ClientId,
+            [SettingsKeys.MalClientSecret] = mal.ClientSecret,
+            [SettingsKeys.MalRefreshToken] = mal.RefreshToken,
 
-            [SettingsKeys.KometaAnimeIdsJsonUrl]   = kometa.AnimeIdsJsonUrl,
+            [SettingsKeys.KometaAnimeIdsJsonUrl] = kometa.AnimeIdsJsonUrl,
 
-            [SettingsKeys.AppShowNsfw]             = "false",
-            [SettingsKeys.AppSyncInterval]         = "daily",
+            [SettingsKeys.AppShowNsfw] = "false",
+            [SettingsKeys.AppSyncInterval] = "daily",
             [SettingsKeys.AppTitleSimilarityThreshold] = "80",
         };
     }

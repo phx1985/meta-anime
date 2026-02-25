@@ -21,7 +21,7 @@ public class SeasonalController(IMediator mediator) : ControllerBase
         if (string.IsNullOrWhiteSpace(season))
             return BadRequest("season is required (winter, spring, summer, fall)");
 
-        var validSeasons = new[] { "winter", "spring", "summer", "fall" };
+        var validSeasons = (string[]) ["winter", "spring", "summer", "fall"];
         if (!validSeasons.Contains(season.ToLower()))
             return BadRequest("season must be one of: winter, spring, summer, fall");
 

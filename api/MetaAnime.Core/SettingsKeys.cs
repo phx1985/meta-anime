@@ -28,11 +28,11 @@ public static class SettingsKeys
     public const string KometaAnimeIdsJsonUrl = "Kometa:AnimeIdsJsonUrl";
 
     // App preferences
-    public const string AppShowNsfw                   = "App:ShowNsfw";
-    public const string AppSyncInterval               = "App:SyncInterval";
-    public const string AppTitleSimilarityThreshold   = "App:TitleSimilarityThreshold";
+    public const string AppShowNsfw = "App:ShowNsfw";
+    public const string AppSyncInterval = "App:SyncInterval";
+    public const string AppTitleSimilarityThreshold = "App:TitleSimilarityThreshold";
 
     // System (not user-configurable)
-    public const string LastSyncDate           = "System:LastSyncDate";
-    public const string MalTokenRefreshedAt    = "System:MalTokenRefreshedAt";
+    public const string LastSyncDate = "System:LastSyncDate";
+    public const string MalTokenRefreshedAt = "System:MalTokenRefreshedAt";
 }

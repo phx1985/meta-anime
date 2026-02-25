@@ -25,9 +25,9 @@ public class KometaAnimeMappingRepository(MetaAnimeDbContext dbContext)
     {
         var platformName = animePlatform.GetPlatformName();
         return await dbContext.KometaAnimeMapping
-                              .AsNoTracking()
-                              .Where(kam => kam.PlatformName == platformName && kam.PlatformId == platformId)
-                              .FirstOrDefaultAsync();
+            .AsNoTracking()
+            .Where(kam => kam.PlatformName == platformName && kam.PlatformId == platformId)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<IList<KometaAnimeMapping>> GetByPlatformIdsAsync(KometaAnimePlatform animePlatform, IEnumerable<string> platformIds)
@@ -35,9 +35,9 @@ public class KometaAnimeMappingRepository(MetaAnimeDbContext dbContext)
         var platformName = animePlatform.GetPlatformName();
         var idList = platformIds.ToList();
         return await dbContext.KometaAnimeMapping
-                              .AsNoTracking()
-                              .Where(kam => kam.PlatformName == platformName && idList.Contains(kam.PlatformId))
-                              .ToListAsync();
+            .AsNoTracking()
+            .Where(kam => kam.PlatformName == platformName && idList.Contains(kam.PlatformId))
+            .ToListAsync();
     }
 
     public async Task<IList<KometaAnimeMapping>> GetByAniDbIdsAndPlatformAsync(KometaAnimePlatform animePlatform, IEnumerable<string> aniDbIds)
@@ -45,16 +45,16 @@ public class KometaAnimeMappingRepository(MetaAnimeDbContext dbContext)
         var platformName = animePlatform.GetPlatformName();
         var idList = aniDbIds.ToList();
         return await dbContext.KometaAnimeMapping
-                              .AsNoTracking()
-                              .Where(kam => kam.PlatformName == platformName && idList.Contains(kam.AniDbId))
-                              .ToListAsync();
+            .AsNoTracking()
+            .Where(kam => kam.PlatformName == platformName && idList.Contains(kam.AniDbId))
+            .ToListAsync();
     }
     public async Task<IList<(string MalId, string AniDbId, string? TvdbId)>> GetMalMappingsWithTvdbAsync(IEnumerable<string> malIds)
     {
         var idList = malIds.ToList();
         if (idList.Count == 0) return [];
 
-        var malPlatform  = KometaAnimePlatform.Mal.GetPlatformName();   // "mal_id"
+        var malPlatform = KometaAnimePlatform.Mal.GetPlatformName();   // "mal_id"
         var tvdbPlatform = KometaAnimePlatform.Tvdb.GetPlatformName();  // "tvdb_id"
 
         // Single LEFT-JOIN query: MAL rows joined with TVDB rows on AniDbId.

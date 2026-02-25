@@ -32,29 +32,29 @@ public class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRepositor
         return
         [
             // ── Plex ──────────────────────────────────────────────────────────
-            new(SettingsKeys.PlexHost,              "plex",   false, true,  Get(SettingsKeys.PlexHost)),
-            new(SettingsKeys.PlexToken,             "plex",   true,  true,  Get(SettingsKeys.PlexToken)),
-            new(SettingsKeys.PlexAnimeSections,     "plex",   false, true,  Get(SettingsKeys.PlexAnimeSections)),
+            new(SettingsKeys.PlexHost, "plex", false, true, Get(SettingsKeys.PlexHost)),
+            new(SettingsKeys.PlexToken, "plex", true, true, Get(SettingsKeys.PlexToken)),
+            new(SettingsKeys.PlexAnimeSections, "plex", false, true, Get(SettingsKeys.PlexAnimeSections)),
 
             // ── Sonarr ────────────────────────────────────────────────────────
-            new(SettingsKeys.SonarrHost,            "sonarr", false, true,  Get(SettingsKeys.SonarrHost)),
-            new(SettingsKeys.SonarrApiKey,          "sonarr", true,  true,  Get(SettingsKeys.SonarrApiKey)),
-            new(SettingsKeys.SonarrAnimeTags,       "sonarr", false, true,  Get(SettingsKeys.SonarrAnimeTags)),
-            new(SettingsKeys.SonarrRemoteUrl,       "sonarr", false, false, Get(SettingsKeys.SonarrRemoteUrl)),
+            new(SettingsKeys.SonarrHost, "sonarr", false, true, Get(SettingsKeys.SonarrHost)),
+            new(SettingsKeys.SonarrApiKey, "sonarr", true, true, Get(SettingsKeys.SonarrApiKey)),
+            new(SettingsKeys.SonarrAnimeTags, "sonarr", false, true, Get(SettingsKeys.SonarrAnimeTags)),
+            new(SettingsKeys.SonarrRemoteUrl, "sonarr", false, false, Get(SettingsKeys.SonarrRemoteUrl)),
 
             // ── MyAnimeList ───────────────────────────────────────────────────
-            new(SettingsKeys.MalApiToken,           "mal",    true,  false, Get(SettingsKeys.MalApiToken)),
-            new(SettingsKeys.MalClientId,           "mal",    false, false, Get(SettingsKeys.MalClientId)),
-            new(SettingsKeys.MalClientSecret,       "mal",    true,  false, Get(SettingsKeys.MalClientSecret)),
-            new(SettingsKeys.MalRefreshToken,       "mal",    true,  false, Get(SettingsKeys.MalRefreshToken)),
-            new(SettingsKeys.MalTokenRefreshedAt,   "mal",    false, false, Get(SettingsKeys.MalTokenRefreshedAt), "info"),
+            new(SettingsKeys.MalApiToken, "mal", true, false, Get(SettingsKeys.MalApiToken)),
+            new(SettingsKeys.MalClientId, "mal", false, false, Get(SettingsKeys.MalClientId)),
+            new(SettingsKeys.MalClientSecret, "mal", true, false, Get(SettingsKeys.MalClientSecret)),
+            new(SettingsKeys.MalRefreshToken, "mal", true, false, Get(SettingsKeys.MalRefreshToken)),
+            new(SettingsKeys.MalTokenRefreshedAt, "mal", false, false, Get(SettingsKeys.MalTokenRefreshedAt), "info"),
 
             // ── Kometa ────────────────────────────────────────────────────────
-            new(SettingsKeys.KometaAnimeIdsJsonUrl, "kometa", false, true,  Get(SettingsKeys.KometaAnimeIdsJsonUrl)),
+            new(SettingsKeys.KometaAnimeIdsJsonUrl, "kometa", false, true, Get(SettingsKeys.KometaAnimeIdsJsonUrl)),
 
             // ── App preferences ───────────────────────────────────────────────
-            new(SettingsKeys.AppShowNsfw,      "app", false, false, Get(SettingsKeys.AppShowNsfw),     "boolean"),
-            new(SettingsKeys.AppSyncInterval,  "app", false, false, Get(SettingsKeys.AppSyncInterval), "select",
+            new(SettingsKeys.AppShowNsfw, "app", false, false, Get(SettingsKeys.AppShowNsfw), "boolean"),
+            new(SettingsKeys.AppSyncInterval, "app", false, false, Get(SettingsKeys.AppSyncInterval), "select",
                 SelectOptions: ["hourly", "every6h", "every12h", "daily", "weekly"]),
             new(SettingsKeys.AppTitleSimilarityThreshold, "app", false, false, Get(SettingsKeys.AppTitleSimilarityThreshold), "number"),
         ];

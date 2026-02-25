@@ -8,7 +8,7 @@ import { SyncStep, SyncStepState, SyncProgressMessage } from '../models/sync-pro
 const STEP_KEYS = ['kometa', 'plex', 'mal', 'sonarr', 'matching'] as const;
 
 function makeInitialSteps(): SyncStep[] {
-  return STEP_KEYS.map(key => ({
+  return STEP_KEYS.map((key) => ({
     stepKey: key,
     state: 'pending' as SyncStepState,
     elapsedMs: 0,
@@ -19,24 +19,24 @@ function makeInitialSteps(): SyncStep[] {
 export class SyncSignalRService implements OnDestroy {
   private connection: signalR.HubConnection | null = null;
 
-  private readonly _steps$           = new BehaviorSubject<SyncStep[]>(makeInitialSteps());
-  private readonly _connected$       = new BehaviorSubject<boolean>(false);
-  private readonly _syncDone$        = new BehaviorSubject<boolean>(false);
-  private readonly _syncError$       = new BehaviorSubject<boolean>(false);
+  private readonly _steps$ = new BehaviorSubject<SyncStep[]>(makeInitialSteps());
+  private readonly _connected$ = new BehaviorSubject<boolean>(false);
+  private readonly _syncDone$ = new BehaviorSubject<boolean>(false);
+  private readonly _syncError$ = new BehaviorSubject<boolean>(false);
   private readonly _overallElapsedMs$ = new BehaviorSubject<number>(0);
   /** Emits void once each time a sync run fully completes. No replay — safe to subscribe on mount. */
-  private readonly _syncCompleted$   = new Subject<void>();
+  private readonly _syncCompleted$ = new Subject<void>();
 
-  readonly steps$:           Observable<SyncStep[]> = this._steps$.asObservable();
-  readonly connected$:       Observable<boolean>    = this._connected$.asObservable();
-  readonly syncDone$:        Observable<boolean>    = this._syncDone$.asObservable();
-  readonly syncError$:       Observable<boolean>    = this._syncError$.asObservable();
-  readonly overallElapsedMs$: Observable<number>   = this._overallElapsedMs$.asObservable();
-  readonly syncCompleted$:   Observable<void>       = this._syncCompleted$.asObservable();
+  readonly steps$: Observable<SyncStep[]> = this._steps$.asObservable();
+  readonly connected$: Observable<boolean> = this._connected$.asObservable();
+  readonly syncDone$: Observable<boolean> = this._syncDone$.asObservable();
+  readonly syncError$: Observable<boolean> = this._syncError$.asObservable();
+  readonly overallElapsedMs$: Observable<number> = this._overallElapsedMs$.asObservable();
+  readonly syncCompleted$: Observable<void> = this._syncCompleted$.asObservable();
 
   /** Elapsed-time ticker: interval handle + last-tick timestamp for delta calculation */
   private tickerHandle: ReturnType<typeof setInterval> | null = null;
-  private lastTickAt   = 0;
+  private lastTickAt = 0;
   /** Wall-clock timestamp when the first 'Running' message was received */
   private overallStartedAt: number | null = null;
 
@@ -66,7 +66,8 @@ export class SyncSignalRService implements OnDestroy {
       this.stopTicker();
     });
 
-    this.connection.start()
+    this.connection
+      .start()
       .then(() => this._connected$.next(true))
       .catch(() => this._connected$.next(false));
   }
@@ -108,7 +109,7 @@ export class SyncSignalRService implements OnDestroy {
     }
 
     this._steps$.next(
-      this._steps$.value.map(s => {
+      this._steps$.value.map((s) => {
         if (s.stepKey !== msg.stepKey) return s;
         return {
           ...s,
@@ -118,11 +119,11 @@ export class SyncSignalRService implements OnDestroy {
           elapsedMs: msg.elapsedMs,
           errorMessage: msg.errorMessage,
         };
-      })
+      }),
     );
 
-    const allDone  = this._steps$.value.every(s => s.state === 'done');
-    const anyError = this._steps$.value.some(s => s.state === 'error');
+    const allDone = this._steps$.value.every((s) => s.state === 'done');
+    const anyError = this._steps$.value.some((s) => s.state === 'error');
 
     if (allDone) {
       this._syncDone$.next(true);
@@ -138,9 +139,12 @@ export class SyncSignalRService implements OnDestroy {
 
   private mapState(raw: SyncProgressMessage['state']): SyncStepState {
     switch (raw) {
-      case 'Running': return 'running';
-      case 'Done':    return 'done';
-      case 'Error':   return 'error';
+      case 'Running':
+        return 'running';
+      case 'Done':
+        return 'done';
+      case 'Error':
+        return 'error';
     }
   }
 
@@ -148,17 +152,15 @@ export class SyncSignalRService implements OnDestroy {
     if (this.tickerHandle !== null) return;
     this.lastTickAt = Date.now();
     this.tickerHandle = setInterval(() => {
-      const now   = Date.now();
+      const now = Date.now();
       const delta = now - this.lastTickAt;
       this.lastTickAt = now;
 
       // Increment per-step elapsed for running steps
       this._steps$.next(
-        this._steps$.value.map(s =>
-          s.state === 'running'
-            ? { ...s, elapsedMs: s.elapsedMs + delta }
-            : s
-        )
+        this._steps$.value.map((s) =>
+          s.state === 'running' ? { ...s, elapsedMs: s.elapsedMs + delta } : s,
+        ),
       );
 
       // Increment overall elapsed

@@ -3,7 +3,6 @@
     <h3 class="missing-title">{{ 'home.missing.title' | translate }}</h3>
   </div>
   <div class="missing-rows">
-
     <!-- Sonarr not in MAL -->
     <div class="gap-row gap-row--sonarr-mal">
       <div class="gap-icon-pair" aria-hidden="true">
@@ -15,7 +14,11 @@
       <div class="gap-info">
         <span class="gap-desc">{{ 'home.missing.sonarrNotInMalDesc' | translate }}</span>
       </div>
-      <div class="gap-count" [class.gap-count--zero]="stats.sonarrNotInMal === 0" [countUp]="stats.sonarrNotInMal"></div>
+      <div
+        class="gap-count"
+        [class.gap-count--zero]="stats.sonarrNotInMal === 0"
+        [countUp]="stats.sonarrNotInMal"
+      ></div>
     </div>
 
     <!-- MAL not in Plex -->
@@ -29,7 +32,11 @@
       <div class="gap-info">
         <span class="gap-desc">{{ 'home.missing.malNotInPlexDesc' | translate }}</span>
       </div>
-      <div class="gap-count" [class.gap-count--zero]="stats.malNotInPlex === 0" [countUp]="stats.malNotInPlex"></div>
+      <div
+        class="gap-count"
+        [class.gap-count--zero]="stats.malNotInPlex === 0"
+        [countUp]="stats.malNotInPlex"
+      ></div>
     </div>
 
     <!-- Plex not in MAL -->
@@ -43,7 +50,11 @@
       <div class="gap-info">
         <span class="gap-desc">{{ 'home.missing.plexNotInMalDesc' | translate }}</span>
       </div>
-      <div class="gap-count" [class.gap-count--zero]="stats.plexNotInMal === 0" [countUp]="stats.plexNotInMal"></div>
+      <div
+        class="gap-count"
+        [class.gap-count--zero]="stats.plexNotInMal === 0"
+        [countUp]="stats.plexNotInMal"
+      ></div>
     </div>
 
     <!-- Plex not in Sonarr -->
@@ -57,8 +68,11 @@
       <div class="gap-info">
         <span class="gap-desc">{{ 'home.missing.plexNotInSonarrDesc' | translate }}</span>
       </div>
-      <div class="gap-count" [class.gap-count--zero]="stats.plexNotInSonarr === 0" [countUp]="stats.plexNotInSonarr"></div>
+      <div
+        class="gap-count"
+        [class.gap-count--zero]="stats.plexNotInSonarr === 0"
+        [countUp]="stats.plexNotInSonarr"
+      ></div>
     </div>
-
   </div>
 </div>

@@ -1,7 +1,7 @@
 export enum AnimeSource {
   Unknown = 0,
   MyAnimeList = 1,
-  Plex = 2
+  Plex = 2,
 }
 
 export interface MalProgressionInfo {

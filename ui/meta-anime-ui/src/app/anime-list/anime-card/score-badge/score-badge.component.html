@@ -5,12 +5,17 @@
   <span class="score-out">/10</span>
   <span class="score-src">{{ label }}</span>
   <svg class="score-arc" viewBox="0 0 36 36" fill="none">
-    <circle class="arc-bg"  cx="18" cy="18" r="15" stroke-width="3"/>
-    <circle class="arc-fill"
-            [class.arc-fill--mine]="mine"
-            cx="18" cy="18" r="15" stroke-width="3"
-            [attr.stroke-dashoffset]="arcCircumference - scorePct(score) * (arcCircumference / 100)"
-            [attr.stroke-dasharray]="arcCircumference + ' ' + arcCircumference"
-            transform="rotate(-90 18 18)"/>
+    <circle class="arc-bg" cx="18" cy="18" r="15" stroke-width="3" />
+    <circle
+      class="arc-fill"
+      [class.arc-fill--mine]="mine"
+      cx="18"
+      cy="18"
+      r="15"
+      stroke-width="3"
+      [attr.stroke-dashoffset]="arcCircumference - scorePct(score) * (arcCircumference / 100)"
+      [attr.stroke-dasharray]="arcCircumference + ' ' + arcCircumference"
+      transform="rotate(-90 18 18)"
+    />
   </svg>
 </div>

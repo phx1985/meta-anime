@@ -13,7 +13,7 @@ public partial class MalAnime : IAnimeConvertible, ICacheable
         return new Anime
         {
             SourceId = Id.ToString(),
-            Title = Title,
+            Title = Title ?? string.Empty,
             Description = Synopsis ?? string.Empty,
             AnimeSource = AnimeSource.MyAnimeList,
             ExternalAnimeIdentifiers = []

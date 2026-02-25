@@ -28,22 +28,28 @@
     <!-- Source counters -->
     <div class="row g-4 mb-3 justify-content-center">
       <div class="col-6 col-md-4 col-lg-4">
-        <div class="stat-card stat-card--plex"
-             [attr.data-tooltip]="'home.stats.tooltip.plex' | translate">
+        <div
+          class="stat-card stat-card--plex"
+          [attr.data-tooltip]="'home.stats.tooltip.plex' | translate"
+        >
           <div class="stat-value" [countUp]="stats()!.plexAnime"></div>
           <img class="stat-icon" src="assets/images/plex.svg" alt="Plex" aria-hidden="true" />
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg-4">
-        <div class="stat-card stat-card--sonarr"
-             [attr.data-tooltip]="'home.stats.tooltip.sonarr' | translate">
+        <div
+          class="stat-card stat-card--sonarr"
+          [attr.data-tooltip]="'home.stats.tooltip.sonarr' | translate"
+        >
           <div class="stat-value" [countUp]="stats()!.sonarrAnime"></div>
           <img class="stat-icon" src="assets/images/sonarr.svg" alt="Sonarr" aria-hidden="true" />
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg-4">
-        <div class="stat-card stat-card--mal"
-             [attr.data-tooltip]="'home.stats.tooltip.mal' | translate">
+        <div
+          class="stat-card stat-card--mal"
+          [attr.data-tooltip]="'home.stats.tooltip.mal' | translate"
+        >
           <div class="stat-value" [countUp]="stats()!.myAnimeListAnime"></div>
           <img class="stat-icon" src="assets/images/mal.svg" alt="MyAnimeList" aria-hidden="true" />
         </div>
@@ -60,7 +66,6 @@
         <app-missing-stats [stats]="stats()!" />
       </div>
     </div>
-
   } @else {
     <div class="d-flex justify-content-center py-5">
       <div class="spinner-border" role="status">

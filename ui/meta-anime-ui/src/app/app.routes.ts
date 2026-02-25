@@ -9,5 +9,5 @@ export const routes: Routes = [
   { path: 'animes', component: AnimeListComponent },
   { path: 'seasonal', component: SeasonalComponent },
   { path: 'settings', component: SettingsComponent },
-  { path: '**', redirectTo: '' }
+  { path: '**', redirectTo: '' },
 ];

@@ -7,7 +7,7 @@ export const apiKeyInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   const authReq = req.clone({
-    headers: req.headers.set('X-Api-Key', environment.apiKey)
+    headers: req.headers.set('X-Api-Key', environment.apiKey),
   });
 
   return next(authReq);

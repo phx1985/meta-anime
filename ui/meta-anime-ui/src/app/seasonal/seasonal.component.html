@@ -1,14 +1,12 @@
 <div class="seasonal-page">
-
   <!-- Animated bokeh background -->
   <div class="bokeh" aria-hidden="true">
-    @for (i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]; track i) {
+    @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]; track i) {
       <div class="bokeh__blob"></div>
     }
   </div>
 
   <div class="container py-5">
-
     <!-- Page header -->
     <div class="seasonal-header mb-4">
       <h1 class="seasonal-title">{{ 'seasonal.title' | translate }}</h1>
@@ -17,45 +15,75 @@
 
     <!-- Season selector: year picker + 4 season pills -->
     <div class="season-selector mb-4">
-
       <!-- Year picker row -->
       <div class="year-picker" role="group" [attr.aria-label]="'seasonal.yearSelect' | translate">
-        <button type="button" class="year-nav year-nav--prev"
-                [disabled]="!canGoPrev()"
-                [attr.aria-label]="'seasonal.prevYear' | translate"
-                (click)="prevYear()">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M10 3L5 8l5 5"/>
+        <button
+          type="button"
+          class="year-nav year-nav--prev"
+          [disabled]="!canGoPrev()"
+          [attr.aria-label]="'seasonal.prevYear' | translate"
+          (click)="prevYear()"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M10 3L5 8l5 5" />
           </svg>
         </button>
 
         <div class="year-display">
-          <select class="year-select"
-                  [ngModel]="selectedYear()"
-                  (ngModelChange)="setYear($event)"
-                  [attr.aria-label]="'seasonal.yearSelect' | translate">
+          <select
+            class="year-select"
+            [ngModel]="selectedYear()"
+            (ngModelChange)="setYear($event)"
+            [attr.aria-label]="'seasonal.yearSelect' | translate"
+          >
             @for (y of yearOptions; track y) {
               <option [value]="y">{{ y }}</option>
             }
           </select>
           <span class="year-text" aria-hidden="true">{{ selectedYear() }}</span>
-          <svg class="year-chevron" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-            <path d="M1 1l4 4 4-4"/>
+          <svg
+            class="year-chevron"
+            viewBox="0 0 10 6"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+          >
+            <path d="M1 1l4 4 4-4" />
           </svg>
         </div>
 
-        <button type="button" class="year-nav year-nav--next"
-                [disabled]="!canGoNext()"
-                [attr.aria-label]="'seasonal.nextYear' | translate"
-                (click)="nextYear()">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M6 3l5 5-5 5"/>
+        <button
+          type="button"
+          class="year-nav year-nav--next"
+          [disabled]="!canGoNext()"
+          [attr.aria-label]="'seasonal.nextYear' | translate"
+          (click)="nextYear()"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M6 3l5 5-5 5" />
           </svg>
         </button>
       </div>
 
       <!-- Season pills -->
-      <div class="season-pills" role="tablist" [attr.aria-label]="'seasonal.seasonSelect' | translate">
+      <div
+        class="season-pills"
+        role="tablist"
+        [attr.aria-label]="'seasonal.seasonSelect' | translate"
+      >
         @for (pill of allSeasons; track pill.season) {
           <button
             type="button"
@@ -63,7 +91,8 @@
             role="tab"
             [class.season-pill--active]="selectedSeason() === pill.season"
             [attr.aria-selected]="selectedSeason() === pill.season"
-            (click)="selectSeason(pill.season)">
+            (click)="selectSeason(pill.season)"
+          >
             {{ pill.labelKey | translate }}
           </button>
         }
@@ -73,19 +102,34 @@
     <!-- ── Filter card ──────────────────────────────────────────────────── -->
     @if (!loading() && !error() && animes().length > 0) {
       <div class="filter-card mb-4">
-
         <!-- Card header — always visible, toggles body -->
-        <div class="filter-card__header"
-             (click)="toggleFilterPanel()"
-             role="button"
-             [attr.aria-expanded]="filterOpen()"
-             [attr.aria-label]="(filterOpen() ? 'seasonal.filter.collapseFilters' : 'seasonal.filter.expandFilters') | translate"
-             tabindex="0"
-             (keydown.enter)="toggleFilterPanel()"
-             (keydown.space)="$event.preventDefault(); toggleFilterPanel()">
+        <div
+          class="filter-card__header"
+          (click)="toggleFilterPanel()"
+          role="button"
+          [attr.aria-expanded]="filterOpen()"
+          [attr.aria-label]="
+            (filterOpen() ? 'seasonal.filter.collapseFilters' : 'seasonal.filter.expandFilters')
+              | translate
+          "
+          tabindex="0"
+          (keydown.enter)="toggleFilterPanel()"
+          (keydown.space)="$event.preventDefault(); toggleFilterPanel()"
+        >
           <div class="filter-card__header-left">
-            <svg class="filter-header-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+            <svg
+              class="filter-header-icon"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
             </svg>
             <div class="filter-header-text">
               <span class="filter-header-title">{{ 'seasonal.filter.title' | translate }}</span>
@@ -95,37 +139,76 @@
               <span class="filter-badge">{{ activeFilterCount }}</span>
             }
           </div>
-          <svg class="filter-chevron" [class.filter-chevron--open]="filterOpen()" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-            <path d="M4 6l4 4 4-4"/>
+          <svg
+            class="filter-chevron"
+            [class.filter-chevron--open]="filterOpen()"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M4 6l4 4 4-4" />
           </svg>
         </div>
 
         <!-- Collapsible body -->
         <div class="filter-card__body" [@filterCollapse]="filterOpen() ? 'open' : 'closed'">
           <div class="filter-card__inner">
-
             <!-- ── Preset bar ──────────────────────────────────────────── -->
             <div class="seasonal-presets-bar">
               <div class="presets-chips">
                 @for (p of savedPresets(); track p.id) {
-                  <button type="button" class="preset-chip preset-chip--saved" (click)="applyPreset(p)">
+                  <button
+                    type="button"
+                    class="preset-chip preset-chip--saved"
+                    (click)="applyPreset(p)"
+                  >
                     {{ p.label }}
-                    <span class="preset-chip__delete" role="button"
-                          [attr.aria-label]="'seasonal.filter.presets.delete' | translate"
-                          (click)="deletePreset(p.id, $event)">
-                      <svg width="8" height="8" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                        <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                    <span
+                      class="preset-chip__delete"
+                      role="button"
+                      [attr.aria-label]="'seasonal.filter.presets.delete' | translate"
+                      (click)="deletePreset(p.id, $event)"
+                    >
+                      <svg
+                        width="8"
+                        height="8"
+                        viewBox="0 0 16 16"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M2 2l12 12M14 2L2 14"
+                          stroke="currentColor"
+                          stroke-width="2.5"
+                          stroke-linecap="round"
+                        />
                       </svg>
                     </span>
                   </button>
                 }
                 @if (savedPresets().length === 0 && !showSavePreset) {
-                  <span class="presets-empty-hint">{{ 'seasonal.filter.presets.noPresets' | translate }}</span>
+                  <span class="presets-empty-hint">{{
+                    'seasonal.filter.presets.noPresets' | translate
+                  }}</span>
                 }
               </div>
               <button type="button" class="btn-save-preset" (click)="openSavePreset()">
-                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                  <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M8 2v12M2 8h12"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    fill="none"
+                  />
                 </svg>
                 {{ 'seasonal.filter.presets.saveAs' | translate }}
               </button>
@@ -133,13 +216,21 @@
 
             @if (showSavePreset) {
               <div class="preset-save-form">
-                <input class="preset-name-input" type="text"
-                       [(ngModel)]="newPresetName"
-                       [placeholder]="'seasonal.filter.presets.namePlaceholder' | translate"
-                       (keydown.enter)="confirmSavePreset()"
-                       (keydown.escape)="cancelSavePreset()"
-                       autofocus />
-                <button type="button" class="btn-preset-confirm" (click)="confirmSavePreset()" [disabled]="!newPresetName.trim()">
+                <input
+                  class="preset-name-input"
+                  type="text"
+                  [(ngModel)]="newPresetName"
+                  [placeholder]="'seasonal.filter.presets.namePlaceholder' | translate"
+                  (keydown.enter)="confirmSavePreset()"
+                  (keydown.escape)="cancelSavePreset()"
+                  autofocus
+                />
+                <button
+                  type="button"
+                  class="btn-preset-confirm"
+                  (click)="confirmSavePreset()"
+                  [disabled]="!newPresetName.trim()"
+                >
                   {{ 'seasonal.filter.presets.save' | translate }}
                 </button>
                 <button type="button" class="btn-preset-cancel" (click)="cancelSavePreset()">
@@ -150,32 +241,77 @@
 
             <!-- Filter grid -->
             <div class="filter-grid">
-
               <!-- Genre -->
               <div class="filter-field">
                 <div class="filter-label-row">
                   <span class="filter-label">{{ 'seasonal.filter.genre' | translate }}</span>
                   @if (filterGenre().length > 1) {
                     <div class="operator-toggle" role="radiogroup">
-                      <button type="button" class="op-btn" [class.op-btn--active]="genreOperator() === 'or'" (click)="setGenreOperator('or', $event)">OR</button>
-                      <button type="button" class="op-btn" [class.op-btn--active]="genreOperator() === 'and'" (click)="setGenreOperator('and', $event)">AND</button>
+                      <button
+                        type="button"
+                        class="op-btn"
+                        [class.op-btn--active]="genreOperator() === 'or'"
+                        (click)="setGenreOperator('or', $event)"
+                      >
+                        OR
+                      </button>
+                      <button
+                        type="button"
+                        class="op-btn"
+                        [class.op-btn--active]="genreOperator() === 'and'"
+                        (click)="setGenreOperator('and', $event)"
+                      >
+                        AND
+                      </button>
                     </div>
                   }
                 </div>
-                <button type="button" class="fp-trigger"
-                        [class.fp-trigger--has-value]="filterGenre().length > 0"
-                        [class.fp-trigger--open]="genreDropdownOpen"
-                        (click)="toggleGenreDropdown($event)">
+                <button
+                  type="button"
+                  class="fp-trigger"
+                  [class.fp-trigger--has-value]="filterGenre().length > 0"
+                  [class.fp-trigger--open]="genreDropdownOpen"
+                  (click)="toggleGenreDropdown($event)"
+                >
                   <span class="fp-trigger__text">
-                    @if (genreLabel()) { {{ genreLabel() }} } @else { {{ 'seasonal.filter.any' | translate }} }
+                    @if (genreLabel()) {
+                      {{ genreLabel() }}
+                    } @else {
+                      {{ 'seasonal.filter.any' | translate }}
+                    }
                   </span>
                   @if (filterGenre().length > 0) {
                     <button type="button" class="fp-trigger__clear" (click)="clearGenres($event)">
-                      <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
+                      <svg
+                        width="9"
+                        height="9"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M2 2l12 12M14 2L2 14" />
+                      </svg>
                     </button>
                   }
-                  <svg class="fp-trigger__chevron" [class.fp-trigger__chevron--open]="genreDropdownOpen" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <svg
+                    class="fp-trigger__chevron"
+                    [class.fp-trigger__chevron--open]="genreDropdownOpen"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M4 6l4 4 4-4"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                   </svg>
                 </button>
               </div>
@@ -186,25 +322,71 @@
                   <span class="filter-label">{{ 'seasonal.filter.theme' | translate }}</span>
                   @if (filterTheme().length > 1) {
                     <div class="operator-toggle" role="radiogroup">
-                      <button type="button" class="op-btn" [class.op-btn--active]="themeOperator() === 'or'" (click)="setThemeOperator('or', $event)">OR</button>
-                      <button type="button" class="op-btn" [class.op-btn--active]="themeOperator() === 'and'" (click)="setThemeOperator('and', $event)">AND</button>
+                      <button
+                        type="button"
+                        class="op-btn"
+                        [class.op-btn--active]="themeOperator() === 'or'"
+                        (click)="setThemeOperator('or', $event)"
+                      >
+                        OR
+                      </button>
+                      <button
+                        type="button"
+                        class="op-btn"
+                        [class.op-btn--active]="themeOperator() === 'and'"
+                        (click)="setThemeOperator('and', $event)"
+                      >
+                        AND
+                      </button>
                     </div>
                   }
                 </div>
-                <button type="button" class="fp-trigger"
-                        [class.fp-trigger--has-value]="filterTheme().length > 0"
-                        [class.fp-trigger--open]="themeDropdownOpen"
-                        (click)="toggleThemeDropdown($event)">
+                <button
+                  type="button"
+                  class="fp-trigger"
+                  [class.fp-trigger--has-value]="filterTheme().length > 0"
+                  [class.fp-trigger--open]="themeDropdownOpen"
+                  (click)="toggleThemeDropdown($event)"
+                >
                   <span class="fp-trigger__text">
-                    @if (themeLabel()) { {{ themeLabel() }} } @else { {{ 'seasonal.filter.any' | translate }} }
+                    @if (themeLabel()) {
+                      {{ themeLabel() }}
+                    } @else {
+                      {{ 'seasonal.filter.any' | translate }}
+                    }
                   </span>
                   @if (filterTheme().length > 0) {
                     <button type="button" class="fp-trigger__clear" (click)="clearThemes($event)">
-                      <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
+                      <svg
+                        width="9"
+                        height="9"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M2 2l12 12M14 2L2 14" />
+                      </svg>
                     </button>
                   }
-                  <svg class="fp-trigger__chevron" [class.fp-trigger__chevron--open]="themeDropdownOpen" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <svg
+                    class="fp-trigger__chevron"
+                    [class.fp-trigger__chevron--open]="themeDropdownOpen"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M4 6l4 4 4-4"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                   </svg>
                 </button>
               </div>
@@ -215,42 +397,97 @@
                   <span class="filter-label">{{ 'seasonal.filter.demographic' | translate }}</span>
                   @if (filterDemographic().length > 1) {
                     <div class="operator-toggle" role="radiogroup">
-                      <button type="button" class="op-btn" [class.op-btn--active]="demographicOperator() === 'or'" (click)="setDemographicOperator('or', $event)">OR</button>
-                      <button type="button" class="op-btn" [class.op-btn--active]="demographicOperator() === 'and'" (click)="setDemographicOperator('and', $event)">AND</button>
+                      <button
+                        type="button"
+                        class="op-btn"
+                        [class.op-btn--active]="demographicOperator() === 'or'"
+                        (click)="setDemographicOperator('or', $event)"
+                      >
+                        OR
+                      </button>
+                      <button
+                        type="button"
+                        class="op-btn"
+                        [class.op-btn--active]="demographicOperator() === 'and'"
+                        (click)="setDemographicOperator('and', $event)"
+                      >
+                        AND
+                      </button>
                     </div>
                   }
                 </div>
-                <button type="button" class="fp-trigger"
-                        [class.fp-trigger--has-value]="filterDemographic().length > 0"
-                        [class.fp-trigger--open]="demographicDropdownOpen"
-                        (click)="toggleDemographicDropdown($event)">
+                <button
+                  type="button"
+                  class="fp-trigger"
+                  [class.fp-trigger--has-value]="filterDemographic().length > 0"
+                  [class.fp-trigger--open]="demographicDropdownOpen"
+                  (click)="toggleDemographicDropdown($event)"
+                >
                   <span class="fp-trigger__text">
-                    @if (demographicLabel()) { {{ demographicLabel() }} } @else { {{ 'seasonal.filter.any' | translate }} }
+                    @if (demographicLabel()) {
+                      {{ demographicLabel() }}
+                    } @else {
+                      {{ 'seasonal.filter.any' | translate }}
+                    }
                   </span>
                   @if (filterDemographic().length > 0) {
-                    <button type="button" class="fp-trigger__clear" (click)="clearDemographics($event)">
-                      <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
+                    <button
+                      type="button"
+                      class="fp-trigger__clear"
+                      (click)="clearDemographics($event)"
+                    >
+                      <svg
+                        width="9"
+                        height="9"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M2 2l12 12M14 2L2 14" />
+                      </svg>
                     </button>
                   }
-                  <svg class="fp-trigger__chevron" [class.fp-trigger__chevron--open]="demographicDropdownOpen" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <svg
+                    class="fp-trigger__chevron"
+                    [class.fp-trigger__chevron--open]="demographicDropdownOpen"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M4 6l4 4 4-4"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
                   </svg>
                 </button>
               </div>
 
               <!-- MAL status -->
               <div class="filter-field filter-field--pills">
-                <span class="filter-label">{{ 'seasonal.filter.malStatus.label' | translate }}</span>
+                <span class="filter-label">{{
+                  'seasonal.filter.malStatus.label' | translate
+                }}</span>
                 <div class="filter-pills">
                   @for (s of malStates; track s.value) {
                     <!-- Visual separator between 'not_in' and the status pills -->
                     @if (s.value === 'watching') {
                       <span class="filter-pills__sep" aria-hidden="true"></span>
                     }
-                    <button type="button" class="filter-pill"
-                            [class.filter-pill--active]="filterMalStatus().includes(s.value)"
-                            [class.filter-pill--muted]="isMalStatusMuted(s.value)"
-                            (click)="toggleMalStatus(s.value)">
+                    <button
+                      type="button"
+                      class="filter-pill"
+                      [class.filter-pill--active]="filterMalStatus().includes(s.value)"
+                      [class.filter-pill--muted]="isMalStatusMuted(s.value)"
+                      (click)="toggleMalStatus(s.value)"
+                    >
                       {{ s.labelKey | translate }}
                     </button>
                   }
@@ -262,15 +499,17 @@
                 <span class="filter-label">{{ 'seasonal.filter.mediaType' | translate }}</span>
                 <div class="filter-pills">
                   @for (t of mediaTypeOptions; track t.value) {
-                    <button type="button" class="filter-pill"
-                            [class.filter-pill--active]="filterMediaType().includes(t.value)"
-                            (click)="toggleMediaType(t.value)">
+                    <button
+                      type="button"
+                      class="filter-pill"
+                      [class.filter-pill--active]="filterMediaType().includes(t.value)"
+                      (click)="toggleMediaType(t.value)"
+                    >
                       {{ t.labelKey | translate }}
                     </button>
                   }
                 </div>
               </div>
-
             </div>
 
             <!-- Footer: Sort + Reset -->
@@ -279,17 +518,43 @@
                 <div class="filter-field filter-field--compact">
                   <span class="filter-label">{{ 'seasonal.filter.sort.by' | translate }}</span>
                   <div class="d-flex align-items-center gap-2">
-                    <select class="sort-select" [ngModel]="sortBy()" (ngModelChange)="setSortBy($event)" [attr.aria-label]="'seasonal.filter.sort.by' | translate">
+                    <select
+                      class="sort-select"
+                      [ngModel]="sortBy()"
+                      (ngModelChange)="setSortBy($event)"
+                      [attr.aria-label]="'seasonal.filter.sort.by' | translate"
+                    >
                       @for (opt of sortOptions; track opt.value) {
                         <option [value]="opt.value">{{ opt.labelKey | translate }}</option>
                       }
                     </select>
-                    <button type="button" class="mode-btn sort-dir-btn" (click)="toggleSortOrder()"
-                            [attr.aria-label]="'seasonal.filter.sort.order' | translate" [attr.aria-pressed]="sortOrder() === 'desc'">
+                    <button
+                      type="button"
+                      class="mode-btn sort-dir-btn"
+                      (click)="toggleSortOrder()"
+                      [attr.aria-label]="'seasonal.filter.sort.order' | translate"
+                      [attr.aria-pressed]="sortOrder() === 'desc'"
+                    >
                       @if (sortOrder() === 'asc') {
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 12l5-8 5 8H3z"/></svg>
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path d="M3 12l5-8 5 8H3z" />
+                        </svg>
                       } @else {
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 4l5 8 5-8H3z"/></svg>
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path d="M3 4l5 8 5-8H3z" />
+                        </svg>
                       }
                     </button>
                   </div>
@@ -297,15 +562,33 @@
               </div>
               <div class="filter-footer__actions">
                 <button type="button" class="btn-reset" (click)="resetFilters()">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                    <path d="M13.5 2.5A7 7 0 1 0 15 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-                    <path d="M11 1l2.5 1.5L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M13.5 2.5A7 7 0 1 0 15 8"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      fill="none"
+                    />
+                    <path
+                      d="M11 1l2.5 1.5L12 5"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      fill="none"
+                    />
                   </svg>
                   {{ 'seasonal.filter.reset' | translate }}
                 </button>
               </div>
             </div>
-
           </div>
         </div>
       </div>
@@ -336,10 +619,12 @@
       <div class="seasonal-grid" [@gridAnimation]="displayedAnimes().length">
         @for (anime of displayedAnimes(); track anime.malId) {
           <div class="seasonal-grid__cell">
-            <app-seasonal-card [anime]="anime"
+            <app-seasonal-card
+              [anime]="anime"
               [activeGenres]="filterGenre()"
               [activeThemes]="filterTheme()"
-              [activeDemographics]="filterDemographic()" />
+              [activeDemographics]="filterDemographic()"
+            />
           </div>
         }
       </div>
@@ -354,7 +639,6 @@
     @if (!loading() && !error() && animes().length === 0) {
       <div class="seasonal-empty">{{ 'seasonal.empty' | translate }}</div>
     }
-
   </div>
 </div>
 
@@ -367,31 +651,95 @@
         <span class="fp-popup__title">{{ 'seasonal.filter.genre' | translate }}</span>
         @if (filterGenre().length > 1) {
           <div class="fp-popup__ops">
-            <button type="button" class="op-btn" [class.op-btn--active]="genreOperator() === 'or'" (click)="setGenreOperator('or', $event)">OR</button>
-            <button type="button" class="op-btn" [class.op-btn--active]="genreOperator() === 'and'" (click)="setGenreOperator('and', $event)">AND</button>
+            <button
+              type="button"
+              class="op-btn"
+              [class.op-btn--active]="genreOperator() === 'or'"
+              (click)="setGenreOperator('or', $event)"
+            >
+              OR
+            </button>
+            <button
+              type="button"
+              class="op-btn"
+              [class.op-btn--active]="genreOperator() === 'and'"
+              (click)="setGenreOperator('and', $event)"
+            >
+              AND
+            </button>
           </div>
         }
-        <button type="button" class="fp-popup__close" (click)="genreDropdownOpen = false" aria-label="Close">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l12 12M14 2L2 14"/></svg>
+        <button
+          type="button"
+          class="fp-popup__close"
+          (click)="genreDropdownOpen = false"
+          aria-label="Close"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M2 2l12 12M14 2L2 14" />
+          </svg>
         </button>
       </div>
       <div class="fp-popup__search">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l3 3" stroke-linecap="round"/></svg>
-        <input class="fp-popup__search-input" type="search" [(ngModel)]="genreSearch" placeholder="Filter..." autocomplete="off" />
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          aria-hidden="true"
+        >
+          <circle cx="6.5" cy="6.5" r="4.5" />
+          <path d="M10 10l3 3" stroke-linecap="round" />
+        </svg>
+        <input
+          class="fp-popup__search-input"
+          type="search"
+          [(ngModel)]="genreSearch"
+          placeholder="Filter..."
+          autocomplete="off"
+        />
         @if (genreSearch) {
           <button type="button" class="fp-popup__search-clear" (click)="genreSearch = ''">
-            <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l12 12M14 2L2 14"/></svg>
+            <svg
+              width="9"
+              height="9"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <path d="M2 2l12 12M14 2L2 14" />
+            </svg>
           </button>
         }
       </div>
       <div class="fp-popup__body" role="listbox" aria-multiselectable="true">
         @for (item of sortedGenreList(); track item.key) {
-          @if (!genreSearch || item.label.toLowerCase().includes(genreSearch.toLowerCase()) || item.key.toLowerCase().includes(genreSearch.toLowerCase())) {
-            <button type="button" class="fp-option"
-                    [class.fp-option--selected]="filterGenre().includes(item.key)"
-                    [class.fp-option--nsfw]="item.nsfw"
-                    role="option" [attr.aria-selected]="filterGenre().includes(item.key)"
-                    (click)="toggleGenre(item.key, $event)">
+          @if (
+            !genreSearch ||
+            item.label.toLowerCase().includes(genreSearch.toLowerCase()) ||
+            item.key.toLowerCase().includes(genreSearch.toLowerCase())
+          ) {
+            <button
+              type="button"
+              class="fp-option"
+              [class.fp-option--selected]="filterGenre().includes(item.key)"
+              [class.fp-option--nsfw]="item.nsfw"
+              role="option"
+              [attr.aria-selected]="filterGenre().includes(item.key)"
+              (click)="toggleGenre(item.key, $event)"
+            >
               {{ item.label }}
             </button>
           }
@@ -399,9 +747,13 @@
       </div>
       <div class="fp-popup__footer">
         @if (filterGenre().length > 0) {
-          <button type="button" class="fp-popup__clear-all" (click)="clearGenres($event)">{{ 'seasonal.filter.clear' | translate }} ({{ filterGenre().length }})</button>
+          <button type="button" class="fp-popup__clear-all" (click)="clearGenres($event)">
+            {{ 'seasonal.filter.clear' | translate }} ({{ filterGenre().length }})
+          </button>
         }
-        <button type="button" class="fp-popup__done" (click)="genreDropdownOpen = false">Done</button>
+        <button type="button" class="fp-popup__done" (click)="genreDropdownOpen = false">
+          Done
+        </button>
       </div>
     </div>
   </div>
@@ -414,31 +766,95 @@
         <span class="fp-popup__title">{{ 'seasonal.filter.theme' | translate }}</span>
         @if (filterTheme().length > 1) {
           <div class="fp-popup__ops">
-            <button type="button" class="op-btn" [class.op-btn--active]="themeOperator() === 'or'" (click)="setThemeOperator('or', $event)">OR</button>
-            <button type="button" class="op-btn" [class.op-btn--active]="themeOperator() === 'and'" (click)="setThemeOperator('and', $event)">AND</button>
+            <button
+              type="button"
+              class="op-btn"
+              [class.op-btn--active]="themeOperator() === 'or'"
+              (click)="setThemeOperator('or', $event)"
+            >
+              OR
+            </button>
+            <button
+              type="button"
+              class="op-btn"
+              [class.op-btn--active]="themeOperator() === 'and'"
+              (click)="setThemeOperator('and', $event)"
+            >
+              AND
+            </button>
           </div>
         }
-        <button type="button" class="fp-popup__close" (click)="themeDropdownOpen = false" aria-label="Close">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l12 12M14 2L2 14"/></svg>
+        <button
+          type="button"
+          class="fp-popup__close"
+          (click)="themeDropdownOpen = false"
+          aria-label="Close"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M2 2l12 12M14 2L2 14" />
+          </svg>
         </button>
       </div>
       <div class="fp-popup__search">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M10 10l3 3" stroke-linecap="round"/></svg>
-        <input class="fp-popup__search-input" type="search" [(ngModel)]="themeSearch" placeholder="Filter..." autocomplete="off" />
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          aria-hidden="true"
+        >
+          <circle cx="6.5" cy="6.5" r="4.5" />
+          <path d="M10 10l3 3" stroke-linecap="round" />
+        </svg>
+        <input
+          class="fp-popup__search-input"
+          type="search"
+          [(ngModel)]="themeSearch"
+          placeholder="Filter..."
+          autocomplete="off"
+        />
         @if (themeSearch) {
           <button type="button" class="fp-popup__search-clear" (click)="themeSearch = ''">
-            <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l12 12M14 2L2 14"/></svg>
+            <svg
+              width="9"
+              height="9"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <path d="M2 2l12 12M14 2L2 14" />
+            </svg>
           </button>
         }
       </div>
       <div class="fp-popup__body" role="listbox" aria-multiselectable="true">
         @for (item of sortedThemeList(); track item.key) {
-          @if (!themeSearch || item.label.toLowerCase().includes(themeSearch.toLowerCase()) || item.key.toLowerCase().includes(themeSearch.toLowerCase())) {
-            <button type="button" class="fp-option"
-                    [class.fp-option--selected]="filterTheme().includes(item.key)"
-                    [class.fp-option--nsfw]="item.nsfw"
-                    role="option" [attr.aria-selected]="filterTheme().includes(item.key)"
-                    (click)="toggleTheme(item.key, $event)">
+          @if (
+            !themeSearch ||
+            item.label.toLowerCase().includes(themeSearch.toLowerCase()) ||
+            item.key.toLowerCase().includes(themeSearch.toLowerCase())
+          ) {
+            <button
+              type="button"
+              class="fp-option"
+              [class.fp-option--selected]="filterTheme().includes(item.key)"
+              [class.fp-option--nsfw]="item.nsfw"
+              role="option"
+              [attr.aria-selected]="filterTheme().includes(item.key)"
+              (click)="toggleTheme(item.key, $event)"
+            >
               {{ item.label }}
             </button>
           }
@@ -446,46 +862,95 @@
       </div>
       <div class="fp-popup__footer">
         @if (filterTheme().length > 0) {
-          <button type="button" class="fp-popup__clear-all" (click)="clearThemes($event)">{{ 'seasonal.filter.clear' | translate }} ({{ filterTheme().length }})</button>
+          <button type="button" class="fp-popup__clear-all" (click)="clearThemes($event)">
+            {{ 'seasonal.filter.clear' | translate }} ({{ filterTheme().length }})
+          </button>
         }
-        <button type="button" class="fp-popup__done" (click)="themeDropdownOpen = false">Done</button>
+        <button type="button" class="fp-popup__done" (click)="themeDropdownOpen = false">
+          Done
+        </button>
       </div>
     </div>
   </div>
 }
 
 @if (demographicDropdownOpen) {
-  <div class="fp-backdrop" (click)="demographicDropdownOpen = false" role="dialog" aria-modal="true">
+  <div
+    class="fp-backdrop"
+    (click)="demographicDropdownOpen = false"
+    role="dialog"
+    aria-modal="true"
+  >
     <div class="fp-popup fp-popup--demographic" (click)="$event.stopPropagation()">
       <div class="fp-popup__header">
         <span class="fp-popup__title">{{ 'seasonal.filter.demographic' | translate }}</span>
         @if (filterDemographic().length > 1) {
           <div class="fp-popup__ops">
-            <button type="button" class="op-btn" [class.op-btn--active]="demographicOperator() === 'or'" (click)="setDemographicOperator('or', $event)">OR</button>
-            <button type="button" class="op-btn" [class.op-btn--active]="demographicOperator() === 'and'" (click)="setDemographicOperator('and', $event)">AND</button>
+            <button
+              type="button"
+              class="op-btn"
+              [class.op-btn--active]="demographicOperator() === 'or'"
+              (click)="setDemographicOperator('or', $event)"
+            >
+              OR
+            </button>
+            <button
+              type="button"
+              class="op-btn"
+              [class.op-btn--active]="demographicOperator() === 'and'"
+              (click)="setDemographicOperator('and', $event)"
+            >
+              AND
+            </button>
           </div>
         }
-        <button type="button" class="fp-popup__close" (click)="demographicDropdownOpen = false" aria-label="Close">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l12 12M14 2L2 14"/></svg>
+        <button
+          type="button"
+          class="fp-popup__close"
+          (click)="demographicDropdownOpen = false"
+          aria-label="Close"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M2 2l12 12M14 2L2 14" />
+          </svg>
         </button>
       </div>
-      <div class="fp-popup__body fp-popup__body--no-search" role="listbox" aria-multiselectable="true">
+      <div
+        class="fp-popup__body fp-popup__body--no-search"
+        role="listbox"
+        aria-multiselectable="true"
+      >
         @for (item of sortedDemographicList(); track item.key) {
-          <button type="button" class="fp-option"
-                  [class.fp-option--selected]="filterDemographic().includes(item.key)"
-                  role="option" [attr.aria-selected]="filterDemographic().includes(item.key)"
-                  (click)="toggleDemographic(item.key, $event)">
+          <button
+            type="button"
+            class="fp-option"
+            [class.fp-option--selected]="filterDemographic().includes(item.key)"
+            role="option"
+            [attr.aria-selected]="filterDemographic().includes(item.key)"
+            (click)="toggleDemographic(item.key, $event)"
+          >
             {{ item.label }}
           </button>
         }
       </div>
       <div class="fp-popup__footer">
         @if (filterDemographic().length > 0) {
-          <button type="button" class="fp-popup__clear-all" (click)="clearDemographics($event)">{{ 'seasonal.filter.clear' | translate }} ({{ filterDemographic().length }})</button>
+          <button type="button" class="fp-popup__clear-all" (click)="clearDemographics($event)">
+            {{ 'seasonal.filter.clear' | translate }} ({{ filterDemographic().length }})
+          </button>
         }
-        <button type="button" class="fp-popup__done" (click)="demographicDropdownOpen = false">Done</button>
+        <button type="button" class="fp-popup__done" (click)="demographicDropdownOpen = false">
+          Done
+        </button>
       </div>
     </div>
   </div>
 }
-

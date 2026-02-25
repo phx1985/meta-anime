@@ -9,7 +9,13 @@ import { AnimeListComponent } from './anime-list.component';
 import { AnimeDetailsResponse, PagedResponse } from '../models/anime.models';
 
 const emptyResponse: PagedResponse<AnimeDetailsResponse> = {
-  data: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false,
+  data: [],
+  page: 1,
+  pageSize: 20,
+  totalCount: 0,
+  totalPages: 0,
+  hasNextPage: false,
+  hasPreviousPage: false,
 };
 
 describe('AnimeListComponent', () => {
@@ -33,7 +39,7 @@ describe('AnimeListComponent', () => {
     fixture = TestBed.createComponent(AnimeListComponent);
     comp = fixture.componentInstance;
     // Flush the NSFW settings call made in the constructor
-    httpMock.match(r => r.url.includes('/api/v1/settings')).forEach(r => r.flush([]));
+    httpMock.match((r) => r.url.includes('/api/v1/settings')).forEach((r) => r.flush([]));
   });
 
   afterEach(() => {
@@ -41,7 +47,7 @@ describe('AnimeListComponent', () => {
   });
 
   it('should create without making HTTP request on init', () => {
-    httpMock.expectNone(r => r.url.includes('/api/v1/animes'));
+    httpMock.expectNone((r) => r.url.includes('/api/v1/animes'));
     expect(comp).toBeTruthy();
   });
 
@@ -53,11 +59,19 @@ describe('AnimeListComponent', () => {
   it('should load animes when search() is called', async () => {
     comp.search();
 
-    const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
-    req.flush({ data: [
-      { aniDbId: '1', title: 'Naruto' },
-      { aniDbId: '2', title: 'One Piece' },
-    ], page: 1, pageSize: 20, totalCount: 2, totalPages: 1, hasNextPage: false, hasPreviousPage: false });
+    const req = httpMock.expectOne((r) => r.url.includes('/api/v1/animes'));
+    req.flush({
+      data: [
+        { aniDbId: '1', title: 'Naruto' },
+        { aniDbId: '2', title: 'One Piece' },
+      ],
+      page: 1,
+      pageSize: 20,
+      totalCount: 2,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    });
 
     await fixture.whenStable();
     fixture.detectChanges();
@@ -69,7 +83,7 @@ describe('AnimeListComponent', () => {
 
   it('should show empty message when no animes after search', async () => {
     comp.search();
-    const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
+    const req = httpMock.expectOne((r) => r.url.includes('/api/v1/animes'));
     req.flush(emptyResponse);
 
     await fixture.whenStable();
@@ -83,9 +97,16 @@ describe('AnimeListComponent', () => {
 
   it('should display total count when animes are loaded', async () => {
     comp.search();
-    const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
-    req.flush({ data: [{ aniDbId: '1', title: 'Naruto' } as AnimeDetailsResponse],
-      page: 1, pageSize: 20, totalCount: 42, totalPages: 3, hasNextPage: true, hasPreviousPage: false } as PagedResponse<AnimeDetailsResponse>);
+    const req = httpMock.expectOne((r) => r.url.includes('/api/v1/animes'));
+    req.flush({
+      data: [{ aniDbId: '1', title: 'Naruto' } as AnimeDetailsResponse],
+      page: 1,
+      pageSize: 20,
+      totalCount: 42,
+      totalPages: 3,
+      hasNextPage: true,
+      hasPreviousPage: false,
+    } as PagedResponse<AnimeDetailsResponse>);
 
     await fixture.whenStable();
     fixture.detectChanges();
@@ -104,8 +125,16 @@ describe('AnimeListComponent', () => {
 
   it('should set allLoaded when hasNextPage is false after search', async () => {
     comp.search();
-    const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
-    req.flush({ data: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false });
+    const req = httpMock.expectOne((r) => r.url.includes('/api/v1/animes'));
+    req.flush({
+      data: [],
+      page: 1,
+      pageSize: 20,
+      totalCount: 0,
+      totalPages: 0,
+      hasNextPage: false,
+      hasPreviousPage: false,
+    });
 
     await fixture.whenStable();
     expect(comp.allLoaded()).toBe(true);
@@ -113,7 +142,7 @@ describe('AnimeListComponent', () => {
 
   it('should request page size of 20', () => {
     comp.search();
-    const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
+    const req = httpMock.expectOne((r) => r.url.includes('/api/v1/animes'));
     expect(req.request.params.get('pageSize')).toBe('20');
     req.flush(emptyResponse);
   });
@@ -125,7 +154,7 @@ describe('AnimeListComponent', () => {
     comp.filterHasFile = 'yes';
     comp.reset();
 
-    httpMock.expectNone(r => r.url.includes('/api/v1/animes'));
+    httpMock.expectNone((r) => r.url.includes('/api/v1/animes'));
     expect(comp.filterGenre()).toEqual([]);
     expect(comp.genreOperator).toBe('or');
     expect(comp.filterWatchState).toEqual([]);
@@ -138,7 +167,7 @@ describe('AnimeListComponent', () => {
   it('should send multi-value status params when multiple watch states selected', () => {
     comp.filterWatchState = ['watching', 'completed'];
     comp.search();
-    const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
+    const req = httpMock.expectOne((r) => r.url.includes('/api/v1/animes'));
     expect(req.request.params.getAll('status')).toEqual(['watching', 'completed']);
     req.flush(emptyResponse);
   });
@@ -146,7 +175,7 @@ describe('AnimeListComponent', () => {
   it('should send multi-value genre params when multiple genres selected', () => {
     comp.filterGenre.set(['Action', 'Fantasy']);
     comp.search();
-    const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
+    const req = httpMock.expectOne((r) => r.url.includes('/api/v1/animes'));
     expect(req.request.params.getAll('genre')).toEqual(['Action', 'Fantasy']);
     req.flush(emptyResponse);
   });
@@ -155,7 +184,7 @@ describe('AnimeListComponent', () => {
     comp.filterGenre.set(['Action', 'Fantasy']);
     comp.genreOperator = 'and';
     comp.search();
-    const req = httpMock.expectOne(r => r.url.includes('/api/v1/animes'));
+    const req = httpMock.expectOne((r) => r.url.includes('/api/v1/animes'));
     expect(req.request.params.get('genreOperator')).toBe('and');
     req.flush(emptyResponse);
   });
@@ -164,6 +193,6 @@ describe('AnimeListComponent', () => {
     comp.filterOpen.set(true);
     comp.search();
     expect(comp.filterOpen()).toBe(false);
-    httpMock.expectOne(r => r.url.includes('/api/v1/animes')).flush(emptyResponse);
+    httpMock.expectOne((r) => r.url.includes('/api/v1/animes')).flush(emptyResponse);
   });
 });

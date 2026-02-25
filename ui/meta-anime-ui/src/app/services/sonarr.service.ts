@@ -1,7 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { SonarrCodecSearchResponse, SonarrOptionsResponse, SonarrAddSeriesRequest, SonarrLookupResult, SonarrAddResult } from '../models/sonarr.models';
+import {
+  SonarrCodecSearchResponse,
+  SonarrOptionsResponse,
+  SonarrAddSeriesRequest,
+  SonarrLookupResult,
+  SonarrAddResult,
+} from '../models/sonarr.models';
 
 @Injectable({ providedIn: 'root' })
 export class SonarrService {
