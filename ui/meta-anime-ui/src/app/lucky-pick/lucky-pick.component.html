@@ -57,9 +57,54 @@
         }
         <div class="lucky-result__info">
           <h2 class="lucky-result__title">{{ title }}</h2>
+          <div class="lucky-result__status-pills">
+            @if (mediaType) {
+              <span class="lucky-pill lucky-pill--media-type">{{ mediaTypeLabel(mediaType) }}</span>
+            }
+            @if (malViewState) {
+              <span class="lucky-pill lucky-pill--{{ malViewState }}">{{ viewStateLabel(malViewState) }}</span>
+            }
+            @if (seriesStatus) {
+              <span class="lucky-pill lucky-pill--series">{{ seriesStatusLabel(seriesStatus) }}</span>
+            }
+          </div>
           @if (synopsis) {
           <p class="lucky-result__synopsis">{{ synopsis }}</p>
           }
+          @if (pureGenres.length > 0) {
+            <div class="lucky-genre-list">
+              @for (g of pureGenres; track g) {
+                <span class="lucky-genre-tag">{{ translateGenre(g) }}</span>
+              }
+            </div>
+          }
+          @if (themes.length > 0) {
+            <div class="lucky-genre-list">
+              @for (t of themes; track t) {
+                <span class="lucky-genre-tag lucky-genre-tag--theme">{{ translateGenre(t) }}</span>
+              }
+            </div>
+          }
+          @if (demographics.length > 0) {
+            <div class="lucky-genre-list">
+              @for (d of demographics; track d) {
+                <span class="lucky-genre-tag lucky-genre-tag--demographic">{{ translateGenre(d) }}</span>
+              }
+            </div>
+          }
+          <div class="lucky-meta-row">
+            @if (mal?.rating) {
+              <app-score-badge [score]="malScore" label="MAL" titleKey="animeCard.malScore" />
+            }
+            @if (startDate) {
+              <span class="lucky-date-range">
+                {{ startDate }}
+                @if (endDate) {
+                  <span class="lucky-date-arrow">→</span> {{ endDate }}
+                }
+              </span>
+            }
+          </div>
           <div class="lucky-result__actions">
             @if (plexUrl) {
             <a [href]="plexUrl" target="_blank" rel="noopener noreferrer" class="lucky-btn lucky-btn--plex">

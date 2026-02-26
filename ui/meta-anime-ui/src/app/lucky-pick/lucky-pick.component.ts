@@ -15,7 +15,9 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { AnimeService } from '../services/anime.service';
 import { UserPreferencesService } from '../services/user-preferences.service';
-import { AnimeDetailsResponse, AnimeFilters } from '../models/anime.models';
+import { AnimeDetailsResponse, AnimeFilters, MalAnimeInfo } from '../models/anime.models';
+import { ScoreBadgeComponent } from '../anime-list/anime-card/score-badge/score-badge.component';
+import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../constants/genre-lists';
 
 type LuckyState = 'idle' | 'spinning' | 'result' | 'no-match' | 'error';
 
@@ -23,7 +25,7 @@ type LuckyState = 'idle' | 'spinning' | 'result' | 'no-match' | 'error';
   selector: 'app-lucky-pick',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, RouterLink],
+  imports: [TranslatePipe, RouterLink, ScoreBadgeComponent],
   templateUrl: './lucky-pick.component.html',
   styleUrl: './lucky-pick.component.scss',
 })
@@ -95,6 +97,78 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
 
   protected get plexUrl(): string | null {
     return this.anime?.plexAnimes?.[0]?.url ?? null;
+  }
+
+  protected get mal(): MalAnimeInfo | undefined {
+    return this.anime?.malAnimes?.[0];
+  }
+
+  // ── Genre / Theme / Demographic ──────────────────────────────────────────
+
+  private get allMalGenres(): string[] {
+    return this.mal?.genres ?? [];
+  }
+
+  protected get pureGenres(): string[] {
+    return this.allMalGenres.filter((g) => GENRE_LIST.includes(g));
+  }
+
+  protected get themes(): string[] {
+    return this.allMalGenres.filter((g) => THEME_LIST.includes(g));
+  }
+
+  protected get demographics(): string[] {
+    return this.allMalGenres.filter((g) => DEMOGRAPHIC_LIST.includes(g));
+  }
+
+  // ── Status / Scores / Dates ──────────────────────────────────────────────
+
+  protected get malViewState(): string | undefined {
+    return this.mal?.viewState;
+  }
+
+  protected get seriesStatus(): string | undefined {
+    return this.mal?.status;
+  }
+
+  protected get mediaType(): string | undefined {
+    return this.mal?.mediaType;
+  }
+
+  protected get malScore(): number {
+    return this.mal?.rating?.malMean ?? 0;
+  }
+
+  protected get startDate(): string | undefined {
+    return this.mal?.startDate;
+  }
+
+  protected get endDate(): string | undefined {
+    return this.mal?.endDate;
+  }
+
+  protected mediaTypeLabel(type: string): string {
+    const key = `animeCard.mediaType.${type}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : type.toUpperCase();
+  }
+
+  protected viewStateLabel(state: string): string {
+    const key = `animeCard.malStatus.${state}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : state;
+  }
+
+  protected seriesStatusLabel(status: string): string {
+    const key = `animeCard.seriesStatus.${status}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : status.replace(/_/g, ' ');
+  }
+
+  protected translateGenre(name: string): string {
+    const key = `genres.${name}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : name;
   }
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
