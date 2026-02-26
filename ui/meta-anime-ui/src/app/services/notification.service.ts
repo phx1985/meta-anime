@@ -1,4 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
+import { StorageKeys } from '../constants/storage-keys';
 
 export type NotifSeverity = 'info' | 'success' | 'warning' | 'error';
 
@@ -12,7 +13,7 @@ export interface AppNotification {
   action?: { labelKey: string; route: string[]; fragment?: string };
 }
 
-const STORAGE_KEY = 'meta-anime-notifications';
+const STORAGE_KEY = StorageKeys.notifications;
 const MAX_STORED = 50;
 const TOAST_TTL_MS = 4500;
 /** Exit animation duration — keep in sync with toastSlideToLeft in app.scss. */

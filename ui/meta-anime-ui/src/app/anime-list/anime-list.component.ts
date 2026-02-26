@@ -28,9 +28,10 @@ import {
   SavedFilterState,
 } from '../models/anime.models';
 import { AnimeCardComponent } from './anime-card/anime-card.component';
+import { StorageKeys } from '../constants/storage-keys';
 
 const PAGE_SIZE = 20;
-const DISPLAY_MODE_KEY = 'meta-anime:displayMode';
+const DISPLAY_MODE_KEY = StorageKeys.displayMode;
 
 export type DisplayMode = 1 | 2 | 3;
 
@@ -71,10 +72,10 @@ export const SORT_OPTIONS = [
 ];
 
 export const CODEC_OPTIONS = [
-  { value: 'hevc', label: 'H.265 / HEVC' },
-  { value: 'h264', label: 'H.264 / AVC' },
-  { value: 'av1', label: 'AV1' },
-  { value: 'mpeg2', label: 'MPEG-2' },
+  { value: 'hevc', labelKey: 'animeList.filter.codecs.hevc' },
+  { value: 'h264', labelKey: 'animeList.filter.codecs.h264' },
+  { value: 'av1', labelKey: 'animeList.filter.codecs.av1' },
+  { value: 'mpeg2', labelKey: 'animeList.filter.codecs.mpeg2' },
 ];
 
 export const MEDIA_TYPE_OPTIONS = [
@@ -357,7 +358,10 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     if (this.filterCodec.length) {
       parts.push(
         this.filterCodec
-          .map((v) => CODEC_OPTIONS.find((c) => c.value === v)?.label ?? v)
+          .map((v) => {
+            const opt = CODEC_OPTIONS.find((c) => c.value === v);
+            return opt ? this.translateService.instant(opt.labelKey) : v;
+          })
           .join(', '),
       );
     }

@@ -3,6 +3,7 @@ import * as signalR from '@microsoft/signalr';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { SyncStep, SyncStepState, SyncProgressMessage } from '../models/sync-progress.models';
+import { ApiConstants } from '../constants/api.constants';
 
 /** Ordered step keys matching the backend emission sequence */
 const STEP_KEYS = ['kometa', 'plex', 'mal', 'sonarr', 'matching'] as const;
@@ -43,12 +44,11 @@ export class SyncSignalRService implements OnDestroy {
   connect(): void {
     if (this.connection) return;
 
-    const hubUrl = '/hubs/sync';
     const builder = new signalR.HubConnectionBuilder()
-      .withUrl(hubUrl, {
+      .withUrl(ApiConstants.syncHubUrl, {
         // Pass API key as query string for WebSocket upgrade handshake
         accessTokenFactory: () => environment.apiKey ?? '',
-        headers: environment.apiKey ? { 'X-Api-Key': environment.apiKey } : {},
+        headers: environment.apiKey ? { [ApiConstants.apiKeyHeader]: environment.apiKey } : {},
       })
       .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Warning);

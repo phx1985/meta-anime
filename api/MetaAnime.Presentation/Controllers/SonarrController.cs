@@ -56,7 +56,7 @@ public class SonarrController(
     public async Task<ActionResult<IList<SonarrLookupItem>>> Lookup([FromQuery] string term)
     {
         if (string.IsNullOrWhiteSpace(term))
-            return BadRequest("term is required");
+            return BadRequest(Constants.Messages.SonarrTermRequired);
 
         var result = await animeMediatorService.SearchSonarrLookupAsync(term);
         if (result.IsFailure)
@@ -73,9 +73,9 @@ public class SonarrController(
     public async Task<ActionResult<SonarrAddResult>> AddSeries([FromBody] SonarrAddSeriesRequest request)
     {
         if (request.TvdbId <= 0)
-            return BadRequest("tvdbId must be a positive integer");
+            return BadRequest(Constants.Messages.SonarrTvdbIdRequired);
         if (string.IsNullOrWhiteSpace(request.RootFolderPath))
-            return BadRequest("rootFolderPath is required");
+            return BadRequest(Constants.Messages.SonarrRootFolderRequired);
 
         var result = await animeMediatorService.AddSonarrSeriesAsync(
             request.TvdbId, request.RootFolderPath, request.QualityProfileId, request.MalId);

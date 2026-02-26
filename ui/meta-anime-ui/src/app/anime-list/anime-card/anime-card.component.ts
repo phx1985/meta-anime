@@ -219,7 +219,7 @@ export class AnimeCardComponent {
     const bytes = this.sonarr?.sizeOnDisk;
     if (!bytes) return undefined;
     const gb = bytes / 1_073_741_824;
-    const unit = this.translate.currentLang === 'fr' ? 'Go' : 'GB';
+    const unit = this.translate.instant('animeCard.sizeUnit');
     return `${gb.toFixed(1)} ${unit}`;
   }
 
@@ -255,9 +255,9 @@ export class AnimeCardComponent {
     const pctOther = 100 - pctH265 - pctH264; // absorb rounding so segments always sum to 100
     // Filter out 0% segments — only show codecs that are actually present
     return [
-      { label: 'H.265', pct: pctH265 },
-      { label: 'H.264', pct: pctH264 },
-      { label: 'Other', pct: pctOther },
+      { label: this.translate.instant('animeCard.codec.h265'), pct: pctH265 },
+      { label: this.translate.instant('animeCard.codec.h264'), pct: pctH264 },
+      { label: this.translate.instant('animeCard.codec.other'), pct: pctOther },
     ].filter((s) => s.pct > 0);
   }
 

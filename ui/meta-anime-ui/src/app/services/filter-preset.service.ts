@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { FilterPreset, SeasonalFilterPreset } from '../models/anime.models';
+import { StorageKeys } from '../constants/storage-keys';
 
-const PRESETS_KEY = 'meta-anime:filterPresets';
-const SEASONAL_PRESETS_KEY = 'meta-anime:seasonalFilterPresets';
+const PRESETS_KEY = StorageKeys.filterPresets;
+const SEASONAL_PRESETS_KEY = StorageKeys.seasonalFilterPresets;
 
 /** Built-in filter suggestions shown to every user. */
 export const BUILT_IN_PRESETS: FilterPreset[] = [

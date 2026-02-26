@@ -2,6 +2,7 @@ using Asp.Versioning;
 using MediatR;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Queries;
+using MetaAnime.Presentation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,14 +20,14 @@ public class SeasonalController(IMediator mediator) : ControllerBase
         [FromQuery] string season)
     {
         if (string.IsNullOrWhiteSpace(season))
-            return BadRequest("season is required (winter, spring, summer, fall)");
+            return BadRequest(Constants.Messages.SeasonRequired);
 
         var validSeasons = (string[]) ["winter", "spring", "summer", "fall"];
         if (!validSeasons.Contains(season.ToLower()))
-            return BadRequest("season must be one of: winter, spring, summer, fall");
+            return BadRequest(Constants.Messages.SeasonInvalid);
 
         if (year < 1917 || year > DateTime.UtcNow.Year + 1)
-            return BadRequest($"year must be between 1917 and {DateTime.UtcNow.Year + 1}");
+            return BadRequest(Constants.Messages.YearInvalid);
 
         var result = await mediator.Send(new GetSeasonalAnimesQuery(year, season.ToLower()));
 

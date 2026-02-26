@@ -531,7 +531,7 @@
                     [class.filter-pill--active]="filterCodec.includes(c.value)"
                     (click)="filterCodec = togglePill(filterCodec, c.value)"
                   >
-                    {{ c.label }}
+                    {{ c.labelKey | translate }}
                   </button>
                 }
               </div>

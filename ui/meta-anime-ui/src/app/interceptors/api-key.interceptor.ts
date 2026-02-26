@@ -1,5 +1,6 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+import { ApiConstants } from '../constants/api.constants';
 
 export const apiKeyInterceptor: HttpInterceptorFn = (req, next) => {
   if (!environment.apiKey) {
@@ -7,7 +8,7 @@ export const apiKeyInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   const authReq = req.clone({
-    headers: req.headers.set('X-Api-Key', environment.apiKey),
+    headers: req.headers.set(ApiConstants.apiKeyHeader, environment.apiKey),
   });
 
   return next(authReq);

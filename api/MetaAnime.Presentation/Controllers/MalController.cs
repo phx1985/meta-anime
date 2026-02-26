@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using MetaAnime.Application.Interfaces;
+using MetaAnime.Presentation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -24,10 +25,10 @@ public class MalController(
         [FromBody] MalListStatusRequest request)
     {
         if (string.IsNullOrWhiteSpace(animeId))
-            return BadRequest("animeId is required");
+            return BadRequest(Constants.Messages.MalAnimeIdRequired);
 
         if (!ValidListStatuses.Contains(request.Status))
-            return BadRequest($"status must be one of: {string.Join(", ", ValidListStatuses)}");
+            return BadRequest(Constants.Messages.MalStatusInvalid);
 
         var result = await animeMediatorService.UpdateMalListStatusAsync(
             animeId, request.Status, request.NumWatchedEpisodes, request.Score);
