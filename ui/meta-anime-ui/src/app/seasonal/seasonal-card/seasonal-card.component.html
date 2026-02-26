@@ -719,6 +719,31 @@
                             }
                           </select>
                         </div>
+                        <div class="field">
+                          <label class="field__label">{{
+                            'seasonal.monitor' | translate
+                          }}</label>
+                          <select
+                            class="field__select"
+                            [ngModel]="sonarrMonitor()"
+                            (ngModelChange)="sonarrMonitor.set($event)"
+                          >
+                            @for (m of sonarrMonitorTypes; track m.value) {
+                              <option [value]="m.value">{{ m.labelKey | translate }}</option>
+                            }
+                          </select>
+                        </div>
+                        <div class="field field--checkbox">
+                          <label class="field__checkbox-label">
+                            <input
+                              type="checkbox"
+                              class="field__checkbox"
+                              [ngModel]="sonarrSeasonFolder()"
+                              (ngModelChange)="sonarrSeasonFolder.set($event)"
+                            />
+                            {{ 'seasonal.seasonFolder' | translate }}
+                          </label>
+                        </div>
                         <p class="options-panel__note">
                           {{ 'seasonal.sonarrAutoSettings' | translate }}
                         </p>

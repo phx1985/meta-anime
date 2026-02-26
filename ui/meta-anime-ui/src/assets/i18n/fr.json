@@ -69,7 +69,7 @@
         "sonarrSearchError": "Échec de la recherche de séries Sonarr.",
         "rootFolder": "Dossier racine",
         "qualityProfile": "Profil qualité",
-        "sonarrAutoSettings": "Type : Anime/Absolu · Dossiers de saison : Oui · Tags de la config",
+        "sonarrAutoSettings": "Type : Anime/Absolu · Tags de la config",
         "sonarrOptionsError": "Échec du chargement des options Sonarr.",
         "sonarrAddError": "Échec de l'ajout à Sonarr.",
         "sonarrAddSuccess": "Ajouté avec succès à Sonarr !",
@@ -129,7 +129,22 @@
         },
         "sonarrAlreadyInLibrary": "Déjà dans Sonarr",
         "partiallyTracked": "Partiellement suivi — ajouter aux autres fournisseurs",
-        "resultCount": "{{count}} résultat(s)"
+        "resultCount": "{{count}} résultat(s)",
+        "monitor": "Surveiller",
+        "seasonFolder": "Dossier de saison",
+        "monitorTypes": {
+            "all": "Tous les épisodes",
+            "future": "Épisodes futurs",
+            "missing": "Épisodes manquants",
+            "existing": "Épisodes existants",
+            "recent": "Épisodes récents",
+            "pilot": "Épisode pilote",
+            "firstSeason": "Première saison",
+            "lastSeason": "Dernière saison",
+            "monitorSpecials": "Surveiller les spéciaux",
+            "unmonitorSpecials": "Ne plus surveiller les spéciaux",
+            "none": "Aucun"
+        }
     },
     "animeList": {
         "title": "Liste des Animes",

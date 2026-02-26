@@ -34,10 +34,25 @@ export interface SonarrLookupResult {
   alreadyInLibrary?: boolean;
 }
 
+export type SonarrMonitorType =
+  | 'all'
+  | 'future'
+  | 'missing'
+  | 'existing'
+  | 'recent'
+  | 'pilot'
+  | 'firstSeason'
+  | 'lastSeason'
+  | 'monitorSpecials'
+  | 'unmonitorSpecials'
+  | 'none';
+
 export interface SonarrAddSeriesRequest {
   tvdbId: number;
   rootFolderPath: string;
   qualityProfileId: number;
+  monitor: SonarrMonitorType;
+  seasonFolder: boolean;
   malId?: string;
 }
 

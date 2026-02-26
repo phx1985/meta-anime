@@ -69,7 +69,7 @@
         "sonarrSearchError": "Failed to search Sonarr series.",
         "rootFolder": "Root Folder",
         "qualityProfile": "Quality Profile",
-        "sonarrAutoSettings": "Series type: Anime/Absolute · Season folders: Yes · Tags from config",
+        "sonarrAutoSettings": "Series type: Anime/Absolute · Tags from config",
         "sonarrOptionsError": "Failed to load Sonarr options.",
         "sonarrAddError": "Failed to add series to Sonarr.",
         "sonarrAddSuccess": "Successfully added to Sonarr!",
@@ -129,7 +129,22 @@
         },
         "sonarrAlreadyInLibrary": "Already in Sonarr",
         "partiallyTracked": "Partially tracked — add to more providers",
-        "resultCount": "{{count}} result(s)"
+        "resultCount": "{{count}} result(s)",
+        "monitor": "Monitor",
+        "seasonFolder": "Season Folder",
+        "monitorTypes": {
+            "all": "All Episodes",
+            "future": "Future Episodes",
+            "missing": "Missing Episodes",
+            "existing": "Existing Episodes",
+            "recent": "Recent Episodes",
+            "pilot": "Pilot Episode",
+            "firstSeason": "First Season",
+            "lastSeason": "Last Season",
+            "monitorSpecials": "Monitor Specials",
+            "unmonitorSpecials": "Unmonitor Specials",
+            "none": "None"
+        }
     },
     "animeList": {
         "title": "Anime List",

@@ -15,6 +15,7 @@ import {
   SonarrQualityProfile,
   SonarrLookupResult,
   SonarrAddResult,
+  SonarrMonitorType,
 } from '../../models/sonarr.models';
 import { Subject, debounceTime, switchMap, of, catchError } from 'rxjs';
 
@@ -101,6 +102,22 @@ export class SeasonalCardComponent implements OnInit {
   sonarrSelected = signal<SonarrLookupResult | null>(null);
   sonarrRootFolder = signal('');
   sonarrProfileId = signal(0);
+  sonarrMonitor = signal<SonarrMonitorType>('all');
+  sonarrSeasonFolder = signal(true);
+
+  readonly sonarrMonitorTypes: { value: SonarrMonitorType; labelKey: string }[] = [
+    { value: 'all', labelKey: 'seasonal.monitorTypes.all' },
+    { value: 'future', labelKey: 'seasonal.monitorTypes.future' },
+    { value: 'missing', labelKey: 'seasonal.monitorTypes.missing' },
+    { value: 'existing', labelKey: 'seasonal.monitorTypes.existing' },
+    { value: 'recent', labelKey: 'seasonal.monitorTypes.recent' },
+    { value: 'pilot', labelKey: 'seasonal.monitorTypes.pilot' },
+    { value: 'firstSeason', labelKey: 'seasonal.monitorTypes.firstSeason' },
+    { value: 'lastSeason', labelKey: 'seasonal.monitorTypes.lastSeason' },
+    { value: 'monitorSpecials', labelKey: 'seasonal.monitorTypes.monitorSpecials' },
+    { value: 'unmonitorSpecials', labelKey: 'seasonal.monitorTypes.unmonitorSpecials' },
+    { value: 'none', labelKey: 'seasonal.monitorTypes.none' },
+  ];
 
   private sonarrSearch$ = new Subject<string>();
 
@@ -433,6 +450,8 @@ export class SeasonalCardComponent implements OnInit {
         tvdbId: selected.tvdbId,
         rootFolderPath: this.sonarrRootFolder(),
         qualityProfileId: this.sonarrProfileId(),
+        monitor: this.sonarrMonitor(),
+        seasonFolder: this.sonarrSeasonFolder(),
         malId: this.anime.malId,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
