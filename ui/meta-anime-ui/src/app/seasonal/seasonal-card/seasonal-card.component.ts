@@ -156,6 +156,10 @@ export class SeasonalCardComponent implements OnInit {
       .subscribe((results) => {
         this.sonarrSearchResults.set(results);
         this.sonarrSearching.set(false);
+        // Auto-select when the user searched by TVDB ID and there is exactly one result
+        if (this.sonarrSearchTerm().startsWith('tvdb:') && results.length === 1 && !results[0].alreadyInLibrary) {
+          this.sonarrSelected.set(results[0]);
+        }
       });
   }
 
