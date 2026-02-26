@@ -76,6 +76,9 @@ export class SettingsComponent {
   luckyPrefsSaved = signal(false);
   private luckyPrefsSavedTimer: ReturnType<typeof setTimeout> | null = null;
 
+  // ── Slider preview (tracks live drag value before persisting) ─────────────
+  sliderPreview = signal<Record<string, string | undefined>>({});
+
   // ── Sync state (driven by SignalR) ────────────────────────────────────────
   syncing = signal(false);
   lastSyncDate = signal<string | null>(null);
@@ -388,6 +391,41 @@ export class SettingsComponent {
   }
   hasError(key: string): boolean {
     return this.errorKey() === key;
+  }
+
+  /** Live display value for a number/slider field — preview while dragging, then persisted value. */
+  protected sliderDisplayValue(key: string, fallback: string | null): string {
+    return this.sliderPreview()[key] ?? fallback ?? '1';
+  }
+
+  /** Update the live preview value as the slider thumb is dragged. */
+  updateSliderPreview(key: string, event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.sliderPreview.update((p) => ({ ...p, [key]: value }));
+  }
+
+  /** Auto-save a number setting when the slider interaction ends. */
+  onNumberChange(setting: SettingDefinition, event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.savingKey.set(setting.key);
+    this.settingsService
+      .update(setting.key, { value })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.savingKey.set(null);
+          this.savedKey.set(setting.key);
+          this.settings.update((list) =>
+            list.map((s) => (s.key === setting.key ? { ...s, value } : s)),
+          );
+          setTimeout(() => {
+            if (this.savedKey() === setting.key) this.savedKey.set(null);
+          }, 2000);
+        },
+        error: () => {
+          this.savingKey.set(null);
+        },
+      });
   }
 
   /** Toggle auto-apply preference and briefly flash the setting row green. */
