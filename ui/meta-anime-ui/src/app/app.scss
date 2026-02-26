@@ -321,9 +321,11 @@
   }
 
   &--active {
-    color: var(--accent-primary);
+    // Keep only the border in accent color when on the settings route;
+    // avoid a permanent "lit" background that looks like a stuck state.
+    color: var(--text-muted);
     border-color: var(--accent-primary);
-    background: rgba(108, 99, 255, 0.12);
+    background: transparent;
   }
 }
 

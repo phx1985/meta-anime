@@ -19,6 +19,7 @@ import { SyncSignalRService } from '../services/sync-signalr.service';
 import { NotificationService } from '../services/notification.service';
 import { UserPreferencesService } from '../services/user-preferences.service';
 import { ProviderStateService } from '../services/provider-state.service';
+import { PopupService } from '../services/popup.service';
 import { SonarrService } from '../services/sonarr.service';
 import { SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
@@ -76,6 +77,7 @@ export class SettingsComponent {
   readonly userPrefs = inject(UserPreferencesService);
   private sonarrService = inject(SonarrService);
   private providerState = inject(ProviderStateService);
+  readonly popupService = inject(PopupService);
 
   loading = signal(true);
   error = signal(false);
@@ -99,8 +101,10 @@ export class SettingsComponent {
   lastSyncDate = signal<string | null>(null);
   currentLang = signal(this.translate.currentLang ?? this.translate.defaultLang ?? 'en');
 
-  /** Provider name ('plex' | 'sonarr' | null) — shows sync-prompt modal when set */
-  syncPromptProvider = signal<string | null>(null);
+  /** Provider name when sync prompt is showing — delegated to PopupService */
+  get syncPromptProvider() { return this.popupService.syncPromptProvider; }
+  /** `true` while the sync-prompt exit animation is playing */
+  get syncPromptLeaving() { return this.popupService.syncPromptLeaving; }
 
   syncSteps = toSignal(this.signalR.steps$, { initialValue: [] as SyncStep[] });
   syncDone = toSignal(this.signalR.syncDone$, { initialValue: false });
@@ -553,11 +557,15 @@ export class SettingsComponent {
     if (!this.sonarrBasicConfigured()) return;
     this.sonarrOptionsLoading.set(true);
     this.sonarrOptionsError.set('');
-    this.sonarrService
-      .getOptions()
+    // forkJoin with timer(400) guarantees the spinner shows for at least 400ms,
+    // preventing a visual glitch when the backend responds instantly.
+    forkJoin([
+      this.sonarrService.getOptions(),
+      timer(400),
+    ])
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (opts) => {
+        next: ([opts]) => {
           this.sonarrRootFolders.set(opts.rootFolders);
           this.sonarrQualityProfiles.set(opts.qualityProfiles);
           this.sonarrOptionsLoading.set(false);
@@ -652,7 +660,7 @@ export class SettingsComponent {
           }
           // Show sync recommendation prompt when enabling a provider
           if (enabling) {
-            this.syncPromptProvider.set(cat);
+            this.popupService.openSyncPrompt(cat);
           }
         },
         error: () => {
@@ -662,12 +670,12 @@ export class SettingsComponent {
   }
 
   dismissSyncPrompt(): void {
-    this.syncPromptProvider.set(null);
+    this.popupService.dismissSyncPrompt();
   }
 
   goToSyncFromPrompt(): void {
-    this.syncPromptProvider.set(null);
-    this.scrollToSection('sync');
+    this.popupService.dismissSyncPrompt();
+    setTimeout(() => this.scrollToSection('sync'), PopupService.MODAL_LEAVE_MS);
   }
 
   shouldShowSyncStep(step: SyncStep): boolean {

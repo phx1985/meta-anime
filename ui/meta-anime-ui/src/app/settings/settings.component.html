@@ -1050,9 +1050,14 @@
 
 <!-- ── Sync Recommendation Prompt (shown when enabling a provider) ──────── -->
 @if (syncPromptProvider()) {
-  <div class="sync-prompt-backdrop" (click)="dismissSyncPrompt()" role="dialog" aria-modal="true"
+  <div class="sync-prompt-backdrop"
+       [class.sync-prompt-backdrop--leaving]="syncPromptLeaving()"
+       (click)="dismissSyncPrompt()"
+       role="dialog" aria-modal="true"
        [attr.aria-label]="'settings.syncPrompt.title' | translate">
-    <div class="sync-prompt-modal" (click)="$event.stopPropagation()">
+    <div class="sync-prompt-modal"
+         [class.sync-prompt-modal--leaving]="syncPromptLeaving()"
+         (click)="$event.stopPropagation()">
       <div class="sync-prompt-icon" aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10" />

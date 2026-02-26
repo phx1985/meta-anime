@@ -18,6 +18,7 @@ import { SettingsService } from './services/settings.service';
 import { NotificationService, AppNotification } from './services/notification.service';
 import { SyncSignalRService } from './services/sync-signalr.service';
 import { ProviderStateService } from './services/provider-state.service';
+import { PopupService } from './services/popup.service';
 import { LuckyPickComponent } from './lucky-pick/lucky-pick.component';
 
 @Component({
@@ -35,6 +36,7 @@ export class App implements OnInit, AfterViewInit {
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   readonly providerState = inject(ProviderStateService);
+  readonly popupService = inject(PopupService);
 
   @ViewChild('navbarEl', { read: ElementRef }) private navbarEl?: ElementRef<HTMLElement>;
 
@@ -54,12 +56,9 @@ export class App implements OnInit, AfterViewInit {
   protected sonarrHomeUrl = signal<string | null>(null);
   protected readonly malHomeUrl = 'https://myanimelist.net';
 
-  /** Controls the disabled-provider interception modal */
-  protected disabledProviderModal = signal<'plex' | 'sonarr' | null>(null);
-  /** True while the modal exit animation is playing */
-  protected modalLeaving = signal(false);
-
-  private static readonly MODAL_LEAVE_MS = 200;
+  /** Controls the disabled-provider interception modal — delegated to PopupService */
+  protected get disabledProviderModal() { return this.popupService.disabledProvider; }
+  protected get modalLeaving() { return this.popupService.disabledProviderLeaving; }
 
   constructor() {
     this.translate.use('en');
@@ -183,31 +182,26 @@ export class App implements OnInit, AfterViewInit {
   openDisabledProviderModal(provider: 'plex' | 'sonarr', event: Event): void {
     event.preventDefault();
     event.stopPropagation();
-    this.disabledProviderModal.set(provider);
+    this.popupService.openDisabledProvider(provider);
   }
 
   dismissDisabledProviderModal(): void {
-    this.modalLeaving.set(true);
-    setTimeout(() => {
-      this.disabledProviderModal.set(null);
-      this.modalLeaving.set(false);
-    }, App.MODAL_LEAVE_MS);
+    this.popupService.dismissDisabledProvider();
   }
 
   goToProviderSettings(provider: 'plex' | 'sonarr'): void {
-    this.modalLeaving.set(true);
+    this.popupService.dismissDisabledProvider();
+    // Navigate after the exit animation completes.
     setTimeout(() => {
-      this.disabledProviderModal.set(null);
-      this.modalLeaving.set(false);
       // Navigate with a `highlight` query param so the Settings page can call
       // scrollToSection() — which handles offset-aware scroll, highlight scale, and auto-clear.
       this.router.navigate(['/settings'], { queryParams: { highlight: provider } });
-    }, App.MODAL_LEAVE_MS);
+    }, PopupService.MODAL_LEAVE_MS);
   }
 
   /** Convenience method for template — dismisses modal and navigates to provider settings. */
   dismissAndGoToSettings(): void {
-    const provider = this.disabledProviderModal();
+    const provider = this.popupService.disabledProvider();
     if (provider) {
       this.goToProviderSettings(provider);
     }
