@@ -260,9 +260,14 @@ public class AnimeMediatorService(
             var threshold = (titleSimilarityThreshold ?? 80) / 100.0;
             // Accept if the title contains the query as a substring OR
             // the word-level Levenshtein similarity meets the threshold (handles typos).
+            // Also search in alternative titles (English, Japanese, synonyms) from MAL.
             result = result.Where(a =>
-                a.Title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                ComputeWordLevelFuzzySimilarity(a.Title, query) >= threshold);
+                TitleMatches(a.Title, query, threshold) ||
+                a.MalAnimes?.Any(m =>
+                    TitleMatches(m.AlternativeTitles?.En, query, threshold) ||
+                    TitleMatches(m.AlternativeTitles?.Ja, query, threshold) ||
+                    m.AlternativeTitles?.Synonyms?.Any(s => TitleMatches(s, query, threshold)) == true
+                ) == true);
         }
 
         if (!string.IsNullOrWhiteSpace(filters?.Source))
@@ -495,6 +500,15 @@ public class AnimeMediatorService(
             _ => data.OrderBy(a => a.Title)
         };
     }
+
+    /// <summary>
+    /// Returns true when a candidate title matches the search query either as a case-insensitive
+    /// substring or via word-level fuzzy similarity above the given threshold.
+    /// </summary>
+    private static bool TitleMatches(string? candidate, string query, double threshold) =>
+        !string.IsNullOrWhiteSpace(candidate) &&
+        (candidate.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+         ComputeWordLevelFuzzySimilarity(candidate, query) >= threshold);
 
     /// <summary>
     /// Computes a word-level fuzzy similarity between a search query and an anime title.
