@@ -440,7 +440,10 @@
       "off": "Disabled"
     },
     "sonarr": {
-      "addDefaultsGroup": "Add Series Defaults"
+      "addDefaultsGroup": "Add Series Defaults",
+      "configureFirst": "Configure Sonarr Host URL and API Key above to unlock these defaults.",
+      "connectionError": "Could not connect to Sonarr. Check your Host URL and API Key.",
+      "loadingOptions": "Loading Sonarr options…"
     }
   },
   "theme": {

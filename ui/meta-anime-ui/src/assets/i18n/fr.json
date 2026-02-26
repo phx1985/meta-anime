@@ -440,7 +440,10 @@
       "off": "Désactivé"
     },
     "sonarr": {
-      "addDefaultsGroup": "Paramètres par défaut (ajout)"
+      "addDefaultsGroup": "Paramètres par défaut (ajout)",
+      "configureFirst": "Configurez l'URL du serveur Sonarr et la clé API ci-dessus pour débloquer ces paramètres.",
+      "connectionError": "Impossible de se connecter à Sonarr. Vérifiez l'URL et la clé API.",
+      "loadingOptions": "Chargement des options Sonarr…"
     }
   },
   "theme": {

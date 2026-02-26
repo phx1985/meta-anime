@@ -173,15 +173,6 @@
               <!-- Setting rows -->
               <div class="settings-rows">
                 @for (setting of grouped()[cat]; track trackByKey($index, setting)) {
-                  @if (cat === 'sonarr' && setting.key === 'Sonarr:DefaultRootFolder') {
-                    <div class="pref-group__header pref-group__header--inline">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                        <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
-                        <circle cx="8" cy="6" r="2.5" fill="currentColor" stroke="none"/><circle cx="16" cy="12" r="2.5" fill="currentColor" stroke="none"/><circle cx="10" cy="18" r="2.5" fill="currentColor" stroke="none"/>
-                      </svg>
-                      <span>{{ 'settings.sonarr.addDefaultsGroup' | translate }}</span>
-                    </div>
-                  }
                   <div
                     class="setting-row"
                     [class.setting-row--editing]="editing()[setting.key]"
@@ -471,6 +462,179 @@
                           }
                         </form>
                       }
+                    </div>
+                  </div>
+                }
+                @if (cat === 'sonarr') {
+                  <!-- ── Add Series Defaults sub-group ──────────────────────── -->
+                  <div
+                    id="sonarr-add-defaults"
+                    class="pref-group sonarr-defaults-group"
+                    [class.sonarr-defaults-group--locked]="!sonarrDefaultsUnlocked()"
+                  >
+                    <div class="pref-group__header">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                        <path d="M4 6h16M4 12h16M4 18h16"/>
+                        <circle cx="8" cy="6" r="2" fill="currentColor" stroke="none"/>
+                        <circle cx="16" cy="12" r="2" fill="currentColor" stroke="none"/>
+                        <circle cx="10" cy="18" r="2" fill="currentColor" stroke="none"/>
+                      </svg>
+                      <span>{{ 'settings.sonarr.addDefaultsGroup' | translate }}</span>
+                    </div>
+
+                    @if (!sonarrBasicConfigured()) {
+                      <div class="sonarr-defaults-notice">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        {{ 'settings.sonarr.configureFirst' | translate }}
+                      </div>
+                    }
+
+                    @if (sonarrBasicConfigured() && sonarrOptionsError()) {
+                      <div class="sonarr-defaults-error">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        {{ sonarrOptionsError() }}
+                      </div>
+                    }
+
+                    @if (sonarrOptionsLoading()) {
+                      <div class="sonarr-defaults-loading">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        {{ 'settings.sonarr.loadingOptions' | translate }}
+                      </div>
+                    }
+
+                    <!-- Root Folder (dynamic select from API) -->
+                    <div class="setting-row sonarr-default-row" [class.setting-row--saved]="isSaved('Sonarr:DefaultRootFolder')">
+                      <div class="setting-info">
+                        <div class="setting-name">{{ 'settings.fields.Sonarr_DefaultRootFolder.name' | translate }}</div>
+                        <div class="setting-desc">{{ 'settings.fields.Sonarr_DefaultRootFolder.desc' | translate }}</div>
+                      </div>
+                      <div class="setting-value-area">
+                        <div class="display-row display-row--select">
+                          <select
+                            class="setting-select"
+                            [disabled]="!sonarrDefaultsUnlocked() || isSaving('Sonarr:DefaultRootFolder')"
+                            (change)="onSonarrDefaultChange('Sonarr:DefaultRootFolder', $event)"
+                            [attr.aria-label]="'settings.fields.Sonarr_DefaultRootFolder.name' | translate"
+                          >
+                            <option value="">{{ 'settings.notSet' | translate }}</option>
+                            @for (folder of sonarrRootFolders(); track folder.id) {
+                              <option
+                                [value]="folder.path"
+                                [selected]="sonarrDefaultByKey('Sonarr:DefaultRootFolder')?.value === folder.path"
+                              >{{ folder.path }}</option>
+                            }
+                          </select>
+                          @if (isSaving('Sonarr:DefaultRootFolder')) {
+                            <span class="spinner-border spinner-border-sm select-spinner" role="status"></span>
+                          }
+                          @if (isSaved('Sonarr:DefaultRootFolder')) {
+                            <span class="badge-saved">&#10003;</span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Quality Profile (dynamic select from API) -->
+                    <div class="setting-row sonarr-default-row" [class.setting-row--saved]="isSaved('Sonarr:DefaultQualityProfileName')">
+                      <div class="setting-info">
+                        <div class="setting-name">{{ 'settings.fields.Sonarr_DefaultQualityProfileName.name' | translate }}</div>
+                        <div class="setting-desc">{{ 'settings.fields.Sonarr_DefaultQualityProfileName.desc' | translate }}</div>
+                      </div>
+                      <div class="setting-value-area">
+                        <div class="display-row display-row--select">
+                          <select
+                            class="setting-select"
+                            [disabled]="!sonarrDefaultsUnlocked() || isSaving('Sonarr:DefaultQualityProfileName')"
+                            (change)="onSonarrDefaultChange('Sonarr:DefaultQualityProfileName', $event)"
+                            [attr.aria-label]="'settings.fields.Sonarr_DefaultQualityProfileName.name' | translate"
+                          >
+                            <option value="">{{ 'settings.notSet' | translate }}</option>
+                            @for (profile of sonarrQualityProfiles(); track profile.id) {
+                              <option
+                                [value]="profile.name"
+                                [selected]="sonarrDefaultByKey('Sonarr:DefaultQualityProfileName')?.value === profile.name"
+                              >{{ profile.name }}</option>
+                            }
+                          </select>
+                          @if (isSaving('Sonarr:DefaultQualityProfileName')) {
+                            <span class="spinner-border spinner-border-sm select-spinner" role="status"></span>
+                          }
+                          @if (isSaved('Sonarr:DefaultQualityProfileName')) {
+                            <span class="badge-saved">&#10003;</span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Season Folder (boolean toggle) -->
+                    <div class="setting-row sonarr-default-row" [class.setting-row--saved]="isSaved('Sonarr:DefaultSeasonFolder')">
+                      <div class="setting-info">
+                        <div class="setting-name">{{ 'settings.fields.Sonarr_DefaultSeasonFolder.name' | translate }}</div>
+                        <div class="setting-desc">{{ 'settings.fields.Sonarr_DefaultSeasonFolder.desc' | translate }}</div>
+                      </div>
+                      <div class="setting-value-area">
+                        <div class="display-row">
+                          <button
+                            type="button"
+                            class="toggle-switch"
+                            [class.toggle-switch--on]="sonarrDefaultByKey('Sonarr:DefaultSeasonFolder')?.value === 'true'"
+                            [disabled]="!sonarrDefaultsUnlocked() || isSaving('Sonarr:DefaultSeasonFolder')"
+                            (click)="onSonarrDefaultBoolToggle('Sonarr:DefaultSeasonFolder')"
+                            role="switch"
+                            [attr.aria-checked]="sonarrDefaultByKey('Sonarr:DefaultSeasonFolder')?.value === 'true'"
+                            [attr.aria-label]="'settings.fields.Sonarr_DefaultSeasonFolder.name' | translate"
+                          >
+                            <span class="toggle-thumb"></span>
+                          </button>
+                          <span class="toggle-label">
+                            {{
+                              (sonarrDefaultByKey('Sonarr:DefaultSeasonFolder')?.value === 'true'
+                                ? 'settings.toggle.on'
+                                : 'settings.toggle.off'
+                              ) | translate
+                            }}
+                          </span>
+                          @if (isSaved('Sonarr:DefaultSeasonFolder')) {
+                            <span class="badge-saved">&#10003;</span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Monitor (static select with all monitor types) -->
+                    <div class="setting-row sonarr-default-row" [class.setting-row--saved]="isSaved('Sonarr:DefaultMonitor')">
+                      <div class="setting-info">
+                        <div class="setting-name">{{ 'settings.fields.Sonarr_DefaultMonitor.name' | translate }}</div>
+                        <div class="setting-desc">{{ 'settings.fields.Sonarr_DefaultMonitor.desc' | translate }}</div>
+                      </div>
+                      <div class="setting-value-area">
+                        <div class="display-row display-row--select">
+                          <select
+                            class="setting-select"
+                            [disabled]="!sonarrDefaultsUnlocked() || isSaving('Sonarr:DefaultMonitor')"
+                            (change)="onSonarrDefaultChange('Sonarr:DefaultMonitor', $event)"
+                            [attr.aria-label]="'settings.fields.Sonarr_DefaultMonitor.name' | translate"
+                          >
+                            @for (opt of (sonarrDefaultByKey('Sonarr:DefaultMonitor')?.selectOptions ?? []); track opt) {
+                              <option [value]="opt" [selected]="sonarrDefaultByKey('Sonarr:DefaultMonitor')?.value === opt">
+                                {{ 'settings.fields.Sonarr_DefaultMonitor.option.' + opt | translate }}
+                              </option>
+                            }
+                          </select>
+                          @if (isSaving('Sonarr:DefaultMonitor')) {
+                            <span class="spinner-border spinner-border-sm select-spinner" role="status"></span>
+                          }
+                          @if (isSaved('Sonarr:DefaultMonitor')) {
+                            <span class="badge-saved">&#10003;</span>
+                          }
+                        </div>
+                      </div>
                     </div>
                   </div>
                 }

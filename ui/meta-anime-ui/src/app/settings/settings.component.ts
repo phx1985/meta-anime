@@ -17,6 +17,8 @@ import { AnimeService } from '../services/anime.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
 import { NotificationService } from '../services/notification.service';
 import { UserPreferencesService } from '../services/user-preferences.service';
+import { SonarrService } from '../services/sonarr.service';
+import { SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
 import { SyncStep } from '../models/sync-progress.models';
 import { SyncStepComponent } from './sync-step/sync-step.component';
@@ -57,6 +59,7 @@ export class SettingsComponent {
   private translate = inject(TranslateService);
   private route = inject(ActivatedRoute);
   readonly userPrefs = inject(UserPreferencesService);
+  private sonarrService = inject(SonarrService);
 
   loading = signal(true);
   error = signal(false);
@@ -100,12 +103,49 @@ export class SettingsComponent {
 
   grouped = computed<SettingsByCategory>(() =>
     this.settings()
-      .filter((s) => s.key !== 'App:SyncInterval' && !s.key.startsWith('System:'))
+      .filter(
+        (s) =>
+          s.key !== 'App:SyncInterval' &&
+          !s.key.startsWith('System:') &&
+          !SettingsComponent.SONARR_DEFAULT_KEYS.has(s.key),
+      )
       .reduce((acc, s) => {
         (acc[s.category] ??= []).push(s);
         return acc;
       }, {} as SettingsByCategory),
   );
+
+  // ── Sonarr "Add Series Defaults" sub-group ──────────────────────────────
+  sonarrRootFolders = signal<SonarrRootFolder[]>([]);
+  sonarrQualityProfiles = signal<SonarrQualityProfile[]>([]);
+  sonarrOptionsLoading = signal(false);
+  sonarrOptionsError = signal('');
+
+  sonarrBasicConfigured = computed(() => {
+    const list = this.settings();
+    const host = list.find((s) => s.key === SettingsComponent.SONARR_HOST_KEY)?.value ?? '';
+    const apiKey = list.find((s) => s.key === SettingsComponent.SONARR_API_KEY_KEY)?.value ?? '';
+    return host.trim().length > 0 && apiKey.trim().length > 0;
+  });
+
+  sonarrDefaultsUnlocked = computed(
+    () =>
+      this.sonarrBasicConfigured() &&
+      !this.sonarrOptionsLoading() &&
+      this.sonarrOptionsError() === '',
+  );
+
+  sonarrDefaultSettings = computed(() => {
+    const order = [
+      'Sonarr:DefaultRootFolder',
+      'Sonarr:DefaultQualityProfileName',
+      'Sonarr:DefaultSeasonFolder',
+      'Sonarr:DefaultMonitor',
+    ];
+    return this.settings()
+      .filter((s) => SettingsComponent.SONARR_DEFAULT_KEYS.has(s.key))
+      .sort((a, b) => order.indexOf(a.key) - order.indexOf(b.key));
+  });
 
   syncIntervalSetting = computed(() => this.settings().find((s) => s.key === 'App:SyncInterval'));
 
@@ -124,6 +164,15 @@ export class SettingsComponent {
   private static readonly HIGHLIGHT_DURATION_MS = 2000;
   private static readonly DEFAULT_NAVBAR_HEIGHT_PX = 56;
   private static readonly SCROLL_OFFSET_PADDING_PX = 8;
+  private static readonly SAVED_STATE_TIMEOUT_MS = 2000;
+  private static readonly SONARR_HOST_KEY = 'Sonarr:Host';
+  private static readonly SONARR_API_KEY_KEY = 'Sonarr:ApiKey';
+  private static readonly SONARR_DEFAULT_KEYS = new Set([
+    'Sonarr:DefaultRootFolder',
+    'Sonarr:DefaultQualityProfileName',
+    'Sonarr:DefaultSeasonFolder',
+    'Sonarr:DefaultMonitor',
+  ]);
 
   /** Locale-aware date formatter — uses current app language */
   fmtDate(iso: string): string {
@@ -193,6 +242,7 @@ export class SettingsComponent {
                 ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 80);
           }
+          this.loadSonarrDefaults();
         },
         error: () => {
           this.error.set(true);
@@ -331,6 +381,14 @@ export class SettingsComponent {
           setTimeout(() => {
             if (this.savedKey() === setting.key) this.savedKey.set(null);
           }, 3000);
+          if (
+            setting.key === SettingsComponent.SONARR_HOST_KEY ||
+            setting.key === SettingsComponent.SONARR_API_KEY_KEY
+          ) {
+            this.sonarrRootFolders.set([]);
+            this.sonarrQualityProfiles.set([]);
+            this.loadSonarrDefaults();
+          }
         },
         error: () => {
           this.savingKey.set(null);
@@ -426,6 +484,82 @@ export class SettingsComponent {
     if (this.luckyPrefsSavedTimer) clearTimeout(this.luckyPrefsSavedTimer);
     this.luckyPrefsSaved.set(true);
     this.luckyPrefsSavedTimer = setTimeout(() => this.luckyPrefsSaved.set(false), 2000);
+  }
+
+  // ── Sonarr defaults helpers ──────────────────────────────────────────────
+
+  loadSonarrDefaults(): void {
+    if (!this.sonarrBasicConfigured()) return;
+    this.sonarrOptionsLoading.set(true);
+    this.sonarrOptionsError.set('');
+    this.sonarrService
+      .getOptions()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (opts) => {
+          this.sonarrRootFolders.set(opts.rootFolders);
+          this.sonarrQualityProfiles.set(opts.qualityProfiles);
+          this.sonarrOptionsLoading.set(false);
+        },
+        error: () => {
+          this.sonarrOptionsError.set(
+            this.translate.instant('settings.sonarr.connectionError'),
+          );
+          this.sonarrOptionsLoading.set(false);
+        },
+      });
+  }
+
+  sonarrDefaultByKey(key: string): SettingDefinition | undefined {
+    return this.settings().find((s) => s.key === key);
+  }
+
+  onSonarrDefaultChange(key: string, event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.savingKey.set(key);
+    this.savedKey.set(null);
+    this.settingsService
+      .update(key, { value })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.savingKey.set(null);
+          this.savedKey.set(key);
+          this.settings.update((list) =>
+            list.map((s) => (s.key === key ? { ...s, value } : s)),
+          );
+          setTimeout(() => {
+            if (this.savedKey() === key) this.savedKey.set(null);
+          }, SettingsComponent.SAVED_STATE_TIMEOUT_MS);
+        },
+        error: () => {
+          this.savingKey.set(null);
+        },
+      });
+  }
+
+  onSonarrDefaultBoolToggle(key: string): void {
+    const current = this.settings().find((s) => s.key === key)?.value;
+    const value = current !== 'true' ? 'true' : 'false';
+    this.savingKey.set(key);
+    this.settingsService
+      .update(key, { value })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.savingKey.set(null);
+          this.savedKey.set(key);
+          this.settings.update((list) =>
+            list.map((s) => (s.key === key ? { ...s, value } : s)),
+          );
+          setTimeout(() => {
+            if (this.savedKey() === key) this.savedKey.set(null);
+          }, SettingsComponent.SAVED_STATE_TIMEOUT_MS);
+        },
+        error: () => {
+          this.savingKey.set(null);
+        },
+      });
   }
 
   trackByKey(_: number, s: SettingDefinition): string {
