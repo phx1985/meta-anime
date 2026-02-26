@@ -727,6 +727,8 @@
   overflow: hidden;
 
   .setting-row {
+    padding-left: 2rem;
+    border-left: 3px solid rgba(108, 99, 255, 0.2);
     border-bottom: 1px solid var(--card-border);
 
     &:last-child {
@@ -747,6 +749,37 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--accent-primary);
+}
+
+.sonarr-defaults-group {
+  margin-top: 0.5rem;
+
+  &--locked {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+}
+
+.sonarr-defaults-notice,
+.sonarr-defaults-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--card-border);
+}
+
+.sonarr-defaults-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  font-size: 0.8rem;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.06);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .toggle-switch {

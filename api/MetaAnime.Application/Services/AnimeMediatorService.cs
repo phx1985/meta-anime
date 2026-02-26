@@ -1090,7 +1090,7 @@ public class AnimeMediatorService(
         }
     }
 
-    public async Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, string? malId = null)
+    public async Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, string monitor = "all", bool seasonFolder = true, string? malId = null)
     {
         try
         {
@@ -1098,7 +1098,7 @@ public class AnimeMediatorService(
             var optionsResult = await sonarrAnimeSource.GetOptionsAsync();
             var tagIds = optionsResult.IsSuccess ? optionsResult.Value.AnimeTagIds : new List<int>();
 
-            var addResult = await sonarrAnimeSource.AddSeriesAsync(tvdbId, rootFolderPath, qualityProfileId, tagIds);
+            var addResult = await sonarrAnimeSource.AddSeriesAsync(tvdbId, rootFolderPath, qualityProfileId, tagIds, monitor, seasonFolder);
             if (addResult.IsFailure)
                 return Result.Failure<SonarrAddResult>(addResult.Error);
 

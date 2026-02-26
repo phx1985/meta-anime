@@ -10,13 +10,15 @@ import { ScoreBadgeComponent } from '../../anime-list/anime-card/score-badge/sco
 import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../../constants/genre-lists';
 import { SonarrService } from '../../services/sonarr.service';
 import { AnimeService } from '../../services/anime.service';
+import { SettingsService } from '../../services/settings.service';
 import {
   SonarrRootFolder,
   SonarrQualityProfile,
   SonarrLookupResult,
   SonarrAddResult,
+  SonarrMonitorType,
 } from '../../models/sonarr.models';
-import { Subject, debounceTime, switchMap, of, catchError } from 'rxjs';
+import { Subject, debounceTime, switchMap, of, catchError, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-seasonal-card',
@@ -53,6 +55,7 @@ export class SeasonalCardComponent implements OnInit {
   private translate = inject(TranslateService);
   private sonarrService = inject(SonarrService);
   private animeService = inject(AnimeService);
+  private settingsService = inject(SettingsService);
   private destroyRef = inject(DestroyRef);
 
   descExpanded = signal(false);
@@ -101,6 +104,22 @@ export class SeasonalCardComponent implements OnInit {
   sonarrSelected = signal<SonarrLookupResult | null>(null);
   sonarrRootFolder = signal('');
   sonarrProfileId = signal(0);
+  sonarrMonitor = signal<SonarrMonitorType>('all');
+  sonarrSeasonFolder = signal(true);
+
+  readonly sonarrMonitorTypes: { value: SonarrMonitorType; labelKey: string }[] = [
+    { value: 'all', labelKey: 'seasonal.monitorTypes.all' },
+    { value: 'future', labelKey: 'seasonal.monitorTypes.future' },
+    { value: 'missing', labelKey: 'seasonal.monitorTypes.missing' },
+    { value: 'existing', labelKey: 'seasonal.monitorTypes.existing' },
+    { value: 'recent', labelKey: 'seasonal.monitorTypes.recent' },
+    { value: 'pilot', labelKey: 'seasonal.monitorTypes.pilot' },
+    { value: 'firstSeason', labelKey: 'seasonal.monitorTypes.firstSeason' },
+    { value: 'lastSeason', labelKey: 'seasonal.monitorTypes.lastSeason' },
+    { value: 'monitorSpecials', labelKey: 'seasonal.monitorTypes.monitorSpecials' },
+    { value: 'unmonitorSpecials', labelKey: 'seasonal.monitorTypes.unmonitorSpecials' },
+    { value: 'none', labelKey: 'seasonal.monitorTypes.none' },
+  ];
 
   private sonarrSearch$ = new Subject<string>();
 
@@ -139,6 +158,10 @@ export class SeasonalCardComponent implements OnInit {
       .subscribe((results) => {
         this.sonarrSearchResults.set(results);
         this.sonarrSearching.set(false);
+        // Auto-select when the user searched by TVDB ID and there is exactly one result
+        if (this.sonarrSearchTerm().startsWith('tvdb:') && results.length === 1 && !results[0].alreadyInLibrary) {
+          this.sonarrSelected.set(results[0]);
+        }
       });
   }
 
@@ -397,15 +420,37 @@ export class SeasonalCardComponent implements OnInit {
   private loadSonarrOptions(): void {
     if (this.sonarrRootFolders().length > 0 || this.sonarrLoadingOptions()) return;
     this.sonarrLoadingOptions.set(true);
-    this.sonarrService
-      .getOptions()
+    forkJoin({
+      opts: this.sonarrService.getOptions(),
+      settings: this.settingsService.getAll(),
+    })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (opts) => {
+        next: ({ opts, settings }) => {
           this.sonarrRootFolders.set(opts.rootFolders);
           this.sonarrQualityProfiles.set(opts.qualityProfiles);
-          if (opts.rootFolders.length > 0) this.sonarrRootFolder.set(opts.rootFolders[0].path);
-          if (opts.qualityProfiles.length > 0) this.sonarrProfileId.set(opts.qualityProfiles[0].id);
+
+          const getDefault = (key: string) => settings.find((s) => s.key === key)?.value ?? '';
+          const defaultRootFolder = getDefault('Sonarr:DefaultRootFolder');
+          const defaultProfileName = getDefault('Sonarr:DefaultQualityProfileName');
+          const defaultSeasonFolder = getDefault('Sonarr:DefaultSeasonFolder');
+          const defaultMonitor = getDefault('Sonarr:DefaultMonitor');
+
+          const folder = (defaultRootFolder
+            ? opts.rootFolders.find((f) => f.path === defaultRootFolder)
+            : null) ?? opts.rootFolders[0];
+          if (folder) this.sonarrRootFolder.set(folder.path);
+
+          const profile = (defaultProfileName
+            ? opts.qualityProfiles.find((p) => p.name === defaultProfileName)
+            : null) ?? opts.qualityProfiles[0];
+          if (profile) this.sonarrProfileId.set(profile.id);
+
+          if (defaultSeasonFolder) this.sonarrSeasonFolder.set(defaultSeasonFolder === 'true');
+          if (defaultMonitor && this.sonarrMonitorTypes.some((t) => t.value === defaultMonitor)) {
+            this.sonarrMonitor.set(defaultMonitor as SonarrMonitorType);
+          }
+
           this.sonarrLoadingOptions.set(false);
         },
         error: () => {
@@ -433,6 +478,8 @@ export class SeasonalCardComponent implements OnInit {
         tvdbId: selected.tvdbId,
         rootFolderPath: this.sonarrRootFolder(),
         qualityProfileId: this.sonarrProfileId(),
+        monitor: this.sonarrMonitor(),
+        seasonFolder: this.sonarrSeasonFolder(),
         malId: this.anime.malId,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))

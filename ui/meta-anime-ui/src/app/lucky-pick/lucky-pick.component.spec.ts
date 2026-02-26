@@ -58,12 +58,13 @@ describe('LuckyPickComponent', () => {
     expect(typeof prefs.luckyOnlyFinished()).toBe('boolean');
   });
 
-  it('should expose plexPhrase, malPhrase, and rerollPhrase signals with string values', () => {
+  it('should expose plexPhrase, malPhrase, rerollPhrase, and searchingPhrase signals with string values', () => {
     const fixture = TestBed.createComponent(LuckyPickComponent);
     const comp = fixture.componentInstance as unknown as {
       plexPhrase: () => string;
       malPhrase: () => string;
       rerollPhrase: () => string;
+      searchingPhrase: () => string;
     };
     expect(typeof comp.plexPhrase()).toBe('string');
     expect(comp.plexPhrase().length).toBeGreaterThan(0);
@@ -71,6 +72,8 @@ describe('LuckyPickComponent', () => {
     expect(comp.malPhrase().length).toBeGreaterThan(0);
     expect(typeof comp.rerollPhrase()).toBe('string');
     expect(comp.rerollPhrase().length).toBeGreaterThan(0);
+    expect(typeof comp.searchingPhrase()).toBe('string');
+    expect(comp.searchingPhrase().length).toBeGreaterThan(0);
   });
 
   it('should reroll phrases on each spin() call', () => {

@@ -62,6 +62,9 @@ public class SettingsSeedService(
             [SettingsKeys.SonarrAnimeTags] = sonarr.AnimeTags,
             [SettingsKeys.SonarrRemoteUrl] = sonarr.RemoteUrl,
 
+            [SettingsKeys.SonarrDefaultSeasonFolder] = "true",
+            [SettingsKeys.SonarrDefaultMonitor] = "all",
+
             [SettingsKeys.MalApiToken] = mal.ApiToken,
             [SettingsKeys.MalClientId] = mal.ClientId,
             [SettingsKeys.MalClientSecret] = mal.ClientSecret,
