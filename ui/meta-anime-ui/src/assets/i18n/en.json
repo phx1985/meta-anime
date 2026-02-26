@@ -11,7 +11,8 @@
       "title": "{{provider}} is Disabled",
       "desc": "This provider is currently inactive. Enable it in Settings to use this action.",
       "cancel": "Cancel",
-      "goToSettings": "Go to Settings"
+      "goToSettings": "Go to Settings",
+      "close": "Close"
     }
   },
   "home": {

@@ -11,7 +11,8 @@
       "title": "{{provider}} est désactivé",
       "desc": "Ce fournisseur est actuellement inactif. Activez-le dans les Paramètres pour utiliser cette action.",
       "cancel": "Annuler",
-      "goToSettings": "Aller aux Paramètres"
+      "goToSettings": "Aller aux Paramètres",
+      "close": "Fermer"
     }
   },
   "home": {

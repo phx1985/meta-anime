@@ -196,6 +196,9 @@ export class SettingsComponent {
   private static readonly DEFAULT_NAVBAR_HEIGHT_PX = 56;
   private static readonly SCROLL_OFFSET_PADDING_PX = 8;
   private static readonly SAVED_STATE_TIMEOUT_MS = 2000;
+  /** Small delay (ms) after settings data arrives before calling scrollToSection —
+   *  gives Angular one render cycle to stamp the section IDs into the DOM. */
+  private static readonly DEEP_LINK_SCROLL_DELAY_MS = 120;
   private static readonly SONARR_HOST_KEY = 'Sonarr:Host';
   private static readonly SONARR_API_KEY_KEY = 'Sonarr:ApiKey';
   private static readonly SONARR_DEFAULT_KEYS = new Set([
@@ -261,6 +264,20 @@ export class SettingsComponent {
       if (this.autoApplySavedTimer) clearTimeout(this.autoApplySavedTimer);
     });
 
+    // Capture a pending highlight from the `?highlight=` query param (set by the
+    // disabled-provider modal's "Go to Settings" button).  We store it now because
+    // the settings data loads asynchronously; we apply it after the data arrives.
+    const pendingHighlight = this.route.snapshot.queryParams['highlight'] as string | undefined;
+
+    // Clear the query param immediately so back-navigation doesn't re-trigger it.
+    if (pendingHighlight) {
+      this.router.navigate([], {
+        replaceUrl: true,
+        queryParams: {},
+        relativeTo: this.route,
+      });
+    }
+
     this.settingsService
       .getAll()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -271,13 +288,20 @@ export class SettingsComponent {
           this.loading.set(false);
           const first = this.navItems()[0];
           if (first) this.activeCategory.set(first);
-          const fragment = this.route.snapshot.fragment;
-          if (fragment) {
-            setTimeout(() => {
-              document
-                .getElementById(fragment)
-                ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 80);
+
+          if (pendingHighlight) {
+            // Use scrollToSection() — handles navbar offset, highlight scale animation,
+            // and auto-clear — matching the side-nav click behaviour exactly.
+            setTimeout(() => this.scrollToSection(pendingHighlight), SettingsComponent.DEEP_LINK_SCROLL_DELAY_MS);
+          } else {
+            const fragment = this.route.snapshot.fragment;
+            if (fragment) {
+              setTimeout(() => {
+                document
+                  .getElementById(fragment)
+                  ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 80);
+            }
           }
           this.loadSonarrDefaults();
         },

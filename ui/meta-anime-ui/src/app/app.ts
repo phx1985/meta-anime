@@ -56,6 +56,10 @@ export class App implements OnInit, AfterViewInit {
 
   /** Controls the disabled-provider interception modal */
   protected disabledProviderModal = signal<'plex' | 'sonarr' | null>(null);
+  /** True while the modal exit animation is playing */
+  protected modalLeaving = signal(false);
+
+  private static readonly MODAL_LEAVE_MS = 200;
 
   constructor() {
     this.translate.use('en');
@@ -183,12 +187,22 @@ export class App implements OnInit, AfterViewInit {
   }
 
   dismissDisabledProviderModal(): void {
-    this.disabledProviderModal.set(null);
+    this.modalLeaving.set(true);
+    setTimeout(() => {
+      this.disabledProviderModal.set(null);
+      this.modalLeaving.set(false);
+    }, App.MODAL_LEAVE_MS);
   }
 
   goToProviderSettings(provider: 'plex' | 'sonarr'): void {
-    this.disabledProviderModal.set(null);
-    this.router.navigate(['/settings'], { fragment: `section-${provider}` });
+    this.modalLeaving.set(true);
+    setTimeout(() => {
+      this.disabledProviderModal.set(null);
+      this.modalLeaving.set(false);
+      // Navigate with a `highlight` query param so the Settings page can call
+      // scrollToSection() — which handles offset-aware scroll, highlight scale, and auto-clear.
+      this.router.navigate(['/settings'], { queryParams: { highlight: provider } });
+    }, App.MODAL_LEAVE_MS);
   }
 
   /** Convenience method for template — dismisses modal and navigates to provider settings. */
