@@ -123,135 +123,130 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
   gap: 2rem;
 }
 
-// ── Orb animation ─────────────────────────────────────────────────────────────
+// ── Orb animation — true 3D gyroscope ─────────────────────────────────────────
+//
+// Each orbital plane is an independently-spinning ring in a unique 3D tilt:
+//   Plane 1 → nearly horizontal  (rotateX ~70°)
+//   Plane 2 → diagonal / tilted  (rotateX −25° + rotateY 55°)
+//   Plane 3 → nearly vertical    (rotateY 80°)
+// The planes spin around their own tilted Z-axis, like real gyroscope gimbals.
+// ─────────────────────────────────────────────────────────────────────────────
+
 .lucky-orb {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   display: flex;
   align-items: center;
   justify-content: center;
+  // Local perspective so the tilt effect is dramatic at this scale
+  perspective: 500px;
+  perspective-origin: 50% 50%;
+  transform-style: preserve-3d;
 }
 
-// Spinning rings with gradient-style borders
+// Plane wrappers — absolute, full-size, each holding one ring + dot
+.lucky-orb__plane {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+
+  &--1 { animation: plane1-spin 3.2s linear infinite; }
+  &--2 { animation: plane2-spin 2.0s linear infinite reverse; }
+  &--3 { animation: plane3-spin 1.5s linear infinite; }
+}
+
+// Plane 1: nearly horizontal orbital plane (like Saturn's rings at a shallow angle)
+@keyframes plane1-spin {
+  from { transform: rotateX(72deg) rotateZ(0deg); }
+  to   { transform: rotateX(72deg) rotateZ(360deg); }
+}
+// Plane 2: diagonal / mixed-axis (gives the gyroscope's characteristic skewed orbit)
+@keyframes plane2-spin {
+  from { transform: rotateX(-25deg) rotateY(55deg) rotateZ(0deg); }
+  to   { transform: rotateX(-25deg) rotateY(55deg) rotateZ(360deg); }
+}
+// Plane 3: nearly vertical orbital plane (side-view ring)
+@keyframes plane3-spin {
+  from { transform: rotateY(80deg) rotateX(8deg) rotateZ(0deg); }
+  to   { transform: rotateY(80deg) rotateX(8deg) rotateZ(360deg); }
+}
+
+// Rings: positioned at the centre of their plane, no own rotation
 .lucky-orb__ring {
   position: absolute;
+  top: 50%;
+  left: 50%;
   border-radius: 50%;
-  border: 1.5px solid transparent;
+  border: 2px solid transparent;
   pointer-events: none;
 
   &--outer {
-    width: 116px;
-    height: 116px;
-    border-color: rgba(108, 99, 255, 0.18);
-    border-top-color: rgba(108, 99, 255, 0.7);
-    border-right-color: rgba(108, 99, 255, 0.35);
-    animation: ringOuter 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    width: 120px;
+    height: 120px;
+    margin: -60px 0 0 -60px;
+    border-color: rgba(108, 99, 255, 0.2);
+    border-top-color: rgba(108, 99, 255, 0.8);
+    border-right-color: rgba(108, 99, 255, 0.42);
   }
 
   &--mid {
-    width: 84px;
-    height: 84px;
-    border-color: rgba(62, 207, 207, 0.12);
-    border-bottom-color: rgba(62, 207, 207, 0.65);
-    border-left-color: rgba(62, 207, 207, 0.3);
-    animation: ringMid 1.9s cubic-bezier(0.4, 0, 0.6, 1) infinite reverse;
+    width: 90px;
+    height: 90px;
+    margin: -45px 0 0 -45px;
+    border-color: rgba(62, 207, 207, 0.15);
+    border-bottom-color: rgba(62, 207, 207, 0.75);
+    border-left-color: rgba(62, 207, 207, 0.38);
   }
 
   &--inner {
-    width: 56px;
-    height: 56px;
-    border-color: rgba(157, 148, 255, 0.15);
-    border-top-color: rgba(157, 148, 255, 0.8);
-    animation: ringInner 1.3s linear infinite;
+    width: 62px;
+    height: 62px;
+    margin: -31px 0 0 -31px;
+    border-color: rgba(157, 148, 255, 0.18);
+    border-top-color: rgba(157, 148, 255, 0.9);
+    border-right-color: rgba(157, 148, 255, 0.45);
   }
 }
 
-@keyframes ringOuter {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-@keyframes ringMid {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-@keyframes ringInner {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-// Orbiting dots
-// transform-origin: <dot-half-width> <orbit-radius>
-// The orb is 120px wide; outer ring radius = 58px (116px / 2); mid ring radius = 42px (84px / 2)
+// Orbiting dots: fixed at the "top" of each ring; carried by the plane's rotation
 .lucky-orb__dot {
   position: absolute;
-  width: 7px;
-  height: 7px;
   border-radius: 50%;
-  background: var(--accent-primary);
-  box-shadow: 0 0 8px var(--accent-primary);
 
   &--1 {
-    animation: dot1 2.6s linear infinite;
-    top: 2px;
-    left: 50%;
-    margin-left: -3.5px;
-    transform-origin: 3.5px 58px; // half-width=3.5px, orbit = outer ring radius (116px/2)
+    width: 9px;
+    height: 9px;
+    // outer ring radius = 60px; top = centre − (60 + half-dot) = 50% − 64.5px
+    top: calc(50% - 64.5px);
+    left: calc(50% - 4.5px);
+    background: var(--accent-primary);
+    box-shadow: 0 0 12px 3px var(--accent-primary);
   }
 
   &--2 {
-    animation: dot2 1.9s linear infinite reverse;
-    background: var(--gradient-end); // teal accent (--gradient-end from global theme)
-    box-shadow: 0 0 8px var(--gradient-end);
-    top: 8px;
-    left: 50%;
-    margin-left: -3.5px;
-    transform-origin: 3.5px 42px; // half-width=3.5px, orbit = mid ring radius (84px/2)
-  }
-
-  &--3 {
-    animation: dot3 3.4s linear infinite;
-    width: 5px;
-    height: 5px;
-    background: rgba(157, 148, 255, 0.9);
-    box-shadow: 0 0 6px rgba(157, 148, 255, 0.9);
-    top: 0;
-    left: 50%;
-    margin-left: -2.5px;
-    transform-origin: 2.5px 60px; // half-width=2.5px, orbit slightly beyond outer ring
-    opacity: 0.7;
+    width: 7px;
+    height: 7px;
+    // mid ring radius = 45px; top = centre − (45 + half-dot) = 50% − 48.5px
+    top: calc(50% - 48.5px);
+    left: calc(50% - 3.5px);
+    background: var(--gradient-end);
+    box-shadow: 0 0 10px 2px var(--gradient-end);
   }
 }
 
-@keyframes dot1 {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-@keyframes dot2 {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-@keyframes dot3 {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-// Central glowing icon
+// Central glowing sphere — floats 15 px in front of the orbital planes
 .lucky-orb__center {
   position: relative;
   z-index: 2;
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   background: radial-gradient(circle at 38% 32%, rgba(157, 148, 255, 0.9), rgba(108, 99, 255, 0.55));
   color: #fff;
-  box-shadow:
-    0 0 16px rgba(108, 99, 255, 0.55),
-    0 0 36px rgba(108, 99, 255, 0.28),
-    0 0 60px rgba(108, 99, 255, 0.12);
   animation: centerPulse 2.4s ease-in-out infinite;
 }
 
@@ -261,20 +256,19 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
       0 0 16px rgba(108, 99, 255, 0.55),
       0 0 36px rgba(108, 99, 255, 0.28),
       0 0 60px rgba(108, 99, 255, 0.12);
-    transform: scale(1);
+    transform: translateZ(15px) scale(1);
   }
   50% {
     box-shadow:
       0 0 22px rgba(108, 99, 255, 0.75),
       0 0 52px rgba(108, 99, 255, 0.42),
       0 0 80px rgba(108, 99, 255, 0.2);
-    transform: scale(1.06);
+    transform: translateZ(15px) scale(1.07);
   }
 }
 
-// Reduced motion: only gentle center pulse; no rotating elements
-.lucky-overlay--reduced-motion .lucky-orb__ring,
-.lucky-overlay--reduced-motion .lucky-orb__dot {
+// Reduced motion: freeze and hide gyroscope planes entirely (covers rings & dots too)
+.lucky-overlay--reduced-motion .lucky-orb__plane {
   animation: none;
   opacity: 0;
 }
@@ -285,7 +279,7 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 
 // Disable heartbeat for users who prefer reduced motion
 .lucky-overlay--reduced-motion .lucky-container--beating {
-  animation: containerIn 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  animation: containerIn $container-in;
 }
 
 // Spin label
@@ -336,7 +330,8 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
   z-index: 1;
   display: flex;
   gap: 1.5rem;
-  align-items: flex-start;
+  // Vertically centre cover and info panel relative to each other
+  align-items: center;
   padding: 0.25rem 0;
 
   @media (max-width: 500px) {
@@ -424,27 +419,31 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
   border: 1.5px solid transparent;
   transition: opacity 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 
-  // ── Plex — golden-orange branded button ────────────────────────────────
+  // ── Plex — outlined, Plex-coloured on hover (mirrors anime card) ──────────
   &--plex {
-    background: #E5A00D;
-    color: #1C1C1C;
-    border-color: #E5A00D;
+    background: transparent;
+    color: var(--text-muted);
+    border-color: var(--card-border);
 
     &:hover {
-      opacity: 0.9;
-      box-shadow: 0 4px 16px rgba(229, 160, 13, 0.4);
+      color: #e5a00d;
+      border-color: #e5a00d;
+      background: rgba(229, 160, 13, 0.1);
+      transform: translateY(-1px);
     }
   }
 
-  // ── MAL — blue branded button ──────────────────────────────────────────
+  // ── MAL — outlined, MAL-blue on hover (mirrors anime card) ────────────────
   &--mal {
-    background: #2E51A2;
-    color: #fff;
-    border-color: #2E51A2;
+    background: transparent;
+    color: var(--text-muted);
+    border-color: var(--card-border);
 
     &:hover {
-      opacity: 0.9;
-      box-shadow: 0 4px 16px rgba(46, 81, 162, 0.4);
+      color: #2e51a2;
+      border-color: #2e51a2;
+      background: rgba(46, 81, 162, 0.1);
+      transform: translateY(-1px);
     }
   }
 
