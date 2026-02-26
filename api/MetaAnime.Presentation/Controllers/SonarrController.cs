@@ -76,9 +76,12 @@ public class SonarrController(
             return BadRequest(Constants.Messages.SonarrTvdbIdRequired);
         if (string.IsNullOrWhiteSpace(request.RootFolderPath))
             return BadRequest(Constants.Messages.SonarrRootFolderRequired);
+        if (!SonarrAddSeriesRequest.ValidMonitorTypes.Contains(request.Monitor))
+            return BadRequest($"Invalid monitor type '{request.Monitor}'. Valid values: {string.Join(", ", SonarrAddSeriesRequest.ValidMonitorTypes)}.");
 
         var result = await animeMediatorService.AddSonarrSeriesAsync(
-            request.TvdbId, request.RootFolderPath, request.QualityProfileId, request.MalId);
+            request.TvdbId, request.RootFolderPath, request.QualityProfileId,
+            request.Monitor, request.SeasonFolder, request.MalId);
 
         if (result.IsFailure)
         {
@@ -104,5 +107,13 @@ public class SonarrController(
     }
 }
 
-public sealed record SonarrAddSeriesRequest(int TvdbId, string RootFolderPath, int QualityProfileId, string? MalId = null);
+public sealed record SonarrAddSeriesRequest(int TvdbId, string RootFolderPath, int QualityProfileId, string Monitor = "all", bool SeasonFolder = true, string? MalId = null)
+{
+    public static readonly IReadOnlySet<string> ValidMonitorTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "all", "future", "missing", "existing", "recent",
+        "pilot", "firstSeason", "lastSeason",
+        "monitorSpecials", "unmonitorSpecials", "none",
+    };
+};
 

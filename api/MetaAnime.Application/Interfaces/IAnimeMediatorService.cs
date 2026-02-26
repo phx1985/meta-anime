@@ -19,7 +19,7 @@ public interface IAnimeMediatorService
     Task<Result<IEnumerable<SeasonalAnimeResponse>>> GetSeasonalAnimesAsync(int year, string season);
     Task<Result<SonarrOptionsResponse>> GetSonarrOptionsAsync();
     Task<Result<IList<SonarrLookupItem>>> SearchSonarrLookupAsync(string term);
-    Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, string? malId = null);
+    Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, string monitor = "all", bool seasonFolder = true, string? malId = null);
     Task<Result> RemoveSonarrSeriesAsync(int sonarrId);
     Task<Result> UpdateMalListStatusAsync(string malId, string status, int numWatchedEpisodes, int score);
 }

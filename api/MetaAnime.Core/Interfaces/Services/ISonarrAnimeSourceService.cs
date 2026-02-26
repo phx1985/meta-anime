@@ -24,7 +24,7 @@ public interface ISonarrAnimeSourceService<T> : IAnimeSourceService<T>
     Task<Result<SonarrInstanceOptions>> GetOptionsAsync();
 
     /// <summary>Searches Sonarr for a series by TVDB ID and adds it with the supplied options.</summary>
-    Task<Result<SonarrAddedSeries>> AddSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, IList<int> tagIds);
+    Task<Result<SonarrAddedSeries>> AddSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, IList<int> tagIds, string monitor = "all", bool seasonFolder = true);
 
     /// <summary>Searches Sonarr's series lookup API by free-text term (title).</summary>
     Task<Result<IList<SonarrLookupItem>>> SearchLookupAsync(string term);

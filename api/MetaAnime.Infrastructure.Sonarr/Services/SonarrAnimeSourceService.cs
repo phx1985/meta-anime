@@ -247,7 +247,7 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options, IPropert
         return Result.Success(new SonarrInstanceOptions(rootFolders, profiles, tagIds));
     }
 
-    public async Task<Result<SonarrAddedSeries>> AddSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, IList<int> tagIds)
+    public async Task<Result<SonarrAddedSeries>> AddSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, IList<int> tagIds, string monitor = "all", bool seasonFolder = true)
     {
         var (host, apiKey, _, isConfigured) = await GetSettingsAsync();
         if (!isConfigured)
@@ -279,9 +279,10 @@ public class SonarrAnimeSourceService(IOptions<SonarrSettings> options, IPropert
             rootFolderPath,
             qualityProfileId,
             seriesType = "anime",
-            seasonFolder = true,
+            seasonFolder,
             monitored = true,
             tags = tagIds,
+            addOptions = new { monitor },
         };
 
         var addReq = new RestRequest("api/v3/series", Method.Post);
