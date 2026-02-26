@@ -15,6 +15,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { AnimeService } from '../services/anime.service';
 import { UserPreferencesService } from '../services/user-preferences.service';
+import { ProviderStateService } from '../services/provider-state.service';
 import { AnimeDetailsResponse, AnimeFilters, MalAnimeInfo } from '../models/anime.models';
 import { ScoreBadgeComponent } from '../anime-list/anime-card/score-badge/score-badge.component';
 import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../constants/genre-lists';
@@ -34,6 +35,7 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
 
   private animeService = inject(AnimeService);
   protected userPrefs = inject(UserPreferencesService);
+  private providerState = inject(ProviderStateService);
   private translate = inject(TranslateService);
 
   protected state = signal<LuckyState>('idle');
@@ -47,6 +49,14 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
 
   /** True if the OS prefers reduced motion */
   protected readonly prefersReducedMotion = this.checkReducedMotion();
+
+  /** Expose provider state for template binding */
+  protected get plexProviderEnabled(): boolean {
+    return this.providerState.plexEnabled();
+  }
+  protected get sonarrProviderEnabled(): boolean {
+    return this.providerState.sonarrEnabled();
+  }
 
   private checkReducedMotion(): boolean {
     try {
@@ -208,7 +218,9 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
       filters.airingStatus = ['finished_airing'];
     }
 
-    if (this.userPrefs.luckyOnlyWithFiles()) {
+    // Only apply "has local files" filter when Sonarr is enabled;
+    // when Sonarr is disabled there are no local file records to match against.
+    if (this.userPrefs.luckyOnlyWithFiles() && this.providerState.sonarrEnabled()) {
       filters.hasFile = true;
     }
 

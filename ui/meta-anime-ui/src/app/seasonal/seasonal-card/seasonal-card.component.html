@@ -176,105 +176,109 @@
   <div class="card-footer">
     <div class="footer-actions">
       <!-- Plex: solid brand color + clickable when in Plex, greyed when not -->
-      @if (anime.inPlex && anime.plexUrl) {
-        <a
-          class="action action--plex action--in-library"
-          [href]="anime.plexUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          [title]="'animeCard.openPlex' | translate"
-        >
-          <svg
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            class="action-icon"
+      @if (plexEnabled) {
+        @if (anime.inPlex && anime.plexUrl) {
+          <a
+            class="action action--plex action--in-library"
+            [href]="anime.plexUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            [title]="'animeCard.openPlex' | translate"
           >
-            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4" />
-            <path d="M6.5 5.5l5 2.5-5 2.5V5.5z" fill="currentColor" />
-          </svg>
-          Plex
-        </a>
-      } @else {
-        <span
-          class="action action--plex action--not-in-library"
-          [title]="'seasonal.notInPlex' | translate"
-        >
-          <svg
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            class="action-icon"
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              class="action-icon"
+            >
+              <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4" />
+              <path d="M6.5 5.5l5 2.5-5 2.5V5.5z" fill="currentColor" />
+            </svg>
+            Plex
+          </a>
+        } @else {
+          <span
+            class="action action--plex action--not-in-library"
+            [title]="'seasonal.notInPlex' | translate"
           >
-            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4" />
-            <path d="M6.5 5.5l5 2.5-5 2.5V5.5z" fill="currentColor" />
-          </svg>
-          Plex
-        </span>
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              class="action-icon"
+            >
+              <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4" />
+              <path d="M6.5 5.5l5 2.5-5 2.5V5.5z" fill="currentColor" />
+            </svg>
+            Plex
+          </span>
+        }
       }
 
       <!-- Sonarr: solid brand color + link when in library, greyed when not -->
-      @if (anime.inSonarr) {
-        <a
-          class="action action--sonarr action--in-library"
-          [attr.href]="anime.sonarrUrl ?? null"
-          [attr.target]="anime.sonarrUrl ? '_blank' : null"
-          [attr.rel]="anime.sonarrUrl ? 'noopener noreferrer' : null"
-          [title]="'animeCard.openSonarr' | translate"
-        >
-          <svg
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            class="action-icon"
+      @if (sonarrEnabled) {
+        @if (anime.inSonarr) {
+          <a
+            class="action action--sonarr action--in-library"
+            [attr.href]="anime.sonarrUrl ?? null"
+            [attr.target]="anime.sonarrUrl ? '_blank' : null"
+            [attr.rel]="anime.sonarrUrl ? 'noopener noreferrer' : null"
+            [title]="'animeCard.openSonarr' | translate"
           >
-            <rect
-              x="1.5"
-              y="3"
-              width="13"
-              height="9"
-              rx="1.2"
-              stroke="currentColor"
-              stroke-width="1.4"
-            />
-            <path
-              d="M5.5 13.5h5M8 12v1.5"
-              stroke="currentColor"
-              stroke-width="1.4"
-              stroke-linecap="round"
-            />
-          </svg>
-          Sonarr
-        </a>
-      } @else {
-        <span
-          class="action action--sonarr action--not-in-library"
-          [title]="'seasonal.notInSonarr' | translate"
-        >
-          <svg
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            class="action-icon"
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              class="action-icon"
+            >
+              <rect
+                x="1.5"
+                y="3"
+                width="13"
+                height="9"
+                rx="1.2"
+                stroke="currentColor"
+                stroke-width="1.4"
+              />
+              <path
+                d="M5.5 13.5h5M8 12v1.5"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+              />
+            </svg>
+            Sonarr
+          </a>
+        } @else {
+          <span
+            class="action action--sonarr action--not-in-library"
+            [title]="'seasonal.notInSonarr' | translate"
           >
-            <rect
-              x="1.5"
-              y="3"
-              width="13"
-              height="9"
-              rx="1.2"
-              stroke="currentColor"
-              stroke-width="1.4"
-            />
-            <path
-              d="M5.5 13.5h5M8 12v1.5"
-              stroke="currentColor"
-              stroke-width="1.4"
-              stroke-linecap="round"
-            />
-          </svg>
-          Sonarr
-        </span>
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              class="action-icon"
+            >
+              <rect
+                x="1.5"
+                y="3"
+                width="13"
+                height="9"
+                rx="1.2"
+                stroke="currentColor"
+                stroke-width="1.4"
+              />
+              <path
+                d="M5.5 13.5h5M8 12v1.5"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+              />
+            </svg>
+            Sonarr
+          </span>
+        }
       }
 
       <!-- MAL: solid brand color + link when in library, greyed when not -->
@@ -513,7 +517,8 @@
       } @else {
         <!-- ── Provider sections (accordion) ── -->
         <div class="dialog__body">
-          <!-- ─── Sonarr section ─── -->
+          <!-- ─── Sonarr section (hidden when Sonarr provider is disabled) ─── -->
+          @if (sonarrEnabled) {
           <div
             class="prov-section"
             [class.prov-section--locked]="anime.inSonarr"
@@ -756,6 +761,7 @@
               </div>
             }
           </div>
+          } <!-- /@if sonarrEnabled -->
 
           <!-- ─── MAL section ─── -->
           <div

@@ -29,6 +29,10 @@ export class AnimeCardComponent {
   @Input() activeGenres: string[] = [];
   @Input() activeThemes: string[] = [];
   @Input() activeDemographics: string[] = [];
+  /** Whether the Plex provider is enabled globally (controls visibility of Plex action). */
+  @Input() plexEnabled = true;
+  /** Whether the Sonarr provider is enabled globally (controls visibility of Sonarr action). */
+  @Input() sonarrEnabled = true;
 
   private translate = inject(TranslateService);
 

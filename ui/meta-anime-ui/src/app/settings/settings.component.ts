@@ -9,14 +9,16 @@ import {
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, timer } from 'rxjs';
 import { finalize } from 'rxjs/operators';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { SettingsService } from '../services/settings.service';
 import { AnimeService } from '../services/anime.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
 import { NotificationService } from '../services/notification.service';
 import { UserPreferencesService } from '../services/user-preferences.service';
+import { ProviderStateService } from '../services/provider-state.service';
 import { SonarrService } from '../services/sonarr.service';
 import { SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
@@ -48,6 +50,18 @@ function langToLocale(lang: string): string {
   imports: [TranslatePipe, ReactiveFormsModule, SyncStepComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
+  animations: [
+    trigger('cardBodyExpand', [
+      transition(':enter', [
+        style({ height: '0', opacity: '0', overflow: 'hidden' }),
+        animate('300ms cubic-bezier(0.4, 0, 0.2, 1)', style({ height: '*', opacity: '1' })),
+      ]),
+      transition(':leave', [
+        style({ overflow: 'hidden' }),
+        animate('220ms cubic-bezier(0.4, 0, 1, 1)', style({ height: '0', opacity: '0' })),
+      ]),
+    ]),
+  ],
 })
 export class SettingsComponent {
   private settingsService = inject(SettingsService);
@@ -58,8 +72,10 @@ export class SettingsComponent {
   private destroyRef = inject(DestroyRef);
   private translate = inject(TranslateService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   readonly userPrefs = inject(UserPreferencesService);
   private sonarrService = inject(SonarrService);
+  private providerState = inject(ProviderStateService);
 
   loading = signal(true);
   error = signal(false);
@@ -82,6 +98,9 @@ export class SettingsComponent {
   syncing = signal(false);
   lastSyncDate = signal<string | null>(null);
   currentLang = signal(this.translate.currentLang ?? this.translate.defaultLang ?? 'en');
+
+  /** Provider name ('plex' | 'sonarr' | null) — shows sync-prompt modal when set */
+  syncPromptProvider = signal<string | null>(null);
 
   syncSteps = toSignal(this.signalR.steps$, { initialValue: [] as SyncStep[] });
   syncDone = toSignal(this.signalR.syncDone$, { initialValue: false });
@@ -589,7 +608,8 @@ export class SettingsComponent {
   toggleProviderEnabled(cat: string): void {
     const key = cat === 'plex' ? 'Plex:Enabled' : 'Sonarr:Enabled';
     const current = this.settings().find((s) => s.key === key)?.value;
-    const next = current !== 'false' ? 'false' : 'true';
+    const enabling = current === 'false'; // toggling from disabled → enabled
+    const next = enabling ? 'true' : 'false';
     this.savingKey.set(key);
     this.settingsService
       .update(key, { value: next })
@@ -600,11 +620,30 @@ export class SettingsComponent {
           this.settings.update((list) =>
             list.map((s) => (s.key === key ? { ...s, value: next } : s)),
           );
+          // Update the shared provider state service immediately
+          if (cat === 'plex') {
+            this.providerState.setPlexEnabled(enabling);
+          } else {
+            this.providerState.setSonarrEnabled(enabling);
+          }
+          // Show sync recommendation prompt when enabling a provider
+          if (enabling) {
+            this.syncPromptProvider.set(cat);
+          }
         },
         error: () => {
           this.savingKey.set(null);
         },
       });
+  }
+
+  dismissSyncPrompt(): void {
+    this.syncPromptProvider.set(null);
+  }
+
+  goToSyncFromPrompt(): void {
+    this.syncPromptProvider.set(null);
+    this.scrollToSection('sync');
   }
 
   shouldShowSyncStep(step: SyncStep): boolean {

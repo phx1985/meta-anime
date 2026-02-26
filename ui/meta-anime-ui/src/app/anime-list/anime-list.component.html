@@ -520,53 +520,55 @@
               </div>
             </div>
 
-            <!-- Codec -->
-            <div class="filter-field filter-field--pills">
-              <span class="filter-label">{{ 'animeList.filter.codec' | translate }}</span>
-              <div class="filter-pills">
-                @for (c of codecOptions; track c.value) {
+            <!-- Codec (Sonarr-only filter) -->
+            @if (providerState.sonarrEnabled()) {
+              <div class="filter-field filter-field--pills">
+                <span class="filter-label">{{ 'animeList.filter.codec' | translate }}</span>
+                <div class="filter-pills">
+                  @for (c of codecOptions; track c.value) {
+                    <button
+                      type="button"
+                      class="filter-pill"
+                      [class.filter-pill--active]="filterCodec.includes(c.value)"
+                      (click)="filterCodec = togglePill(filterCodec, c.value)"
+                    >
+                      {{ c.labelKey | translate }}
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Has file (Sonarr-only filter) -->
+              <div class="filter-field filter-field--pills">
+                <span class="filter-label">{{ 'animeList.filter.hasFile' | translate }}</span>
+                <div class="filter-pills">
                   <button
                     type="button"
                     class="filter-pill"
-                    [class.filter-pill--active]="filterCodec.includes(c.value)"
-                    (click)="filterCodec = togglePill(filterCodec, c.value)"
+                    [class.filter-pill--active]="filterHasFile === 'any'"
+                    (click)="filterHasFile = 'any'"
                   >
-                    {{ c.labelKey | translate }}
+                    {{ 'animeList.filter.any' | translate }}
                   </button>
-                }
+                  <button
+                    type="button"
+                    class="filter-pill"
+                    [class.filter-pill--active]="filterHasFile === 'yes'"
+                    (click)="filterHasFile = 'yes'"
+                  >
+                    {{ 'animeList.filter.hasFileYes' | translate }}
+                  </button>
+                  <button
+                    type="button"
+                    class="filter-pill"
+                    [class.filter-pill--active]="filterHasFile === 'no'"
+                    (click)="filterHasFile = 'no'"
+                  >
+                    {{ 'animeList.filter.hasFileNo' | translate }}
+                  </button>
+                </div>
               </div>
-            </div>
-
-            <!-- Has file -->
-            <div class="filter-field filter-field--pills">
-              <span class="filter-label">{{ 'animeList.filter.hasFile' | translate }}</span>
-              <div class="filter-pills">
-                <button
-                  type="button"
-                  class="filter-pill"
-                  [class.filter-pill--active]="filterHasFile === 'any'"
-                  (click)="filterHasFile = 'any'"
-                >
-                  {{ 'animeList.filter.any' | translate }}
-                </button>
-                <button
-                  type="button"
-                  class="filter-pill"
-                  [class.filter-pill--active]="filterHasFile === 'yes'"
-                  (click)="filterHasFile = 'yes'"
-                >
-                  {{ 'animeList.filter.hasFileYes' | translate }}
-                </button>
-                <button
-                  type="button"
-                  class="filter-pill"
-                  [class.filter-pill--active]="filterHasFile === 'no'"
-                  (click)="filterHasFile = 'no'"
-                >
-                  {{ 'animeList.filter.hasFileNo' | translate }}
-                </button>
-              </div>
-            </div>
+            }
           </div>
 
           <!-- ── Footer: Sort · Display mode · Actions ───────────────────── -->
@@ -800,6 +802,8 @@
             [activeGenres]="filterGenre()"
             [activeThemes]="filterTheme()"
             [activeDemographics]="filterDemographic()"
+            [plexEnabled]="providerState.plexEnabled()"
+            [sonarrEnabled]="providerState.sonarrEnabled()"
           />
         }
       </div>

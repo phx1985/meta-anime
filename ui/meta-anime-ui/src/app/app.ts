@@ -17,6 +17,7 @@ import { ThemeService } from './services/theme.service';
 import { SettingsService } from './services/settings.service';
 import { NotificationService, AppNotification } from './services/notification.service';
 import { SyncSignalRService } from './services/sync-signalr.service';
+import { ProviderStateService } from './services/provider-state.service';
 import { LuckyPickComponent } from './lucky-pick/lucky-pick.component';
 
 @Component({
@@ -33,6 +34,7 @@ export class App implements OnInit, AfterViewInit {
   private syncSignalR = inject(SyncSignalRService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
+  readonly providerState = inject(ProviderStateService);
 
   @ViewChild('navbarEl', { read: ElementRef }) private navbarEl?: ElementRef<HTMLElement>;
 
@@ -51,6 +53,9 @@ export class App implements OnInit, AfterViewInit {
   protected plexHomeUrl = signal<string | null>(null);
   protected sonarrHomeUrl = signal<string | null>(null);
   protected readonly malHomeUrl = 'https://myanimelist.net';
+
+  /** Controls the disabled-provider interception modal */
+  protected disabledProviderModal = signal<'plex' | 'sonarr' | null>(null);
 
   constructor() {
     this.translate.use('en');
@@ -168,6 +173,22 @@ export class App implements OnInit, AfterViewInit {
 
   closeLuckyPick(): void {
     this.luckyPickOpen.set(false);
+  }
+
+  /** Called when a disabled provider link is clicked — shows the interception modal */
+  openDisabledProviderModal(provider: 'plex' | 'sonarr', event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.disabledProviderModal.set(provider);
+  }
+
+  dismissDisabledProviderModal(): void {
+    this.disabledProviderModal.set(null);
+  }
+
+  goToProviderSettings(provider: 'plex' | 'sonarr'): void {
+    this.disabledProviderModal.set(null);
+    this.router.navigate(['/settings'], { fragment: `section-${provider}` });
   }
 
   handleNotifClick(notif: AppNotification): void {

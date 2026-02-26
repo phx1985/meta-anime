@@ -3,7 +3,16 @@
     "home": "Home",
     "animes": "Animes",
     "seasonal": "Seasonal",
-    "settings": "Settings"
+    "settings": "Settings",
+    "openPlex": "Open Plex",
+    "openSonarr": "Open Sonarr",
+    "providerDisabled": "This provider is currently disabled",
+    "disabledModal": {
+      "title": "{{provider}} is Disabled",
+      "desc": "This provider is currently inactive. Enable it in Settings to use this action.",
+      "cancel": "Cancel",
+      "goToSettings": "Go to Settings"
+    }
   },
   "home": {
     "title": "Meta Anime",
@@ -456,7 +465,14 @@
     "provider": {
       "enabled": "Enabled",
       "disabled": "Disabled",
-      "enabledToggle": "Toggle provider enabled state"
+      "enabledToggle": "Toggle provider enabled state",
+      "disabledHint": "Enable Sonarr in its settings card to use this feature"
+    },
+    "syncPrompt": {
+      "title": "Sync Recommended",
+      "desc": "{{provider}} has been enabled. A manual sync is recommended to populate its data.",
+      "dismiss": "Later",
+      "goToSync": "Go to Sync"
     }
   },
   "theme": {

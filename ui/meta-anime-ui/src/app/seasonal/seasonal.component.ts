@@ -7,6 +7,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
 import { FilterPresetService } from '../services/filter-preset.service';
+import { ProviderStateService } from '../services/provider-state.service';
 import {
   SeasonalAnimeItem,
   SeasonalFilterPreset,
@@ -109,6 +110,7 @@ export class SeasonalComponent {
   private presetService = inject(FilterPresetService);
   private destroyRef = inject(DestroyRef);
   private translateService = inject(TranslateService);
+  readonly providerState = inject(ProviderStateService);
 
   private readonly _now = new Date();
   private readonly _maxYear = this._now.getFullYear();

@@ -3,7 +3,16 @@
     "home": "Accueil",
     "animes": "Animes",
     "seasonal": "Saisonnier",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "openPlex": "Ouvrir Plex",
+    "openSonarr": "Ouvrir Sonarr",
+    "providerDisabled": "Ce fournisseur est actuellement désactivé",
+    "disabledModal": {
+      "title": "{{provider}} est désactivé",
+      "desc": "Ce fournisseur est actuellement inactif. Activez-le dans les Paramètres pour utiliser cette action.",
+      "cancel": "Annuler",
+      "goToSettings": "Aller aux Paramètres"
+    }
   },
   "home": {
     "title": "Meta Anime",
@@ -456,7 +465,14 @@
     "provider": {
       "enabled": "Activé",
       "disabled": "Désactivé",
-      "enabledToggle": "Basculer l'état d'activation du fournisseur"
+      "enabledToggle": "Basculer l'état d'activation du fournisseur",
+      "disabledHint": "Activez Sonarr dans sa carte de paramètres pour utiliser cette fonctionnalité"
+    },
+    "syncPrompt": {
+      "title": "Synchronisation Recommandée",
+      "desc": "{{provider}} a été activé. Une synchronisation manuelle est recommandée pour charger ses données.",
+      "dismiss": "Plus tard",
+      "goToSync": "Aller à la Synchronisation"
     }
   },
   "theme": {

@@ -21,6 +21,7 @@ import { SettingsService } from '../services/settings.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
 import { FilterPresetService } from '../services/filter-preset.service';
 import { UserPreferencesService } from '../services/user-preferences.service';
+import { ProviderStateService } from '../services/provider-state.service';
 import {
   AnimeDetailsResponse,
   AnimeFilters,
@@ -136,6 +137,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   private translateService = inject(TranslateService);
   readonly presetService = inject(FilterPresetService);
   readonly userPrefs = inject(UserPreferencesService);
+  readonly providerState = inject(ProviderStateService);
 
   @ViewChildren('animeCard', { read: ElementRef }) cardRefs!: QueryList<ElementRef>;
 

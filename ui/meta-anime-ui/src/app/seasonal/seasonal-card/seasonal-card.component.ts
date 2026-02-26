@@ -51,6 +51,10 @@ export class SeasonalCardComponent implements OnInit {
   @Input() activeGenres: string[] = [];
   @Input() activeThemes: string[] = [];
   @Input() activeDemographics: string[] = [];
+  /** Whether the Plex provider is enabled globally. */
+  @Input() plexEnabled = true;
+  /** Whether the Sonarr provider is enabled globally. */
+  @Input() sonarrEnabled = true;
 
   private translate = inject(TranslateService);
   private sonarrService = inject(SonarrService);
@@ -282,7 +286,8 @@ export class SeasonalCardComponent implements OnInit {
   // ── Unified add modal ─────────────────────────────────────────────────────
 
   openAddModal(): void {
-    this.addSonarr.set(!this.anime.inSonarr);
+    // Only pre-select Sonarr if it is both missing AND enabled globally
+    this.addSonarr.set(!this.anime.inSonarr && this.sonarrEnabled);
     this.addMal.set(!this.anime.inMal);
     this.addError.set('');
     this.addSuccess.set(false);
@@ -291,8 +296,8 @@ export class SeasonalCardComponent implements OnInit {
     this.malEpisodes.set(0);
     this.malScore.set(0);
 
-    // Auto-expand the first missing provider
-    if (!this.anime.inSonarr) {
+    // Auto-expand the first missing provider (skip Sonarr if disabled)
+    if (!this.anime.inSonarr && this.sonarrEnabled) {
       this.expandedProvider.set('sonarr');
     } else if (!this.anime.inMal) {
       this.expandedProvider.set('mal');
@@ -302,8 +307,8 @@ export class SeasonalCardComponent implements OnInit {
 
     this.showAddModal.set(true);
 
-    // Kick off Sonarr search + options when Sonarr is pre-selected
-    if (!this.anime.inSonarr) {
+    // Kick off Sonarr search + options when Sonarr is pre-selected and enabled
+    if (!this.anime.inSonarr && this.sonarrEnabled) {
       this.initSonarrSection();
     }
   }

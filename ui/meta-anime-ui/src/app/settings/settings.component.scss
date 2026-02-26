@@ -1298,3 +1298,121 @@
     filter: grayscale(1);
   }
 }
+
+// ── Setting row disabled by provider state ────────────────────────────────
+.setting-row--provider-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+  filter: grayscale(0.4);
+}
+
+.badge-provider-disabled {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
+// ── Sync Recommendation Prompt ────────────────────────────────────────────
+
+.sync-prompt-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.sync-prompt-modal {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  padding: 2rem;
+  max-width: 420px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.sync-prompt-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(108, 99, 255, 0.15);
+  border: 1px solid rgba(108, 99, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-primary);
+  margin-bottom: 0.25rem;
+}
+
+.sync-prompt-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.sync-prompt-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.sync-prompt-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.sync-prompt-btn {
+  padding: 0.55rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s, transform 0.1s;
+
+  &--secondary {
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    border: 1px solid var(--card-border);
+
+    &:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+  }
+
+  &--primary {
+    background: var(--accent-primary);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    &:hover {
+      background: var(--accent-hover, #7c74ff);
+      transform: translateY(-1px);
+    }
+  }
+}
