@@ -563,18 +563,19 @@ export class SettingsComponent {
       this.sonarrService.getOptions(),
       timer(400),
     ])
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.sonarrOptionsLoading.set(false)),
+      )
       .subscribe({
         next: ([opts]) => {
           this.sonarrRootFolders.set(opts.rootFolders);
           this.sonarrQualityProfiles.set(opts.qualityProfiles);
-          this.sonarrOptionsLoading.set(false);
         },
         error: () => {
           this.sonarrOptionsError.set(
             this.translate.instant('settings.sonarr.connectionError'),
           );
-          this.sonarrOptionsLoading.set(false);
         },
       });
   }

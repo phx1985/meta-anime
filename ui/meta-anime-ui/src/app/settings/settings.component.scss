@@ -769,6 +769,11 @@
   font-size: 0.8rem;
   color: var(--text-muted);
   border-bottom: 1px solid var(--card-border);
+
+  .spinner-border {
+    flex-shrink: 0;
+    margin-right: 0.25rem;
+  }
 }
 
 .sonarr-defaults-error {
