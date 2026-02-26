@@ -585,23 +585,23 @@
       "desc": "Lorsqu'activé, vos derniers filtres de recherche anime seront automatiquement restaurés et appliqués à l'ouverture de la page Liste des Animes."
     },
     "luckyPick": {
-      "groupTitle": "Je me sens chanceux",
+      "groupTitle": "J'ai de la chance!",
       "onlyFinished": {
-        "name": "Je me sens chanceux — Uniquement les animes terminés",
+        "name": "Uniquement les animes terminés",
         "desc": "Lorsqu'activé, la sélection aléatoire choisit uniquement parmi les séries dont la diffusion est terminée."
       },
       "onlyPlanToWatch": {
-        "name": "Je me sens chanceux — Uniquement À regarder",
+        "name": "Uniquement À regarder",
         "desc": "Lorsqu'activé, la sélection aléatoire choisit uniquement parmi les animes de votre liste « À regarder »."
       },
       "onlyWithFiles": {
-        "name": "Je me sens chanceux — Uniquement avec fichiers locaux",
+        "name": "Uniquement avec fichiers locaux",
         "desc": "Lorsqu'activé, la sélection aléatoire choisit uniquement les animes disposant de fichiers locaux dans Sonarr."
       }
     }
   },
   "luckyPick": {
-    "buttonLabel": "Je me sens chanceux",
+    "buttonLabel": "J'ai de la chance!",
     "ariaLabel": "Superposition de sélection aléatoire d'anime",
     "resultAriaLabel": "Anime recommandé",
     "searching": "Recherche de votre prochain anime…",

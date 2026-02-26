@@ -585,17 +585,17 @@
       "desc": "When enabled, your last used anime search filters will be automatically restored and applied when you open the Anime List page."
     },
     "luckyPick": {
-      "groupTitle": "I'm Feeling Lucky",
+      "groupTitle": "I'm Feeling Lucky!",
       "onlyFinished": {
-        "name": "I'm Feeling Lucky — Only Finished Anime",
+        "name": "Only Finished Anime",
         "desc": "When enabled, the random pick will only select from anime series that have finished airing."
       },
       "onlyPlanToWatch": {
-        "name": "I'm Feeling Lucky — Only Plan to Watch",
+        "name": "Only Plan to Watch",
         "desc": "When enabled, the random pick will only select from anime on your 'Plan to Watch' list."
       },
       "onlyWithFiles": {
-        "name": "I'm Feeling Lucky — Only with Local Files",
+        "name": "Only with Local Files",
         "desc": "When enabled, the random pick will only select anime that have local files available in Sonarr."
       }
     }
