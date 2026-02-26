@@ -1023,10 +1023,7 @@
 
             <ol class="sync-hub-steps" aria-label="Sync steps">
               @for (step of syncSteps(); track trackByStepKey($index, step)) {
-                @if (
-                  (step.stepKey !== 'plex' || plexEnabled()) &&
-                  (step.stepKey !== 'sonarr' || sonarrEnabled())
-                ) {
+                @if (shouldShowSyncStep(step)) {
                   <app-sync-step [step]="step" />
                 }
               }

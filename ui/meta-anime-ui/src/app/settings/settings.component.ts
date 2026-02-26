@@ -607,6 +607,12 @@ export class SettingsComponent {
       });
   }
 
+  shouldShowSyncStep(step: SyncStep): boolean {
+    if (step.stepKey === 'plex' && !this.plexEnabled()) return false;
+    if (step.stepKey === 'sonarr' && !this.sonarrEnabled()) return false;
+    return true;
+  }
+
   trackByKey(_: number, s: SettingDefinition): string {
     return s.key;
   }
