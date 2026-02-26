@@ -804,7 +804,7 @@
                           class="toggle-switch"
                           [class.toggle-switch--on]="userPrefs.luckyOnlyWithFiles()"
                           [disabled]="!sonarrEnabled()"
-                          (click)="!sonarrEnabled() ? null : toggleLuckyOnlyWithFiles()"
+                          (click)="toggleLuckyOnlyWithFiles()"
                           role="switch"
                           [attr.aria-checked]="userPrefs.luckyOnlyWithFiles()"
                           [attr.aria-label]="'userPreferences.luckyPick.onlyWithFiles.name' | translate"

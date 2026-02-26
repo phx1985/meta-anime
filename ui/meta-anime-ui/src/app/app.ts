@@ -191,6 +191,14 @@ export class App implements OnInit, AfterViewInit {
     this.router.navigate(['/settings'], { fragment: `section-${provider}` });
   }
 
+  /** Convenience method for template — dismisses modal and navigates to provider settings. */
+  dismissAndGoToSettings(): void {
+    const provider = this.disabledProviderModal();
+    if (provider) {
+      this.goToProviderSettings(provider);
+    }
+  }
+
   handleNotifClick(notif: AppNotification): void {
     this.notifService.acknowledge(notif.id);
     this.notifCenterOpen.set(false);
