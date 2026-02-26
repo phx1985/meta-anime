@@ -17,10 +17,11 @@ import { ThemeService } from './services/theme.service';
 import { SettingsService } from './services/settings.service';
 import { NotificationService, AppNotification } from './services/notification.service';
 import { SyncSignalRService } from './services/sync-signalr.service';
+import { LuckyPickComponent } from './lucky-pick/lucky-pick.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -40,6 +41,11 @@ export class App implements OnInit, AfterViewInit {
   protected notifCenterOpen = signal<boolean>(false);
   /** Dynamic top offset for the toast stack — tracks the actual navbar height */
   protected toastTopPx = signal<number>(72); // ~4.5rem default
+
+  /** Controls the Lucky Pick overlay visibility */
+  protected luckyPickOpen = signal<boolean>(false);
+  /** Prevent rapid-fire clicks from re-opening while already open */
+  private luckyPickBusy = false;
 
   /** Provider home-page URLs (populated from settings) */
   protected plexHomeUrl = signal<string | null>(null);
@@ -150,6 +156,18 @@ export class App implements OnInit, AfterViewInit {
   toggleNotifCenter(event: Event): void {
     event.stopPropagation();
     this.notifCenterOpen.update((v) => !v);
+  }
+
+  openLuckyPick(): void {
+    if (this.luckyPickBusy || this.luckyPickOpen()) return;
+    this.luckyPickBusy = true;
+    this.luckyPickOpen.set(true);
+    // Reset busy flag after a short guard window
+    setTimeout(() => (this.luckyPickBusy = false), 500);
+  }
+
+  closeLuckyPick(): void {
+    this.luckyPickOpen.set(false);
   }
 
   handleNotifClick(notif: AppNotification): void {
