@@ -9,14 +9,17 @@ import {
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, timer } from 'rxjs';
 import { finalize } from 'rxjs/operators';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { SettingsService } from '../services/settings.service';
 import { AnimeService } from '../services/anime.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
 import { NotificationService } from '../services/notification.service';
 import { UserPreferencesService } from '../services/user-preferences.service';
+import { ProviderStateService } from '../services/provider-state.service';
+import { PopupService } from '../services/popup.service';
 import { SonarrService } from '../services/sonarr.service';
 import { SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
@@ -48,6 +51,18 @@ function langToLocale(lang: string): string {
   imports: [TranslatePipe, ReactiveFormsModule, SyncStepComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
+  animations: [
+    trigger('cardBodyExpand', [
+      transition(':enter', [
+        style({ height: '0', opacity: '0', overflow: 'hidden' }),
+        animate('300ms cubic-bezier(0.4, 0, 0.2, 1)', style({ height: '*', opacity: '1' })),
+      ]),
+      transition(':leave', [
+        style({ overflow: 'hidden' }),
+        animate('220ms cubic-bezier(0.4, 0, 1, 1)', style({ height: '0', opacity: '0' })),
+      ]),
+    ]),
+  ],
 })
 export class SettingsComponent {
   private settingsService = inject(SettingsService);
@@ -58,8 +73,11 @@ export class SettingsComponent {
   private destroyRef = inject(DestroyRef);
   private translate = inject(TranslateService);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   readonly userPrefs = inject(UserPreferencesService);
   private sonarrService = inject(SonarrService);
+  private providerState = inject(ProviderStateService);
+  readonly popupService = inject(PopupService);
 
   loading = signal(true);
   error = signal(false);
@@ -82,6 +100,11 @@ export class SettingsComponent {
   syncing = signal(false);
   lastSyncDate = signal<string | null>(null);
   currentLang = signal(this.translate.currentLang ?? this.translate.defaultLang ?? 'en');
+
+  /** Provider name when sync prompt is showing — delegated to PopupService */
+  get syncPromptProvider() { return this.popupService.syncPromptProvider; }
+  /** `true` while the sync-prompt exit animation is playing */
+  get syncPromptLeaving() { return this.popupService.syncPromptLeaving; }
 
   syncSteps = toSignal(this.signalR.steps$, { initialValue: [] as SyncStep[] });
   syncDone = toSignal(this.signalR.syncDone$, { initialValue: false });
@@ -107,7 +130,8 @@ export class SettingsComponent {
         (s) =>
           s.key !== 'App:SyncInterval' &&
           !s.key.startsWith('System:') &&
-          !SettingsComponent.SONARR_DEFAULT_KEYS.has(s.key),
+          !SettingsComponent.SONARR_DEFAULT_KEYS.has(s.key) &&
+          !SettingsComponent.PROVIDER_ENABLED_KEYS.has(s.key),
       )
       .reduce((acc, s) => {
         (acc[s.category] ??= []).push(s);
@@ -153,9 +177,20 @@ export class SettingsComponent {
     () => this.settings().find((s) => s.key === 'System:MalTokenRefreshedAt')?.value ?? null,
   );
 
-  categories = computed(() => Object.keys(this.grouped()));
+  categories = computed(() => {
+    const available = new Set(Object.keys(this.grouped()));
+    return SettingsComponent.CATEGORY_ORDER.filter((c) => available.has(c));
+  });
 
   navItems = computed<string[]>(() => [...this.categories(), 'sync']);
+
+  plexEnabled = computed(
+    () => this.settings().find((s) => s.key === 'Plex:Enabled')?.value !== 'false',
+  );
+
+  sonarrEnabled = computed(
+    () => this.settings().find((s) => s.key === 'Sonarr:Enabled')?.value !== 'false',
+  );
 
   forms: Record<string, FormGroup> = {};
 
@@ -165,6 +200,9 @@ export class SettingsComponent {
   private static readonly DEFAULT_NAVBAR_HEIGHT_PX = 56;
   private static readonly SCROLL_OFFSET_PADDING_PX = 8;
   private static readonly SAVED_STATE_TIMEOUT_MS = 2000;
+  /** Small delay (ms) after settings data arrives before calling scrollToSection —
+   *  gives Angular one render cycle to stamp the section IDs into the DOM. */
+  private static readonly DEEP_LINK_SCROLL_DELAY_MS = 120;
   private static readonly SONARR_HOST_KEY = 'Sonarr:Host';
   private static readonly SONARR_API_KEY_KEY = 'Sonarr:ApiKey';
   private static readonly SONARR_DEFAULT_KEYS = new Set([
@@ -173,6 +211,12 @@ export class SettingsComponent {
     'Sonarr:DefaultSeasonFolder',
     'Sonarr:DefaultMonitor',
   ]);
+  private static readonly PROVIDER_ENABLED_KEYS = new Set([
+    'Plex:Enabled',
+    'Sonarr:Enabled',
+  ]);
+
+  private static readonly CATEGORY_ORDER = ['mal', 'kometa', 'plex', 'sonarr', 'app'];
 
   /** Locale-aware date formatter — uses current app language */
   fmtDate(iso: string): string {
@@ -224,6 +268,20 @@ export class SettingsComponent {
       if (this.autoApplySavedTimer) clearTimeout(this.autoApplySavedTimer);
     });
 
+    // Capture a pending highlight from the `?highlight=` query param (set by the
+    // disabled-provider modal's "Go to Settings" button).  We store it now because
+    // the settings data loads asynchronously; we apply it after the data arrives.
+    const pendingHighlight = this.route.snapshot.queryParams['highlight'] as string | undefined;
+
+    // Clear the query param immediately so back-navigation doesn't re-trigger it.
+    if (pendingHighlight) {
+      this.router.navigate([], {
+        replaceUrl: true,
+        queryParams: {},
+        relativeTo: this.route,
+      });
+    }
+
     this.settingsService
       .getAll()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -234,13 +292,20 @@ export class SettingsComponent {
           this.loading.set(false);
           const first = this.navItems()[0];
           if (first) this.activeCategory.set(first);
-          const fragment = this.route.snapshot.fragment;
-          if (fragment) {
-            setTimeout(() => {
-              document
-                .getElementById(fragment)
-                ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 80);
+
+          if (pendingHighlight) {
+            // Use scrollToSection() — handles navbar offset, highlight scale animation,
+            // and auto-clear — matching the side-nav click behaviour exactly.
+            setTimeout(() => this.scrollToSection(pendingHighlight), SettingsComponent.DEEP_LINK_SCROLL_DELAY_MS);
+          } else {
+            const fragment = this.route.snapshot.fragment;
+            if (fragment) {
+              setTimeout(() => {
+                document
+                  .getElementById(fragment)
+                  ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 80);
+            }
           }
           this.loadSonarrDefaults();
         },
@@ -492,20 +557,25 @@ export class SettingsComponent {
     if (!this.sonarrBasicConfigured()) return;
     this.sonarrOptionsLoading.set(true);
     this.sonarrOptionsError.set('');
-    this.sonarrService
-      .getOptions()
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    // forkJoin with timer(400) guarantees the spinner shows for at least 400ms,
+    // preventing a visual glitch when the backend responds instantly.
+    forkJoin([
+      this.sonarrService.getOptions(),
+      timer(400),
+    ])
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.sonarrOptionsLoading.set(false)),
+      )
       .subscribe({
-        next: (opts) => {
+        next: ([opts]) => {
           this.sonarrRootFolders.set(opts.rootFolders);
           this.sonarrQualityProfiles.set(opts.qualityProfiles);
-          this.sonarrOptionsLoading.set(false);
         },
         error: () => {
           this.sonarrOptionsError.set(
             this.translate.instant('settings.sonarr.connectionError'),
           );
-          this.sonarrOptionsLoading.set(false);
         },
       });
   }
@@ -562,6 +632,59 @@ export class SettingsComponent {
       });
   }
 
+  isProviderEnabled(cat: string): boolean {
+    if (cat === 'plex') return this.plexEnabled();
+    if (cat === 'sonarr') return this.sonarrEnabled();
+    return true;
+  }
+
+  toggleProviderEnabled(cat: string): void {
+    const key = cat === 'plex' ? 'Plex:Enabled' : 'Sonarr:Enabled';
+    const current = this.settings().find((s) => s.key === key)?.value;
+    const enabling = current === 'false'; // toggling from disabled → enabled
+    const next = enabling ? 'true' : 'false';
+    this.savingKey.set(key);
+    this.settingsService
+      .update(key, { value: next })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.savingKey.set(null);
+          this.settings.update((list) =>
+            list.map((s) => (s.key === key ? { ...s, value: next } : s)),
+          );
+          // Update the shared provider state service immediately
+          if (cat === 'plex') {
+            this.providerState.setPlexEnabled(enabling);
+          } else {
+            this.providerState.setSonarrEnabled(enabling);
+          }
+          // Show sync recommendation prompt when enabling a provider
+          if (enabling) {
+            this.popupService.openSyncPrompt(cat);
+          }
+        },
+        error: () => {
+          this.savingKey.set(null);
+        },
+      });
+  }
+
+  dismissSyncPrompt(): void {
+    this.popupService.dismissSyncPrompt();
+  }
+
+  goToSyncFromPrompt(): void {
+    this.popupService.dismissSyncPrompt();
+    setTimeout(() => this.scrollToSection('sync'), PopupService.MODAL_LEAVE_MS);
+  }
+
+  shouldShowSyncStep(step: SyncStep): boolean {
+    if (step.stepKey === 'plex' && !this.plexEnabled()) return false;
+    if (step.stepKey === 'sonarr' && !this.sonarrEnabled()) return false;
+    return true;
+  }
+
   trackByKey(_: number, s: SettingDefinition): string {
     return s.key;
   }
@@ -578,6 +701,12 @@ export class SettingsComponent {
     if (this.syncing()) return;
 
     this.syncing.set(true);
+
+    // Inform SignalR service which steps are disabled so completion is detected correctly
+    const disabledSteps = new Set<string>();
+    if (!this.plexEnabled()) disabledSteps.add('plex');
+    if (!this.sonarrEnabled()) disabledSteps.add('sonarr');
+    this.signalR.setDisabledStepKeys(disabledSteps);
     this.signalR.resetSteps();
 
     this.notifService.push({

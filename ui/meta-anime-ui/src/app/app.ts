@@ -17,6 +17,8 @@ import { ThemeService } from './services/theme.service';
 import { SettingsService } from './services/settings.service';
 import { NotificationService, AppNotification } from './services/notification.service';
 import { SyncSignalRService } from './services/sync-signalr.service';
+import { ProviderStateService } from './services/provider-state.service';
+import { PopupService } from './services/popup.service';
 import { LuckyPickComponent } from './lucky-pick/lucky-pick.component';
 
 @Component({
@@ -33,6 +35,8 @@ export class App implements OnInit, AfterViewInit {
   private syncSignalR = inject(SyncSignalRService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
+  readonly providerState = inject(ProviderStateService);
+  readonly popupService = inject(PopupService);
 
   @ViewChild('navbarEl', { read: ElementRef }) private navbarEl?: ElementRef<HTMLElement>;
 
@@ -51,6 +55,10 @@ export class App implements OnInit, AfterViewInit {
   protected plexHomeUrl = signal<string | null>(null);
   protected sonarrHomeUrl = signal<string | null>(null);
   protected readonly malHomeUrl = 'https://myanimelist.net';
+
+  /** Controls the disabled-provider interception modal — delegated to PopupService */
+  protected get disabledProviderModal() { return this.popupService.disabledProvider; }
+  protected get modalLeaving() { return this.popupService.disabledProviderLeaving; }
 
   constructor() {
     this.translate.use('en');
@@ -168,6 +176,35 @@ export class App implements OnInit, AfterViewInit {
 
   closeLuckyPick(): void {
     this.luckyPickOpen.set(false);
+  }
+
+  /** Called when a disabled provider link is clicked — shows the interception modal */
+  openDisabledProviderModal(provider: 'plex' | 'sonarr', event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.popupService.openDisabledProvider(provider);
+  }
+
+  dismissDisabledProviderModal(): void {
+    this.popupService.dismissDisabledProvider();
+  }
+
+  goToProviderSettings(provider: 'plex' | 'sonarr'): void {
+    this.popupService.dismissDisabledProvider();
+    // Navigate after the exit animation completes.
+    setTimeout(() => {
+      // Navigate with a `highlight` query param so the Settings page can call
+      // scrollToSection() — which handles offset-aware scroll, highlight scale, and auto-clear.
+      this.router.navigate(['/settings'], { queryParams: { highlight: provider } });
+    }, PopupService.MODAL_LEAVE_MS);
+  }
+
+  /** Convenience method for template — dismisses modal and navigates to provider settings. */
+  dismissAndGoToSettings(): void {
+    const provider = this.popupService.disabledProvider();
+    if (provider) {
+      this.goToProviderSettings(provider);
+    }
   }
 
   handleNotifClick(notif: AppNotification): void {

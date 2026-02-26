@@ -1,5 +1,6 @@
 using FluentAssertions;
 using MetaAnime.Application.Services;
+using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Caching;
 using MetaAnime.Core.Interfaces.Mappers;
 using MetaAnime.Core.Interfaces.Repositories;
@@ -21,6 +22,7 @@ public class AnimeServiceTests
     private readonly Mock<IMalAnimeSourceService<MalAnime>> _mockMalService;
     private readonly Mock<ISonarrAnimeSourceService<SonarrSeries>> _mockSonarrService;
     private readonly Mock<ICacheEntryService> _mockCacheService;
+    private readonly Mock<IPropertyBagRepository> _mockPropertyBagRepository;
     private readonly AnimeService _sut;
 
     public AnimeServiceTests()
@@ -30,12 +32,23 @@ public class AnimeServiceTests
         _mockMalService = new Mock<IMalAnimeSourceService<MalAnime>>();
         _mockSonarrService = new Mock<ISonarrAnimeSourceService<SonarrSeries>>();
         _mockCacheService = new Mock<ICacheEntryService>();
+        _mockPropertyBagRepository = new Mock<IPropertyBagRepository>();
+
+        // Default: both providers enabled
+        _mockPropertyBagRepository
+            .Setup(x => x.GetByKeyAsync(SettingsKeys.PlexEnabled))
+            .ReturnsAsync(new PropertyBag { Key = SettingsKeys.PlexEnabled, Value = "true" });
+        _mockPropertyBagRepository
+            .Setup(x => x.GetByKeyAsync(SettingsKeys.SonarrEnabled))
+            .ReturnsAsync(new PropertyBag { Key = SettingsKeys.SonarrEnabled, Value = "true" });
+
         _sut = new AnimeService(
             _mockAnimeRepository.Object,
             _mockPlexService.Object,
             _mockMalService.Object,
             _mockSonarrService.Object,
-            _mockCacheService.Object
+            _mockCacheService.Object,
+            _mockPropertyBagRepository.Object
         );
     }
 
@@ -160,5 +173,72 @@ public class AnimeServiceTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         _mockAnimeRepository.Verify(x => x.BulkInsertAsync(animes), Times.Once);
+    }
+
+    [Fact]
+    public async Task RefreshData_WhenPlexDisabled_SkipsPlexSync()
+    {
+        // Arrange
+        _mockPropertyBagRepository
+            .Setup(x => x.GetByKeyAsync(SettingsKeys.PlexEnabled))
+            .ReturnsAsync(new PropertyBag { Key = SettingsKeys.PlexEnabled, Value = "false" });
+
+        _mockMalService
+            .Setup(x => x.GetAllAsync())
+            .ReturnsAsync(Result.Success<IList<MalAnime>>([]));
+
+        _mockSonarrService
+            .Setup(x => x.GetAllAsync())
+            .ReturnsAsync(Result.Success<IList<SonarrSeries>>([]));
+
+        _mockSonarrService
+            .Setup(x => x.GetBulkCodecDistributionsAsync(It.IsAny<IEnumerable<string>>()))
+            .ReturnsAsync(new Dictionary<string, Dictionary<string, int>>());
+
+        _mockAnimeRepository.Setup(x => x.BulkDeleteAllAsync()).Returns(Task.CompletedTask);
+        _mockAnimeRepository.Setup(x => x.BulkInsertAsync(It.IsAny<IEnumerable<IAnimeConvertible>>())).Returns(Task.CompletedTask);
+        _mockAnimeRepository.Setup(x => x.GetAllAsync()).ReturnsAsync(Enumerable.Empty<Anime>());
+
+        _mockCacheService.Setup(x => x.BulkDeleteBySourceAsync(It.IsAny<AnimeSource>())).ReturnsAsync(Result.Success());
+        _mockCacheService.Setup(x => x.BulkInsertAsync(It.IsAny<IEnumerable<ICacheable>>())).ReturnsAsync(Result.Success());
+
+        // Act
+        var result = await _sut.RefreshData();
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        _mockPlexService.Verify(x => x.GetAllAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task RefreshData_WhenSonarrDisabled_SkipsSonarrSync()
+    {
+        // Arrange
+        _mockPropertyBagRepository
+            .Setup(x => x.GetByKeyAsync(SettingsKeys.SonarrEnabled))
+            .ReturnsAsync(new PropertyBag { Key = SettingsKeys.SonarrEnabled, Value = "false" });
+
+        _mockPlexService
+            .Setup(x => x.GetAllAsync())
+            .ReturnsAsync(Result.Success<IList<PlexMedia>>([]));
+
+        _mockMalService
+            .Setup(x => x.GetAllAsync())
+            .ReturnsAsync(Result.Success<IList<MalAnime>>([]));
+
+        _mockAnimeRepository.Setup(x => x.BulkDeleteAllAsync()).Returns(Task.CompletedTask);
+        _mockAnimeRepository.Setup(x => x.BulkInsertAsync(It.IsAny<IEnumerable<IAnimeConvertible>>())).Returns(Task.CompletedTask);
+        _mockAnimeRepository.Setup(x => x.GetAllAsync()).ReturnsAsync(Enumerable.Empty<Anime>());
+
+        _mockCacheService.Setup(x => x.BulkDeleteBySourceAsync(It.IsAny<AnimeSource>())).ReturnsAsync(Result.Success());
+        _mockCacheService.Setup(x => x.BulkInsertAsync(It.IsAny<IEnumerable<ICacheable>>())).ReturnsAsync(Result.Success());
+
+        // Act
+        var result = await _sut.RefreshData();
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        _mockSonarrService.Verify(x => x.GetAllAsync(), Times.Never);
+        _mockSonarrService.Verify(x => x.GetBulkCodecDistributionsAsync(It.IsAny<IEnumerable<string>>()), Times.Never);
     }
 }
