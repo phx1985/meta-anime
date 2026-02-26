@@ -7,7 +7,11 @@
   [attr.aria-label]="'luckyPick.ariaLabel' | translate"
   (click)="close()"
 >
-  <div class="lucky-container" (click)="$event.stopPropagation()">
+  <div
+    class="lucky-container"
+    [class.lucky-container--beating]="isSpinning()"
+    (click)="$event.stopPropagation()"
+  >
 
     <!-- ── Close button ──────────────────────────────────────────────────── -->
     <button
@@ -74,12 +78,14 @@
                   [href]="plexUrl"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="lucky-btn lucky-btn--primary"
+                  class="lucky-btn lucky-btn--plex"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <polygon points="5 3 19 12 5 21 5 3"/>
+                  <!-- Plex logo placeholder -->
+                  <svg class="lucky-btn__logo" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect width="24" height="24" rx="4" fill="#E5A00D"/>
+                    <path d="M8 5.5l10 6.5-10 6.5V5.5z" fill="#1C1C1C"/>
                   </svg>
-                  {{ 'luckyPick.watchNow' | translate }}
+                  {{ plexPhrase() }}
                 </a>
               }
               @if (malUrl) {
@@ -87,17 +93,32 @@
                   [href]="malUrl"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="lucky-btn lucky-btn--secondary"
+                  class="lucky-btn lucky-btn--mal"
                 >
-                  {{ 'luckyPick.viewDetails' | translate }}
+                  <!-- MAL logo placeholder -->
+                  <svg class="lucky-btn__logo" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect width="24" height="24" rx="4" fill="#2E51A2"/>
+                    <path d="M4 7h2.5l2 5 2-5H13v10h-2V11l-1.5 3.5h-1.5L6.5 11v6H4V7z" fill="#fff"/>
+                    <path d="M14 7h2v8h4v2h-6V7z" fill="#fff"/>
+                  </svg>
+                  {{ malPhrase() }}
                 </a>
               }
               <button
                 type="button"
-                class="lucky-btn lucky-btn--ghost"
+                class="lucky-btn lucky-btn--reroll"
                 (click)="tryAgain()"
               >
-                {{ 'luckyPick.tryAgain' | translate }}
+                <!-- Dice icon -->
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <rect x="2" y="2" width="20" height="20" rx="3" ry="3"/>
+                  <circle cx="8"  cy="8"  r="1.5" fill="currentColor"/>
+                  <circle cx="16" cy="8"  r="1.5" fill="currentColor"/>
+                  <circle cx="8"  cy="16" r="1.5" fill="currentColor"/>
+                  <circle cx="16" cy="16" r="1.5" fill="currentColor"/>
+                  <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+                </svg>
+                {{ rerollPhrase() }}
               </button>
             </div>
           </div>

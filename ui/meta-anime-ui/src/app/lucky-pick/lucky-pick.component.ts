@@ -18,6 +18,46 @@ import { AnimeDetailsResponse, AnimeFilters } from '../models/anime.models';
 
 type LuckyState = 'idle' | 'spinning' | 'result' | 'no-match' | 'error';
 
+// ── Humorous copy banks ──────────────────────────────────────────────────────
+const PLEX_PHRASES = [
+  'Summon the popcorn!',
+  'Let the binge begin!',
+  'Stream it before your resolve crumbles.',
+  'Your sofa is calling.',
+  'Skip sleep. Start streaming.',
+  'Deploy the watching station!',
+  'One does not simply watch one episode.',
+  'Challenge accepted — marathon mode: ON.',
+  'Lights, snacks, existential dread. Go!',
+  'Your screen awaits, weeb.',
+] as const;
+
+const MAL_PHRASES = [
+  'Add to the endless backlog.',
+  'Register this into the void.',
+  'Feed the algorithm.',
+  'Pad that Plan-to-Watch list.',
+  'Witness the MAL score drama.',
+  'Judge it with numbers.',
+  'Let strangers rate your taste.',
+  '10/10 it before watching.',
+  'Confirm it is, indeed, an anime.',
+  'Log it for future abandonment.',
+] as const;
+
+const REROLL_PHRASES = [
+  'Trash tier, roll again!',
+  'Nope. Next!',
+  'The prophecy demands a reroll.',
+  'This one... is not it.',
+  'Call upon the dice spirits!',
+  'Fortune spins twice for cowards.',
+  'One more spin of destiny.',
+  'Rejected. Spin the wheel!',
+  '404: hype not found. Retry.',
+  'The RNG gods demand sacrifice.',
+] as const;
+
 @Component({
   selector: 'app-lucky-pick',
   standalone: true,
@@ -34,6 +74,11 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
 
   protected state = signal<LuckyState>('idle');
   protected result = signal<AnimeDetailsResponse | null>(null);
+
+  /** Randomly-selected humorous button phrases, rerolled on every spin */
+  protected plexPhrase   = signal(LuckyPickComponent.pickRandom(PLEX_PHRASES));
+  protected malPhrase    = signal(LuckyPickComponent.pickRandom(MAL_PHRASES));
+  protected rerollPhrase = signal(LuckyPickComponent.pickRandom(REROLL_PHRASES));
 
   /** True if the OS prefers reduced motion */
   protected readonly prefersReducedMotion = this.checkReducedMotion();
@@ -101,6 +146,11 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
     if (this.state() === 'spinning') return;
     this.result.set(null);
     this.state.set('spinning');
+
+    // Reroll funny phrases on every spin so the copy feels fresh
+    this.plexPhrase.set(LuckyPickComponent.pickRandom(PLEX_PHRASES));
+    this.malPhrase.set(LuckyPickComponent.pickRandom(MAL_PHRASES));
+    this.rerollPhrase.set(LuckyPickComponent.pickRandom(REROLL_PHRASES));
 
     const filters: AnimeFilters = {};
 
@@ -171,5 +221,10 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
       clearTimeout(this.spinTimer);
       this.spinTimer = null;
     }
+  }
+
+  /** Picks a uniformly-random element from a readonly array. */
+  private static pickRandom<T>(arr: readonly T[]): T {
+    return arr[Math.floor(Math.random() * arr.length)];
   }
 }

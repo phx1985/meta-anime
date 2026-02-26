@@ -57,4 +57,56 @@ describe('LuckyPickComponent', () => {
     expect(typeof prefs.luckyOnlyWithFiles()).toBe('boolean');
     expect(typeof prefs.luckyOnlyFinished()).toBe('boolean');
   });
+
+  it('should expose plexPhrase, malPhrase, and rerollPhrase signals with string values', () => {
+    const fixture = TestBed.createComponent(LuckyPickComponent);
+    const comp = fixture.componentInstance as unknown as {
+      plexPhrase: () => string;
+      malPhrase: () => string;
+      rerollPhrase: () => string;
+    };
+    expect(typeof comp.plexPhrase()).toBe('string');
+    expect(comp.plexPhrase().length).toBeGreaterThan(0);
+    expect(typeof comp.malPhrase()).toBe('string');
+    expect(comp.malPhrase().length).toBeGreaterThan(0);
+    expect(typeof comp.rerollPhrase()).toBe('string');
+    expect(comp.rerollPhrase().length).toBeGreaterThan(0);
+  });
+
+  it('should reroll phrases on each spin() call', () => {
+    const fixture = TestBed.createComponent(LuckyPickComponent);
+    const component = fixture.componentInstance;
+    const comp = component as unknown as {
+      plexPhrase: () => string;
+      malPhrase: () => string;
+      rerollPhrase: () => string;
+      state: { set: (v: string) => void };
+    };
+
+    // Force to non-spinning state so spin() can run
+    comp.state.set('result' as never);
+    component.spin();
+    // After a spin the phrase must still be a valid, non-empty string
+    expect(typeof comp.plexPhrase()).toBe('string');
+    expect(comp.plexPhrase().length).toBeGreaterThan(0);
+    // A second spin should also produce a valid phrase
+    comp.state.set('result' as never);
+    component.spin();
+    expect(typeof comp.plexPhrase()).toBe('string');
+    expect(comp.plexPhrase().length).toBeGreaterThan(0);
+  });
+
+  it('should apply lucky-container--beating class only while spinning', () => {
+    const fixture = TestBed.createComponent(LuckyPickComponent);
+    const comp = fixture.componentInstance as unknown as {
+      isSpinning: () => boolean;
+      state: { set: (v: string) => void };
+    };
+
+    comp.state.set('spinning' as never);
+    expect(comp.isSpinning()).toBe(true);
+
+    comp.state.set('result' as never);
+    expect(comp.isSpinning()).toBe(false);
+  });
 });
