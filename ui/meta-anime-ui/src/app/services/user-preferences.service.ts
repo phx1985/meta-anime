@@ -1,10 +1,11 @@
 import { Injectable, signal, effect } from '@angular/core';
+import { StorageKeys } from '../constants/storage-keys';
 
-const AUTO_APPLY_KEY = 'meta-anime:autoApplyLastFilters';
-const LAST_FILTERS_KEY = 'meta-anime:lastUsedFilters';
-const LUCKY_ONLY_FINISHED_KEY = 'meta-anime:luckyOnlyFinished';
-const LUCKY_ONLY_PLAN_TO_WATCH_KEY = 'meta-anime:luckyOnlyPlanToWatch';
-const LUCKY_ONLY_WITH_FILES_KEY = 'meta-anime:luckyOnlyWithFiles';
+const AUTO_APPLY_KEY = StorageKeys.autoApplyLastFilters;
+const LAST_FILTERS_KEY = StorageKeys.lastUsedFilters;
+const LUCKY_ONLY_FINISHED_KEY = StorageKeys.luckyOnlyFinished;
+const LUCKY_ONLY_PLAN_TO_WATCH_KEY = StorageKeys.luckyOnlyPlanToWatch;
+const LUCKY_ONLY_WITH_FILES_KEY = StorageKeys.luckyOnlyWithFiles;
 
 @Injectable({ providedIn: 'root' })
 export class UserPreferencesService {
