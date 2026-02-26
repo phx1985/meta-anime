@@ -11,18 +11,21 @@
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   animation: overlayIn 0.25s ease both;
-  // 3D perspective so the container entrance has genuine depth
   perspective: 1400px;
   perspective-origin: 50% 40%;
 }
 
 @keyframes overlayIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 // ── Container ─────────────────────────────────────────────────────────────────
-// Custom property keeps the entrance timing DRY across base + beating modifier
 $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 
 .lucky-container {
@@ -31,13 +34,12 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
   align-items: center;
   justify-content: center;
   width: min(760px, 100%);
-  min-height: 320px;
-  // Extra top padding ensures content is never hidden behind the close button
-  padding: 3.5rem 2.5rem 2rem;
+  // Increased base height to accommodate the 30% taller cover image
+  min-height: 420px;
+  padding: 3.5rem 2.5rem 2.5rem;
   border-radius: 22px;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  // Layered shadows simulate physical depth/lift off the screen
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.5),
     0 6px 16px rgba(0, 0, 0, 0.45),
@@ -48,43 +50,56 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
   animation: containerIn $container-in;
 
   @media (max-width: 500px) {
-    // Increased top padding so result card never covers the close button
-    padding: 3.75rem 1.25rem 1.5rem;
-    min-height: 260px;
+    // Increased height and padding for mobile 30% scaling
+    padding: 4.5rem 1.25rem 2rem;
+    min-height: 350px;
     border-radius: 18px;
   }
 }
 
-// 3D entrance: the card appears to fly forward out of the screen
 @keyframes containerIn {
   from {
     opacity: 0;
     transform: scale(0.82) translateY(24px) rotateX(-10deg);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0) rotateX(0deg);
   }
 }
 
-// ── Heartbeat — the whole container pulses rhythmically while searching ───────
-// Applied via [class.lucky-container--beating]="isSpinning()" in the template.
-// The first animation runs the entrance once; the heartbeat loops after a short
-// delay to let the card finish entering before it starts pulsing.
+// ── Heartbeat ─────────────────────────────────────────────────────────────────
 .lucky-container--beating {
   animation:
     containerIn $container-in,
     heartbeat 1.15s ease-in-out 0.5s infinite;
 }
 
-// Realistic lub-dub heartbeat: two beats then a pause
 @keyframes heartbeat {
-  0%   { transform: scale(1); }
-  8%   { transform: scale(1.03); }
-  18%  { transform: scale(1); }
-  28%  { transform: scale(1.018); }
-  42%  { transform: scale(1); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  8% {
+    transform: scale(1.03);
+  }
+
+  18% {
+    transform: scale(1);
+  }
+
+  28% {
+    transform: scale(1.018);
+  }
+
+  42% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 // ── Close button ─────────────────────────────────────────────────────────────
@@ -102,7 +117,6 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
   background: var(--card-bg);
   color: var(--text-muted);
   cursor: pointer;
-  // z-index ensures the button always floats above the result card backdrop
   z-index: 10;
   transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 
@@ -123,15 +137,7 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
   gap: 2rem;
 }
 
-// ── Orb animation — true 3D gyroscope ─────────────────────────────────────────
-//
-// Each orbital plane is an independently-spinning ring in a unique 3D tilt:
-//   Plane 1 → nearly horizontal  (rotateX ~70°)
-//   Plane 2 → diagonal / tilted  (rotateX −25° + rotateY 55°)
-//   Plane 3 → nearly vertical    (rotateY 80°)
-// The planes spin around their own tilted Z-axis, like real gyroscope gimbals.
-// ─────────────────────────────────────────────────────────────────────────────
-
+// ── True 3D Gyroscope ─────────────────────────────────────────────────────────
 .lucky-orb {
   position: relative;
   width: 140px;
@@ -139,150 +145,182 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
   display: flex;
   align-items: center;
   justify-content: center;
-  // Local perspective so the tilt effect is dramatic at this scale
-  perspective: 500px;
-  perspective-origin: 50% 50%;
+  perspective: 600px;
   transform-style: preserve-3d;
+  animation: gyroAssemblySpin 12s linear infinite;
 }
 
-// Plane wrappers — absolute, full-size, each holding one ring + dot
-.lucky-orb__plane {
+@keyframes gyroAssemblySpin {
+  from {
+    transform: rotateX(-15deg) rotateY(0deg);
+  }
+
+  to {
+    transform: rotateX(-15deg) rotateY(360deg);
+  }
+}
+
+.lucky-orb__gimbal {
   position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-
-  &--1 { animation: plane1-spin 3.2s linear infinite; }
-  &--2 { animation: plane2-spin 2.0s linear infinite reverse; }
-  &--3 { animation: plane3-spin 1.5s linear infinite; }
-}
-
-// Plane 1: nearly horizontal orbital plane (like Saturn's rings at a shallow angle)
-@keyframes plane1-spin {
-  from { transform: rotateX(72deg) rotateZ(0deg); }
-  to   { transform: rotateX(72deg) rotateZ(360deg); }
-}
-// Plane 2: diagonal / mixed-axis (gives the gyroscope's characteristic skewed orbit)
-@keyframes plane2-spin {
-  from { transform: rotateX(-25deg) rotateY(55deg) rotateZ(0deg); }
-  to   { transform: rotateX(-25deg) rotateY(55deg) rotateZ(360deg); }
-}
-// Plane 3: nearly vertical orbital plane (side-view ring)
-@keyframes plane3-spin {
-  from { transform: rotateY(80deg) rotateX(8deg) rotateZ(0deg); }
-  to   { transform: rotateY(80deg) rotateX(8deg) rotateZ(360deg); }
-}
-
-// Rings: positioned at the centre of their plane, no own rotation
-.lucky-orb__ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
   border-radius: 50%;
-  border: 2px solid transparent;
-  pointer-events: none;
+  transform-style: preserve-3d;
+  border: 3px solid transparent;
+  box-shadow: inset 0 0 10px rgba(108, 99, 255, 0.2), 0 0 5px rgba(108, 99, 255, 0.2);
 
   &--outer {
-    width: 120px;
-    height: 120px;
-    margin: -60px 0 0 -60px;
-    border-color: rgba(108, 99, 255, 0.2);
-    border-top-color: rgba(108, 99, 255, 0.8);
-    border-right-color: rgba(108, 99, 255, 0.42);
+    width: 140px;
+    height: 140px;
+    border-color: rgba(108, 99, 255, 0.4);
+    border-left-color: rgba(108, 99, 255, 0.9);
+    border-right-color: rgba(108, 99, 255, 0.9);
+    animation: gimbalSpinZ 4s linear infinite;
   }
 
   &--mid {
-    width: 90px;
-    height: 90px;
-    margin: -45px 0 0 -45px;
-    border-color: rgba(62, 207, 207, 0.15);
-    border-bottom-color: rgba(62, 207, 207, 0.75);
-    border-left-color: rgba(62, 207, 207, 0.38);
+    width: 105px;
+    height: 105px;
+    border-color: rgba(62, 207, 207, 0.3);
+    border-top-color: rgba(62, 207, 207, 0.8);
+    border-bottom-color: rgba(62, 207, 207, 0.8);
+    animation: gimbalSpinX 2.5s linear infinite;
   }
 
   &--inner {
-    width: 62px;
-    height: 62px;
-    margin: -31px 0 0 -31px;
-    border-color: rgba(157, 148, 255, 0.18);
-    border-top-color: rgba(157, 148, 255, 0.9);
-    border-right-color: rgba(157, 148, 255, 0.45);
+    width: 70px;
+    height: 70px;
+    border-color: rgba(157, 148, 255, 0.3);
+    border-left-color: rgba(157, 148, 255, 0.9);
+    border-right-color: rgba(157, 148, 255, 0.9);
+    animation: gimbalSpinY 1.8s linear infinite reverse;
   }
 }
 
-// Orbiting dots: fixed at the "top" of each ring; carried by the plane's rotation
-.lucky-orb__dot {
-  position: absolute;
-  border-radius: 50%;
-
-  &--1 {
-    width: 9px;
-    height: 9px;
-    // outer ring radius = 60px; top = centre − (60 + half-dot) = 50% − 64.5px
-    top: calc(50% - 64.5px);
-    left: calc(50% - 4.5px);
-    background: var(--accent-primary);
-    box-shadow: 0 0 12px 3px var(--accent-primary);
+@keyframes gimbalSpinX {
+  from {
+    transform: rotateX(0deg);
   }
 
-  &--2 {
-    width: 7px;
-    height: 7px;
-    // mid ring radius = 45px; top = centre − (45 + half-dot) = 50% − 48.5px
-    top: calc(50% - 48.5px);
-    left: calc(50% - 3.5px);
-    background: var(--gradient-end);
-    box-shadow: 0 0 10px 2px var(--gradient-end);
+  to {
+    transform: rotateX(360deg);
   }
 }
 
-// Central glowing sphere — floats 15 px in front of the orbital planes
+@keyframes gimbalSpinY {
+  from {
+    transform: rotateY(0deg);
+  }
+
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+@keyframes gimbalSpinZ {
+  from {
+    transform: rotateZ(0deg);
+  }
+
+  to {
+    transform: rotateZ(360deg);
+  }
+}
+
+// ── True Mathematical 3D Sphere Implementation ────────────────────────────────
 .lucky-orb__center {
-  position: relative;
+  position: absolute;
   z-index: 2;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 38% 32%, rgba(157, 148, 255, 0.9), rgba(108, 99, 255, 0.55));
+  perspective: 800px;
+  transform-style: preserve-3d;
+  transform: rotateX(15deg); // Counters parent assembly tilt
+  animation: centerPulse3D 2s ease-in-out infinite alternate;
+}
+
+.lucky-orb__sphere {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: trueSphereSpin 5s linear infinite;
+}
+
+@keyframes trueSphereSpin {
+  from {
+    transform: rotateY(0deg) rotateX(20deg);
+  }
+
+  to {
+    transform: rotateY(360deg) rotateX(20deg);
+  }
+}
+
+// Generating the 3D sphere from 6 intersecting circular planes
+.lucky-orb__slice {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  // Wireframe structural lines
+  border: 1.5px solid rgba(157, 148, 255, 0.75);
+  // Extends the light outward from the slices
+  box-shadow: 0 0 8px rgba(108, 99, 255, 0.6), inset 0 0 8px rgba(108, 99, 255, 0.4);
+  // Calculates the rotation angle based on the CSS variable index (0 to 5)
+  transform: rotateY(calc(var(--slice-idx) * 30deg));
+}
+
+// The internal energy core
+.lucky-orb__core-glow {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(157, 148, 255, 0.7) 40%, transparent 80%);
+  transform: translateZ(0); // Anchors exactly in the centre
+  box-shadow: 0 0 20px rgba(157, 148, 255, 0.8);
+}
+
+.lucky-orb__star {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) translateZ(0);
   color: #fff;
-  animation: centerPulse 2.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 1));
 }
 
-@keyframes centerPulse {
-  0%, 100% {
-    box-shadow:
-      0 0 16px rgba(108, 99, 255, 0.55),
-      0 0 36px rgba(108, 99, 255, 0.28),
-      0 0 60px rgba(108, 99, 255, 0.12);
-    transform: translateZ(15px) scale(1);
+@keyframes centerPulse3D {
+  0% {
+    transform: rotateX(15deg) scale(0.95);
   }
-  50% {
-    box-shadow:
-      0 0 22px rgba(108, 99, 255, 0.75),
-      0 0 52px rgba(108, 99, 255, 0.42),
-      0 0 80px rgba(108, 99, 255, 0.2);
-    transform: translateZ(15px) scale(1.07);
+
+  100% {
+    transform: rotateX(15deg) scale(1.05);
   }
 }
 
-// Reduced motion: freeze and hide gyroscope planes entirely (covers rings & dots too)
-.lucky-overlay--reduced-motion .lucky-orb__plane {
+.lucky-overlay--reduced-motion .lucky-orb {
   animation: none;
-  opacity: 0;
+  transform: rotateX(-15deg) rotateY(30deg);
+}
+
+.lucky-overlay--reduced-motion .lucky-orb__gimbal {
+  animation: none;
 }
 
 .lucky-overlay--reduced-motion .lucky-orb__center {
-  animation: centerPulse 2s ease-in-out infinite;
+  animation: none;
+  transform: rotateX(15deg) scale(1);
 }
 
-// Disable heartbeat for users who prefer reduced motion
+.lucky-overlay--reduced-motion .lucky-orb__sphere {
+  animation: none;
+}
+
 .lucky-overlay--reduced-motion .lucky-container--beating {
   animation: containerIn $container-in;
 }
 
-// Spin label
 .lucky-spin-label {
   margin: 0;
   font-size: 0.92rem;
@@ -292,8 +330,15 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 }
 
 @keyframes labelPulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 // ── Result card ───────────────────────────────────────────────────────────────
@@ -306,8 +351,15 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 }
 
 @keyframes resultIn {
-  from { opacity: 0; transform: scale(0.88) translateY(18px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .lucky-result__backdrop {
@@ -330,7 +382,6 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
   z-index: 1;
   display: flex;
   gap: 1.5rem;
-  // Vertically centre cover and info panel relative to each other
   align-items: center;
   padding: 0.25rem 0;
 
@@ -343,8 +394,9 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 }
 
 .lucky-result__cover {
-  width: 120px;
-  height: 170px;
+  // Increased 30% for PC view (previously 160x226)
+  width: 208px;
+  height: 294px;
   object-fit: cover;
   border-radius: 12px;
   flex-shrink: 0;
@@ -356,13 +408,14 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
     justify-content: center;
     background: var(--bg-secondary);
     color: var(--text-muted);
-    font-size: 3rem;
+    font-size: 3.5rem;
     font-weight: 700;
   }
 
   @media (max-width: 500px) {
-    width: 100px;
-    height: 140px;
+    // Increased 30% for Mobile view (previously 120x170)
+    width: 156px;
+    height: 221px;
   }
 }
 
@@ -376,7 +429,7 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 
 .lucky-result__title {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.35rem; // Slightly scaled up title to match larger image
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.3;
@@ -384,13 +437,18 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 
 .lucky-result__synopsis {
   margin: 0;
-  font-size: 0.84rem;
+  font-size: 0.88rem;
   color: var(--text-secondary);
   line-height: 1.6;
   display: -webkit-box;
-  -webkit-line-clamp: 6;
+  // Increased clamp lines to balance the taller cover image
+  -webkit-line-clamp: 10;
   -webkit-box-orient: vertical;
   overflow: hidden;
+
+  @media (max-width: 500px) {
+    -webkit-line-clamp: 8;
+  }
 }
 
 // ── Action buttons ────────────────────────────────────────────────────────────
@@ -398,8 +456,8 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 .lucky-message__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
 
   @media (max-width: 500px) {
     justify-content: center;
@@ -409,8 +467,9 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 .lucky-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
-  padding: 0.5rem 1.1rem;
+  padding: 0.6rem 1.1rem;
   border-radius: 8px;
   font-size: 0.84rem;
   font-weight: 600;
@@ -419,7 +478,10 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
   border: 1.5px solid transparent;
   transition: opacity 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 
-  // ── Plex — outlined, Plex-coloured on hover (mirrors anime card) ──────────
+  // Flex layout fixes wrapping alignment
+  flex: 1 1 auto;
+  text-align: center;
+
   &--plex {
     background: transparent;
     color: var(--text-muted);
@@ -433,7 +495,6 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
     }
   }
 
-  // ── MAL — outlined, MAL-blue on hover (mirrors anime card) ────────────────
   &--mal {
     background: transparent;
     color: var(--text-muted);
@@ -447,22 +508,26 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
     }
   }
 
-  // ── Reroll — ghost style ───────────────────────────────────────────────
   &--reroll {
     background: transparent;
     color: var(--text-muted);
     border-color: var(--card-border);
 
-    &:hover { color: var(--text-primary); border-color: var(--text-muted); }
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--text-muted);
+    }
   }
 
-  // ── Generic variants (used in no-match / error / other places) ─────────
   &--primary {
     background: var(--accent-primary);
     color: #fff;
     border-color: var(--accent-primary);
 
-    &:hover { opacity: 0.88; box-shadow: 0 4px 16px rgba(108, 99, 255, 0.35); }
+    &:hover {
+      opacity: 0.88;
+      box-shadow: 0 4px 16px rgba(108, 99, 255, 0.35);
+    }
   }
 
   &--secondary {
@@ -470,7 +535,9 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
     color: var(--accent-primary);
     border-color: var(--accent-primary);
 
-    &:hover { background: rgba(108, 99, 255, 0.1); }
+    &:hover {
+      background: rgba(108, 99, 255, 0.1);
+    }
   }
 
   &--ghost {
@@ -478,7 +545,10 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
     color: var(--text-muted);
     border-color: var(--card-border);
 
-    &:hover { color: var(--text-primary); border-color: var(--text-muted); }
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--text-muted);
+    }
   }
 
   &:focus-visible {
@@ -506,7 +576,9 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 .lucky-message__icon {
   color: var(--text-muted);
 
-  &--error { color: #e53e3e; }
+  &--error {
+    color: #e53e3e;
+  }
 }
 
 .lucky-message__title {
