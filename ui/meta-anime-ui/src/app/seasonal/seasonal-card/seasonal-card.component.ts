@@ -10,6 +10,7 @@ import { ScoreBadgeComponent } from '../../anime-list/anime-card/score-badge/sco
 import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../../constants/genre-lists';
 import { SonarrService } from '../../services/sonarr.service';
 import { AnimeService } from '../../services/anime.service';
+import { SettingsService } from '../../services/settings.service';
 import {
   SonarrRootFolder,
   SonarrQualityProfile,
@@ -17,7 +18,7 @@ import {
   SonarrAddResult,
   SonarrMonitorType,
 } from '../../models/sonarr.models';
-import { Subject, debounceTime, switchMap, of, catchError } from 'rxjs';
+import { Subject, debounceTime, switchMap, of, catchError, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-seasonal-card',
@@ -54,6 +55,7 @@ export class SeasonalCardComponent implements OnInit {
   private translate = inject(TranslateService);
   private sonarrService = inject(SonarrService);
   private animeService = inject(AnimeService);
+  private settingsService = inject(SettingsService);
   private destroyRef = inject(DestroyRef);
 
   descExpanded = signal(false);
@@ -418,15 +420,37 @@ export class SeasonalCardComponent implements OnInit {
   private loadSonarrOptions(): void {
     if (this.sonarrRootFolders().length > 0 || this.sonarrLoadingOptions()) return;
     this.sonarrLoadingOptions.set(true);
-    this.sonarrService
-      .getOptions()
+    forkJoin({
+      opts: this.sonarrService.getOptions(),
+      settings: this.settingsService.getAll(),
+    })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (opts) => {
+        next: ({ opts, settings }) => {
           this.sonarrRootFolders.set(opts.rootFolders);
           this.sonarrQualityProfiles.set(opts.qualityProfiles);
-          if (opts.rootFolders.length > 0) this.sonarrRootFolder.set(opts.rootFolders[0].path);
-          if (opts.qualityProfiles.length > 0) this.sonarrProfileId.set(opts.qualityProfiles[0].id);
+
+          const getDefault = (key: string) => settings.find((s) => s.key === key)?.value ?? '';
+          const defaultRootFolder = getDefault('Sonarr:DefaultRootFolder');
+          const defaultProfileName = getDefault('Sonarr:DefaultQualityProfileName');
+          const defaultSeasonFolder = getDefault('Sonarr:DefaultSeasonFolder');
+          const defaultMonitor = getDefault('Sonarr:DefaultMonitor');
+
+          const folder = (defaultRootFolder
+            ? opts.rootFolders.find((f) => f.path === defaultRootFolder)
+            : null) ?? opts.rootFolders[0];
+          if (folder) this.sonarrRootFolder.set(folder.path);
+
+          const profile = (defaultProfileName
+            ? opts.qualityProfiles.find((p) => p.name === defaultProfileName)
+            : null) ?? opts.qualityProfiles[0];
+          if (profile) this.sonarrProfileId.set(profile.id);
+
+          if (defaultSeasonFolder) this.sonarrSeasonFolder.set(defaultSeasonFolder === 'true');
+          if (defaultMonitor && this.sonarrMonitorTypes.some((t) => t.value === defaultMonitor)) {
+            this.sonarrMonitor.set(defaultMonitor as SonarrMonitorType);
+          }
+
           this.sonarrLoadingOptions.set(false);
         },
         error: () => {

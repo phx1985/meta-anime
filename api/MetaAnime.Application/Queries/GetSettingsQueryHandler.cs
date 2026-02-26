@@ -42,6 +42,13 @@ public class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRepositor
             new(SettingsKeys.SonarrAnimeTags, "sonarr", false, true, Get(SettingsKeys.SonarrAnimeTags)),
             new(SettingsKeys.SonarrRemoteUrl, "sonarr", false, false, Get(SettingsKeys.SonarrRemoteUrl)),
 
+            // ── Sonarr "Add Series" defaults ──────────────────────────────────
+            new(SettingsKeys.SonarrDefaultRootFolder, "sonarr", false, false, Get(SettingsKeys.SonarrDefaultRootFolder)),
+            new(SettingsKeys.SonarrDefaultQualityProfileName, "sonarr", false, false, Get(SettingsKeys.SonarrDefaultQualityProfileName)),
+            new(SettingsKeys.SonarrDefaultSeasonFolder, "sonarr", false, false, Get(SettingsKeys.SonarrDefaultSeasonFolder), "boolean"),
+            new(SettingsKeys.SonarrDefaultMonitor, "sonarr", false, false, Get(SettingsKeys.SonarrDefaultMonitor), "select",
+                SelectOptions: ["all", "future", "missing", "existing", "recent", "pilot", "firstSeason", "lastSeason", "monitorSpecials", "unmonitorSpecials", "none"]),
+
             // ── MyAnimeList ───────────────────────────────────────────────────
             new(SettingsKeys.MalApiToken, "mal", true, false, Get(SettingsKeys.MalApiToken)),
             new(SettingsKeys.MalClientId, "mal", false, false, Get(SettingsKeys.MalClientId)),

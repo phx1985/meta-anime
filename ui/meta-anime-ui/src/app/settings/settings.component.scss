@@ -747,6 +747,11 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--accent-primary);
+
+  &--inline {
+    border-top: 1px solid var(--card-border);
+    margin-top: 0.25rem;
+  }
 }
 
 .toggle-switch {

@@ -18,6 +18,12 @@ public static class SettingsKeys
     public const string SonarrAnimeTags = "Sonarr:AnimeTags";
     public const string SonarrRemoteUrl = "Sonarr:RemoteUrl";
 
+    // Sonarr "Add Series" defaults
+    public const string SonarrDefaultRootFolder = "Sonarr:DefaultRootFolder";
+    public const string SonarrDefaultQualityProfileName = "Sonarr:DefaultQualityProfileName";
+    public const string SonarrDefaultSeasonFolder = "Sonarr:DefaultSeasonFolder";
+    public const string SonarrDefaultMonitor = "Sonarr:DefaultMonitor";
+
     // MyAnimeList
     public const string MalApiToken = "MAL:ApiToken";
     public const string MalClientId = "MAL:ClientId";
