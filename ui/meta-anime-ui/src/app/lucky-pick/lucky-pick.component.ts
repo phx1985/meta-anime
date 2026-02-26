@@ -40,9 +40,10 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
   protected result = signal<AnimeDetailsResponse | null>(null);
 
   /** Randomly-selected humorous button phrases, rerolled on every spin */
-  protected plexPhrase   = signal(this.pickPhrase('luckyPick.phrases.plex'));
-  protected malPhrase    = signal(this.pickPhrase('luckyPick.phrases.mal'));
-  protected rerollPhrase = signal(this.pickPhrase('luckyPick.phrases.reroll'));
+  protected plexPhrase      = signal(this.pickPhrase('luckyPick.phrases.plex'));
+  protected malPhrase       = signal(this.pickPhrase('luckyPick.phrases.mal'));
+  protected rerollPhrase    = signal(this.pickPhrase('luckyPick.phrases.reroll'));
+  protected searchingPhrase = signal(this.pickPhrase('luckyPick.phrases.searching'));
 
   /** True if the OS prefers reduced motion */
   protected readonly prefersReducedMotion = this.checkReducedMotion();
@@ -179,6 +180,7 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
       this.plexPhrase.set(this.pickPhrase('luckyPick.phrases.plex'));
       this.malPhrase.set(this.pickPhrase('luckyPick.phrases.mal'));
       this.rerollPhrase.set(this.pickPhrase('luckyPick.phrases.reroll'));
+      this.searchingPhrase.set(this.pickPhrase('luckyPick.phrases.searching'));
     });
     this.spin();
   }
@@ -194,6 +196,7 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
     this.plexPhrase.set(this.pickPhrase('luckyPick.phrases.plex'));
     this.malPhrase.set(this.pickPhrase('luckyPick.phrases.mal'));
     this.rerollPhrase.set(this.pickPhrase('luckyPick.phrases.reroll'));
+    this.searchingPhrase.set(this.pickPhrase('luckyPick.phrases.searching'));
 
     const filters: AnimeFilters = {};
 
