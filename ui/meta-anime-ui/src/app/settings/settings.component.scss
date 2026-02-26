@@ -3,8 +3,6 @@
   margin: 0 auto;
 }
 
-// ── Two-column layout: sidenav | main ─────────────────────────────────────────
-
 .settings-layout {
   display: grid;
   grid-template-columns: 190px 1fr;
@@ -13,6 +11,7 @@
 
   @media (max-width: 960px) {
     grid-template-columns: 1fr;
+
     .settings-sidenav {
       display: none;
     }
@@ -23,10 +22,8 @@
   min-width: 0;
 }
 
-// ── Mobile sticky subnav (icon-only bar, replaces the hidden sidenav) ─────────
-
 .settings-mobile-subnav {
-  display: none; // hidden on desktop
+  display: none;
 
   @media (max-width: 960px) {
     display: flex;
@@ -37,13 +34,14 @@
     overflow-x: auto;
     scrollbar-width: none;
     position: sticky;
-    top: 3.5rem; // sits directly below the ~56px navbar
+    top: 3.5rem;
     z-index: 100;
     background: var(--card-bg);
     border-bottom: 1px solid var(--card-border);
     box-shadow: 0 2px 10px var(--card-shadow);
     padding: 0.4rem 0.75rem;
-    margin: 0 -0.75rem 1.25rem; // bleed to edges of container
+    margin: 0 -0.75rem 1.25rem;
+
     &::-webkit-scrollbar {
       display: none;
     }
@@ -73,6 +71,7 @@
 
   &:hover {
     background: var(--bg-secondary);
+
     img,
     svg {
       opacity: 0.85;
@@ -82,6 +81,7 @@
   &--active {
     background: rgba(108, 99, 255, 0.12);
     box-shadow: inset 0 -2px 0 var(--accent-primary);
+
     img,
     svg {
       opacity: 1;
@@ -93,8 +93,6 @@
   object-fit: contain;
   border-radius: 3px;
 }
-
-// ── Floating vertical side navigation ─────────────────────────────────────────
 
 .settings-sidenav {
   position: sticky;
@@ -192,9 +190,11 @@
   0% {
     transform: scale(1);
   }
+
   40% {
     transform: scale(0.96);
   }
+
   100% {
     transform: scale(1);
   }
@@ -205,13 +205,12 @@
     transform: scale(0);
     opacity: 0;
   }
+
   to {
     transform: scale(1);
     opacity: 1;
   }
 }
-
-// ── Page header ───────────────────────────────────────────────────────────────
 
 .settings-header {
   display: flex;
@@ -235,8 +234,6 @@
   color: var(--text-muted);
   font-size: 1rem;
 }
-
-// ── Sync button ───────────────────────────────────────────────────────────────
 
 .btn-sync {
   display: inline-flex;
@@ -276,8 +273,6 @@
   }
 }
 
-// ── Sync controls (button + last sync date) ───────────────────────────────────
-
 .sync-controls {
   display: flex;
   flex-direction: column;
@@ -314,6 +309,7 @@
     opacity: 0;
     transform: translateY(4px);
   }
+
   to {
     opacity: 1;
     transform: none;
@@ -331,7 +327,11 @@
   flex-shrink: 0;
 }
 
-// ── Sync notification hub ─────────────────────────────────────────────────────
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .sync-hub {
   background: var(--card-bg);
@@ -346,6 +346,7 @@
   &.sync-hub--done {
     border-left-color: #22c55e;
   }
+
   &.sync-hub--error {
     border-left-color: #ef4444;
   }
@@ -356,6 +357,7 @@
     opacity: 0;
     transform: translateY(-20px) scale(0.97);
   }
+
   to {
     opacity: 1;
     transform: none;
@@ -422,6 +424,7 @@
     background: #22c55e;
     color: #fff;
   }
+
   &.sync-status-icon--error {
     background: #ef4444;
     color: #fff;
@@ -444,6 +447,7 @@
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.4;
     transform: scale(0.8);
@@ -461,9 +465,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition:
-    color 0.15s ease,
-    background 0.15s ease;
+  transition: color 0.15s ease, background 0.15s ease;
 
   &:hover {
     color: var(--text-primary);
@@ -480,10 +482,6 @@
   gap: 0.45rem;
 }
 
-// Sync step row styles live in sync-step.component.scss
-
-// ── Category card ─────────────────────────────────────────────────────────────
-
 .settings-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
@@ -491,7 +489,6 @@
   overflow: hidden;
   box-shadow: 0 4px 20px var(--card-shadow);
   animation: popFadeIn 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) both;
-  // Ensure the sticky navbar (≈64 px) + some breathing room doesn't cover the card header
   scroll-margin-top: 80px;
 }
 
@@ -500,6 +497,7 @@
     opacity: 0;
     transform: translateY(20px) scale(0.97);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -509,12 +507,15 @@
 .settings-card:nth-child(1) {
   animation-delay: 0s;
 }
+
 .settings-card:nth-child(2) {
   animation-delay: 0.08s;
 }
+
 .settings-card:nth-child(3) {
   animation-delay: 0.16s;
 }
+
 .settings-card:nth-child(4) {
   animation-delay: 0.24s;
 }
@@ -553,8 +554,6 @@
   color: rgba(255, 255, 255, 0.78);
 }
 
-// ── Setting rows ──────────────────────────────────────────────────────────────
-
 .settings-rows {
   padding: 0.25rem 0;
 }
@@ -575,28 +574,6 @@
   &:hover,
   &.setting-row--editing {
     background: var(--bg-secondary);
-  }
-
-  &.setting-row--saved {
-    animation: savedFlash 2s ease both;
-  }
-}
-
-@keyframes savedFlash {
-  0% {
-    background: transparent;
-  }
-  12% {
-    background: rgba(34, 197, 94, 0.13);
-    box-shadow: inset 3px 0 0 #22c55e;
-  }
-  55% {
-    background: rgba(34, 197, 94, 0.07);
-    box-shadow: inset 3px 0 0 rgba(34, 197, 94, 0.5);
-  }
-  100% {
-    background: transparent;
-    box-shadow: none;
   }
 }
 
@@ -621,8 +598,6 @@
   line-height: 1.45;
 }
 
-// ── Badges ────────────────────────────────────────────────────────────────────
-
 .badge-sensitive {
   font-size: 0.8rem;
   cursor: help;
@@ -635,19 +610,6 @@
   white-space: nowrap;
   animation: fadeIn 0.3s ease both;
 }
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-// ── Value area ────────────────────────────────────────────────────────────────
 
 .setting-value-area {
   min-width: 0;
@@ -674,8 +636,6 @@
   gap: 0.4rem;
   flex-shrink: 0;
 }
-
-// ── Icon-only button (eye) ────────────────────────────────────────────────────
 
 .btn-icon {
   display: inline-flex;
@@ -707,8 +667,6 @@
   align-items: center;
   gap: 0.3rem;
 }
-
-// ── Edit form ─────────────────────────────────────────────────────────────────
 
 .edit-form {
   display: flex;
@@ -756,17 +714,12 @@
   gap: 0.5rem;
 }
 
-// ── Responsive ────────────────────────────────────────────────────────────────
-
 @media (max-width: 640px) {
   .setting-row {
     grid-template-columns: 1fr;
   }
 }
 
-// ── Boolean toggle switch ─────────────────────────────────────────────────────
-
-// ── Preference group (used for Lucky Pick settings cluster) ───────────────────
 .pref-group {
   margin-top: 0.5rem;
   border: 1px solid var(--card-border);
@@ -848,8 +801,6 @@
   margin-left: 0.5rem;
 }
 
-// ── Select field ──────────────────────────────────────────────────────────────
-
 .display-row--select {
   align-items: center;
   gap: 0.6rem;
@@ -868,9 +819,7 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.65rem center;
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
   &:focus {
     outline: none;
@@ -890,7 +839,156 @@
   height: 14px;
 }
 
-// ── Dedicated Sync Card ───────────────────────────────────────────────────────
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.slider-value-badge {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+  background: var(--bg-primary);
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  padding: 0.25rem 0;
+  width: 46px;
+  text-align: center;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.slider-track {
+  flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.setting-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(128, 128, 128, 0.2);
+  outline: none;
+  cursor: pointer;
+
+  background-image: linear-gradient(var(--accent-primary), var(--accent-primary));
+  background-size: calc(var(--slider-val, 80) * 1%) 100%;
+  background-repeat: no-repeat;
+
+  transition: background-image 0.3s ease;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  @mixin thumb-styles {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: none;
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.25),
+      0 2px 6px rgba(0, 0, 0, 0.15),
+      0 0 0 1px rgba(0, 0, 0, 0.05),
+      0 0 0 0 rgba(108, 99, 255, 0);
+    cursor: grab;
+    transition:
+      transform 0.15s cubic-bezier(0.2, 0, 0.2, 1),
+      box-shadow 0.15s ease;
+  }
+
+  &::-webkit-slider-thumb {
+    @include thumb-styles;
+  }
+
+  &::-moz-range-thumb {
+    @include thumb-styles;
+  }
+
+  @mixin thumb-focus {
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.25),
+      0 2px 6px rgba(0, 0, 0, 0.15),
+      0 0 0 1px rgba(0, 0, 0, 0.05),
+      0 0 0 4px rgba(108, 99, 255, 0.2);
+  }
+
+  &:focus::-webkit-slider-thumb {
+    @include thumb-focus;
+  }
+
+  &:focus::-moz-range-thumb {
+    @include thumb-focus;
+  }
+
+  @mixin thumb-active {
+    cursor: grabbing;
+    transform: scale(1.25);
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.2),
+      0 4px 8px rgba(0, 0, 0, 0.15),
+      0 0 0 1px rgba(0, 0, 0, 0.05),
+      0 0 0 6px rgba(108, 99, 255, 0.25);
+  }
+
+  &:active::-webkit-slider-thumb {
+    @include thumb-active;
+  }
+
+  &:active::-moz-range-thumb {
+    @include thumb-active;
+  }
+
+  &::-moz-range-track {
+    background: transparent;
+    border: none;
+  }
+}
+
+.slider-row--saved {
+  .slider-value-badge {
+    animation: badgeMinimalSave 1.5s ease forwards;
+  }
+
+  .setting-slider {
+    background-image: linear-gradient(#10b981, #10b981);
+  }
+}
+
+@keyframes badgeMinimalSave {
+  0% {
+    color: var(--accent-primary);
+    border-color: var(--card-border);
+  }
+
+  15%,
+  70% {
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.08);
+  }
+
+  100% {
+    color: var(--accent-primary);
+    border-color: var(--card-border);
+    background: var(--bg-primary);
+  }
+}
 
 .sync-card {
   border-left: 4px solid var(--accent-primary);
@@ -899,6 +997,7 @@
   &.sync-card--done {
     border-left-color: #22c55e;
   }
+
   &.sync-card--error {
     border-left-color: #ef4444;
   }
@@ -918,8 +1017,6 @@
   flex: 1 1 auto;
   min-width: 0;
 }
-
-// ── Manual sync action section (inside sync-progress-body) ───────────────────
 
 .sync-manual-section {
   display: flex;
@@ -1035,9 +1132,7 @@
   padding: 0.2rem 0.5rem;
   cursor: pointer;
   margin-left: auto;
-  transition:
-    color 0.15s ease,
-    border-color 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease;
 
   &:hover {
     color: var(--text-primary);
@@ -1045,9 +1140,6 @@
   }
 }
 
-// Sync step provider + indeterminate animation styles live in sync-step.component.scss
-
-// ── Disabled state for settings grid during sync ──────────────────────────────
 .settings-grid--disabled {
   pointer-events: none;
   opacity: 0.55;
@@ -1055,7 +1147,6 @@
   user-select: none;
 }
 
-// ── Sync interval setting row (inside sync card) ──────────────────────────────
 .sync-interval-row {
   display: flex;
   align-items: center;
@@ -1091,10 +1182,6 @@
   flex-shrink: 0;
 }
 
-// ── Settings card highlight / dim (triggered by sidenav click) ───────────────
-// Using pure CSS transitions (no keyframe animation) so class removal is always
-// smooth — no end-of-animation flash.
-
 .settings-card {
   transition:
     opacity 0.4s ease,
@@ -1114,14 +1201,10 @@
   }
 }
 
-// ── Category header text wrapper ──────────────────────────────────────────────
-
 .category-header-text {
   flex: 1 1 auto;
   min-width: 0;
 }
-
-// ── MAL token refresh badge (in card header) ──────────────────────────────────
 
 .mal-token-badge {
   display: inline-flex;

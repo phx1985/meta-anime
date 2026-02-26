@@ -34,6 +34,7 @@
     overflow: hidden;
     max-height: 0;
     transition: max-height 0.3s ease;
+    order: 4;
 
     &.show {
       max-height: 32rem;
@@ -61,10 +62,18 @@
   flex-shrink: 0;
 
   @media (max-width: 991.98px) {
+    order: 3;
     width: 100%;
     border-top: 1px solid var(--navbar-border);
-    padding-top: 0.6rem;
-    margin-top: 0.25rem;
+    padding-top: 0.4rem;
+    padding-bottom: 0.4rem;
+    justify-content: center;
+    gap: 0.3rem;
+
+    // Hide dividers in the ribbon to save space on small screens
+    .navbar-divider {
+      display: none;
+    }
   }
 }
 
@@ -285,6 +294,40 @@
   }
 }
 
+// ── Settings icon button ───────────────────────────────────────────────────────
+.btn-settings {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--navbar-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    background: rgba(108, 99, 255, 0.06);
+    outline: none;
+  }
+
+  &--active {
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    background: rgba(108, 99, 255, 0.12);
+  }
+}
+
+
 .notif-badge {
   position: absolute;
   bottom: 1px;
@@ -328,12 +371,12 @@
 
   @media (max-width: 480px) {
     position: fixed;
-    top: 4.5rem;
+    top: 7rem;
     left: 0.75rem;
     right: 0.75rem;
     width: auto;
     max-width: none;
-    max-height: calc(100vh - 5.5rem);
+    max-height: calc(100vh - 8rem);
   }
 }
 

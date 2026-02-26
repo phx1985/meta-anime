@@ -21,6 +21,9 @@
   --bubble-body: rgba(108, 99, 255, 0.12);
   /* bokeh blobs (anime list) */
   --bokeh-opacity: 0.45;
+  /* slider control */
+  --slider-track-unfilled: rgba(128, 128, 160, 0.3);
+  --slider-thumb-border: #ffffff;
 }
 
 [data-theme='dark'] {
@@ -44,6 +47,9 @@
   --bubble-body: rgba(255, 255, 255, 0.06);
   /* bokeh blobs (anime list) */
   --bokeh-opacity: 0.18;
+  /* slider control */
+  --slider-track-unfilled: rgba(160, 160, 200, 0.22);
+  --slider-thumb-border: #1a1a2e;
 }
 
 // Global styles

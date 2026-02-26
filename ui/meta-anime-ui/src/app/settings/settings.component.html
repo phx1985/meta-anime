@@ -248,6 +248,34 @@
                             <span class="badge-saved">&#10003;</span>
                           }
                         </div>
+                      } @else if (setting.fieldType === 'number') {
+                        <div class="slider-row" [class.slider-row--saved]="isSaved(setting.key)">
+                          <div class="slider-value-badge">
+                            {{ sliderDisplayValue(setting.key, setting.value) }}%
+                          </div>
+                          <div class="slider-track">
+                            <input
+                              type="range"
+                              class="setting-slider"
+                              min="1"
+                              max="100"
+                              [value]="sliderDisplayValue(setting.key, setting.value)"
+                              [style.--slider-val]="sliderDisplayValue(setting.key, setting.value)"
+                              (input)="updateSliderPreview(setting.key, $event)"
+                              (change)="onNumberChange(setting, $event)"
+                              [disabled]="isSaving(setting.key) || syncing()"
+                              [attr.aria-label]="
+                                'settings.fields.' + slug(setting.key) + '.name' | translate
+                              "
+                            />
+                          </div>
+                          @if (isSaving(setting.key)) {
+                            <span
+                              class="spinner-border spinner-border-sm select-spinner"
+                              role="status"
+                            ></span>
+                          }
+                        </div>
                       } @else if (!editing()[setting.key]) {
                         <div class="display-row">
                           <span class="setting-current-value">
