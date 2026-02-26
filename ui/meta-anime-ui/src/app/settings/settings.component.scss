@@ -727,6 +727,8 @@
   overflow: hidden;
 
   .setting-row {
+    padding-left: 2rem;
+    border-left: 3px solid rgba(108, 99, 255, 0.2);
     border-bottom: 1px solid var(--card-border);
 
     &:last-child {
@@ -751,11 +753,6 @@
 
 .sonarr-defaults-group {
   margin-top: 0.5rem;
-
-  .sonarr-default-row {
-    padding-left: 2rem;
-    border-left: 3px solid rgba(108, 99, 255, 0.2);
-  }
 
   &--locked {
     opacity: 0.55;
