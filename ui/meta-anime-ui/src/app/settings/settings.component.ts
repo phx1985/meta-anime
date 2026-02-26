@@ -107,7 +107,8 @@ export class SettingsComponent {
         (s) =>
           s.key !== 'App:SyncInterval' &&
           !s.key.startsWith('System:') &&
-          !SettingsComponent.SONARR_DEFAULT_KEYS.has(s.key),
+          !SettingsComponent.SONARR_DEFAULT_KEYS.has(s.key) &&
+          !SettingsComponent.PROVIDER_ENABLED_KEYS.has(s.key),
       )
       .reduce((acc, s) => {
         (acc[s.category] ??= []).push(s);
@@ -153,9 +154,20 @@ export class SettingsComponent {
     () => this.settings().find((s) => s.key === 'System:MalTokenRefreshedAt')?.value ?? null,
   );
 
-  categories = computed(() => Object.keys(this.grouped()));
+  categories = computed(() => {
+    const available = new Set(Object.keys(this.grouped()));
+    return SettingsComponent.CATEGORY_ORDER.filter((c) => available.has(c));
+  });
 
   navItems = computed<string[]>(() => [...this.categories(), 'sync']);
+
+  plexEnabled = computed(
+    () => this.settings().find((s) => s.key === 'Plex:Enabled')?.value !== 'false',
+  );
+
+  sonarrEnabled = computed(
+    () => this.settings().find((s) => s.key === 'Sonarr:Enabled')?.value !== 'false',
+  );
 
   forms: Record<string, FormGroup> = {};
 
@@ -173,6 +185,12 @@ export class SettingsComponent {
     'Sonarr:DefaultSeasonFolder',
     'Sonarr:DefaultMonitor',
   ]);
+  private static readonly PROVIDER_ENABLED_KEYS = new Set([
+    'Plex:Enabled',
+    'Sonarr:Enabled',
+  ]);
+
+  private static readonly CATEGORY_ORDER = ['mal', 'kometa', 'plex', 'sonarr', 'app'];
 
   /** Locale-aware date formatter — uses current app language */
   fmtDate(iso: string): string {
@@ -562,6 +580,33 @@ export class SettingsComponent {
       });
   }
 
+  isProviderEnabled(cat: string): boolean {
+    if (cat === 'plex') return this.plexEnabled();
+    if (cat === 'sonarr') return this.sonarrEnabled();
+    return true;
+  }
+
+  toggleProviderEnabled(cat: string): void {
+    const key = cat === 'plex' ? 'Plex:Enabled' : 'Sonarr:Enabled';
+    const current = this.settings().find((s) => s.key === key)?.value;
+    const next = current !== 'false' ? 'false' : 'true';
+    this.savingKey.set(key);
+    this.settingsService
+      .update(key, { value: next })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.savingKey.set(null);
+          this.settings.update((list) =>
+            list.map((s) => (s.key === key ? { ...s, value: next } : s)),
+          );
+        },
+        error: () => {
+          this.savingKey.set(null);
+        },
+      });
+  }
+
   trackByKey(_: number, s: SettingDefinition): string {
     return s.key;
   }
@@ -578,6 +623,12 @@ export class SettingsComponent {
     if (this.syncing()) return;
 
     this.syncing.set(true);
+
+    // Inform SignalR service which steps are disabled so completion is detected correctly
+    const disabledSteps = new Set<string>();
+    if (!this.plexEnabled()) disabledSteps.add('plex');
+    if (!this.sonarrEnabled()) disabledSteps.add('sonarr');
+    this.signalR.setDisabledStepKeys(disabledSteps);
     this.signalR.resetSteps();
 
     this.notifService.push({

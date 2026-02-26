@@ -8,11 +8,13 @@ namespace MetaAnime.Core;
 public static class SettingsKeys
 {
     // Plex
+    public const string PlexEnabled = "Plex:Enabled";
     public const string PlexHost = "Plex:Host";
     public const string PlexToken = "Plex:Token";
     public const string PlexAnimeSections = "Plex:AnimeSections";
 
     // Sonarr
+    public const string SonarrEnabled = "Sonarr:Enabled";
     public const string SonarrHost = "Sonarr:Host";
     public const string SonarrApiKey = "Sonarr:ApiKey";
     public const string SonarrAnimeTags = "Sonarr:AnimeTags";

@@ -53,10 +53,12 @@ public class SettingsSeedService(
 
         return new Dictionary<string, string?>
         {
+            [SettingsKeys.PlexEnabled] = "true",
             [SettingsKeys.PlexHost] = plex.Host,
             [SettingsKeys.PlexToken] = plex.Token,
             [SettingsKeys.PlexAnimeSections] = plex.AnimeSections,
 
+            [SettingsKeys.SonarrEnabled] = "true",
             [SettingsKeys.SonarrHost] = sonarr.Host,
             [SettingsKeys.SonarrApiKey] = sonarr.ApiKey,
             [SettingsKeys.SonarrAnimeTags] = sonarr.AnimeTags,

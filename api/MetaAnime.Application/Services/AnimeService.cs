@@ -1,4 +1,5 @@
 ﻿using MetaAnime.Domain.Enums;
+using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Mappers;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
@@ -17,7 +18,8 @@ public class AnimeService(
     IPlexAnimeSourceService<PlexMedia> plexAnimeSourceService,
     IMalAnimeSourceService<MalAnime> malAnimeSourceService,
     ISonarrAnimeSourceService<SonarrSeries> sonarrAnimeSourceService,
-    ICacheEntryService cacheEntryService
+    ICacheEntryService cacheEntryService,
+    IPropertyBagRepository propertyBagRepository
     ) : IAnimeService
 {
     public async Task<Result> BulkInsertAsync(IEnumerable<Anime> animes)
@@ -115,20 +117,31 @@ public class AnimeService(
     {
         try
         {
+            // ── Read provider enabled flags ───────────────────────────────────────
+            var plexEnabledEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexEnabled);
+            var sonarrEnabledEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrEnabled);
+            var plexEnabled = plexEnabledEntry?.Value != "false";
+            var sonarrEnabled = sonarrEnabledEntry?.Value != "false";
+
             // ── Step: Plex ───────────────────────────────────────────────────────
             // Each source runs sequentially and emits its own Running/Done/Error
             // SignalR messages so the UI can track per-provider progress.
             var sw = Stopwatch.StartNew();
 
-            await NotifyAsync(progressNotifier, "plex", SyncStepState.Running, 0, sw);
-            var plexResult = await plexAnimeSourceService.GetAllAsync();
-            if (plexResult.IsFailure)
+            IList<PlexMedia> plexAnimes = [];
+            if (plexEnabled)
             {
-                await NotifyAsync(progressNotifier, "plex", SyncStepState.Error, null, sw, plexResult.Error.Message);
-                return Result.Failure<IEnumerable<Anime>>(plexResult.Error);
+                await NotifyAsync(progressNotifier, "plex", SyncStepState.Running, 0, sw);
+                var plexResult = await plexAnimeSourceService.GetAllAsync();
+                if (plexResult.IsFailure)
+                {
+                    await NotifyAsync(progressNotifier, "plex", SyncStepState.Error, null, sw, plexResult.Error.Message);
+                    return Result.Failure<IEnumerable<Anime>>(plexResult.Error);
+                }
+                plexAnimes = plexResult.Value;
+                await NotifyAsync(progressNotifier, "plex", SyncStepState.Done, 100, sw);
+                sw.Restart();
             }
-            await NotifyAsync(progressNotifier, "plex", SyncStepState.Done, 100, sw);
-            sw.Restart();
 
             // ── Step: MAL ────────────────────────────────────────────────────────
             await NotifyAsync(progressNotifier, "mal", SyncStepState.Running, 0, sw);
@@ -142,29 +155,34 @@ public class AnimeService(
             sw.Restart();
 
             // ── Step: Sonarr ─────────────────────────────────────────────────────
-            await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Running, 0, sw);
-            var sonarrResult = await sonarrAnimeSourceService.GetAllAsync();
-            if (sonarrResult.IsFailure)
+            IList<SonarrSeries> sonarrAnimes = [];
+            if (sonarrEnabled)
             {
-                await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Error, null, sw, sonarrResult.Error.Message);
-                return Result.Failure<IEnumerable<Anime>>(sonarrResult.Error);
-            }
+                await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Running, 0, sw);
+                var sonarrResult = await sonarrAnimeSourceService.GetAllAsync();
+                if (sonarrResult.IsFailure)
+                {
+                    await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Error, null, sw, sonarrResult.Error.Message);
+                    return Result.Failure<IEnumerable<Anime>>(sonarrResult.Error);
+                }
 
-            // Enrich each Sonarr series with codec distribution so it is included in the cache.
-            // Settings are fetched once (avoiding concurrent DbContext access); the HTTP calls
-            // to Sonarr run in parallel inside GetBulkCodecDistributionsAsync.
-            var codecDistributions = await sonarrAnimeSourceService.GetBulkCodecDistributionsAsync(
-                sonarrResult.Value.Select(s => s.Id.ToString()));
-            foreach (var series in sonarrResult.Value)
-            {
-                if (codecDistributions.TryGetValue(series.Id.ToString(), out var dist))
-                    series.CodecDistribution = dist;
+                // Enrich each Sonarr series with codec distribution so it is included in the cache.
+                // Settings are fetched once (avoiding concurrent DbContext access); the HTTP calls
+                // to Sonarr run in parallel inside GetBulkCodecDistributionsAsync.
+                var codecDistributions = await sonarrAnimeSourceService.GetBulkCodecDistributionsAsync(
+                    sonarrResult.Value.Select(s => s.Id.ToString()));
+                foreach (var series in sonarrResult.Value)
+                {
+                    if (codecDistributions.TryGetValue(series.Id.ToString(), out var dist))
+                        series.CodecDistribution = dist;
+                }
+                sonarrAnimes = sonarrResult.Value;
+                await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Done, 100, sw);
             }
-            await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Done, 100, sw);
 
             // ── Persist all sources to DB + cache ────────────────────────────────
             await animeRepository.BulkDeleteAllAsync();
-            await animeRepository.BulkInsertAsync([.. plexResult.Value, .. malResult.Value, .. sonarrResult.Value]);
+            await animeRepository.BulkInsertAsync([.. plexAnimes, .. malResult.Value, .. sonarrAnimes]);
 
             var deletePlexResult = await cacheEntryService.BulkDeleteBySourceAsync(AnimeSource.Plex);
             if (deletePlexResult.IsFailure)
@@ -178,7 +196,7 @@ public class AnimeService(
             if (deleteSonarrResult.IsFailure)
                 return Result.Failure<IEnumerable<Anime>>(deleteSonarrResult.Error);
 
-            var addPlexResult = await cacheEntryService.BulkInsertAsync(plexResult.Value);
+            var addPlexResult = await cacheEntryService.BulkInsertAsync(plexAnimes);
             if (addPlexResult.IsFailure)
                 return Result.Failure<IEnumerable<Anime>>(addPlexResult.Error);
 
@@ -186,7 +204,7 @@ public class AnimeService(
             if (addMalResult.IsFailure)
                 return Result.Failure<IEnumerable<Anime>>(addMalResult.Error);
 
-            var addSonarrResult = await cacheEntryService.BulkInsertAsync(sonarrResult.Value);
+            var addSonarrResult = await cacheEntryService.BulkInsertAsync(sonarrAnimes);
             if (addSonarrResult.IsFailure)
                 return Result.Failure<IEnumerable<Anime>>(addSonarrResult.Error);
 

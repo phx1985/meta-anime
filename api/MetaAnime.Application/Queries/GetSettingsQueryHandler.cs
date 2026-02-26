@@ -32,11 +32,13 @@ public class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRepositor
         return
         [
             // ── Plex ──────────────────────────────────────────────────────────
+            new(SettingsKeys.PlexEnabled, "plex", false, false, Get(SettingsKeys.PlexEnabled), "boolean"),
             new(SettingsKeys.PlexHost, "plex", false, true, Get(SettingsKeys.PlexHost)),
             new(SettingsKeys.PlexToken, "plex", true, true, Get(SettingsKeys.PlexToken)),
             new(SettingsKeys.PlexAnimeSections, "plex", false, true, Get(SettingsKeys.PlexAnimeSections)),
 
             // ── Sonarr ────────────────────────────────────────────────────────
+            new(SettingsKeys.SonarrEnabled, "sonarr", false, false, Get(SettingsKeys.SonarrEnabled), "boolean"),
             new(SettingsKeys.SonarrHost, "sonarr", false, true, Get(SettingsKeys.SonarrHost)),
             new(SettingsKeys.SonarrApiKey, "sonarr", true, true, Get(SettingsKeys.SonarrApiKey)),
             new(SettingsKeys.SonarrAnimeTags, "sonarr", false, true, Get(SettingsKeys.SonarrAnimeTags)),

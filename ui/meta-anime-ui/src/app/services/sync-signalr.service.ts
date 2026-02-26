@@ -28,6 +28,9 @@ export class SyncSignalRService implements OnDestroy {
   /** Emits void once each time a sync run fully completes. No replay — safe to subscribe on mount. */
   private readonly _syncCompleted$ = new Subject<void>();
 
+  /** Step keys that are disabled (excluded from the done check) */
+  private _disabledStepKeys = new Set<string>();
+
   readonly steps$: Observable<SyncStep[]> = this._steps$.asObservable();
   readonly connected$: Observable<boolean> = this._connected$.asObservable();
   readonly syncDone$: Observable<boolean> = this._syncDone$.asObservable();
@@ -81,6 +84,11 @@ export class SyncSignalRService implements OnDestroy {
     this._connected$.next(false);
   }
 
+  /** Set the step keys for disabled providers (they are excluded from the done/active checks) */
+  setDisabledStepKeys(keys: Set<string>): void {
+    this._disabledStepKeys = keys;
+  }
+
   /** Reset steps to pending for a new sync run */
   resetSteps(): void {
     this._steps$.next(makeInitialSteps());
@@ -122,7 +130,9 @@ export class SyncSignalRService implements OnDestroy {
       }),
     );
 
-    const allDone = this._steps$.value.every((s) => s.state === 'done');
+    const allDone = this._steps$.value
+      .filter((s) => !this._disabledStepKeys.has(s.stepKey))
+      .every((s) => s.state === 'done');
     const anyError = this._steps$.value.some((s) => s.state === 'error');
 
     if (allDone) {

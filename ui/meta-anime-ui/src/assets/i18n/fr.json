@@ -433,6 +433,14 @@
           "unmonitorSpecials": "Ne pas surveiller les spéciaux",
           "none": "Aucun"
         }
+      },
+      "Plex_Enabled": {
+        "name": "Activer Plex",
+        "desc": "Activer ou désactiver Plex comme source de données pour la synchronisation."
+      },
+      "Sonarr_Enabled": {
+        "name": "Activer Sonarr",
+        "desc": "Activer ou désactiver Sonarr comme source de données pour la synchronisation."
       }
     },
     "toggle": {
@@ -444,6 +452,11 @@
       "configureFirst": "Configurez l'URL du serveur Sonarr et la clé API ci-dessus pour débloquer ces paramètres.",
       "connectionError": "Impossible de se connecter à Sonarr. Vérifiez l'URL et la clé API.",
       "loadingOptions": "Chargement des options Sonarr…"
+    },
+    "provider": {
+      "enabled": "Activé",
+      "disabled": "Désactivé",
+      "enabledToggle": "Basculer l'état d'activation du fournisseur"
     }
   },
   "theme": {

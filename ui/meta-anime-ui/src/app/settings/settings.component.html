@@ -26,6 +26,7 @@
           type="button"
           class="settings-mobile-subnav__btn"
           [class.settings-mobile-subnav__btn--active]="activeCategory() === cat"
+          [class.settings-mobile-subnav__btn--provider-disabled]="!isProviderEnabled(cat)"
           (click)="scrollToSection(cat)"
           [attr.aria-label]="
             cat !== 'sync'
@@ -72,6 +73,7 @@
                 class="sidenav-btn"
                 [class.sidenav-btn--active]="activeCategory() === cat"
                 [class.sidenav-btn--highlighted]="highlighted() === cat"
+                [class.sidenav-btn--provider-disabled]="!isProviderEnabled(cat)"
                 (click)="scrollToSection(cat)"
               >
                 @if (cat !== 'sync') {
@@ -127,6 +129,7 @@
               [id]="'section-' + cat"
               [class.settings-card--highlighted]="highlighted() === cat"
               [class.settings-card--dimmed]="highlighted() !== null && highlighted() !== cat"
+              [class.settings-card--provider-disabled]="!isProviderEnabled(cat)"
             >
               <!-- Category header with real provider logo -->
               <div class="settings-card-header settings-card-header--{{ cat }}">
@@ -168,11 +171,38 @@
                     {{ fmtDate(malTokenRefreshDate()!) }}
                   </div>
                 }
+
+                <!-- Plex / Sonarr: master enabled toggle -->
+                @if (cat === 'plex' || cat === 'sonarr') {
+                  <div class="provider-enable-toggle">
+                    <button
+                      type="button"
+                      class="toggle-switch"
+                      [class.toggle-switch--on]="isProviderEnabled(cat)"
+                      [disabled]="savingKey() === (cat === 'plex' ? 'Plex:Enabled' : 'Sonarr:Enabled')"
+                      (click)="toggleProviderEnabled(cat)"
+                      role="switch"
+                      [attr.aria-checked]="isProviderEnabled(cat)"
+                      [attr.aria-label]="'settings.provider.enabledToggle' | translate"
+                    >
+                      <span class="toggle-thumb"></span>
+                    </button>
+                    <span class="provider-enable-label">
+                      {{
+                        (isProviderEnabled(cat)
+                          ? 'settings.provider.enabled'
+                          : 'settings.provider.disabled'
+                        ) | translate
+                      }}
+                    </span>
+                  </div>
+                }
               </div>
 
-              <!-- Setting rows -->
-              <div class="settings-rows">
-                @for (setting of grouped()[cat]; track trackByKey($index, setting)) {
+              <!-- Setting rows (collapsed when provider disabled) -->
+              @if (isProviderEnabled(cat)) {
+                <div class="settings-rows">
+                  @for (setting of grouped()[cat]; track trackByKey($index, setting)) {
                   <div
                     class="setting-row"
                     [class.setting-row--editing]="editing()[setting.key]"
@@ -785,6 +815,7 @@
                   </div>
                 }
               </div>
+              }
             </div>
           }
         </div>
@@ -992,7 +1023,12 @@
 
             <ol class="sync-hub-steps" aria-label="Sync steps">
               @for (step of syncSteps(); track trackByStepKey($index, step)) {
-                <app-sync-step [step]="step" />
+                @if (
+                  (step.stepKey !== 'plex' || plexEnabled()) &&
+                  (step.stepKey !== 'sonarr' || sonarrEnabled())
+                ) {
+                  <app-sync-step [step]="step" />
+                }
               }
             </ol>
           </div>

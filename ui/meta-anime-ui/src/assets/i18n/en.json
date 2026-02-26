@@ -433,6 +433,14 @@
           "unmonitorSpecials": "Unmonitor Specials",
           "none": "None"
         }
+      },
+      "Plex_Enabled": {
+        "name": "Enable Plex",
+        "desc": "Enable or disable Plex as a data source for sync."
+      },
+      "Sonarr_Enabled": {
+        "name": "Enable Sonarr",
+        "desc": "Enable or disable Sonarr as a data source for sync."
       }
     },
     "toggle": {
@@ -444,6 +452,11 @@
       "configureFirst": "Configure Sonarr Host URL and API Key above to unlock these defaults.",
       "connectionError": "Could not connect to Sonarr. Check your Host URL and API Key.",
       "loadingOptions": "Loading Sonarr options…"
+    },
+    "provider": {
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "enabledToggle": "Toggle provider enabled state"
     }
   },
   "theme": {
