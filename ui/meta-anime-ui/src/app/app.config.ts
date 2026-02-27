@@ -1,4 +1,5 @@
 import {
+  APP_INITIALIZER,
   ApplicationConfig,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection,
@@ -10,6 +11,7 @@ import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { routes } from './app.routes';
 import { apiKeyInterceptor } from './interceptors/api-key.interceptor';
+import { RuntimeConfigService } from './services/runtime-config.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -23,5 +25,11 @@ export const appConfig: ApplicationConfig = {
     ),
     provideTranslateService({ fallbackLang: 'en' }),
     provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' }),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (rcs: RuntimeConfigService) => () => rcs.load(),
+      deps: [RuntimeConfigService],
+      multi: true,
+    },
   ],
 };
