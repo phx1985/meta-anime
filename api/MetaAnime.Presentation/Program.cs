@@ -17,9 +17,13 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 builder.Configuration.AddJsonFile("/config/appsettings.json", optional: true, reloadOnChange: false);
 
 // Explicitly load the environment-specific settings file (e.g. appsettings.Development.json).
-// This is required when running via Aspire, where the content root may not be resolved
-// automatically to the project source directory.
-builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+// AppContext.BaseDirectory is used so the file is resolved from the binary output directory,
+// where MSBuild copies it via CopyToOutputDirectory=PreserveNewest. This is necessary when
+// running via Aspire, where the content root may not match the directory containing the file.
+builder.Configuration.AddJsonFile(
+    Path.Combine(AppContext.BaseDirectory, $"appsettings.{builder.Environment.EnvironmentName}.json"),
+    optional: true,
+    reloadOnChange: true);
 
 builder.AddServiceDefaults();
 
