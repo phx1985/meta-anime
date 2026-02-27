@@ -1,9 +1,9 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, inject } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { environment } from '../../environments/environment';
 import { SyncStep, SyncStepState, SyncProgressMessage } from '../models/sync-progress.models';
 import { ApiConstants } from '../constants/api.constants';
+import { RuntimeConfigService } from './runtime-config.service';
 
 /** Ordered step keys matching the backend emission sequence */
 const STEP_KEYS = ['kometa', 'plex', 'mal', 'sonarr', 'matching'] as const;
@@ -19,6 +19,7 @@ function makeInitialSteps(): SyncStep[] {
 @Injectable({ providedIn: 'root' })
 export class SyncSignalRService implements OnDestroy {
   private connection: signalR.HubConnection | null = null;
+  private readonly runtimeConfig = inject(RuntimeConfigService);
 
   private readonly _steps$ = new BehaviorSubject<SyncStep[]>(makeInitialSteps());
   private readonly _connected$ = new BehaviorSubject<boolean>(false);
@@ -47,11 +48,11 @@ export class SyncSignalRService implements OnDestroy {
   connect(): void {
     if (this.connection) return;
 
+    const apiKey = this.runtimeConfig.apiKey;
     const builder = new signalR.HubConnectionBuilder()
       .withUrl(ApiConstants.syncHubUrl, {
-        // Pass API key as query string for WebSocket upgrade handshake
-        accessTokenFactory: () => environment.apiKey ?? '',
-        headers: environment.apiKey ? { [ApiConstants.apiKeyHeader]: environment.apiKey } : {},
+        accessTokenFactory: () => apiKey ?? '',
+        headers: apiKey ? { [ApiConstants.apiKeyHeader]: apiKey } : {},
       })
       .withAutomaticReconnect()
       .configureLogging(signalR.LogLevel.Warning);
