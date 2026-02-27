@@ -1485,3 +1485,44 @@
 .setting-row--saved {
   animation: rowSavedFlash 1.8s ease forwards;
 }
+
+// ── Provider configure-first hint ─────────────────────────────────────────────
+.provider-configure-hint {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+}
+
+// ── MAL auth prompt ────────────────────────────────────────────────────────────
+.mal-auth-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.8rem;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.07);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+  flex-wrap: wrap;
+
+  svg {
+    flex-shrink: 0;
+    color: #f59e0b;
+  }
+
+  &__text {
+    flex: 1;
+    min-width: 200px;
+  }
+}
+
+// ── Sync HTTP error message ────────────────────────────────────────────────────
+.sync-http-error {
+  font-size: 0.72rem;
+  color: #ef4444;
+  padding: 0.2rem 0.5rem;
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: 4px;
+  max-width: 100%;
+  word-break: break-word;
+}

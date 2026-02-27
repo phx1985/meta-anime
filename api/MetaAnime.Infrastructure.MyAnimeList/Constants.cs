@@ -11,5 +11,6 @@ public static class Constants
         public const string InvalidResponse = "MAL.InvalidResponse";
         public const string NotConfigured = "MAL.NotConfigured";
         public const string NoToken = "MAL.NoToken";
+        public const string AuthenticationFailed = "MAL.AuthenticationFailed";
     }
 }

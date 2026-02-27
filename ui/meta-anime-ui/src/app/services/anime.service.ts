@@ -92,4 +92,8 @@ export class AnimeService {
   updateMalListStatus(malId: string, request: MalListStatusRequest): Observable<void> {
     return this.http.put<void>(`${this.malBase}/list/${malId}`, request);
   }
+
+  refreshMalToken(): Observable<void> {
+    return this.http.post<void>(`${this.malBase}/token/refresh`, null);
+  }
 }

@@ -179,7 +179,8 @@
                       type="button"
                       class="toggle-switch"
                       [class.toggle-switch--on]="isProviderEnabled(cat)"
-                      [disabled]="savingKey() === (cat === 'plex' ? 'Plex:Enabled' : 'Sonarr:Enabled')"
+                      [disabled]="savingKey() === (cat === 'plex' ? 'Plex:Enabled' : 'Sonarr:Enabled') || (!isProviderEnabled(cat) && isProviderToggleBlocked(cat))"
+                      [title]="(!isProviderEnabled(cat) && isProviderToggleBlocked(cat)) ? ('settings.provider.configureFirstTooltip' | translate) : ''"
                       (click)="toggleProviderEnabled(cat)"
                       role="switch"
                       [attr.aria-checked]="isProviderEnabled(cat)"
@@ -195,13 +196,17 @@
                         ) | translate
                       }}
                     </span>
+                    @if (!isProviderEnabled(cat) && isProviderToggleBlocked(cat)) {
+                      <span class="provider-configure-hint">
+                        {{ 'settings.provider.configureFirstTooltip' | translate }}
+                      </span>
+                    }
                   </div>
                 }
               </div>
 
-              <!-- Setting rows (collapsed when provider disabled) -->
-              @if (isProviderEnabled(cat)) {
-                <div class="settings-rows" @cardBodyExpand>
+              <!-- Setting rows (always visible) -->
+              <div class="settings-rows">
                   @for (setting of grouped()[cat]; track trackByKey($index, setting)) {
                   <div
                     class="setting-row"
@@ -493,6 +498,32 @@
                         </form>
                       }
                     </div>
+                  </div>
+                }
+                @if (cat === 'mal' && malNeedsAuth()) {
+                  <!-- ── MAL Token Refresh prompt ─────────────────────────── -->
+                  <div class="mal-auth-prompt">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <span class="mal-auth-prompt__text">{{ 'settings.mal.authRequired' | translate }}</span>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-primary"
+                      [disabled]="malRefreshing()"
+                      (click)="refreshMalToken()"
+                    >
+                      @if (malRefreshing()) {
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                      }
+                      {{ 'settings.mal.refreshToken' | translate }}
+                    </button>
+                    @if (malRefreshSuccess()) {
+                      <span class="badge-saved">&#10003; {{ 'settings.saved' | translate }}</span>
+                    }
+                    @if (malRefreshError()) {
+                      <span class="text-danger small">{{ malRefreshError()! | translate }}</span>
+                    }
                   </div>
                 }
                 @if (cat === 'sonarr') {
@@ -825,7 +856,6 @@
                   </div>
                 }
               </div>
-              }
             </div>
           }
         </div>
@@ -980,6 +1010,9 @@
                     </svg>
                     {{ 'settings.sync.hub.error' | translate }}
                   </span>
+                  @if (syncHttpError()) {
+                    <span class="sync-http-error">{{ syncHttpError() }}</span>
+                  }
                 } @else {
                   <span class="sync-overall-badge sync-overall-badge--running">
                     <span class="sync-hub-pulse" aria-hidden="true"></span>
