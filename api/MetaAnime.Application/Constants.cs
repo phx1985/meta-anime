@@ -56,6 +56,7 @@ public static class Constants
         public static class MalTokenRefreshJob
         {
             public const string Starting = "Starting MAL token refresh at {Time}";
+            public const string Skipped = "Skipping MAL token refresh: MyAnimeList ClientId is not configured.";
             public const string Succeeded = "Successfully refreshed MAL token at {Time}";
             public const string Failed = "Failed to refresh MAL token: {ErrorMessage}";
             public const string Error = "Error during MAL token refresh";

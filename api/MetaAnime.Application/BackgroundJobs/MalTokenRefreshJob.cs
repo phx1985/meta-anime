@@ -1,18 +1,27 @@
 using Hangfire;
 using MetaAnime.Core.Interfaces.Services;
+using MetaAnime.Core.Settings;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace MetaAnime.Application.BackgroundJobs;
 
 public sealed class MalTokenRefreshJob(
     IMalTokenService malTokenService,
-    ILogger<MalTokenRefreshJob> logger)
+    ILogger<MalTokenRefreshJob> logger,
+    IOptions<MalSettings> malSettings)
 {
     /// <summary>
     /// Refreshes the MyAnimeList access token using the stored refresh token and persists the new tokens.
     /// </summary>
     public async Task RefreshToken()
     {
+        if (string.IsNullOrEmpty(malSettings.Value.ClientId))
+        {
+            logger.LogWarning(Constants.LogMessages.MalTokenRefreshJob.Skipped);
+            return;
+        }
+
         logger.LogInformation(Constants.LogMessages.MalTokenRefreshJob.Starting, DateTime.UtcNow);
 
         try
