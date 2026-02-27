@@ -1,7 +1,7 @@
 # =============================================================================
 # Stage 1: Build Angular UI
 # =============================================================================
-FROM node:22-alpine AS ui-builder
+FROM --platform=$BUILDPLATFORM node:22-alpine AS ui-builder
 
 WORKDIR /src
 COPY ui/meta-anime-ui/package*.json ./
