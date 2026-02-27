@@ -1,4 +1,14 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, Input, signal, inject, HostListener, HostBinding, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  HostBinding,
+  HostListener,
+  Input,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
