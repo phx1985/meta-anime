@@ -18,7 +18,7 @@ chown -R abc:abc /config/postgres/sockets
 
 exec s6-setuidgid abc "${PG_BIN}/postgres" \
     -D /config/postgres \
-    -c "unix_socket_directories='/config/postgres/sockets'" \
-    -c "listen_addresses='127.0.0.1'" \
+    -c "unix_socket_directories=/config/postgres/sockets" \
+    -c "listen_addresses=127.0.0.1" \
     -c log_destination=stderr \
     -c logging_collector=off
