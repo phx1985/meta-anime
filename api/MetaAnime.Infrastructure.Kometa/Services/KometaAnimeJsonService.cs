@@ -1,4 +1,6 @@
-﻿using MetaAnime.Core.Interfaces.Services;
+﻿using MetaAnime.Core;
+using MetaAnime.Core.Interfaces.Repositories;
+using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
 using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.Kometa.Models;
@@ -7,14 +9,17 @@ using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.Kometa.Services;
 
-public sealed class KometaAnimeJsonService(IOptions<KometaSettings> options) : IKometaAnimeJsonService<KometaRaw>
+public sealed class KometaAnimeJsonService(IOptions<KometaSettings> options, IPropertyBagRepository propertyBagRepository) : IKometaAnimeJsonService<KometaRaw>
 {
-    #region Fields
-    private readonly string jsonUrl = options.Value.AnimeIdsJsonUrl;
-    #endregion
+    private const string DefaultAnimeIdsJsonUrl = "https://raw.githubusercontent.com/Kometa-Team/Anime-IDs/refs/heads/master/anime_ids.json";
 
     public async Task<Result<IList<KometaRaw>>> GetAllAsync()
     {
+        var urlEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.KometaAnimeIdsJsonUrl);
+        var jsonUrl = urlEntry?.Value
+            ?? options.Value.AnimeIdsJsonUrl
+            ?? DefaultAnimeIdsJsonUrl;
+
         using var client = new HttpClient();
         using var response = await client.GetAsync(jsonUrl);
 
