@@ -16,6 +16,11 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 // This file is optional so the app still starts in development without it.
 builder.Configuration.AddJsonFile("/config/appsettings.json", optional: true, reloadOnChange: false);
 
+// Explicitly load the environment-specific settings file (e.g. appsettings.Development.json).
+// This is required when running via Aspire, where the content root may not be resolved
+// automatically to the project source directory.
+builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+
 builder.AddServiceDefaults();
 
 // Add services to the container.
