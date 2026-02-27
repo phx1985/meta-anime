@@ -6,7 +6,10 @@ var postgres = builder.AddPostgres("postgres")
 var api = builder.AddProject<Projects.MetaAnime_Presentation>("api")
     .WithReference(postgres)
     .WaitFor(postgres)
-    .WithEnvironment("ASPNETCORE_ENVIRONMENT", builder.Environment.EnvironmentName);
+    .WithEnvironment("ASPNETCORE_ENVIRONMENT", builder.Environment.EnvironmentName)
+    .WithEnvironment("ASPNETCORE_CONTENTROOT",
+        Path.GetDirectoryName(new Projects.MetaAnime_Presentation().ProjectPath)
+            ?? throw new InvalidOperationException("Could not determine the MetaAnime.Presentation project directory."));
 
 builder.AddExecutable("ui", "npm", "../ui/meta-anime-ui", "run", "start")
     .WithReference(api)
