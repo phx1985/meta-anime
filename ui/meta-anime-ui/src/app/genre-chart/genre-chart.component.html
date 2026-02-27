@@ -1,0 +1,51 @@
+<div class="genre-chart-card">
+  <div class="chart-header">
+    <h3 class="chart-title">{{ 'home.chart.title' | translate }}</h3>
+    <div class="chart-toggle" role="group" [attr.aria-label]="'home.chart.toggleLabel' | translate">
+      <button
+        class="toggle-btn"
+        [class.active]="chartType === 'doughnut'"
+        (click)="setChartType('doughnut')"
+        [attr.aria-pressed]="chartType === 'doughnut'"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <circle cx="12" cy="12" r="4" />
+        </svg>
+        {{ 'home.chart.pie' | translate }}
+      </button>
+      <button
+        class="toggle-btn"
+        [class.active]="chartType === 'bar'"
+        (click)="setChartType('bar')"
+        [attr.aria-pressed]="chartType === 'bar'"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          aria-hidden="true"
+        >
+          <rect x="2" y="10" width="5" height="12" />
+          <rect x="9.5" y="6" width="5" height="16" />
+          <rect x="17" y="2" width="5" height="20" />
+        </svg>
+        {{ 'home.chart.bar' | translate }}
+      </button>
+    </div>
+  </div>
+  <div class="chart-canvas-wrap" [class.bar-mode]="chartType === 'bar'">
+    <canvas #chartCanvas></canvas>
+  </div>
+</div>

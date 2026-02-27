@@ -1,0 +1,31 @@
+<div class="not-found-page" [attr.aria-label]="'notFound.ariaLabel' | translate">
+
+  <!-- Bokeh background — mirrors the anime-list page aesthetic -->
+  <div class="bokeh" aria-hidden="true">
+    @for (i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]; track i) {
+      <div class="bokeh__blob"></div>
+    }
+  </div>
+
+  <div class="not-found-card">
+
+    <!-- Glowing error code with codec glitch effect -->
+    <div class="error-code" aria-hidden="true" data-text="404">404</div>
+
+    <!-- Page title -->
+    <h1 class="not-found-title">{{ 'notFound.title' | translate }}</h1>
+
+    <!-- Randomly picked subtitle sentence -->
+    <p class="not-found-subtitle">{{ subtitleKey() | translate }}</p>
+
+    <!-- Speech bubble — character name + quote -->
+    <div class="speech-bubble" role="status">
+      <p class="character-name">{{ character().nameKey | translate }}</p>
+      <p class="character-quote">{{ character().quoteKey | translate }}</p>
+    </div>
+
+    <!-- Back home CTA -->
+    <a class="btn-go-home" routerLink="/">{{ 'notFound.goHome' | translate }}</a>
+
+  </div>
+</div>

@@ -1,0 +1,1670 @@
+// ─── Seasonal Card ──────────────────────────────────────────────────────────
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  // z-index: 0 creates a stacking context for z-index: -1 pseudo-elements
+  // without using isolation: isolate. When the modal is open, the parent
+  // component elevates this to 1090 via @HostBinding so the fixed backdrop
+  // always renders above sibling cards that are later in the DOM.
+  z-index: 0;
+
+  // ── Post-add neon aura glow ──────────────────────────────────────────────
+  // Placed on ::after (separate from ::before arc) so it never conflicts
+  // with the card's own cardIn animation — fixes the card-disappearance bug.
+  &.neon-glow-active::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 15px;
+    pointer-events: none;
+    z-index: -1;
+    animation: neonAura 2.2s ease-out forwards;
+  }
+}
+
+.seasonal-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.4, 0.64, 1),
+    box-shadow 0.25s ease;
+  animation: cardIn 0.45s ease both;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px var(--card-shadow);
+  }
+}
+
+// ─── Top-right corner badge (+ / ✓) ──────────────────────────────────────────
+
+.corner-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.5, 0.64, 1),
+    box-shadow 0.15s;
+
+  svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  // ── Add button ──────────────────────────────────────────────────────────────
+  &--add {
+    background: rgba(30, 30, 46, 0.82);
+    border: 1.5px solid rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.92);
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+
+    &:hover {
+      transform: scale(1.18) rotate(90deg);
+      background: rgba(30, 30, 46, 0.95);
+      border-color: rgba(255, 255, 255, 0.35);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  // ── Tracked badge ───────────────────────────────────────────────────────────
+  &--tracked {
+    background: rgba(34, 197, 94, 0.18);
+    border: 1.5px solid rgba(34, 197, 94, 0.45);
+    color: #22c55e;
+    cursor: default;
+    backdrop-filter: blur(6px);
+  }
+
+  // ── Partially-tracked — ghost/outline badge with service logo + green "+" ──
+  &--partial {
+    // CSS custom property — overridden per service modifier below
+    --brand-rgb: 53, 197, 244;
+    background: transparent;
+    border: 1.5px solid rgba(var(--brand-rgb), 0.55);
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    width: 32px;
+    height: 32px;
+    overflow: visible;
+    transition:
+      background 0.18s ease,
+      border-color 0.2s ease,
+      box-shadow 0.18s ease,
+      transform 0.18s cubic-bezier(0.34, 1.5, 0.64, 1);
+
+    &.corner-badge--sonarr {
+      --brand-rgb: 53, 197, 244;
+    }
+    &.corner-badge--mal {
+      --brand-rgb: 84, 129, 232;
+    }
+
+    &:hover {
+      background: rgba(var(--brand-rgb), 0.12);
+      border-color: rgb(var(--brand-rgb));
+      box-shadow:
+        0 0 14px rgba(var(--brand-rgb), 0.35),
+        0 3px 10px rgba(0, 0, 0, 0.35);
+      transform: scale(1.18);
+    }
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+    }
+  }
+}
+
+.partial-logo-wrap {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.partial-logo {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+}
+
+.partial-plus {
+  position: absolute;
+  bottom: -5px;
+  right: -6px;
+  width: 11px;
+  height: 11px;
+  background: #22c55e;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+
+// ─── Cover + content row ──────────────────────────────────────────────────────
+
+.card-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.card-cover {
+  width: 175px;
+  min-height: 245px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-secondary);
+  &.cover--clickable {
+    cursor: pointer;
+  }
+}
+
+.cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  transition: transform 0.4s ease;
+
+  .cover--clickable:hover & {
+    transform: scale(1.06);
+  }
+}
+
+.cover-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+}
+
+// ─── Main content area ────────────────────────────────────────────────────────
+
+.card-content {
+  flex: 1;
+  padding: 0.85rem 1rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  // Leave room for the corner badge (top-right corner of article)
+  padding-right: calc(1rem + 34px);
+  transition: background 0.45s ease;
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+
+.card-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  &--link {
+    cursor: pointer;
+    transition: color 0.15s;
+    &:hover {
+      color: var(--accent-primary);
+      text-decoration: underline dotted;
+    }
+  }
+}
+
+// ─── Status pills ─────────────────────────────────────────────────────────────
+
+.status-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 5px;
+  text-transform: uppercase;
+  line-height: 1.4;
+
+  &--series {
+    background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+    color: var(--text-muted);
+    border: 1px solid color-mix(in srgb, var(--text-muted) 20%, transparent);
+  }
+
+  &--media-type {
+    background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+    color: var(--accent-primary);
+    border: 1px solid color-mix(in srgb, var(--accent-primary) 25%, transparent);
+  }
+}
+
+// ─── Description ──────────────────────────────────────────────────────────────
+
+.desc-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.desc-text {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: opacity 0.15s;
+
+  &--clickable {
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+      opacity: 0.75;
+    }
+  }
+}
+
+.desc-toggle {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent-primary);
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-decoration: underline dotted;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// ─── Genre tags ───────────────────────────────────────────────────────────────
+
+.genre-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+
+  & + .genre-list {
+    margin-top: 0.15rem;
+  }
+}
+
+.genre-tag {
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  color: var(--accent-primary);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 22%, transparent);
+  border-radius: 4px;
+  font-size: 0.67rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s,
+    transform 0.15s;
+
+  // Highlighted when the genre matches an active filter selection
+  &--highlighted {
+    background: var(--accent-primary);
+    color: #fff;
+    border-color: var(--accent-primary);
+    box-shadow: 0 1px 6px rgba(108, 99, 255, 0.4);
+    transform: scale(1.04);
+  }
+
+  // Theme variant — teal
+  &--theme {
+    background: color-mix(in srgb, #14b8a6 10%, transparent);
+    color: #14b8a6;
+    border-color: color-mix(in srgb, #14b8a6 25%, transparent);
+
+    &.genre-tag--highlighted {
+      background: #14b8a6;
+      color: #fff;
+      border-color: #14b8a6;
+      box-shadow: 0 1px 6px rgba(20, 184, 166, 0.4);
+    }
+  }
+
+  // Demographic variant — amber
+  &--demographic {
+    background: color-mix(in srgb, #f59e0b 10%, transparent);
+    color: #d97706;
+    border-color: color-mix(in srgb, #f59e0b 25%, transparent);
+
+    &.genre-tag--highlighted {
+      background: #f59e0b;
+      color: #fff;
+      border-color: #f59e0b;
+      box-shadow: 0 1px 6px rgba(245, 158, 11, 0.4);
+    }
+  }
+}
+
+// ─── Scores + dates ───────────────────────────────────────────────────────────
+
+.meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.scores {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.date-range {
+  font-size: 0.73rem;
+  color: var(--text-secondary);
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border-top: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--bg-secondary) 40%, transparent);
+  position: relative;
+  z-index: 1;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 7px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--card-border);
+  color: var(--text-muted);
+  background: transparent;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.15s;
+  line-height: 1;
+
+  // ── In-library variant: solid brand color, clickable ──────────────────────
+  &--in-library {
+    opacity: 1;
+    cursor: pointer;
+
+    &:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.1);
+    }
+  }
+
+  // Plex: solid Plex orange when in library
+  &--plex.action--in-library {
+    color: #e5a00d;
+    border-color: #e5a00d;
+    background: rgba(229, 160, 13, 0.12);
+  }
+
+  // Sonarr: solid Sonarr blue when in library
+  &--sonarr.action--in-library {
+    color: #35c5f4;
+    border-color: #35c5f4;
+    background: rgba(53, 197, 244, 0.12);
+  }
+
+  // MAL: solid MAL blue when in library
+  &--mal.action--in-library {
+    color: #2e51a2;
+    border-color: #2e51a2;
+    background: rgba(46, 81, 162, 0.12);
+  }
+
+  // Not-in-library: greyed fade mask (no color changes, pointer-events blocked)
+  &--not-in-library {
+    cursor: default;
+    pointer-events: none;
+    filter: grayscale(1);
+    -webkit-mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.45) 0%,
+      rgba(0, 0, 0, 0.45) 45%,
+      rgba(0, 0, 0, 0) 100%
+    );
+    mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.45) 0%,
+      rgba(0, 0, 0, 0.45) 45%,
+      rgba(0, 0, 0, 0) 100%
+    );
+  }
+}
+
+.action-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+// ─── Dialog system ────────────────────────────────────────────────────────────
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: backdropIn 0.2s ease both;
+
+  @media (max-width: 600px) {
+    align-items: flex-end;
+    padding: 0;
+  }
+}
+
+.dialog {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  width: min(440px, 100%);
+  // Use dvh so controls are always reachable above virtual keyboard on mobile
+  max-height: min(88vh, calc(100dvh - 2rem));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; // children handle their own overflow
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.55);
+  animation: dialogEnter 0.3s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+
+  &--wide {
+    width: min(580px, 100%);
+  }
+
+  @media (max-width: 600px) {
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: min(90vh, calc(100dvh - 1rem));
+    animation: dialogSlideUp 0.35s cubic-bezier(0.34, 1.1, 0.64, 1) both;
+  }
+}
+
+// Mobile drag handle
+.dialog__sheet-handle {
+  display: none;
+  width: 38px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--card-border);
+  margin: 0.6rem auto 0;
+  flex-shrink: 0;
+
+  @media (max-width: 600px) {
+    display: block;
+  }
+}
+
+// Dialog header — no provider logos, just title + close
+.dialog__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem 0.85rem 1.25rem;
+  flex-shrink: 0;
+
+  &--add {
+    background: linear-gradient(
+      to right,
+      rgba(53, 197, 244, 0.07),
+      rgba(46, 81, 162, 0.07),
+      transparent
+    );
+    border-bottom: 1px solid color-mix(in srgb, var(--card-border) 80%, transparent);
+  }
+}
+
+.dialog__add-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.dialog__header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.dialog__action-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin: 0;
+  margin-top: 0.1rem;
+}
+
+.dialog__close-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--card-border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition:
+    background 0.15s,
+    transform 0.18s,
+    color 0.15s;
+
+  svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  &:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    transform: rotate(90deg);
+  }
+}
+
+// Anime context strip
+.dialog__context {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1.25rem;
+  border-bottom: 1px solid var(--card-border);
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--bg-secondary) 30%, transparent);
+}
+
+.dialog__context-thumb {
+  width: 36px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.dialog__context-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+}
+
+// Body — scrollable so all controls are reachable
+.dialog__body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; // smooth scroll on iOS
+  overscroll-behavior: contain;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  // Allow body to shrink so footer stays visible
+  min-height: 0;
+}
+
+// Footer — always visible at bottom
+.dialog__footer {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--bg-secondary) 30%, transparent);
+  flex-shrink: 0;
+}
+
+// ─── Success state ─────────────────────────────────────────────────────────────
+
+.dialog__success-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2.5rem 1.25rem;
+  flex: 1;
+  min-height: 180px;
+  animation: fadeIn 0.25s ease both;
+}
+
+.success-circle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: successPop 0.5s cubic-bezier(0.34, 1.6, 0.64, 1) both;
+
+  svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .success-check {
+    stroke-dasharray: 54;
+    stroke-dashoffset: 54;
+    animation: checkDraw 0.4s 0.2s ease-out forwards;
+  }
+
+  &--sonarr {
+    background: rgba(53, 197, 244, 0.12);
+    color: #35c5f4;
+    box-shadow:
+      0 0 0 2px rgba(53, 197, 244, 0.25),
+      0 0 24px rgba(53, 197, 244, 0.15);
+  }
+
+  &--mal {
+    background: rgba(46, 81, 162, 0.12);
+    color: #5479d3;
+    box-shadow:
+      0 0 0 2px rgba(46, 81, 162, 0.25),
+      0 0 24px rgba(46, 81, 162, 0.1);
+  }
+
+  &--add {
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+    box-shadow:
+      0 0 0 2px rgba(34, 197, 94, 0.25),
+      0 0 24px rgba(34, 197, 94, 0.12);
+  }
+}
+
+.success-message {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  text-align: center;
+}
+
+// ─── Form fields ──────────────────────────────────────────────────────────────
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+
+  &__label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__select,
+  &__input {
+    width: 100%;
+    padding: 0.45rem 0.7rem;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.84rem;
+    outline: none;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+    min-width: 0;
+
+    &:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 20%, transparent);
+    }
+  }
+
+  &__error {
+    font-size: 0.75rem;
+    color: #ef4444;
+    margin: 0;
+  }
+
+  &--checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+  }
+
+  &__checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.84rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  &__checkbox {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--accent-primary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}
+
+.field-row {
+  display: flex;
+  gap: 0.75rem;
+
+  @media (max-width: 400px) {
+    flex-direction: column;
+  }
+}
+
+// ─── Search input ─────────────────────────────────────────────────────────────
+
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  &__icon {
+    position: absolute;
+    left: 0.6rem;
+    width: 15px;
+    height: 15px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    pointer-events: none;
+  }
+
+  &__input {
+    width: 100%;
+    padding: 0.45rem 2.2rem 0.45rem 2rem;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.84rem;
+    outline: none;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+
+    &:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 20%, transparent);
+    }
+  }
+
+  &__spinner {
+    position: absolute;
+    right: 0.6rem;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--card-border);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+    flex-shrink: 0;
+    pointer-events: none;
+  }
+}
+
+// ─── Result list ──────────────────────────────────────────────────────────────
+
+.result-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 0.25rem;
+  background: var(--bg-secondary);
+  scrollbar-width: thin;
+  scrollbar-color: var(--card-border) transparent;
+
+  // On small mobile screens, limit height so the options panel (root folder +
+  // quality profile) is always visible above the fold of the dialog body.
+  @media (max-width: 480px) {
+    max-height: 140px;
+  }
+}
+
+.result-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
+
+  &:hover:not(&--active) {
+    background: color-mix(in srgb, var(--accent-primary) 7%, transparent);
+  }
+
+  &--active {
+    background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+    border-color: var(--accent-primary);
+  }
+
+  &__thumb {
+    // Larger poster for better readability
+    width: 52px;
+    min-width: 52px;
+    height: 74px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+
+    &--empty {
+      width: 52px;
+      height: 74px;
+      background: var(--bg-primary);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: var(--text-muted);
+    }
+  }
+
+  &__meta {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  &__title {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__year {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+
+  &__overview {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+  }
+
+  &--in-library {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &__in-library-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #22c55e;
+    margin-top: 0.1rem;
+  }
+
+  &__check {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    color: var(--accent-primary);
+    align-self: center;
+  }
+}
+
+// ─── Options panel ────────────────────────────────────────────────────────────
+
+.options-panel {
+  border-top: 1px solid var(--card-border);
+  padding-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+
+  &__loading {
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem 0;
+  }
+
+  &__note {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+}
+
+// ─── Buttons ──────────────────────────────────────────────────────────────────
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.48rem 1.2rem;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.12s;
+  border: 1px solid transparent;
+  line-height: 1;
+
+  &--ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border-color: var(--card-border);
+    &:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+  }
+
+  &--sonarr {
+    background: #35c5f4;
+    color: #0d1117;
+    border-color: #35c5f4;
+    &:hover:not(:disabled) {
+      background: #55d0f6;
+    }
+  }
+
+  &--mal {
+    background: #2e51a2;
+    color: #fff;
+    border-color: #2e51a2;
+    &:hover:not(:disabled) {
+      background: #3b64c6;
+    }
+  }
+
+  &--add {
+    background: #22c55e;
+    color: #fff;
+    border-color: #22c55e;
+    &:hover:not(:disabled) {
+      background: #16a34a;
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+// ─── Provider section cards (in unified add dialog) ────────────────────────
+
+.prov-section {
+  border: 1.5px solid var(--card-border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+
+  &--on {
+    border-color: var(--accent-primary);
+  }
+
+  &--locked {
+    opacity: 0.55;
+    filter: grayscale(0.4);
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 0.85rem;
+    background: color-mix(in srgb, var(--bg-secondary) 40%, transparent);
+    user-select: none;
+
+    &--clickable {
+      cursor: pointer;
+    }
+    &--clickable:hover {
+      background: color-mix(in srgb, var(--bg-secondary) 70%, transparent);
+    }
+  }
+
+  &__logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 7px;
+    object-fit: contain;
+    padding: 3px;
+    background: var(--bg-primary);
+    border: 1px solid var(--card-border);
+    flex-shrink: 0;
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  &__name {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  &__state {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+  }
+
+  &__check {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    svg {
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  &__body {
+    padding: 0.75rem 0.85rem;
+    border-top: 1px solid var(--card-border);
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    background: color-mix(in srgb, var(--bg-secondary) 15%, transparent);
+    // Overflow handled by the dialog body — no inner scroll needed
+  }
+
+  &__enable-hint {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 0.5rem 0;
+    margin: 0;
+  }
+
+  &__chevron {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition:
+      transform 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+      color 0.15s;
+    margin-left: 0.1rem;
+
+    &--open {
+      transform: rotate(180deg);
+      color: var(--accent-primary);
+    }
+  }
+}
+
+// iOS-style toggle switch
+.prov-toggle {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--card-border);
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s;
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  &--on {
+    background: var(--accent-primary);
+    &::after {
+      transform: translateX(16px);
+    }
+  }
+}
+
+// Inline error inside modal body
+.field__error--modal {
+  margin: 0;
+}
+
+// ─── Spinners ─────────────────────────────────────────────────────────────────
+
+.spinner {
+  border-radius: 50%;
+  border: 2px solid var(--card-border);
+  border-top-color: var(--accent-primary);
+  animation: spin 0.75s linear infinite;
+  flex-shrink: 0;
+
+  &--sm {
+    width: 16px;
+    height: 16px;
+  }
+  &--md {
+    width: 22px;
+    height: 22px;
+  }
+
+  &--white {
+    border-color: rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1060;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: lightboxIn 0.22s ease both;
+  cursor: zoom-out;
+}
+
+.lightbox-img {
+  max-width: min(420px, 90vw);
+  max-height: 90vh;
+  border-radius: 10px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8);
+  object-fit: contain;
+  animation: lightboxImgIn 0.28s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  cursor: default;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 5rem;
+  right: 1.25rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.15s;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.22);
+    transform: scale(1.1);
+  }
+}
+
+// ─── Keyframe animations ──────────────────────────────────────────────────────
+
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialogEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes dialogSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes successPop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes checkDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes lightboxIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lightboxImgIn {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// ─── Lightning bolt arcs — shown during neon-glow-active ─────────────────────
+// 10 unique SVG bolt/spark elements, absolutely positioned around :host.
+// Rendered via @if (outside the card's overflow:hidden article element) so they
+// extend beyond the card border. Each has a unique shape, size, and stagger delay.
+.lightning-arc {
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+  animation: arcFlicker 2.2s ease-out forwards;
+  // Blur + warm amber/orange glow — blur(2px) diffuses the bolt silhouette for a
+  // lighter, more atmospheric feel; the outer drop-shadows add the plasma corona
+  filter: blur(2px) drop-shadow(0 0 2px rgba(255, 245, 160, 0.7))
+    drop-shadow(0 0 5px rgba(255, 214, 0, 0.5)) drop-shadow(0 0 11px rgba(255, 140, 0, 0.35))
+    drop-shadow(0 0 18px rgba(255, 120, 0, 0.2));
+
+  // Semi-transparent pale-yellow fill — softer, ghostly channel appearance
+  path {
+    fill: rgba(255, 240, 160, 0.55);
+  }
+
+  // Branch paths: thinner glowing strokes departing from the main channel
+  .bolt-branch {
+    fill: none;
+    stroke: rgba(255, 196, 30, 0.45);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  // Spark stars: near-white, semi-transparent for a delicate energy burst
+  &--spark path {
+    fill: rgba(255, 248, 225, 0.55);
+  }
+
+  // ── Main bolts (6) — each with a unique size and position on a different edge ──
+  &--1 {
+    width: 18px;
+    height: 28px;
+    top: -17px;
+    left: 17%;
+    animation-delay: 0.03s;
+  }
+  &--2 {
+    width: 14px;
+    height: 22px;
+    top: -14px;
+    right: 22%;
+    animation-delay: 0.29s;
+  }
+  &--3 {
+    width: 26px;
+    height: 14px;
+    top: 22%;
+    right: -16px;
+    animation-delay: 0.11s;
+  }
+  &--4 {
+    width: 14px;
+    height: 22px;
+    bottom: 28%;
+    right: -14px;
+    animation-delay: 0.44s;
+  }
+  &--5 {
+    width: 18px;
+    height: 26px;
+    bottom: -16px;
+    left: 26%;
+    animation-delay: 0.2s;
+  }
+  &--6 {
+    width: 24px;
+    height: 12px;
+    top: 47%;
+    left: -14px;
+    animation-delay: 0.51s;
+  }
+  // ── Small secondary bolts (2) ──
+  &--7 {
+    width: 11px;
+    height: 18px;
+    top: -11px;
+    left: 43%;
+    animation-delay: 0.64s;
+  }
+  &--8 {
+    width: 11px;
+    height: 18px;
+    bottom: -11px;
+    right: 18%;
+    animation-delay: 0.07s;
+  }
+  // ── Spark stars (2) ──
+  &--9 {
+    width: 10px;
+    height: 10px;
+    top: -5px;
+    left: 31%;
+    animation-delay: 0.15s;
+  }
+  &--10 {
+    width: 8px;
+    height: 8px;
+    top: 11%;
+    right: -4px;
+    animation-delay: 0.37s;
+  }
+}
+
+// Realistic multi-stroke lightning flicker:
+// 1. Hard snap to full brightness (like a lightning return stroke)
+// 2. Quick dim (current drop after initial stroke)
+// 3. Restrike to full (dart-leader / return stroke sequence)
+// 4. Fade to dark (channel cools)
+// 5–6. Two faint after-pulses (residual glow in ionised channel)
+@keyframes arcFlicker {
+  0% {
+    opacity: 0;
+  }
+  // First return stroke — soft flash (blurred, so full opacity already looks diffuse)
+  4% {
+    opacity: 0.55;
+  }
+  // Current-zero crossing — channel briefly goes dark
+  9% {
+    opacity: 0.07;
+  }
+  // Second stroke — re-ignition along same channel
+  13% {
+    opacity: 0.55;
+  }
+  // Rapid decay after second stroke
+  22% {
+    opacity: 0;
+  }
+  // Dark interval (channel de-ionises)
+  40% {
+    opacity: 0;
+  }
+  // Third weaker burst
+  44% {
+    opacity: 0.42;
+  }
+  48% {
+    opacity: 0.03;
+  }
+  52% {
+    opacity: 0.3;
+  }
+  60% {
+    opacity: 0;
+  }
+  // Long dark
+  78% {
+    opacity: 0;
+  }
+  // Final faint afterglow
+  82% {
+    opacity: 0.18;
+  }
+  87% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+// Neon aura: electric-blue plasma discharge on :host::after after a successful add.
+// Lives on ::after (NOT the .seasonal-card article) — fixes card-disappearance bug.
+// White-hot initial burst → sustained blue plasma → secondary surge → "freed" swell.
+@keyframes neonAura {
+  0% {
+    box-shadow: none;
+  }
+  // White-hot initial discharge — instantaneous channel formation
+  5% {
+    box-shadow:
+      0 0 0px 2px rgba(255, 255, 255, 0.92),
+      0 0 10px 5px rgba(0, 245, 255, 1),
+      0 0 30px 12px rgba(0, 191, 255, 0.82),
+      0 0 65px 22px rgba(0, 120, 255, 0.45),
+      0 0 100px 35px rgba(0, 60, 255, 0.2);
+  }
+  // Peak sustained blue plasma glow
+  10% {
+    box-shadow:
+      0 0 2px 3px rgba(200, 245, 255, 0.88),
+      0 0 10px 5px rgba(0, 229, 255, 0.92),
+      0 0 26px 10px rgba(0, 191, 255, 0.65),
+      0 0 55px 20px rgba(0, 140, 255, 0.38),
+      0 0 85px 30px rgba(0, 80, 255, 0.18);
+  }
+  // Quick dip between pulses
+  20% {
+    box-shadow:
+      0 0 3px 2px rgba(0, 229, 255, 0.38),
+      0 0 10px 4px rgba(0, 180, 255, 0.18);
+  }
+  // Secondary surge — residual plasma oscillation
+  28% {
+    box-shadow:
+      0 0 5px 3px rgba(0, 240, 255, 0.82),
+      0 0 18px 7px rgba(0, 200, 255, 0.52),
+      0 0 38px 14px rgba(0, 130, 255, 0.28);
+  }
+  // Long smooth fade
+  62% {
+    box-shadow:
+      0 0 3px 1px rgba(0, 229, 255, 0.22),
+      0 0 8px 3px rgba(0, 191, 255, 0.1);
+  }
+  // "Freed" swell — plasma exhales as the field collapses
+  80% {
+    box-shadow:
+      0 0 8px 4px rgba(0, 229, 255, 0.52),
+      0 0 24px 9px rgba(0, 191, 255, 0.28),
+      0 0 42px 14px rgba(0, 120, 255, 0.14);
+  }
+  93% {
+    box-shadow: 0 0 2px 1px rgba(0, 229, 255, 0.14);
+  }
+  100% {
+    box-shadow: none;
+  }
+}

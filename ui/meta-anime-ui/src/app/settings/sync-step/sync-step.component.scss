@@ -1,0 +1,154 @@
+// Sync step row — extracted from SettingsComponent
+// The host uses display:contents so the inner <li> participates in the parent <ol> layout.
+
+:host {
+  display: contents;
+}
+
+.sync-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  transition: color 0.3s ease;
+  flex-wrap: wrap;
+
+  &.sync-step--done {
+    color: #22c55e;
+  }
+  &.sync-step--running {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+  &.sync-step--error {
+    color: #ef4444;
+  }
+}
+
+.sync-step-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.sync-step-label {
+  flex: 1;
+}
+
+.sync-step-elapsed {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.sync-step-error {
+  font-size: 0.72rem;
+  color: #ef4444;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.sync-step-progress {
+  width: 100%;
+  height: 3px;
+  background: var(--card-border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 0.25rem;
+}
+
+.sync-step-progress-fill {
+  height: 100%;
+  background: var(--accent-primary);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.sync-step-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mini-spin {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--accent-primary);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+  display: inline-block;
+}
+
+.step-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--card-border);
+  display: inline-block;
+  margin: 3px;
+}
+
+.sync-step-provider {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.sync-step-provider-img {
+  display: block;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  border-radius: 3px;
+  opacity: 0.8;
+}
+
+.sync-step--pending .sync-step-provider-img {
+  opacity: 0.35;
+}
+.sync-step--running .sync-step-provider-img {
+  opacity: 1;
+}
+.sync-step--done .sync-step-provider-img {
+  opacity: 0.9;
+}
+
+// Indeterminate progress animation
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+    width: 40%;
+  }
+  50% {
+    transform: translateX(60%);
+    width: 60%;
+  }
+  100% {
+    transform: translateX(260%);
+    width: 40%;
+  }
+}
+
+.sync-step-progress-fill--indeterminate {
+  width: 40% !important;
+  animation: indeterminate 1.4s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

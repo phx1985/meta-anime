@@ -1,0 +1,109 @@
+// CSS Custom Properties for theming
+:root,
+[data-theme='light'] {
+  --bg-primary: #f8f6f2;
+  --bg-secondary: #e9ecf1;
+  --text-primary: #2c2d3e;
+  --text-secondary: #4a5568;
+  --text-muted: #8896aa;
+  --accent-primary: #6c63ff;
+  --navbar-bg: rgba(240, 237, 255, 0.93);
+  --navbar-border: rgba(0, 0, 0, 0.08);
+  --card-bg: #ffffff;
+  --card-border: rgba(0, 0, 0, 0.08);
+  --card-shadow: rgba(100, 88, 128, 0.15);
+  --gradient-start: #6c63ff;
+  --gradient-end: #3ecfcf;
+  --hero-text: #ffffff;
+  /* bubble particles */
+  --bubble-border: rgba(108, 99, 255, 0.45);
+  --bubble-shimmer: rgba(255, 255, 255, 0.75);
+  --bubble-body: rgba(108, 99, 255, 0.12);
+  /* bokeh blobs (anime list) */
+  --bokeh-opacity: 0.45;
+  /* slider control */
+  --slider-track-unfilled: rgba(128, 128, 160, 0.3);
+  --slider-thumb-border: #ffffff;
+}
+
+[data-theme='dark'] {
+  --bg-primary: #0f0f1a;
+  --bg-secondary: #1a1a2e;
+  --text-primary: #e8e8f0;
+  --text-secondary: #a8a8c0;
+  --text-muted: #6c6c88;
+  --accent-primary: #9d94ff;
+  --navbar-bg: rgba(15, 15, 26, 0.92);
+  --navbar-border: rgba(255, 255, 255, 0.06);
+  --card-bg: #1a1a2e;
+  --card-border: rgba(255, 255, 255, 0.06);
+  --card-shadow: rgba(0, 0, 0, 0.4);
+  --gradient-start: #3d2b8e;
+  --gradient-end: #1a6b6b;
+  --hero-text: #ffffff;
+  /* bubble particles */
+  --bubble-border: rgba(255, 255, 255, 0.28);
+  --bubble-shimmer: rgba(255, 255, 255, 0.7);
+  --bubble-body: rgba(255, 255, 255, 0.06);
+  /* bokeh blobs (anime list) */
+  --bokeh-opacity: 0.18;
+  /* slider control */
+  --slider-track-unfilled: rgba(160, 160, 200, 0.22);
+  --slider-thumb-border: #1a1a2e;
+}
+
+// Global styles
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family:
+    'Segoe UI',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+// Bootstrap overrides
+.btn-outline-secondary {
+  color: var(--text-secondary);
+  border-color: var(--card-border);
+
+  &:hover {
+    background-color: var(--card-bg);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+  }
+}
+
+.spinner-border {
+  color: var(--accent-primary);
+}
+
+// Scrollbar
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: 3px;
+}

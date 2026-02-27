@@ -1,0 +1,25 @@
+﻿using MetaAnime.Application.Contracts;
+using MetaAnime.Application.Queries;
+using MetaAnime.Domain.Enums;
+using MetaAnime.Core.Interfaces.Shared.Results;
+using MetaAnime.Core.Interfaces.Services;
+
+namespace MetaAnime.Application.Interfaces;
+
+public interface IAnimeMediatorService
+{
+    Task<Result<AnimeStatisticsResponse>> GetStatisticsAsync();
+    Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAllAsync(int page = 1, int pageSize = 100, AnimeFilters? filters = null, bool enriched = false);
+    Task<Result<AnimeDetailsResponse?>> GetByIdAsync(string aniDbId);
+    Task<Result<IEnumerable<SonarrCodecSearchResponse>>> GetSonarrSeriesByCodecAsync(string codec);
+    Task<Result<AnimeResponse>> CreateAsync(CreateAnimeRequest request);
+    Task<Result<AnimeResponse>> UpdateAsync(Guid id, UpdateAnimeRequest request);
+    Task<Result> DeleteAsync(Guid id);
+    Task<Result> SyncAllAsync(bool forceRefreshKometaMapping = false);
+    Task<Result<IEnumerable<SeasonalAnimeResponse>>> GetSeasonalAnimesAsync(int year, string season);
+    Task<Result<SonarrOptionsResponse>> GetSonarrOptionsAsync();
+    Task<Result<IList<SonarrLookupItem>>> SearchSonarrLookupAsync(string term);
+    Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, string monitor = "all", bool seasonFolder = true, string? malId = null);
+    Task<Result> RemoveSonarrSeriesAsync(int sonarrId);
+    Task<Result> UpdateMalListStatusAsync(string malId, string status, int numWatchedEpisodes, int score);
+}

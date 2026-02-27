@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hangfire.Core" Version="1.8.23" />
+    <PackageReference Include="MediatR" Version="14.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MetaAnime.Core\MetaAnime.Core.csproj" />
+    <ProjectReference Include="..\MetaAnime.Infrastructure.Kometa\MetaAnime.Infrastructure.Kometa.csproj" />
+    <ProjectReference Include="..\MetaAnime.Infrastructure.MyAnimeList\MetaAnime.Infrastructure.MyAnimeList.csproj" />
+    <ProjectReference Include="..\MetaAnime.Infrastructure.Plex\MetaAnime.Infrastructure.Plex.csproj" />
+    <ProjectReference Include="..\MetaAnime.Infrastructure.Sonarr\MetaAnime.Infrastructure.Sonarr.csproj" />
+  </ItemGroup>
+
+</Project>

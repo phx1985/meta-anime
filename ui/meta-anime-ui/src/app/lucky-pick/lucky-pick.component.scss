@@ -1,0 +1,704 @@
+// ── Overlay backdrop — adds perspective so the container "pops" in 3D ────────
+.lucky-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1080;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: overlayIn 0.25s ease both;
+  perspective: 1400px;
+  perspective-origin: 50% 40%;
+}
+
+@keyframes overlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+// ── Container ─────────────────────────────────────────────────────────────────
+$container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+
+.lucky-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(760px, 100%);
+  // Increased base height to accommodate the 30% taller cover image
+  min-height: 420px;
+  padding: 3.5rem 2.5rem 2.5rem;
+  border-radius: 22px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 6px 16px rgba(0, 0, 0, 0.45),
+    0 20px 48px rgba(0, 0, 0, 0.42),
+    0 48px 96px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transform-style: preserve-3d;
+  animation: containerIn $container-in;
+
+  @media (max-width: 500px) {
+    // Increased height and padding for mobile 30% scaling
+    padding: 4.5rem 1.25rem 2rem;
+    min-height: 350px;
+    border-radius: 18px;
+  }
+}
+
+@keyframes containerIn {
+  from {
+    opacity: 0;
+    transform: scale(0.82) translateY(24px) rotateX(-10deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0) rotateX(0deg);
+  }
+}
+
+// ── Heartbeat ─────────────────────────────────────────────────────────────────
+.lucky-container--beating {
+  animation:
+    containerIn $container-in,
+    heartbeat 1.15s ease-in-out 0.5s infinite;
+}
+
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+  }
+
+  8% {
+    transform: scale(1.03);
+  }
+
+  18% {
+    transform: scale(1);
+  }
+
+  28% {
+    transform: scale(1.018);
+  }
+
+  42% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+// ── Close button ─────────────────────────────────────────────────────────────
+.lucky-close {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-muted);
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    background: rgba(108, 99, 255, 0.08);
+    outline: none;
+  }
+}
+
+// ── Spin scene ────────────────────────────────────────────────────────────────
+.lucky-spin-scene {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+// ── True 3D Gyroscope ─────────────────────────────────────────────────────────
+.lucky-orb {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 600px;
+  transform-style: preserve-3d;
+  animation: gyroAssemblySpin 12s linear infinite;
+}
+
+@keyframes gyroAssemblySpin {
+  from {
+    transform: rotateX(-15deg) rotateY(0deg);
+  }
+
+  to {
+    transform: rotateX(-15deg) rotateY(360deg);
+  }
+}
+
+.lucky-orb__gimbal {
+  position: absolute;
+  border-radius: 50%;
+  transform-style: preserve-3d;
+  border: 3px solid transparent;
+  box-shadow: inset 0 0 10px rgba(108, 99, 255, 0.2), 0 0 5px rgba(108, 99, 255, 0.2);
+
+  &--outer {
+    width: 140px;
+    height: 140px;
+    border-color: rgba(108, 99, 255, 0.4);
+    border-left-color: rgba(108, 99, 255, 0.9);
+    border-right-color: rgba(108, 99, 255, 0.9);
+    animation: gimbalSpinZ 4s linear infinite;
+  }
+
+  &--mid {
+    width: 105px;
+    height: 105px;
+    border-color: rgba(62, 207, 207, 0.3);
+    border-top-color: rgba(62, 207, 207, 0.8);
+    border-bottom-color: rgba(62, 207, 207, 0.8);
+    animation: gimbalSpinX 2.5s linear infinite;
+  }
+
+  &--inner {
+    width: 70px;
+    height: 70px;
+    border-color: rgba(157, 148, 255, 0.3);
+    border-left-color: rgba(157, 148, 255, 0.9);
+    border-right-color: rgba(157, 148, 255, 0.9);
+    animation: gimbalSpinY 1.8s linear infinite reverse;
+  }
+}
+
+@keyframes gimbalSpinX {
+  from {
+    transform: rotateX(0deg);
+  }
+
+  to {
+    transform: rotateX(360deg);
+  }
+}
+
+@keyframes gimbalSpinY {
+  from {
+    transform: rotateY(0deg);
+  }
+
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+@keyframes gimbalSpinZ {
+  from {
+    transform: rotateZ(0deg);
+  }
+
+  to {
+    transform: rotateZ(360deg);
+  }
+}
+
+// ── True Mathematical 3D Sphere Implementation ────────────────────────────────
+.lucky-orb__center {
+  position: absolute;
+  z-index: 2;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 800px;
+  transform-style: preserve-3d;
+  transform: rotateX(15deg); // Counters parent assembly tilt
+  animation: centerPulse3D 2s ease-in-out infinite alternate;
+}
+
+.lucky-orb__sphere {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: trueSphereSpin 5s linear infinite;
+}
+
+@keyframes trueSphereSpin {
+  from {
+    transform: rotateY(0deg) rotateX(20deg);
+  }
+
+  to {
+    transform: rotateY(360deg) rotateX(20deg);
+  }
+}
+
+// Generating the 3D sphere from 6 intersecting circular planes
+.lucky-orb__slice {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  // Wireframe structural lines
+  border: 1.5px solid rgba(157, 148, 255, 0.75);
+  // Extends the light outward from the slices
+  box-shadow: 0 0 8px rgba(108, 99, 255, 0.6), inset 0 0 8px rgba(108, 99, 255, 0.4);
+  // Calculates the rotation angle based on the CSS variable index (0 to 5)
+  transform: rotateY(calc(var(--slice-idx) * 30deg));
+}
+
+// The internal energy core
+.lucky-orb__core-glow {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(157, 148, 255, 0.7) 40%, transparent 80%);
+  transform: translateZ(0); // Anchors exactly in the centre
+  box-shadow: 0 0 20px rgba(157, 148, 255, 0.8);
+}
+
+.lucky-orb__star {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) translateZ(0);
+  color: #fff;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 1));
+}
+
+@keyframes centerPulse3D {
+  0% {
+    transform: rotateX(15deg) scale(0.95);
+  }
+
+  100% {
+    transform: rotateX(15deg) scale(1.05);
+  }
+}
+
+.lucky-overlay--reduced-motion .lucky-orb {
+  animation: none;
+  transform: rotateX(-15deg) rotateY(30deg);
+}
+
+.lucky-overlay--reduced-motion .lucky-orb__gimbal {
+  animation: none;
+}
+
+.lucky-overlay--reduced-motion .lucky-orb__center {
+  animation: none;
+  transform: rotateX(15deg) scale(1);
+}
+
+.lucky-overlay--reduced-motion .lucky-orb__sphere {
+  animation: none;
+}
+
+.lucky-overlay--reduced-motion .lucky-container--beating {
+  animation: containerIn $container-in;
+}
+
+.lucky-spin-label {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+  animation: labelPulse 2s ease-in-out infinite;
+}
+
+@keyframes labelPulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// ── Result card ───────────────────────────────────────────────────────────────
+.lucky-result {
+  position: relative;
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  animation: resultIn 0.48s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+@keyframes resultIn {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.lucky-result__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.lucky-result__backdrop-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(16px) brightness(0.3) saturate(1.3);
+  transform: scale(1.12);
+}
+
+.lucky-result__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 0.25rem 0;
+
+  @media (max-width: 500px) {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+  }
+}
+
+.lucky-result__cover {
+  // Increased 30% for PC view (previously 160x226)
+  width: 208px;
+  height: 294px;
+  object-fit: cover;
+  border-radius: 12px;
+  flex-shrink: 0;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
+
+  &--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    font-size: 3.5rem;
+    font-weight: 700;
+  }
+
+  @media (max-width: 500px) {
+    // Increased 30% for Mobile view (previously 120x170)
+    width: 156px;
+    height: 221px;
+  }
+}
+
+.lucky-result__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+// ── Status pills ──────────────────────────────────────────────────────────────
+.lucky-result__status-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.lucky-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.5rem;
+  border-radius: 5px;
+  text-transform: uppercase;
+  line-height: 1.4;
+
+  &--watching {
+    background: rgba(59, 130, 246, 0.14);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+  &--completed {
+    background: rgba(34, 197, 94, 0.14);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+  &--on_hold {
+    background: rgba(245, 158, 11, 0.14);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+  &--dropped {
+    background: rgba(239, 68, 68, 0.14);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+  &--plan_to_watch {
+    background: rgba(168, 85, 247, 0.14);
+    color: #a855f7;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+  }
+  &--series {
+    background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+    color: var(--text-muted);
+    border: 1px solid color-mix(in srgb, var(--text-muted) 20%, transparent);
+  }
+  &--media-type {
+    background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+    color: var(--accent-primary);
+    border: 1px solid color-mix(in srgb, var(--accent-primary) 25%, transparent);
+  }
+}
+
+// ── Genre / Theme / Demographic tags ──────────────────────────────────────────
+.lucky-genre-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+
+  & + .lucky-genre-list {
+    margin-top: 0.15rem;
+  }
+}
+
+.lucky-genre-tag {
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  color: var(--accent-primary);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 22%, transparent);
+  border-radius: 4px;
+  font-size: 0.67rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+
+  &--theme {
+    background: color-mix(in srgb, #14b8a6 10%, transparent);
+    color: #14b8a6;
+    border-color: color-mix(in srgb, #14b8a6 25%, transparent);
+  }
+
+  &--demographic {
+    background: color-mix(in srgb, #f59e0b 10%, transparent);
+    color: #d97706;
+    border-color: color-mix(in srgb, #f59e0b 25%, transparent);
+  }
+}
+
+// ── Score + dates row ─────────────────────────────────────────────────────────
+.lucky-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lucky-date-range {
+  font-size: 0.73rem;
+  color: var(--text-secondary);
+}
+
+.lucky-date-arrow {
+  opacity: 0.5;
+  margin: 0 0.2em;
+}
+
+.lucky-result__title {
+  margin: 0;
+  font-size: 1.35rem; // Slightly scaled up title to match larger image
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.lucky-result__synopsis {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  display: -webkit-box;
+  // Increased clamp lines to balance the taller cover image
+  -webkit-line-clamp: 10;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  @media (max-width: 500px) {
+    -webkit-line-clamp: 8;
+  }
+}
+
+// ── Action buttons ────────────────────────────────────────────────────────────
+.lucky-result__actions,
+.lucky-message__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+
+  @media (max-width: 500px) {
+    justify-content: center;
+  }
+}
+
+.lucky-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1.5px solid transparent;
+  transition: opacity 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+
+  // Flex layout fixes wrapping alignment
+  flex: 1 1 auto;
+  text-align: center;
+
+  &--plex {
+    background: transparent;
+    color: var(--text-muted);
+    border-color: var(--card-border);
+
+    &:hover {
+      color: #e5a00d;
+      border-color: #e5a00d;
+      background: rgba(229, 160, 13, 0.1);
+      transform: translateY(-1px);
+    }
+  }
+
+  &--mal {
+    background: transparent;
+    color: var(--text-muted);
+    border-color: var(--card-border);
+
+    &:hover {
+      color: #2e51a2;
+      border-color: #2e51a2;
+      background: rgba(46, 81, 162, 0.1);
+      transform: translateY(-1px);
+    }
+  }
+
+  &--reroll {
+    background: transparent;
+    color: var(--text-muted);
+    border-color: var(--card-border);
+
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--text-muted);
+    }
+  }
+
+  &--primary {
+    background: var(--accent-primary);
+    color: #fff;
+    border-color: var(--accent-primary);
+
+    &:hover {
+      opacity: 0.88;
+      box-shadow: 0 4px 16px rgba(108, 99, 255, 0.35);
+    }
+  }
+
+  &--secondary {
+    background: transparent;
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+
+    &:hover {
+      background: rgba(108, 99, 255, 0.1);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border-color: var(--card-border);
+
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--text-muted);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+  }
+}
+
+.lucky-btn__logo {
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+
+// ── No-match / error message ──────────────────────────────────────────────────
+.lucky-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  text-align: center;
+  padding: 0.75rem 0;
+  animation: resultIn 0.38s ease both;
+}
+
+.lucky-message__icon {
+  color: var(--text-muted);
+
+  &--error {
+    color: #e53e3e;
+  }
+}
+
+.lucky-message__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.lucky-message__desc {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  max-width: 34ch;
+}

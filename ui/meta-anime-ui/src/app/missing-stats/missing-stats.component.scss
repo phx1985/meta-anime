@@ -1,0 +1,191 @@
+// ── Card shell ─────────────────────────────────────────────────────────────────
+
+.missing-stats-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 4px 24px var(--card-shadow);
+  animation: popFadeIn 0.6s cubic-bezier(0.34, 1.4, 0.64, 1) 0.45s both;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+// ── Card header ────────────────────────────────────────────────────────────────
+
+.missing-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.875rem;
+}
+
+.missing-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+@keyframes popFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// ── Row list ───────────────────────────────────────────────────────────────────
+
+.missing-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  flex: 1 1 auto;
+}
+
+// ── Individual gap row ─────────────────────────────────────────────────────────
+
+.gap-row {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 10px;
+  border-left: 3px solid transparent;
+  background: var(--bg-secondary);
+  animation: slideIn 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 14px var(--card-shadow);
+  }
+
+  &:nth-child(1) {
+    animation-delay: 0.05s;
+  }
+  &:nth-child(2) {
+    animation-delay: 0.12s;
+  }
+  &:nth-child(3) {
+    animation-delay: 0.19s;
+  }
+  &:nth-child(4) {
+    animation-delay: 0.26s;
+  }
+
+  // Accent left-border per pair
+  &.gap-row--sonarr-mal {
+    border-left-color: #35c5f4;
+  }
+  &.gap-row--mal-plex {
+    border-left-color: #2e51a2;
+  }
+  &.gap-row--plex-mal {
+    border-left-color: #e5a00d;
+  }
+  &.gap-row--plex-sonarr {
+    border-left-color: #e5a00d;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// ── Icon pair: [source] + [ghost-target] ──────────────────────────────────────
+
+.gap-icon-pair {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+// Source icon — normal, clean
+.gap-src-img {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+
+// ── Ghost target icon wrapper ──────────────────────────────────────────────────
+
+.gap-tgt-wrap {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+
+  // The actual image — greyed, faded, with a right-side dissolve mask
+  .gap-tgt-img {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    object-fit: contain;
+    display: block;
+    filter: grayscale(0.85) opacity(0.45);
+    // Mask: left 45% fully visible → dissolve → right 15% invisible
+    mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.6) 38%,
+      rgba(0, 0, 0, 0.25) 60%,
+      rgba(0, 0, 0, 0.06) 80%,
+      transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.85) 0%,
+      rgba(0, 0, 0, 0.6) 38%,
+      rgba(0, 0, 0, 0.25) 60%,
+      rgba(0, 0, 0, 0.06) 80%,
+      transparent 100%
+    );
+  }
+}
+
+// ── Gap info text ──────────────────────────────────────────────────────────────
+
+.gap-info {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.gap-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+// ── Count badge ────────────────────────────────────────────────────────────────
+
+.gap-count {
+  flex-shrink: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  min-width: 2.25rem;
+  text-align: right;
+  color: #ef4444;
+
+  &.gap-count--zero {
+    color: #22c55e;
+  }
+}
