@@ -60,6 +60,11 @@ export class App implements OnInit, AfterViewInit {
   protected get disabledProviderModal() { return this.popupService.disabledProvider; }
   protected get modalLeaving() { return this.popupService.disabledProviderLeaving; }
 
+  /** Controls the synopsis modal — delegated to PopupService */
+  protected get synopsisModal() { return this.popupService.synopsisTitle; }
+  protected get synopsisBody() { return this.popupService.synopsisBody; }
+  protected get synopsisLeaving() { return this.popupService.synopsisLeaving; }
+
   constructor() {
     this.translate.use('en');
   }
@@ -187,6 +192,10 @@ export class App implements OnInit, AfterViewInit {
 
   dismissDisabledProviderModal(): void {
     this.popupService.dismissDisabledProvider();
+  }
+
+  dismissSynopsisModal(): void {
+    this.popupService.dismissSynopsis();
   }
 
   goToProviderSettings(provider: 'plex' | 'sonarr'): void {

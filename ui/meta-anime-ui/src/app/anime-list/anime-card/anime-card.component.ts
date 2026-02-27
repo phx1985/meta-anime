@@ -1,12 +1,10 @@
 import { Component, Input, signal, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { trigger, state, style, animate, transition } from '@angular/animations';
 import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo } from '../../models/anime.models';
 import { ScoreBadgeComponent } from './score-badge/score-badge.component';
 import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../../constants/genre-lists';
-
-const TRUNCATE_AT = 180;
+import { PopupService } from '../../services/popup.service';
 
 @Component({
   selector: 'app-anime-card',
@@ -14,14 +12,6 @@ const TRUNCATE_AT = 180;
   imports: [CommonModule, TranslatePipe, ScoreBadgeComponent],
   templateUrl: './anime-card.component.html',
   styleUrl: './anime-card.component.scss',
-  animations: [
-    trigger('expandCollapse', [
-      state('collapsed', style({ height: '3.75rem', overflow: 'hidden' })),
-      state('expanded', style({ height: '*', overflow: 'hidden' })),
-      transition('collapsed => expanded', animate('380ms cubic-bezier(0.4, 0, 0.2, 1)')),
-      transition('expanded => collapsed', animate('280ms cubic-bezier(0.4, 0, 1, 1)')),
-    ]),
-  ],
 })
 export class AnimeCardComponent {
   @Input({ required: true }) anime!: AnimeDetailsResponse;
@@ -35,9 +25,9 @@ export class AnimeCardComponent {
   @Input() sonarrEnabled = true;
 
   private translate = inject(TranslateService);
+  private popupService = inject(PopupService);
 
   showAltTitles = signal(false);
-  descExpanded = signal(false);
   showLightbox = signal(false);
 
   @HostListener('document:keydown.escape')
@@ -101,10 +91,8 @@ export class AnimeCardComponent {
     return this.mal?.synopsis ?? this.anime.description ?? '';
   }
 
-  get truncatedDescription(): string {
-    const d = this.description;
-    if (!d) return '';
-    return this.descExpanded() || d.length <= TRUNCATE_AT ? d : d.slice(0, TRUNCATE_AT) + '…';
+  get isTruncated(): boolean {
+    return this.description.length > 180;
   }
 
   // ── Status ────────────────────────────────────────────────────────────────
@@ -285,8 +273,8 @@ export class AnimeCardComponent {
     this.showAltTitles.update((v) => !v);
   }
 
-  toggleDesc(): void {
-    this.descExpanded.update((v) => !v);
+  openSynopsisModal(): void {
+    this.popupService.openSynopsis(this.displayTitle, this.description);
   }
 
   openLightbox(): void {

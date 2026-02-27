@@ -1,11 +1,4 @@
-<article class="anime-card" [class.card--expanded]="descExpanded()">
-  <!-- ── Blurred backdrop (visible when synopsis expanded) ──────────────── -->
-  @if (coverImageUrl) {
-    <div class="cover-backdrop" aria-hidden="true">
-      <img [src]="coverImageUrl" class="backdrop-img" [alt]="''" />
-    </div>
-  }
-
+<article class="anime-card">
   <div class="card-main">
     <!-- ── Cover image ────────────────────────────────────────────────── -->
     <div
@@ -88,12 +81,22 @@
       <!-- ── Description ──────────────────────────────────────────────── -->
       @if (description) {
         <div class="desc-wrap">
-          <p class="desc-text" [@expandCollapse]="descExpanded() ? 'expanded' : 'collapsed'">
-            {{ description }}
-          </p>
-          @if (description.length > 180) {
-            <button class="desc-toggle" (click)="toggleDesc()">
-              {{ descExpanded() ? ('animeCard.less' | translate) : ('animeCard.more' | translate) }}
+          <p
+            class="desc-text"
+            [class.desc-text--clickable]="isTruncated"
+            [attr.role]="isTruncated ? 'button' : null"
+            [attr.tabindex]="isTruncated ? 0 : null"
+            (click)="isTruncated && openSynopsisModal()"
+            (keydown.enter)="isTruncated && openSynopsisModal()"
+            (keydown.space)="isTruncated && openSynopsisModal()"
+          >{{ description }}</p>
+          @if (isTruncated) {
+            <button
+              type="button"
+              class="desc-toggle"
+              (click)="openSynopsisModal()"
+            >
+              {{ 'animeCard.seeMore' | translate }}
             </button>
           }
         </div>
