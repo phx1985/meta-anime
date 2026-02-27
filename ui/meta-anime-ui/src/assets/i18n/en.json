@@ -324,7 +324,10 @@
       }
     },
     "mal": {
-      "tokenRefreshed": "Token refreshed:"
+      "tokenRefreshed": "Token refreshed:",
+      "authRequired": "MAL credentials are configured but no token has been authorized. Please refresh the token to enable syncing.",
+      "refreshToken": "Authorize / Refresh Token",
+      "refreshError": "Failed to refresh MAL token. Please check your credentials."
     },
     "category": {
       "plex": {
@@ -468,7 +471,8 @@
       "enabled": "Enabled",
       "disabled": "Disabled",
       "enabledToggle": "Toggle provider enabled state",
-      "disabledHint": "Enable Sonarr in its settings card to use this feature"
+      "disabledHint": "Enable Sonarr in its settings card to use this feature",
+      "configureFirstTooltip": "Configure basic settings first to enable."
     },
     "syncPrompt": {
       "title": "Sync Recommended",
@@ -598,6 +602,13 @@
       "errorTitle": "Sync failed",
       "errorMessage": "The synchronization encountered an error. Check the sync log for details.",
       "viewLog": "View log"
+    },
+    "malAuth": {
+      "title": "MyAnimeList authentication error",
+      "message": "MyAnimeList token is invalid or expired. Please authorize in Settings.",
+      "action": "Go to Settings",
+      "reloadFailed": "Token refreshed, but could not reload settings.",
+      "reloadFailedMessage": "Please refresh the page to see the updated token status."
     }
   },
   "toast": {

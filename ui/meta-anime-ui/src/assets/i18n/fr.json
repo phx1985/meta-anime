@@ -324,7 +324,10 @@
       }
     },
     "mal": {
-      "tokenRefreshed": "Token actualisé :"
+      "tokenRefreshed": "Token actualisé :",
+      "authRequired": "Les identifiants MAL sont configurés mais aucun jeton n’a été autorisé. Veuillez actualiser le jeton pour activer la synchronisation.",
+      "refreshToken": "Autoriser / Actualiser le jeton",
+      "refreshError": "Échec de l’actualisation du jeton MAL. Vérifiez vos identifiants."
     },
     "category": {
       "plex": {
@@ -468,7 +471,8 @@
       "enabled": "Activé",
       "disabled": "Désactivé",
       "enabledToggle": "Basculer l'état d'activation du fournisseur",
-      "disabledHint": "Activez Sonarr dans sa carte de paramètres pour utiliser cette fonctionnalité"
+      "disabledHint": "Activez Sonarr dans sa carte de paramètres pour utiliser cette fonctionnalité",
+      "configureFirstTooltip": "Configurez d’abord les paramètres de base pour activer."
     },
     "syncPrompt": {
       "title": "Synchronisation Recommandée",
@@ -598,6 +602,13 @@
       "errorTitle": "Échec de la sync",
       "errorMessage": "La synchronisation a rencontré une erreur. Consultez le journal pour plus de détails.",
       "viewLog": "Voir le journal"
+    },
+    "malAuth": {
+      "title": "Erreur d’authentification MyAnimeList",
+      "message": "Le jeton MyAnimeList est invalide ou expiré. Veuillez vous autoriser dans les Paramètres.",
+      "action": "Aller aux Paramètres",
+      "reloadFailed": "Jeton actualisé, mais impossible de recharger les paramètres.",
+      "reloadFailedMessage": "Veuillez actualiser la page pour voir le statut du jeton mis à jour."
     }
   },
   "toast": {

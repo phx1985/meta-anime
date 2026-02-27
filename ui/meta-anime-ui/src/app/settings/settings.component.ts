@@ -12,6 +12,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, timer } from 'rxjs';
 import { finalize } from 'rxjs/operators';
+import { HttpErrorResponse } from '@angular/common/http';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { SettingsService } from '../services/settings.service';
 import { AnimeService } from '../services/anime.service';
@@ -99,6 +100,7 @@ export class SettingsComponent {
 
   syncing = signal(false);
   lastSyncDate = signal<string | null>(null);
+  syncHttpError = signal<string | null>(null);
   currentLang = signal(this.translate.currentLang ?? this.translate.defaultLang ?? 'en');
 
   /** Provider name when sync prompt is showing — delegated to PopupService */
@@ -192,6 +194,25 @@ export class SettingsComponent {
     () => this.settings().find((s) => s.key === 'Sonarr:Enabled')?.value !== 'false',
   );
 
+  plexBasicConfigured = computed(() => {
+    const list = this.settings();
+    const host = list.find((s) => s.key === 'Plex:Host')?.value ?? '';
+    const token = list.find((s) => s.key === 'Plex:Token')?.value ?? '';
+    return host.trim().length > 0 && token.trim().length > 0;
+  });
+
+  malClientIdConfigured = computed(
+    () => (this.settings().find((s) => s.key === 'MAL:ClientId')?.value ?? '').trim().length > 0,
+  );
+
+  /** True when MAL has a ClientId configured but no token has ever been successfully refreshed. */
+  malNeedsAuth = computed(() => this.malClientIdConfigured() && !this.malTokenRefreshDate());
+
+  malRefreshing = signal(false);
+  malRefreshError = signal<string | null>(null);
+  malRefreshSuccess = signal(false);
+  private malRefreshSuccessTimer: ReturnType<typeof setTimeout> | null = null;
+
   forms: Record<string, FormGroup> = {};
 
   readonly fmtElapsed = fmtElapsed;
@@ -266,6 +287,7 @@ export class SettingsComponent {
 
     this.destroyRef.onDestroy(() => {
       if (this.autoApplySavedTimer) clearTimeout(this.autoApplySavedTimer);
+      if (this.malRefreshSuccessTimer) clearTimeout(this.malRefreshSuccessTimer);
     });
 
     // Capture a pending highlight from the `?highlight=` query param (set by the
@@ -638,10 +660,22 @@ export class SettingsComponent {
     return true;
   }
 
+  /** True when the provider's enable toggle should be blocked (not configured yet). */
+  isProviderToggleBlocked(cat: string): boolean {
+    if (cat === 'plex') return !this.plexBasicConfigured();
+    if (cat === 'sonarr') return !this.sonarrBasicConfigured();
+    return false;
+  }
+
   toggleProviderEnabled(cat: string): void {
     const key = cat === 'plex' ? 'Plex:Enabled' : 'Sonarr:Enabled';
     const current = this.settings().find((s) => s.key === key)?.value;
     const enabling = current === 'false'; // toggling from disabled → enabled
+    // Guard: prevent enabling if basic settings not yet configured
+    if (enabling) {
+      if (cat === 'plex' && !this.plexBasicConfigured()) return;
+      if (cat === 'sonarr' && !this.sonarrBasicConfigured()) return;
+    }
     const next = enabling ? 'true' : 'false';
     this.savingKey.set(key);
     this.settingsService
@@ -679,6 +713,44 @@ export class SettingsComponent {
     setTimeout(() => this.scrollToSection('sync'), PopupService.MODAL_LEAVE_MS);
   }
 
+  refreshMalToken(): void {
+    if (this.malRefreshing()) return;
+    this.malRefreshing.set(true);
+    this.malRefreshError.set(null);
+    this.malRefreshSuccess.set(false);
+    this.animeService
+      .refreshMalToken()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.malRefreshing.set(false);
+          this.malRefreshSuccess.set(true);
+          if (this.malRefreshSuccessTimer) clearTimeout(this.malRefreshSuccessTimer);
+          this.malRefreshSuccessTimer = setTimeout(() => this.malRefreshSuccess.set(false), 3000);
+          // Reload settings to update malTokenRefreshDate
+          this.settingsService
+            .getAll()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: (data) => this.settings.set(data),
+              error: () => {
+                // Settings reload failed — non-critical, but show a mild toast
+                this.notifService.push({
+                  id: `mal-settings-reload-${Date.now()}`,
+                  severity: 'warning',
+                  titleKey: 'notifications.malAuth.reloadFailed',
+                  messageKey: 'notifications.malAuth.reloadFailedMessage',
+                });
+              },
+            });
+        },
+        error: () => {
+          this.malRefreshing.set(false);
+          this.malRefreshError.set('settings.mal.refreshError');
+        },
+      });
+  }
+
   shouldShowSyncStep(step: SyncStep): boolean {
     if (step.stepKey === 'plex' && !this.plexEnabled()) return false;
     if (step.stepKey === 'sonarr' && !this.sonarrEnabled()) return false;
@@ -701,6 +773,7 @@ export class SettingsComponent {
     if (this.syncing()) return;
 
     this.syncing.set(true);
+    this.syncHttpError.set(null);
 
     // Inform SignalR service which steps are disabled so completion is detected correctly
     const disabledSteps = new Set<string>();
@@ -735,8 +808,12 @@ export class SettingsComponent {
         next: () => {
           /* SignalR done event handles syncing flag */
         },
-        error: () => {
+        error: (err: unknown) => {
           this.syncing.set(false);
+          const message = err instanceof HttpErrorResponse
+            ? (err.error?.message ?? err.message ?? 'Sync failed')
+            : 'Sync failed';
+          this.syncHttpError.set(message);
           this.signalR.markError();
         },
       });

@@ -66,7 +66,10 @@ public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTok
         // Fetch json result
         do
         {
-            var response = await FetchAnimeListAsync(paging, token);
+            var (response, refreshedToken) = await ExecuteWithAutoRefreshAsync(
+                token,
+                t => FetchAnimeListAsync(paging, t));
+            token = refreshedToken;
             var json = response.Content!;
 
             if (response.IsSuccessful)
@@ -100,7 +103,9 @@ public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTok
             return Result.Failure<MalAnime>(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
         }
 
-        var response = await FetchAnimeByIdAsync(id, token);
+        var (response, _) = await ExecuteWithAutoRefreshAsync(
+            token,
+            t => FetchAnimeByIdAsync(id, t));
         var json = response.Content!;
         if (response.IsSuccessful)
         {
@@ -131,12 +136,13 @@ public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTok
 
         while (nextUrl != null)
         {
-            var uri = new Uri(nextUrl);
-            var restClient = new RestClient(uri);
-            var restRequest = new RestRequest { Method = Method.Get };
-            restRequest.AddHeader("Authorization", $"Bearer {token}");
-
-            var response = await ExecuteRequestAsync(restClient, restRequest);
+            var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
+            {
+                var restClient = new RestClient(new Uri(nextUrl));
+                var restRequest = new RestRequest { Method = Method.Get };
+                restRequest.AddHeader("Authorization", $"Bearer {t}");
+                return ExecuteRequestAsync(restClient, restRequest);
+            });
             var json = response.Content!;
 
             if (response.IsSuccessful)
@@ -178,14 +184,16 @@ public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTok
             return Result.Failure(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
 
         var uri = new Uri($"{baseUrl}/anime/{animeId}/my_list_status");
-        var restClient = new RestClient(uri);
-        var restRequest = new RestRequest { Method = Method.Patch };
-        restRequest.AddHeader("Authorization", $"Bearer {token}");
-        restRequest.AddParameter("status", status);
-        restRequest.AddParameter("num_watched_episodes", numWatchedEpisodes);
-        restRequest.AddParameter("score", score);
-
-        var response = await ExecuteRequestAsync(restClient, restRequest);
+        var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
+        {
+            var restClient = new RestClient(uri);
+            var restRequest = new RestRequest { Method = Method.Patch };
+            restRequest.AddHeader("Authorization", $"Bearer {t}");
+            restRequest.AddParameter("status", status);
+            restRequest.AddParameter("num_watched_episodes", numWatchedEpisodes);
+            restRequest.AddParameter("score", score);
+            return ExecuteRequestAsync(restClient, restRequest);
+        });
         if (response.IsSuccessful)
             return Result.Success();
 
@@ -216,6 +224,41 @@ public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTok
         restRequest.AddHeader("Authorization", $"Bearer {token}");
 
         return await ExecuteRequestAsync(restClient, restRequest);
+    }
+
+    /// <summary>
+    /// Executes a request via the provided factory. If the response is 401 Unauthorized,
+    /// attempts a token refresh exactly once and retries. Throws <see cref="MalAuthenticationException"/>
+    /// when the refresh fails or the retry is still unauthorized.
+    /// </summary>
+    private async Task<(RestResponse Response, string Token)> ExecuteWithAutoRefreshAsync(
+        string initialToken,
+        Func<string, Task<RestResponse>> requestFactory)
+    {
+        var response = await requestFactory(initialToken);
+
+        if (response.StatusCode != System.Net.HttpStatusCode.Unauthorized)
+            return (response, initialToken);
+
+        // 401 — attempt token refresh exactly once
+        logger.LogWarning("MAL API returned 401. Attempting token refresh.");
+        var refreshResult = await malTokenService.RefreshTokenAsync();
+        if (refreshResult.IsFailure)
+        {
+            throw new MalAuthenticationException(
+                $"MyAnimeList token is invalid or expired and could not be refreshed: {refreshResult.Error.Message}");
+        }
+
+        var newToken = await malTokenService.GetAccessTokenAsync() ?? initialToken;
+        var retryResponse = await requestFactory(newToken);
+
+        if (retryResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            throw new MalAuthenticationException(
+                "MyAnimeList token is invalid or expired. Please re-authorize in Settings.");
+        }
+
+        return (retryResponse, newToken);
     }
 
     private static async Task<RestResponse> ExecuteRequestAsync(RestClient client, RestRequest request)
