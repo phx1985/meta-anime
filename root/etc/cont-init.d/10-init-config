@@ -102,3 +102,15 @@ EOF
     echo "[init] Setup complete. Configuration written to /config/appsettings.json"
     echo "[init] API key generated. Use the X-Api-Key header with the value stored in /config/appsettings.json"
 fi
+
+# ─── Always write Angular runtime config ─────────────────────────────────────
+# Extract the API key from the persisted appsettings and expose it to the
+# pre-built Angular front-end via /assets/config.json (served as a static file).
+RUNTIME_API_KEY=$(jq -r '.Authentication.ApiKey // ""' /config/appsettings.json 2>/dev/null || true)
+mkdir -p /app/wwwroot/assets
+cat > /app/wwwroot/assets/config.json << EOF
+{
+  "apiKey": "${RUNTIME_API_KEY}"
+}
+EOF
+echo "[init] Angular runtime config written to /app/wwwroot/assets/config.json"
