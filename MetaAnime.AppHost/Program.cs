@@ -5,7 +5,8 @@ var postgres = builder.AddPostgres("postgres")
 
 var api = builder.AddProject<Projects.MetaAnime_Presentation>("api")
     .WithReference(postgres)
-    .WaitFor(postgres);
+    .WaitFor(postgres)
+    .WithEnvironment("ASPNETCORE_ENVIRONMENT", builder.Environment.EnvironmentName);
 
 builder.AddExecutable("ui", "npm", "../ui/meta-anime-ui", "run", "start")
     .WithReference(api)
