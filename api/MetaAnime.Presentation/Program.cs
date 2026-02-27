@@ -90,7 +90,6 @@ var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>(
 await AnimeSyncJob.ScheduleAsync(recurringJobManager, app.Services);
 MalTokenRefreshJob.Schedule(recurringJobManager);
 
-app.UseHttpsRedirection();
 app.UseCors();
 app.UseResponseCaching();
 app.UseAuthentication();

@@ -15,7 +15,7 @@ public sealed class ApiKeyAuthenticationHandler(IOptionsMonitor<AuthenticationSc
     {
         if (!Request.Headers.TryGetValue("X-Api-Key", out var apiKeyHeaderValues))
         {
-            return Task.FromResult(AuthenticateResult.Fail("API key not provided."));
+            return Task.FromResult(AuthenticateResult.NoResult());
         }
 
         var providedApiKey = apiKeyHeaderValues.FirstOrDefault();
