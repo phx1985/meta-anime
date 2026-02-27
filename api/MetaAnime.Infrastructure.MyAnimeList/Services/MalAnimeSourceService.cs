@@ -2,13 +2,14 @@
 using MetaAnime.Core.Interfaces.Shared.Results;
 using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.MyAnimeList.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RestSharp;
 using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.MyAnimeList.Services;
 
-public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTokenService malTokenService) : IMalAnimeSourceService<MalAnime>
+public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTokenService malTokenService, ILogger<MalAnimeSourceService> logger) : IMalAnimeSourceService<MalAnime>
 {
     #region Fields
     private readonly string baseUrl = options.Value.ApiBaseUrl;
@@ -49,12 +50,14 @@ public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTok
         // Return empty list if MAL is not configured
         if (!isConfigured)
         {
+            logger.LogWarning("Skipping MAL sync: Not configured (ApiBaseUrl is missing)");
             return Result.Success<IList<MalAnime>>(malApiAnimes);
         }
 
         var token = await malTokenService.GetAccessTokenAsync();
         if (string.IsNullOrWhiteSpace(token))
         {
+            logger.LogWarning("Skipping MAL sync: Not configured (no access token available)");
             return Result.Success<IList<MalAnime>>(malApiAnimes);
         }
 

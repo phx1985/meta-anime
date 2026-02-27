@@ -11,7 +11,7 @@ namespace MetaAnime.Infrastructure.Kometa.Services;
 
 public sealed class KometaAnimeJsonService(IOptions<KometaSettings> options, IPropertyBagRepository propertyBagRepository) : IKometaAnimeJsonService<KometaRaw>
 {
-    private const string DefaultAnimeIdsJsonUrl = "https://raw.githubusercontent.com/Kometa-Team/Anime-IDs/refs/heads/master/anime_ids.json";
+    private const string DefaultAnimeIdsJsonUrl = KometaSettings.DefaultAnimeIdsJsonUrl;
 
     public async Task<Result<IList<KometaRaw>>> GetAllAsync()
     {

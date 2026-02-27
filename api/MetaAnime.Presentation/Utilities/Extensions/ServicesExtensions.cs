@@ -1,3 +1,4 @@
+using MetaAnime.Application;
 using MetaAnime.Application.Interfaces;
 using MetaAnime.Application.Services;
 using MetaAnime.Core.Interfaces.Repositories;
@@ -30,7 +31,7 @@ public static class ServicesExtensions
     /// </summary>
     public static void AddCustomServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddMediator();
+        services.AddApplicationMediator();
 
         services.AddOptions<PlexSettings>()
             .Bind(configuration.GetSection(PlexSettings.SectionName))
