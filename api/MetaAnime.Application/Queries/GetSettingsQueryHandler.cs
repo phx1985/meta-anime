@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Repositories;
@@ -9,7 +9,7 @@ namespace MetaAnime.Application.Queries;
 public sealed class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRepository)
     : IRequestHandler<GetSettingsQuery, Result<IEnumerable<SettingDefinition>>>
 {
-    public async Task<Result<IEnumerable<SettingDefinition>>> Handle(GetSettingsQuery request, CancellationToken cancellationToken)
+    public async ValueTask<Result<IEnumerable<SettingDefinition>>> Handle(GetSettingsQuery request, CancellationToken cancellationToken)
     {
         try
         {

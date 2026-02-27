@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Shared.Results;
 
@@ -7,7 +7,7 @@ namespace MetaAnime.Application.Commands;
 public sealed class DeletePropertyBagCommandHandler(IPropertyBagRepository propertyBagRepository)
     : IRequestHandler<DeletePropertyBagCommand, Result>
 {
-    public async Task<Result> Handle(DeletePropertyBagCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result> Handle(DeletePropertyBagCommand request, CancellationToken cancellationToken)
     {
         try
         {

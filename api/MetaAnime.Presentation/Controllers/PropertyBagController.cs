@@ -1,5 +1,5 @@
 using Asp.Versioning;
-using MediatR;
+using Mediator;
 using ApplicationConstants = MetaAnime.Application.Constants;
 using MetaAnime.Application.Commands;
 using MetaAnime.Application.Contracts;

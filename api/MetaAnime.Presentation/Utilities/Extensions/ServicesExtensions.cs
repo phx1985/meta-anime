@@ -1,4 +1,3 @@
-using LukeHagar.PlexAPI.SDK;
 using MetaAnime.Application.Interfaces;
 using MetaAnime.Application.Services;
 using MetaAnime.Core.Interfaces.Repositories;
@@ -10,7 +9,6 @@ using MetaAnime.Infrastructure.MyAnimeList.Models;
 using MetaAnime.Infrastructure.MyAnimeList.Services;
 using MetaAnime.Infrastructure.Plex.Models;
 using MetaAnime.Infrastructure.Plex.Services;
-using MetaAnime.Infrastructure.Plex.Utilities;
 using MetaAnime.Infrastructure.Repositories;
 using MetaAnime.Infrastructure.Sonarr.Services;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
@@ -32,7 +30,7 @@ public static class ServicesExtensions
     /// </summary>
     public static void AddCustomServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(IAnimeMediatorService).Assembly));
+        services.AddMediator();
 
         services.AddOptions<PlexSettings>()
             .Bind(configuration.GetSection(PlexSettings.SectionName))
@@ -63,16 +61,6 @@ public static class ServicesExtensions
             .Bind(configuration.GetSection(MalSettings.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
-
-        services.AddSingleton<IPlexAPI, PlexAPI>(provider =>
-        {
-            var settings = provider.GetRequiredService<IOptions<PlexSettings>>().Value;
-            return PlexAPI.Builder()
-                .WithToken(settings.Token)
-                .WithServerUrl(settings.Host)
-                .WithClient(new SpeakeasyHttpClient2())
-                .Build();
-        });
 
         services.AddScoped<IKometaAnimeJsonService<KometaRaw>, KometaAnimeJsonService>();
         services.AddScoped<IKometaAnimeMappingService, KometaAnimeMappingService>();

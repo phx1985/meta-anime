@@ -1,5 +1,5 @@
 using Asp.Versioning;
-using MediatR;
+using Mediator;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Queries;
 using MetaAnime.Presentation;

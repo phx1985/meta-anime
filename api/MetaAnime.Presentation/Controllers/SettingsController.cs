@@ -1,6 +1,6 @@
 using Asp.Versioning;
 using Hangfire;
-using MediatR;
+using Mediator;
 using MetaAnime.Application.BackgroundJobs;
 using MetaAnime.Application.Commands;
 using MetaAnime.Application.Contracts;

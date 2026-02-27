@@ -1,23 +1,20 @@
 ﻿using LukeHagar.PlexAPI.SDK;
 using LukeHagar.PlexAPI.SDK.Models.Requests;
+using MetaAnime.Core;
+using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
 using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.Plex.Models;
+using MetaAnime.Infrastructure.Plex.Utilities;
 using Microsoft.Extensions.Options;
 using Components = LukeHagar.PlexAPI.SDK.Models.Components;
 
 namespace MetaAnime.Infrastructure.Plex.Services;
 
-public sealed class PlexAnimeSourceService(IPlexAPI plexAPI, IOptions<PlexSettings> options) : IPlexAnimeSourceService<PlexMedia>
+public sealed class PlexAnimeSourceService(IOptions<PlexSettings> options, IPropertyBagRepository propertyBagRepository) : IPlexAnimeSourceService<PlexMedia>
 {
-    #region Fields
-    private readonly int[] animeSections = ParseAnimeSections(options.Value.AnimeSections);
-    private readonly IPlexAPI plexAPI = plexAPI;
-    private readonly bool isConfigured = !string.IsNullOrWhiteSpace(options.Value.Host)
-        && !string.IsNullOrWhiteSpace(options.Value.Token)
-        && !string.IsNullOrWhiteSpace(options.Value.AnimeSections);
-    #endregion
+    private (IPlexAPI plexAPI, int[] animeSections, bool isConfigured)? _settings;
 
     private static int[] ParseAnimeSections(string sections)
     {
@@ -38,8 +35,35 @@ public sealed class PlexAnimeSourceService(IPlexAPI plexAPI, IOptions<PlexSettin
         }
     }
 
+    private async Task<(IPlexAPI plexAPI, int[] animeSections, bool isConfigured)> GetSettingsAsync()
+    {
+        if (_settings.HasValue) return _settings.Value;
+
+        var hostEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexHost);
+        var tokenEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexToken);
+        var sectionsEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexAnimeSections);
+
+        var host = hostEntry?.Value ?? options.Value.Host ?? string.Empty;
+        var token = tokenEntry?.Value ?? options.Value.Token ?? string.Empty;
+        var sectionsStr = sectionsEntry?.Value ?? options.Value.AnimeSections ?? string.Empty;
+        var animeSections = ParseAnimeSections(sectionsStr);
+        var isConfigured = !string.IsNullOrWhiteSpace(host)
+            && !string.IsNullOrWhiteSpace(token)
+            && animeSections.Length > 0;
+
+        var plexAPI = PlexAPI.Builder()
+            .WithToken(token)
+            .WithServerUrl(host)
+            .WithClient(new SpeakeasyHttpClient2())
+            .Build();
+
+        _settings = (plexAPI, animeSections, isConfigured);
+        return _settings.Value;
+    }
+
     public async Task<Result<IList<PlexMedia>>> GetAllAsync()
     {
+        var (plexAPI, animeSections, isConfigured) = await GetSettingsAsync();
         var results = new List<PlexMedia>();
 
         if (!isConfigured)
@@ -75,6 +99,8 @@ public sealed class PlexAnimeSourceService(IPlexAPI plexAPI, IOptions<PlexSettin
 
     public async Task<Result<PlexMedia>> GetByIdAsync(string id)
     {
+        var (plexAPI, _, isConfigured) = await GetSettingsAsync();
+
         if (!isConfigured)
         {
             return Result.Failure<PlexMedia>(new(Constants.Errors.NotConfigured, "Plex is not configured"));
@@ -95,6 +121,13 @@ public sealed class PlexAnimeSourceService(IPlexAPI plexAPI, IOptions<PlexSettin
 
     public async Task<Result<string>> GetMachineIdentifierAsync()
     {
+        var (plexAPI, _, isConfigured) = await GetSettingsAsync();
+
+        if (!isConfigured)
+        {
+            return Result.Failure<string>(new Error(Constants.Errors.NotConfigured, "Plex is not configured"));
+        }
+
         var response = await plexAPI.General.GetIdentityAsync();
         var machineIdentifier = response.Object?.MediaContainer?.MachineIdentifier;
 
