@@ -9,7 +9,7 @@ using Components = LukeHagar.PlexAPI.SDK.Models.Components;
 
 namespace MetaAnime.Infrastructure.Plex.Services;
 
-public class PlexAnimeSourceService(IPlexAPI plexAPI, IOptions<PlexSettings> options) : IPlexAnimeSourceService<PlexMedia>
+public sealed class PlexAnimeSourceService(IPlexAPI plexAPI, IOptions<PlexSettings> options) : IPlexAnimeSourceService<PlexMedia>
 {
     #region Fields
     private readonly int[] animeSections = ParseAnimeSections(options.Value.AnimeSections);

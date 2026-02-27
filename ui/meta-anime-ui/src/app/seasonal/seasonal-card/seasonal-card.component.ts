@@ -1,10 +1,9 @@
-import { Component, Input, signal, inject, HostListener, HostBinding, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, Input, signal, inject, HostListener, HostBinding, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { trigger, state, style, animate, transition } from '@angular/animations';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { DestroyRef } from '@angular/core';
 import { SeasonalAnimeItem } from '../../models/anime.models';
 import { ScoreBadgeComponent } from '../../anime-list/anime-card/score-badge/score-badge.component';
 import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../../constants/genre-lists';
@@ -23,6 +22,7 @@ import { Subject, debounceTime, switchMap, of, catchError, forkJoin } from 'rxjs
 @Component({
   selector: 'app-seasonal-card',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule, TranslatePipe, ScoreBadgeComponent],
   templateUrl: './seasonal-card.component.html',
   styleUrl: './seasonal-card.component.scss',

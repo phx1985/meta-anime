@@ -5,7 +5,7 @@ using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Commands;
 
-public class UpsertPropertyBagCommandHandler(IPropertyBagRepository propertyBagRepository)
+public sealed class UpsertPropertyBagCommandHandler(IPropertyBagRepository propertyBagRepository)
     : IRequestHandler<UpsertPropertyBagCommand, Result<PropertyBagResponse>>
 {
     public async Task<Result<PropertyBagResponse>> Handle(UpsertPropertyBagCommand request, CancellationToken cancellationToken)

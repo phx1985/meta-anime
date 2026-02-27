@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MetaAnime.Infrastructure.Repositories;
 
-public class AnimeMappingRepository(MetaAnimeDbContext dbContext) : IAnimeMappingRepository
+public sealed class AnimeMappingRepository(MetaAnimeDbContext dbContext) : IAnimeMappingRepository
 {
     public async Task BulkDeleteAllAsync()
     {

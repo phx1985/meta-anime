@@ -6,7 +6,7 @@ using MetaAnime.Domain.Enums;
 
 namespace MetaAnime.Application.Services;
 
-public class AnimeMappingService(IAnimeMappingRepository mappingRepository) : IAnimeMappingService
+public sealed class AnimeMappingService(IAnimeMappingRepository mappingRepository) : IAnimeMappingService
 {
     public async Task<Result> BulkDeleteAllAsync()
     {

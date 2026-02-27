@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   Input,
   OnChanges,
@@ -42,6 +43,7 @@ Chart.register(
 @Component({
   selector: 'app-genre-chart',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TranslatePipe],
   templateUrl: './genre-chart.component.html',
   styleUrl: './genre-chart.component.scss',

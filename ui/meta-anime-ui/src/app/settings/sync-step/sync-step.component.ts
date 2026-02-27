@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 import { SyncStep } from '../../models/sync-progress.models';
@@ -24,6 +24,7 @@ const PROVIDER_IMAGES: Record<string, string> = {
 @Component({
   selector: 'app-sync-step',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, TranslatePipe],
   templateUrl: './sync-step.component.html',
   styleUrl: './sync-step.component.scss',

@@ -10,7 +10,7 @@ namespace MetaAnime.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/mal")]
-public class MalController(
+public sealed class MalController(
     IAnimeMediatorService animeMediatorService,
     ILogger<MalController> logger) : ControllerBase
 {

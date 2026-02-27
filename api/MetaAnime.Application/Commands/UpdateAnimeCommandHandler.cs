@@ -5,7 +5,7 @@ using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Commands;
 
-public class UpdateAnimeCommandHandler(IAnimeMediatorService animeMediatorService)
+public sealed class UpdateAnimeCommandHandler(IAnimeMediatorService animeMediatorService)
     : IRequestHandler<UpdateAnimeCommand, Result<AnimeResponse>>
 {
     public async Task<Result<AnimeResponse>> Handle(UpdateAnimeCommand request, CancellationToken cancellationToken)

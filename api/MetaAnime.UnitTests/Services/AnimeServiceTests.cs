@@ -11,6 +11,7 @@ using MetaAnime.Domain.Enums;
 using MetaAnime.Infrastructure.MyAnimeList.Models;
 using MetaAnime.Infrastructure.Plex.Models;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace MetaAnime.UnitTests.Services;
@@ -48,7 +49,8 @@ public class AnimeServiceTests
             _mockMalService.Object,
             _mockSonarrService.Object,
             _mockCacheService.Object,
-            _mockPropertyBagRepository.Object
+            _mockPropertyBagRepository.Object,
+            Mock.Of<ILogger<AnimeService>>()
         );
     }
 

@@ -14,7 +14,7 @@ namespace MetaAnime.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/settings")]
-public class SettingsController(IMediator mediator, IRecurringJobManager recurringJobManager) : ControllerBase
+public sealed class SettingsController(IMediator mediator, IRecurringJobManager recurringJobManager) : ControllerBase
 {
     /// <summary>
     /// Returns all settings definitions with their current values.

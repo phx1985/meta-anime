@@ -5,7 +5,7 @@ using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Queries;
 
-public class GetAllPropertyBagQueryHandler(IPropertyBagRepository propertyBagRepository)
+public sealed class GetAllPropertyBagQueryHandler(IPropertyBagRepository propertyBagRepository)
     : IRequestHandler<GetAllPropertyBagQuery, Result<IEnumerable<PropertyBagResponse>>>
 {
     public async Task<Result<IEnumerable<PropertyBagResponse>>> Handle(GetAllPropertyBagQuery request, CancellationToken cancellationToken)

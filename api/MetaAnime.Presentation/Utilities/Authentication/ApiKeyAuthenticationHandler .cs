@@ -6,7 +6,7 @@ using System.Text.Encodings.Web;
 
 namespace MetaAnime.Utilities.Authentication;
 
-public class ApiKeyAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, IOptions<AuthenticationSettings> authSettings)
+public sealed class ApiKeyAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, IOptions<AuthenticationSettings> authSettings)
     : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
     private readonly string apiKey = authSettings.Value.ApiKey;

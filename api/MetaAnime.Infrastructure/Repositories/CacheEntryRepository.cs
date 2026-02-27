@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MetaAnime.Infrastructure.Repositories;
 
-public class CacheEntryRepository(MetaAnimeDbContext dbContext) : ICacheEntryRepository
+public sealed class CacheEntryRepository(MetaAnimeDbContext dbContext) : ICacheEntryRepository
 {
     public async Task AddAsync(CacheEntry cacheEntry)
     {

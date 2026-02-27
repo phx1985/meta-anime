@@ -11,7 +11,7 @@ namespace MetaAnime.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/seasonal")]
-public class SeasonalController(IMediator mediator) : ControllerBase
+public sealed class SeasonalController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
     [Authorize]

@@ -6,4 +6,4 @@ namespace MetaAnime.Hubs;
 /// SignalR hub that broadcasts real-time sync progress to connected clients.
 /// Anonymous access — no sensitive data is pushed through this hub.
 /// </summary>
-public class SyncHub : Hub { }
+public sealed class SyncHub : Hub { }

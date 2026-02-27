@@ -12,7 +12,7 @@ namespace MetaAnime.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/sonarr")]
-public class SonarrController(
+public sealed class SonarrController(
     IAnimeMediatorService animeMediatorService,
     ILogger<SonarrController> logger) : ControllerBase
 {

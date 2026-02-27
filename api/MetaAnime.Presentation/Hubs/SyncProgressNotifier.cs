@@ -8,7 +8,7 @@ namespace MetaAnime.Presentation.Hubs;
 /// <summary>
 /// Sends <see cref="SyncProgressUpdate"/> messages to all SignalR clients.
 /// </summary>
-public class SyncProgressNotifier(IHubContext<SyncHub> hubContext) : ISyncProgressNotifier
+public sealed class SyncProgressNotifier(IHubContext<SyncHub> hubContext) : ISyncProgressNotifier
 {
     public Task NotifyAsync(SyncProgressUpdate update) =>
         hubContext.Clients.All.SendAsync("SyncProgress", update);

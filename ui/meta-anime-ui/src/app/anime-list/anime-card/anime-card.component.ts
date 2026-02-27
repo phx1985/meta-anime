@@ -1,4 +1,4 @@
-import { Component, Input, signal, inject, HostListener } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, signal, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { trigger, state, style, animate, transition } from '@angular/animations';
@@ -11,6 +11,7 @@ const TRUNCATE_AT = 180;
 @Component({
   selector: 'app-anime-card',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, TranslatePipe, ScoreBadgeComponent],
   templateUrl: './anime-card.component.html',
   styleUrl: './anime-card.component.scss',

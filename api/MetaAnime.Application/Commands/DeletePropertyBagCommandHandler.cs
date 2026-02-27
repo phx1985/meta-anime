@@ -4,7 +4,7 @@ using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Commands;
 
-public class DeletePropertyBagCommandHandler(IPropertyBagRepository propertyBagRepository)
+public sealed class DeletePropertyBagCommandHandler(IPropertyBagRepository propertyBagRepository)
     : IRequestHandler<DeletePropertyBagCommand, Result>
 {
     public async Task<Result> Handle(DeletePropertyBagCommand request, CancellationToken cancellationToken)

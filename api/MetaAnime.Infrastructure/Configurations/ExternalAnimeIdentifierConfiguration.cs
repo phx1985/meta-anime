@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace MetaAnime.Infrastructure.Configurations;
 
-public class ExternalAnimeIdentifierConfiguration : IEntityTypeConfiguration<ExternalAnimeIdentifier>
+public sealed class ExternalAnimeIdentifierConfiguration : IEntityTypeConfiguration<ExternalAnimeIdentifier>
 {
     public void Configure(EntityTypeBuilder<ExternalAnimeIdentifier> builder)
     {

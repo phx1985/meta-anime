@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaAnime.Application.BackgroundJobs;
 
-public class MalTokenRefreshJob(
+public sealed class MalTokenRefreshJob(
     IMalTokenService malTokenService,
     ILogger<MalTokenRefreshJob> logger)
 {

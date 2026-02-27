@@ -2,7 +2,7 @@
 
 namespace MetaAnime.Domain.Entities;
 
-public class CacheEntry
+public sealed class CacheEntry
 {
     public Guid Id { get; set; }
     public required string SourceId { get; set; }

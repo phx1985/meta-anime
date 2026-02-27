@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace MetaAnime.Infrastructure.Kometa.Models;
 
-public class KometaRaw
+public sealed class KometaRaw
 {
     [JsonIgnore]
     public string AniDbId { get; set; }

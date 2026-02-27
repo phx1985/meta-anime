@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace MetaAnime.Infrastructure.Configurations;
 
-public class KometaAnimeMappingConfiguration : IEntityTypeConfiguration<KometaAnimeMapping>
+public sealed class KometaAnimeMappingConfiguration : IEntityTypeConfiguration<KometaAnimeMapping>
 {
     public void Configure(EntityTypeBuilder<KometaAnimeMapping> builder)
     {
