@@ -41,6 +41,25 @@ export class PopupService {
     this._animateOut(this.syncPromptLeaving, () => this.syncPromptProvider.set(null));
   }
 
+  // ── Synopsis modal ────────────────────────────────────────────────────────────
+
+  /** Anime title shown as the modal header; `null` means the modal is closed. */
+  readonly synopsisTitle = signal<string | null>(null);
+  /** Full synopsis text shown in the scrollable modal body. */
+  readonly synopsisBody = signal<string>('');
+  /** `true` while the exit animation is playing. */
+  readonly synopsisLeaving = signal(false);
+
+  openSynopsis(title: string, body: string): void {
+    this.synopsisTitle.set(title);
+    this.synopsisBody.set(body);
+    this.synopsisLeaving.set(false);
+  }
+
+  dismissSynopsis(): void {
+    this._animateOut(this.synopsisLeaving, () => this.synopsisTitle.set(null));
+  }
+
   // ── Shared helpers ────────────────────────────────────────────────────────────
 
   /**

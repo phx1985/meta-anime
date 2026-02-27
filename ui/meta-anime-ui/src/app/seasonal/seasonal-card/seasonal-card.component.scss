@@ -39,11 +39,6 @@
     box-shadow 0.25s ease;
   animation: cardIn 0.45s ease both;
 
-  &.card--expanded {
-    align-self: start;
-    height: auto;
-  }
-
   &:hover {
     transform: translateY(-4px);
     box-shadow: 0 18px 40px var(--card-shadow);
@@ -173,30 +168,6 @@
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
-// ─── Blurred backdrop ─────────────────────────────────────────────────────────
-
-.cover-backdrop {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  border-radius: inherit;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-
-  .card--expanded & {
-    opacity: 1;
-  }
-}
-
-.backdrop-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: blur(8px) saturate(1.2) brightness(0.6);
-  transform: scale(1.12);
-}
 
 // ─── Cover + content row ──────────────────────────────────────────────────────
 
@@ -216,20 +187,8 @@
   position: relative;
   overflow: hidden;
   background: var(--bg-secondary);
-  transition:
-    width 0.45s cubic-bezier(0.4, 0, 0.2, 1),
-    min-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.35s ease;
-
   &.cover--clickable {
     cursor: pointer;
-  }
-
-  .card--expanded & {
-    width: 0;
-    min-height: 0;
-    opacity: 0;
-    overflow: hidden;
   }
 }
 
@@ -274,11 +233,6 @@
   // Leave room for the corner badge (top-right corner of article)
   padding-right: calc(1rem + 34px);
   transition: background 0.45s ease;
-
-  .card--expanded & {
-    background: color-mix(in srgb, var(--card-bg) 78%, transparent);
-    backdrop-filter: blur(4px);
-  }
 }
 
 // ─── Header ───────────────────────────────────────────────────────────────────
@@ -355,12 +309,10 @@
   color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
-  // Default collapsed height matches the Angular animation `state('collapsed')`.
-  // Set in CSS so the card height is stable even before Angular's animation
-  // framework initialises (prevents one row card from inflating its peers).
-  height: 3.75rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  display: block;
 }
 
 .desc-toggle {

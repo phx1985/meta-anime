@@ -1,11 +1,4 @@
-<article class="anime-card" [class.card--expanded]="descExpanded()">
-  <!-- ── Blurred backdrop (visible when synopsis expanded) ──────────────── -->
-  @if (coverImageUrl) {
-    <div class="cover-backdrop" aria-hidden="true">
-      <img [src]="coverImageUrl" class="backdrop-img" [alt]="''" />
-    </div>
-  }
-
+<article class="anime-card">
   <div class="card-main">
     <!-- ── Cover image ────────────────────────────────────────────────── -->
     <div
@@ -88,12 +81,16 @@
       <!-- ── Description ──────────────────────────────────────────────── -->
       @if (description) {
         <div class="desc-wrap">
-          <p class="desc-text" [@expandCollapse]="descExpanded() ? 'expanded' : 'collapsed'">
-            {{ description }}
-          </p>
+          <p class="desc-text">{{ description }}</p>
           @if (description.length > 180) {
-            <button class="desc-toggle" (click)="toggleDesc()">
-              {{ descExpanded() ? ('animeCard.less' | translate) : ('animeCard.more' | translate) }}
+            <button
+              type="button"
+              class="desc-toggle"
+              (click)="openSynopsisModal()"
+              (keydown.enter)="openSynopsisModal()"
+              (keydown.space)="openSynopsisModal()"
+            >
+              {{ 'animeCard.seeMore' | translate }}
             </button>
           }
         </div>

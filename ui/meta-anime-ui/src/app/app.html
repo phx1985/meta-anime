@@ -370,3 +370,35 @@
   </div>
 </div>
 }
+<!-- ── Synopsis Modal ───────────────────────────────────────────────────── -->
+@if (synopsisModal()) {
+<div class="synopsis-backdrop"
+     [class.synopsis-backdrop--leaving]="synopsisLeaving()"
+     (click)="dismissSynopsisModal()"
+     role="dialog" aria-modal="true"
+     [attr.aria-label]="synopsisModal()">
+  <div class="synopsis-modal"
+       [class.synopsis-modal--leaving]="synopsisLeaving()"
+       (click)="$event.stopPropagation()">
+
+    <!-- Close button -->
+    <button type="button" class="synopsis-close"
+      (click)="dismissSynopsisModal()"
+      aria-label="Close">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+
+    <!-- Title -->
+    <h3 class="synopsis-title">{{ synopsisModal() }}</h3>
+
+    <!-- Scrollable synopsis body -->
+    <div class="synopsis-body">
+      <p class="synopsis-text">{{ synopsisBody() }}</p>
+    </div>
+  </div>
+</div>
+}

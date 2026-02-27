@@ -2,7 +2,8 @@ import { Component, Input, signal, inject, HostListener, HostBinding, OnInit } f
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { trigger, state, style, animate, transition } from '@angular/animations';
+import { trigger, style, animate, transition } from '@angular/animations';
+import { PopupService } from '../../services/popup.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DestroyRef } from '@angular/core';
 import { SeasonalAnimeItem } from '../../models/anime.models';
@@ -27,12 +28,6 @@ import { Subject, debounceTime, switchMap, of, catchError, forkJoin } from 'rxjs
   templateUrl: './seasonal-card.component.html',
   styleUrl: './seasonal-card.component.scss',
   animations: [
-    trigger('expandCollapse', [
-      state('collapsed', style({ height: '3.75rem', overflow: 'hidden' })),
-      state('expanded', style({ height: '*', overflow: 'hidden' })),
-      transition('collapsed => expanded', animate('380ms cubic-bezier(0.4, 0, 0.2, 1)')),
-      transition('expanded => collapsed', animate('280ms cubic-bezier(0.4, 0, 1, 1)')),
-    ]),
     trigger('accordionExpand', [
       transition(':enter', [
         style({ height: '0', opacity: '0', overflow: 'hidden' }),
@@ -61,8 +56,8 @@ export class SeasonalCardComponent implements OnInit {
   private animeService = inject(AnimeService);
   private settingsService = inject(SettingsService);
   private destroyRef = inject(DestroyRef);
+  private popupService = inject(PopupService);
 
-  descExpanded = signal(false);
   showLightbox = signal(false);
 
   // ── Neon aura animation signal (set true after a successful add) ──────────
@@ -273,8 +268,8 @@ export class SeasonalCardComponent implements OnInit {
     if (this.malUrl) window.open(this.malUrl, '_blank', 'noopener,noreferrer');
   }
 
-  toggleDesc(): void {
-    this.descExpanded.update((v) => !v);
+  openSynopsisModal(): void {
+    this.popupService.openSynopsis(this.displayTitle, this.description);
   }
   openLightbox(): void {
     if (this.coverImageUrl) this.showLightbox.set(true);
