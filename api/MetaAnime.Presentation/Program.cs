@@ -8,6 +8,10 @@ using MetaAnime.Utilities.Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Read container-generated secrets (written by the s6 init script on first boot).
+// This file is optional so the app still starts in development without it.
+builder.Configuration.AddJsonFile("/config/appsettings.json", optional: true, reloadOnChange: false);
+
 builder.AddServiceDefaults();
 
 // Add services to the container.
@@ -92,6 +96,10 @@ app.UseResponseCaching();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Serve Angular static files from wwwroot (populated during Docker build)
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 // Hangfire Dashboard — open in Development (browser can't send X-Api-Key),
 // protected by HangfireAuthorizationFilter in all other environments.
 var dashboardOptions = new DashboardOptions();
@@ -103,4 +111,8 @@ app.UseHangfireDashboard("/hangfire", dashboardOptions);
 
 app.MapControllers();
 app.MapHub<SyncHub>("/hubs/sync");
+
+// Fallback to Angular index.html for all unmatched routes (client-side routing)
+app.MapFallbackToFile("index.html");
+
 app.Run();

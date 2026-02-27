@@ -1,0 +1,94 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+# =============================================================================
+# Container initialization: PostgreSQL setup and secret generation
+# Runs once on each container start; skips re-initialization if already done.
+# =============================================================================
+
+# Resolve the PostgreSQL binary directory dynamically (supports pg 15/16/17…)
+PG_VERSION=$(ls /usr/lib/postgresql 2>/dev/null | sort -V | tail -1)
+if [ -z "${PG_VERSION}" ]; then
+    echo "[init] ERROR: No PostgreSQL installation found in /usr/lib/postgresql" >&2
+    exit 1
+fi
+PG_BIN="/usr/lib/postgresql/${PG_VERSION}/bin"
+export PATH="${PG_BIN}:${PATH}"
+
+# Ensure /config is owned by the service account before any work
+chown -R abc:abc /config
+
+# ─── PostgreSQL First-Run Initialization ─────────────────────────────────────
+if [ ! -d /config/postgres ]; then
+    echo "[init] Initializing PostgreSQL data directory…"
+    mkdir -p /config/postgres
+    chown abc:abc /config/postgres
+    chmod 700 /config/postgres
+
+    # Initialize the cluster as the abc user
+    s6-setuidgid abc "${PG_BIN}/initdb" \
+        -D /config/postgres \
+        --auth-local=trust \
+        --auth-host=md5 \
+        --encoding=UTF8 \
+        --locale=C
+
+    # Start postgres temporarily on the loopback interface for user/db creation
+    s6-setuidgid abc "${PG_BIN}/pg_ctl" \
+        -D /config/postgres \
+        -o "-c listen_addresses='127.0.0.1'" \
+        -w start
+
+    # Generate a cryptographically secure database password
+    DB_PASSWORD=$(openssl rand -base64 32)
+    if [ -z "${DB_PASSWORD}" ]; then
+        echo "[init] ERROR: Failed to generate database password" >&2
+        s6-setuidgid abc "${PG_BIN}/pg_ctl" -D /config/postgres -w stop
+        exit 1
+    fi
+
+    # Create application role and database
+    s6-setuidgid abc psql -h 127.0.0.1 -d postgres \
+        -c "CREATE USER metaanime WITH PASSWORD '${DB_PASSWORD}';"
+    s6-setuidgid abc psql -h 127.0.0.1 -d postgres \
+        -c "CREATE DATABASE metaanime OWNER metaanime;"
+
+    # Shut down the temporary postgres instance
+    s6-setuidgid abc "${PG_BIN}/pg_ctl" -D /config/postgres -w stop
+
+    # Generate a cryptographically secure API key
+    API_KEY=$(openssl rand -hex 32)
+    if [ -z "${API_KEY}" ]; then
+        echo "[init] ERROR: Failed to generate API key" >&2
+        exit 1
+    fi
+
+    # Write the generated secrets to /config/appsettings.json.
+    # The .NET application reads this file on every startup.
+    # openssl rand -base64 produces [A-Za-z0-9+/=] — safe in JSON strings.
+    # openssl rand -hex produces [0-9a-f] — safe in JSON strings.
+    cat > /config/appsettings.json << EOF
+{
+  "Postgres": {
+    "Host": "127.0.0.1",
+    "User": "metaanime",
+    "Password": "${DB_PASSWORD}",
+    "Db": "metaanime"
+  },
+  "Authentication": {
+    "ApiKey": "${API_KEY}"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*"
+}
+EOF
+    chown abc:abc /config/appsettings.json
+    chmod 600 /config/appsettings.json
+
+    echo "[init] Setup complete. Configuration written to /config/appsettings.json"
+    echo "[init] API key generated. Use the X-Api-Key header with the value stored in /config/appsettings.json"
+fi

@@ -1,0 +1,15 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+# =============================================================================
+# PostgreSQL service finish script
+# Gracefully stops PostgreSQL when the service exits.
+# =============================================================================
+
+PG_VERSION=$(ls /usr/lib/postgresql 2>/dev/null | sort -V | tail -1)
+if [ -z "${PG_VERSION}" ]; then
+    echo "[postgres/finish] ERROR: No PostgreSQL installation found" >&2
+    exit 1
+fi
+PG_BIN="/usr/lib/postgresql/${PG_VERSION}/bin"
+
+s6-setuidgid abc "${PG_BIN}/pg_ctl" -D /config/postgres -w stop

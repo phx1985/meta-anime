@@ -1,0 +1,8 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+# =============================================================================
+# MetaAnime API service finish script
+# Called by s6 when the .NET process exits.
+# =============================================================================
+
+echo "[metaanime] Service exited."
