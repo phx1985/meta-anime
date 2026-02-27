@@ -185,6 +185,10 @@ export class SeasonalCardComponent implements OnInit {
     return this.anime.synopsis ?? '';
   }
 
+  get isTruncated(): boolean {
+    return this.description.length > 180;
+  }
+
   private get allMalGenres(): string[] {
     return this.anime.genres ?? [];
   }

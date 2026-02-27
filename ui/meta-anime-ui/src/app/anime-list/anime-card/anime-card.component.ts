@@ -91,6 +91,10 @@ export class AnimeCardComponent {
     return this.mal?.synopsis ?? this.anime.description ?? '';
   }
 
+  get isTruncated(): boolean {
+    return this.description.length > 180;
+  }
+
   // ── Status ────────────────────────────────────────────────────────────────
 
   /** MAL list status (watching / completed / on_hold / dropped / plan_to_watch) */

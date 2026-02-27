@@ -81,8 +81,16 @@
       <!-- ── Description ──────────────────────────────────────────────── -->
       @if (description) {
         <div class="desc-wrap">
-          <p class="desc-text">{{ description }}</p>
-          @if (description.length > 180) {
+          <p
+            class="desc-text"
+            [class.desc-text--clickable]="isTruncated"
+            [attr.role]="isTruncated ? 'button' : null"
+            [attr.tabindex]="isTruncated ? 0 : null"
+            (click)="isTruncated && openSynopsisModal()"
+            (keydown.enter)="isTruncated && openSynopsisModal()"
+            (keydown.space)="isTruncated && openSynopsisModal()"
+          >{{ description }}</p>
+          @if (isTruncated) {
             <button
               type="button"
               class="desc-toggle"

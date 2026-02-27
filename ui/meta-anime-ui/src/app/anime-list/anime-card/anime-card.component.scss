@@ -279,6 +279,16 @@
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  transition: opacity 0.15s;
+
+  &--clickable {
+    cursor: pointer;
+    user-select: none;
+
+    &:hover {
+      opacity: 0.75;
+    }
+  }
 }
 
 .desc-toggle {
