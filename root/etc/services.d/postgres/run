@@ -1,0 +1,20 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+# =============================================================================
+# PostgreSQL service run script
+# Starts PostgreSQL bound strictly to 127.0.0.1 (never accessible externally).
+# Uses /config/postgres as PGDATA so data persists in the mounted volume.
+# =============================================================================
+
+PG_VERSION=$(ls /usr/lib/postgresql 2>/dev/null | sort -V | tail -1)
+if [ -z "${PG_VERSION}" ]; then
+    echo "[postgres] ERROR: No PostgreSQL installation found in /usr/lib/postgresql" >&2
+    exit 1
+fi
+PG_BIN="/usr/lib/postgresql/${PG_VERSION}/bin"
+
+exec s6-setuidgid abc "${PG_BIN}/postgres" \
+    -D /config/postgres \
+    -c listen_addresses='127.0.0.1' \
+    -c log_destination=stderr \
+    -c logging_collector=off

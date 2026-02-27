@@ -1,0 +1,27 @@
+# Version control
+.git
+.gitignore
+
+# IDE and editor files
+.vs
+.vscode
+**/.idea
+**/*.user
+
+# Build artifacts
+**/bin
+**/obj
+**/dist
+**/node_modules
+
+# Docker files (not needed inside build context)
+docker-compose*
+Dockerfile*
+
+# Aspire host (not required inside the container build)
+MetaAnime.AppHost
+
+# Misc
+README.md
+LICENSE
+**/*.md
