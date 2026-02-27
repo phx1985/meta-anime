@@ -39,6 +39,7 @@ RUN apt-get update \
         openssl \
         wget \
         ca-certificates \
+        jq \
     && wget -q https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb \
         -O /tmp/packages-microsoft-prod.deb \
     && dpkg -i /tmp/packages-microsoft-prod.deb \
