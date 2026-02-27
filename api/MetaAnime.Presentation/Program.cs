@@ -6,7 +6,11 @@ using MetaAnime.Hubs;
 using MetaAnime.Utilities.Extensions;
 using MetaAnime.Utilities.Hangfire;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    WebRootPath = "/app/wwwroot"
+});
 
 // Read container-generated secrets (written by the s6 init script on first boot).
 // This file is optional so the app still starts in development without it.
@@ -85,6 +89,10 @@ if (app.Environment.IsDevelopment())
 
 app.MapDefaultEndpoints();
 
+// Serve Angular static files from wwwroot (populated during Docker build)
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 // Schedule background jobs
 var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>();
 await AnimeSyncJob.ScheduleAsync(recurringJobManager, app.Services);
@@ -94,10 +102,6 @@ app.UseCors();
 app.UseResponseCaching();
 app.UseAuthentication();
 app.UseAuthorization();
-
-// Serve Angular static files from wwwroot (populated during Docker build)
-app.UseDefaultFiles();
-app.UseStaticFiles();
 
 // Hangfire Dashboard — open in Development (browser can't send X-Api-Key),
 // protected by HangfireAuthorizationFilter in all other environments.
