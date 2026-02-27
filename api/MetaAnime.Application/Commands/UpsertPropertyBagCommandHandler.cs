@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Shared.Results;
@@ -8,7 +8,7 @@ namespace MetaAnime.Application.Commands;
 public sealed class UpsertPropertyBagCommandHandler(IPropertyBagRepository propertyBagRepository)
     : IRequestHandler<UpsertPropertyBagCommand, Result<PropertyBagResponse>>
 {
-    public async Task<Result<PropertyBagResponse>> Handle(UpsertPropertyBagCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result<PropertyBagResponse>> Handle(UpsertPropertyBagCommand request, CancellationToken cancellationToken)
     {
         try
         {

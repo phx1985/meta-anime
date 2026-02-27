@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
@@ -12,7 +12,7 @@ public sealed class MatchAnimeCommandHandler(
     IPropertyBagRepository propertyBagRepository)
     : IRequestHandler<MatchAnimeCommand, Result>
 {
-    public async Task<Result> Handle(MatchAnimeCommand request, CancellationToken cancellationToken)
+    public async ValueTask<Result> Handle(MatchAnimeCommand request, CancellationToken cancellationToken)
     {
         var result = await animeMatchingService.MatchAsync(request.ForceRefreshKometaMapping, progressNotifier);
 

@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Repositories;
@@ -9,7 +9,7 @@ namespace MetaAnime.Application.Queries;
 public sealed class GetSyncStatusQueryHandler(IPropertyBagRepository propertyBagRepository)
     : IRequestHandler<GetSyncStatusQuery, Result<SyncStatusResponse>>
 {
-    public async Task<Result<SyncStatusResponse>> Handle(GetSyncStatusQuery request, CancellationToken cancellationToken)
+    public async ValueTask<Result<SyncStatusResponse>> Handle(GetSyncStatusQuery request, CancellationToken cancellationToken)
     {
         try
         {

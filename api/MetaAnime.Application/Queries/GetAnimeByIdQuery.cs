@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Core.Interfaces.Shared.Results;
 

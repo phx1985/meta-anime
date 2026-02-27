@@ -1,4 +1,4 @@
-using MediatR;
+using Mediator;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Shared.Results;
@@ -8,7 +8,7 @@ namespace MetaAnime.Application.Queries;
 public sealed class GetPropertyBagByKeyQueryHandler(IPropertyBagRepository propertyBagRepository)
     : IRequestHandler<GetPropertyBagByKeyQuery, Result<PropertyBagResponse?>>
 {
-    public async Task<Result<PropertyBagResponse?>> Handle(GetPropertyBagByKeyQuery request, CancellationToken cancellationToken)
+    public async ValueTask<Result<PropertyBagResponse?>> Handle(GetPropertyBagByKeyQuery request, CancellationToken cancellationToken)
     {
         try
         {
