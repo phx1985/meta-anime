@@ -1,4 +1,4 @@
-import { Component, inject, signal, DestroyRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
@@ -11,6 +11,7 @@ import { CountUpDirective } from '../directives/count-up.directive';
 @Component({
   selector: 'app-home',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TranslatePipe, GenreChartComponent, MissingStatsComponent, CountUpDirective],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',

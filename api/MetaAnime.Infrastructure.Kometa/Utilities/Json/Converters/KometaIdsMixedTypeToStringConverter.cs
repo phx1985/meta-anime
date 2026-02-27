@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace MetaAnime.Infrastructure.Kometa.Infrastructure.Kometa.Utilities.Json.Converters;
 
-public class KometaIdsMixedTypeToStringConverter : JsonConverter<string[]>
+public sealed class KometaIdsMixedTypeToStringConverter : JsonConverter<string[]>
 {
     public override string[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {

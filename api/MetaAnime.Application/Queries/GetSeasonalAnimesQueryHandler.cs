@@ -5,7 +5,7 @@ using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Queries;
 
-public class GetSeasonalAnimesQueryHandler(IAnimeMediatorService animeMediatorService)
+public sealed class GetSeasonalAnimesQueryHandler(IAnimeMediatorService animeMediatorService)
     : IRequestHandler<GetSeasonalAnimesQuery, Result<IEnumerable<SeasonalAnimeResponse>>>
 {
     public async Task<Result<IEnumerable<SeasonalAnimeResponse>>> Handle(GetSeasonalAnimesQuery request, CancellationToken cancellationToken)

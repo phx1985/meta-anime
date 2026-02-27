@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MetaAnime.Infrastructure.Repositories;
 
-public class KometaAnimeMappingRepository(MetaAnimeDbContext dbContext)
+public sealed class KometaAnimeMappingRepository(MetaAnimeDbContext dbContext)
     : IKometaAnimeMappingRepository
 {
     public async Task<IList<KometaAnimeMapping>> GetAllAsync()

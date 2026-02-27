@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace MetaAnime.Infrastructure.Configurations;
 
-public class PropertyBagConfiguration : IEntityTypeConfiguration<PropertyBag>
+public sealed class PropertyBagConfiguration : IEntityTypeConfiguration<PropertyBag>
 {
     public void Configure(EntityTypeBuilder<PropertyBag> builder)
     {

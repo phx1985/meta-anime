@@ -40,7 +40,7 @@ public partial class MalAnime
     public int NumEpisodes { get; set; }
 }
 
-public class MalStartSeason
+public sealed class MalStartSeason
 {
     [JsonPropertyName("year")]
     public int Year { get; set; }

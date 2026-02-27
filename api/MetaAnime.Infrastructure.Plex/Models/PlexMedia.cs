@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.Plex.Models;
 
-public class PlexMedia : IAnimeConvertible, ICacheable
+public sealed class PlexMedia : IAnimeConvertible, ICacheable
 {
     #region Consts
     private const string TVDB_ID_PREFIX = "tvdb://";

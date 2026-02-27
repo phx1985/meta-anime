@@ -1,26 +1,27 @@
-﻿using MetaAnime.Domain.Enums;
-using MetaAnime.Core;
+﻿using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Mappers;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
 using MetaAnime.Core.Sync;
 using MetaAnime.Domain.Entities;
+using MetaAnime.Domain.Enums;
 using MetaAnime.Infrastructure.MyAnimeList.Models;
 using MetaAnime.Infrastructure.Plex.Models;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
 namespace MetaAnime.Application.Services;
 
-public class AnimeService(
+public sealed class AnimeService(
     IAnimeRepository animeRepository,
     IPlexAnimeSourceService<PlexMedia> plexAnimeSourceService,
     IMalAnimeSourceService<MalAnime> malAnimeSourceService,
     ISonarrAnimeSourceService<SonarrSeries> sonarrAnimeSourceService,
     ICacheEntryService cacheEntryService,
-    IPropertyBagRepository propertyBagRepository
-    ) : IAnimeService
+    IPropertyBagRepository propertyBagRepository,
+    ILogger<AnimeService> logger) : IAnimeService
 {
     public async Task<Result> BulkInsertAsync(IEnumerable<Anime> animes)
     {
@@ -123,46 +124,51 @@ public class AnimeService(
             var plexEnabled = plexEnabledEntry?.Value != "false";
             var sonarrEnabled = sonarrEnabledEntry?.Value != "false";
 
-            // ── Step: Plex ───────────────────────────────────────────────────────
             // Each source runs sequentially and emits its own Running/Done/Error
             // SignalR messages so the UI can track per-provider progress.
             var sw = Stopwatch.StartNew();
 
+            // ── Step: Plex ───────────────────────────────────────────────────────
             IList<PlexMedia> plexAnimes = [];
             if (plexEnabled)
             {
-                await NotifyAsync(progressNotifier, "plex", SyncStepState.Running, 0, sw);
+                await NotifyAsync(progressNotifier, SyncStepKeys.Plex, SyncStepState.Running, 0, sw);
                 var plexResult = await plexAnimeSourceService.GetAllAsync();
                 if (plexResult.IsFailure)
                 {
-                    await NotifyAsync(progressNotifier, "plex", SyncStepState.Error, null, sw, plexResult.Error.Message);
+                    logger.LogError("Plex sync failed: {ErrorCode} — {ErrorMessage}", plexResult.Error.Code, plexResult.Error.Message);
+                    await NotifyAsync(progressNotifier, SyncStepKeys.Plex, SyncStepState.Error, null, sw, plexResult.Error.Message);
                     return Result.Failure<IEnumerable<Anime>>(plexResult.Error);
                 }
                 plexAnimes = plexResult.Value;
-                await NotifyAsync(progressNotifier, "plex", SyncStepState.Done, 100, sw);
+                logger.LogInformation("Plex sync fetched {Count} anime in {ElapsedMs}ms", plexAnimes.Count, sw.ElapsedMilliseconds);
+                await NotifyAsync(progressNotifier, SyncStepKeys.Plex, SyncStepState.Done, 100, sw);
                 sw.Restart();
             }
 
             // ── Step: MAL ────────────────────────────────────────────────────────
-            await NotifyAsync(progressNotifier, "mal", SyncStepState.Running, 0, sw);
+            await NotifyAsync(progressNotifier, SyncStepKeys.Mal, SyncStepState.Running, 0, sw);
             var malResult = await malAnimeSourceService.GetAllAsync();
             if (malResult.IsFailure)
             {
-                await NotifyAsync(progressNotifier, "mal", SyncStepState.Error, null, sw, malResult.Error.Message);
+                logger.LogError("MAL sync failed: {ErrorCode} — {ErrorMessage}", malResult.Error.Code, malResult.Error.Message);
+                await NotifyAsync(progressNotifier, SyncStepKeys.Mal, SyncStepState.Error, null, sw, malResult.Error.Message);
                 return Result.Failure<IEnumerable<Anime>>(malResult.Error);
             }
-            await NotifyAsync(progressNotifier, "mal", SyncStepState.Done, 100, sw);
+            logger.LogInformation("MAL sync fetched {Count} anime in {ElapsedMs}ms", malResult.Value.Count, sw.ElapsedMilliseconds);
+            await NotifyAsync(progressNotifier, SyncStepKeys.Mal, SyncStepState.Done, 100, sw);
             sw.Restart();
 
             // ── Step: Sonarr ─────────────────────────────────────────────────────
             IList<SonarrSeries> sonarrAnimes = [];
             if (sonarrEnabled)
             {
-                await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Running, 0, sw);
+                await NotifyAsync(progressNotifier, SyncStepKeys.Sonarr, SyncStepState.Running, 0, sw);
                 var sonarrResult = await sonarrAnimeSourceService.GetAllAsync();
                 if (sonarrResult.IsFailure)
                 {
-                    await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Error, null, sw, sonarrResult.Error.Message);
+                    logger.LogError("Sonarr sync failed: {ErrorCode} — {ErrorMessage}", sonarrResult.Error.Code, sonarrResult.Error.Message);
+                    await NotifyAsync(progressNotifier, SyncStepKeys.Sonarr, SyncStepState.Error, null, sw, sonarrResult.Error.Message);
                     return Result.Failure<IEnumerable<Anime>>(sonarrResult.Error);
                 }
 
@@ -177,7 +183,8 @@ public class AnimeService(
                         series.CodecDistribution = dist;
                 }
                 sonarrAnimes = sonarrResult.Value;
-                await NotifyAsync(progressNotifier, "sonarr", SyncStepState.Done, 100, sw);
+                logger.LogInformation("Sonarr sync fetched {Count} series in {ElapsedMs}ms", sonarrAnimes.Count, sw.ElapsedMilliseconds);
+                await NotifyAsync(progressNotifier, SyncStepKeys.Sonarr, SyncStepState.Done, 100, sw);
             }
 
             // ── Persist all sources to DB + cache ────────────────────────────────

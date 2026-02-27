@@ -6,7 +6,7 @@ using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Queries;
 
-public class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRepository)
+public sealed class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRepository)
     : IRequestHandler<GetSettingsQuery, Result<IEnumerable<SettingDefinition>>>
 {
     public async Task<Result<IEnumerable<SettingDefinition>>> Handle(GetSettingsQuery request, CancellationToken cancellationToken)

@@ -6,7 +6,7 @@ using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Commands;
 
-public class MatchAnimeCommandHandler(
+public sealed class MatchAnimeCommandHandler(
     IAnimeMatchingService animeMatchingService,
     ISyncProgressNotifier progressNotifier,
     IPropertyBagRepository propertyBagRepository)

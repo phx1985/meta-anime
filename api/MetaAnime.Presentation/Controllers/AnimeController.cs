@@ -12,7 +12,7 @@ namespace MetaAnime.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/animes")]
-public class AnimeController(IMediator mediator)
+public sealed class AnimeController(IMediator mediator)
     : ControllerBase
 {
     [HttpGet("statistics")]

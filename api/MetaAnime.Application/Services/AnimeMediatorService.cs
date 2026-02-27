@@ -17,7 +17,7 @@ using System.Text.Json;
 
 namespace MetaAnime.Application.Services;
 
-public class AnimeMediatorService(
+public sealed class AnimeMediatorService(
     IAnimeMappingService animeMappingService,
     IPlexAnimeSourceService<PlexMedia> plexAnimeSource,
     IMalAnimeSourceService<MalAnime> malAnimeSource,

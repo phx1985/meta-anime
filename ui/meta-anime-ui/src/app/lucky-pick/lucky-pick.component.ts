@@ -285,12 +285,10 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
   /**
    * Uses TranslateService to load the phrase array for the given i18n key,
    * then returns one uniformly-random element from it.
+   * Falls back gracefully when the key resolves to a non-array value.
    */
   private pickPhrase(key: string): string {
     const value: unknown = this.translate.instant(key);
-    if (!Array.isArray(value)) {
-      console.warn(`[LuckyPick] Expected an array at i18n key "${key}", got:`, value);
-    }
     const arr: string[] = Array.isArray(value) ? (value as string[]) : [String(value)];
     return arr[Math.floor(Math.random() * arr.length)];
   }

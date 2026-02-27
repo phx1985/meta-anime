@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
 
-public class SonarrRootFolder
+public sealed class SonarrRootFolder
 {
     [JsonPropertyName("id")]
     public int Id { get; set; }
@@ -12,7 +12,7 @@ public class SonarrRootFolder
     public long FreeSpace { get; set; }
 }
 
-public class SonarrQualityProfile
+public sealed class SonarrQualityProfile
 {
     [JsonPropertyName("id")]
     public int Id { get; set; }

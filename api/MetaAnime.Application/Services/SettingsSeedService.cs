@@ -13,7 +13,7 @@ namespace MetaAnime.Application.Services;
 /// on first run. Existing entries are never overwritten, so the PropertyBag
 /// remains the source of truth after the initial seed.
 /// </summary>
-public class SettingsSeedService(
+public sealed class SettingsSeedService(
     IServiceProvider serviceProvider,
     IOptions<PlexSettings> plexOptions,
     IOptions<SonarrSettings> sonarrOptions,

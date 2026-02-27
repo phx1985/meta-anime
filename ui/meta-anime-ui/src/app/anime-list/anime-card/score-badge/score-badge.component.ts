@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '@ngx-translate/core';
 
@@ -12,6 +12,7 @@ const ARC_CIRCUMFERENCE = 94.25;
 @Component({
   selector: 'app-score-badge',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, TranslatePipe],
   templateUrl: './score-badge.component.html',
   styleUrl: './score-badge.component.scss',

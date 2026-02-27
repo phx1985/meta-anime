@@ -12,7 +12,7 @@ namespace MetaAnime.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/property-bag")]
-public class PropertyBagController(IMediator mediator) : ControllerBase
+public sealed class PropertyBagController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
     [Authorize]

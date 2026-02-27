@@ -7,7 +7,7 @@ using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.Kometa.Services;
 
-public class KometaAnimeJsonService(IOptions<KometaSettings> options) : IKometaAnimeJsonService<KometaRaw>
+public sealed class KometaAnimeJsonService(IOptions<KometaSettings> options) : IKometaAnimeJsonService<KometaRaw>
 {
     #region Fields
     private readonly string jsonUrl = options.Value.AnimeIdsJsonUrl;

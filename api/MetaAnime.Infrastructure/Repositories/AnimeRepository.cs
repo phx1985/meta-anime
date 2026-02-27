@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MetaAnime.Infrastructure.Repositories;
 
-public class AnimeRepository(MetaAnimeDbContext dbContext) : IAnimeRepository
+public sealed class AnimeRepository(MetaAnimeDbContext dbContext) : IAnimeRepository
 {
     public async Task AddAsync(Anime anime)
     {

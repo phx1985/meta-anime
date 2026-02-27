@@ -7,7 +7,7 @@ using MetaAnime.Domain.Entities;
 
 namespace MetaAnime.Application.Services;
 
-public class CacheEntryService(ICacheEntryRepository cacheEntryRepository) : ICacheEntryService
+public sealed class CacheEntryService(ICacheEntryRepository cacheEntryRepository) : ICacheEntryService
 {
     public async Task<Result<CacheEntry>> AddAsync(Result<CacheEntry> cacheEntry)
     {

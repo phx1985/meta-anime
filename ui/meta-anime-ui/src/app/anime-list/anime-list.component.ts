@@ -1,5 +1,6 @@
 import {
   AfterViewInit,
+  ChangeDetectionStrategy,
   Component,
   DestroyRef,
   ElementRef,
@@ -91,6 +92,7 @@ export const MEDIA_TYPE_OPTIONS = [
 @Component({
   selector: 'app-anime-list',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FormsModule, RouterLink, TranslatePipe, AnimeCardComponent],
   templateUrl: './anime-list.component.html',
   styleUrl: './anime-list.component.scss',

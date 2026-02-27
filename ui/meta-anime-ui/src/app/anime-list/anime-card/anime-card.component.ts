@@ -1,4 +1,4 @@
-import { Component, Input, signal, inject, HostListener } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, signal, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo } from '../../models/anime.models';
@@ -9,6 +9,7 @@ import { PopupService } from '../../services/popup.service';
 @Component({
   selector: 'app-anime-card',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, TranslatePipe, ScoreBadgeComponent],
   templateUrl: './anime-card.component.html',
   styleUrl: './anime-card.component.scss',

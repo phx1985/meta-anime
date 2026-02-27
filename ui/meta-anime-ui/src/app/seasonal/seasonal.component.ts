@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -66,6 +66,7 @@ function getCurrentSeason(month: number): SeasonName {
 @Component({
   selector: 'app-seasonal',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule, TranslatePipe, SeasonalCardComponent],
   templateUrl: './seasonal.component.html',
   styleUrl: './seasonal.component.scss',

@@ -6,7 +6,7 @@ using MetaAnime.Domain.Entities;
 
 namespace MetaAnime.Application.Services;
 
-public class KometaAnimeMappingService(IKometaAnimeMappingRepository kometaAnimeMappingRepository) : IKometaAnimeMappingService
+public sealed class KometaAnimeMappingService(IKometaAnimeMappingRepository kometaAnimeMappingRepository) : IKometaAnimeMappingService
 {
     public async Task<Result<IList<KometaAnimeMapping>>> GetAllAsync()
     {

@@ -6,7 +6,7 @@ namespace MetaAnime.Utilities.Hangfire;
 /// Authorization filter for Hangfire Dashboard
 /// Requires authenticated users to access the dashboard
 /// </summary>
-public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
+public sealed class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
 {
     public bool Authorize(DashboardContext context)
     {

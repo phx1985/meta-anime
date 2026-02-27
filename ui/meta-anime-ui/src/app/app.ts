@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   inject,
   signal,
@@ -23,6 +24,7 @@ import { LuckyPickComponent } from './lucky-pick/lucky-pick.component';
 
 @Component({
   selector: 'app-root',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',

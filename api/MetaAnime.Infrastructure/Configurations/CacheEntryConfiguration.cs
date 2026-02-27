@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace MetaAnime.Infrastructure.Configurations;
 
-public class CacheEntryConfiguration : IEntityTypeConfiguration<CacheEntry>
+public sealed class CacheEntryConfiguration : IEntityTypeConfiguration<CacheEntry>
 {
     public void Configure(EntityTypeBuilder<CacheEntry> builder)
     {

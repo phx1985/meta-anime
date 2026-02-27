@@ -3,7 +3,7 @@
 namespace MetaAnime.Domain.Entities;
 
 [DebuggerDisplay("[AniDbId: {AniDbId}] - {PlatformName}->[{PlatformId}]")]
-public class KometaAnimeMapping
+public sealed class KometaAnimeMapping
 {
     public Guid Id { get; set; }
     public required string AniDbId { get; set; }

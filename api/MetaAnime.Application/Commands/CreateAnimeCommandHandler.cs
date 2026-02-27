@@ -5,7 +5,7 @@ using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Commands;
 
-public class CreateAnimeCommandHandler(IAnimeMediatorService animeMediatorService)
+public sealed class CreateAnimeCommandHandler(IAnimeMediatorService animeMediatorService)
     : IRequestHandler<CreateAnimeCommand, Result<AnimeResponse>>
 {
     public async Task<Result<AnimeResponse>> Handle(CreateAnimeCommand request, CancellationToken cancellationToken)

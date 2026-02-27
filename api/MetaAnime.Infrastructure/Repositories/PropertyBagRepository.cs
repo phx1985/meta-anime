@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MetaAnime.Infrastructure.Repositories;
 
-public class PropertyBagRepository(MetaAnimeDbContext dbContext) : IPropertyBagRepository
+public sealed class PropertyBagRepository(MetaAnimeDbContext dbContext) : IPropertyBagRepository
 {
     public async Task<PropertyBag?> GetByKeyAsync(string key)
     {

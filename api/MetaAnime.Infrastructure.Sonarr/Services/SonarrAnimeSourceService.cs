@@ -12,7 +12,7 @@ using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.Sonarr.Services;
 
-public class SonarrAnimeSourceService(IOptions<SonarrSettings> options, IPropertyBagRepository propertyBagRepository) : ISonarrAnimeSourceService<SonarrSeries>
+public sealed class SonarrAnimeSourceService(IOptions<SonarrSettings> options, IPropertyBagRepository propertyBagRepository) : ISonarrAnimeSourceService<SonarrSeries>
 {
     #region Fields
     private static readonly JsonSerializerOptions jsonOptions = new() { PropertyNameCaseInsensitive = true };

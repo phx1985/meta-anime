@@ -9,7 +9,7 @@ using System.Text.Json.Serialization;
 
 namespace MetaAnime.Infrastructure.MyAnimeList.Services;
 
-public class MalTokenService(
+public sealed class MalTokenService(
     IPropertyBagRepository propertyBagRepository,
     IOptions<MalSettings> options) : IMalTokenService
 {

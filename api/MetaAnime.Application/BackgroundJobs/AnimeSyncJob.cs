@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MetaAnime.Application.BackgroundJobs;
 
-public class AnimeSyncJob(
+public sealed class AnimeSyncJob(
     IAnimeMatchingService animeMatchingService,
     ILogger<AnimeSyncJob> logger)
 {

@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace MetaAnime.Infrastructure.Configurations;
 
-public class AnimeConfiguration : IEntityTypeConfiguration<Anime>
+public sealed class AnimeConfiguration : IEntityTypeConfiguration<Anime>
 {
     public void Configure(EntityTypeBuilder<Anime> builder)
     {

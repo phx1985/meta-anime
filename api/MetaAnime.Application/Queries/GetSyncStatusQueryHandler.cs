@@ -6,7 +6,7 @@ using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Queries;
 
-public class GetSyncStatusQueryHandler(IPropertyBagRepository propertyBagRepository)
+public sealed class GetSyncStatusQueryHandler(IPropertyBagRepository propertyBagRepository)
     : IRequestHandler<GetSyncStatusQuery, Result<SyncStatusResponse>>
 {
     public async Task<Result<SyncStatusResponse>> Handle(GetSyncStatusQuery request, CancellationToken cancellationToken)

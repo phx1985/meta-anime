@@ -8,7 +8,7 @@ using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.MyAnimeList.Services;
 
-public class MalAnimeSourceService(IOptions<MalSettings> options, IMalTokenService malTokenService) : IMalAnimeSourceService<MalAnime>
+public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTokenService malTokenService) : IMalAnimeSourceService<MalAnime>
 {
     #region Fields
     private readonly string baseUrl = options.Value.ApiBaseUrl;
