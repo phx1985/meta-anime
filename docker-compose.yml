@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: metaanime
+      POSTGRES_PASSWORD: metaanime
+      POSTGRES_DB: metaanime
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metaanime -d metaanime"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

@@ -1,0 +1,24 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+# =============================================================================
+# MetaAnime API service run script
+# Waits for PostgreSQL to be ready, then starts the .NET application.
+# Runs as the abc user (respects PUID/PGID set at container startup).
+# =============================================================================
+
+PG_VERSION=$(ls /usr/lib/postgresql 2>/dev/null | sort -V | tail -1)
+if [ -z "${PG_VERSION}" ]; then
+    echo "[metaanime] ERROR: No PostgreSQL installation found in /usr/lib/postgresql" >&2
+    exit 1
+fi
+PG_BIN="/usr/lib/postgresql/${PG_VERSION}/bin"
+
+echo "[metaanime] Waiting for PostgreSQL to be ready…"
+until s6-setuidgid abc "${PG_BIN}/pg_isready" -h 127.0.0.1 -U metaanime -d metaanime -q; do
+    sleep 1
+done
+echo "[metaanime] PostgreSQL is ready."
+
+exec s6-setuidgid abc \
+    dotnet /app/MetaAnime.Presentation.dll \
+    --urls "http://0.0.0.0:8080"
