@@ -30,7 +30,7 @@ public static class ServicesExtensions
     /// </summary>
     public static void AddCustomServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddMediator();
+        services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
 
         services.AddOptions<PlexSettings>()
             .Bind(configuration.GetSection(PlexSettings.SectionName))

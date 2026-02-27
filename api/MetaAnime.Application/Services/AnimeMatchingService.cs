@@ -6,7 +6,6 @@ using MetaAnime.Domain.Enums;
 using MetaAnime.Infrastructure.Kometa.Models;
 using MetaAnime.Infrastructure.Kometa.Utilities.Extensions;
 using MetaAnime.Infrastructure.Utilities.Extensions;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace MetaAnime.Application.Services;
@@ -95,7 +94,7 @@ public sealed class AnimeMatchingService(
             return Result.Failure(deleteMappingsResult.Error);
         }
 
-        var animeMappings = new ConcurrentBag<AnimeMapping>();
+        var animeMappings = new List<AnimeMapping>();
         // Platforms are ordered by priority (Tvdb > Imdb > Tmdb)
         var platformMappings = new Dictionary<MediaPlatform, KometaAnimePlatform>
         {
@@ -104,17 +103,17 @@ public sealed class AnimeMatchingService(
             { MediaPlatform.Tmdb, KometaAnimePlatform.TmdbShow }
         };
 
-        Parallel.ForEach(allAnimes, anime =>
+        foreach (var anime in allAnimes)
         {
             if (anime.AnimeSource == AnimeSource.MyAnimeList)
             {
                 var malKometaMapping = kometaMappings.Where(km => km.GetPlatformEnum() == KometaAnimePlatform.Mal && km.PlatformId == anime.SourceId).ToList();
                 malKometaMapping.ForEach(km => animeMappings.Add(new AnimeMapping { AnimeId = anime.Id, AniDbId = km.AniDbId }));
-                return;
+                continue;
             }
 
             if (anime.ExternalAnimeIdentifiers is null || anime.ExternalAnimeIdentifiers.Count == 0)
-                return;
+                continue;
 
             foreach (var platformMapping in platformMappings)
             {
@@ -127,7 +126,7 @@ public sealed class AnimeMatchingService(
                     break;
                 }
             }
-        });
+        }
 
         var addMappingsResult = await mappingService.BulkInsertAsync(animeMappings);
         if (addMappingsResult.IsFailure)

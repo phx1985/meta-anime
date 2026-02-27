@@ -72,7 +72,7 @@ public sealed class SettingsSeedService(
             [SettingsKeys.MalClientSecret] = mal.ClientSecret,
             [SettingsKeys.MalRefreshToken] = mal.RefreshToken,
 
-            [SettingsKeys.KometaAnimeIdsJsonUrl] = kometa.AnimeIdsJsonUrl,
+            [SettingsKeys.KometaAnimeIdsJsonUrl] = kometa.AnimeIdsJsonUrl ?? KometaSettings.DefaultAnimeIdsJsonUrl,
 
             [SettingsKeys.AppShowNsfw] = "false",
             [SettingsKeys.AppSyncInterval] = "daily",
