@@ -32,10 +32,12 @@ if [ ! -d /config/postgres ]; then
         --encoding=UTF8 \
         --locale=C
 
-    # Start postgres temporarily on the loopback interface for user/db creation
+    # Start postgres temporarily via Unix socket for user/db creation.
+    # Using listen_addresses='' disables TCP so only the local socket is used,
+    # which matches the --auth-local=trust policy and requires no password.
     s6-setuidgid abc "${PG_BIN}/pg_ctl" \
         -D /config/postgres \
-        -o "-c listen_addresses=127.0.0.1" \
+        -o "-c listen_addresses='' -c unix_socket_directories=/tmp" \
         -w start
 
     # Generate a cryptographically secure database password
@@ -46,11 +48,19 @@ if [ ! -d /config/postgres ]; then
         exit 1
     fi
 
-    # Create application role and database
-    s6-setuidgid abc psql -h 127.0.0.1 -d postgres \
-        -c "CREATE USER metaanime WITH PASSWORD '${DB_PASSWORD}';"
-    s6-setuidgid abc psql -h 127.0.0.1 -d postgres \
-        -c "CREATE DATABASE metaanime OWNER metaanime;"
+    # Create application role and database via the local Unix socket (trust auth)
+    s6-setuidgid abc psql -h /tmp -d postgres \
+        -c "CREATE USER metaanime WITH PASSWORD '${DB_PASSWORD}';" || {
+        echo "[init] ERROR: Failed to create database user" >&2
+        s6-setuidgid abc "${PG_BIN}/pg_ctl" -D /config/postgres -w stop
+        exit 1
+    }
+    s6-setuidgid abc psql -h /tmp -d postgres \
+        -c "CREATE DATABASE metaanime OWNER metaanime;" || {
+        echo "[init] ERROR: Failed to create database" >&2
+        s6-setuidgid abc "${PG_BIN}/pg_ctl" -D /config/postgres -w stop
+        exit 1
+    }
 
     # Shut down the temporary postgres instance
     s6-setuidgid abc "${PG_BIN}/pg_ctl" -D /config/postgres -w stop
