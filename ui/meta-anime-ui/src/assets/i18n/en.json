@@ -4,6 +4,8 @@
     "animes": "Animes",
     "seasonal": "Seasonal",
     "settings": "Settings",
+    "lucky": "Lucky",
+    "providers": "Providers",
     "openPlex": "Open Plex",
     "openSonarr": "Open Sonarr",
     "providerDisabled": "This provider is currently disabled",

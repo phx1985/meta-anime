@@ -37,7 +37,7 @@
     order: 4;
 
     &.show {
-      max-height: 32rem;
+      max-height: 60rem;
       padding-top: 0.5rem;
       padding-bottom: 0.5rem;
     }
@@ -64,13 +64,20 @@
   @media (max-width: 991.98px) {
     order: 3;
     width: 100%;
-    border-top: 1px solid var(--navbar-border);
-    padding-top: 0.4rem;
-    padding-bottom: 0.4rem;
-    justify-content: center;
+    border-top: none;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    justify-content: flex-end;
     gap: 0.3rem;
 
-    // Hide dividers in the ribbon to save space on small screens
+    // Hide provider links, lucky pick, settings, language & theme controls on mobile
+    // Only the notification bell remains in the top bar
+    .provider-links,
+    .btn-lucky,
+    .btn-settings,
+    .btn-lang,
+    .btn-os-theme,
+    .btn-theme-toggle,
     .navbar-divider {
       display: none;
     }
@@ -1045,4 +1052,198 @@
   line-height: 1.65;
   margin: 0;
   white-space: pre-line;
+}
+
+// ── Mobile menu extras (inside hamburger, visible only on mobile) ──────────────
+
+.mobile-menu-extras {
+  display: none; // hidden on desktop
+
+  @media (max-width: 991.98px) {
+    display: block;
+    width: 100%;
+  }
+}
+
+.mobile-menu-sep {
+  height: 1px;
+  background: var(--navbar-border);
+  margin: 0.25rem 0;
+}
+
+.mobile-menu-section {
+  padding: 0.5rem 0;
+}
+
+.mobile-menu-section-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0.25rem 0.75rem 0.4rem;
+}
+
+.mobile-menu-providers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0 0.5rem;
+}
+
+.mobile-menu-provider-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  background: transparent;
+  border: 1px solid var(--card-border);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    background: var(--bg-secondary);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+  }
+
+  img {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  &--disabled {
+    opacity: 0.45;
+    filter: grayscale(1);
+
+    &:hover {
+      opacity: 0.6;
+      filter: grayscale(0.5);
+    }
+  }
+}
+
+.mobile-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 48px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: 0;
+  transition: color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    background: var(--bg-secondary);
+    color: var(--accent-primary);
+  }
+
+  &--active {
+    color: var(--accent-primary);
+  }
+
+  svg {
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+}
+
+.mobile-menu-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem 0.75rem;
+  flex-wrap: wrap;
+}
+
+// Also ensure mobile nav-link touch targets are large enough
+@media (max-width: 991.98px) {
+  .nav-link {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem;
+  }
+}
+
+// ── Mobile Bottom Navigation Bar ───────────────────────────────────────────────
+
+.bottom-nav {
+  display: none; // hidden on desktop
+
+  @media (max-width: 991.98px) {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    background: var(--navbar-bg);
+    border-top: 1px solid var(--navbar-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+}
+
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: 60px;
+  padding: 0.5rem 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--accent-primary);
+    outline: none;
+  }
+
+  &--active {
+    color: var(--accent-primary);
+  }
+
+  svg {
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+  }
+
+  &--active svg {
+    transform: scale(1.1);
+  }
+
+  span {
+    line-height: 1;
+    white-space: nowrap;
+  }
 }
