@@ -177,6 +177,10 @@ export class SeasonalComponent {
   savedPresets = signal<SeasonalFilterPreset[]>([]);
   showSavePreset = false;
   newPresetName = '';
+  /** Name of the currently active preset — shown in the filter header (mobile highlight). */
+  activePresetName = signal<string | null>(null);
+  /** Whether the mobile presets bottom-sheet is open. */
+  presetsSheetOpen = signal(false);
 
   readonly malStates = SEASONAL_MAL_STATES;
   readonly sortOptions = SEASONAL_SORT_OPTIONS;
@@ -624,6 +628,7 @@ export class SeasonalComponent {
     this.genreDropdownOpen = false;
     this.themeDropdownOpen = false;
     this.demographicDropdownOpen = false;
+    this.activePresetName.set(null);
     this._applyFilteredResults();
   }
 
@@ -644,14 +649,22 @@ export class SeasonalComponent {
     this.genreDropdownOpen = false;
     this.themeDropdownOpen = false;
     this.demographicDropdownOpen = false;
+    this.activePresetName.set(preset.label);
+    this.presetsSheetOpen.set(false);
     this._applyFilteredResults();
     this.showSavePreset = false;
     this.filterOpen.set(false);
   }
 
   openSavePreset(): void {
+    this.presetsSheetOpen.set(false);
     this.showSavePreset = !this.showSavePreset;
-    if (this.showSavePreset) this.newPresetName = '';
+    if (this.showSavePreset) {
+      this.filterOpen.set(true);
+      const summary = this.filterSummary;
+      const noFilterText = this.translateService.instant('seasonal.filter.noFilterActive');
+      this.newPresetName = summary !== noFilterText ? summary : '';
+    }
   }
 
   confirmSavePreset(): void {
@@ -720,13 +733,10 @@ export class SeasonalComponent {
     this.error.set(false);
     this.fetchElapsedMs.set(null);
 
-    // On the very first load (no data yet) show the loading spinner.
-    // For subsequent season/year changes keep the existing animes visible so
-    // the @gridAnimation blur-rise plays — making the animation homogeneous
-    // between filter changes and season changes.
-    if (this.animes().length === 0) {
-      this.loading.set(true);
-    }
+    // Always show the loading spinner immediately when the season/year changes
+    // so the user gets instant visual feedback rather than stale data lingering.
+    this.loading.set(true);
+    this.displayedAnimes.set([]); // clear grid instantly to reveal the spinner
 
     this.fetchStartTime = Date.now();
     this.animeService

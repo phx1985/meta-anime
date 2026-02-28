@@ -181,6 +181,10 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   /** Whether the "save as preset" inline form is visible */
   showSavePreset = false;
   newPresetName = '';
+  /** Name of the currently active preset — shown in the filter header (mobile highlight). */
+  activePresetName = signal<string | null>(null);
+  /** Whether the mobile presets bottom-sheet is open. */
+  presetsSheetOpen = signal(false);
 
   // ── Filter state ──────────────────────────────────────────────────────────
   filterTitle = '';
@@ -576,6 +580,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.demographicDropdownOpen = false;
     this.showSavePreset = false;
     this.newPresetName = '';
+    this.activePresetName.set(null);
     this.animes.set([]);
     this.totalCount.set(0);
     this.allLoaded.set(false);
@@ -589,6 +594,8 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.applyFilterState(preset.filters);
     this.showSavePreset = false;
     this.newPresetName = '';
+    this.activePresetName.set(this.translateService.instant(preset.labelKey));
+    this.presetsSheetOpen.set(false);
     // Open advanced section if the preset uses any advanced filter
     const f = preset.filters;
     const hasAdvanced = !!(
@@ -626,8 +633,14 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   }
 
   openSavePreset(): void {
+    this.presetsSheetOpen.set(false);
     this.showSavePreset = !this.showSavePreset;
-    if (this.showSavePreset) this.newPresetName = '';
+    if (this.showSavePreset) {
+      this.filterOpen.set(true);
+      const summary = this.filterSummary;
+      const noFilterText = this.translateService.instant('animeList.filter.noFilterActive');
+      this.newPresetName = summary !== noFilterText ? summary : '';
+    }
   }
 
   confirmSavePreset(): void {

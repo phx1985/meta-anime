@@ -134,7 +134,9 @@
         "save": "Save",
         "cancel": "Cancel",
         "delete": "Delete preset",
-        "noPresets": "No saved presets yet"
+        "noPresets": "No saved presets yet",
+        "label": "Presets",
+        "myPresets": "My Presets"
       },
       "noFilterActive": "No filter active",
       "mediaType": "Media type"

@@ -101,7 +101,7 @@
 
     <!-- ── Filter card ──────────────────────────────────────────────────── -->
     @if (!loading() && !error() && animes().length > 0) {
-      <div class="filter-card mb-4">
+      <div class="filter-card mb-4" [class.filter-card--open]="filterOpen()">
         <!-- Card header — always visible, toggles body -->
         <div
           class="filter-card__header"
@@ -132,7 +132,11 @@
               <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
             </svg>
             <div class="filter-header-text">
-              <span class="filter-header-title">{{ 'seasonal.filter.title' | translate }}</span>
+              @if (activePresetName()) {
+                <span class="filter-header-title filter-header-title--preset">{{ activePresetName() }}</span>
+              } @else {
+                <span class="filter-header-title">{{ 'seasonal.filter.title' | translate }}</span>
+              }
               <span class="filter-header-summary" [title]="filterSummary">{{ filterSummary }}</span>
             </div>
             @if (activeFilterCount > 0) {
@@ -157,6 +161,22 @@
           <div class="filter-card__inner">
             <!-- ── Preset bar ──────────────────────────────────────────── -->
             <div class="seasonal-presets-bar">
+              <!-- Mobile: single "Presets" button replacing the inline chips -->
+              <button
+                type="button"
+                class="btn-presets-mobile"
+                (click)="presetsSheetOpen.set(true)"
+                [attr.aria-label]="'seasonal.filter.presets.label' | translate"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                {{ 'seasonal.filter.presets.label' | translate }}
+                @if (savedPresets().length > 0) {
+                  <span class="btn-presets-mobile__count">{{ savedPresets().length }}</span>
+                }
+              </button>
               <div class="presets-chips">
                 @for (p of savedPresets(); track p.id) {
                   <button
@@ -643,6 +663,56 @@
     }
   </div>
 </div>
+
+<!-- ── Filter bottom-sheet backdrop (mobile only) ──────────────────────── -->
+<div
+  class="filter-sheet-backdrop"
+  [class.filter-sheet-backdrop--visible]="filterOpen()"
+  (click)="filterOpen.set(false)"
+  aria-hidden="true"
+></div>
+
+<!-- ── Presets bottom sheet (mobile) ───────────────────────────────────── -->
+@if (presetsSheetOpen()) {
+  <div class="presets-sheet-backdrop" (click)="presetsSheetOpen.set(false)" role="dialog" aria-modal="true" [attr.aria-label]="'seasonal.filter.presets.label' | translate">
+    <div class="presets-sheet" (click)="$event.stopPropagation()">
+      <div class="presets-sheet__handle" aria-hidden="true"></div>
+      <div class="presets-sheet__header">
+        <span class="presets-sheet__title">{{ 'seasonal.filter.presets.label' | translate }}</span>
+        <button type="button" class="presets-sheet__close" (click)="presetsSheetOpen.set(false)" aria-label="Close">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
+        </button>
+      </div>
+
+      <!-- Custom presets -->
+      <div class="presets-sheet__section">
+        <span class="presets-sheet__section-label">{{ 'seasonal.filter.presets.myPresets' | translate }}</span>
+        @if (savedPresets().length === 0) {
+          <p class="presets-sheet__empty">{{ 'seasonal.filter.presets.noPresets' | translate }}</p>
+        }
+        @for (p of savedPresets(); track p.id) {
+          <button type="button" class="presets-sheet__item" (click)="applyPreset(p)">
+            <span class="presets-sheet__item-name">{{ p.label }}</span>
+            @if (activePresetName() === p.label) {
+              <svg class="presets-sheet__item-check" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M2 8l4 4 8-8"/></svg>
+            }
+            <button type="button" class="presets-sheet__item-delete" (click)="deletePreset(p.id, $event)" [attr.aria-label]="'seasonal.filter.presets.delete' | translate">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
+            </button>
+          </button>
+        }
+      </div>
+
+      <!-- Save current filters as preset -->
+      <div class="presets-sheet__footer">
+        <button type="button" class="presets-sheet__save-btn" (click)="openSavePreset()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg>
+          {{ 'seasonal.filter.presets.saveAs' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- ── Genre / Theme / Demographic filter popups (fixed overlay) ─────────── -->
 

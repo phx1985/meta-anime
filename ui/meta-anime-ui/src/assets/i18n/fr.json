@@ -134,7 +134,9 @@
         "save": "Sauvegarder",
         "cancel": "Annuler",
         "delete": "Supprimer le préréglage",
-        "noPresets": "Aucun préréglage sauvegardé"
+        "noPresets": "Aucun préréglage sauvegardé",
+        "label": "Préréglages",
+        "myPresets": "Mes préréglages"
       },
       "noFilterActive": "Aucun filtre actif",
       "mediaType": "Type de média"
