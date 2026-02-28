@@ -6,6 +6,7 @@ using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Domain.Entities;
+using MetaAnime.Core;
 using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.MyAnimeList.Models;
 using MetaAnime.Infrastructure.Plex.Models;
@@ -30,7 +31,6 @@ public sealed class AnimeMediatorService(
     IAnimeRepository animeRepository,
     IAnimeMappingRepository animeMappingRepository,
     IOptions<MalSettings> malOptions,
-    IOptions<SonarrSettings> sonarrOptions,
     ILogger<AnimeMediatorService> logger)
     : IAnimeMediatorService
 {
@@ -59,10 +59,6 @@ public sealed class AnimeMediatorService(
         CodecAliases.TryGetValue(codec, out var aliases) ? aliases : [codec];
 
     private readonly string myAnimeListHost = malOptions.Value.WebBaseUrl;
-    private readonly string sonarrSeriesBaseUrl =
-        sonarrOptions.Value?.RemoteUrl is string remoteUrl && !string.IsNullOrWhiteSpace(remoteUrl)
-            ? remoteUrl
-            : sonarrOptions.Value?.Host ?? string.Empty;
 
     // Lazily resolved the first time a URL is needed so the constructor stays synchronous.
     private string? _plexBaseUrl;
@@ -72,6 +68,21 @@ public sealed class AnimeMediatorService(
         var idResult = await plexAnimeSource.GetMachineIdentifierAsync();
         _plexBaseUrl = $"https://app.plex.tv/desktop/#!/server/{idResult.Value}/details?key=%2Flibrary%2Fmetadata%2F";
         return _plexBaseUrl;
+    }
+
+    // Reads the Sonarr base URL from the PropertyBag at request time so that
+    // settings configured via the UI (not appsettings) are always reflected.
+    // Cached for the duration of a single request only (service is Scoped).
+    private string? _sonarrSeriesBaseUrl;
+    private async Task<string> GetSonarrSeriesBaseUrlAsync()
+    {
+        if (_sonarrSeriesBaseUrl is not null) return _sonarrSeriesBaseUrl;
+        var remoteUrlEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrRemoteUrl);
+        var remoteUrl = remoteUrlEntry?.Value;
+        if (!string.IsNullOrWhiteSpace(remoteUrl))
+            return _sonarrSeriesBaseUrl = remoteUrl;
+        var hostEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrHost);
+        return _sonarrSeriesBaseUrl = hostEntry?.Value ?? string.Empty;
     }
 
     public async Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAllAsync(int page = 1, int pageSize = 100, AnimeFilters? filters = null, bool enriched = false)
@@ -163,6 +174,8 @@ public sealed class AnimeMediatorService(
                 .Where(c => c.AnimeSource == AnimeSource.Sonarr)
                 .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData);
 
+            var sonarrBaseUrl = await GetSonarrSeriesBaseUrlAsync();
+
             var mappingsByAniDbId = mappings
                 .GroupBy(m => m.AniDbId)
                 .ToDictionary(g => g.Key, g => g.ToList());
@@ -201,7 +214,7 @@ public sealed class AnimeMediatorService(
                         .ToList();
                     sonarrAnimes = group
                         .Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr)
-                        .Select(m => CreateSonarrAnimeInfoFromCache(m, sonarrCache))
+                        .Select(m => CreateSonarrAnimeInfoFromCache(m, sonarrCache, sonarrBaseUrl))
                         .ToList();
                 }
 
@@ -795,10 +808,11 @@ public sealed class AnimeMediatorService(
             if (searchResult.IsFailure)
                 return Result.Failure<IEnumerable<SonarrCodecSearchResponse>>(searchResult.Error);
 
+            var sonarrBaseUrl = await GetSonarrSeriesBaseUrlAsync();
             var responses = searchResult.Value.Select(r => new SonarrCodecSearchResponse(
                 r.Id,
                 r.Title,
-                $"{sonarrSeriesBaseUrl}/series/{r.Id}",
+                $"{sonarrBaseUrl}/series/{r.Id}",
                 r.CodecDistribution,
                 r.TotalSizeOnDisk
             ));
@@ -949,6 +963,7 @@ public sealed class AnimeMediatorService(
 
             // Resolve Plex base URL only if needed
             string? plexBaseUrl = anyInPlex ? await GetPlexBaseUrlAsync() : null;
+            var sonarrSeriesBaseUrl = await GetSonarrSeriesBaseUrlAsync();
 
             // ── Sonarr TitleSlug lookup (for building correct Sonarr web UI URLs) ───────
             var sonarrIds = aniDbToSources.Values
@@ -1132,8 +1147,9 @@ public sealed class AnimeMediatorService(
                     await animeMappingRepository.AddAsync(new AnimeMapping { AniDbId = aniDbId, AnimeId = animeForDb.Id });
             }
 
+            var sonarrBaseUrl = await GetSonarrSeriesBaseUrlAsync();
             var url = !string.IsNullOrEmpty(added.TitleSlug)
-                ? $"{sonarrSeriesBaseUrl.TrimEnd('/')}/series/{added.TitleSlug}"
+                ? $"{sonarrBaseUrl.TrimEnd('/')}/series/{added.TitleSlug}"
                 : null;
             return Result.Success(new SonarrAddResult(added.Id, added.Title, added.TitleSlug, url));
         }
@@ -1299,7 +1315,7 @@ public sealed class AnimeMediatorService(
         return new MalAnimeInfo(mapping.Anime, myAnimeListHost);
     }
 
-    private SonarrAnimeInfo CreateSonarrAnimeInfoFromCache(AnimeMapping mapping, Dictionary<string, string> sonarrCache)
+    private SonarrAnimeInfo CreateSonarrAnimeInfoFromCache(AnimeMapping mapping, Dictionary<string, string> sonarrCache, string sonarrBaseUrl)
     {
         if (mapping.Anime?.SourceId != null && sonarrCache.TryGetValue(mapping.Anime.SourceId, out var rawData))
         {
@@ -1312,7 +1328,7 @@ public sealed class AnimeMediatorService(
                     {
                         logger.LogDebug(Constants.LogMessages.AnimeMediatorService.SonarrAnimeSeasons,
                             mapping.Anime.SourceId, sonarrSeries.Title, sonarrSeries.Seasons?.Count ?? 0);
-                        return new SonarrAnimeInfo(sonarrSeries, sonarrSeriesBaseUrl, sonarrSeries.CodecDistribution);
+                        return new SonarrAnimeInfo(sonarrSeries, sonarrBaseUrl, sonarrSeries.CodecDistribution);
                     }
                 }
                 catch (JsonException ex)
@@ -1321,7 +1337,7 @@ public sealed class AnimeMediatorService(
                 }
             }
         }
-        return new SonarrAnimeInfo(mapping.Anime, sonarrSeriesBaseUrl);
+        return new SonarrAnimeInfo(mapping.Anime, sonarrBaseUrl);
     }
 
     private async Task<List<PlexAnimeInfo>> FetchPlexAnimeDetailsAsync(IEnumerable<AnimeMapping> mappings)
@@ -1370,7 +1386,8 @@ public sealed class AnimeMediatorService(
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(sonarrSeriesBaseUrl))
+            var sonarrBaseUrl = await GetSonarrSeriesBaseUrlAsync();
+            if (string.IsNullOrWhiteSpace(sonarrBaseUrl))
             {
                 logger.LogWarning("Sonarr enrichment skipped: Sonarr base URL is not configured");
                 return [];
@@ -1382,11 +1399,11 @@ public sealed class AnimeMediatorService(
                 if (sonarrResult.IsSuccess && sonarrResult.Value != null)
                 {
                     var codecDistribution = await sonarrAnimeSource.GetCodecDistributionAsync(mapping.Anime!.SourceId);
-                    return new SonarrAnimeInfo(sonarrResult.Value, sonarrSeriesBaseUrl, codecDistribution);
+                    return new SonarrAnimeInfo(sonarrResult.Value, sonarrBaseUrl, codecDistribution);
                 }
                 else
                 {
-                    return new SonarrAnimeInfo(mapping.Anime, sonarrSeriesBaseUrl);
+                    return new SonarrAnimeInfo(mapping.Anime, sonarrBaseUrl);
                 }
             });
 
