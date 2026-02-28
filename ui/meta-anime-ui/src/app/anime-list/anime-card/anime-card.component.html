@@ -215,11 +215,11 @@
       @if (plexEnabled) {
         <a
           class="action action--plex"
-          [attr.href]="plexUrl"
+          href="javascript:void(0)"
           [class.action--disabled]="!plexUrl"
-          target="_blank"
-          rel="noopener noreferrer"
+          [attr.aria-disabled]="!plexUrl ? 'true' : null"
           [title]="'animeCard.openPlex' | translate"
+          (click)="openPlexLink($event)"
         >
           <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
             <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4" />

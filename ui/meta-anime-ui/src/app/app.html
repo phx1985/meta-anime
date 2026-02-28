@@ -58,8 +58,7 @@
             }
             @if (plexHomeUrl()) {
               @if (providerState.plexEnabled()) {
-                <a class="mobile-menu-provider-link" [href]="plexHomeUrl()" target="_blank" rel="noopener noreferrer"
-                  (click)="closeMenu()">
+                <a class="mobile-menu-provider-link" href="javascript:void(0)" (click)="openPlexHomeLink($event); closeMenu()">
                   <img src="assets/images/plex.svg" alt="Plex" width="22" height="22" />
                   <span>Plex</span>
                 </a>
@@ -157,7 +156,7 @@
         }
         @if (plexHomeUrl()) {
           @if (providerState.plexEnabled()) {
-            <a class="provider-link" [href]="plexHomeUrl()" target="_blank" rel="noopener noreferrer"
+            <a class="provider-link" href="javascript:void(0)" (click)="openPlexHomeLink($event)"
                [title]="'nav.openPlex' | translate">
               <img src="assets/images/plex.svg" alt="Plex" width="18" height="18" />
             </a>

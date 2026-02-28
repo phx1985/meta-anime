@@ -5,6 +5,7 @@ import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo } from '../../model
 import { ScoreBadgeComponent } from './score-badge/score-badge.component';
 import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../../constants/genre-lists';
 import { PopupService } from '../../services/popup.service';
+import { PlexDeepLinkService } from '../../services/plex-deep-link.service';
 
 @Component({
   selector: 'app-anime-card',
@@ -27,6 +28,7 @@ export class AnimeCardComponent {
 
   private translate = inject(TranslateService);
   private popupService = inject(PopupService);
+  private plexDeepLink = inject(PlexDeepLinkService);
 
   showAltTitles = signal(false);
   showLightbox = signal(false);
@@ -284,5 +286,11 @@ export class AnimeCardComponent {
 
   closeLightbox(): void {
     this.showLightbox.set(false);
+  }
+
+  openPlexLink(event: Event): void {
+    if (!this.plexUrl) return;
+    event.preventDefault();
+    this.plexDeepLink.openLink(this.plexUrl);
   }
 }

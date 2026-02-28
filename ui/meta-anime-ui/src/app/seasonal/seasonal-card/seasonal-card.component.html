@@ -183,10 +183,9 @@
         @if (anime.inPlex && anime.plexUrl) {
           <a
             class="action action--plex action--in-library"
-            [href]="anime.plexUrl"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="javascript:void(0)"
             [title]="'animeCard.openPlex' | translate"
+            (click)="openPlexLink($event)"
           >
             <svg
               viewBox="0 0 16 16"

@@ -1,0 +1,135 @@
+import { TestBed } from '@angular/core/testing';
+import { PLATFORM_ID } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { PlexDeepLinkService } from './plex-deep-link.service';
+import { MobileDetectionService } from './mobile-detection.service';
+
+describe('PlexDeepLinkService', () => {
+  let service: PlexDeepLinkService;
+  let mockDocument: Partial<Document>;
+  let openSpy: ReturnType<typeof vi.fn>;
+  let mockMobileDetection: { isMobile: ReturnType<typeof vi.fn> };
+
+  function setup(isMobile: boolean): void {
+    openSpy = vi.fn();
+    mockMobileDetection = { isMobile: vi.fn().mockReturnValue(isMobile) };
+    mockDocument = {
+      defaultView: { open: openSpy } as unknown as Window & typeof globalThis,
+      location: { href: '' } as Location,
+      hidden: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+
+    TestBed.configureTestingModule({
+      providers: [
+        PlexDeepLinkService,
+        { provide: PLATFORM_ID, useValue: 'browser' },
+        { provide: DOCUMENT, useValue: mockDocument },
+        { provide: MobileDetectionService, useValue: mockMobileDetection },
+      ],
+    });
+
+    service = TestBed.inject(PlexDeepLinkService);
+  }
+
+  afterEach(() => TestBed.resetTestingModule());
+
+  // ── buildPlexUri ─────────────────────────────────────────────────────────
+
+  describe('buildPlexUri', () => {
+    beforeEach(() => setup(false));
+
+    it('converts a full Plex desktop URL to a plex:// deep link', () => {
+      const webUrl =
+        'https://app.plex.tv/desktop/#!/server/abc123/details?key=%2Flibrary%2Fmetadata%2F456';
+      const result = service.buildPlexUri(webUrl);
+      expect(result).toBe(
+        'plex://preplay?key=%2Flibrary%2Fmetadata%2F456&server=abc123',
+      );
+    });
+
+    it('returns plex:// for a plain https://app.plex.tv URL with no hash', () => {
+      expect(service.buildPlexUri('https://app.plex.tv')).toBe('plex://');
+    });
+
+    it('returns plex:// for a malformed URL', () => {
+      expect(service.buildPlexUri('not-a-url')).toBe('plex://');
+    });
+
+    it('returns plex:// when hash path does not match expected pattern', () => {
+      expect(service.buildPlexUri('https://app.plex.tv/#!/other/path')).toBe('plex://');
+    });
+  });
+
+  // ── openLink (desktop) ───────────────────────────────────────────────────
+
+  describe('openLink on desktop', () => {
+    beforeEach(() => setup(false));
+
+    it('opens the web URL in a new tab on desktop', () => {
+      service.openLink('https://app.plex.tv/desktop/#!/server/abc/details?key=%2F1');
+      expect(openSpy).toHaveBeenCalledWith(
+        'https://app.plex.tv/desktop/#!/server/abc/details?key=%2F1',
+        '_blank',
+        'noopener,noreferrer',
+      );
+    });
+
+    it('does nothing when url is null', () => {
+      service.openLink(null);
+      expect(openSpy).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when url is empty string', () => {
+      service.openLink('');
+      expect(openSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── openLink (mobile) ────────────────────────────────────────────────────
+
+  describe('openLink on mobile', () => {
+    beforeEach(() => setup(true));
+
+    it('sets document.location.href to the plex:// URI on mobile', () => {
+      const webUrl = 'https://app.plex.tv/desktop/#!/server/srv1/details?key=%2Flib%2F1';
+      service.openLink(webUrl);
+      expect(mockDocument.location!.href).toBe(
+        'plex://preplay?key=%2Flib%2F1&server=srv1',
+      );
+    });
+
+    it('registers a visibilitychange listener on mobile', () => {
+      service.openLink('https://app.plex.tv');
+      expect(mockDocument.addEventListener).toHaveBeenCalledWith(
+        'visibilitychange',
+        expect.any(Function),
+        { once: true },
+      );
+    });
+
+    it('falls back to the web URL after 500 ms if page is still visible', async () => {
+      vi.useFakeTimers();
+      service.openLink('https://app.plex.tv');
+      // Simulate page remaining visible
+      vi.advanceTimersByTime(500);
+      expect(openSpy).toHaveBeenCalledWith(
+        'https://app.plex.tv',
+        '_blank',
+        'noopener,noreferrer',
+      );
+      vi.useRealTimers();
+    });
+
+    it('does NOT fall back if the page became hidden (app opened)', async () => {
+      vi.useFakeTimers();
+      // Make document.hidden return true → app opened
+      Object.defineProperty(mockDocument, 'hidden', { value: true, configurable: true });
+      service.openLink('https://app.plex.tv');
+      vi.advanceTimersByTime(500);
+      expect(openSpy).not.toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+  });
+});

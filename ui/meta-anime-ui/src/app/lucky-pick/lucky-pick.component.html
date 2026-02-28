@@ -107,7 +107,7 @@
           </div>
           <div class="lucky-result__actions">
             @if (plexUrl && plexProviderEnabled) {
-            <a [href]="plexUrl" target="_blank" rel="noopener noreferrer" class="lucky-btn lucky-btn--plex">
+            <a href="javascript:void(0)" (click)="openPlexLink($event)" class="lucky-btn lucky-btn--plex">
               <img src="assets/images/plex.svg" class="lucky-btn__logo" width="16" height="16" alt=""
                 aria-hidden="true" />
               {{ plexPhrase() }}

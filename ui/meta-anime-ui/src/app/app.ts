@@ -20,6 +20,7 @@ import { NotificationService, AppNotification } from './services/notification.se
 import { SyncSignalRService } from './services/sync-signalr.service';
 import { ProviderStateService } from './services/provider-state.service';
 import { PopupService } from './services/popup.service';
+import { PlexDeepLinkService } from './services/plex-deep-link.service';
 import { LuckyPickComponent } from './lucky-pick/lucky-pick.component';
 
 @Component({
@@ -39,6 +40,7 @@ export class App implements OnInit, AfterViewInit {
   private destroyRef = inject(DestroyRef);
   readonly providerState = inject(ProviderStateService);
   readonly popupService = inject(PopupService);
+  private plexDeepLink = inject(PlexDeepLinkService);
 
   @ViewChild('navbarEl', { read: ElementRef }) private navbarEl?: ElementRef<HTMLElement>;
 
@@ -190,6 +192,12 @@ export class App implements OnInit, AfterViewInit {
     event.preventDefault();
     event.stopPropagation();
     this.popupService.openDisabledProvider(provider);
+  }
+
+  /** Opens the Plex home URL using native deep linking on mobile (with web fallback). */
+  openPlexHomeLink(event: Event): void {
+    event.preventDefault();
+    this.plexDeepLink.openLink(this.plexHomeUrl());
   }
 
   dismissDisabledProviderModal(): void {
