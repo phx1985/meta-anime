@@ -1453,11 +1453,16 @@
   }
 }
 
-// ─── Active-preset header title ───────────────────────────────────────────────
+// ─── Active-preset subtitle in filter header ──────────────────────────────────
 
-.filter-header-title--preset {
+.filter-header-preset-name {
+  font-size: 0.75rem;
+  font-weight: 600;
   color: var(--accent-primary);
-  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: min(40ch, 50%);
 }
 
 // ─── Mobile "Presets" button ──────────────────────────────────────────────────
@@ -1514,42 +1519,118 @@
 
 // ─── Filter bottom-sheet backdrop (mobile only) ───────────────────────────────
 
-.filter-sheet-backdrop {
-  display: none;
+// ─── Mobile filter sheet (dedicated fixed overlay) ────────────────────────────
 
-  &--visible {
-    @media (max-width: 639px) {
-      display: block;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.45);
-      z-index: 1035;
-      backdrop-filter: blur(2px);
-      -webkit-backdrop-filter: blur(2px);
-    }
+@media (max-width: 639px) {
+  .filter-card__body {
+    display: none !important;
   }
 }
 
-// ─── Mobile filter card → fixed bottom sheet ──────────────────────────────────
+.mobile-filter-backdrop {
+  display: none;
 
-@media (max-width: 639px) {
-  .filter-card--open .filter-card__body {
-    position: fixed !important;
+  @media (max-width: 639px) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    z-index: 1050;
+    animation: mobileFilterBdIn 0.22s ease;
+  }
+}
+
+@keyframes mobileFilterBdIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.mobile-filter-sheet {
+  display: none;
+
+  @media (max-width: 639px) {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    max-height: 82vh;
-    overflow-y: auto !important;
-    z-index: 1036;
+    max-height: 88vh;
+    z-index: 1051;
     background: var(--card-bg);
     border-radius: 1.25rem 1.25rem 0 0;
     border: 1px solid var(--card-border);
     border-bottom: none;
-    box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+    animation: mobileSheetUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+}
 
-  .filter-card--open .filter-card__inner {
-    padding-top: 1.25rem;
+@keyframes mobileSheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.mobile-filter-sheet__handle {
+  display: none;
+
+  @media (max-width: 639px) {
+    display: block;
+    width: 2.5rem;
+    height: 4px;
+    background: var(--card-border);
+    border-radius: 2px;
+    margin: 0.65rem auto 0.25rem;
+    flex-shrink: 0;
+  }
+}
+
+.mobile-filter-sheet__header {
+  display: none;
+
+  @media (max-width: 639px) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.25rem 0.5rem;
+    border-bottom: 1px solid var(--card-border);
+    flex-shrink: 0;
+  }
+}
+
+.mobile-filter-sheet__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.mobile-filter-sheet__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+}
+
+.mobile-filter-sheet > .filter-card__inner {
+  @media (max-width: 639px) {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
     padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
   }
 }

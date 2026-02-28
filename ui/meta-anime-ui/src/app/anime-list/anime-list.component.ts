@@ -15,6 +15,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { NgTemplateOutlet } from '@angular/common';
 import { trigger, state, style, animate, transition, query, stagger } from '@angular/animations';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
@@ -93,7 +94,7 @@ export const MEDIA_TYPE_OPTIONS = [
   selector: 'app-anime-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, TranslatePipe, AnimeCardComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, AnimeCardComponent, NgTemplateOutlet],
   templateUrl: './anime-list.component.html',
   styleUrl: './anime-list.component.scss',
   animations: [

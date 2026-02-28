@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { trigger, state, style, animate, transition, query, stagger } from '@angular/animations';
@@ -67,7 +67,7 @@ function getCurrentSeason(month: number): SeasonName {
   selector: 'app-seasonal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslatePipe, SeasonalCardComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, SeasonalCardComponent, NgTemplateOutlet],
   templateUrl: './seasonal.component.html',
   styleUrl: './seasonal.component.scss',
   animations: [

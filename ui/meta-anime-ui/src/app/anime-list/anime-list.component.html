@@ -13,7 +13,7 @@
     </div>
 
     <!-- ── Filter card ──────────────────────────────────────────────────── -->
-    <div class="filter-card mb-4" [class.filter-card--open]="filterOpen()">
+    <div class="filter-card mb-4">
       <!-- Card header — always visible, toggles body -->
       <div
         class="filter-card__header"
@@ -46,11 +46,7 @@
           <div class="filter-header-text">
             <!-- "Filters" title with inline info icon -->
             <span class="filter-header-title-row">
-              @if (activePresetName()) {
-                <span class="filter-header-title filter-header-title--preset">{{ activePresetName() }}</span>
-              } @else {
-                <span class="filter-header-title">{{ 'animeList.filter.title' | translate }}</span>
-              }
+              <span class="filter-header-title">{{ 'animeList.filter.title' | translate }}</span>
               <!-- Info icon with auto-apply popover — shows on hover only -->
               <span class="filter-info-wrap">
                 <button
@@ -84,7 +80,11 @@
                 </div>
               </span>
             </span>
-            <span class="filter-header-summary" [title]="filterSummary">{{ filterSummary }}</span>
+            @if (activePresetName()) {
+              <span class="filter-header-preset-name" [title]="activePresetName()!">{{ activePresetName() }}</span>
+            } @else {
+              <span class="filter-header-summary" [title]="filterSummary">{{ filterSummary }}</span>
+            }
           </div>
           @if (activeFilterCount > 0) {
             <span class="filter-badge">{{ activeFilterCount }}</span>
@@ -103,8 +103,14 @@
         </svg>
       </div>
 
-      <!-- Collapsible body -->
+      <!-- Collapsible body (desktop accordion; hidden on mobile via CSS) -->
       <div class="filter-card__body" [@filterCollapse]="filterOpen() ? 'open' : 'closed'">
+        <ng-container *ngTemplateOutlet="filterBodyTpl"></ng-container>
+      </div>
+    </div>
+
+<!-- Filter content template (shared by desktop accordion and mobile sheet) -->
+<ng-template #filterBodyTpl>
         <div class="filter-card__inner">
           <!-- ── Presets bar ──────────────────────────────────────────────── -->
           <div class="presets-bar">
@@ -764,8 +770,7 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
+</ng-template>
     <!-- ── /Filter card ─────────────────────────────────────────────────── -->
 
     @if (!searched()) {
@@ -845,13 +850,32 @@
   </div>
 </div>
 
-<!-- ── Filter bottom-sheet backdrop (mobile only) ──────────────────────── -->
-<div
-  class="filter-sheet-backdrop"
-  [class.filter-sheet-backdrop--visible]="filterOpen()"
-  (click)="filterOpen.set(false)"
-  aria-hidden="true"
-></div>
+<!-- ── Mobile filter sheet (dedicated overlay — avoids backdrop-filter stacking context trap) -->
+@if (filterOpen()) {
+  <div class="mobile-filter-backdrop" (click)="filterOpen.set(false)" aria-hidden="true"></div>
+  <div
+    class="mobile-filter-sheet"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'animeList.filter.title' | translate"
+  >
+    <div class="mobile-filter-sheet__handle" aria-hidden="true"></div>
+    <div class="mobile-filter-sheet__header">
+      <span class="mobile-filter-sheet__title">{{ 'animeList.filter.title' | translate }}</span>
+      <button
+        type="button"
+        class="mobile-filter-sheet__close"
+        (click)="filterOpen.set(false)"
+        [attr.aria-label]="'animeList.filter.collapseFilters' | translate"
+      >
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M2 2l12 12M14 2L2 14"/>
+        </svg>
+      </button>
+    </div>
+    <ng-container *ngTemplateOutlet="filterBodyTpl"></ng-container>
+  </div>
+}
 
 <!-- ── Presets bottom sheet (mobile) ───────────────────────────────────── -->
 @if (presetsSheetOpen()) {
