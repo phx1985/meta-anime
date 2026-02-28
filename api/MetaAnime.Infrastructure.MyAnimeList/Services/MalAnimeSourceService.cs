@@ -1,19 +1,17 @@
-﻿using MetaAnime.Core.Interfaces.Services;
+﻿using MetaAnime.Core;
+using MetaAnime.Core.Interfaces.Repositories;
+using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
-using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.MyAnimeList.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using RestSharp;
 using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.MyAnimeList.Services;
 
-public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTokenService malTokenService, ILogger<MalAnimeSourceService> logger) : IMalAnimeSourceService<MalAnime>
+public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepository, IMalTokenService malTokenService, ILogger<MalAnimeSourceService> logger) : IMalAnimeSourceService<MalAnime>
 {
     #region Fields
-    private readonly string baseUrl = options.Value.ApiBaseUrl;
-    private readonly bool isConfigured = !string.IsNullOrWhiteSpace(options.Value.ApiBaseUrl);
     private const string REQUEST_FIELDS = "synopsis, ";
     private const string EXTENDED_REQUEST_FIELDS = REQUEST_FIELDS + "alternative_titles{en,ja,synonyms}, " +
                                                                     "genres{id,name}, " +
@@ -47,18 +45,18 @@ public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTok
     {
         var malApiAnimes = new List<MalAnime>();
 
-        // Return empty list if MAL is not configured
-        if (!isConfigured)
+        var baseUrl = await GetBaseUrlAsync();
+        if (string.IsNullOrWhiteSpace(baseUrl))
         {
-            logger.LogWarning("Skipping MAL sync: Not configured (ApiBaseUrl is missing)");
-            return Result.Success<IList<MalAnime>>(malApiAnimes);
+            logger.LogWarning("Skipping MAL sync: '{Key}' is blank in the database. Configure the MAL API Base URL before running a sync.", SettingsKeys.MalApiBaseUrl);
+            return Result.Failure<IList<MalAnime>>(new Error(Constants.Errors.NotConfigured, $"MAL sync aborted: '{SettingsKeys.MalApiBaseUrl}' is blank. Please set the MAL API Base URL in Settings."));
         }
 
         var token = await malTokenService.GetAccessTokenAsync();
         if (string.IsNullOrWhiteSpace(token))
         {
-            logger.LogWarning("Skipping MAL sync: Not configured (no access token available)");
-            return Result.Success<IList<MalAnime>>(malApiAnimes);
+            logger.LogWarning("Skipping MAL sync: no access token available (MAL_ACCESS_TOKEN / {Key} is blank).", SettingsKeys.MalApiToken);
+            return Result.Failure<IList<MalAnime>>(new Error(Constants.Errors.NoToken, "MAL sync aborted: no access token available. Please complete the MAL OAuth flow in Settings."));
         }
 
         Paging paging = null!;
@@ -68,7 +66,7 @@ public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTok
         {
             var (response, refreshedToken) = await ExecuteWithAutoRefreshAsync(
                 token,
-                t => FetchAnimeListAsync(paging, t));
+                t => FetchAnimeListAsync(baseUrl, paging, t));
             token = refreshedToken;
             var json = response.Content!;
 
@@ -91,10 +89,10 @@ public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTok
 
     public async Task<Result<MalAnime>> GetByIdAsync(string id)
     {
-        // Return failure if MAL is not configured
-        if (!isConfigured)
+        var baseUrl = await GetBaseUrlAsync();
+        if (string.IsNullOrWhiteSpace(baseUrl))
         {
-            return Result.Failure<MalAnime>(new(Constants.Errors.NotConfigured, "MyAnimeList is not configured"));
+            return Result.Failure<MalAnime>(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."));
         }
 
         var token = await malTokenService.GetAccessTokenAsync();
@@ -105,7 +103,7 @@ public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTok
 
         var (response, _) = await ExecuteWithAutoRefreshAsync(
             token,
-            t => FetchAnimeByIdAsync(id, t));
+            t => FetchAnimeByIdAsync(baseUrl, id, t));
         var json = response.Content!;
         if (response.IsSuccessful)
         {
@@ -122,12 +120,18 @@ public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTok
 
     public async Task<Result<IList<MalAnime>>> GetSeasonalAsync(int year, string season)
     {
-        if (!isConfigured)
-            return Result.Success<IList<MalAnime>>(new List<MalAnime>());
+        var baseUrl = await GetBaseUrlAsync();
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            logger.LogWarning("Skipping MAL seasonal fetch: '{Key}' is blank in the database.", SettingsKeys.MalApiBaseUrl);
+            return Result.Failure<IList<MalAnime>>(new Error(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."));
+        }
 
         var token = await malTokenService.GetAccessTokenAsync();
         if (string.IsNullOrWhiteSpace(token))
-            return Result.Success<IList<MalAnime>>(new List<MalAnime>());
+        {
+            return Result.Failure<IList<MalAnime>>(new Error(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
+        }
 
         // Fetch all pages from MAL (limit=500 per request, loop until no next page)
         const int perPage = 500;
@@ -176,8 +180,11 @@ public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTok
     }
     public async Task<Result> UpdateListStatusAsync(string animeId, string status, int numWatchedEpisodes, int score)
     {
-        if (!isConfigured)
-            return Result.Failure(new(Constants.Errors.NotConfigured, "MyAnimeList is not configured"));
+        var baseUrl = await GetBaseUrlAsync();
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            return Result.Failure(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."));
+        }
 
         var token = await malTokenService.GetAccessTokenAsync();
         if (string.IsNullOrWhiteSpace(token))
@@ -203,7 +210,10 @@ public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTok
     #endregion
 
     #region Private
-    private async Task<RestResponse> FetchAnimeListAsync(Paging paging, string token)
+    private async Task<string?> GetBaseUrlAsync()
+        => (await propertyBagRepository.GetByKeyAsync(SettingsKeys.MalApiBaseUrl))?.Value;
+
+    private async Task<RestResponse> FetchAnimeListAsync(string baseUrl, Paging paging, string token)
     {
         var pagingUri = paging?.HasNextPage == true ? paging.Next : null;
         // Use EXTENDED_REQUEST_FIELDS to get my_list_status data (needed for viewState, addedDate, progression, rating)
@@ -216,7 +226,7 @@ public sealed class MalAnimeSourceService(IOptions<MalSettings> options, IMalTok
         return await ExecuteRequestAsync(restClient, restRequest);
     }
 
-    private async Task<RestResponse> FetchAnimeByIdAsync(string id, string token)
+    private async Task<RestResponse> FetchAnimeByIdAsync(string baseUrl, string id, string token)
     {
         var animeUri = new Uri($"{baseUrl}/anime/{id}?fields={EXTENDED_REQUEST_FIELDS}");
         var restClient = new RestClient(animeUri);
