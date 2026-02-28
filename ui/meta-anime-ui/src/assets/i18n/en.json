@@ -139,7 +139,8 @@
         "myPresets": "My Presets"
       },
       "noFilterActive": "No filter active",
-      "mediaType": "Media type"
+      "mediaType": "Media type",
+      "apply": "Apply"
     },
     "sonarrAlreadyInLibrary": "Already in Sonarr",
     "partiallyTracked": "Partially tracked — add to more providers",

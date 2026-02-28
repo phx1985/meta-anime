@@ -492,13 +492,11 @@ export class SeasonalComponent {
       v.includes(genre) ? v.filter((g) => g !== genre) : [...v, genre],
     );
     if (this.filterGenre().length <= 1) this.genreOperator.set('or');
-    this._applyFilteredResults();
   }
 
   clearGenres(event: MouseEvent): void {
     event.stopPropagation();
     this.filterGenre.set([]);
-    this._applyFilteredResults();
   }
 
   // ── Theme dropdown ────────────────────────────────────────────────────────
@@ -518,13 +516,11 @@ export class SeasonalComponent {
       v.includes(theme) ? v.filter((t) => t !== theme) : [...v, theme],
     );
     if (this.filterTheme().length <= 1) this.themeOperator.set('or');
-    this._applyFilteredResults();
   }
 
   clearThemes(event: MouseEvent): void {
     event.stopPropagation();
     this.filterTheme.set([]);
-    this._applyFilteredResults();
   }
 
   // ── Demographic dropdown ──────────────────────────────────────────────────
@@ -544,13 +540,11 @@ export class SeasonalComponent {
       v.includes(demographic) ? v.filter((d) => d !== demographic) : [...v, demographic],
     );
     if (this.filterDemographic().length <= 1) this.demographicOperator.set('or');
-    this._applyFilteredResults();
   }
 
   clearDemographics(event: MouseEvent): void {
     event.stopPropagation();
     this.filterDemographic.set([]);
-    this._applyFilteredResults();
   }
 
   // ── MAL status pills ──────────────────────────────────────────────────────
@@ -569,7 +563,6 @@ export class SeasonalComponent {
       }
       return [...current.filter((s) => s !== 'not_in'), status];
     });
-    this._applyFilteredResults();
   }
 
   // ── Media type pills ──────────────────────────────────────────────────────
@@ -578,7 +571,6 @@ export class SeasonalComponent {
     this.filterMediaType.update((current) =>
       current.includes(type) ? current.filter((t) => t !== type) : [...current, type],
     );
-    this._applyFilteredResults();
   }
 
   // ── Sort ──────────────────────────────────────────────────────────────────
@@ -586,24 +578,20 @@ export class SeasonalComponent {
   setGenreOperator(op: 'or' | 'and', event: MouseEvent): void {
     event.stopPropagation();
     this.genreOperator.set(op);
-    this._applyFilteredResults();
   }
 
   setThemeOperator(op: 'or' | 'and', event: MouseEvent): void {
     event.stopPropagation();
     this.themeOperator.set(op);
-    this._applyFilteredResults();
   }
 
   setDemographicOperator(op: 'or' | 'and', event: MouseEvent): void {
     event.stopPropagation();
     this.demographicOperator.set(op);
-    this._applyFilteredResults();
   }
 
   setSortBy(value: string): void {
     this.sortBy.set(value);
-    this._applyFilteredResults();
   }
 
   /** Returns true when this MAL status pill should be visually muted (its group is excluded). */
@@ -617,7 +605,6 @@ export class SeasonalComponent {
 
   toggleSortOrder(): void {
     this.sortOrder.update((o) => (o === 'asc' ? 'desc' : 'asc'));
-    this._applyFilteredResults();
   }
 
   // ── Reset ─────────────────────────────────────────────────────────────────
@@ -638,6 +625,12 @@ export class SeasonalComponent {
     this.demographicDropdownOpen = false;
     this.activePresetName.set(null);
     this._applyFilteredResults();
+  }
+
+  /** Apply the current filter state and close the filter sheet. */
+  applyFilters(): void {
+    this._applyFilteredResults();
+    this.filterOpen.set(false);
   }
 
   // ── Preset methods ────────────────────────────────────────────────────────

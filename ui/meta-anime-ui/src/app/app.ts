@@ -215,7 +215,14 @@ export class App implements OnInit, AfterViewInit {
   /** Scroll-to-hide/show the bottom navigation bar on mobile */
   @HostListener('window:scroll')
   onWindowScroll(): void {
-    if (this.menuOpen() || this.anyOverlayOpen()) return; // keep nav visible when menu or overlay is open
+    if (this.menuOpen()) return;
+    if (this.anyOverlayOpen()) {
+      // Lock: keep the nav hidden while any overlay is active and keep lastScrollY
+      // current so reveal-logic starts from the correct baseline after dismissal.
+      this.bottomNavHidden.set(true);
+      this.lastScrollY = window.scrollY;
+      return;
+    }
     const currentY = window.scrollY;
     const delta = currentY - this.lastScrollY;
     if (Math.abs(delta) < App.SCROLL_DELTA_THRESHOLD) return;
