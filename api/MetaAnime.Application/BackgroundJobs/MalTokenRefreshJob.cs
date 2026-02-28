@@ -1,22 +1,23 @@
 using Hangfire;
+using MetaAnime.Core;
+using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
-using MetaAnime.Core.Settings;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace MetaAnime.Application.BackgroundJobs;
 
 public sealed class MalTokenRefreshJob(
     IMalTokenService malTokenService,
     ILogger<MalTokenRefreshJob> logger,
-    IOptions<MalSettings> malSettings)
+    IPropertyBagRepository propertyBagRepository)
 {
     /// <summary>
     /// Refreshes the MyAnimeList access token using the stored refresh token and persists the new tokens.
     /// </summary>
     public async Task RefreshToken()
     {
-        if (string.IsNullOrEmpty(malSettings.Value.ClientId))
+        var clientIdEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.MalClientId);
+        if (string.IsNullOrEmpty(clientIdEntry?.Value))
         {
             logger.LogWarning(Constants.LogMessages.MalTokenRefreshJob.Skipped);
             return;
@@ -45,14 +46,14 @@ public sealed class MalTokenRefreshJob(
     }
 
     /// <summary>
-    /// Schedules the MAL token refresh job to run daily.
+    /// Schedules the MAL token refresh job to run once every 7 days.
     /// </summary>
     public static void Schedule(IRecurringJobManager recurringJobManager)
     {
         recurringJobManager.AddOrUpdate<MalTokenRefreshJob>(
             Constants.JobNames.MalTokenRefresh,
             job => job.RefreshToken(),
-            Cron.Daily);
+            Cron.Weekly);
         recurringJobManager.Trigger(Constants.JobNames.MalTokenRefresh); // Trigger immediately on startup
     }
 }

@@ -1,11 +1,12 @@
 using FluentAssertions;
 using MetaAnime.Application.BackgroundJobs;
+using MetaAnime.Core;
+using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
-using MetaAnime.Core.Settings;
+using MetaAnime.Domain.Entities;
 using MetaAnime.Infrastructure.MyAnimeList;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Moq;
 
 namespace MetaAnime.UnitTests.Services;
@@ -14,23 +15,22 @@ public class MalTokenRefreshJobTests
 {
     private readonly Mock<IMalTokenService> _mockMalTokenService;
     private readonly Mock<ILogger<MalTokenRefreshJob>> _mockLogger;
+    private readonly Mock<IPropertyBagRepository> _mockPropertyBagRepository;
 
     public MalTokenRefreshJobTests()
     {
         _mockMalTokenService = new Mock<IMalTokenService>();
         _mockLogger = new Mock<ILogger<MalTokenRefreshJob>>();
+        _mockPropertyBagRepository = new Mock<IPropertyBagRepository>();
     }
 
     private MalTokenRefreshJob CreateSut(string? clientId = "test-client-id")
     {
-        var malSettings = Options.Create(new MalSettings
-        {
-            ApiBaseUrl = "https://api.myanimelist.net/v2",
-            ApiToken = "token",
-            WebBaseUrl = "https://myanimelist.net",
-            ClientId = clientId
-        });
-        return new MalTokenRefreshJob(_mockMalTokenService.Object, _mockLogger.Object, malSettings);
+        _mockPropertyBagRepository
+            .Setup(x => x.GetByKeyAsync(SettingsKeys.MalClientId))
+            .ReturnsAsync(clientId is null ? null : new PropertyBag { Key = SettingsKeys.MalClientId, Value = clientId });
+
+        return new MalTokenRefreshJob(_mockMalTokenService.Object, _mockLogger.Object, _mockPropertyBagRepository.Object);
     }
 
     [Fact]

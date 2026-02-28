@@ -4,15 +4,13 @@ using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
-using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.Plex.Models;
 using MetaAnime.Infrastructure.Plex.Utilities;
-using Microsoft.Extensions.Options;
 using Components = LukeHagar.PlexAPI.SDK.Models.Components;
 
 namespace MetaAnime.Infrastructure.Plex.Services;
 
-public sealed class PlexAnimeSourceService(IOptions<PlexSettings> options, IPropertyBagRepository propertyBagRepository) : IPlexAnimeSourceService<PlexMedia>
+public sealed class PlexAnimeSourceService(IPropertyBagRepository propertyBagRepository) : IPlexAnimeSourceService<PlexMedia>
 {
     private (IPlexAPI plexAPI, int[] animeSections, bool isConfigured)? _settings;
 
@@ -43,9 +41,9 @@ public sealed class PlexAnimeSourceService(IOptions<PlexSettings> options, IProp
         var tokenEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexToken);
         var sectionsEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexAnimeSections);
 
-        var host = hostEntry?.Value ?? options.Value.Host ?? string.Empty;
-        var token = tokenEntry?.Value ?? options.Value.Token ?? string.Empty;
-        var sectionsStr = sectionsEntry?.Value ?? options.Value.AnimeSections ?? string.Empty;
+        var host = hostEntry?.Value ?? string.Empty;
+        var token = tokenEntry?.Value ?? string.Empty;
+        var sectionsStr = sectionsEntry?.Value ?? string.Empty;
         var animeSections = ParseAnimeSections(sectionsStr);
         var isConfigured = !string.IsNullOrWhiteSpace(host)
             && !string.IsNullOrWhiteSpace(token)

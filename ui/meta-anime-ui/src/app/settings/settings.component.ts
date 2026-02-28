@@ -187,11 +187,11 @@ export class SettingsComponent {
   navItems = computed<string[]>(() => [...this.categories(), 'sync']);
 
   plexEnabled = computed(
-    () => this.settings().find((s) => s.key === 'Plex:Enabled')?.value !== 'false',
+    () => this.settings().find((s) => s.key === 'Plex:Enabled')?.value === 'true',
   );
 
   sonarrEnabled = computed(
-    () => this.settings().find((s) => s.key === 'Sonarr:Enabled')?.value !== 'false',
+    () => this.settings().find((s) => s.key === 'Sonarr:Enabled')?.value === 'true',
   );
 
   plexBasicConfigured = computed(() => {
@@ -204,14 +204,6 @@ export class SettingsComponent {
   malClientIdConfigured = computed(
     () => (this.settings().find((s) => s.key === 'MAL:ClientId')?.value ?? '').trim().length > 0,
   );
-
-  /** True when MAL has a ClientId configured but no token has ever been successfully refreshed. */
-  malNeedsAuth = computed(() => this.malClientIdConfigured() && !this.malTokenRefreshDate());
-
-  malRefreshing = signal(false);
-  malRefreshError = signal<string | null>(null);
-  malRefreshSuccess = signal(false);
-  private malRefreshSuccessTimer: ReturnType<typeof setTimeout> | null = null;
 
   forms: Record<string, FormGroup> = {};
 
@@ -287,7 +279,6 @@ export class SettingsComponent {
 
     this.destroyRef.onDestroy(() => {
       if (this.autoApplySavedTimer) clearTimeout(this.autoApplySavedTimer);
-      if (this.malRefreshSuccessTimer) clearTimeout(this.malRefreshSuccessTimer);
     });
 
     // Capture a pending highlight from the `?highlight=` query param (set by the
@@ -711,44 +702,6 @@ export class SettingsComponent {
   goToSyncFromPrompt(): void {
     this.popupService.dismissSyncPrompt();
     setTimeout(() => this.scrollToSection('sync'), PopupService.MODAL_LEAVE_MS);
-  }
-
-  refreshMalToken(): void {
-    if (this.malRefreshing()) return;
-    this.malRefreshing.set(true);
-    this.malRefreshError.set(null);
-    this.malRefreshSuccess.set(false);
-    this.animeService
-      .refreshMalToken()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: () => {
-          this.malRefreshing.set(false);
-          this.malRefreshSuccess.set(true);
-          if (this.malRefreshSuccessTimer) clearTimeout(this.malRefreshSuccessTimer);
-          this.malRefreshSuccessTimer = setTimeout(() => this.malRefreshSuccess.set(false), 3000);
-          // Reload settings to update malTokenRefreshDate
-          this.settingsService
-            .getAll()
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-              next: (data) => this.settings.set(data),
-              error: () => {
-                // Settings reload failed — non-critical, but show a mild toast
-                this.notifService.push({
-                  id: `mal-settings-reload-${Date.now()}`,
-                  severity: 'warning',
-                  titleKey: 'notifications.malAuth.reloadFailed',
-                  messageKey: 'notifications.malAuth.reloadFailedMessage',
-                });
-              },
-            });
-        },
-        error: () => {
-          this.malRefreshing.set(false);
-          this.malRefreshError.set('settings.mal.refreshError');
-        },
-      });
   }
 
   shouldShowSyncStep(step: SyncStep): boolean {

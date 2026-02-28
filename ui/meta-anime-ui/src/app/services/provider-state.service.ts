@@ -35,10 +35,10 @@ export class ProviderStateService {
       .subscribe({
         next: (settings) => {
           this._plexEnabled.set(
-            settings.find((s) => s.key === 'Plex:Enabled')?.value !== 'false',
+            settings.find((s) => s.key === 'Plex:Enabled')?.value === 'true',
           );
           this._sonarrEnabled.set(
-            settings.find((s) => s.key === 'Sonarr:Enabled')?.value !== 'false',
+            settings.find((s) => s.key === 'Sonarr:Enabled')?.value === 'true',
           );
         },
         error: () => {

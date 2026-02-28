@@ -5,7 +5,7 @@ namespace MetaAnime.Core.Interfaces.Services;
 public interface IMalTokenService
 {
     /// <summary>
-    /// Returns the current MAL access token, reading from PropertyBag first, then falling back to settings.
+    /// Returns the current MAL access token, reading exclusively from the PropertyBag.
     /// </summary>
     Task<string?> GetAccessTokenAsync();
 

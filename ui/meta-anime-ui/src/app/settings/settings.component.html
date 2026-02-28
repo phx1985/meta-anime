@@ -500,32 +500,6 @@
                     </div>
                   </div>
                 }
-                @if (cat === 'mal' && malNeedsAuth()) {
-                  <!-- ── MAL Token Refresh prompt ─────────────────────────── -->
-                  <div class="mal-auth-prompt">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </svg>
-                    <span class="mal-auth-prompt__text">{{ 'settings.mal.authRequired' | translate }}</span>
-                    <button
-                      type="button"
-                      class="btn btn-sm btn-primary"
-                      [disabled]="malRefreshing()"
-                      (click)="refreshMalToken()"
-                    >
-                      @if (malRefreshing()) {
-                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                      }
-                      {{ 'settings.mal.refreshToken' | translate }}
-                    </button>
-                    @if (malRefreshSuccess()) {
-                      <span class="badge-saved">&#10003; {{ 'settings.saved' | translate }}</span>
-                    }
-                    @if (malRefreshError()) {
-                      <span class="text-danger small">{{ malRefreshError()! | translate }}</span>
-                    }
-                  </div>
-                }
                 @if (cat === 'sonarr') {
                   <!-- ── Add Series Defaults sub-group ──────────────────────── -->
                   <div
