@@ -133,7 +133,11 @@
             </svg>
             <div class="filter-header-text">
               <span class="filter-header-title">{{ 'seasonal.filter.title' | translate }}</span>
-              <span class="filter-header-summary" [title]="filterSummary">{{ filterSummary }}</span>
+              @if (activePresetName()) {
+                <span class="filter-header-preset-name" [title]="activePresetName()!">{{ activePresetName() }}</span>
+              } @else {
+                <span class="filter-header-summary" [title]="filterSummary">{{ filterSummary }}</span>
+              }
             </div>
             @if (activeFilterCount > 0) {
               <span class="filter-badge">{{ activeFilterCount }}</span>
@@ -152,11 +156,34 @@
           </svg>
         </div>
 
-        <!-- Collapsible body -->
+        <!-- Collapsible body (desktop accordion; hidden on mobile via CSS) -->
         <div class="filter-card__body" [@filterCollapse]="filterOpen() ? 'open' : 'closed'">
+          <ng-container *ngTemplateOutlet="filterBodyTpl"></ng-container>
+        </div>
+      </div>
+    }
+
+<!-- Filter content template (shared by desktop accordion and mobile sheet) -->
+<ng-template #filterBodyTpl>
           <div class="filter-card__inner">
             <!-- ── Preset bar ──────────────────────────────────────────── -->
             <div class="seasonal-presets-bar">
+              <!-- Mobile: single "Presets" button replacing the inline chips -->
+              <button
+                type="button"
+                class="btn-presets-mobile"
+                (click)="presetsSheetOpen.set(true)"
+                [attr.aria-label]="'seasonal.filter.presets.label' | translate"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                {{ 'seasonal.filter.presets.label' | translate }}
+                @if (savedPresets().length > 0) {
+                  <span class="btn-presets-mobile__count">{{ savedPresets().length }}</span>
+                }
+              </button>
               <div class="presets-chips">
                 @for (p of savedPresets(); track p.id) {
                   <button
@@ -587,12 +614,13 @@
                   </svg>
                   {{ 'seasonal.filter.reset' | translate }}
                 </button>
+                <button type="button" class="btn-apply" (click)="applyFilters()">
+                  {{ 'seasonal.filter.apply' | translate }}
+                </button>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    }
+</ng-template>
     <!-- ── /Filter card ─────────────────────────────────────────────────── -->
 
     <!-- Error state -->
@@ -643,6 +671,87 @@
     }
   </div>
 </div>
+
+<!-- ── Mobile filter sheet (dedicated overlay — avoids backdrop-filter stacking context trap) -->
+@if (filterOpen()) {
+  <div class="mobile-filter-backdrop" (click)="filterOpen.set(false)" aria-hidden="true"></div>
+  <div
+    class="mobile-filter-sheet"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'seasonal.filter.title' | translate"
+  >
+    <div class="mobile-filter-sheet__handle" aria-hidden="true"></div>
+    <div class="mobile-filter-sheet__header">
+      <span class="mobile-filter-sheet__title">{{ 'seasonal.filter.title' | translate }}</span>
+      <button
+        type="button"
+        class="mobile-filter-sheet__close"
+        (click)="filterOpen.set(false)"
+        [attr.aria-label]="'seasonal.filter.collapseFilters' | translate"
+      >
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M2 2l12 12M14 2L2 14"/>
+        </svg>
+      </button>
+    </div>
+    <ng-container *ngTemplateOutlet="filterBodyTpl"></ng-container>
+    <div class="mobile-filter-sheet__footer">
+      <button type="button" class="btn-reset" (click)="resetFilters()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M13.5 2.5A7 7 0 1 0 15 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+          <path d="M11 1l2.5 1.5L12 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        {{ 'seasonal.filter.reset' | translate }}
+      </button>
+      <button type="button" class="btn-apply" (click)="applyFilters()">
+        {{ 'seasonal.filter.apply' | translate }}
+      </button>
+    </div>
+  </div>
+}
+
+<!-- ── Presets bottom sheet (mobile) ───────────────────────────────────── -->
+@if (presetsSheetOpen()) {
+  <div class="presets-sheet-backdrop" (click)="presetsSheetOpen.set(false)" role="dialog" aria-modal="true" [attr.aria-label]="'seasonal.filter.presets.label' | translate">
+    <div class="presets-sheet" (click)="$event.stopPropagation()">
+      <div class="presets-sheet__handle" aria-hidden="true"></div>
+      <div class="presets-sheet__header">
+        <span class="presets-sheet__title">{{ 'seasonal.filter.presets.label' | translate }}</span>
+        <button type="button" class="presets-sheet__close" (click)="presetsSheetOpen.set(false)" aria-label="Close">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
+        </button>
+      </div>
+
+      <!-- Custom presets -->
+      <div class="presets-sheet__section">
+        <span class="presets-sheet__section-label">{{ 'seasonal.filter.presets.myPresets' | translate }}</span>
+        @if (savedPresets().length === 0) {
+          <p class="presets-sheet__empty">{{ 'seasonal.filter.presets.noPresets' | translate }}</p>
+        }
+        @for (p of savedPresets(); track p.id) {
+          <button type="button" class="presets-sheet__item" (click)="applyPreset(p)">
+            <span class="presets-sheet__item-name">{{ p.label }}</span>
+            @if (activePresetName() === p.label) {
+              <svg class="presets-sheet__item-check" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M2 8l4 4 8-8"/></svg>
+            }
+            <button type="button" class="presets-sheet__item-delete" (click)="deletePreset(p.id, $event)" [attr.aria-label]="'seasonal.filter.presets.delete' | translate">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
+            </button>
+          </button>
+        }
+      </div>
+
+      <!-- Save current filters as preset -->
+      <div class="presets-sheet__footer">
+        <button type="button" class="presets-sheet__save-btn" (click)="openSavePreset()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg>
+          {{ 'seasonal.filter.presets.saveAs' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- ── Genre / Theme / Demographic filter popups (fixed overlay) ─────────── -->
 

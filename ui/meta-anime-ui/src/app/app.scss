@@ -15,6 +15,24 @@
   letter-spacing: -0.01em;
 }
 
+// Mobile-only page context subtitle inside the brand
+.navbar-page-label {
+  display: none;
+
+  @media (max-width: 991.98px) {
+    display: inline;
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0;
+    margin-left: 0.35rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 40vw;
+  }
+}
+
 .nav-link {
   color: var(--text-secondary) !important;
   transition: color 0.2s ease;
@@ -37,13 +55,13 @@
     order: 4;
 
     &.show {
-      max-height: 32rem;
+      max-height: 60rem;
       padding-top: 0.5rem;
       padding-bottom: 0.5rem;
     }
 
     .navbar-nav {
-      flex-direction: column;
+      display: none; // hidden on mobile — bottom nav handles primary navigation
     }
   }
 
@@ -62,18 +80,33 @@
   flex-shrink: 0;
 
   @media (max-width: 991.98px) {
-    order: 3;
-    width: 100%;
-    border-top: 1px solid var(--navbar-border);
-    padding-top: 0.4rem;
-    padding-bottom: 0.4rem;
-    justify-content: center;
+    order: 1; // place before the toggler (order 2 via .navbar-toggler below)
+    border-top: none;
+    padding-top: 0;
+    padding-bottom: 0;
+    justify-content: flex-end;
     gap: 0.3rem;
+    margin-left: auto; // push to the right side so it sits next to the toggler
 
-    // Hide dividers in the ribbon to save space on small screens
+    // Hide provider links, lucky pick, settings, language & theme controls on mobile
+    // Only the notification bell remains in the top bar
+    .provider-links,
+    .btn-lucky,
+    .btn-settings,
+    .btn-lang,
+    .btn-os-theme,
+    .btn-theme-toggle,
     .navbar-divider {
       display: none;
     }
+  }
+}
+
+// On mobile, push the toggler (hamburger) to the right of the bell
+@media (max-width: 991.98px) {
+  .navbar-toggler {
+    order: 2;
+    margin-left: 0.25rem;
   }
 }
 
@@ -254,6 +287,11 @@
     color 0.2s ease,
     border-color 0.2s ease,
     background 0.2s ease;
+
+  @media (max-width: 991.98px) {
+    width: 44px;
+    height: 44px;
+  }
 
   &:hover {
     color: var(--accent-primary);
@@ -1045,4 +1083,220 @@
   line-height: 1.65;
   margin: 0;
   white-space: pre-line;
+}
+
+// ── Mobile menu extras (inside hamburger, visible only on mobile) ──────────────
+
+.mobile-menu-extras {
+  display: none; // hidden on desktop
+
+  @media (max-width: 991.98px) {
+    display: block;
+    width: 100%;
+  }
+}
+
+.mobile-menu-sep {
+  height: 1px;
+  background: var(--navbar-border);
+  margin: 0.25rem 0;
+}
+
+.mobile-menu-section {
+  padding: 0.5rem 0;
+}
+
+.mobile-menu-section-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0.25rem 0.75rem 0.4rem;
+}
+
+.mobile-menu-providers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0 0.5rem;
+}
+
+.mobile-menu-provider-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  background: transparent;
+  border: 1px solid var(--card-border);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    background: var(--bg-secondary);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+  }
+
+  img {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  &--disabled {
+    opacity: 0.45;
+    filter: grayscale(1);
+
+    &:hover {
+      opacity: 0.6;
+      filter: grayscale(0.5);
+    }
+  }
+}
+
+.mobile-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 48px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: 0;
+  transition: color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    background: var(--bg-secondary);
+    color: var(--accent-primary);
+  }
+
+  &--active {
+    color: var(--accent-primary);
+  }
+
+  svg {
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+}
+
+.mobile-menu-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem 0.75rem;
+  flex-wrap: wrap;
+}
+
+// Also ensure mobile nav-link touch targets are large enough
+@media (max-width: 991.98px) {
+  .nav-link {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem;
+  }
+}
+
+// ── Mobile Bottom Navigation Bar (floating pill) ───────────────────────────────
+
+.bottom-nav {
+  display: none; // hidden on desktop
+
+  @media (max-width: 991.98px) {
+    display: flex;
+    position: fixed;
+    bottom: calc(0.875rem + env(safe-area-inset-bottom, 0px));
+    left: 1rem;
+    right: 1rem;
+    z-index: 1030;
+    background: var(--navbar-bg);
+    border-radius: 20px;
+    border: 1px solid var(--navbar-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.22),
+      0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  // Scroll-to-hide: retract below the screen edge when scrolling down
+  &--hidden {
+    @media (max-width: 991.98px) {
+      transform: translateY(calc(100% + 1.5rem));
+    }
+  }
+}
+
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  min-height: 60px;
+  padding: 0.5rem 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  opacity: 0.55;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+
+  &:first-child {
+    border-radius: 20px 0 0 20px;
+  }
+
+  &:last-child {
+    border-radius: 0 20px 20px 0;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--accent-primary);
+    opacity: 1;
+    outline: none;
+  }
+
+  &--active {
+    color: var(--accent-primary);
+    opacity: 1;
+  }
+
+  svg {
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+  }
+
+  &--active svg {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent-primary) 60%, transparent));
+  }
+
+  span {
+    line-height: 1;
+    white-space: nowrap;
+  }
 }

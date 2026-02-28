@@ -1,6 +1,15 @@
 .settings-page {
   max-width: 1200px;
   margin: 0 auto;
+  // Apply the same padding that Bootstrap py-5 provides on desktop
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+
+  // On mobile, the sticky navbar is a single row (~56px). Use extra top padding
+  // so page content fully clears the navbar.
+  @media (max-width: 991.98px) {
+    padding-top: 4.5rem;
+  }
 }
 
 .settings-layout {
@@ -34,7 +43,7 @@
     overflow-x: auto;
     scrollbar-width: none;
     position: sticky;
-    top: 3.5rem;
+    top: 4rem; // clears the sticky navbar (single row ≈ 56px) with a small buffer
     z-index: 100;
     background: var(--card-bg);
     border-bottom: 1px solid var(--card-border);
@@ -635,6 +644,10 @@
   align-items: center;
   gap: 0.4rem;
   flex-shrink: 0;
+
+  @media (max-width: 991.98px) {
+    gap: 0.6rem;
+  }
 }
 
 .btn-icon {
@@ -654,6 +667,12 @@
     border-color 0.15s ease,
     background 0.15s ease;
 
+  @media (max-width: 991.98px) {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
   &:hover {
     color: var(--accent-primary);
     border-color: var(--accent-primary);
@@ -666,6 +685,13 @@
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
+
+  @media (max-width: 991.98px) {
+    min-height: 44px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    font-size: 0.9rem;
+  }
 }
 
 .edit-form {
@@ -693,6 +719,12 @@
     border: none;
     border-radius: 4px;
     z-index: 1;
+
+    @media (max-width: 991.98px) {
+      width: 40px;
+      height: 40px;
+      right: 2px;
+    }
   }
 }
 

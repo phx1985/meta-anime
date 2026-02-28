@@ -1,9 +1,11 @@
 {
   "nav": {
     "home": "Home",
-    "animes": "Animes",
+    "animes": "My Animes",
     "seasonal": "Seasonal",
     "settings": "Settings",
+    "lucky": "Lucky",
+    "providers": "Providers",
     "openPlex": "Open Plex",
     "openSonarr": "Open Sonarr",
     "providerDisabled": "This provider is currently disabled",
@@ -132,10 +134,13 @@
         "save": "Save",
         "cancel": "Cancel",
         "delete": "Delete preset",
-        "noPresets": "No saved presets yet"
+        "noPresets": "No saved presets yet",
+        "label": "Presets",
+        "myPresets": "My Presets"
       },
       "noFilterActive": "No filter active",
-      "mediaType": "Media type"
+      "mediaType": "Media type",
+      "apply": "Apply"
     },
     "sonarrAlreadyInLibrary": "Already in Sonarr",
     "partiallyTracked": "Partially tracked — add to more providers",

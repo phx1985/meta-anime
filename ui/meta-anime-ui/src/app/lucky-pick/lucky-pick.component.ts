@@ -16,6 +16,7 @@ import { Subscription } from 'rxjs';
 import { AnimeService } from '../services/anime.service';
 import { UserPreferencesService } from '../services/user-preferences.service';
 import { ProviderStateService } from '../services/provider-state.service';
+import { PlexDeepLinkService } from '../services/plex-deep-link.service';
 import { AnimeDetailsResponse, AnimeFilters, MalAnimeInfo } from '../models/anime.models';
 import { ScoreBadgeComponent } from '../anime-list/anime-card/score-badge/score-badge.component';
 import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../constants/genre-lists';
@@ -37,6 +38,7 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
   protected userPrefs = inject(UserPreferencesService);
   private providerState = inject(ProviderStateService);
   private translate = inject(TranslateService);
+  private plexDeepLink = inject(PlexDeepLinkService);
 
   protected state = signal<LuckyState>('idle');
   protected result = signal<AnimeDetailsResponse | null>(null);
@@ -108,6 +110,12 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
 
   protected get plexUrl(): string | null {
     return this.anime?.plexAnimes?.[0]?.url ?? null;
+  }
+
+  openPlexLink(event: Event): void {
+    if (!this.plexUrl) return;
+    event.preventDefault();
+    this.plexDeepLink.openLink(this.plexUrl);
   }
 
   protected get mal(): MalAnimeInfo | undefined {

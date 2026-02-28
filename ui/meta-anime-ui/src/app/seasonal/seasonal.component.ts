@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, computed, effect } from '@angular/core';
+import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { trigger, state, style, animate, transition, query, stagger } from '@angular/animations';
@@ -8,6 +8,7 @@ import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
 import { FilterPresetService } from '../services/filter-preset.service';
 import { ProviderStateService } from '../services/provider-state.service';
+import { PopupService } from '../services/popup.service';
 import {
   SeasonalAnimeItem,
   SeasonalFilterPreset,
@@ -67,7 +68,7 @@ function getCurrentSeason(month: number): SeasonName {
   selector: 'app-seasonal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslatePipe, SeasonalCardComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, SeasonalCardComponent, NgTemplateOutlet],
   templateUrl: './seasonal.component.html',
   styleUrl: './seasonal.component.scss',
   animations: [
@@ -112,6 +113,7 @@ export class SeasonalComponent {
   private destroyRef = inject(DestroyRef);
   private translateService = inject(TranslateService);
   readonly providerState = inject(ProviderStateService);
+  private readonly popupService = inject(PopupService);
 
   private readonly _now = new Date();
   private readonly _maxYear = this._now.getFullYear();
@@ -177,6 +179,10 @@ export class SeasonalComponent {
   savedPresets = signal<SeasonalFilterPreset[]>([]);
   showSavePreset = false;
   newPresetName = '';
+  /** Name of the currently active preset — shown in the filter header (mobile highlight). */
+  activePresetName = signal<string | null>(null);
+  /** Whether the mobile presets bottom-sheet is open. */
+  presetsSheetOpen = signal(false);
 
   readonly malStates = SEASONAL_MAL_STATES;
   readonly sortOptions = SEASONAL_SORT_OPTIONS;
@@ -423,6 +429,12 @@ export class SeasonalComponent {
 
     this.savedPresets.set(this.presetService.getSeasonalPresets());
 
+    // Notify app-root to retract the bottom nav bar while any mobile sheet is open.
+    effect(() => {
+      this.popupService.childOverlayOpen.set(this.filterOpen() || this.presetsSheetOpen());
+    }, { allowSignalWrites: true });
+    this.destroyRef.onDestroy(() => this.popupService.childOverlayOpen.set(false));
+
     // Initial load
     this._loadCurrent();
   }
@@ -480,13 +492,11 @@ export class SeasonalComponent {
       v.includes(genre) ? v.filter((g) => g !== genre) : [...v, genre],
     );
     if (this.filterGenre().length <= 1) this.genreOperator.set('or');
-    this._applyFilteredResults();
   }
 
   clearGenres(event: MouseEvent): void {
     event.stopPropagation();
     this.filterGenre.set([]);
-    this._applyFilteredResults();
   }
 
   // ── Theme dropdown ────────────────────────────────────────────────────────
@@ -506,13 +516,11 @@ export class SeasonalComponent {
       v.includes(theme) ? v.filter((t) => t !== theme) : [...v, theme],
     );
     if (this.filterTheme().length <= 1) this.themeOperator.set('or');
-    this._applyFilteredResults();
   }
 
   clearThemes(event: MouseEvent): void {
     event.stopPropagation();
     this.filterTheme.set([]);
-    this._applyFilteredResults();
   }
 
   // ── Demographic dropdown ──────────────────────────────────────────────────
@@ -532,13 +540,11 @@ export class SeasonalComponent {
       v.includes(demographic) ? v.filter((d) => d !== demographic) : [...v, demographic],
     );
     if (this.filterDemographic().length <= 1) this.demographicOperator.set('or');
-    this._applyFilteredResults();
   }
 
   clearDemographics(event: MouseEvent): void {
     event.stopPropagation();
     this.filterDemographic.set([]);
-    this._applyFilteredResults();
   }
 
   // ── MAL status pills ──────────────────────────────────────────────────────
@@ -557,7 +563,6 @@ export class SeasonalComponent {
       }
       return [...current.filter((s) => s !== 'not_in'), status];
     });
-    this._applyFilteredResults();
   }
 
   // ── Media type pills ──────────────────────────────────────────────────────
@@ -566,7 +571,6 @@ export class SeasonalComponent {
     this.filterMediaType.update((current) =>
       current.includes(type) ? current.filter((t) => t !== type) : [...current, type],
     );
-    this._applyFilteredResults();
   }
 
   // ── Sort ──────────────────────────────────────────────────────────────────
@@ -574,24 +578,20 @@ export class SeasonalComponent {
   setGenreOperator(op: 'or' | 'and', event: MouseEvent): void {
     event.stopPropagation();
     this.genreOperator.set(op);
-    this._applyFilteredResults();
   }
 
   setThemeOperator(op: 'or' | 'and', event: MouseEvent): void {
     event.stopPropagation();
     this.themeOperator.set(op);
-    this._applyFilteredResults();
   }
 
   setDemographicOperator(op: 'or' | 'and', event: MouseEvent): void {
     event.stopPropagation();
     this.demographicOperator.set(op);
-    this._applyFilteredResults();
   }
 
   setSortBy(value: string): void {
     this.sortBy.set(value);
-    this._applyFilteredResults();
   }
 
   /** Returns true when this MAL status pill should be visually muted (its group is excluded). */
@@ -605,7 +605,6 @@ export class SeasonalComponent {
 
   toggleSortOrder(): void {
     this.sortOrder.update((o) => (o === 'asc' ? 'desc' : 'asc'));
-    this._applyFilteredResults();
   }
 
   // ── Reset ─────────────────────────────────────────────────────────────────
@@ -624,7 +623,14 @@ export class SeasonalComponent {
     this.genreDropdownOpen = false;
     this.themeDropdownOpen = false;
     this.demographicDropdownOpen = false;
+    this.activePresetName.set(null);
     this._applyFilteredResults();
+  }
+
+  /** Apply the current filter state and close the filter sheet. */
+  applyFilters(): void {
+    this._applyFilteredResults();
+    this.filterOpen.set(false);
   }
 
   // ── Preset methods ────────────────────────────────────────────────────────
@@ -644,14 +650,22 @@ export class SeasonalComponent {
     this.genreDropdownOpen = false;
     this.themeDropdownOpen = false;
     this.demographicDropdownOpen = false;
+    this.activePresetName.set(preset.label);
+    this.presetsSheetOpen.set(false);
     this._applyFilteredResults();
     this.showSavePreset = false;
     this.filterOpen.set(false);
   }
 
   openSavePreset(): void {
+    this.presetsSheetOpen.set(false);
     this.showSavePreset = !this.showSavePreset;
-    if (this.showSavePreset) this.newPresetName = '';
+    if (this.showSavePreset) {
+      this.filterOpen.set(true);
+      const summary = this.filterSummary;
+      const noFilterText = this.translateService.instant('seasonal.filter.noFilterActive');
+      this.newPresetName = summary !== noFilterText ? summary : '';
+    }
   }
 
   confirmSavePreset(): void {
@@ -720,13 +734,10 @@ export class SeasonalComponent {
     this.error.set(false);
     this.fetchElapsedMs.set(null);
 
-    // On the very first load (no data yet) show the loading spinner.
-    // For subsequent season/year changes keep the existing animes visible so
-    // the @gridAnimation blur-rise plays — making the animation homogeneous
-    // between filter changes and season changes.
-    if (this.animes().length === 0) {
-      this.loading.set(true);
-    }
+    // Always show the loading spinner immediately when the season/year changes
+    // so the user gets instant visual feedback rather than stale data lingering.
+    this.loading.set(true);
+    this.displayedAnimes.set([]); // clear grid instantly to reveal the spinner
 
     this.fetchStartTime = Date.now();
     this.animeService

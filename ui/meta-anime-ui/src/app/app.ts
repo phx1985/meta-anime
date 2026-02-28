@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   signal,
   OnInit,
@@ -11,7 +12,7 @@ import {
   AfterViewInit,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { filter } from 'rxjs/operators';
 import { ThemeService } from './services/theme.service';
@@ -20,6 +21,7 @@ import { NotificationService, AppNotification } from './services/notification.se
 import { SyncSignalRService } from './services/sync-signalr.service';
 import { ProviderStateService } from './services/provider-state.service';
 import { PopupService } from './services/popup.service';
+import { PlexDeepLinkService } from './services/plex-deep-link.service';
 import { LuckyPickComponent } from './lucky-pick/lucky-pick.component';
 
 @Component({
@@ -39,6 +41,7 @@ export class App implements OnInit, AfterViewInit {
   private destroyRef = inject(DestroyRef);
   readonly providerState = inject(ProviderStateService);
   readonly popupService = inject(PopupService);
+  private plexDeepLink = inject(PlexDeepLinkService);
 
   @ViewChild('navbarEl', { read: ElementRef }) private navbarEl?: ElementRef<HTMLElement>;
 
@@ -58,6 +61,38 @@ export class App implements OnInit, AfterViewInit {
   protected sonarrHomeUrl = signal<string | null>(null);
   protected readonly malHomeUrl = 'https://myanimelist.net';
 
+  /** True while the bottom nav bar is retracted (scroll-down hide on mobile) */
+  protected bottomNavHidden = signal<boolean>(false);
+  /**
+   * True whenever any overlay / bottom-sheet / modal is open.
+   * Combines signals from this component (Lucky Pick) and from PopupService
+   * (disabled-provider, synopsis, sync-prompt modals, and the child-component
+   * filter / presets sheets registered via `childOverlayOpen`).
+   */
+  protected anyOverlayOpen = computed(
+    () =>
+      this.luckyPickOpen() ||
+      this.popupService.childOverlayOpen() ||
+      !!this.popupService.disabledProvider() ||
+      !!this.popupService.synopsisTitle() ||
+      !!this.popupService.syncPromptProvider(),
+  );
+  /** i18n key of the active route – displayed as a page label in the top header on mobile */
+  protected currentPageKey = signal<string>('');
+  /** Tracks the last scroll position for scroll-direction detection */
+  private lastScrollY = 0;
+  /** Minimum scroll delta (px) before direction is detected, avoids micro-jitter */
+  private static readonly SCROLL_DELTA_THRESHOLD = 4;
+  /** If scroll position is at or below this many px from the top, always reveal the nav */
+  private static readonly SCROLL_TOP_THRESHOLD = 40;
+
+  /** Route → nav i18n key mapping */
+  private static readonly PAGE_KEYS: Record<string, string> = {
+    '/animes': 'nav.animes',
+    '/seasonal': 'nav.seasonal',
+    '/settings': 'nav.settings',
+  };
+
   /** Controls the disabled-provider interception modal — delegated to PopupService */
   protected get disabledProviderModal() { return this.popupService.disabledProvider; }
   protected get modalLeaving() { return this.popupService.disabledProviderLeaving; }
@@ -74,6 +109,21 @@ export class App implements OnInit, AfterViewInit {
   ngOnInit(): void {
     // Connect to SignalR hub globally so sync done/error notifications work on any page
     this.syncSignalR.connect();
+
+    // Track active route for the mobile page-context label
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((e) => {
+        // Strip query params and hash, then map to a page i18n key ('' for unmapped routes)
+        const path = '/' + e.urlAfterRedirects.replace(/^\//, '').split('?')[0].split('#')[0].split('/')[0];
+        this.currentPageKey.set(App.PAGE_KEYS[path] ?? '');
+        // Always reveal the bottom nav when navigating to a new page
+        this.bottomNavHidden.set(false);
+        this.lastScrollY = 0;
+      });
 
     // Sync done → success notification (fires on every transition false→true, not on replay)
     this.syncSignalR.syncDone$
@@ -162,6 +212,30 @@ export class App implements OnInit, AfterViewInit {
     });
   }
 
+  /** Scroll-to-hide/show the bottom navigation bar on mobile */
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    if (this.menuOpen()) return;
+    if (this.anyOverlayOpen()) {
+      // Lock: keep the nav hidden while any overlay is active and keep lastScrollY
+      // current so reveal-logic starts from the correct baseline after dismissal.
+      this.bottomNavHidden.set(true);
+      this.lastScrollY = window.scrollY;
+      return;
+    }
+    const currentY = window.scrollY;
+    const delta = currentY - this.lastScrollY;
+    if (Math.abs(delta) < App.SCROLL_DELTA_THRESHOLD) return;
+    if (currentY <= App.SCROLL_TOP_THRESHOLD) {
+      this.bottomNavHidden.set(false);
+    } else if (delta > 0) {
+      this.bottomNavHidden.set(true);
+    } else {
+      this.bottomNavHidden.set(false);
+    }
+    this.lastScrollY = currentY;
+  }
+
   /** Close notification center when clicking anywhere outside it */
   @HostListener('document:click')
   onDocumentClick(): void {
@@ -190,6 +264,12 @@ export class App implements OnInit, AfterViewInit {
     event.preventDefault();
     event.stopPropagation();
     this.popupService.openDisabledProvider(provider);
+  }
+
+  /** Opens the Plex home URL using native deep linking on mobile (with web fallback). */
+  openPlexHomeLink(event: Event): void {
+    event.preventDefault();
+    this.plexDeepLink.openLink(this.plexHomeUrl());
   }
 
   dismissDisabledProviderModal(): void {

@@ -14,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { trigger, style, animate, transition } from '@angular/animations';
 import { PopupService } from '../../services/popup.service';
+import { PlexDeepLinkService } from '../../services/plex-deep-link.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SeasonalAnimeItem } from '../../models/anime.models';
 import { ScoreBadgeComponent } from '../../anime-list/anime-card/score-badge/score-badge.component';
@@ -67,6 +68,7 @@ export class SeasonalCardComponent implements OnInit {
   private settingsService = inject(SettingsService);
   private destroyRef = inject(DestroyRef);
   private popupService = inject(PopupService);
+  private plexDeepLink = inject(PlexDeepLinkService);
 
   showLightbox = signal(false);
 
@@ -280,6 +282,12 @@ export class SeasonalCardComponent implements OnInit {
 
   openMalPage(): void {
     if (this.malUrl) window.open(this.malUrl, '_blank', 'noopener,noreferrer');
+  }
+
+  openPlexLink(event: Event): void {
+    if (!this.anime.plexUrl) return;
+    event.preventDefault();
+    this.plexDeepLink.openLink(this.anime.plexUrl);
   }
 
   openSynopsisModal(): void {

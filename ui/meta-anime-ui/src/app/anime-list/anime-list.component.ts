@@ -15,6 +15,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { NgTemplateOutlet } from '@angular/common';
 import { trigger, state, style, animate, transition, query, stagger } from '@angular/animations';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
@@ -23,6 +24,7 @@ import { SyncSignalRService } from '../services/sync-signalr.service';
 import { FilterPresetService } from '../services/filter-preset.service';
 import { UserPreferencesService } from '../services/user-preferences.service';
 import { ProviderStateService } from '../services/provider-state.service';
+import { PopupService } from '../services/popup.service';
 import {
   AnimeDetailsResponse,
   AnimeFilters,
@@ -93,7 +95,7 @@ export const MEDIA_TYPE_OPTIONS = [
   selector: 'app-anime-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, TranslatePipe, AnimeCardComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, AnimeCardComponent, NgTemplateOutlet],
   templateUrl: './anime-list.component.html',
   styleUrl: './anime-list.component.scss',
   animations: [
@@ -140,6 +142,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   readonly presetService = inject(FilterPresetService);
   readonly userPrefs = inject(UserPreferencesService);
   readonly providerState = inject(ProviderStateService);
+  private readonly popupService = inject(PopupService);
 
   @ViewChildren('animeCard', { read: ElementRef }) cardRefs!: QueryList<ElementRef>;
 
@@ -181,6 +184,10 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   /** Whether the "save as preset" inline form is visible */
   showSavePreset = false;
   newPresetName = '';
+  /** Name of the currently active preset — shown in the filter header (mobile highlight). */
+  activePresetName = signal<string | null>(null);
+  /** Whether the mobile presets bottom-sheet is open. */
+  presetsSheetOpen = signal(false);
 
   // ── Filter state ──────────────────────────────────────────────────────────
   filterTitle = '';
@@ -392,6 +399,12 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     const n = Number(saved);
     if (saved && (n === 1 || n === 2 || n === 3)) this.displayMode.set(n as DisplayMode);
 
+    // Notify app-root to retract the bottom nav bar while any mobile sheet is open.
+    effect(() => {
+      this.popupService.childOverlayOpen.set(this.filterOpen() || this.presetsSheetOpen());
+    }, { allowSignalWrites: true });
+    this.destroyRef.onDestroy(() => this.popupService.childOverlayOpen.set(false));
+
     this.savedPresets.set(this.presetService.getSavedPresets());
 
     this.settingsService
@@ -576,6 +589,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.demographicDropdownOpen = false;
     this.showSavePreset = false;
     this.newPresetName = '';
+    this.activePresetName.set(null);
     this.animes.set([]);
     this.totalCount.set(0);
     this.allLoaded.set(false);
@@ -589,6 +603,8 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.applyFilterState(preset.filters);
     this.showSavePreset = false;
     this.newPresetName = '';
+    this.activePresetName.set(this.translateService.instant(preset.labelKey));
+    this.presetsSheetOpen.set(false);
     // Open advanced section if the preset uses any advanced filter
     const f = preset.filters;
     const hasAdvanced = !!(
@@ -626,8 +642,14 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   }
 
   openSavePreset(): void {
+    this.presetsSheetOpen.set(false);
     this.showSavePreset = !this.showSavePreset;
-    if (this.showSavePreset) this.newPresetName = '';
+    if (this.showSavePreset) {
+      this.filterOpen.set(true);
+      const summary = this.filterSummary;
+      const noFilterText = this.translateService.instant('animeList.filter.noFilterActive');
+      this.newPresetName = summary !== noFilterText ? summary : '';
+    }
   }
 
   confirmSavePreset(): void {

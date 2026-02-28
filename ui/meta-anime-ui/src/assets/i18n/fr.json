@@ -1,9 +1,11 @@
 {
   "nav": {
     "home": "Accueil",
-    "animes": "Animes",
+    "animes": "Mes Animes",
     "seasonal": "Saisonnier",
     "settings": "Paramètres",
+    "lucky": "Chance",
+    "providers": "Fournisseurs",
     "openPlex": "Ouvrir Plex",
     "openSonarr": "Ouvrir Sonarr",
     "providerDisabled": "Ce fournisseur est actuellement désactivé",
@@ -132,10 +134,13 @@
         "save": "Sauvegarder",
         "cancel": "Annuler",
         "delete": "Supprimer le préréglage",
-        "noPresets": "Aucun préréglage sauvegardé"
+        "noPresets": "Aucun préréglage sauvegardé",
+        "label": "Préréglages",
+        "myPresets": "Mes préréglages"
       },
       "noFilterActive": "Aucun filtre actif",
-      "mediaType": "Type de média"
+      "mediaType": "Type de média",
+      "apply": "Appliquer"
     },
     "sonarrAlreadyInLibrary": "Déjà dans Sonarr",
     "partiallyTracked": "Partiellement suivi — ajouter aux autres fournisseurs",
