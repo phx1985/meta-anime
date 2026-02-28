@@ -353,7 +353,7 @@
 <router-outlet />
 
 <!-- ── Mobile Bottom Navigation Bar ─────────────────────────────────────── -->
-<nav class="bottom-nav" [class.bottom-nav--hidden]="bottomNavHidden()" aria-label="Primary navigation">
+<nav class="bottom-nav" [class.bottom-nav--hidden]="bottomNavHidden() || anyOverlayOpen()" aria-label="Primary navigation">
   <a class="bottom-nav-item" routerLink="/" routerLinkActive="bottom-nav-item--active"
     [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

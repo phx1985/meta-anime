@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -8,6 +8,7 @@ import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
 import { FilterPresetService } from '../services/filter-preset.service';
 import { ProviderStateService } from '../services/provider-state.service';
+import { PopupService } from '../services/popup.service';
 import {
   SeasonalAnimeItem,
   SeasonalFilterPreset,
@@ -112,6 +113,7 @@ export class SeasonalComponent {
   private destroyRef = inject(DestroyRef);
   private translateService = inject(TranslateService);
   readonly providerState = inject(ProviderStateService);
+  private readonly popupService = inject(PopupService);
 
   private readonly _now = new Date();
   private readonly _maxYear = this._now.getFullYear();
@@ -426,6 +428,12 @@ export class SeasonalComponent {
       .subscribe((e) => this.langSignal.set(e.lang));
 
     this.savedPresets.set(this.presetService.getSeasonalPresets());
+
+    // Notify app-root to retract the bottom nav bar while any mobile sheet is open.
+    effect(() => {
+      this.popupService.childOverlayOpen.set(this.filterOpen() || this.presetsSheetOpen());
+    }, { allowSignalWrites: true });
+    this.destroyRef.onDestroy(() => this.popupService.childOverlayOpen.set(false));
 
     // Initial load
     this._loadCurrent();

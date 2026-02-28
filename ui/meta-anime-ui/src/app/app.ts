@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
   signal,
   OnInit,
@@ -62,6 +63,20 @@ export class App implements OnInit, AfterViewInit {
 
   /** True while the bottom nav bar is retracted (scroll-down hide on mobile) */
   protected bottomNavHidden = signal<boolean>(false);
+  /**
+   * True whenever any overlay / bottom-sheet / modal is open.
+   * Combines signals from this component (Lucky Pick) and from PopupService
+   * (disabled-provider, synopsis, sync-prompt modals, and the child-component
+   * filter / presets sheets registered via `childOverlayOpen`).
+   */
+  protected anyOverlayOpen = computed(
+    () =>
+      this.luckyPickOpen() ||
+      this.popupService.childOverlayOpen() ||
+      !!this.popupService.disabledProvider() ||
+      !!this.popupService.synopsisTitle() ||
+      !!this.popupService.syncPromptProvider(),
+  );
   /** i18n key of the active route – displayed as a page label in the top header on mobile */
   protected currentPageKey = signal<string>('');
   /** Tracks the last scroll position for scroll-direction detection */
@@ -200,7 +215,7 @@ export class App implements OnInit, AfterViewInit {
   /** Scroll-to-hide/show the bottom navigation bar on mobile */
   @HostListener('window:scroll')
   onWindowScroll(): void {
-    if (this.menuOpen()) return; // keep nav visible when hamburger menu is open
+    if (this.menuOpen() || this.anyOverlayOpen()) return; // keep nav visible when menu or overlay is open
     const currentY = window.scrollY;
     const delta = currentY - this.lastScrollY;
     if (Math.abs(delta) < App.SCROLL_DELTA_THRESHOLD) return;

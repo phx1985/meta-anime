@@ -9,6 +9,15 @@ export class PopupService {
   /** Duration (ms) that matches the CSS exit-animation duration for all modals. */
   static readonly MODAL_LEAVE_MS = 200;
 
+  // ── Child-component overlay flag ──────────────────────────────────────────────
+
+  /**
+   * Set to `true` by routed child components (anime-list, seasonal) whenever
+   * their local filter or presets bottom-sheet is open on mobile.  The app-root
+   * watches this to retract the floating bottom nav bar.
+   */
+  readonly childOverlayOpen = signal(false);
+
   // ── Disabled-provider interception modal ─────────────────────────────────────
 
   /** Which provider is currently blocked; `null` means the modal is closed. */

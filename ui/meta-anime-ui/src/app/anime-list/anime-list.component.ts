@@ -24,6 +24,7 @@ import { SyncSignalRService } from '../services/sync-signalr.service';
 import { FilterPresetService } from '../services/filter-preset.service';
 import { UserPreferencesService } from '../services/user-preferences.service';
 import { ProviderStateService } from '../services/provider-state.service';
+import { PopupService } from '../services/popup.service';
 import {
   AnimeDetailsResponse,
   AnimeFilters,
@@ -141,6 +142,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   readonly presetService = inject(FilterPresetService);
   readonly userPrefs = inject(UserPreferencesService);
   readonly providerState = inject(ProviderStateService);
+  private readonly popupService = inject(PopupService);
 
   @ViewChildren('animeCard', { read: ElementRef }) cardRefs!: QueryList<ElementRef>;
 
@@ -396,6 +398,12 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     const saved = localStorage.getItem(DISPLAY_MODE_KEY);
     const n = Number(saved);
     if (saved && (n === 1 || n === 2 || n === 3)) this.displayMode.set(n as DisplayMode);
+
+    // Notify app-root to retract the bottom nav bar while any mobile sheet is open.
+    effect(() => {
+      this.popupService.childOverlayOpen.set(this.filterOpen() || this.presetsSheetOpen());
+    }, { allowSignalWrites: true });
+    this.destroyRef.onDestroy(() => this.popupService.childOverlayOpen.set(false));
 
     this.savedPresets.set(this.presetService.getSavedPresets());
 
