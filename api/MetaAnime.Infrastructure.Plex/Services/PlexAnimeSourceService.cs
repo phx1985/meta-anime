@@ -12,7 +12,6 @@ namespace MetaAnime.Infrastructure.Plex.Services;
 
 public sealed class PlexAnimeSourceService(IPropertyBagRepository propertyBagRepository) : IPlexAnimeSourceService<PlexMedia>
 {
-    private (IPlexAPI plexAPI, int[] animeSections, bool isConfigured)? _settings;
 
     private static int[] ParseAnimeSections(string sections)
     {
@@ -35,8 +34,6 @@ public sealed class PlexAnimeSourceService(IPropertyBagRepository propertyBagRep
 
     private async Task<(IPlexAPI plexAPI, int[] animeSections, bool isConfigured)> GetSettingsAsync()
     {
-        if (_settings.HasValue) return _settings.Value;
-
         var hostEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexHost);
         var tokenEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexToken);
         var sectionsEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexAnimeSections);
@@ -55,8 +52,7 @@ public sealed class PlexAnimeSourceService(IPropertyBagRepository propertyBagRep
             .WithClient(new SpeakeasyHttpClient2())
             .Build();
 
-        _settings = (plexAPI, animeSections, isConfigured);
-        return _settings.Value;
+        return (plexAPI, animeSections, isConfigured);
     }
 
     public async Task<Result<IList<PlexMedia>>> GetAllAsync()
