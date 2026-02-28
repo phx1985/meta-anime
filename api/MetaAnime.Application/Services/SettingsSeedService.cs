@@ -96,8 +96,8 @@ public sealed class SettingsSeedService(
     /// </summary>
     private static Dictionary<string, string?> BuildDefaultSeeds() => new()
     {
-        [SettingsKeys.PlexEnabled] = "true",
-        [SettingsKeys.SonarrEnabled] = "true",
+        [SettingsKeys.PlexEnabled] = "false",
+        [SettingsKeys.SonarrEnabled] = "false",
         [SettingsKeys.SonarrDefaultSeasonFolder] = "true",
         [SettingsKeys.SonarrDefaultMonitor] = "all",
         [SettingsKeys.KometaAnimeIdsJsonUrl] = KometaSettings.DefaultAnimeIdsJsonUrl,

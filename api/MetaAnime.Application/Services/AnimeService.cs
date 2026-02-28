@@ -121,8 +121,8 @@ public sealed class AnimeService(
             // ── Read provider enabled flags ───────────────────────────────────────
             var plexEnabledEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexEnabled);
             var sonarrEnabledEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrEnabled);
-            var plexEnabled = plexEnabledEntry?.Value != "false";
-            var sonarrEnabled = sonarrEnabledEntry?.Value != "false";
+            var plexEnabled = plexEnabledEntry?.Value == "true";
+            var sonarrEnabled = sonarrEnabledEntry?.Value == "true";
 
             // Each source runs sequentially and emits its own Running/Done/Error
             // SignalR messages so the UI can track per-provider progress.

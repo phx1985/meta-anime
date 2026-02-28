@@ -187,11 +187,11 @@ export class SettingsComponent {
   navItems = computed<string[]>(() => [...this.categories(), 'sync']);
 
   plexEnabled = computed(
-    () => this.settings().find((s) => s.key === 'Plex:Enabled')?.value !== 'false',
+    () => this.settings().find((s) => s.key === 'Plex:Enabled')?.value === 'true',
   );
 
   sonarrEnabled = computed(
-    () => this.settings().find((s) => s.key === 'Sonarr:Enabled')?.value !== 'false',
+    () => this.settings().find((s) => s.key === 'Sonarr:Enabled')?.value === 'true',
   );
 
   plexBasicConfigured = computed(() => {
