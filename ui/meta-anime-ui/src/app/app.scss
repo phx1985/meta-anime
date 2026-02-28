@@ -5,6 +5,19 @@
   -webkit-backdrop-filter: blur(8px);
   transition: background 0.3s ease;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+
+  @media (max-width: 991.98px) {
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.12);
+
+    // Give the inner container explicit vertical alignment and safe horizontal padding
+    .container {
+      display: flex;
+      align-items: center;
+      min-height: 56px;
+      padding-left: max(1rem, env(safe-area-inset-left, 1rem));
+      padding-right: max(1rem, env(safe-area-inset-right, 1rem));
+    }
+  }
 }
 
 .navbar-brand {
