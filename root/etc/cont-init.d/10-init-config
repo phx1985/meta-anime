@@ -93,7 +93,11 @@ if [ ! -d /config/postgres ]; then
       "Microsoft.AspNetCore": "Warning"
     }
   },
-  "AllowedHosts": "*"
+  "AllowedHosts": "*",
+  "MyAnimeList": {
+    "ApiBaseUrl": "https://api.myanimelist.net/v2",
+    "WebBaseUrl": "https://myanimelist.net"
+  }
 }
 EOF
     chown abc:abc /config/appsettings.json

@@ -59,9 +59,10 @@ public sealed class AnimeMediatorService(
         CodecAliases.TryGetValue(codec, out var aliases) ? aliases : [codec];
 
     private readonly string myAnimeListHost = malOptions.Value.WebBaseUrl;
-    private readonly string sonarrSeriesBaseUrl = !string.IsNullOrWhiteSpace(sonarrOptions.Value.RemoteUrl)
-        ? sonarrOptions.Value.RemoteUrl
-        : sonarrOptions.Value.Host;
+    private readonly string sonarrSeriesBaseUrl =
+        sonarrOptions.Value?.RemoteUrl is string remoteUrl && !string.IsNullOrWhiteSpace(remoteUrl)
+            ? remoteUrl
+            : sonarrOptions.Value?.Host ?? string.Empty;
 
     // Lazily resolved the first time a URL is needed so the constructor stays synchronous.
     private string? _plexBaseUrl;
@@ -1023,7 +1024,7 @@ public sealed class AnimeMediatorService(
                 // Use TitleSlug from cache (same as regular anime card); fall back to numeric ID
                 var sonarrSlug = sources.SonarrId != null && sonarrSlugById.TryGetValue(sources.SonarrId, out var slug)
                     ? slug : sources.SonarrId;
-                string? sonarrUrl = inSonarr && sonarrSlug != null
+                string? sonarrUrl = inSonarr && sonarrSlug != null && !string.IsNullOrWhiteSpace(sonarrSeriesBaseUrl)
                     ? $"{sonarrSeriesBaseUrl.TrimEnd('/')}/series/{sonarrSlug}" : null;
                 var tvdbId = aniDbId != null && aniDbToTvdb.TryGetValue(aniDbId, out var tId) ? tId : null;
                 string? malViewState = sources.MalId != null && malViewStateById.TryGetValue(sources.MalId, out var vs) ? vs : null;
@@ -1367,21 +1368,35 @@ public sealed class AnimeMediatorService(
 
     private async Task<List<SonarrAnimeInfo>> FetchSonarrAnimeDetailsAsync(IEnumerable<AnimeMapping> mappings)
     {
-        var tasks = mappings.Select(async mapping =>
+        try
         {
-            var sonarrResult = await sonarrAnimeSource.GetByIdAsync(mapping.Anime!.SourceId);
-            if (sonarrResult.IsSuccess && sonarrResult.Value != null)
+            if (string.IsNullOrWhiteSpace(sonarrSeriesBaseUrl))
             {
-                var codecDistribution = await sonarrAnimeSource.GetCodecDistributionAsync(mapping.Anime!.SourceId);
-                return new SonarrAnimeInfo(sonarrResult.Value, sonarrSeriesBaseUrl, codecDistribution);
+                logger.LogWarning("Sonarr enrichment skipped: Sonarr base URL is not configured");
+                return [];
             }
-            else
-            {
-                return new SonarrAnimeInfo(mapping.Anime, sonarrSeriesBaseUrl);
-            }
-        });
 
-        return (await Task.WhenAll(tasks)).ToList();
+            var tasks = mappings.Select(async mapping =>
+            {
+                var sonarrResult = await sonarrAnimeSource.GetByIdAsync(mapping.Anime!.SourceId);
+                if (sonarrResult.IsSuccess && sonarrResult.Value != null)
+                {
+                    var codecDistribution = await sonarrAnimeSource.GetCodecDistributionAsync(mapping.Anime!.SourceId);
+                    return new SonarrAnimeInfo(sonarrResult.Value, sonarrSeriesBaseUrl, codecDistribution);
+                }
+                else
+                {
+                    return new SonarrAnimeInfo(mapping.Anime, sonarrSeriesBaseUrl);
+                }
+            });
+
+            return (await Task.WhenAll(tasks)).ToList();
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Sonarr enrichment failed and was skipped: {Message}", ex.Message);
+            return [];
+        }
     }
 
     #endregion

@@ -18,7 +18,7 @@ public sealed record SonarrAnimeInfo(
         : this(
             Title: anime?.Title ?? "NO_TITLE",
             Id: anime?.SourceId,
-            Url: $"{sonarrBaseUrl.TrimEnd('/')}/series/{anime?.SourceId}",
+            Url: string.IsNullOrWhiteSpace(sonarrBaseUrl) ? null : $"{sonarrBaseUrl.TrimEnd('/')}/series/{anime?.SourceId}",
             Exists: false,
             SeasonInfo: null,
             CodecDistribution: null,
@@ -30,7 +30,7 @@ public sealed record SonarrAnimeInfo(
         : this(
             sonarrSeries?.Title ?? "NO_TITLE",
             sonarrSeries?.Id.ToString(),
-            $"{sonarrBaseUrl.TrimEnd('/')}/series/{sonarrSeries?.TitleSlug ?? sonarrSeries?.Id.ToString()}",
+            string.IsNullOrWhiteSpace(sonarrBaseUrl) ? null : $"{sonarrBaseUrl.TrimEnd('/')}/series/{sonarrSeries?.TitleSlug ?? sonarrSeries?.Id.ToString()}",
             sonarrSeries != null,
             sonarrSeries?.Seasons?.Select(s => new SonarrSeasonInfo(
                 s.SeasonNumber,
