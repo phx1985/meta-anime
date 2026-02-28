@@ -27,6 +27,8 @@ public static class SettingsKeys
     public const string SonarrDefaultMonitor = "Sonarr:DefaultMonitor";
 
     // MyAnimeList
+    public const string MalApiBaseUrl = "MAL:ApiBaseUrl";
+    public const string MalWebBaseUrl = "MAL:WebBaseUrl";
     public const string MalApiToken = "MAL:ApiToken";
     public const string MalClientId = "MAL:ClientId";
     public const string MalClientSecret = "MAL:ClientSecret";

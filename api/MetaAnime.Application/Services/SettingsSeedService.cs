@@ -84,6 +84,8 @@ public sealed class SettingsSeedService(
             [SettingsKeys.MalClientId] = mal.ClientId,
             [SettingsKeys.MalClientSecret] = mal.ClientSecret,
             [SettingsKeys.MalRefreshToken] = mal.RefreshToken,
+            [SettingsKeys.MalApiBaseUrl] = mal.ApiBaseUrl,
+            [SettingsKeys.MalWebBaseUrl] = mal.WebBaseUrl,
 
             // Only upsert the Kometa URL when explicitly set in config (null/empty values are skipped in the upsert loop above)
             [SettingsKeys.KometaAnimeIdsJsonUrl] = kometa.AnimeIdsJsonUrl,
