@@ -15,6 +15,24 @@
   letter-spacing: -0.01em;
 }
 
+// Mobile-only page context subtitle inside the brand
+.navbar-page-label {
+  display: none;
+
+  @media (max-width: 991.98px) {
+    display: inline;
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0;
+    margin-left: 0.35rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 40vw;
+  }
+}
+
 .nav-link {
   color: var(--text-secondary) !important;
   transition: color 0.2s ease;
@@ -62,13 +80,13 @@
   flex-shrink: 0;
 
   @media (max-width: 991.98px) {
-    order: 3;
-    width: 100%;
+    order: 1; // place before the toggler (order 2 via .navbar-toggler below)
     border-top: none;
-    padding-top: 0.25rem;
-    padding-bottom: 0.25rem;
+    padding-top: 0;
+    padding-bottom: 0;
     justify-content: flex-end;
     gap: 0.3rem;
+    margin-left: auto; // push to the right side so it sits next to the toggler
 
     // Hide provider links, lucky pick, settings, language & theme controls on mobile
     // Only the notification bell remains in the top bar
@@ -81,6 +99,14 @@
     .navbar-divider {
       display: none;
     }
+  }
+}
+
+// On mobile, push the toggler (hamburger) to the right of the bell
+@media (max-width: 991.98px) {
+  .navbar-toggler {
+    order: 2;
+    margin-left: 0.25rem;
   }
 }
 
@@ -261,6 +287,11 @@
     color 0.2s ease,
     border-color 0.2s ease,
     background 0.2s ease;
+
+  @media (max-width: 991.98px) {
+    width: 44px;
+    height: 44px;
+  }
 
   &:hover {
     color: var(--accent-primary);
@@ -1200,6 +1231,14 @@
     box-shadow:
       0 8px 32px rgba(0, 0, 0, 0.22),
       0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  // Scroll-to-hide: retract below the screen edge when scrolling down
+  &--hidden {
+    @media (max-width: 991.98px) {
+      transform: translateY(calc(100% + 1.5rem));
+    }
   }
 }
 

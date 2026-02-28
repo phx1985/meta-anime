@@ -11,7 +11,7 @@ import {
   AfterViewInit,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { filter } from 'rxjs/operators';
 import { ThemeService } from './services/theme.service';
@@ -60,6 +60,24 @@ export class App implements OnInit, AfterViewInit {
   protected sonarrHomeUrl = signal<string | null>(null);
   protected readonly malHomeUrl = 'https://myanimelist.net';
 
+  /** True while the bottom nav bar is retracted (scroll-down hide on mobile) */
+  protected bottomNavHidden = signal<boolean>(false);
+  /** i18n key of the active route – displayed as a page label in the top header on mobile */
+  protected currentPageKey = signal<string>('');
+  /** Tracks the last scroll position for scroll-direction detection */
+  private lastScrollY = 0;
+  /** Minimum scroll delta (px) before direction is detected, avoids micro-jitter */
+  private static readonly SCROLL_DELTA_THRESHOLD = 4;
+  /** If scroll position is at or below this many px from the top, always reveal the nav */
+  private static readonly SCROLL_TOP_THRESHOLD = 40;
+
+  /** Route → nav i18n key mapping */
+  private static readonly PAGE_KEYS: Record<string, string> = {
+    '/animes': 'nav.animes',
+    '/seasonal': 'nav.seasonal',
+    '/settings': 'nav.settings',
+  };
+
   /** Controls the disabled-provider interception modal — delegated to PopupService */
   protected get disabledProviderModal() { return this.popupService.disabledProvider; }
   protected get modalLeaving() { return this.popupService.disabledProviderLeaving; }
@@ -76,6 +94,21 @@ export class App implements OnInit, AfterViewInit {
   ngOnInit(): void {
     // Connect to SignalR hub globally so sync done/error notifications work on any page
     this.syncSignalR.connect();
+
+    // Track active route for the mobile page-context label
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((e) => {
+        // Strip query params and hash, then map to a page i18n key ('' for unmapped routes)
+        const path = '/' + e.urlAfterRedirects.replace(/^\//, '').split('?')[0].split('#')[0].split('/')[0];
+        this.currentPageKey.set(App.PAGE_KEYS[path] ?? '');
+        // Always reveal the bottom nav when navigating to a new page
+        this.bottomNavHidden.set(false);
+        this.lastScrollY = 0;
+      });
 
     // Sync done → success notification (fires on every transition false→true, not on replay)
     this.syncSignalR.syncDone$
@@ -162,6 +195,23 @@ export class App implements OnInit, AfterViewInit {
         /* non-critical */
       },
     });
+  }
+
+  /** Scroll-to-hide/show the bottom navigation bar on mobile */
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    if (this.menuOpen()) return; // keep nav visible when hamburger menu is open
+    const currentY = window.scrollY;
+    const delta = currentY - this.lastScrollY;
+    if (Math.abs(delta) < App.SCROLL_DELTA_THRESHOLD) return;
+    if (currentY <= App.SCROLL_TOP_THRESHOLD) {
+      this.bottomNavHidden.set(false);
+    } else if (delta > 0) {
+      this.bottomNavHidden.set(true);
+    } else {
+      this.bottomNavHidden.set(false);
+    }
+    this.lastScrollY = currentY;
   }
 
   /** Close notification center when clicking anywhere outside it */
