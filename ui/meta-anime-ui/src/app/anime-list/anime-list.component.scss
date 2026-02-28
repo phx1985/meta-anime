@@ -1441,10 +1441,15 @@
     gap: 0.875rem;
   }
 
-  // Smaller pill text on mobile
+  // Larger, thumb-friendly filter pills on mobile
+  .filter-pills {
+    gap: 0.5rem;
+  }
+
   .filter-pill {
-    font-size: 0.75rem;
-    padding: 0.2rem 0.55rem;
+    font-size: 0.875rem;
+    padding: 0.55rem 1rem;
+    min-height: 40px;
   }
 
   .preset-save-form {

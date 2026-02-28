@@ -43,7 +43,7 @@
     }
 
     .navbar-nav {
-      flex-direction: column;
+      display: none; // hidden on mobile — bottom nav handles primary navigation
     }
   }
 
@@ -1180,7 +1180,7 @@
   }
 }
 
-// ── Mobile Bottom Navigation Bar ───────────────────────────────────────────────
+// ── Mobile Bottom Navigation Bar (floating pill) ───────────────────────────────
 
 .bottom-nav {
   display: none; // hidden on desktop
@@ -1188,16 +1188,18 @@
   @media (max-width: 991.98px) {
     display: flex;
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: calc(0.875rem + env(safe-area-inset-bottom, 0px));
+    left: 1rem;
+    right: 1rem;
     z-index: 1030;
     background: var(--navbar-bg);
-    border-top: 1px solid var(--navbar-border);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12);
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    border-radius: 20px;
+    border: 1px solid var(--navbar-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.22),
+      0 2px 8px rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -1213,6 +1215,7 @@
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-muted);
+  opacity: 0.55;
   text-decoration: none;
   background: transparent;
   border: none;
@@ -1220,17 +1223,27 @@
   letter-spacing: 0.02em;
   transition:
     color 0.2s ease,
-    background 0.2s ease;
+    opacity 0.2s ease;
   -webkit-tap-highlight-color: transparent;
+
+  &:first-child {
+    border-radius: 20px 0 0 20px;
+  }
+
+  &:last-child {
+    border-radius: 0 20px 20px 0;
+  }
 
   &:hover,
   &:focus-visible {
     color: var(--accent-primary);
+    opacity: 1;
     outline: none;
   }
 
   &--active {
     color: var(--accent-primary);
+    opacity: 1;
   }
 
   svg {
@@ -1239,7 +1252,8 @@
   }
 
   &--active svg {
-    transform: scale(1.1);
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent-primary) 60%, transparent));
   }
 
   span {
