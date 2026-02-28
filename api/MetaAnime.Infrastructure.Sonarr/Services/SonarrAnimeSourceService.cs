@@ -2,9 +2,7 @@ using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
-using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
-using Microsoft.Extensions.Options;
 using RestSharp;
 using System.Collections.Concurrent;
 using System.Net;
@@ -12,7 +10,7 @@ using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.Sonarr.Services;
 
-public sealed class SonarrAnimeSourceService(IOptions<SonarrSettings> options, IPropertyBagRepository propertyBagRepository) : ISonarrAnimeSourceService<SonarrSeries>
+public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagRepository) : ISonarrAnimeSourceService<SonarrSeries>
 {
     #region Fields
     private static readonly JsonSerializerOptions jsonOptions = new() { PropertyNameCaseInsensitive = true };
@@ -24,9 +22,9 @@ public sealed class SonarrAnimeSourceService(IOptions<SonarrSettings> options, I
         var apiKeyEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrApiKey);
         var tagsEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrAnimeTags);
 
-        var host = hostEntry?.Value ?? options.Value.Host ?? string.Empty;
-        var apiKey = apiKeyEntry?.Value ?? options.Value.ApiKey ?? string.Empty;
-        var tagsStr = tagsEntry?.Value ?? options.Value.AnimeTags ?? string.Empty;
+        var host = hostEntry?.Value ?? string.Empty;
+        var apiKey = apiKeyEntry?.Value ?? string.Empty;
+        var tagsStr = tagsEntry?.Value ?? string.Empty;
         var tags = tagsStr.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
         var isConfigured = !string.IsNullOrWhiteSpace(host) && !string.IsNullOrWhiteSpace(apiKey);
 

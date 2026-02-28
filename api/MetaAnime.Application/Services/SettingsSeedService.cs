@@ -9,9 +9,10 @@ using Microsoft.Extensions.Options;
 namespace MetaAnime.Application.Services;
 
 /// <summary>
-/// Seeds the PropertyBag with values from appsettings / environment variables
-/// on first run. Existing entries are never overwritten, so the PropertyBag
-/// remains the source of truth after the initial seed.
+/// Seeds the PropertyBag with values from appsettings / environment variables on startup.
+/// Provider credentials (URLs, API keys, Client IDs) are always upserted from configuration,
+/// allowing config-file changes to take effect on restart. Default values (toggles, preferences)
+/// are only written once so that user changes made via the UI are preserved.
 /// </summary>
 public sealed class SettingsSeedService(
     IServiceProvider serviceProvider,
@@ -26,9 +27,22 @@ public sealed class SettingsSeedService(
         using var scope = serviceProvider.CreateScope();
         var repo = scope.ServiceProvider.GetRequiredService<IPropertyBagRepository>();
 
-        var seeds = BuildSeeds();
+        // Always upsert provider credentials from configuration (if non-empty).
+        // This ensures a config-file change is picked up on the next restart.
+        var providerSeeds = BuildProviderSeeds();
+        foreach (var (key, value) in providerSeeds)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                continue;
 
-        foreach (var (key, value) in seeds)
+            await repo.UpsertAsync(key, value);
+            logger.LogInformation("Settings seed: upserted '{Key}' from configuration", key);
+        }
+
+        // Only initialise default values when the key is not yet in the database,
+        // so that user changes made via the UI are preserved across restarts.
+        var defaultSeeds = BuildDefaultSeeds();
+        foreach (var (key, value) in defaultSeeds)
         {
             if (string.IsNullOrWhiteSpace(value))
                 continue;
@@ -37,14 +51,18 @@ public sealed class SettingsSeedService(
             if (existing is null)
             {
                 await repo.UpsertAsync(key, value);
-                logger.LogInformation("Settings seed: initialised '{Key}' from environment", key);
+                logger.LogInformation("Settings seed: initialised '{Key}' with default", key);
             }
         }
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    private Dictionary<string, string?> BuildSeeds()
+    /// <summary>
+    /// Third-party provider credentials and URLs sourced from the configuration file.
+    /// These are always upserted so that config-file changes take effect on restart.
+    /// </summary>
+    private Dictionary<string, string?> BuildProviderSeeds()
     {
         var plex = plexOptions.Value;
         var sonarr = sonarrOptions.Value;
@@ -53,30 +71,38 @@ public sealed class SettingsSeedService(
 
         return new Dictionary<string, string?>
         {
-            [SettingsKeys.PlexEnabled] = "true",
             [SettingsKeys.PlexHost] = plex.Host,
             [SettingsKeys.PlexToken] = plex.Token,
             [SettingsKeys.PlexAnimeSections] = plex.AnimeSections,
 
-            [SettingsKeys.SonarrEnabled] = "true",
             [SettingsKeys.SonarrHost] = sonarr.Host,
             [SettingsKeys.SonarrApiKey] = sonarr.ApiKey,
             [SettingsKeys.SonarrAnimeTags] = sonarr.AnimeTags,
             [SettingsKeys.SonarrRemoteUrl] = sonarr.RemoteUrl,
-
-            [SettingsKeys.SonarrDefaultSeasonFolder] = "true",
-            [SettingsKeys.SonarrDefaultMonitor] = "all",
 
             [SettingsKeys.MalApiToken] = mal.ApiToken,
             [SettingsKeys.MalClientId] = mal.ClientId,
             [SettingsKeys.MalClientSecret] = mal.ClientSecret,
             [SettingsKeys.MalRefreshToken] = mal.RefreshToken,
 
-            [SettingsKeys.KometaAnimeIdsJsonUrl] = kometa.AnimeIdsJsonUrl ?? KometaSettings.DefaultAnimeIdsJsonUrl,
-
-            [SettingsKeys.AppShowNsfw] = "false",
-            [SettingsKeys.AppSyncInterval] = "daily",
-            [SettingsKeys.AppTitleSimilarityThreshold] = "80",
+            // Only upsert the Kometa URL when explicitly set in config (null/empty values are skipped in the upsert loop above)
+            [SettingsKeys.KometaAnimeIdsJsonUrl] = kometa.AnimeIdsJsonUrl,
         };
     }
+
+    /// <summary>
+    /// Hardcoded defaults for app preferences and provider toggles.
+    /// Written once on first run; subsequent user changes via the UI are preserved.
+    /// </summary>
+    private static Dictionary<string, string?> BuildDefaultSeeds() => new()
+    {
+        [SettingsKeys.PlexEnabled] = "true",
+        [SettingsKeys.SonarrEnabled] = "true",
+        [SettingsKeys.SonarrDefaultSeasonFolder] = "true",
+        [SettingsKeys.SonarrDefaultMonitor] = "all",
+        [SettingsKeys.KometaAnimeIdsJsonUrl] = KometaSettings.DefaultAnimeIdsJsonUrl,
+        [SettingsKeys.AppShowNsfw] = "false",
+        [SettingsKeys.AppSyncInterval] = "daily",
+        [SettingsKeys.AppTitleSimilarityThreshold] = "80",
+    };
 }

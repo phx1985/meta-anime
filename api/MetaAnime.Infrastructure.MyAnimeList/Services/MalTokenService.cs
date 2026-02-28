@@ -1,8 +1,7 @@
+using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
-using MetaAnime.Core.Settings;
-using Microsoft.Extensions.Options;
 using RestSharp;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -10,14 +9,11 @@ using System.Text.Json.Serialization;
 namespace MetaAnime.Infrastructure.MyAnimeList.Services;
 
 public sealed class MalTokenService(
-    IPropertyBagRepository propertyBagRepository,
-    IOptions<MalSettings> options) : IMalTokenService
+    IPropertyBagRepository propertyBagRepository) : IMalTokenService
 {
     private const string AccessTokenKey = "MAL_ACCESS_TOKEN";
     private const string RefreshTokenKey = "MAL_REFRESH_TOKEN";
     private const string TokenUrl = "https://myanimelist.net/v1/oauth2/token";
-
-    private readonly MalSettings _settings = options.Value;
 
     public async Task<string?> GetAccessTokenAsync()
     {
@@ -27,12 +23,16 @@ public sealed class MalTokenService(
             return entry.Value;
         }
 
-        return string.IsNullOrWhiteSpace(_settings.ApiToken) ? null : _settings.ApiToken;
+        // Fall back to legacy API token stored in PropertyBag
+        var legacyEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.MalApiToken);
+        return string.IsNullOrWhiteSpace(legacyEntry?.Value) ? null : legacyEntry.Value;
     }
 
     public async Task<Result> RefreshTokenAsync()
     {
-        if (string.IsNullOrWhiteSpace(_settings.ClientId))
+        var clientIdEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.MalClientId);
+        var clientId = clientIdEntry?.Value;
+        if (string.IsNullOrWhiteSpace(clientId))
         {
             return Result.Failure(new Error(Constants.Errors.MissingClientId, "MyAnimeList ClientId is not configured"));
         }
@@ -40,15 +40,18 @@ public sealed class MalTokenService(
         var refreshToken = await GetCurrentRefreshTokenAsync();
         if (string.IsNullOrWhiteSpace(refreshToken))
         {
-            return Result.Failure(new Error(Constants.Errors.MissingRefreshToken, "No MAL refresh token available in PropertyBag or settings"));
+            return Result.Failure(new Error(Constants.Errors.MissingRefreshToken, "No MAL refresh token available"));
         }
+
+        var clientSecretEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.MalClientSecret);
+        var clientSecret = clientSecretEntry?.Value;
 
         var client = new RestClient(new Uri(TokenUrl));
         var request = new RestRequest { Method = Method.Post };
-        request.AddParameter("client_id", _settings.ClientId);
-        if (!string.IsNullOrWhiteSpace(_settings.ClientSecret))
+        request.AddParameter("client_id", clientId);
+        if (!string.IsNullOrWhiteSpace(clientSecret))
         {
-            request.AddParameter("client_secret", _settings.ClientSecret);
+            request.AddParameter("client_secret", clientSecret);
         }
         request.AddParameter("grant_type", "refresh_token");
         request.AddParameter("refresh_token", refreshToken);
@@ -95,7 +98,9 @@ public sealed class MalTokenService(
             return entry.Value;
         }
 
-        return _settings.RefreshToken;
+        // Fall back to initial refresh token stored in PropertyBag (seeded from config)
+        var seededEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.MalRefreshToken);
+        return seededEntry?.Value;
     }
 
     private sealed class MalTokenResponse
