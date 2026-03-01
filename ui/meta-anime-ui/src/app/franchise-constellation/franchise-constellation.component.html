@@ -33,16 +33,6 @@
       <span class="constellation-title-label">{{ 'franchise.title' | translate }}</span>
     </div>
 
-    <!-- Live-building status pill (visible only while BFS is running) -->
-    @if (svc.loading()) {
-      <div class="loading-pill" aria-live="polite">
-        <span class="loading-pill-dot"></span>
-        <span class="loading-pill-text">
-          {{ 'franchise.loadingProgress' | translate: { count: svc.loadingCount() } }}
-        </span>
-      </div>
-    }
-
     @if (rootTitle) {
       <span class="constellation-anime-name">{{ rootTitle }}</span>
     }
@@ -60,6 +50,18 @@
     </div>
   }
 
+  <!-- ── Centered loading overlay ─────────────────────────────────────── -->
+  @if (svc.loading() && !svc.graph()) {
+    <div class="loading-center" aria-live="polite">
+      <div class="loading-pill">
+        <span class="loading-pill-dot"></span>
+        <span class="loading-pill-text">
+          {{ 'franchise.loadingProgress' | translate: { count: svc.loadingCount() } }}
+        </span>
+      </div>
+    </div>
+  }
+
   <!-- ── Graph (shown immediately as soon as first node is available) ─── -->
   @if (svc.graph()) {
     <div
@@ -73,6 +75,16 @@
       (touchstart)="onTouchStart($event)"
       (touchmove)="onTouchMove($event)"
     >
+      <!-- In-canvas loading progress pill (shown while BFS is still running) -->
+      @if (svc.loading()) {
+        <div class="loading-pill loading-pill--in-canvas" aria-live="polite">
+          <span class="loading-pill-dot"></span>
+          <span class="loading-pill-text">
+            {{ 'franchise.loadingProgress' | translate: { count: svc.loadingCount() } }}
+          </span>
+        </div>
+      }
+
       <div
         class="constellation-graph"
         [style.transform]="graphTransform()"
@@ -106,7 +118,6 @@
         @for (node of displayNodes(); track node.malId) {
           <div
             class="constellation-node"
-            [class.constellation-node--root]="node.isRoot"
             [attr.data-mal-id]="node.malId"
             [style.left.px]="node.x"
             [style.top.px]="node.y"
@@ -150,8 +161,8 @@
       </div>
     }
 
-    <!-- ── Edge legend (bottom-left) ─────────────────────────────────── -->
-    <div class="edge-legend" aria-label="Legend">
+    <!-- ── Desktop Legend (bottom-left) ───────────────────────────────── -->
+    <div class="edge-legend edge-legend--desktop" aria-label="Legend">
       <span class="edge-legend-title">{{ 'franchise.legend.title' | translate }}</span>
       <div class="edge-legend-item">
         <svg class="edge-legend-svg" viewBox="0 0 36 8" aria-hidden="true">
@@ -161,34 +172,59 @@
         <span>{{ 'franchise.legend.canonical' | translate }}</span>
       </div>
 
-      <!-- Media type swatches -->
-      <div class="edge-legend-divider" aria-hidden="true"></div>
-      <span class="edge-legend-title">{{ 'franchise.legend.mediaTypes.title' | translate }}</span>
-      <div class="edge-legend-item">
-        <span class="legend-swatch legend-swatch--tv" aria-hidden="true"></span>
-        <span>{{ 'franchise.legend.mediaTypes.tv' | translate }}</span>
-      </div>
-      <div class="edge-legend-item">
-        <span class="legend-swatch legend-swatch--movie" aria-hidden="true"></span>
-        <span>{{ 'franchise.legend.mediaTypes.movie' | translate }}</span>
-      </div>
-      <div class="edge-legend-item">
-        <span class="legend-swatch legend-swatch--ova" aria-hidden="true"></span>
-        <span>{{ 'franchise.legend.mediaTypes.ova' | translate }}</span>
-      </div>
-      <div class="edge-legend-item">
-        <span class="legend-swatch legend-swatch--ona" aria-hidden="true"></span>
-        <span>{{ 'franchise.legend.mediaTypes.ona' | translate }}</span>
-      </div>
-      <div class="edge-legend-item">
-        <span class="legend-swatch legend-swatch--special" aria-hidden="true"></span>
-        <span>{{ 'franchise.legend.mediaTypes.special' | translate }}</span>
-      </div>
-      <div class="edge-legend-item">
-        <span class="legend-swatch legend-swatch--music" aria-hidden="true"></span>
-        <span>{{ 'franchise.legend.mediaTypes.music' | translate }}</span>
-      </div>
+      @if (presentMediaTypes().length) {
+        <!-- Media type swatches — only types present in this franchise -->
+        <div class="edge-legend-divider" aria-hidden="true"></div>
+        <span class="edge-legend-title">{{ 'franchise.legend.mediaTypes.title' | translate }}</span>
+        @for (type of presentMediaTypes(); track type) {
+          <div class="edge-legend-item">
+            <span class="legend-swatch" [class]="'legend-swatch--' + type" aria-hidden="true"></span>
+            <span>{{ 'franchise.legend.mediaTypes.' + type | translate }}</span>
+          </div>
+        }
+      }
     </div>
+
+    <!-- ── Mobile legend toggle button ───────────────────────────────── -->
+    <button
+      type="button"
+      class="legend-toggle-btn"
+      (click)="toggleLegend()"
+      [attr.aria-expanded]="legendOpen()"
+      [attr.aria-label]="'franchise.legend.title' | translate"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="8.01" />
+        <line x1="12" y1="12" x2="12" y2="16" />
+      </svg>
+    </button>
+
+    <!-- ── Mobile legend bottom-sheet ────────────────────────────────── -->
+    @if (legendOpen()) {
+      <div class="legend-sheet-backdrop" (click)="toggleLegend()" aria-hidden="true"></div>
+      <div class="legend-sheet" role="dialog" [attr.aria-label]="'franchise.legend.title' | translate">
+        <div class="legend-sheet-handle" aria-hidden="true"></div>
+        <span class="edge-legend-title">{{ 'franchise.legend.title' | translate }}</span>
+        <div class="edge-legend-item">
+          <svg class="edge-legend-svg" viewBox="0 0 36 8" aria-hidden="true">
+            <line x1="0" y1="4" x2="28" y2="4" class="legend-line legend-line--canonical" />
+            <polygon points="28,1 36,4 28,7" class="legend-arrow legend-arrow--canonical" />
+          </svg>
+          <span>{{ 'franchise.legend.canonical' | translate }}</span>
+        </div>
+        @if (presentMediaTypes().length) {
+          <div class="edge-legend-divider" aria-hidden="true"></div>
+          <span class="edge-legend-title">{{ 'franchise.legend.mediaTypes.title' | translate }}</span>
+          @for (type of presentMediaTypes(); track type) {
+            <div class="edge-legend-item">
+              <span class="legend-swatch" [class]="'legend-swatch--' + type" aria-hidden="true"></span>
+              <span>{{ 'franchise.legend.mediaTypes.' + type | translate }}</span>
+            </div>
+          }
+        }
+      </div>
+    }
   }
 
   <!-- ── Quick Look modal (layered over the full constellation) ──────── -->

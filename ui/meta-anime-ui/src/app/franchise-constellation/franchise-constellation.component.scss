@@ -43,13 +43,13 @@
   &:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.08); }
 }
 
-// Header
+// Header — compact padding to reclaim vertical canvas space
 .constellation-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
-  padding: 1rem 4rem 0.5rem;
+  gap: 0.2rem;
+  padding: 0.55rem 4rem 0.35rem;
   flex-shrink: 0;
 }
 
@@ -86,6 +86,15 @@
   text-overflow: ellipsis;
 }
 
+// ── Centered loading overlay (before any graph nodes arrive) ─────────────────
+
+.loading-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 // ── Live-building status pill ─────────────────────────────────────────────────
 
 .loading-pill {
@@ -100,6 +109,16 @@
   font-weight: 600;
   color: rgba(157, 148, 255, 0.9);
   animation: pillFadeIn 0.3s ease both;
+
+  // In-canvas variant: absolute overlay within the graph-wrap during live build
+  &--in-canvas {
+    position: absolute;
+    top: 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 6;
+    pointer-events: none;
+  }
 }
 
 .loading-pill-dot {
@@ -206,19 +225,6 @@ $media-music:   #ec4899; // pink
   &:active { cursor: grabbing; z-index: 100; }
   &:hover  { z-index: 10; }
   &:hover .node-card-inner { box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65); }
-
-  // V9: root card highlight via inner wrapper — glow/border only, same size
-  &--root { z-index: 1; }
-  &--root .node-card-inner {
-    border: 2px solid var(--accent-primary, #9d94ff);
-    box-shadow:
-      0 0 0 2px var(--accent-primary, #9d94ff),
-      0 0 24px rgba(157, 148, 255, 0.5),
-      0 8px 32px rgba(0, 0, 0, 0.5);
-    animation:
-      nodeIn 0.18s ease-out both,
-      centerGlow 2.4s ease-in-out infinite;
-  }
 }
 
 // Inner wrapper: the actual visual card that is animated.
@@ -287,28 +293,29 @@ $media-music:   #ec4899; // pink
   overflow: hidden;
 }
 
-// ── Media-type colored top border per node ────────────────────────────────────
-// Applied on .node-card-inner via [class] binding in the template.
-// Using border-top only (no box-shadow) keeps the GPU-composited nodeIn
-// animation (transform + opacity) unaffected.
+// ── Media-type colored LEFT border per node (prominent ribbon) ────────────────
+// border-left: 6px solid gives a clear visual cue at a glance.
+// Using border-left (not box-shadow) keeps will-change: transform, opacity
+// on node-card-inner and the GPU-composited nodeIn animation unaffected.
 
-@mixin media-border($color) {
-  border-top: 4px solid $color;
-  // Trim the top border-radius so the border flush with the card corners
+@mixin media-left-border($color) {
+  border-left: 6px solid $color;
   border-radius: 10px;
   .node-poster,
   .node-poster-placeholder {
-    border-radius: 6px 6px 0 0;
+    // top-left radius is smaller (4 px) to align flush with the 6 px left ribbon;
+    // top-right matches the card's own corner (9 px inside the 10 px outer radius).
+    border-radius: 4px 9px 0 0;
   }
 }
 
-.node-card-inner--tv      { @include media-border($media-tv); }
-.node-card-inner--movie   { @include media-border($media-movie); }
-.node-card-inner--ova     { @include media-border($media-ova); }
-.node-card-inner--ona     { @include media-border($media-ona); }
+.node-card-inner--tv      { @include media-left-border($media-tv); }
+.node-card-inner--movie   { @include media-left-border($media-movie); }
+.node-card-inner--ova     { @include media-left-border($media-ova); }
+.node-card-inner--ona     { @include media-left-border($media-ona); }
 .node-card-inner--special,
-.node-card-inner--tv_special { @include media-border($media-special); }
-.node-card-inner--music   { @include media-border($media-music); }
+.node-card-inner--tv_special { @include media-left-border($media-special); }
+.node-card-inner--music   { @include media-left-border($media-music); }
 
 // ── V9: Truncation badge ──────────────────────────────────────────────────────
 .node-truncated-badge {
@@ -329,7 +336,7 @@ $media-music:   #ec4899; // pink
   z-index: 5;
 }
 
-// ── Edge Legend ───────────────────────────────────────────────────────────────
+// ── Edge Legend — desktop (bottom-left floating box) ─────────────────────────
 
 .edge-legend {
   position: absolute;
@@ -403,8 +410,90 @@ $media-music:   #ec4899; // pink
   &--movie   { background: $media-movie; }
   &--ova     { background: $media-ova; }
   &--ona     { background: $media-ona; }
-  &--special { background: $media-special; }
+  &--special,
+  &--tv_special { background: $media-special; }
   &--music   { background: $media-music; }
+}
+
+// ── Mobile: legend toggle button & bottom-sheet ───────────────────────────────
+
+// The floating legend box is desktop-only
+.edge-legend--desktop {
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+// Floating "ⓘ" button shown only on mobile (bottom-right corner)
+.legend-toggle-btn {
+  display: none; // hidden on desktop
+
+  @media (max-width: 768px) {
+    display: flex;
+    position: absolute;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(10, 14, 26, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(157, 148, 255, 0.9);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 6;
+    transition: background 0.15s;
+
+    svg { width: 22px; height: 22px; pointer-events: none; }
+
+    &:hover { background: rgba(157, 148, 255, 0.2); }
+  }
+}
+
+// Translucent backdrop behind the bottom-sheet
+.legend-sheet-backdrop {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 7;
+    background: rgba(0, 0, 0, 0.4);
+    animation: overlayIn 0.15s ease both;
+  }
+}
+
+// Bottom-sheet panel
+.legend-sheet {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 8;
+    padding: 1rem 1.25rem calc(1rem + env(safe-area-inset-bottom, 0px));
+    background: rgba(12, 14, 28, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: none;
+    border-radius: 16px 16px 0 0;
+    animation: sheetIn 0.22s cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+}
+
+.legend-sheet-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.25);
+  align-self: center;
+  margin-bottom: 0.4rem;
 }
 
 // ── Empty State ───────────────────────────────────────────────────────────────
@@ -430,21 +519,6 @@ $media-music:   #ec4899; // pink
   to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
-@keyframes centerGlow {
-  0%, 100% {
-    box-shadow:
-      0 0 0 2px var(--accent-primary, #9d94ff),
-      0 0 18px rgba(157, 148, 255, 0.4),
-      0 8px 32px rgba(0, 0, 0, 0.5);
-  }
-  50% {
-    box-shadow:
-      0 0 0 3px var(--accent-primary, #9d94ff),
-      0 0 36px rgba(157, 148, 255, 0.75),
-      0 8px 40px rgba(0, 0, 0, 0.5);
-  }
-}
-
 @keyframes pillFadeIn {
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -458,6 +532,11 @@ $media-music:   #ec4899; // pink
 @keyframes pillDotPulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%       { opacity: 0.4; transform: scale(0.7); }
+}
+
+@keyframes sheetIn {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
 }
 
 // ── Quick Look modal ──────────────────────────────────────────────────────────

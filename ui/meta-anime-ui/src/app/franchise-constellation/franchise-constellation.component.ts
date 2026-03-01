@@ -26,17 +26,17 @@ const V_GAP = 100;
 const PARALLEL_GAP = 12;
 /** Horizontal control-point offset for U-turn bezier curves at row ends. */
 const UTURN_RADIUS = 80;
-const PADDING = 80;
+const PADDING = 40;
 const CANVAS_W = 8000;
 const CANVAS_H = 10000;
-const FIT_MARGIN = 60;
-const HEADER_APPROX_H = 90;
+const FIT_MARGIN = 40;
+const HEADER_APPROX_H = 72;
 const DRAG_THRESHOLD = 5;
 const MIN_SCALE = 0.05;
 const MAX_SCALE = 3;
 const MIN_NODES_PER_ROW = 2;
 /** Milliseconds between each card appearing during the sequential render animation. */
-const RENDER_INTERVAL_MS = 150;
+const RENDER_INTERVAL_MS = 50;
 
 const TRUNK_TYPES = new Set(['prequel', 'sequel']);
 
@@ -106,6 +106,27 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   protected readonly quickLookSynopsisLong = computed(
     () => (this.quickLookNode()?.synopsis?.length ?? 0) > 200,
   );
+
+  /** Unique media types present in the current franchise graph (for legend). */
+  protected readonly presentMediaTypes = computed<string[]>(() => {
+    const g = this.svc.graph();
+    if (!g) return [];
+    const seen = new Set<string>();
+    for (const node of g.nodes) {
+      if (node.mediaType) seen.add(node.mediaType.toLowerCase());
+    }
+    // Deterministic order matching the legend colour palette
+    const order = ['tv', 'movie', 'ova', 'ona', 'special', 'tv_special', 'music'];
+    const sorted = order.filter((t) => seen.has(t));
+    // Append any unknown types not in the fixed list
+    for (const t of seen) {
+      if (!order.includes(t)) sorted.push(t);
+    }
+    return sorted;
+  });
+
+  /** Whether the mobile legend bottom-sheet is open. */
+  protected legendOpen = signal(false);
 
   private readonly nodeMap = computed<Map<string, FranchiseGraphNode>>(() => {
     const g = this.svc.graph();
@@ -244,7 +265,9 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.quickLookNode()) {
+    if (this.legendOpen()) {
+      this.legendOpen.set(false);
+    } else if (this.quickLookNode()) {
       this.closeQuickLook();
     } else {
       this.svc.close();
@@ -266,6 +289,10 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
 
   close(): void {
     this.svc.close();
+  }
+
+  toggleLegend(): void {
+    this.legendOpen.update((v) => !v);
   }
 
   // ── Pointer events ─────────────────────────────────────────────────────────

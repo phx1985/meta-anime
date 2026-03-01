@@ -275,6 +275,7 @@
             "ova": "OVA",
             "ona": "ONA",
             "special": "Special",
+            "tv_special": "TV Special",
             "music": "Music",
             "unknown": "Unknown"
         },
@@ -516,6 +517,7 @@
                 "ova": "OVA",
                 "ona": "ONA",
                 "special": "Special",
+                "tv_special": "TV Special",
                 "music": "Music"
             }
         },
