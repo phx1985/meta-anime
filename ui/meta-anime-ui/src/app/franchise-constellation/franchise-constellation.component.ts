@@ -15,25 +15,39 @@ import { FranchiseConstellationService } from '../services/franchise-constellati
 import { PopupService } from '../services/popup.service';
 import { FranchiseGraph, FranchiseGraphEdge, FranchiseGraphNode } from '../models/anime.models';
 
-// ── Layout constants (Final Pivot: uniform cards, 1D horizontal timeline) ────
+// ── Layout constants ──────────────────────────────────────────────────────────
 const NODE_W = 144;
 const NODE_H = 200;
-/** Generous horizontal gap so directional arrows are clearly visible. */
-const H_GAP = 200;
-const PADDING = 120;
+/** Horizontal gap between nodes within a row. */
+const H_GAP = 80;
+/** Vertical gap between rows (bottom of tallest node to top of next row). */
+const V_GAP = 100;
+/** Gap between stacked parallel nodes within a single column step. */
+const PARALLEL_GAP = 12;
+/** Horizontal control-point offset for U-turn bezier curves at row ends. */
+const UTURN_RADIUS = 80;
+const PADDING = 80;
 const CANVAS_W = 8000;
-const CANVAS_H = 6000;
-const TRUNK_CENTER_Y = CANVAS_H / 2;
+const CANVAS_H = 10000;
 const FIT_MARGIN = 60;
 const HEADER_APPROX_H = 90;
 const DRAG_THRESHOLD = 5;
 const MIN_SCALE = 0.05;
 const MAX_SCALE = 3;
+const MIN_NODES_PER_ROW = 2;
 
 const TRUNK_TYPES = new Set(['prequel', 'sequel']);
 
 function isTrunkRelation(relationType: string | undefined): boolean {
   return TRUNK_TYPES.has(relationType ?? '');
+}
+
+interface LayoutMeta {
+  /** Zero-based step index across all rows (used to determine arrow direction). */
+  row: number;
+  colStep: number;
+  /** Reading direction of this node's row. */
+  rowDir: 'ltr' | 'rtl';
 }
 
 export interface DisplayEdge {
@@ -70,6 +84,9 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   /** Map<malId, {x, y}> — top-left corner of each card in canvas space. */
   protected nodePositions = signal<Map<string, { x: number; y: number }>>(new Map());
 
+  /** Snake-layout metadata for each node — drives directional edge routing. */
+  private layoutMeta = signal<Map<string, LayoutMeta>>(new Map());
+
   /** IDs the user has manually repositioned — excluded from auto-layout. */
   private manuallyDraggedIds = new Set<string>();
 
@@ -89,10 +106,11 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   protected edges = computed<DisplayEdge[]>(() => {
     const g = this.svc.graph();
     const pos = this.nodePositions();
+    const meta = this.layoutMeta(); // track as dependency for edge redraw on layout change
     if (!g) return [];
     return g.edges
       .map((e) => ({
-        d: this._edgePath(e, g, pos),
+        d: this._edgePath(e, g, pos, meta),
         isCanonical: true,
       }))
       .filter((e) => e.d !== '');
@@ -122,7 +140,7 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
       const g = this.svc.graph();
       if (!g) return;
 
-      const newPositions = this._computeTimelinePositions(g);
+      const { positions: newPositions, layoutInfo } = this._computeSnakePositions(g);
 
       // Replace all auto-layout positions so that column shifts caused by newly-
       // discovered prequels are reflected immediately (prevents coordinate sharing).
@@ -145,6 +163,15 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
         return m;
       });
 
+      // Update layout metadata for all nodes (including manual ones keep old meta)
+      this.layoutMeta.update((current) => {
+        const m = new Map<string, LayoutMeta>(current);
+        for (const [malId, info] of layoutInfo) {
+          m.set(malId, info);
+        }
+        return m;
+      });
+
       // V6: auto-fit camera after every node arrival (pass data to avoid
       // reading the just-written signal and creating a re-entrant effect).
       if (merged) this._fitCameraToNodes(merged, g);
@@ -156,6 +183,7 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
       const g = this.svc.graph();
       if (!g) {
         this.nodePositions.set(new Map());
+        this.layoutMeta.set(new Map());
         this.manuallyDraggedIds.clear();
         this.translateX.set(0);
         this.translateY.set(0);
@@ -175,6 +203,19 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   @HostListener('document:keydown.escape')
   onEscape(): void {
     this.svc.close();
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    const g = this.svc.graph();
+    if (!g) return;
+    // Recalculate snake layout for the new viewport width.
+    // Manual drags are cleared because the column structure may shift entirely.
+    this.manuallyDraggedIds.clear();
+    const { positions, layoutInfo } = this._computeSnakePositions(g);
+    this.nodePositions.set(positions);
+    this.layoutMeta.set(layoutInfo);
+    this._fitCameraToNodes(positions, g);
   }
 
   close(): void {
@@ -282,13 +323,94 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     return this.svc.graph()?.nodes.find((n) => n.isRoot)?.title;
   }
 
-  // ── Final Pivot: 1D Horizontal Timeline layout ────────────────────────────
+  // ── Snake (Boustrophedon) Layout ──────────────────────────────────────────
+
+  /**
+   * Places all nodes in a snake (boustrophedon) wrapping pattern:
+   *   - Row 0 (even): nodes flow LEFT → RIGHT
+   *   - Row 1 (odd):  nodes flow RIGHT → LEFT
+   *   - Row 2 (even): nodes flow LEFT → RIGHT  … and so on.
+   *
+   * The number of columns per row is calculated dynamically from the current
+   * viewport width so the timeline always fits horizontally.
+   *
+   * Parallel nodes (same chronological column, e.g. a TV arc and a movie)
+   * are stacked vertically and treated as a single column step, so they
+   * never break the snake pattern.
+   */
+  private _computeSnakePositions(graph: FranchiseGraph): {
+    positions: Map<string, { x: number; y: number }>;
+    layoutInfo: Map<string, LayoutMeta>;
+  } {
+    const positions = new Map<string, { x: number; y: number }>();
+    const layoutInfo = new Map<string, LayoutMeta>();
+    if (!graph.nodes.length) return { positions, layoutInfo };
+
+    // ── Determine columns per row from current viewport ─────────────────────
+    const stepW = NODE_W + H_GAP;
+    const maxNodesPerRow = Math.max(
+      MIN_NODES_PER_ROW,
+      Math.floor((window.innerWidth - 2 * PADDING) / stepW),
+    );
+
+    // ── Build column groups (handles parallel canon) ─────────────────────────
+    const trunkCols = this._computeTrunkCols(graph);
+    const colValues = Array.from(trunkCols.values());
+    const minCol = Math.min(...colValues);
+
+    const colGroups = new Map<number, string[]>();
+    for (const [malId, rawCol] of trunkCols) {
+      const col = rawCol - minCol;
+      if (!colGroups.has(col)) colGroups.set(col, []);
+      colGroups.get(col)!.push(malId);
+    }
+    // Sort nodes within each parallel group for deterministic ordering
+    for (const [, ids] of colGroups) ids.sort();
+
+    const sortedSteps = Array.from(colGroups.entries()).sort((a, b) => a[0] - b[0]);
+    const totalRows = Math.ceil(sortedSteps.length / maxNodesPerRow);
+
+    // ── Pass 1: compute max stack height per row ─────────────────────────────
+    const rowMaxH: number[] = new Array(totalRows).fill(NODE_H);
+    sortedSteps.forEach(([, malIds], stepIdx) => {
+      const row = Math.floor(stepIdx / maxNodesPerRow);
+      const stackH = malIds.length * NODE_H + (malIds.length - 1) * PARALLEL_GAP;
+      rowMaxH[row] = Math.max(rowMaxH[row], stackH);
+    });
+
+    // ── Pass 2: compute top-Y for each row ───────────────────────────────────
+    const rowYStart: number[] = [PADDING];
+    for (let r = 0; r < totalRows - 1; r++) {
+      rowYStart.push(rowYStart[r] + rowMaxH[r] + V_GAP);
+    }
+
+    // ── Pass 3: assign positions ─────────────────────────────────────────────
+    sortedSteps.forEach(([, malIds], stepIdx) => {
+      const row = Math.floor(stepIdx / maxNodesPerRow);
+      const colWithinRow = stepIdx % maxNodesPerRow;
+      const isLtr = row % 2 === 0;
+      // In RTL rows the rightmost canvas position corresponds to colWithinRow=0
+      const xIndex = isLtr ? colWithinRow : maxNodesPerRow - 1 - colWithinRow;
+      const x = PADDING + xIndex * stepW;
+      const rowDir: 'ltr' | 'rtl' = isLtr ? 'ltr' : 'rtl';
+      const rowY = rowYStart[row];
+      const stackH = malIds.length * NODE_H + (malIds.length - 1) * PARALLEL_GAP;
+      // Centre the parallel stack within the row's height
+      const startY = rowY + (rowMaxH[row] - stackH) / 2;
+
+      malIds.forEach((malId, i) => {
+        positions.set(malId, { x, y: startY + i * (NODE_H + PARALLEL_GAP) });
+        layoutInfo.set(malId, { row, colStep: stepIdx, rowDir });
+      });
+    });
+
+    return { positions, layoutInfo };
+  }
 
   /**
    * Runs BFS following only prequel/sequel edges from root.
    * Returns Map<malId, rawColumn> where column 0 = root's column,
    * prequel neighbours get column − 1, sequel neighbours get column + 1.
-   * Used to determine left-to-right relationship order (prequels left, sequels right).
    */
   private _computeTrunkCols(graph: FranchiseGraph): Map<string, number> {
     const trunkCols = new Map<string, number>();
@@ -326,29 +448,7 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     return trunkCols;
   }
 
-  /**
-   * Places all nodes in a single straight horizontal line ordered by
-   * relationship: prequels to the left, sequels to the right of the root.
-   * Since the service only fetches prequel/sequel relations, every node
-   * in the graph is part of this single timeline — no branches exist.
-   */
-  private _computeTimelinePositions(graph: FranchiseGraph): Map<string, { x: number; y: number }> {
-    const positions = new Map<string, { x: number; y: number }>();
-    const trunkCols = this._computeTrunkCols(graph);
-    const colValues = Array.from(trunkCols.values());
-    const minCol = Math.min(...colValues);
-
-    for (const [malId, rawCol] of trunkCols) {
-      const col = rawCol - minCol;
-      const x = PADDING + col * (NODE_W + H_GAP);
-      const y = TRUNK_CENTER_Y - NODE_H / 2;
-      positions.set(malId, { x, y });
-    }
-
-    return positions;
-  }
-
-  // ── V6 Camera auto-fit ─────────────────────────────────────────────────────
+  // ── Camera auto-fit ────────────────────────────────────────────────────────
 
   /**
    * Fits the camera so that every placed node is visible in the viewport.
@@ -406,10 +506,23 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
 
   // ── Edge drawing ──────────────────────────────────────────────────────────
 
+  /**
+   * Computes an SVG path for one edge, aware of the snake layout:
+   *
+   * • Same row, LTR: straight line from right edge of earlier node →
+   *                  left edge of later node.  Arrow points RIGHT.
+   * • Same row, RTL: straight line from left edge of earlier node →
+   *                  right edge of later node.  Arrow points LEFT.
+   * • Cross-row (U-turn): cubic bezier from the bottom-centre of the last
+   *                        node in row N to the top-centre of the first node
+   *                        in row N+1, curving away from the centre so the
+   *                        path forms a smooth "swoop".
+   */
   private _edgePath(
     edge: FranchiseGraphEdge,
     graph: FranchiseGraph,
     pos: Map<string, { x: number; y: number }>,
+    meta: Map<string, LayoutMeta>,
   ): string {
     const fromNode = graph.nodes.find((n) => n.malId === edge.fromMalId);
     const toNode = graph.nodes.find((n) => n.malId === edge.toMalId);
@@ -419,15 +532,60 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     const toPos = pos.get(edge.toMalId);
     if (!fromPos || !toPos) return '';
 
-    // All nodes share the same y row.  Draw a left-to-right horizontal line
-    // connecting the right edge of the left card to the left edge of the right card
-    // so arrows never overlap a card and always point in the reading direction.
-    const leftPos = fromPos.x <= toPos.x ? fromPos : toPos;
-    const rightPos = fromPos.x <= toPos.x ? toPos : fromPos;
-    const lx = leftPos.x + NODE_W;   // right edge of left card
-    const rx = rightPos.x;           // left edge of right card
-    const y = leftPos.y + NODE_H / 2;
-    return `M ${lx} ${y} L ${rx} ${y}`;
+    const fromMeta = meta.get(edge.fromMalId);
+    const toMeta = meta.get(edge.toMalId);
+
+    if (!fromMeta || !toMeta) {
+      // Fallback: simple horizontal line (should not normally occur)
+      const leftPos = fromPos.x <= toPos.x ? fromPos : toPos;
+      const rightPos = fromPos.x <= toPos.x ? toPos : fromPos;
+      const y = leftPos.y + NODE_H / 2;
+      return `M ${leftPos.x + NODE_W} ${y} L ${rightPos.x} ${y}`;
+    }
+
+    // Identify which node is chronologically earlier (lower colStep)
+    const fromIsEarlier = fromMeta.colStep <= toMeta.colStep;
+    const earlierPos = fromIsEarlier ? fromPos : toPos;
+    const laterPos = fromIsEarlier ? toPos : fromPos;
+    const earlierMeta = fromIsEarlier ? fromMeta : toMeta;
+    const laterMeta = fromIsEarlier ? toMeta : fromMeta;
+
+    // ── Same row: straight horizontal edge ───────────────────────────────────
+    if (earlierMeta.row === laterMeta.row) {
+      const fromCy = earlierPos.y + NODE_H / 2;
+      const toCy = laterPos.y + NODE_H / 2;
+      if (earlierMeta.rowDir === 'ltr') {
+        // Earlier is to the LEFT → arrow points RIGHT
+        return `M ${earlierPos.x + NODE_W} ${fromCy} L ${laterPos.x} ${toCy}`;
+      } else {
+        // Earlier is to the RIGHT (RTL row) → arrow points LEFT
+        return `M ${earlierPos.x} ${fromCy} L ${laterPos.x + NODE_W} ${toCy}`;
+      }
+    }
+
+    // ── Cross-row: U-turn bezier ─────────────────────────────────────────────
+    // The earlier node sits at the end of its row; the later node starts the
+    // next row.  Both share the same canvas X (rightmost or leftmost column).
+    // A cubic bezier with control points offset horizontally creates the swoop.
+    const fromCx = earlierPos.x + NODE_W / 2; // bottom-centre of earlier node
+    const fromCy = earlierPos.y + NODE_H;
+    const toCx = laterPos.x + NODE_W / 2;     // top-centre of later node
+    const toCy = laterPos.y;
+    const r = UTURN_RADIUS;
+
+    if (earlierMeta.row % 2 === 0) {
+      // LTR → RTL: turn curves to the RIGHT
+      return (
+        `M ${fromCx} ${fromCy} ` +
+        `C ${fromCx + r} ${fromCy} ${toCx + r} ${toCy} ${toCx} ${toCy}`
+      );
+    } else {
+      // RTL → LTR: turn curves to the LEFT
+      return (
+        `M ${fromCx} ${fromCy} ` +
+        `C ${fromCx - r} ${fromCy} ${toCx - r} ${toCy} ${toCx} ${toCy}`
+      );
+    }
   }
 
   private _touchDist(event: TouchEvent): number {
