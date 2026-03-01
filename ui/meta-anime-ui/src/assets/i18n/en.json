@@ -495,6 +495,26 @@
         "followOs": "Sync with OS theme",
         "label": "Theme"
     },
+    "franchise": {
+        "title": "Franchise Constellation",
+        "loading": "Mapping Franchise Data...",
+        "empty": "No related anime found in the franchise data.",
+        "close": "Close",
+        "viewButton": "View Franchise Constellation",
+        "openOnMal": "Open {{title}} on MyAnimeList",
+        "relationType": {
+            "prequel": "Prequel",
+            "sequel": "Sequel",
+            "alternative_version": "Alternative Version",
+            "alternative_setting": "Alternative Setting",
+            "parent_story": "Parent Story",
+            "side_story": "Side Story",
+            "summary": "Summary",
+            "spin_off": "Spin-off",
+            "character": "Character",
+            "other": "Other"
+        }
+    },
     "genres": {
         "Action": "Action",
         "Adventure": "Adventure",

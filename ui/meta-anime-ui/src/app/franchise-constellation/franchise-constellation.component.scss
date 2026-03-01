@@ -12,7 +12,7 @@
   width: 100%;
   height: 100dvh;
   z-index: 1099;
-  background: rgba(10, 15, 25, 0.85);
+  background: rgba(10, 15, 25, 0.88);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   display: flex;
@@ -42,8 +42,8 @@
     transform 0.15s;
 
   svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     pointer-events: none;
   }
 
@@ -59,24 +59,24 @@
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
-  padding: 1.25rem 4rem 0.5rem;
+  padding: 1.1rem 4rem 0.5rem;
   flex-shrink: 0;
 }
 
 .constellation-title-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.75rem;
-  font-weight: 600;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  color: var(--accent-primary, #9d94ff);
 }
 
 .constellation-icon {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   color: var(--accent-primary, #9d94ff);
   flex-shrink: 0;
 }
@@ -88,9 +88,9 @@
 .constellation-anime-name {
   font-size: 1rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.92);
   text-align: center;
-  max-width: 70vw;
+  max-width: 72vw;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -104,38 +104,33 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .loading-svg {
-  width: 120px;
-  height: 80px;
+  width: 160px;
+  height: 60px;
 }
 
 .loading-node {
   fill: var(--accent-primary, #9d94ff);
-  opacity: 0.9;
 
-  &--pulse1 {
-    animation: pulse 1.6s ease-in-out infinite;
-  }
-  &--pulse2 {
-    animation: pulse 1.6s ease-in-out 0.3s infinite;
-  }
-  &--pulse3 {
-    animation: pulse 1.6s ease-in-out 0.6s infinite;
-  }
-  &--pulse4 {
-    animation: pulse 1.6s ease-in-out 0.9s infinite;
-  }
+  &--pulse1 { animation: pulse 1.6s ease-in-out 0s infinite; }
+  &--pulse2 { animation: pulse 1.6s ease-in-out 0.35s infinite; }
+  &--pulse3 { animation: pulse 1.6s ease-in-out 0.7s infinite; }
 }
 
 .loading-edge {
   stroke: var(--accent-primary, #9d94ff);
-  stroke-width: 1.5;
-  opacity: 0.4;
-  stroke-dasharray: 4 4;
-  animation: dashMove 1s linear infinite;
+  stroke-width: 2;
+  opacity: 0.5;
+  stroke-dasharray: 5 4;
+  animation: dashMove 0.9s linear infinite;
+}
+
+.loading-arrow {
+  fill: var(--accent-primary, #9d94ff);
+  opacity: 0.7;
 }
 
 .loading-label {
@@ -158,12 +153,7 @@
   gap: 0.75rem;
   color: rgba(239, 68, 68, 0.9);
 
-  p {
-    font-size: 0.82rem;
-    margin: 0;
-    text-align: center;
-    max-width: 320px;
-  }
+  p { font-size: 0.82rem; margin: 0; text-align: center; max-width: 320px; }
 }
 
 // ── Graph Container (pan/zoom viewport) ──────────────────────────────────────
@@ -176,9 +166,7 @@
   touch-action: none;
   user-select: none;
 
-  &:active {
-    cursor: grabbing;
-  }
+  &:active { cursor: grabbing; }
 }
 
 .constellation-graph {
@@ -198,159 +186,146 @@
 
 .graph-edge {
   fill: none;
-  stroke: rgba(157, 148, 255, 0.35);
-  stroke-width: 1.5;
-  stroke-dasharray: 6 4;
-  animation: dashMove 2s linear infinite;
+  stroke: rgba(157, 148, 255, 0.5);
+  stroke-width: 2;
+}
+
+.graph-arrow-head {
+  fill: rgba(157, 148, 255, 0.6);
 }
 
 // ── Nodes ─────────────────────────────────────────────────────────────────────
 
 .constellation-node {
   position: absolute;
+  width: 144px; // NODE_W
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: rgba(18, 20, 36, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   transition:
     transform 0.18s cubic-bezier(0.34, 1.4, 0.64, 1),
     box-shadow 0.18s;
-  animation: nodeIn 0.35s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  animation: nodeIn 0.4s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 
   &:hover {
-    transform: scale(1.04);
+    transform: translateY(-4px) scale(1.02);
     z-index: 2;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
   }
 
+  // ── Center node: pulsating golden/accent glow — no "You Are Here" text ────
   &--center {
-    width: 120px;
+    width: 160px; // CENTER_W
+    border: 2px solid var(--accent-primary, #9d94ff);
     box-shadow:
       0 0 0 2px var(--accent-primary, #9d94ff),
-      0 8px 32px rgba(157, 148, 255, 0.35);
+      0 0 24px rgba(157, 148, 255, 0.5),
+      0 8px 32px rgba(0, 0, 0, 0.5);
+    animation:
+      nodeIn 0.4s cubic-bezier(0.34, 1.4, 0.64, 1) both,
+      centerGlow 2.4s ease-in-out infinite;
+    z-index: 1;
+
+    &:hover {
+      transform: translateY(-4px) scale(1.02);
+    }
   }
-
-  &:not(&--center) {
-    width: 100px;
-    height: 60px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-  }
 }
 
-// Center node inner
-.node-center-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: rgba(26, 26, 46, 0.92);
-  border-radius: 12px;
-  overflow: hidden;
-  height: 170px;
-}
+// ── Poster image ─────────────────────────────────────────────────────────────
 
-.node-cover {
-  width: 120px;
-  height: 130px;
-  object-fit: cover;
-  object-position: top center;
-  flex-shrink: 0;
-}
-
-.node-cover-placeholder {
-  width: 120px;
-  height: 130px;
-  background: linear-gradient(135deg, rgba(157, 148, 255, 0.2), rgba(157, 148, 255, 0.05));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.5);
-  flex-shrink: 0;
-}
-
-.node-center-title {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
-  padding: 0.3rem 0.5rem 0;
-  text-align: center;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.node-poster {
   width: 100%;
-}
-
-.node-center-badge {
-  font-size: 0.6rem;
-  font-weight: 700;
-  color: var(--accent-primary, #9d94ff);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 0.1rem 0.5rem 0.35rem;
-}
-
-// Related node inner
-.node-related-inner {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: rgba(26, 26, 46, 0.88);
-  border-radius: 12px;
-  overflow: hidden;
-  height: 60px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.node-thumb {
-  width: 42px;
-  height: 60px;
+  // Center node: 160px wide, ~224px tall (aspect 4:5.6)
+  // Related nodes: 144px wide, ~200px tall (aspect 4:5.56)
+  height: 200px;
   object-fit: cover;
   object-position: top center;
+  display: block;
   flex-shrink: 0;
+
+  .constellation-node--center & {
+    height: 224px;
+  }
 }
 
-.node-thumb-placeholder {
-  width: 42px;
-  height: 60px;
-  background: linear-gradient(135deg, rgba(157, 148, 255, 0.15), rgba(157, 148, 255, 0.03));
+.node-poster-placeholder {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(145deg, rgba(157, 148, 255, 0.18), rgba(157, 148, 255, 0.04));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 2.5rem;
   font-weight: 800;
   color: rgba(255, 255, 255, 0.4);
   flex-shrink: 0;
+
+  .constellation-node--center & {
+    height: 224px;
+    font-size: 3rem;
+  }
 }
 
-.node-related-meta {
-  flex: 1;
-  min-width: 0;
+// ── Node meta (title + badge) ─────────────────────────────────────────────────
+
+.node-meta {
+  padding: 0.5rem 0.55rem 0.55rem;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding-right: 0.35rem;
+  gap: 0.3rem;
+  flex: 1;
 }
 
-.node-related-title {
-  font-size: 0.62rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.88);
-  line-height: 1.3;
+.node-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.35;
+  // Allow up to 4 lines — no hard clamp that cuts off long titles
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
+
+  .constellation-node--center & {
+    font-size: 0.75rem;
+  }
 }
 
 .node-relation-badge {
-  font-size: 0.56rem;
+  align-self: flex-start;
+  font-size: 0.6rem;
   font-weight: 700;
-  color: var(--accent-primary, #9d94ff);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  padding: 0.12rem 0.45rem;
+  border-radius: 4px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.4;
+
+  .constellation-node--left & {
+    background: rgba(99, 172, 255, 0.15);
+    color: #63acff;
+    border: 1px solid rgba(99, 172, 255, 0.3);
+  }
+
+  .constellation-node--right & {
+    background: rgba(52, 211, 153, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.3);
+  }
+
+  .constellation-node--other & {
+    background: rgba(157, 148, 255, 0.15);
+    color: var(--accent-primary, #9d94ff);
+    border: 1px solid rgba(157, 148, 255, 0.3);
+  }
 }
 
 // ── Empty State ───────────────────────────────────────────────────────────────
@@ -372,8 +347,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 0.9; r: 8; }
-  50% { opacity: 0.3; r: 5; }
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 0.25; }
 }
 
 @keyframes textPulse {
@@ -382,16 +357,26 @@
 }
 
 @keyframes dashMove {
-  to { stroke-dashoffset: -20; }
+  to { stroke-dashoffset: -18; }
 }
 
 @keyframes nodeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.85) translateY(8px);
+  from { opacity: 0; transform: scale(0.88) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+// Pulsating golden/accent glow for the center "You Are Here" node
+@keyframes centerGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 2px var(--accent-primary, #9d94ff),
+      0 0 18px rgba(157, 148, 255, 0.4),
+      0 8px 32px rgba(0, 0, 0, 0.5);
   }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
+  50% {
+    box-shadow:
+      0 0 0 3px var(--accent-primary, #9d94ff),
+      0 0 36px rgba(157, 148, 255, 0.75),
+      0 8px 40px rgba(0, 0, 0, 0.5);
   }
 }

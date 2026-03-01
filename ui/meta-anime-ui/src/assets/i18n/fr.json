@@ -495,6 +495,26 @@
         "followOs": "Suivre le thème du système",
         "label": "Thème"
     },
+    "franchise": {
+        "title": "Constellation de Franchise",
+        "loading": "Cartographie des données de franchise...",
+        "empty": "Aucun anime lié trouvé dans les données de franchise.",
+        "close": "Fermer",
+        "viewButton": "Voir la Constellation de Franchise",
+        "openOnMal": "Ouvrir {{title}} sur MyAnimeList",
+        "relationType": {
+            "prequel": "Préquelle",
+            "sequel": "Suite",
+            "alternative_version": "Version alternative",
+            "alternative_setting": "Contexte alternatif",
+            "parent_story": "Récit parent",
+            "side_story": "Récit secondaire",
+            "summary": "Résumé",
+            "spin_off": "Dérivé",
+            "character": "Personnage",
+            "other": "Autre"
+        }
+    },
     "genres": {
         "Action": "Action",
         "Adventure": "Aventure",

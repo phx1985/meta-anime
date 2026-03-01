@@ -6,15 +6,15 @@
   (touchmove)="onTouchMove($event)"
   role="dialog"
   aria-modal="true"
-  aria-label="Franchise Constellation"
+  [attr.aria-label]="'franchise.title' | translate"
 >
   <!-- Close button -->
   <button
     type="button"
     class="constellation-close"
     (click)="close()"
-    aria-label="Close Franchise Constellation"
-    title="Close"
+    [attr.aria-label]="'franchise.close' | translate"
+    [title]="'franchise.close' | translate"
   >
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
       <path d="M18 6L6 18M6 6l12 12" />
@@ -24,19 +24,16 @@
   <!-- Header -->
   <div class="constellation-header">
     <div class="constellation-title-row">
-      <!-- Constellation SVG icon -->
-      <svg class="constellation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-        <circle cx="5" cy="5" r="1.5" fill="currentColor" />
-        <circle cx="19" cy="5" r="1.5" fill="currentColor" />
-        <circle cx="12" cy="12" r="2" fill="currentColor" />
-        <circle cx="5" cy="19" r="1.5" fill="currentColor" />
-        <circle cx="19" cy="19" r="1.5" fill="currentColor" />
-        <line x1="5" y1="5" x2="12" y2="12" />
-        <line x1="19" y1="5" x2="12" y2="12" />
-        <line x1="5" y1="19" x2="12" y2="12" />
-        <line x1="19" y1="19" x2="12" y2="12" />
+      <!-- Timeline / family-tree icon -->
+      <svg class="constellation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <rect x="1" y="9" width="5" height="6" rx="1.5" />
+        <rect x="9.5" y="9" width="5" height="6" rx="1.5" />
+        <rect x="18" y="9" width="5" height="6" rx="1.5" />
+        <line x1="6" y1="12" x2="9.5" y2="12" />
+        <line x1="14.5" y1="12" x2="18" y2="12" />
+        <polyline points="9 12 7.5 12 7.5 5.5 16.5 5.5 16.5 12 15 12" />
       </svg>
-      <span class="constellation-title-label">Franchise Constellation</span>
+      <span class="constellation-title-label">{{ 'franchise.title' | translate }}</span>
     </div>
     @if (svc.data()) {
       <span class="constellation-anime-name">{{ svc.data()!.title }}</span>
@@ -46,18 +43,17 @@
   <!-- ── Loading state ─────────────────────────────────────────────────── -->
   @if (svc.loading()) {
     <div class="constellation-loading">
-      <!-- Pulsing SVG node-network animation -->
-      <svg class="loading-svg" viewBox="0 0 120 80" fill="none" aria-hidden="true">
-        <circle class="loading-node loading-node--pulse1" cx="20" cy="40" r="8" />
-        <circle class="loading-node loading-node--pulse2" cx="60" cy="20" r="6" />
-        <circle class="loading-node loading-node--pulse3" cx="60" cy="60" r="6" />
-        <circle class="loading-node loading-node--pulse4" cx="100" cy="40" r="8" />
-        <line class="loading-edge" x1="28" y1="40" x2="54" y2="24" />
-        <line class="loading-edge" x1="28" y1="40" x2="54" y2="56" />
-        <line class="loading-edge" x1="66" y1="24" x2="92" y2="40" />
-        <line class="loading-edge" x1="66" y1="56" x2="92" y2="40" />
+      <!-- Pulsing L-to-R node-network SVG -->
+      <svg class="loading-svg" viewBox="0 0 160 60" fill="none" aria-hidden="true">
+        <circle class="loading-node loading-node--pulse1" cx="20" cy="30" r="8" />
+        <circle class="loading-node loading-node--pulse2" cx="80" cy="30" r="10" />
+        <circle class="loading-node loading-node--pulse3" cx="140" cy="30" r="8" />
+        <line class="loading-edge" x1="28" y1="30" x2="70" y2="30" />
+        <line class="loading-edge" x1="90" y1="30" x2="132" y2="30" />
+        <polygon class="loading-arrow" points="73,27 80,30 73,33" />
+        <polygon class="loading-arrow" points="133,27 140,30 133,33" />
       </svg>
-      <p class="loading-label">Mapping Franchise Data...</p>
+      <p class="loading-label">{{ 'franchise.loading' | translate }}</p>
     </div>
   }
 
@@ -77,7 +73,6 @@
   @if (svc.data() && !svc.loading()) {
     <div
       class="constellation-graph-wrap"
-      #graphContainer
       (pointerdown)="onPointerDown($event)"
       (pointermove)="onPointerMove($event)"
       (pointerup)="onPointerUp()"
@@ -85,7 +80,6 @@
     >
       <div
         class="constellation-graph"
-        #graphInner
         [style.transform]="graphTransform()"
         [style.width.px]="graphWidth()"
         [style.height.px]="graphHeight()"
@@ -93,58 +87,63 @@
         <!-- SVG layer for edges -->
         <svg
           class="graph-svg"
-          [attr.viewBox]="svgViewBox()"
           [attr.width]="graphWidth()"
           [attr.height]="graphHeight()"
           aria-hidden="true"
         >
+          <!-- Arrow-head marker definition -->
+          <defs>
+            <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" class="graph-arrow-head" />
+            </marker>
+          </defs>
           @for (edge of edges(); track $index) {
             <path
               class="graph-edge"
-              [attr.d]="'M ' + edge.x1 + ' ' + edge.y1 + ' C ' + (edge.x1 + 60) + ' ' + edge.y1 + ' ' + (edge.x2 - 60) + ' ' + edge.y2 + ' ' + edge.x2 + ' ' + edge.y2"
+              [attr.d]="edge.d"
+              marker-end="url(#arrowhead)"
             />
           }
         </svg>
 
         <!-- Nodes layer -->
-        @for (node of nodes(); track node.malId + node.relationType) {
+        @for (node of nodes(); track node.malId + node.zone) {
           <div
             class="constellation-node"
             [class.constellation-node--center]="node.isCenter"
+            [class.constellation-node--left]="node.zone === 'left'"
+            [class.constellation-node--right]="node.zone === 'right'"
+            [class.constellation-node--other]="node.zone === 'other'"
             [style.left.px]="node.x"
             [style.top.px]="node.y"
             (click)="openMalPage(node.malId)"
             role="button"
             tabindex="0"
             (keydown.enter)="openMalPage(node.malId)"
-            [attr.aria-label]="'Open ' + node.title + ' on MyAnimeList'"
+            [attr.aria-label]="translate.instant('franchise.openOnMal', { title: node.title })"
             [title]="node.title"
           >
-            @if (node.isCenter) {
-              <div class="node-center-inner">
-                @if (node.coverImageUrl) {
-                  <img class="node-cover" [src]="node.coverImageUrl" [alt]="node.title" loading="lazy" />
-                } @else {
-                  <div class="node-cover-placeholder">{{ node.title.charAt(0) }}</div>
-                }
-                <span class="node-center-title">{{ node.title }}</span>
-                <span class="node-center-badge">You Are Here</span>
-              </div>
+            <!-- Poster cover image -->
+            @if (node.coverImageUrl) {
+              <img
+                class="node-poster"
+                [src]="node.coverImageUrl"
+                [alt]="node.title"
+                loading="lazy"
+              />
             } @else {
-              <div class="node-related-inner">
-                @if (node.coverImageUrl) {
-                  <img class="node-thumb" [src]="node.coverImageUrl" [alt]="node.title" loading="lazy" />
-                } @else {
-                  <div class="node-thumb-placeholder">{{ node.title.charAt(0) }}</div>
-                }
-                <div class="node-related-meta">
-                  <span class="node-related-title">{{ node.title }}</span>
-                  @if (node.relationType) {
-                    <span class="node-relation-badge">{{ node.relationType }}</span>
-                  }
-                </div>
-              </div>
+              <div class="node-poster-placeholder">{{ node.title.charAt(0) }}</div>
             }
+
+            <!-- Title + relation badge -->
+            <div class="node-meta">
+              <span class="node-title">{{ node.title }}</span>
+              @if (!node.isCenter && node.relationTypeKey) {
+                <span class="node-relation-badge">
+                  {{ relationI18nKey(node.relationTypeKey) | translate }}
+                </span>
+              }
+            </div>
           </div>
         }
       </div>
@@ -152,7 +151,7 @@
 
     @if (!nodes().length || nodes().length === 1) {
       <div class="constellation-empty">
-        <p>No related anime found in the franchise data.</p>
+        <p>{{ 'franchise.empty' | translate }}</p>
       </div>
     }
   }

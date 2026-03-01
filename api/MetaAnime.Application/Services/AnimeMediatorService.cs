@@ -1430,7 +1430,7 @@ public sealed class AnimeMediatorService(
             .Select(r => new FranchiseRelationDto(
                 r.Node!.Id.ToString(),
                 r.Node.Title ?? string.Empty,
-                r.Node.MainPicture?.Medium,
+                r.Node.MainPicture?.Large ?? r.Node.MainPicture?.Medium,
                 r.RelationType,
                 r.RelationTypeFormatted
             ));
@@ -1438,7 +1438,7 @@ public sealed class AnimeMediatorService(
         return Result.Success(new FranchiseConstellationResponse(
             anime.Id.ToString(),
             anime.Title ?? string.Empty,
-            anime.MainPicture?.Medium,
+            anime.MainPicture?.Large ?? anime.MainPicture?.Medium,
             relations
         ));
     }
