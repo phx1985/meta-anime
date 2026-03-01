@@ -83,6 +83,7 @@ export class App implements OnInit, AfterViewInit {
       this.luckyPickOpen() ||
       this.menuOpen() ||
       this.popupService.childOverlayOpen() ||
+      this.popupService.addProviderModalOpen() ||
       !!this.popupService.disabledProvider() ||
       !!this.popupService.synopsisTitle() ||
       !!this.popupService.syncPromptProvider(),

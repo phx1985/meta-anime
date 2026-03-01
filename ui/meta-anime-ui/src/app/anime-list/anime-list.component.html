@@ -861,16 +861,14 @@
   >
     <div class="mobile-filter-sheet__handle" aria-hidden="true"></div>
     <div class="mobile-filter-sheet__header">
+      <button type="button" class="mobile-filter-sheet__reset" (click)="reset()"
+        [attr.aria-label]="'animeList.filter.reset' | translate">
+        {{ 'animeList.filter.reset' | translate }}
+      </button>
       <span class="mobile-filter-sheet__title">{{ 'animeList.filter.title' | translate }}</span>
-      <button
-        type="button"
-        class="mobile-filter-sheet__close"
-        (click)="filterOpen.set(false)"
-        [attr.aria-label]="'animeList.filter.collapseFilters' | translate"
-      >
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-          <path d="M2 2l12 12M14 2L2 14"/>
-        </svg>
+      <button type="button" class="mobile-filter-sheet__apply" (click)="search(); filterOpen.set(false)"
+        [attr.aria-label]="'animeList.filter.apply' | translate">
+        {{ 'animeList.filter.apply' | translate }}
       </button>
     </div>
     <ng-container *ngTemplateOutlet="filterBodyTpl"></ng-container>

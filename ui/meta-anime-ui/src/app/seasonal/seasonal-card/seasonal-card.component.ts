@@ -174,6 +174,9 @@ export class SeasonalCardComponent implements OnInit {
           this.sonarrSelected.set(results[0]);
         }
       });
+
+    // Ensure the global add-modal flag is cleared if this card is destroyed while the modal is open
+    this.destroyRef.onDestroy(() => this.popupService.addProviderModalOpen.set(false));
   }
 
   @HostListener('document:keydown.escape')
@@ -323,6 +326,7 @@ export class SeasonalCardComponent implements OnInit {
     }
 
     this.showAddModal.set(true);
+    this.popupService.addProviderModalOpen.set(true);
 
     // Kick off Sonarr search + options when Sonarr is pre-selected and enabled
     if (!this.anime.inSonarr && this.sonarrEnabled) {
@@ -332,6 +336,7 @@ export class SeasonalCardComponent implements OnInit {
 
   closeAddModal(): void {
     this.showAddModal.set(false);
+    this.popupService.addProviderModalOpen.set(false);
     this.expandedProvider.set(null);
   }
 
