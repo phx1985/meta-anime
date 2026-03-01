@@ -116,23 +116,25 @@
             [attr.aria-label]="translate.instant('franchise.openOnMal', { title: node.title })"
             [title]="node.title"
           >
-            @if (node.coverImageUrl) {
-              <img
-                class="node-poster"
-                [src]="node.coverImageUrl"
-                [alt]="node.title"
-                loading="lazy"
-              />
-            } @else {
-              <div class="node-poster-placeholder">{{ node.title.charAt(0) }}</div>
-            }
-            <div class="node-meta">
-              <span class="node-title">{{ node.title }}</span>
+            <div class="node-card-inner">
+              @if (node.coverImageUrl) {
+                <img
+                  class="node-poster"
+                  [src]="node.coverImageUrl"
+                  [alt]="node.title"
+                  loading="lazy"
+                />
+              } @else {
+                <div class="node-poster-placeholder">{{ node.title.charAt(0) }}</div>
+              }
+              <div class="node-meta">
+                <span class="node-title">{{ node.title }}</span>
+              </div>
+              <!-- V9: Truncation badge — shown when BFS pruned hidden relations -->
+              @if (node.isTruncated) {
+                <div class="node-truncated-badge" [title]="'franchise.truncated' | translate" aria-hidden="true">•••</div>
+              }
             </div>
-            <!-- V9: Truncation badge — shown when BFS pruned hidden relations -->
-            @if (node.isTruncated) {
-              <div class="node-truncated-badge" [title]="'franchise.truncated' | translate" aria-hidden="true">•••</div>
-            }
           </div>
         }
       </div>

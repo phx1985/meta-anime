@@ -168,7 +168,7 @@
 .graph-edge {
   fill: none;
   stroke-width: 1.8;
-  animation: edgeIn 0.3s ease-out 0.45s both;
+  animation: edgeIn 0.2s ease-out 0.18s both;
 
   // Solid line for canonical story progression (prequel / sequel)
   &--canonical {
@@ -183,10 +183,39 @@
 
 // ── Nodes ─────────────────────────────────────────────────────────────────────
 
+// Outer wrapper: position-only container — the graph engine sets left/top here.
+// No animation here so coordinate updates never fight the CSS transition.
 .constellation-node {
   position: absolute;
   width: 144px;
   cursor: grab;
+  overflow: visible; // allow truncation badge to overflow
+  clip-path: none; // ensure badge is visible
+
+  &:active { cursor: grabbing; z-index: 100; }
+  &:hover  { z-index: 10; }
+  &:hover .node-card-inner { box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65); }
+
+  // V9: root card highlight via inner wrapper — glow/border only, same size
+  &--root { z-index: 1; }
+  &--root .node-card-inner {
+    border: 2px solid var(--accent-primary, #9d94ff);
+    box-shadow:
+      0 0 0 2px var(--accent-primary, #9d94ff),
+      0 0 24px rgba(157, 148, 255, 0.5),
+      0 8px 32px rgba(0, 0, 0, 0.5);
+    animation:
+      nodeIn 0.18s ease-out both,
+      centerGlow 2.4s ease-in-out infinite;
+  }
+}
+
+// Inner wrapper: the actual visual card that is animated.
+// Keeping animation here means the GPU-composited slide/fade never interferes
+// with the outer wrapper's left/top coordinate updates from the layout engine.
+.node-card-inner {
+  position: relative; // establishes stacking context for truncation badge
+  width: 100%;
   border-radius: 10px;
   overflow: visible; // allow truncation badge to overflow
   display: flex;
@@ -195,24 +224,8 @@
   border: 1px solid rgba(255, 255, 255, 0.09);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   transition: box-shadow 0.18s;
-  animation: nodeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-  clip-path: none; // ensure badge is visible
-
-  &:active { cursor: grabbing; z-index: 100; }
-  &:hover  { z-index: 10; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65); }
-
-  // V9: root card is SAME SIZE as all others — highlight via glow/border only
-  &--root {
-    border: 2px solid var(--accent-primary, #9d94ff);
-    box-shadow:
-      0 0 0 2px var(--accent-primary, #9d94ff),
-      0 0 24px rgba(157, 148, 255, 0.5),
-      0 8px 32px rgba(0, 0, 0, 0.5);
-    animation:
-      nodeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both,
-      centerGlow 2.4s ease-in-out infinite;
-    z-index: 1;
-  }
+  animation: nodeIn 0.18s ease-out both;
+  will-change: transform, opacity;
 }
 
 .node-poster {
@@ -356,8 +369,8 @@
 }
 
 @keyframes nodeIn {
-  from { opacity: 0; transform: scale(0.88) translateY(20px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0); }
+  from { opacity: 0; transform: translateY(16px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
 @keyframes centerGlow {

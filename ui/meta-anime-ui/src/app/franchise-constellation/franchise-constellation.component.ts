@@ -35,6 +35,8 @@ const DRAG_THRESHOLD = 5;
 const MIN_SCALE = 0.05;
 const MAX_SCALE = 3;
 const MIN_NODES_PER_ROW = 2;
+/** Milliseconds between each card appearing during the sequential render animation. */
+const RENDER_INTERVAL_MS = 150;
 
 const TRUNK_TYPES = new Set(['prequel', 'sequel']);
 
@@ -90,25 +92,37 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   /** IDs the user has manually repositioned — excluded from auto-layout. */
   private manuallyDraggedIds = new Set<string>();
 
-  /** All graph nodes merged with their current canvas positions. */
+  // ── Sequential render queue ────────────────────────────────────────────────
+  /** Node IDs waiting to become visible; drained one at a time at RENDER_INTERVAL_MS. */
+  private _renderQueue: string[] = [];
+  private _renderTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Subset of graph nodes currently rendered in the DOM. */
+  protected visibleNodeIds = signal<Set<string>>(new Set());
+
+  /** All graph nodes merged with their current canvas positions (visible only). */
   protected displayNodes = computed<Array<FranchiseGraphNode & { x: number; y: number }>>(() => {
     const g = this.svc.graph();
     const pos = this.nodePositions();
+    const visible = this.visibleNodeIds();
     if (!g) return [];
-    return g.nodes.map((n) => ({
-      ...n,
-      x: pos.get(n.malId)?.x ?? 0,
-      y: pos.get(n.malId)?.y ?? 0,
-    }));
+    return g.nodes
+      .filter((n) => visible.has(n.malId))
+      .map((n) => ({
+        ...n,
+        x: pos.get(n.malId)?.x ?? 0,
+        y: pos.get(n.malId)?.y ?? 0,
+      }));
   });
 
-  /** Timeline edges — all are canonical (prequel/sequel solid arrows). */
+  /** Timeline edges — only edges where both endpoints are visible. */
   protected edges = computed<DisplayEdge[]>(() => {
     const g = this.svc.graph();
     const pos = this.nodePositions();
     const meta = this.layoutMeta(); // track as dependency for edge redraw on layout change
+    const visible = this.visibleNodeIds();
     if (!g) return [];
     return g.edges
+      .filter((e) => visible.has(e.fromMalId) && visible.has(e.toMalId))
       .map((e) => ({
         d: this._edgePath(e, g, pos, meta),
         isCanonical: true,
@@ -175,6 +189,17 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
       // V6: auto-fit camera after every node arrival (pass data to avoid
       // reading the just-written signal and creating a re-entrant effect).
       if (merged) this._fitCameraToNodes(merged, g);
+
+      // Queue any newly arrived nodes for sequential visual rendering.
+      // Nodes already visible or already queued are skipped (deduplication).
+      const alreadyQueued = new Set(this._renderQueue);
+      const visible = this.visibleNodeIds();
+      for (const node of g.nodes) {
+        if (!visible.has(node.malId) && !alreadyQueued.has(node.malId)) {
+          this._renderQueue.push(node.malId);
+        }
+      }
+      this._startRenderDrain();
     });
 
     // ── Reset effect ────────────────────────────────────────────────────────
@@ -182,6 +207,8 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     effect(() => {
       const g = this.svc.graph();
       if (!g) {
+        this._stopRenderDrain();
+        this.visibleNodeIds.set(new Set());
         this.nodePositions.set(new Map());
         this.layoutMeta.set(new Map());
         this.manuallyDraggedIds.clear();
@@ -197,6 +224,7 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this._stopRenderDrain();
     this.popupService.franchiseConstellationOpen.set(false);
   }
 
@@ -321,6 +349,41 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
 
   protected get rootTitle(): string | undefined {
     return this.svc.graph()?.nodes.find((n) => n.isRoot)?.title;
+  }
+
+  // ── Render queue (sequential appearance animation) ────────────────────────
+
+  /** Starts draining the render queue if not already running. */
+  private _startRenderDrain(): void {
+    if (this._renderTimer !== null || this._renderQueue.length === 0) return;
+    this._scheduleNextNode();
+  }
+
+  /**
+   * Immediately makes the next queued node visible, then schedules itself
+   * again after RENDER_INTERVAL_MS (150 ms) so nodes appear one at a time.
+   */
+  private _scheduleNextNode(): void {
+    if (this._renderQueue.length === 0) {
+      this._renderTimer = null;
+      return;
+    }
+    const malId = this._renderQueue.shift()!;
+    this.visibleNodeIds.update((s) => {
+      const n = new Set(s);
+      n.add(malId);
+      return n;
+    });
+    this._renderTimer = setTimeout(() => this._scheduleNextNode(), RENDER_INTERVAL_MS);
+  }
+
+  /** Cancels any pending drain and empties the queue. */
+  private _stopRenderDrain(): void {
+    if (this._renderTimer !== null) {
+      clearTimeout(this._renderTimer);
+      this._renderTimer = null;
+    }
+    this._renderQueue = [];
   }
 
   // ── Snake (Boustrophedon) Layout ──────────────────────────────────────────
