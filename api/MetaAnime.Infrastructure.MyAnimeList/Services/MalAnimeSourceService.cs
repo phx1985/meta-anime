@@ -38,6 +38,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
                                            "media_type, " +
                                            "mean, " +
                                            "num_episodes";
+    private const string FRANCHISE_FIELDS = "id,title,main_picture,related_anime{node{id,title,main_picture},relation_type,relation_type_formatted}";
     #endregion
 
     #region IMalAnimeSourceService Implementation
@@ -210,8 +211,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
 
     private async Task<RestResponse> FetchAnimeWithRelatedAsync(string baseUrl, string id, string token)
     {
-        const string relatedFields = "id,title,main_picture,related_anime{node{id,title,main_picture},relation_type,relation_type_formatted}";
-        var animeUri = new Uri($"{baseUrl}/anime/{id}?fields={relatedFields}");
+        var animeUri = new Uri($"{baseUrl}/anime/{id}?fields={FRANCHISE_FIELDS}");
         var restClient = new RestClient(animeUri);
         var restRequest = new RestRequest { Method = Method.Get };
         restRequest.AddHeader("Authorization", $"Bearer {token}");

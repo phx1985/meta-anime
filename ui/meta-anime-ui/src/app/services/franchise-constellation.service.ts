@@ -1,4 +1,5 @@
 import { Injectable, signal, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AnimeService } from './anime.service';
 import { FranchiseConstellationData } from '../models/anime.models';
 
@@ -47,12 +48,8 @@ export class FranchiseConstellationService {
         this.data.set(data);
         this.loading.set(false);
       },
-      error: (err) => {
-        const msg =
-          (err?.error as string | undefined) ??
-          (err?.message as string | undefined) ??
-          'Failed to load franchise data';
-        this.error.set(msg);
+      error: (err: unknown) => {
+        this.error.set(this._extractErrorMessage(err));
         this.loading.set(false);
       },
     });
@@ -60,5 +57,19 @@ export class FranchiseConstellationService {
 
   close(): void {
     this.isOpen.set(false);
+  }
+
+  private _extractErrorMessage(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      if (typeof err.error === 'string' && err.error.length > 0) return err.error;
+      if (err.error && typeof err.error === 'object') {
+        const obj = err.error as Record<string, unknown>;
+        const msg = obj['message'] ?? obj['title'] ?? obj['errorMessage'];
+        if (typeof msg === 'string') return msg;
+      }
+      return err.message || 'Failed to load franchise data';
+    }
+    if (err instanceof Error) return err.message;
+    return 'Failed to load franchise data';
   }
 }

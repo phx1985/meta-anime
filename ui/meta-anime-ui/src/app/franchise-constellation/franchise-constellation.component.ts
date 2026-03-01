@@ -52,7 +52,15 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   protected readonly svc = inject(FranchiseConstellationService);
   private readonly popupService = inject(PopupService);
 
-  @ViewChild('graphContainer') graphContainerRef?: ElementRef<HTMLElement>;
+  private static readonly RELATION_ORDER: Record<string, number> = {
+    prequel: 0,
+    sequel: 1,
+    alternative_version: 2,
+    alternative_setting: 3,
+    side_story: 4,
+    summary: 5,
+    other: 99,
+  };
   @ViewChild('graphInner') graphInnerRef?: ElementRef<HTMLElement>;
 
   // ── Pan/zoom state ────────────────────────────────────────────────────────
@@ -201,18 +209,9 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
 
     // Sort relations: prequels/sequels first, then others — giving a
     // roughly chronological Left-to-Right reading order
-    const ORDER: Record<string, number> = {
-      prequel: 0,
-      sequel: 1,
-      alternative_version: 2,
-      alternative_setting: 3,
-      side_story: 4,
-      summary: 5,
-      other: 99,
-    };
     const sorted = [...relations].sort((a, b) => {
-      const ao = ORDER[a.relationType ?? 'other'] ?? 98;
-      const bo = ORDER[b.relationType ?? 'other'] ?? 98;
+      const ao = FranchiseConstellationComponent.RELATION_ORDER[a.relationType ?? 'other'] ?? 98;
+      const bo = FranchiseConstellationComponent.RELATION_ORDER[b.relationType ?? 'other'] ?? 98;
       return ao - bo;
     });
 
