@@ -41,6 +41,8 @@ const ALL_SEASONS: SeasonPill[] = [
   { season: 'fall', labelKey: 'seasonal.season.fall' },
 ];
 
+const SEASON_ORDER: SeasonName[] = ['winter', 'spring', 'summer', 'fall'];
+
 export const SEASONAL_MAL_STATES = [
   { value: 'not_in', labelKey: 'seasonal.filter.malStatus.not_in' },
   { value: 'watching', labelKey: 'animeCard.malStatus.watching' },
@@ -135,6 +137,15 @@ export class SeasonalComponent {
 
   readonly canGoPrev = computed(() => this.selectedYear() > MIN_YEAR);
   readonly canGoNext = computed(() => this.selectedYear() < this._maxYear);
+
+  /** Previous-season arrow is disabled only when already at the very first season of the first year. */
+  readonly canGoPrevSeason = computed(
+    () => this.selectedYear() > MIN_YEAR || this.selectedSeason() !== 'winter',
+  );
+  /** Next-season arrow is disabled only when already at the very last season of the last year. */
+  readonly canGoNextSeason = computed(
+    () => this.selectedYear() < this._maxYear || this.selectedSeason() !== 'fall',
+  );
 
   animes = signal<SeasonalAnimeItem[]>([]);
   loading = signal(false);
@@ -443,14 +454,12 @@ export class SeasonalComponent {
   prevYear(): void {
     if (!this.canGoPrev()) return;
     this.selectedYear.update((y) => y - 1);
-    this.selectedSeason.set('winter');
     this._loadCurrent();
   }
 
   nextYear(): void {
     if (!this.canGoNext()) return;
     this.selectedYear.update((y) => y + 1);
-    this.selectedSeason.set('winter');
     this._loadCurrent();
   }
 
@@ -458,7 +467,6 @@ export class SeasonalComponent {
     const clamped = Math.max(MIN_YEAR, Math.min(this._maxYear, year));
     if (clamped === this.selectedYear()) return;
     this.selectedYear.set(clamped);
-    this.selectedSeason.set('winter');
     this._loadCurrent();
   }
 
@@ -466,6 +474,33 @@ export class SeasonalComponent {
   selectSeason(season: SeasonName): void {
     if (this.selectedSeason() === season) return;
     this.selectedSeason.set(season);
+    this._loadCurrent();
+  }
+
+  // ── Season micro-navigation (with year wrapping) ──────────────────────────
+  prevSeason(): void {
+    const idx = SEASON_ORDER.indexOf(this.selectedSeason());
+    if (idx === 0) {
+      // winter → fall of previous year
+      if (!this.canGoPrev()) return;
+      this.selectedYear.update((y) => y - 1);
+      this.selectedSeason.set('fall');
+    } else {
+      this.selectedSeason.set(SEASON_ORDER[idx - 1]);
+    }
+    this._loadCurrent();
+  }
+
+  nextSeason(): void {
+    const idx = SEASON_ORDER.indexOf(this.selectedSeason());
+    if (idx === SEASON_ORDER.length - 1) {
+      // fall → winter of next year
+      if (!this.canGoNext()) return;
+      this.selectedYear.update((y) => y + 1);
+      this.selectedSeason.set('winter');
+    } else {
+      this.selectedSeason.set(SEASON_ORDER[idx + 1]);
+    }
     this._loadCurrent();
   }
 

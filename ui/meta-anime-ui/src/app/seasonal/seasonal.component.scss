@@ -312,36 +312,14 @@
 }
 
 .year-display {
-  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
   padding: 0.3rem 0.75rem;
   border-radius: 9px;
   border: 1px solid var(--card-border);
   background: var(--card-bg);
-  cursor: pointer;
   min-width: 90px;
-  transition:
-    border-color 0.15s,
-    background 0.15s;
-
-  &:hover {
-    border-color: var(--accent-primary);
-    background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
-  }
-}
-
-.year-select {
-  // Invisible native select sits on top to capture interaction
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: none;
+  justify-content: center;
 }
 
 .year-text {
@@ -349,15 +327,6 @@
   font-weight: 700;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
-  pointer-events: none;
-}
-
-.year-chevron {
-  width: 10px;
-  height: 6px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  pointer-events: none;
 }
 
 // ── Season pills ─────────────────────────────────────────────────────────────
@@ -366,6 +335,41 @@
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.season-nav {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.15s;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent-primary);
+    background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+    transform: scale(1.08);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
 }
 
 .season-pill {
