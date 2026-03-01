@@ -59,6 +59,8 @@
         "yearSelect": "Select year",
         "prevYear": "Previous year",
         "nextYear": "Next year",
+        "prevSeason": "Previous season",
+        "nextSeason": "Next season",
         "openMal": "Open on MyAnimeList",
         "loading": "Loading seasonal anime…",
         "error": "Failed to load seasonal anime. Please try again later.",

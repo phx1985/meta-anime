@@ -36,27 +36,7 @@
         </button>
 
         <div class="year-display">
-          <select
-            class="year-select"
-            [ngModel]="selectedYear()"
-            (ngModelChange)="setYear($event)"
-            [attr.aria-label]="'seasonal.yearSelect' | translate"
-          >
-            @for (y of yearOptions; track y) {
-              <option [value]="y">{{ y }}</option>
-            }
-          </select>
-          <span class="year-text" aria-hidden="true">{{ selectedYear() }}</span>
-          <svg
-            class="year-chevron"
-            viewBox="0 0 10 6"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-          >
-            <path d="M1 1l4 4 4-4" />
-          </svg>
+          <span class="year-text">{{ selectedYear() }}</span>
         </div>
 
         <button
@@ -78,12 +58,29 @@
         </button>
       </div>
 
-      <!-- Season pills -->
+      <!-- Season pills with micro-navigation arrows -->
       <div
         class="season-pills"
         role="tablist"
         [attr.aria-label]="'seasonal.seasonSelect' | translate"
       >
+        <button
+          type="button"
+          class="season-nav season-nav--prev"
+          [disabled]="!canGoPrevSeason()"
+          [attr.aria-label]="'seasonal.prevSeason' | translate"
+          (click)="prevSeason()"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M10 3L5 8l5 5" />
+          </svg>
+        </button>
         @for (pill of allSeasons; track pill.season) {
           <button
             type="button"
@@ -96,6 +93,23 @@
             {{ pill.labelKey | translate }}
           </button>
         }
+        <button
+          type="button"
+          class="season-nav season-nav--next"
+          [disabled]="!canGoNextSeason()"
+          [attr.aria-label]="'seasonal.nextSeason' | translate"
+          (click)="nextSeason()"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M6 3l5 5-5 5" />
+          </svg>
+        </button>
       </div>
     </div>
 

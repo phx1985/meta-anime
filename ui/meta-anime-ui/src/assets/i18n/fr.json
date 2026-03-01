@@ -59,6 +59,8 @@
         "yearSelect": "Sélectionner une année",
         "prevYear": "Année précédente",
         "nextYear": "Année suivante",
+        "prevSeason": "Saison précédente",
+        "nextSeason": "Saison suivante",
         "openMal": "Ouvrir sur MyAnimeList",
         "loading": "Chargement des animes saisonniers…",
         "error": "Échec du chargement des animes saisonniers. Veuillez réessayer plus tard.",
