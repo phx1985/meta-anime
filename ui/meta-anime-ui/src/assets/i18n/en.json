@@ -1,972 +1,976 @@
 {
-  "nav": {
-    "home": "Home",
-    "animes": "My Animes",
-    "seasonal": "Seasonal",
-    "settings": "Settings",
-    "lucky": "Lucky",
-    "providers": "Providers",
-    "openPlex": "Open Plex",
-    "openSonarr": "Open Sonarr",
-    "providerDisabled": "This provider is currently disabled",
-    "disabledModal": {
-      "title": "{{provider}} is Disabled",
-      "desc": "This provider is currently inactive. Enable it in Settings to use this action.",
-      "cancel": "Cancel",
-      "goToSettings": "Go to Settings",
-      "close": "Close"
-    }
-  },
-  "home": {
-    "title": "Meta Anime",
-    "subtitle": "Your unified anime metadata hub",
-    "stats": {
-      "plex": "Plex",
-      "sonarr": "Sonarr",
-      "mal": "MyAnimeList",
-      "description": "Aggregated from all your sources",
-      "tooltip": {
-        "plex": "Anime series available in your Plex media library.",
-        "sonarr": "Anime series tracked by your Sonarr instance.",
-        "mal": "Anime entries sourced from your MyAnimeList account."
-      }
+    "nav": {
+        "home": "Home",
+        "animes": "My Animes",
+        "seasonal": "Seasonal",
+        "settings": "Settings",
+        "lucky": "Lucky",
+        "providers": "Providers",
+        "openPlex": "Open Plex",
+        "openSonarr": "Open Sonarr",
+        "providerDisabled": "This provider is currently disabled",
+        "disabledModal": {
+            "title": "{{provider}} is Disabled",
+            "desc": "This provider is currently inactive. Enable it in Settings to use this action.",
+            "cancel": "Cancel",
+            "goToSettings": "Go to Settings",
+            "close": "Close"
+        },
+        "menu": "Menu"
     },
-    "chart": {
-      "title": "Genre Distribution",
-      "toggleLabel": "Chart type",
-      "pie": "Pie",
-      "bar": "Bar"
+    "home": {
+        "title": "Meta Anime",
+        "subtitle": "Your unified anime metadata hub",
+        "stats": {
+            "plex": "Plex",
+            "sonarr": "Sonarr",
+            "mal": "MyAnimeList",
+            "description": "Aggregated from all your sources",
+            "tooltip": {
+                "plex": "Anime series available in your Plex media library.",
+                "sonarr": "Anime series tracked by your Sonarr instance.",
+                "mal": "Anime entries sourced from your MyAnimeList account."
+            }
+        },
+        "chart": {
+            "title": "Genre Distribution",
+            "toggleLabel": "Chart type",
+            "pie": "Pie",
+            "bar": "Bar"
+        },
+        "missing": {
+            "title": "Coverage Gaps",
+            "subtitle": "Series present in one source but absent from another.",
+            "sonarrNotInMal": "Sonarr not in MAL",
+            "sonarrNotInMalDesc": "Series tracked by Sonarr with no matching entry in MyAnimeList.",
+            "malNotInPlex": "MAL not in Plex",
+            "malNotInPlexDesc": "Series on your MAL watch-list that are missing from your Plex library.",
+            "plexNotInMal": "Plex not in MAL",
+            "plexNotInMalDesc": "Series in your Plex library that have no matching entry in MyAnimeList.",
+            "plexNotInSonarr": "Plex not in Sonarr",
+            "plexNotInSonarrDesc": "Series in your Plex library that are not tracked by Sonarr."
+        },
+        "welcome": "Welcome to Meta Anime"
     },
-    "missing": {
-      "title": "Coverage Gaps",
-      "subtitle": "Series present in one source but absent from another.",
-      "sonarrNotInMal": "Sonarr not in MAL",
-      "sonarrNotInMalDesc": "Series tracked by Sonarr with no matching entry in MyAnimeList.",
-      "malNotInPlex": "MAL not in Plex",
-      "malNotInPlexDesc": "Series on your MAL watch-list that are missing from your Plex library.",
-      "plexNotInMal": "Plex not in MAL",
-      "plexNotInMalDesc": "Series in your Plex library that have no matching entry in MyAnimeList.",
-      "plexNotInSonarr": "Plex not in Sonarr",
-      "plexNotInSonarrDesc": "Series in your Plex library that are not tracked by Sonarr."
+    "seasonal": {
+        "title": "Seasonal Anime",
+        "subtitle": "Browse anime by season from MyAnimeList",
+        "seasonSelect": "Select season",
+        "yearSelect": "Select year",
+        "prevYear": "Previous year",
+        "nextYear": "Next year",
+        "openMal": "Open on MyAnimeList",
+        "loading": "Loading seasonal anime…",
+        "error": "Failed to load seasonal anime. Please try again later.",
+        "empty": "No anime found for this season. MAL data may not be available yet for this period.",
+        "notInPlex": "Not in your Plex library",
+        "notInSonarr": "Not tracked by Sonarr",
+        "notInMal": "Not in your MAL list",
+        "addToSonarr": "Add to Sonarr",
+        "addToMal": "Add to MAL",
+        "addToProviders": "Add to Providers",
+        "chooseProviders": "Choose where to add this anime",
+        "allTracked": "Tracked in Sonarr & MAL",
+        "alreadyTracked": "Already tracked ✓",
+        "willAdd": "Will be added",
+        "notTracked": "Not tracked",
+        "addSuccess": "Added successfully!",
+        "sonarrNoneSelected": "Please select a series from the search results",
+        "enableToAdd": "Toggle the switch above to configure and add this provider",
+        "sonarrSearch": "Search Sonarr",
+        "sonarrSearchPlaceholder": "Search by title…",
+        "sonarrSearchError": "Failed to search Sonarr series.",
+        "rootFolder": "Root Folder",
+        "qualityProfile": "Quality Profile",
+        "sonarrAutoSettings": "Series type: Anime/Absolute · Tags from config",
+        "sonarrOptionsError": "Failed to load Sonarr options.",
+        "sonarrAddError": "Failed to add series to Sonarr.",
+        "sonarrAddSuccess": "Successfully added to Sonarr!",
+        "malStatusLabel": "Status",
+        "episodesWatched": "Episodes Watched",
+        "score": "Score (0–10)",
+        "malAddError": "Failed to update MAL list.",
+        "malAddSuccess": "Successfully added to MAL list!",
+        "malStatus": {
+            "watching": "Watching",
+            "completed": "Completed",
+            "on_hold": "On Hold",
+            "dropped": "Dropped",
+            "plan_to_watch": "Plan to Watch"
+        },
+        "season": {
+            "winter": "Winter",
+            "spring": "Spring",
+            "summer": "Summer",
+            "fall": "Fall"
+        },
+        "filter": {
+            "title": "Filters",
+            "expandFilters": "Expand filters",
+            "collapseFilters": "Collapse filters",
+            "genre": "Genre",
+            "genreOperator": "Genre logic",
+            "theme": "Theme",
+            "themeOperator": "Theme logic",
+            "demographic": "Demographic",
+            "demographicOperator": "Demographic logic",
+            "any": "Any",
+            "clear": "Clear selection",
+            "reset": "Reset",
+            "noResults": "No anime match the selected filters.",
+            "malStatus": {
+                "label": "MAL Status",
+                "not_in": "Not in MAL"
+            },
+            "sort": {
+                "by": "Sort by",
+                "order": "Sort order",
+                "title": "Title",
+                "malScore": "MAL Score",
+                "startDate": "Start Date"
+            },
+            "presets": {
+                "saveAs": "Save filters as preset",
+                "namePlaceholder": "Preset name…",
+                "save": "Save",
+                "cancel": "Cancel",
+                "delete": "Delete preset",
+                "noPresets": "No saved presets yet",
+                "label": "Presets",
+                "myPresets": "My Presets"
+            },
+            "noFilterActive": "No filter active",
+            "mediaType": "Media type",
+            "apply": "Apply"
+        },
+        "sonarrAlreadyInLibrary": "Already in Sonarr",
+        "partiallyTracked": "Partially tracked — add to more providers",
+        "resultCount": "{{count}} result(s)",
+        "monitor": "Monitor",
+        "seasonFolder": "Season Folder",
+        "monitorTypes": {
+            "all": "All Episodes",
+            "future": "Future Episodes",
+            "missing": "Missing Episodes",
+            "existing": "Existing Episodes",
+            "recent": "Recent Episodes",
+            "pilot": "Pilot Episode",
+            "firstSeason": "First Season",
+            "lastSeason": "Last Season",
+            "monitorSpecials": "Monitor Specials",
+            "unmonitorSpecials": "Unmonitor Specials",
+            "none": "None"
+        }
     },
-    "welcome": "Welcome to Meta Anime"
-  },
-  "seasonal": {
-    "title": "Seasonal Anime",
-    "subtitle": "Browse anime by season from MyAnimeList",
-    "seasonSelect": "Select season",
-    "yearSelect": "Select year",
-    "prevYear": "Previous year",
-    "nextYear": "Next year",
-    "openMal": "Open on MyAnimeList",
-    "loading": "Loading seasonal anime…",
-    "error": "Failed to load seasonal anime. Please try again later.",
-    "empty": "No anime found for this season. MAL data may not be available yet for this period.",
-    "notInPlex": "Not in your Plex library",
-    "notInSonarr": "Not tracked by Sonarr",
-    "notInMal": "Not in your MAL list",
-    "addToSonarr": "Add to Sonarr",
-    "addToMal": "Add to MAL",
-    "addToProviders": "Add to Providers",
-    "chooseProviders": "Choose where to add this anime",
-    "allTracked": "Tracked in Sonarr & MAL",
-    "alreadyTracked": "Already tracked ✓",
-    "willAdd": "Will be added",
-    "notTracked": "Not tracked",
-    "addSuccess": "Added successfully!",
-    "sonarrNoneSelected": "Please select a series from the search results",
-    "enableToAdd": "Toggle the switch above to configure and add this provider",
-    "sonarrSearch": "Search Sonarr",
-    "sonarrSearchPlaceholder": "Search by title…",
-    "sonarrSearchError": "Failed to search Sonarr series.",
-    "rootFolder": "Root Folder",
-    "qualityProfile": "Quality Profile",
-    "sonarrAutoSettings": "Series type: Anime/Absolute · Tags from config",
-    "sonarrOptionsError": "Failed to load Sonarr options.",
-    "sonarrAddError": "Failed to add series to Sonarr.",
-    "sonarrAddSuccess": "Successfully added to Sonarr!",
-    "malStatusLabel": "Status",
-    "episodesWatched": "Episodes Watched",
-    "score": "Score (0–10)",
-    "malAddError": "Failed to update MAL list.",
-    "malAddSuccess": "Successfully added to MAL list!",
-    "malStatus": {
-      "watching": "Watching",
-      "completed": "Completed",
-      "on_hold": "On Hold",
-      "dropped": "Dropped",
-      "plan_to_watch": "Plan to Watch"
+    "animeList": {
+        "title": "Anime List",
+        "error": "Failed to load animes. Please try again later.",
+        "empty": "No animes found.",
+        "totalCount": "{{count}} anime(s) found",
+        "loadingMore": "Loading more…",
+        "endOfResults": "You've reached the end of the list",
+        "displayMode": "Display mode",
+        "cols1": "1 column",
+        "cols2": "2 columns",
+        "cols3": "3 columns",
+        "filter": {
+            "title": "Filters",
+            "titleSearch": "Title",
+            "titlePlaceholder": "Search by title…",
+            "genre": "Genre",
+            "genreOperator": "Genre logic",
+            "watchState": "Watch status",
+            "airingStatus": "Airing status",
+            "theme": "Theme",
+            "themeOperator": "Theme logic",
+            "demographic": "Demographic",
+            "demographicOperator": "Demographic logic",
+            "hasFile": "Files",
+            "hasFileYes": "Has files",
+            "hasFileNo": "No files",
+            "codec": "Codec",
+            "mediaType": "Media type",
+            "any": "Any",
+            "clear": "Clear selection",
+            "search": "Search",
+            "reset": "Reset",
+            "expandFilters": "Expand filters",
+            "collapseFilters": "Collapse filters",
+            "noFilterActive": "No filter selected",
+            "prompt": "Set your filters and press Search to explore your anime library.",
+            "advanced": "Advanced filters",
+            "hideAdvanced": "Hide advanced",
+            "infoAriaLabel": "Filter info",
+            "infoAutoApplyOn": "Auto-apply last filters is ON — your previous search filters are restored automatically each time you open this page.",
+            "infoAutoApplyOff": "Auto-apply last filters is OFF — filters start fresh on every visit. Enable it in Settings to restore your last search automatically.",
+            "infoGoToSettings": "Go to Settings to change this",
+            "codecs": {
+                "hevc": "H.265 / HEVC",
+                "h264": "H.264 / AVC",
+                "av1": "AV1",
+                "mpeg2": "MPEG-2"
+            },
+            "apply": "Apply"
+        },
+        "presets": {
+            "label": "Presets",
+            "suggestions": "Suggestions",
+            "myPresets": "My Presets",
+            "noPresets": "No saved presets yet",
+            "saveAs": "Save as preset",
+            "namePlaceholder": "Preset name…",
+            "save": "Save",
+            "cancel": "Cancel",
+            "delete": "Delete preset",
+            "builtIn": {
+                "currentlyAiring": "Currently Airing",
+                "topRated": "Top Rated",
+                "watching": "Watching",
+                "planToWatch": "Plan to Watch",
+                "hasFiles": "Has Files",
+                "actionAdventure": "Action / Adventure"
+            }
+        },
+        "sort": {
+            "by": "Sort by",
+            "order": "Sort order",
+            "title": "Title",
+            "malScore": "MAL score",
+            "myScore": "My score",
+            "startDate": "Air date",
+            "endDate": "End date",
+            "addedDate": "Date added",
+            "sizeOnDisk": "Size on disk",
+            "totalSizeDisk": "Total size"
+        }
     },
-    "season": {
-      "winter": "Winter",
-      "spring": "Spring",
-      "summer": "Summer",
-      "fall": "Fall"
+    "animeCard": {
+        "altTitles": "Alternative titles",
+        "more": "more",
+        "less": "less",
+        "malScore": "MAL",
+        "myScore": "Mine",
+        "addedOn": "Added",
+        "plex": "Plex",
+        "openPlex": "Open in Plex",
+        "openSonarr": "Open in Sonarr",
+        "openMal": "Open in MyAnimeList",
+        "malStatus": {
+            "watching": "Watching",
+            "completed": "Completed",
+            "on_hold": "On Hold",
+            "dropped": "Dropped",
+            "plan_to_watch": "Plan to Watch"
+        },
+        "seriesStatus": {
+            "finished_airing": "Finished",
+            "currently_airing": "Airing",
+            "not_yet_aired": "Upcoming"
+        },
+        "noFiles": "No files",
+        "sizeOnDisk": "Size on disk",
+        "mediaType": {
+            "tv": "TV",
+            "movie": "Movie",
+            "ova": "OVA",
+            "ona": "ONA",
+            "special": "Special",
+            "music": "Music",
+            "unknown": "Unknown"
+        },
+        "codec": {
+            "h265": "H.265",
+            "h264": "H.264",
+            "other": "Other"
+        },
+        "sizeUnit": "GB",
+        "seeMore": "See more"
     },
-    "filter": {
-      "title": "Filters",
-      "expandFilters": "Expand filters",
-      "collapseFilters": "Collapse filters",
-      "genre": "Genre",
-      "genreOperator": "Genre logic",
-      "theme": "Theme",
-      "themeOperator": "Theme logic",
-      "demographic": "Demographic",
-      "demographicOperator": "Demographic logic",
-      "any": "Any",
-      "clear": "Clear selection",
-      "reset": "Reset",
-      "noResults": "No anime match the selected filters.",
-      "malStatus": {
-        "label": "MAL Status",
-        "not_in": "Not in MAL"
-      },
-      "sort": {
-        "by": "Sort by",
-        "order": "Sort order",
-        "title": "Title",
-        "malScore": "MAL Score",
-        "startDate": "Start Date"
-      },
-      "presets": {
-        "saveAs": "Save filters as preset",
-        "namePlaceholder": "Preset name…",
+    "settings": {
+        "title": "Settings",
+        "subtitle": "Manage your integrations and connection settings. Changes take effect immediately.",
+        "error": "Failed to load settings. Please try again later.",
+        "required": "required",
+        "sensitive": "Sensitive field",
+        "sensitiveHint": "Enter a new value to update",
+        "notSet": "Not configured",
+        "edit": "Edit",
         "save": "Save",
         "cancel": "Cancel",
-        "delete": "Delete preset",
-        "noPresets": "No saved presets yet",
-        "label": "Presets",
-        "myPresets": "My Presets"
-      },
-      "noFilterActive": "No filter active",
-      "mediaType": "Media type",
-      "apply": "Apply"
-    },
-    "sonarrAlreadyInLibrary": "Already in Sonarr",
-    "partiallyTracked": "Partially tracked — add to more providers",
-    "resultCount": "{{count}} result(s)",
-    "monitor": "Monitor",
-    "seasonFolder": "Season Folder",
-    "monitorTypes": {
-      "all": "All Episodes",
-      "future": "Future Episodes",
-      "missing": "Missing Episodes",
-      "existing": "Existing Episodes",
-      "recent": "Recent Episodes",
-      "pilot": "Pilot Episode",
-      "firstSeason": "First Season",
-      "lastSeason": "Last Season",
-      "monitorSpecials": "Monitor Specials",
-      "unmonitorSpecials": "Unmonitor Specials",
-      "none": "None"
-    }
-  },
-  "animeList": {
-    "title": "Anime List",
-    "error": "Failed to load animes. Please try again later.",
-    "empty": "No animes found.",
-    "totalCount": "{{count}} anime(s) found",
-    "loadingMore": "Loading more…",
-    "endOfResults": "You've reached the end of the list",
-    "displayMode": "Display mode",
-    "cols1": "1 column",
-    "cols2": "2 columns",
-    "cols3": "3 columns",
-    "filter": {
-      "title": "Filters",
-      "titleSearch": "Title",
-      "titlePlaceholder": "Search by title…",
-      "genre": "Genre",
-      "genreOperator": "Genre logic",
-      "watchState": "Watch status",
-      "airingStatus": "Airing status",
-      "theme": "Theme",
-      "themeOperator": "Theme logic",
-      "demographic": "Demographic",
-      "demographicOperator": "Demographic logic",
-      "hasFile": "Files",
-      "hasFileYes": "Has files",
-      "hasFileNo": "No files",
-      "codec": "Codec",
-      "mediaType": "Media type",
-      "any": "Any",
-      "clear": "Clear selection",
-      "search": "Search",
-      "reset": "Reset",
-      "expandFilters": "Expand filters",
-      "collapseFilters": "Collapse filters",
-      "noFilterActive": "No filter selected",
-      "prompt": "Set your filters and press Search to explore your anime library.",
-      "advanced": "Advanced filters",
-      "hideAdvanced": "Hide advanced",
-      "infoAriaLabel": "Filter info",
-      "infoAutoApplyOn": "Auto-apply last filters is ON — your previous search filters are restored automatically each time you open this page.",
-      "infoAutoApplyOff": "Auto-apply last filters is OFF — filters start fresh on every visit. Enable it in Settings to restore your last search automatically.",
-      "infoGoToSettings": "Go to Settings to change this",
-      "codecs": {
-        "hevc": "H.265 / HEVC",
-        "h264": "H.264 / AVC",
-        "av1": "AV1",
-        "mpeg2": "MPEG-2"
-      }
-    },
-    "presets": {
-      "label": "Presets",
-      "suggestions": "Suggestions",
-      "myPresets": "My Presets",
-      "noPresets": "No saved presets yet",
-      "saveAs": "Save as preset",
-      "namePlaceholder": "Preset name…",
-      "save": "Save",
-      "cancel": "Cancel",
-      "delete": "Delete preset",
-      "builtIn": {
-        "currentlyAiring": "Currently Airing",
-        "topRated": "Top Rated",
-        "watching": "Watching",
-        "planToWatch": "Plan to Watch",
-        "hasFiles": "Has Files",
-        "actionAdventure": "Action / Adventure"
-      }
-    },
-    "sort": {
-      "by": "Sort by",
-      "order": "Sort order",
-      "title": "Title",
-      "malScore": "MAL score",
-      "myScore": "My score",
-      "startDate": "Air date",
-      "endDate": "End date",
-      "addedDate": "Date added",
-      "sizeOnDisk": "Size on disk",
-      "totalSizeDisk": "Total size"
-    }
-  },
-  "animeCard": {
-    "altTitles": "Alternative titles",
-    "more": "more",
-    "less": "less",
-    "malScore": "MAL",
-    "myScore": "Mine",
-    "addedOn": "Added",
-    "plex": "Plex",
-    "openPlex": "Open in Plex",
-    "openSonarr": "Open in Sonarr",
-    "openMal": "Open in MyAnimeList",
-    "malStatus": {
-      "watching": "Watching",
-      "completed": "Completed",
-      "on_hold": "On Hold",
-      "dropped": "Dropped",
-      "plan_to_watch": "Plan to Watch"
-    },
-    "seriesStatus": {
-      "finished_airing": "Finished",
-      "currently_airing": "Airing",
-      "not_yet_aired": "Upcoming"
-    },
-    "noFiles": "No files",
-    "sizeOnDisk": "Size on disk",
-    "mediaType": {
-      "tv": "TV",
-      "movie": "Movie",
-      "ova": "OVA",
-      "ona": "ONA",
-      "special": "Special",
-      "music": "Music",
-      "unknown": "Unknown"
-    },
-    "codec": {
-      "h265": "H.265",
-      "h264": "H.264",
-      "other": "Other"
-    },
-    "sizeUnit": "GB",
-    "seeMore": "See more"
-  },
-  "settings": {
-    "title": "Settings",
-    "subtitle": "Manage your integrations and connection settings. Changes take effect immediately.",
-    "error": "Failed to load settings. Please try again later.",
-    "required": "required",
-    "sensitive": "Sensitive field",
-    "sensitiveHint": "Enter a new value to update",
-    "notSet": "Not configured",
-    "edit": "Edit",
-    "save": "Save",
-    "cancel": "Cancel",
-    "saved": "Saved",
-    "saveError": "Failed to save. Please try again.",
-    "reveal": "Show value",
-    "hide": "Hide value",
-    "sync": {
-      "button": "Manual Sync",
-      "inProgress": "Syncing…",
-      "hub": {
-        "title": "Sync in progress",
-        "done": "Sync complete",
-        "error": "Sync failed — please retry",
-        "dismiss": "Dismiss",
-        "clearLog": "Clear log"
-      },
-      "step": {
-        "init": "Initialising sync",
-        "kometa": "Loading Kometa mappings",
-        "plex": "Fetching Plex library",
-        "mal": "Fetching MyAnimeList entries",
-        "sonarr": "Fetching Sonarr series",
-        "matching": "Matching & indexing"
-      },
-      "lastSync": "Last sync",
-      "neverSynced": "Never synced",
-      "card": {
-        "title": "Synchronization",
-        "desc": "Monitor background sync progress and configure the automatic sync schedule."
-      },
-      "manual": {
-        "title": "Manual Sync",
-        "desc": "Trigger an immediate sync from all sources (Plex, Sonarr, MyAnimeList)."
-      }
-    },
-    "mal": {
-      "tokenRefreshed": "Token refreshed:",
-      "authRequired": "MAL credentials are configured but no token has been authorized. Please refresh the token to enable syncing.",
-      "refreshToken": "Authorize / Refresh Token",
-      "refreshError": "Failed to refresh MAL token. Please check your credentials."
-    },
-    "category": {
-      "plex": {
-        "name": "Plex",
-        "desc": "Connect to your Plex Media Server to sync your anime library."
-      },
-      "sonarr": {
-        "name": "Sonarr",
-        "desc": "Track anime series from your Sonarr instance."
-      },
-      "mal": {
-        "name": "MyAnimeList",
-        "desc": "Authenticate with your MyAnimeList account for watch-list data."
-      },
-      "kometa": {
-        "name": "Kometa",
-        "desc": "Source of the AniDB ↔ TVDB / TMDB mapping file."
-      },
-      "app": {
-        "name": "App Preferences",
-        "desc": "General application preferences and content filtering options."
-      }
-    },
-    "fields": {
-      "Plex_Host": {
-        "name": "Server URL",
-        "desc": "Base URL of your Plex Media Server (e.g. http://localhost:32400)."
-      },
-      "Plex_Token": {
-        "name": "Auth Token",
-        "desc": "Authentication token for your Plex account."
-      },
-      "Plex_AnimeSections": {
-        "name": "Anime Library IDs",
-        "desc": "Comma-separated Plex library section IDs that contain anime."
-      },
-      "Sonarr_Host": {
-        "name": "Server URL",
-        "desc": "Base URL of your Sonarr instance (e.g. http://localhost:8989)."
-      },
-      "Sonarr_ApiKey": {
-        "name": "API Key",
-        "desc": "API key found in Sonarr › Settings › General."
-      },
-      "Sonarr_AnimeTags": {
-        "name": "Anime Tags",
-        "desc": "Comma-separated Sonarr tag names used to identify anime series."
-      },
-      "Sonarr_RemoteUrl": {
-        "name": "Remote URL",
-        "desc": "Optional public URL for Sonarr used to build series deep-links."
-      },
-      "MAL_ApiToken": {
-        "name": "Access Token",
-        "desc": "Current OAuth access token for the MyAnimeList API."
-      },
-      "MAL_ClientId": {
-        "name": "OAuth Client ID",
-        "desc": "Client ID registered on the MyAnimeList developer portal."
-      },
-      "MAL_ClientSecret": {
-        "name": "OAuth Client Secret",
-        "desc": "Client Secret registered on the MyAnimeList developer portal."
-      },
-      "MAL_RefreshToken": {
-        "name": "Refresh Token",
-        "desc": "OAuth Refresh Token used to renew the access token automatically."
-      },
-      "Kometa_AnimeIdsJsonUrl": {
-        "name": "Anime IDs JSON URL",
-        "desc": "URL of the Kometa Community anime_ids.json AniDB mapping file."
-      },
-      "App_ShowNsfw": {
-        "name": "Show NSFW Content",
-        "desc": "When enabled, adult and explicit content from MyAnimeList will be included in lists and statistics."
-      },
-      "App_SyncInterval": {
-        "name": "Sync Interval",
-        "desc": "How often the background sync job runs to fetch new data from all sources.",
-        "option": {
-          "hourly": "Every Hour",
-          "every6h": "Every 6 Hours",
-          "every12h": "Every 12 Hours",
-          "daily": "Daily",
-          "weekly": "Weekly"
+        "saved": "Saved",
+        "saveError": "Failed to save. Please try again.",
+        "reveal": "Show value",
+        "hide": "Hide value",
+        "sync": {
+            "button": "Manual Sync",
+            "inProgress": "Syncing…",
+            "hub": {
+                "title": "Sync in progress",
+                "done": "Sync complete",
+                "error": "Sync failed — please retry",
+                "dismiss": "Dismiss",
+                "clearLog": "Clear log"
+            },
+            "step": {
+                "init": "Initialising sync",
+                "kometa": "Loading Kometa mappings",
+                "plex": "Fetching Plex library",
+                "mal": "Fetching MyAnimeList entries",
+                "sonarr": "Fetching Sonarr series",
+                "matching": "Matching & indexing"
+            },
+            "lastSync": "Last sync",
+            "neverSynced": "Never synced",
+            "card": {
+                "title": "Synchronization",
+                "desc": "Monitor background sync progress and configure the automatic sync schedule."
+            },
+            "manual": {
+                "title": "Manual Sync",
+                "desc": "Trigger an immediate sync from all sources (Plex, Sonarr, MyAnimeList)."
+            }
+        },
+        "mal": {
+            "tokenRefreshed": "Token refreshed:",
+            "authRequired": "MAL credentials are configured but no token has been authorized. Please refresh the token to enable syncing.",
+            "refreshToken": "Authorize / Refresh Token",
+            "refreshError": "Failed to refresh MAL token. Please check your credentials."
+        },
+        "category": {
+            "plex": {
+                "name": "Plex",
+                "desc": "Connect to your Plex Media Server to sync your anime library."
+            },
+            "sonarr": {
+                "name": "Sonarr",
+                "desc": "Track anime series from your Sonarr instance."
+            },
+            "mal": {
+                "name": "MyAnimeList",
+                "desc": "Authenticate with your MyAnimeList account for watch-list data."
+            },
+            "kometa": {
+                "name": "Kometa",
+                "desc": "Source of the AniDB ↔ TVDB / TMDB mapping file."
+            },
+            "app": {
+                "name": "App Preferences",
+                "desc": "General application preferences and content filtering options."
+            }
+        },
+        "fields": {
+            "Plex_Host": {
+                "name": "Server URL",
+                "desc": "Base URL of your Plex Media Server (e.g. http://localhost:32400)."
+            },
+            "Plex_Token": {
+                "name": "Auth Token",
+                "desc": "Authentication token for your Plex account."
+            },
+            "Plex_AnimeSections": {
+                "name": "Anime Library IDs",
+                "desc": "Comma-separated Plex library section IDs that contain anime."
+            },
+            "Sonarr_Host": {
+                "name": "Server URL",
+                "desc": "Base URL of your Sonarr instance (e.g. http://localhost:8989)."
+            },
+            "Sonarr_ApiKey": {
+                "name": "API Key",
+                "desc": "API key found in Sonarr › Settings › General."
+            },
+            "Sonarr_AnimeTags": {
+                "name": "Anime Tags",
+                "desc": "Comma-separated Sonarr tag names used to identify anime series."
+            },
+            "Sonarr_RemoteUrl": {
+                "name": "Remote URL",
+                "desc": "Optional public URL for Sonarr used to build series deep-links."
+            },
+            "MAL_ApiToken": {
+                "name": "Access Token",
+                "desc": "Current OAuth access token for the MyAnimeList API."
+            },
+            "MAL_ClientId": {
+                "name": "OAuth Client ID",
+                "desc": "Client ID registered on the MyAnimeList developer portal."
+            },
+            "MAL_ClientSecret": {
+                "name": "OAuth Client Secret",
+                "desc": "Client Secret registered on the MyAnimeList developer portal."
+            },
+            "MAL_RefreshToken": {
+                "name": "Refresh Token",
+                "desc": "OAuth Refresh Token used to renew the access token automatically."
+            },
+            "Kometa_AnimeIdsJsonUrl": {
+                "name": "Anime IDs JSON URL",
+                "desc": "URL of the Kometa Community anime_ids.json AniDB mapping file."
+            },
+            "App_ShowNsfw": {
+                "name": "Show NSFW Content",
+                "desc": "When enabled, adult and explicit content from MyAnimeList will be included in lists and statistics."
+            },
+            "App_SyncInterval": {
+                "name": "Sync Interval",
+                "desc": "How often the background sync job runs to fetch new data from all sources.",
+                "option": {
+                    "hourly": "Every Hour",
+                    "every6h": "Every 6 Hours",
+                    "every12h": "Every 12 Hours",
+                    "daily": "Daily",
+                    "weekly": "Weekly"
+                }
+            },
+            "App_TitleSimilarityThreshold": {
+                "name": "Title Search Similarity (%)",
+                "desc": "Minimum similarity percentage (1–100) for fuzzy title search using pg_trgm. Default: 80."
+            },
+            "Sonarr_DefaultRootFolder": {
+                "name": "Default Root Folder",
+                "desc": "Default root folder path pre-selected when adding a series to Sonarr."
+            },
+            "Sonarr_DefaultQualityProfileName": {
+                "name": "Default Quality Profile",
+                "desc": "Quality profile name pre-selected when adding a series to Sonarr."
+            },
+            "Sonarr_DefaultSeasonFolder": {
+                "name": "Default Season Folder",
+                "desc": "Whether to organise episodes into per-season subfolders by default."
+            },
+            "Sonarr_DefaultMonitor": {
+                "name": "Default Monitor",
+                "desc": "Monitor setting pre-selected when adding a series to Sonarr.",
+                "option": {
+                    "all": "All Episodes",
+                    "future": "Future Episodes",
+                    "missing": "Missing Episodes",
+                    "existing": "Existing Episodes",
+                    "recent": "Recent Episodes",
+                    "pilot": "Pilot Episode",
+                    "firstSeason": "First Season",
+                    "lastSeason": "Last Season",
+                    "monitorSpecials": "Monitor Specials",
+                    "unmonitorSpecials": "Unmonitor Specials",
+                    "none": "None"
+                }
+            },
+            "Plex_Enabled": {
+                "name": "Enable Plex",
+                "desc": "Enable or disable Plex as a data source for sync."
+            },
+            "Sonarr_Enabled": {
+                "name": "Enable Sonarr",
+                "desc": "Enable or disable Sonarr as a data source for sync."
+            }
+        },
+        "toggle": {
+            "on": "Enabled",
+            "off": "Disabled"
+        },
+        "sonarr": {
+            "addDefaultsGroup": "Add Series Defaults",
+            "configureFirst": "Configure Sonarr Host URL and API Key above to unlock these defaults.",
+            "connectionError": "Could not connect to Sonarr. Check your Host URL and API Key.",
+            "loadingOptions": "Loading Sonarr options…"
+        },
+        "provider": {
+            "enabled": "Enabled",
+            "disabled": "Disabled",
+            "enabledToggle": "Toggle provider enabled state",
+            "disabledHint": "Enable Sonarr in its settings card to use this feature",
+            "configureFirstTooltip": "Configure basic settings first to enable."
+        },
+        "syncPrompt": {
+            "title": "Sync Recommended",
+            "desc": "{{provider}} has been enabled. A manual sync is recommended to populate its data.",
+            "dismiss": "Later",
+            "goToSync": "Go to Sync"
         }
-      },
-      "App_TitleSimilarityThreshold": {
-        "name": "Title Search Similarity (%)",
-        "desc": "Minimum similarity percentage (1–100) for fuzzy title search using pg_trgm. Default: 80."
-      },
-      "Sonarr_DefaultRootFolder": {
-        "name": "Default Root Folder",
-        "desc": "Default root folder path pre-selected when adding a series to Sonarr."
-      },
-      "Sonarr_DefaultQualityProfileName": {
-        "name": "Default Quality Profile",
-        "desc": "Quality profile name pre-selected when adding a series to Sonarr."
-      },
-      "Sonarr_DefaultSeasonFolder": {
-        "name": "Default Season Folder",
-        "desc": "Whether to organise episodes into per-season subfolders by default."
-      },
-      "Sonarr_DefaultMonitor": {
-        "name": "Default Monitor",
-        "desc": "Monitor setting pre-selected when adding a series to Sonarr.",
-        "option": {
-          "all": "All Episodes",
-          "future": "Future Episodes",
-          "missing": "Missing Episodes",
-          "existing": "Existing Episodes",
-          "recent": "Recent Episodes",
-          "pilot": "Pilot Episode",
-          "firstSeason": "First Season",
-          "lastSeason": "Last Season",
-          "monitorSpecials": "Monitor Specials",
-          "unmonitorSpecials": "Unmonitor Specials",
-          "none": "None"
+    },
+    "theme": {
+        "toggle": "Toggle Theme",
+        "light": "Light",
+        "dark": "Dark",
+        "followOs": "Sync with OS theme",
+        "label": "Theme"
+    },
+    "genres": {
+        "Action": "Action",
+        "Adventure": "Adventure",
+        "Avant Garde": "Avant Garde",
+        "Award Winning": "Award Winning",
+        "Boys Love": "Boys Love",
+        "Comedy": "Comedy",
+        "Drama": "Drama",
+        "Ecchi": "Ecchi",
+        "Fantasy": "Fantasy",
+        "Girls Love": "Girls Love",
+        "Gourmet": "Gourmet",
+        "Horror": "Horror",
+        "Mystery": "Mystery",
+        "Romance": "Romance",
+        "Sci-Fi": "Sci-Fi",
+        "Slice of Life": "Slice of Life",
+        "Sports": "Sports",
+        "Supernatural": "Supernatural",
+        "Suspense": "Suspense",
+        "Isekai": "Isekai",
+        "Mecha": "Mecha",
+        "Music": "Music",
+        "Psychological": "Psychological",
+        "School": "School",
+        "Seinen": "Seinen",
+        "Shoujo": "Shoujo",
+        "Shounen": "Shounen",
+        "Space": "Space",
+        "Military": "Military",
+        "Historical": "Historical",
+        "Adult Cast": "Adult Cast",
+        "Anthropomorphic": "Anthropomorphic",
+        "CGDCT": "CGDCT",
+        "Childcare": "Childcare",
+        "Combat Sports": "Combat Sports",
+        "Crossdressing": "Crossdressing",
+        "Delinquents": "Delinquents",
+        "Detective": "Detective",
+        "Educational": "Educational",
+        "Erotica": "Erotica",
+        "Gag Humor": "Gag Humor",
+        "Gore": "Gore",
+        "Harem": "Harem",
+        "Hentai": "Hentai",
+        "High Stakes Game": "High Stakes Game",
+        "Idols (Female)": "Idols (Female)",
+        "Idols (Male)": "Idols (Male)",
+        "Iyashikei": "Iyashikei",
+        "Josei": "Josei",
+        "Kids": "Kids",
+        "Love Polygon": "Love Polygon",
+        "Love Status Quo": "Love Status Quo",
+        "Magical Sex Shift": "Magical Sex Shift",
+        "Mahou Shoujo": "Mahou Shoujo",
+        "Medical": "Medical",
+        "Mythology": "Mythology",
+        "Organized Crime": "Organized Crime",
+        "Otaku Culture": "Otaku Culture",
+        "Parody": "Parody",
+        "Performing Arts": "Performing Arts",
+        "Pets": "Pets",
+        "Racing": "Racing",
+        "Reincarnation": "Reincarnation",
+        "Reverse Harem": "Reverse Harem",
+        "Romantic Subtext": "Romantic Subtext",
+        "Samurai": "Samurai",
+        "Martial Arts": "Martial Arts",
+        "Showbiz": "Showbiz",
+        "Strategy Game": "Strategy Game",
+        "Super Power": "Super Power",
+        "Survival": "Survival",
+        "Team Sports": "Team Sports",
+        "Time Travel": "Time Travel",
+        "Urban Fantasy": "Urban Fantasy",
+        "Vampire": "Vampire",
+        "Video Game": "Video Game",
+        "Villainess": "Villainess",
+        "Visual Arts": "Visual Arts",
+        "Workplace": "Workplace"
+    },
+    "lang": {
+        "switch": "Français",
+        "selectLanguage": "Language"
+    },
+    "notifications": {
+        "center": {
+            "title": "Notifications",
+            "empty": "All caught up!",
+            "markAllRead": "Mark all read",
+            "dismiss": "Dismiss"
+        },
+        "time": {
+            "justNow": "just now",
+            "minutesAgo": "{{n}}m ago",
+            "hoursAgo": "{{n}}h ago",
+            "daysAgo": "{{n}}d ago"
+        },
+        "welcome": {
+            "title": "Welcome to MetaAnime 👋",
+            "message": "MetaAnime aggregates your anime library from Plex, Sonarr and MyAnimeList into one elegant hub. Start by running your first sync.",
+            "action": "Run first sync"
+        },
+        "noSync": {
+            "title": "First sync needed",
+            "message": "Your library has not been synced yet. Run a sync to populate your anime list with metadata.",
+            "action": "Go to Sync"
+        },
+        "sync": {
+            "startTitle": "Sync started",
+            "startMessage": "Manual sync has been triggered. Check the progress log in Settings.",
+            "doneTitle": "Sync complete ✓",
+            "doneMessage": "All sources have been synchronized successfully.",
+            "errorTitle": "Sync failed",
+            "errorMessage": "The synchronization encountered an error. Check the sync log for details.",
+            "viewLog": "View log"
+        },
+        "malAuth": {
+            "title": "MyAnimeList authentication error",
+            "message": "MyAnimeList token is invalid or expired. Please authorize in Settings.",
+            "action": "Go to Settings",
+            "reloadFailed": "Token refreshed, but could not reload settings.",
+            "reloadFailedMessage": "Please refresh the page to see the updated token status."
         }
-      },
-      "Plex_Enabled": {
-        "name": "Enable Plex",
-        "desc": "Enable or disable Plex as a data source for sync."
-      },
-      "Sonarr_Enabled": {
-        "name": "Enable Sonarr",
-        "desc": "Enable or disable Sonarr as a data source for sync."
-      }
     },
-    "toggle": {
-      "on": "Enabled",
-      "off": "Disabled"
+    "toast": {
+        "noSync": {
+            "title": "No sync yet",
+            "message": "Your library has not been synced. Run a sync to populate your anime list.",
+            "cta": "Go to Sync",
+            "dismiss": "Dismiss"
+        }
     },
-    "sonarr": {
-      "addDefaultsGroup": "Add Series Defaults",
-      "configureFirst": "Configure Sonarr Host URL and API Key above to unlock these defaults.",
-      "connectionError": "Could not connect to Sonarr. Check your Host URL and API Key.",
-      "loadingOptions": "Loading Sonarr options…"
+    "common": {
+        "cancel": "Cancel",
+        "add": "Add",
+        "confirm": "Confirm"
     },
-    "provider": {
-      "enabled": "Enabled",
-      "disabled": "Disabled",
-      "enabledToggle": "Toggle provider enabled state",
-      "disabledHint": "Enable Sonarr in its settings card to use this feature",
-      "configureFirstTooltip": "Configure basic settings first to enable."
+    "notFound": {
+        "ariaLabel": "404 – Page not found",
+        "title": "Oops — This Page Has Gone Off-Script!",
+        "subtitle": {
+            "dimension": "This page wandered off into another dimension, and frankly it seems quite happy there with no intention of coming back.",
+            "trainingArc": "This page is on a training arc — it'll be back stronger, wiser, and with a brand-new power-up you never saw coming.",
+            "plotTwist": "Plot twist: this page doesn't exist. The real page was the friends we made along the way. Spoiler: they're gone too.",
+            "houdini": "Seems like this page pulled a Houdini on us. One moment it was here, the next — poof — gone without so much as a curtain call.",
+            "void": "This URL leads to the void. The void stares back. Then the void shrugs and goes back to watching anime. Classic void.",
+            "kamehameha": "Loading failed… maybe try a Kamehameha? If that doesn't work, a Rasengan, a Getsuga Tenshō, or just hitting Ctrl+R might do.",
+            "timeline": "Our server searched every timeline across the multiverse, consulted three oracles, and still found absolutely nothing here.",
+            "questGone": "Error 404: the page went on a quest and never returned. Rumour has it, it found a great anime recommendation and got sidetracked.",
+            "uncharted": "You've discovered uncharted territory. Plant a flag, name it after yourself, and enjoy the solitude — there's nothing else here.",
+            "endOfInternet": "You've reached the end of the internet. Just kidding. But this page is gone, probably binge-watching something in another tab."
+        },
+        "goHome": "Go Back Home",
+        "characters": {
+            "goku": {
+                "name": "Goku",
+                "quote": "I searched the entire universe for this page… it's gone. Even Ultra Instinct couldn't find it."
+            },
+            "luffy": {
+                "name": "Monkey D. Luffy",
+                "quote": "I'm gonna be King of the Pirates! But first, where IS this page?! Even my Haki can't sense it!"
+            },
+            "naruto": {
+                "name": "Naruto Uzumaki",
+                "quote": "Believe it! I tried a thousand shadow clones to find this page and they ALL came back empty-handed, dattebayo!"
+            },
+            "sailorMoon": {
+                "name": "Sailor Moon",
+                "quote": "In the name of the Moon, I shall punish whoever deleted this page!"
+            },
+            "edwardElric": {
+                "name": "Edward Elric",
+                "quote": "Equivalent Exchange means there should be SOMETHING here. But there's nothing! Nothing at all!"
+            },
+            "lelouch": {
+                "name": "Lelouch vi Britannia",
+                "quote": "I, Lelouch vi Britannia, command this page to… exist. Hmm. My Geass has no power here."
+            },
+            "mikasa": {
+                "name": "Mikasa Ackerman",
+                "quote": "I searched every corner of this server. The page isn't here. It never was."
+            },
+            "tanjiro": {
+                "name": "Tanjiro Kamado",
+                "quote": "With all my training, I still couldn't locate this page. I could smell it once, but the scent has vanished."
+            },
+            "spike": {
+                "name": "Spike Spiegel",
+                "quote": "Whatever happens, happens. And apparently, what happened is this page disappeared. See you, Space Page."
+            },
+            "light": {
+                "name": "Light Yagami",
+                "quote": "I calculated every possible URL and still found nothing. Could a page this elusive truly be… justice?"
+            }
+        }
     },
-    "syncPrompt": {
-      "title": "Sync Recommended",
-      "desc": "{{provider}} has been enabled. A manual sync is recommended to populate its data.",
-      "dismiss": "Later",
-      "goToSync": "Go to Sync"
-    }
-  },
-  "theme": {
-    "toggle": "Toggle Theme",
-    "light": "Light",
-    "dark": "Dark",
-    "followOs": "Sync with OS theme"
-  },
-  "genres": {
-    "Action": "Action",
-    "Adventure": "Adventure",
-    "Avant Garde": "Avant Garde",
-    "Award Winning": "Award Winning",
-    "Boys Love": "Boys Love",
-    "Comedy": "Comedy",
-    "Drama": "Drama",
-    "Ecchi": "Ecchi",
-    "Fantasy": "Fantasy",
-    "Girls Love": "Girls Love",
-    "Gourmet": "Gourmet",
-    "Horror": "Horror",
-    "Mystery": "Mystery",
-    "Romance": "Romance",
-    "Sci-Fi": "Sci-Fi",
-    "Slice of Life": "Slice of Life",
-    "Sports": "Sports",
-    "Supernatural": "Supernatural",
-    "Suspense": "Suspense",
-    "Isekai": "Isekai",
-    "Mecha": "Mecha",
-    "Music": "Music",
-    "Psychological": "Psychological",
-    "School": "School",
-    "Seinen": "Seinen",
-    "Shoujo": "Shoujo",
-    "Shounen": "Shounen",
-    "Space": "Space",
-    "Military": "Military",
-    "Historical": "Historical",
-    "Adult Cast": "Adult Cast",
-    "Anthropomorphic": "Anthropomorphic",
-    "CGDCT": "CGDCT",
-    "Childcare": "Childcare",
-    "Combat Sports": "Combat Sports",
-    "Crossdressing": "Crossdressing",
-    "Delinquents": "Delinquents",
-    "Detective": "Detective",
-    "Educational": "Educational",
-    "Erotica": "Erotica",
-    "Gag Humor": "Gag Humor",
-    "Gore": "Gore",
-    "Harem": "Harem",
-    "Hentai": "Hentai",
-    "High Stakes Game": "High Stakes Game",
-    "Idols (Female)": "Idols (Female)",
-    "Idols (Male)": "Idols (Male)",
-    "Iyashikei": "Iyashikei",
-    "Josei": "Josei",
-    "Kids": "Kids",
-    "Love Polygon": "Love Polygon",
-    "Love Status Quo": "Love Status Quo",
-    "Magical Sex Shift": "Magical Sex Shift",
-    "Mahou Shoujo": "Mahou Shoujo",
-    "Medical": "Medical",
-    "Mythology": "Mythology",
-    "Organized Crime": "Organized Crime",
-    "Otaku Culture": "Otaku Culture",
-    "Parody": "Parody",
-    "Performing Arts": "Performing Arts",
-    "Pets": "Pets",
-    "Racing": "Racing",
-    "Reincarnation": "Reincarnation",
-    "Reverse Harem": "Reverse Harem",
-    "Romantic Subtext": "Romantic Subtext",
-    "Samurai": "Samurai",
-    "Martial Arts": "Martial Arts",
-    "Showbiz": "Showbiz",
-    "Strategy Game": "Strategy Game",
-    "Super Power": "Super Power",
-    "Survival": "Survival",
-    "Team Sports": "Team Sports",
-    "Time Travel": "Time Travel",
-    "Urban Fantasy": "Urban Fantasy",
-    "Vampire": "Vampire",
-    "Video Game": "Video Game",
-    "Villainess": "Villainess",
-    "Visual Arts": "Visual Arts",
-    "Workplace": "Workplace"
-  },
-  "lang": {
-    "switch": "Français"
-  },
-  "notifications": {
-    "center": {
-      "title": "Notifications",
-      "empty": "All caught up!",
-      "markAllRead": "Mark all read",
-      "dismiss": "Dismiss"
-    },
-    "time": {
-      "justNow": "just now",
-      "minutesAgo": "{{n}}m ago",
-      "hoursAgo": "{{n}}h ago",
-      "daysAgo": "{{n}}d ago"
-    },
-    "welcome": {
-      "title": "Welcome to MetaAnime 👋",
-      "message": "MetaAnime aggregates your anime library from Plex, Sonarr and MyAnimeList into one elegant hub. Start by running your first sync.",
-      "action": "Run first sync"
-    },
-    "noSync": {
-      "title": "First sync needed",
-      "message": "Your library has not been synced yet. Run a sync to populate your anime list with metadata.",
-      "action": "Go to Sync"
-    },
-    "sync": {
-      "startTitle": "Sync started",
-      "startMessage": "Manual sync has been triggered. Check the progress log in Settings.",
-      "doneTitle": "Sync complete ✓",
-      "doneMessage": "All sources have been synchronized successfully.",
-      "errorTitle": "Sync failed",
-      "errorMessage": "The synchronization encountered an error. Check the sync log for details.",
-      "viewLog": "View log"
-    },
-    "malAuth": {
-      "title": "MyAnimeList authentication error",
-      "message": "MyAnimeList token is invalid or expired. Please authorize in Settings.",
-      "action": "Go to Settings",
-      "reloadFailed": "Token refreshed, but could not reload settings.",
-      "reloadFailedMessage": "Please refresh the page to see the updated token status."
-    }
-  },
-  "toast": {
-    "noSync": {
-      "title": "No sync yet",
-      "message": "Your library has not been synced. Run a sync to populate your anime list.",
-      "cta": "Go to Sync",
-      "dismiss": "Dismiss"
-    }
-  },
-  "common": {
-    "cancel": "Cancel",
-    "add": "Add",
-    "confirm": "Confirm"
-  },
-  "notFound": {
-    "ariaLabel": "404 – Page not found",
-    "title": "Oops — This Page Has Gone Off-Script!",
-    "subtitle": {
-      "dimension": "This page wandered off into another dimension, and frankly it seems quite happy there with no intention of coming back.",
-      "trainingArc": "This page is on a training arc — it'll be back stronger, wiser, and with a brand-new power-up you never saw coming.",
-      "plotTwist": "Plot twist: this page doesn't exist. The real page was the friends we made along the way. Spoiler: they're gone too.",
-      "houdini": "Seems like this page pulled a Houdini on us. One moment it was here, the next — poof — gone without so much as a curtain call.",
-      "void": "This URL leads to the void. The void stares back. Then the void shrugs and goes back to watching anime. Classic void.",
-      "kamehameha": "Loading failed… maybe try a Kamehameha? If that doesn't work, a Rasengan, a Getsuga Tenshō, or just hitting Ctrl+R might do.",
-      "timeline": "Our server searched every timeline across the multiverse, consulted three oracles, and still found absolutely nothing here.",
-      "questGone": "Error 404: the page went on a quest and never returned. Rumour has it, it found a great anime recommendation and got sidetracked.",
-      "uncharted": "You've discovered uncharted territory. Plant a flag, name it after yourself, and enjoy the solitude — there's nothing else here.",
-      "endOfInternet": "You've reached the end of the internet. Just kidding. But this page is gone, probably binge-watching something in another tab."
-    },
-    "goHome": "Go Back Home",
-    "characters": {
-      "goku": {
-        "name": "Goku",
-        "quote": "I searched the entire universe for this page… it's gone. Even Ultra Instinct couldn't find it."
-      },
-      "luffy": {
-        "name": "Monkey D. Luffy",
-        "quote": "I'm gonna be King of the Pirates! But first, where IS this page?! Even my Haki can't sense it!"
-      },
-      "naruto": {
-        "name": "Naruto Uzumaki",
-        "quote": "Believe it! I tried a thousand shadow clones to find this page and they ALL came back empty-handed, dattebayo!"
-      },
-      "sailorMoon": {
-        "name": "Sailor Moon",
-        "quote": "In the name of the Moon, I shall punish whoever deleted this page!"
-      },
-      "edwardElric": {
-        "name": "Edward Elric",
-        "quote": "Equivalent Exchange means there should be SOMETHING here. But there's nothing! Nothing at all!"
-      },
-      "lelouch": {
-        "name": "Lelouch vi Britannia",
-        "quote": "I, Lelouch vi Britannia, command this page to… exist. Hmm. My Geass has no power here."
-      },
-      "mikasa": {
-        "name": "Mikasa Ackerman",
-        "quote": "I searched every corner of this server. The page isn't here. It never was."
-      },
-      "tanjiro": {
-        "name": "Tanjiro Kamado",
-        "quote": "With all my training, I still couldn't locate this page. I could smell it once, but the scent has vanished."
-      },
-      "spike": {
-        "name": "Spike Spiegel",
-        "quote": "Whatever happens, happens. And apparently, what happened is this page disappeared. See you, Space Page."
-      },
-      "light": {
-        "name": "Light Yagami",
-        "quote": "I calculated every possible URL and still found nothing. Could a page this elusive truly be… justice?"
-      }
-    }
-  },
-  "userPreferences": {
-    "autoApplyLastFilters": {
-      "name": "Auto-apply Last Search Filters",
-      "desc": "When enabled, your last used anime search filters will be automatically restored and applied when you open the Anime List page."
+    "userPreferences": {
+        "autoApplyLastFilters": {
+            "name": "Auto-apply Last Search Filters",
+            "desc": "When enabled, your last used anime search filters will be automatically restored and applied when you open the Anime List page."
+        },
+        "luckyPick": {
+            "groupTitle": "I'm Feeling Lucky!",
+            "onlyFinished": {
+                "name": "Only Finished Anime",
+                "desc": "When enabled, the random pick will only select from anime series that have finished airing."
+            },
+            "onlyPlanToWatch": {
+                "name": "Only Plan to Watch",
+                "desc": "When enabled, the random pick will only select from anime on your 'Plan to Watch' list."
+            },
+            "onlyWithFiles": {
+                "name": "Only with Local Files",
+                "desc": "When enabled, the random pick will only select anime that have local files available in Sonarr."
+            }
+        }
     },
     "luckyPick": {
-      "groupTitle": "I'm Feeling Lucky!",
-      "onlyFinished": {
-        "name": "Only Finished Anime",
-        "desc": "When enabled, the random pick will only select from anime series that have finished airing."
-      },
-      "onlyPlanToWatch": {
-        "name": "Only Plan to Watch",
-        "desc": "When enabled, the random pick will only select from anime on your 'Plan to Watch' list."
-      },
-      "onlyWithFiles": {
-        "name": "Only with Local Files",
-        "desc": "When enabled, the random pick will only select anime that have local files available in Sonarr."
-      }
+        "buttonLabel": "I'm Feeling Lucky",
+        "ariaLabel": "Random anime pick overlay",
+        "resultAriaLabel": "Recommended anime",
+        "searching": "Finding your next anime…",
+        "watchNow": "Watch Now",
+        "viewDetails": "View on MAL",
+        "tryAgain": "Try Again",
+        "close": "Close",
+        "noMatch": {
+            "title": "No matches found",
+            "desc": "None of your anime match the current random pick settings.",
+            "adjustSettings": "Adjust Settings"
+        },
+        "error": {
+            "title": "Connection lost",
+            "desc": "Could not reach the server. Please check your connection.",
+            "retry": "Retry"
+        },
+        "phrases": {
+            "plex": [
+                "Summon the popcorn!",
+                "Let the binge begin!",
+                "Stream it before your resolve crumbles.",
+                "Your sofa is calling.",
+                "Skip sleep. Start streaming.",
+                "Deploy the watching station!",
+                "One does not simply watch one episode.",
+                "Challenge accepted — marathon mode: ON.",
+                "Lights, snacks, existential dread. Go!",
+                "Your screen awaits, weeb.",
+                "Hit play. Regret nothing.",
+                "The remote is destiny.",
+                "Tonight's agenda: this anime, snacks, repeat.",
+                "Your pillow is already in position.",
+                "Begin the sacred stream.",
+                "Queued. Buffered. Ready to ruin your sleep schedule.",
+                "Auto-play is not a suggestion, it's a lifestyle.",
+                "Social plans? Cancelled. This is better.",
+                "The opening theme alone is worth it.",
+                "Lean back. Your couch is a cinema now.",
+                "One episode. I swear. (It's a lie.)",
+                "Stream responsibly. Just kidding — marathon it.",
+                "Your watchlist thanks you.",
+                "The couch fortress must be assembled.",
+                "No subtitles needed — you'll figure it out.",
+                "Press play and let fate guide you.",
+                "Your future self will thank you for starting this.",
+                "Sleep is a myth. Press play.",
+                "You deserve this watch session.",
+                "The plot thickens — go watch.",
+                "Your blanket is already expecting you.",
+                "Skip the trailer. Trust the RNG.",
+                "The opening banger awaits.",
+                "Full screen. Headphones. Go.",
+                "It's not procrastination, it's watching anime.",
+                "Consider this your sign to watch it.",
+                "The streaming gods have chosen wisely.",
+                "Plot armour: maximum. Fear: zero.",
+                "Your next binge is already loading.",
+                "Darkness is falling. Plex is calling.",
+                "This is the way. The Plex way.",
+                "All hail the recommendation algorithm.",
+                "The saga begins now.",
+                "Watch it before the internet spoils it.",
+                "You asked for a sign. This is it.",
+                "Episode one or season three, we don't judge.",
+                "Close the browser, open Plex.",
+                "The controller is in your hands. The destiny too.",
+                "Your DND status is now \"streaming\".",
+                "A new adventure awaits on your screen.",
+                "The episode count is merely a suggestion.",
+                "Don't check the time. Just watch.",
+                "The Plex library is richer today.",
+                "Load the next masterpiece.",
+                "Queue it up. No regrets.",
+                "This anime chose YOU.",
+                "Time to disappear into another world.",
+                "Your viewing history needs updating.",
+                "Anime doesn't watch itself — but almost.",
+                "Tonight, you become the main character."
+            ],
+            "mal": [
+                "Check what MAL has to say.",
+                "The community score awaits your judgment.",
+                "See if MAL agrees with your taste.",
+                "Your MAL entry is lonely. Visit it.",
+                "Update that episode count, procrastinator.",
+                "The score field is empty. Fix that.",
+                "Mark it 'Completed' for the dopamine hit.",
+                "Your MAL status: still a lie.",
+                "Time to bump those episodes watched.",
+                "The community is divided. Where do you stand?",
+                "Drop it or commit. MAL demands a status.",
+                "Give it a score. Be brave.",
+                "The forum threads won't read themselves.",
+                "Check the MAL score. Feel validated or betrayed.",
+                "Update your progress before you forget the plot.",
+                "Someone wrote a review. Be curious.",
+                "The MAL consensus is... interesting.",
+                "Your status: 'Plan to Watch' since 2019.",
+                "Change that status to 'Currently Watching'.",
+                "The episode tracker awaits.",
+                "10/10 or coward.",
+                "The community needs your score to complete the average.",
+                "Read the reviews. Cry a little.",
+                "Check the opening theme on YouTube after.",
+                "Your entry says 0 episodes. Liars never prosper.",
+                "Mark it 'Completed'. You've earned it.",
+                "The score debate in the forum is spicy.",
+                "Update your MAL diary. You forgot again.",
+                "Your watching history is a crime scene.",
+                "Face the community's verdict.",
+                "The MAL page holds answers you didn't ask for.",
+                "Ponder the 7.8 score controversy.",
+                "Your anime life needs better documentation.",
+                "Leave a review. Be the chaos.",
+                "Bump your episode count by at least one.",
+                "Declare your score before the internet does.",
+                "The synopsis will remind you what it's about.",
+                "Your 'Completed' list is missing one entry.",
+                "The reviews are unhinged. Perfect.",
+                "Update status. Feel like a functioning adult.",
+                "Drop the 'On Hold' stigma. Finish it.",
+                "The MAL score dropped 0.1 today. Tragic.",
+                "Your profile statistics deserve this update.",
+                "Review written. Dignity lost. Worth it.",
+                "Update those episodes. The algorithm is watching.",
+                "Your MAL data is out of date. Fix it.",
+                "The related anime tab will destroy your evening.",
+                "Check recommendations. Ruin your watchlist further.",
+                "Rate it now before your opinion changes tomorrow.",
+                "The staff list is more interesting than you'd think.",
+                "Your future rewatch needs a bookmark.",
+                "The score sits at 8.2. Do you agree?",
+                "Mark it 'Completed' and feel superior.",
+                "The fan reviews are a goldmine of passion.",
+                "Update your score. You've grown as a person.",
+                "Check if the manga is better. Spoiler: maybe.",
+                "Your MAL list: a monument to ambition.",
+                "One score update, one small step for anime-kind.",
+                "The community awaits your star rating.",
+                "Your MAL entry called. It wants an update."
+            ],
+            "reroll": [
+                "Trash tier, roll again!",
+                "Nope. Next!",
+                "The prophecy demands a reroll.",
+                "This one... is not it.",
+                "Call upon the dice spirits!",
+                "Fortune spins twice for cowards.",
+                "One more spin of destiny.",
+                "Rejected. Spin the wheel!",
+                "404: hype not found. Retry.",
+                "The RNG gods demand sacrifice.",
+                "Skip! Next adventure awaits.",
+                "The dice have spoken — again.",
+                "Chaos demands another spin.",
+                "Insufficient hype. Rerolling.",
+                "Not today. Try the next fate.",
+                "The stars are not aligned. Respin.",
+                "Hard pass. Wheel, do your thing.",
+                "Nah. Fate, try again.",
+                "Roll it back and try again.",
+                "Your destiny is one spin away.",
+                "The RNG has failed you. Retry.",
+                "Fortune favours the persistent.",
+                "Not the chosen one. Spin again.",
+                "This is not the anime you're looking for.",
+                "The wheel of fate spins on.",
+                "Bold move. Spin again anyway.",
+                "Cast the dice into the void.",
+                "Randomness has more to offer.",
+                "Your true calling is one spin away.",
+                "The universe has other plans. Roll again.",
+                "Skip to the good stuff.",
+                "The prophecy was wrong. Respin.",
+                "Another spin, another chance at greatness.",
+                "The dice gods are not done with you.",
+                "One more roll. I believe in you.",
+                "Chaotic neutral energy. Spin again.",
+                "Plot twist: there's a better pick.",
+                "The anime gods have other intentions.",
+                "Turn the wheel of destiny once more.",
+                "Meh. The RNG has hidden depths.",
+                "Fortune does not tire of spinning.",
+                "Refresh the fates.",
+                "Discard and draw again.",
+                "The dice are fickle. Roll once more.",
+                "Nope. The wheel demands action.",
+                "Retry. The algorithm has secrets.",
+                "Your true destiny awaits the next spin.",
+                "Chaos is a ladder. Climb it. Spin again.",
+                "Insufficient destiny. Recompute.",
+                "Hard skip. Fate reboot.",
+                "Consult the oracle once more.",
+                "Spin the wheel of wonder.",
+                "Not quite. One more chance.",
+                "Your fate file is corrupted. Reload.",
+                "Destiny buffer overflow. Respin.",
+                "The RNG apologises. It tries again.",
+                "Wrong timeline. Recalculate.",
+                "The dice gave 0/10. Try again.",
+                "Nope nope nope. Next!",
+                "Let chaos decide once more!"
+            ],
+            "searching": [
+                "Consulting the elder weebs...",
+                "Charging up the friendship speech...",
+                "Waiting for the protagonist to stop screaming...",
+                "Summoning Truck-kun...",
+                "Counting plot-armor layers...",
+                "Buffering the power of friendship...",
+                "Downloading 10,000 hours of filler...",
+                "Asking Senpai to notice us...",
+                "Calibrating the tsundere detector...",
+                "Charging the spirit bomb...",
+                "Training in a gravity chamber...",
+                "Awaiting the next season announcement...",
+                "Consulting the Sacred Tome of Manga...",
+                "Rearranging the tournament arc...",
+                "Powering up the protagonist's special eyes...",
+                "Locating the hidden overpowered skill...",
+                "Negotiating with the isekai gods...",
+                "Deploying the beach episode protocol...",
+                "Gathering all seven dragon balls...",
+                "Scanning the opening theme for foreshadowing...",
+                "Waking up late and bumping into a transfer student...",
+                "Polishing the power of nakama...",
+                "Unlocking the forbidden form...",
+                "Recalculating the protagonist's trauma backstory...",
+                "Deploying the maid-café distraction...",
+                "Forging a bond stronger than steel...",
+                "Recruiting the final party member...",
+                "Analyzing the opening frame by frame...",
+                "Reloading the main character's resolve...",
+                "Stalling for the author to finish the manga...",
+                "Bribing the recap episode to cooperate...",
+                "Decoding the rival's speech about strength...",
+                "Consulting the Akashic records...",
+                "Performing the obligatory hot-spring scene...",
+                "Translating the protagonist's monologue...",
+                "Recompiling the hero's tragic past...",
+                "Summoning the spirit of the headband...",
+                "Waiting for the fansub group to release...",
+                "Overclocking the death-glare generator...",
+                "Scheduling the three-episode rule evaluation...",
+                "Optimising the tsundere-to-deredere transition...",
+                "Loading the legendary move's full animation...",
+                "Rewinding the final-episode cliffhanger...",
+                "Buffering the inevitable reunion scene...",
+                "Manifesting your next favourite anime...",
+                "Rolling for isekai transportation method...",
+                "Applying the power of a single determined shout...",
+                "Locating the one weakness of the final boss...",
+                "Generating a suspiciously convenient backstory...",
+                "Aligning the stars for your next obsession..."
+            ]
+        }
     }
-  },
-  "luckyPick": {
-    "buttonLabel": "I'm Feeling Lucky",
-    "ariaLabel": "Random anime pick overlay",
-    "resultAriaLabel": "Recommended anime",
-    "searching": "Finding your next anime…",
-    "watchNow": "Watch Now",
-    "viewDetails": "View on MAL",
-    "tryAgain": "Try Again",
-    "close": "Close",
-    "noMatch": {
-      "title": "No matches found",
-      "desc": "None of your anime match the current random pick settings.",
-      "adjustSettings": "Adjust Settings"
-    },
-    "error": {
-      "title": "Connection lost",
-      "desc": "Could not reach the server. Please check your connection.",
-      "retry": "Retry"
-    },
-    "phrases": {
-      "plex": [
-        "Summon the popcorn!",
-        "Let the binge begin!",
-        "Stream it before your resolve crumbles.",
-        "Your sofa is calling.",
-        "Skip sleep. Start streaming.",
-        "Deploy the watching station!",
-        "One does not simply watch one episode.",
-        "Challenge accepted — marathon mode: ON.",
-        "Lights, snacks, existential dread. Go!",
-        "Your screen awaits, weeb.",
-        "Hit play. Regret nothing.",
-        "The remote is destiny.",
-        "Tonight's agenda: this anime, snacks, repeat.",
-        "Your pillow is already in position.",
-        "Begin the sacred stream.",
-        "Queued. Buffered. Ready to ruin your sleep schedule.",
-        "Auto-play is not a suggestion, it's a lifestyle.",
-        "Social plans? Cancelled. This is better.",
-        "The opening theme alone is worth it.",
-        "Lean back. Your couch is a cinema now.",
-        "One episode. I swear. (It's a lie.)",
-        "Stream responsibly. Just kidding — marathon it.",
-        "Your watchlist thanks you.",
-        "The couch fortress must be assembled.",
-        "No subtitles needed — you'll figure it out.",
-        "Press play and let fate guide you.",
-        "Your future self will thank you for starting this.",
-        "Sleep is a myth. Press play.",
-        "You deserve this watch session.",
-        "The plot thickens — go watch.",
-        "Your blanket is already expecting you.",
-        "Skip the trailer. Trust the RNG.",
-        "The opening banger awaits.",
-        "Full screen. Headphones. Go.",
-        "It's not procrastination, it's watching anime.",
-        "Consider this your sign to watch it.",
-        "The streaming gods have chosen wisely.",
-        "Plot armour: maximum. Fear: zero.",
-        "Your next binge is already loading.",
-        "Darkness is falling. Plex is calling.",
-        "This is the way. The Plex way.",
-        "All hail the recommendation algorithm.",
-        "The saga begins now.",
-        "Watch it before the internet spoils it.",
-        "You asked for a sign. This is it.",
-        "Episode one or season three, we don't judge.",
-        "Close the browser, open Plex.",
-        "The controller is in your hands. The destiny too.",
-        "Your DND status is now \"streaming\".",
-        "A new adventure awaits on your screen.",
-        "The episode count is merely a suggestion.",
-        "Don't check the time. Just watch.",
-        "The Plex library is richer today.",
-        "Load the next masterpiece.",
-        "Queue it up. No regrets.",
-        "This anime chose YOU.",
-        "Time to disappear into another world.",
-        "Your viewing history needs updating.",
-        "Anime doesn't watch itself — but almost.",
-        "Tonight, you become the main character."
-      ],
-      "mal": [
-        "Check what MAL has to say.",
-        "The community score awaits your judgment.",
-        "See if MAL agrees with your taste.",
-        "Your MAL entry is lonely. Visit it.",
-        "Update that episode count, procrastinator.",
-        "The score field is empty. Fix that.",
-        "Mark it 'Completed' for the dopamine hit.",
-        "Your MAL status: still a lie.",
-        "Time to bump those episodes watched.",
-        "The community is divided. Where do you stand?",
-        "Drop it or commit. MAL demands a status.",
-        "Give it a score. Be brave.",
-        "The forum threads won't read themselves.",
-        "Check the MAL score. Feel validated or betrayed.",
-        "Update your progress before you forget the plot.",
-        "Someone wrote a review. Be curious.",
-        "The MAL consensus is... interesting.",
-        "Your status: 'Plan to Watch' since 2019.",
-        "Change that status to 'Currently Watching'.",
-        "The episode tracker awaits.",
-        "10/10 or coward.",
-        "The community needs your score to complete the average.",
-        "Read the reviews. Cry a little.",
-        "Check the opening theme on YouTube after.",
-        "Your entry says 0 episodes. Liars never prosper.",
-        "Mark it 'Completed'. You've earned it.",
-        "The score debate in the forum is spicy.",
-        "Update your MAL diary. You forgot again.",
-        "Your watching history is a crime scene.",
-        "Face the community's verdict.",
-        "The MAL page holds answers you didn't ask for.",
-        "Ponder the 7.8 score controversy.",
-        "Your anime life needs better documentation.",
-        "Leave a review. Be the chaos.",
-        "Bump your episode count by at least one.",
-        "Declare your score before the internet does.",
-        "The synopsis will remind you what it's about.",
-        "Your 'Completed' list is missing one entry.",
-        "The reviews are unhinged. Perfect.",
-        "Update status. Feel like a functioning adult.",
-        "Drop the 'On Hold' stigma. Finish it.",
-        "The MAL score dropped 0.1 today. Tragic.",
-        "Your profile statistics deserve this update.",
-        "Review written. Dignity lost. Worth it.",
-        "Update those episodes. The algorithm is watching.",
-        "Your MAL data is out of date. Fix it.",
-        "The related anime tab will destroy your evening.",
-        "Check recommendations. Ruin your watchlist further.",
-        "Rate it now before your opinion changes tomorrow.",
-        "The staff list is more interesting than you'd think.",
-        "Your future rewatch needs a bookmark.",
-        "The score sits at 8.2. Do you agree?",
-        "Mark it 'Completed' and feel superior.",
-        "The fan reviews are a goldmine of passion.",
-        "Update your score. You've grown as a person.",
-        "Check if the manga is better. Spoiler: maybe.",
-        "Your MAL list: a monument to ambition.",
-        "One score update, one small step for anime-kind.",
-        "The community awaits your star rating.",
-        "Your MAL entry called. It wants an update."
-      ],
-      "reroll": [
-        "Trash tier, roll again!",
-        "Nope. Next!",
-        "The prophecy demands a reroll.",
-        "This one... is not it.",
-        "Call upon the dice spirits!",
-        "Fortune spins twice for cowards.",
-        "One more spin of destiny.",
-        "Rejected. Spin the wheel!",
-        "404: hype not found. Retry.",
-        "The RNG gods demand sacrifice.",
-        "Skip! Next adventure awaits.",
-        "The dice have spoken — again.",
-        "Chaos demands another spin.",
-        "Insufficient hype. Rerolling.",
-        "Not today. Try the next fate.",
-        "The stars are not aligned. Respin.",
-        "Hard pass. Wheel, do your thing.",
-        "Nah. Fate, try again.",
-        "Roll it back and try again.",
-        "Your destiny is one spin away.",
-        "The RNG has failed you. Retry.",
-        "Fortune favours the persistent.",
-        "Not the chosen one. Spin again.",
-        "This is not the anime you're looking for.",
-        "The wheel of fate spins on.",
-        "Bold move. Spin again anyway.",
-        "Cast the dice into the void.",
-        "Randomness has more to offer.",
-        "Your true calling is one spin away.",
-        "The universe has other plans. Roll again.",
-        "Skip to the good stuff.",
-        "The prophecy was wrong. Respin.",
-        "Another spin, another chance at greatness.",
-        "The dice gods are not done with you.",
-        "One more roll. I believe in you.",
-        "Chaotic neutral energy. Spin again.",
-        "Plot twist: there's a better pick.",
-        "The anime gods have other intentions.",
-        "Turn the wheel of destiny once more.",
-        "Meh. The RNG has hidden depths.",
-        "Fortune does not tire of spinning.",
-        "Refresh the fates.",
-        "Discard and draw again.",
-        "The dice are fickle. Roll once more.",
-        "Nope. The wheel demands action.",
-        "Retry. The algorithm has secrets.",
-        "Your true destiny awaits the next spin.",
-        "Chaos is a ladder. Climb it. Spin again.",
-        "Insufficient destiny. Recompute.",
-        "Hard skip. Fate reboot.",
-        "Consult the oracle once more.",
-        "Spin the wheel of wonder.",
-        "Not quite. One more chance.",
-        "Your fate file is corrupted. Reload.",
-        "Destiny buffer overflow. Respin.",
-        "The RNG apologises. It tries again.",
-        "Wrong timeline. Recalculate.",
-        "The dice gave 0/10. Try again.",
-        "Nope nope nope. Next!",
-        "Let chaos decide once more!"
-      ],
-      "searching": [
-        "Consulting the elder weebs...",
-        "Charging up the friendship speech...",
-        "Waiting for the protagonist to stop screaming...",
-        "Summoning Truck-kun...",
-        "Counting plot-armor layers...",
-        "Buffering the power of friendship...",
-        "Downloading 10,000 hours of filler...",
-        "Asking Senpai to notice us...",
-        "Calibrating the tsundere detector...",
-        "Charging the spirit bomb...",
-        "Training in a gravity chamber...",
-        "Awaiting the next season announcement...",
-        "Consulting the Sacred Tome of Manga...",
-        "Rearranging the tournament arc...",
-        "Powering up the protagonist's special eyes...",
-        "Locating the hidden overpowered skill...",
-        "Negotiating with the isekai gods...",
-        "Deploying the beach episode protocol...",
-        "Gathering all seven dragon balls...",
-        "Scanning the opening theme for foreshadowing...",
-        "Waking up late and bumping into a transfer student...",
-        "Polishing the power of nakama...",
-        "Unlocking the forbidden form...",
-        "Recalculating the protagonist's trauma backstory...",
-        "Deploying the maid-café distraction...",
-        "Forging a bond stronger than steel...",
-        "Recruiting the final party member...",
-        "Analyzing the opening frame by frame...",
-        "Reloading the main character's resolve...",
-        "Stalling for the author to finish the manga...",
-        "Bribing the recap episode to cooperate...",
-        "Decoding the rival's speech about strength...",
-        "Consulting the Akashic records...",
-        "Performing the obligatory hot-spring scene...",
-        "Translating the protagonist's monologue...",
-        "Recompiling the hero's tragic past...",
-        "Summoning the spirit of the headband...",
-        "Waiting for the fansub group to release...",
-        "Overclocking the death-glare generator...",
-        "Scheduling the three-episode rule evaluation...",
-        "Optimising the tsundere-to-deredere transition...",
-        "Loading the legendary move's full animation...",
-        "Rewinding the final-episode cliffhanger...",
-        "Buffering the inevitable reunion scene...",
-        "Manifesting your next favourite anime...",
-        "Rolling for isekai transportation method...",
-        "Applying the power of a single determined shout...",
-        "Locating the one weakness of the final boss...",
-        "Generating a suspiciously convenient backstory...",
-        "Aligning the stars for your next obsession..."
-      ]
-    }
-  }
 }

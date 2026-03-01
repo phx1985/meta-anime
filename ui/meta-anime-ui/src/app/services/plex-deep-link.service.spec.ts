@@ -9,12 +9,18 @@ describe('PlexDeepLinkService', () => {
   let mockDocument: Partial<Document>;
   let openSpy: ReturnType<typeof vi.fn>;
   let mockMobileDetection: { isMobile: ReturnType<typeof vi.fn> };
+  let mockWindow: Partial<Window & typeof globalThis>;
 
   function setup(isMobile: boolean): void {
     openSpy = vi.fn();
+    mockWindow = {
+      open: openSpy,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    } as unknown as Window & typeof globalThis;
     mockMobileDetection = { isMobile: vi.fn().mockReturnValue(isMobile) };
     mockDocument = {
-      defaultView: { open: openSpy } as unknown as Window & typeof globalThis,
+      defaultView: mockWindow as Window & typeof globalThis,
       location: { href: '' } as Location,
       hidden: false,
       addEventListener: vi.fn(),
@@ -40,12 +46,12 @@ describe('PlexDeepLinkService', () => {
   describe('buildPlexUri', () => {
     beforeEach(() => setup(false));
 
-    it('converts a full Plex desktop URL to a plex:// deep link', () => {
+    it('converts a full Plex desktop URL to a plex://server/…/details deep link', () => {
       const webUrl =
         'https://app.plex.tv/desktop/#!/server/abc123/details?key=%2Flibrary%2Fmetadata%2F456';
       const result = service.buildPlexUri(webUrl);
       expect(result).toBe(
-        'plex://preplay?key=%2Flibrary%2Fmetadata%2F456&server=abc123',
+        'plex://server/abc123/details?key=%2Flibrary%2Fmetadata%2F456',
       );
     });
 
@@ -92,28 +98,28 @@ describe('PlexDeepLinkService', () => {
   describe('openLink on mobile', () => {
     beforeEach(() => setup(true));
 
-    it('sets document.location.href to the plex:// URI on mobile', () => {
+    it('sets document.location.href to the plex://server/…/details URI on mobile', () => {
       const webUrl = 'https://app.plex.tv/desktop/#!/server/srv1/details?key=%2Flib%2F1';
       service.openLink(webUrl);
       expect(mockDocument.location!.href).toBe(
-        'plex://preplay?key=%2Flib%2F1&server=srv1',
+        'plex://server/srv1/details?key=%2Flib%2F1',
       );
     });
 
-    it('registers a visibilitychange listener on mobile', () => {
+    it('registers a blur listener on the window to cancel the fallback', () => {
       service.openLink('https://app.plex.tv');
-      expect(mockDocument.addEventListener).toHaveBeenCalledWith(
-        'visibilitychange',
+      expect(mockWindow.addEventListener).toHaveBeenCalledWith(
+        'blur',
         expect.any(Function),
         { once: true },
       );
     });
 
-    it('falls back to the web URL after 500 ms if page is still visible', async () => {
+    it('falls back to the web URL after 1 000 ms if page is still visible', async () => {
       vi.useFakeTimers();
       service.openLink('https://app.plex.tv');
       // Simulate page remaining visible
-      vi.advanceTimersByTime(500);
+      vi.advanceTimersByTime(1000);
       expect(openSpy).toHaveBeenCalledWith(
         'https://app.plex.tv',
         '_blank',
@@ -127,7 +133,7 @@ describe('PlexDeepLinkService', () => {
       // Make document.hidden return true → app opened
       Object.defineProperty(mockDocument, 'hidden', { value: true, configurable: true });
       service.openLink('https://app.plex.tv');
-      vi.advanceTimersByTime(500);
+      vi.advanceTimersByTime(1000);
       expect(openSpy).not.toHaveBeenCalled();
       vi.useRealTimers();
     });

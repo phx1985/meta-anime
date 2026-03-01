@@ -18,6 +18,13 @@ export class PopupService {
    */
   readonly childOverlayOpen = signal(false);
 
+  /**
+   * Set to `true` by the seasonal-card component when its "Add to Providers"
+   * modal is open.  Included in the global anyOverlayOpen check so the bottom
+   * nav bar is correctly hidden while the modal is visible.
+   */
+  readonly addProviderModalOpen = signal(false);
+
   // ── Disabled-provider interception modal ─────────────────────────────────────
 
   /** Which provider is currently blocked; `null` means the modal is closed. */

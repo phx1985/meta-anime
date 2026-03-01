@@ -427,6 +427,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
         try {
           const restored = JSON.parse(raw) as SavedFilterState;
           this.applyFilterState(restored);
+          this.activePresetName.set(restored.activePresetName ?? null);
           this.search();
         } catch {
           // Corrupt storage entry — silently discard.
@@ -464,6 +465,11 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.filterOpen.update((v) => !v);
   }
 
+  /** Clears the active preset name when the user manually modifies any filter. */
+  protected invalidatePreset(): void {
+    if (this.activePresetName()) this.activePresetName.set(null);
+  }
+
   // ── Advanced section collapse ─────────────────────────────────────────────
 
   toggleAdvanced(): void {
@@ -473,11 +479,13 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   // ── Sort order toggle ─────────────────────────────────────────────────────
 
   toggleSortOrder(): void {
+    this.invalidatePreset();
     this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
     if (this.searched()) this.loadAnimes(true);
   }
 
   onSortByChange(): void {
+    this.invalidatePreset();
     if (this.searched()) this.loadAnimes(true);
   }
 
@@ -500,6 +508,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   toggleGenre(genre: string, event: MouseEvent): void {
     event.stopPropagation();
+    this.invalidatePreset();
     this.filterGenre.update((v) => this.togglePill(v, genre));
     // Auto-reset operator to OR when ≤ 1 genre selected (operator toggle is hidden)
     if (this.filterGenre().length <= 1) this.genreOperator = 'or';
@@ -507,6 +516,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   clearGenres(event: MouseEvent): void {
     event.stopPropagation();
+    this.invalidatePreset();
     this.filterGenre.set([]);
   }
 
@@ -523,12 +533,14 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   toggleTheme(theme: string, event: MouseEvent): void {
     event.stopPropagation();
+    this.invalidatePreset();
     this.filterTheme.update((v) => this.togglePill(v, theme));
     if (this.filterTheme().length <= 1) this.themeOperator = 'or';
   }
 
   clearThemes(event: MouseEvent): void {
     event.stopPropagation();
+    this.invalidatePreset();
     this.filterTheme.set([]);
   }
 
@@ -545,12 +557,14 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   toggleDemographic(demographic: string, event: MouseEvent): void {
     event.stopPropagation();
+    this.invalidatePreset();
     this.filterDemographic.update((v) => this.togglePill(v, demographic));
     if (this.filterDemographic().length <= 1) this.demographicOperator = 'or';
   }
 
   clearDemographics(event: MouseEvent): void {
     event.stopPropagation();
+    this.invalidatePreset();
     this.filterDemographic.set([]);
   }
 
@@ -699,6 +713,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
       mediaType: this.filterMediaType.length ? this.filterMediaType : undefined,
       sortBy: this.sortBy !== 'title' ? this.sortBy : undefined,
       sortOrder: this.sortOrder !== 'asc' ? this.sortOrder : undefined,
+      activePresetName: this.activePresetName() ?? undefined,
     };
   }
 

@@ -112,4 +112,69 @@ describe('LuckyPickComponent', () => {
     comp.state.set('result' as never);
     expect(comp.isSpinning()).toBe(false);
   });
+
+  // ── Synopsis truncation tests ─────────────────────────────────────────────
+
+  it('should report isSynopsisTruncated=false when synopsis is short', () => {
+    const fixture = TestBed.createComponent(LuckyPickComponent);
+    const comp = fixture.componentInstance as unknown as {
+      isSynopsisTruncated: boolean;
+      result: { set: (v: unknown) => void };
+    };
+    comp.result.set({
+      title: 'Test',
+      malAnimes: [{ synopsis: 'Short text.' }],
+    } as never);
+    expect(comp.isSynopsisTruncated).toBe(false);
+  });
+
+  it('should report isSynopsisTruncated=false when synopsis is exactly 300 characters (boundary)', () => {
+    const fixture = TestBed.createComponent(LuckyPickComponent);
+    const comp = fixture.componentInstance as unknown as {
+      isSynopsisTruncated: boolean;
+      result: { set: (v: unknown) => void };
+    };
+    const boundaryText = 'A'.repeat(300);
+    comp.result.set({
+      title: 'Test',
+      malAnimes: [{ synopsis: boundaryText }],
+    } as never);
+    expect(comp.isSynopsisTruncated).toBe(false);
+  });
+
+  it('should report isSynopsisTruncated=true when synopsis exceeds threshold', () => {
+    const fixture = TestBed.createComponent(LuckyPickComponent);
+    const comp = fixture.componentInstance as unknown as {
+      isSynopsisTruncated: boolean;
+      result: { set: (v: unknown) => void };
+    };
+    const longText = 'A'.repeat(301);
+    comp.result.set({
+      title: 'Test',
+      malAnimes: [{ synopsis: longText }],
+    } as never);
+    expect(comp.isSynopsisTruncated).toBe(true);
+  });
+
+  it('should call popupService.openSynopsis with title and synopsis when openSynopsisModal is called', () => {
+    const fixture = TestBed.createComponent(LuckyPickComponent);
+    const comp = fixture.componentInstance as unknown as {
+      openSynopsisModal: () => void;
+      result: { set: (v: unknown) => void };
+      popupService: { openSynopsis: (t: string, b: string) => void };
+    };
+    comp.result.set({
+      title: 'My Anime',
+      malAnimes: [{ synopsis: 'Some synopsis text.', alternativeTitles: { en: 'My Anime EN' } }],
+    } as never);
+    let capturedTitle = '';
+    let capturedBody = '';
+    comp.popupService.openSynopsis = (t: string, b: string) => {
+      capturedTitle = t;
+      capturedBody = b;
+    };
+    comp.openSynopsisModal();
+    expect(capturedTitle).toBe('My Anime EN');
+    expect(capturedBody).toBe('Some synopsis text.');
+  });
 });

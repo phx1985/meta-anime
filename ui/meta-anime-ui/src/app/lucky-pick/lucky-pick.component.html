@@ -69,7 +69,26 @@
             }
           </div>
           @if (synopsis) {
-          <p class="lucky-result__synopsis">{{ synopsis }}</p>
+          <div class="lucky-result__synopsis-wrap">
+            <p
+              class="lucky-result__synopsis"
+              [class.lucky-result__synopsis--clickable]="isSynopsisTruncated"
+              [attr.role]="isSynopsisTruncated ? 'button' : null"
+              [attr.tabindex]="isSynopsisTruncated ? 0 : null"
+              (click)="isSynopsisTruncated && openSynopsisModal()"
+              (keydown.enter)="isSynopsisTruncated && openSynopsisModal()"
+              (keydown.space)="isSynopsisTruncated && openSynopsisModal($event)"
+            >{{ synopsis }}</p>
+            @if (isSynopsisTruncated) {
+              <button
+                type="button"
+                class="lucky-result__synopsis-toggle"
+                (click)="openSynopsisModal()"
+              >
+                {{ 'animeCard.seeMore' | translate }}
+              </button>
+            }
+          </div>
           }
           @if (pureGenres.length > 0) {
             <div class="lucky-genre-list">

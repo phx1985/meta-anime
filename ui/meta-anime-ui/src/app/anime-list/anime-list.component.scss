@@ -1692,12 +1692,13 @@
   display: none;
 
   @media (max-width: 639px) {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 1.25rem 0.5rem;
+    padding: 0.625rem 0.75rem;
     border-bottom: 1px solid var(--card-border);
     flex-shrink: 0;
+    min-height: 52px;
   }
 }
 
@@ -1705,24 +1706,58 @@
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
+  text-align: center;
 }
 
-.mobile-filter-sheet__close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+// Reset button — left side of the header
+.mobile-filter-sheet__reset {
+  display: none;
 
-  &:hover {
-    background: var(--bg-secondary);
-    color: var(--text-primary);
+  @media (max-width: 639px) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 44px;
+    padding: 0.25rem 0.5rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+
+    &:hover {
+      color: var(--text-primary);
+      background: var(--bg-secondary);
+    }
+  }
+}
+
+// Apply button — right side of the header
+.mobile-filter-sheet__apply {
+  display: none;
+
+  @media (max-width: 639px) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 44px;
+    padding: 0.25rem 0.5rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--accent-primary);
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    justify-self: end;
+    transition: background 0.15s, opacity 0.15s;
+
+    &:hover {
+      background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+    }
   }
 }
 
@@ -1744,7 +1779,7 @@
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
-  z-index: 1040;
+  z-index: 1060;
   display: flex;
   align-items: flex-end;
   justify-content: stretch;
