@@ -217,6 +217,8 @@ export interface FranchiseGraphNode {
   title: string;
   coverImageUrl?: string;
   isRoot: boolean;
+  /** True when this node has relations that were pruned (branch depth cap or 40-card limit). */
+  isTruncated?: boolean;
 }
 
 /** A directed edge in the franchise graph. */

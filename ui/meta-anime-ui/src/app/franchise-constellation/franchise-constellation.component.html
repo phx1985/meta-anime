@@ -79,7 +79,7 @@
         [style.width.px]="CANVAS_W"
         [style.height.px]="CANVAS_H"
       >
-        <!-- SVG layer for edges -->
+        <!-- SVG layer for edges + trunk bounding box -->
         <svg
           class="graph-svg"
           [attr.width]="CANVAS_W"
@@ -96,6 +96,26 @@
               <polygon points="0 0, 8 3, 0 6" class="graph-arrow-head graph-arrow-head--indirect" />
             </marker>
           </defs>
+
+          <!-- V9: Core Storyline bounding box (behind edges) -->
+          @if (trunkBbox()) {
+            <g class="trunk-bbox-group">
+              <rect
+                class="trunk-bbox"
+                [attr.x]="trunkBbox()!.x"
+                [attr.y]="trunkBbox()!.y"
+                [attr.width]="trunkBbox()!.w"
+                [attr.height]="trunkBbox()!.h"
+                rx="16"
+              />
+              <text
+                class="trunk-bbox-label"
+                [attr.x]="trunkBbox()!.x + 12"
+                [attr.y]="trunkBbox()!.y - 8"
+              >{{ 'franchise.mainStoryline' | translate }}</text>
+            </g>
+          }
+
           @for (edge of edges(); track $index) {
             <path
               [class]="edge.isCanonical ? 'graph-edge graph-edge--canonical' : 'graph-edge graph-edge--indirect'"
@@ -132,6 +152,10 @@
             <div class="node-meta">
               <span class="node-title">{{ node.title }}</span>
             </div>
+            <!-- V9: Truncation badge — shown when BFS pruned hidden relations -->
+            @if (node.isTruncated) {
+              <div class="node-truncated-badge" [title]="'franchise.truncated' | translate" aria-hidden="true">•••</div>
+            }
           </div>
         }
       </div>

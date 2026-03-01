@@ -503,6 +503,8 @@
         "close": "Fermer",
         "viewButton": "Voir la Constellation de Franchise",
         "openOnMal": "Ouvrir {{title}} sur MyAnimeList",
+        "mainStoryline": "Histoire Principale",
+        "truncated": "Plus…",
         "legend": {
             "title": "Légende",
             "canonical": "Préquelle / Suite",

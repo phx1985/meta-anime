@@ -15,39 +15,25 @@ import { FranchiseConstellationService } from '../services/franchise-constellati
 import { PopupService } from '../services/popup.service';
 import { FranchiseGraph, FranchiseGraphEdge, FranchiseGraphNode } from '../models/anime.models';
 
-// ── Layout constants (V6: massive spacing / fishbone layout) ─────────────────
+// ── Layout constants (V9: uniform card sizes + fishbone layout) ──────────────
 const NODE_W = 144;
 const NODE_H = 200;
-const CENTER_W = 160;
-const CENTER_H = 224;
-/** V6: massive horizontal gap so arrows are clearly visible between cards. */
+/** V9: All nodes use the same size — root is highlighted via glow only. */
 const H_GAP = 200;
-/** V6: generous vertical gap between branch stacks. */
 const V_GAP = 80;
-/** Canvas outer padding. */
 const PADDING = 120;
-/** V6: large canvas to accommodate big franchises without clipping. */
 const CANVAS_W = 8000;
 const CANVAS_H = 6000;
-/** Y-coordinate of the centre of the horizontal trunk spine. */
 const TRUNK_CENTER_Y = CANVAS_H / 2;
-/** Pixel budget at the edge of the viewport used as margin when auto-fitting. */
 const FIT_MARGIN = 60;
-/** Approximate header height used when computing the available viewport height. */
 const HEADER_APPROX_H = 90;
-/** Minimum pointer movement before we commit to a drag gesture (vs. click). */
 const DRAG_THRESHOLD = 5;
-
-/** Minimum pinch/wheel zoom level (must match auto-fit lower bound). */
 const MIN_SCALE = 0.05;
-/** Maximum pinch/wheel zoom level. */
 const MAX_SCALE = 3;
-const TRUNK_TYPES = new Set(['prequel', 'sequel']);
+/** Padding around the trunk bounding box outline. */
+const TRUNK_BBOX_PAD = 24;
 
-/**
- * V6: STRICT trunk types — only direct prequel/sequel edges form the horizontal spine.
- * parent_story, spin_off, etc. are treated as branches.
- */
+const TRUNK_TYPES = new Set(['prequel', 'sequel']);
 const CANONICAL_TYPES = new Set(['prequel', 'sequel', 'parent_story']);
 
 function isCanonicalRelation(relationType: string | undefined): boolean {
@@ -118,6 +104,37 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
         isCanonical: isCanonicalRelation(e.relationType),
       }))
       .filter((e) => e.d !== '');
+  });
+
+  /**
+   * Bounding box around the trunk (main storyline) nodes, used to render
+   * the "Core Storyline" highlight rectangle in the SVG layer.
+   * Returns null when there are no trunk nodes yet.
+   */
+  protected trunkBbox = computed<{ x: number; y: number; w: number; h: number } | null>(() => {
+    const g = this.svc.graph();
+    const pos = this.nodePositions();
+    if (!g) return null;
+
+    const trunkIds = this._computeTrunkNodeIds(g);
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    for (const malId of trunkIds) {
+      const p = pos.get(malId);
+      if (!p) continue;
+      if (p.x < minX) minX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.x + NODE_W > maxX) maxX = p.x + NODE_W;
+      if (p.y + NODE_H > maxY) maxY = p.y + NODE_H;
+    }
+
+    if (!isFinite(minX)) return null;
+    return {
+      x: minX - TRUNK_BBOX_PAD,
+      y: minY - TRUNK_BBOX_PAD,
+      w: maxX - minX + TRUNK_BBOX_PAD * 2,
+      h: maxY - minY + TRUNK_BBOX_PAD * 2,
+    };
   });
 
   // ── Pointer state ─────────────────────────────────────────────────────────
@@ -297,30 +314,18 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     return this.svc.graph()?.nodes.find((n) => n.isRoot)?.title;
   }
 
-  // ── V6 Fishbone "Trunk and Branch" layout ─────────────────────────────────
+  // ── V9 Fishbone "Trunk and Branch" layout ─────────────────────────────────
 
   /**
-   * Positions every node using a strict fishbone layout:
-   *
-   *  • Phase 1 — Trunk: BFS along prequel/sequel edges only.
-   *    All trunk nodes share the same Y = TRUNK_CENTER_Y.
-   *    Their X increases left-to-right with massive H_GAP spacing.
-   *
-   *  • Phase 2 — Branches: every non-trunk node is placed directly
-   *    above or below the trunk node it is most closely related to,
-   *    using alternating above/below placement with V_GAP spacing.
-   *
-   * Branch nodes that share an anchor trunk column are spread vertically
-   * so they never overlap.
+   * Runs trunk BFS following only prequel/sequel edges from root.
+   * Returns Map<malId, rawColumn> where column 0 = root's column.
+   * Shared by the layout algorithm and the trunk bounding-box computed signal.
    */
-  private _computeFishbonePositions(graph: FranchiseGraph): Map<string, { x: number; y: number }> {
-    const positions = new Map<string, { x: number; y: number }>();
-
-    // ── Phase 1: Trunk BFS (prequel/sequel only) ──────────────────────────
-    const trunkCols = new Map<string, number>(); // malId → raw trunk column
+  private _computeTrunkCols(graph: FranchiseGraph): Map<string, number> {
+    const trunkCols = new Map<string, number>();
     trunkCols.set(graph.rootMalId, 0);
     const bfsQ = [graph.rootMalId];
-    const trunkVisited = new Set<string>([graph.rootMalId]);
+    const visited = new Set<string>([graph.rootMalId]);
 
     while (bfsQ.length > 0) {
       const cur = bfsQ.shift()!;
@@ -334,52 +339,56 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
 
         if (edge.fromMalId === cur) {
           neighborId = edge.toMalId;
-          // 'sequel' from cur → neighbor is later (+1), 'prequel' → neighbor is earlier (-1)
           delta = edge.relationType === 'sequel' ? 1 : -1;
         } else if (edge.toMalId === cur) {
           neighborId = edge.fromMalId;
-          // 'sequel' INTO cur → neighbor is earlier (-1), 'prequel' INTO cur → neighbor is later (+1)
           delta = edge.relationType === 'sequel' ? -1 : 1;
         } else {
           continue;
         }
 
-        if (!trunkVisited.has(neighborId)) {
-          trunkVisited.add(neighborId);
+        if (!visited.has(neighborId)) {
+          visited.add(neighborId);
           trunkCols.set(neighborId, curCol + delta);
           bfsQ.push(neighborId);
         }
       }
     }
+    return trunkCols;
+  }
 
-    // Normalise so the leftmost trunk column = 0
+  /** Returns the set of trunk node IDs (used by the `trunkBbox` computed signal). */
+  private _computeTrunkNodeIds(graph: FranchiseGraph): Set<string> {
+    return new Set(this._computeTrunkCols(graph).keys());
+  }
+
+  /**
+   * Positions every node using a strict fishbone layout.
+   * V9: All nodes use NODE_W × NODE_H (uniform grid — root is NOT larger).
+   */
+  private _computeFishbonePositions(graph: FranchiseGraph): Map<string, { x: number; y: number }> {
+    const positions = new Map<string, { x: number; y: number }>();
+
+    // ── Phase 1: Trunk placement ──────────────────────────────────────────
+    // Reuse _computeTrunkCols to avoid duplicating the BFS logic.
+    const trunkCols = this._computeTrunkCols(graph);
     const colValues = Array.from(trunkCols.values());
     const minCol = Math.min(...colValues);
 
-    // Place trunk nodes on the horizontal spine
-    const trunkXByMalId = new Map<string, number>(); // malId → canvas X
     for (const [malId, rawCol] of trunkCols) {
       const col = rawCol - minCol;
-      const node = graph.nodes.find((n) => n.malId === malId);
-      const nodeH = node?.isRoot ? CENTER_H : NODE_H;
       const x = PADDING + col * (NODE_W + H_GAP);
-      const y = TRUNK_CENTER_Y - nodeH / 2; // vertically centred on the spine
+      const y = TRUNK_CENTER_Y - NODE_H / 2;
       positions.set(malId, { x, y });
-      trunkXByMalId.set(malId, x);
     }
 
     // ── Phase 2: Branch nodes ─────────────────────────────────────────────
     const trunkNodeIds = new Set(trunkCols.keys());
     const branchNodes = graph.nodes
       .filter((n) => !trunkNodeIds.has(n.malId))
-      .sort((a, b) => a.malId.localeCompare(b.malId)); // stable deterministic ordering
+      .sort((a, b) => a.malId.localeCompare(b.malId));
 
-    /**
-     * Finds the trunk node most directly connected to `branchMalId`.
-     * Searches 1 hop first, then 2 hops, then falls back to root.
-     */
     const findTrunkAnchor = (branchMalId: string): string => {
-      // 1-hop: direct edge to any trunk node
       for (const edge of graph.edges) {
         const nbr =
           edge.fromMalId === branchMalId
@@ -389,7 +398,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
               : null;
         if (nbr && trunkNodeIds.has(nbr)) return nbr;
       }
-      // 2-hop: via an intermediate non-trunk node
       for (const edge1 of graph.edges) {
         const hop1 =
           edge1.fromMalId === branchMalId
@@ -408,10 +416,9 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
           if (hop2 && trunkNodeIds.has(hop2)) return hop2;
         }
       }
-      return graph.rootMalId; // fallback
+      return graph.rootMalId;
     };
 
-    // Track how many branches have been placed above/below each anchor
     const aboveCount = new Map<string, number>();
     const belowCount = new Map<string, number>();
 
@@ -423,16 +430,13 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
       const a = aboveCount.get(anchorId) ?? 0;
       const b = belowCount.get(anchorId) ?? 0;
 
-      // Alternate: if equal counts, go above first
       const goAbove = a <= b;
       let y: number;
 
       if (goAbove) {
-        // above[k]: top-left y = TRUNK_CENTER_Y - NODE_H/2 - (k+1)*(NODE_H + V_GAP)
         y = TRUNK_CENTER_Y - NODE_H / 2 - (a + 1) * (NODE_H + V_GAP);
         aboveCount.set(anchorId, a + 1);
       } else {
-        // below[k]: top-left y = TRUNK_CENTER_Y + NODE_H/2 + V_GAP + k*(NODE_H + V_GAP)
         y = TRUNK_CENTER_Y + NODE_H / 2 + V_GAP + b * (NODE_H + V_GAP);
         belowCount.set(anchorId, b + 1);
       }
@@ -455,7 +459,7 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
    */
   private _fitCameraToNodes(
     pos: Map<string, { x: number; y: number }>,
-    graph: FranchiseGraph,
+    _graph: FranchiseGraph,
   ): void {
     if (pos.size === 0) return;
 
@@ -464,14 +468,11 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
       maxX = -Infinity,
       maxY = -Infinity;
 
-    for (const [malId, p] of pos) {
-      const node = graph.nodes.find((n) => n.malId === malId);
-      const w = node?.isRoot ? CENTER_W : NODE_W;
-      const h = node?.isRoot ? CENTER_H : NODE_H;
+    for (const [, p] of pos) {
       if (p.x < minX) minX = p.x;
       if (p.y < minY) minY = p.y;
-      if (p.x + w > maxX) maxX = p.x + w;
-      if (p.y + h > maxY) maxY = p.y + h;
+      if (p.x + NODE_W > maxX) maxX = p.x + NODE_W;
+      if (p.y + NODE_H > maxY) maxY = p.y + NODE_H;
     }
 
     // Add breathing room around the bounding box
@@ -517,17 +518,12 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     const toPos = pos.get(edge.toMalId);
     if (!fromPos || !toPos) return '';
 
-    const fromW = fromNode.isRoot ? CENTER_W : NODE_W;
-    const fromH = fromNode.isRoot ? CENTER_H : NODE_H;
-    const toW = toNode.isRoot ? CENTER_W : NODE_W;
-    const toH = toNode.isRoot ? CENTER_H : NODE_H;
+    // V9: all nodes same size — uniform NODE_W x NODE_H
+    const x1 = fromPos.x + NODE_W / 2;
+    const y1 = fromPos.y + NODE_H / 2;
+    const x2 = toPos.x + NODE_W / 2;
+    const y2 = toPos.y + NODE_H / 2;
 
-    const x1 = fromPos.x + fromW / 2;
-    const y1 = fromPos.y + fromH / 2;
-    const x2 = toPos.x + toW / 2;
-    const y2 = toPos.y + toH / 2;
-
-    // Smooth Bézier: horizontal control points for trunk edges, curved for branches
     const cx = (x1 + x2) / 2;
     return `M ${x1} ${y1} C ${cx} ${y1} ${cx} ${y2} ${x2} ${y2}`;
   }
