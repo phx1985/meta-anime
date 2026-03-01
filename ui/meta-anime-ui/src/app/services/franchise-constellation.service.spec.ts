@@ -149,4 +149,93 @@ describe('FranchiseConstellationService', () => {
       expect(nodeIds).toContain('C');
     });
   });
+
+  // ── True root detection ────────────────────────────────────────────────────
+
+  describe('true root detection', () => {
+    it('marks the node with no prequels as root when opening from a sequel', async () => {
+      // Chain: A → B → C  (A is oldest, C is clicked)
+      animeServiceMock.getFranchiseConstellation.mockImplementation((id: string) => {
+        if (id === 'C') return of(makeApiNode('C', [{ malId: 'B', relationType: 'prequel' }]));
+        if (id === 'B')
+          return of(
+            makeApiNode('B', [
+              { malId: 'A', relationType: 'prequel' },
+              { malId: 'C', relationType: 'sequel' },
+            ]),
+          );
+        return of(makeApiNode(id, [])); // A has no relations
+      });
+
+      service.open('C', 'Anime C');
+      await vi.runAllTimersAsync();
+
+      const root = service.graph()!.nodes.find((n) => n.isRoot);
+      expect(root?.malId).toBe('A');
+    });
+
+    it('marks rootMalId to the true root', async () => {
+      animeServiceMock.getFranchiseConstellation.mockImplementation((id: string) => {
+        if (id === 'B') return of(makeApiNode('B', [{ malId: 'A', relationType: 'prequel' }]));
+        return of(makeApiNode(id, []));
+      });
+
+      service.open('B', 'Anime B');
+      await vi.runAllTimersAsync();
+
+      expect(service.graph()!.rootMalId).toBe('A');
+    });
+  });
+
+  // ── Chronological node ordering ────────────────────────────────────────────
+
+  describe('chronological node ordering', () => {
+    it('places the oldest prequel first in graph.nodes', async () => {
+      // Click B; B has prequel A and sequel C → expected order: A, B, C
+      animeServiceMock.getFranchiseConstellation.mockImplementation((id: string) => {
+        if (id === 'B')
+          return of(
+            makeApiNode('B', [
+              { malId: 'A', relationType: 'prequel' },
+              { malId: 'C', relationType: 'sequel' },
+            ]),
+          );
+        return of(makeApiNode(id, []));
+      });
+
+      service.open('B', 'Anime B');
+      await vi.runAllTimersAsync();
+
+      const ids = service.graph()!.nodes.map((n) => n.malId);
+      expect(ids).toEqual(['A', 'B', 'C']);
+    });
+
+    it('returns nodes in ascending sequel order for a linear chain', async () => {
+      // Chain: A → B → C → D opened from D
+      animeServiceMock.getFranchiseConstellation.mockImplementation((id: string) => {
+        if (id === 'D') return of(makeApiNode('D', [{ malId: 'C', relationType: 'prequel' }]));
+        if (id === 'C')
+          return of(
+            makeApiNode('C', [
+              { malId: 'B', relationType: 'prequel' },
+              { malId: 'D', relationType: 'sequel' },
+            ]),
+          );
+        if (id === 'B')
+          return of(
+            makeApiNode('B', [
+              { malId: 'A', relationType: 'prequel' },
+              { malId: 'C', relationType: 'sequel' },
+            ]),
+          );
+        return of(makeApiNode(id, [])); // A
+      });
+
+      service.open('D', 'Anime D');
+      await vi.runAllTimersAsync();
+
+      const ids = service.graph()!.nodes.map((n) => n.malId);
+      expect(ids).toEqual(['A', 'B', 'C', 'D']);
+    });
+  });
 });

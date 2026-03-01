@@ -152,13 +152,8 @@ export class FranchiseConstellationService {
         // Persist updated node (with truncation flag if needed)
         nodesMap.set(item.malId, { ...updatedNode, ...(hasHiddenRelations && { isTruncated: true }) });
 
-        // Update progress counter and emit partial graph for UI feedback
+        // Update progress counter only — full graph emitted once BFS completes
         this.loadingCount.set(visited.size);
-        this.graph.set({
-          rootMalId,
-          nodes: Array.from(nodesMap.values()),
-          edges: Array.from(edgesMap.values()),
-        });
 
         // Respect MAL API rate limit — 200 ms between calls
         if (queue.length > 0 && !signal.aborted) {
@@ -172,11 +167,7 @@ export class FranchiseConstellationService {
     }
 
     if (!signal.aborted) {
-      const finalGraph: FranchiseGraph = {
-        rootMalId,
-        nodes: Array.from(nodesMap.values()),
-        edges: Array.from(edgesMap.values()),
-      };
+      const finalGraph = this._buildFinalGraph(rootMalId, nodesMap, edgesMap);
       this.cache.set(rootMalId, finalGraph);
       this.graph.set(finalGraph);
       this.loading.set(false);
@@ -206,5 +197,90 @@ export class FranchiseConstellationService {
         reject(new DOMException('BFS aborted', 'AbortError'));
       });
     });
+  }
+
+  // ── Graph finalisation helpers ────────────────────────────────────────────────
+
+  /**
+   * Assigns a chronological column number to every node reachable via
+   * prequel/sequel edges from `startId`.
+   * sequel neighbour → current col + 1, prequel neighbour → current col − 1.
+   */
+  private _computeTrunkCols(
+    edges: FranchiseGraphEdge[],
+    startId: string,
+  ): Map<string, number> {
+    const cols = new Map<string, number>([[startId, 0]]);
+    const queue = [startId];
+    const visited = new Set<string>([startId]);
+
+    while (queue.length > 0) {
+      const cur = queue.shift()!;
+      const curCol = cols.get(cur) ?? 0;
+
+      for (const edge of edges) {
+        if (!TRUNK_RELATION_TYPES.has(edge.relationType ?? '')) continue;
+
+        let neighborId: string;
+        let delta: number;
+
+        if (edge.fromMalId === cur) {
+          neighborId = edge.toMalId;
+          delta = edge.relationType === 'sequel' ? 1 : -1;
+        } else if (edge.toMalId === cur) {
+          neighborId = edge.fromMalId;
+          delta = edge.relationType === 'sequel' ? -1 : 1;
+        } else {
+          continue;
+        }
+
+        if (!visited.has(neighborId)) {
+          visited.add(neighborId);
+          cols.set(neighborId, curCol + delta);
+          queue.push(neighborId);
+        }
+      }
+    }
+    return cols;
+  }
+
+  /**
+   * Produces the definitive FranchiseGraph from the BFS-collected maps:
+   * 1. Computes trunk columns to determine every node's chronological position.
+   * 2. Identifies the true root — the node with the lowest (oldest) column value.
+   * 3. Sorts nodes in ascending chronological order (oldest at index 0).
+   * 4. Updates `isRoot` flags and `rootMalId` to reflect the true root.
+   */
+  private _buildFinalGraph(
+    clickedRootMalId: string,
+    nodesMap: Map<string, FranchiseGraphNode>,
+    edgesMap: Map<string, FranchiseGraphEdge>,
+  ): FranchiseGraph {
+    const edges = Array.from(edgesMap.values());
+    const trunkCols = this._computeTrunkCols(edges, clickedRootMalId);
+
+    // True root = node with the smallest (most-negative) column value
+    let trueRootId = clickedRootMalId;
+    let minCol = trunkCols.get(clickedRootMalId) ?? 0;
+    for (const [malId, col] of trunkCols) {
+      if (col < minCol) {
+        minCol = col;
+        trueRootId = malId;
+      }
+    }
+
+    // Sort nodes chronologically; malId is a stable tiebreaker within the same column
+    const sortedNodes = Array.from(nodesMap.values()).sort((a, b) => {
+      const colA = trunkCols.get(a.malId) ?? 0;
+      const colB = trunkCols.get(b.malId) ?? 0;
+      if (colA !== colB) return colA - colB;
+      return a.malId.localeCompare(b.malId);
+    });
+
+    return {
+      rootMalId: trueRootId,
+      nodes: sortedNodes.map((n) => ({ ...n, isRoot: n.malId === trueRootId })),
+      edges,
+    };
   }
 }
