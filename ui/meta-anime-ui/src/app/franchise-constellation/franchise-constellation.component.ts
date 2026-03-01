@@ -124,13 +124,20 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
 
       const newPositions = this._computeTimelinePositions(g);
 
-      // Merge: only insert nodes that don't already have a position and were
-      // not manually repositioned by the user.
+      // Replace all auto-layout positions so that column shifts caused by newly-
+      // discovered prequels are reflected immediately (prevents coordinate sharing).
+      // Manually-dragged nodes are the only exception — their positions are preserved.
       let merged: Map<string, { x: number; y: number }> | undefined;
       this.nodePositions.update((current) => {
-        const m = new Map(current);
+        const m = new Map<string, { x: number; y: number }>();
+        // Preserve manually-dragged positions as-is
+        for (const malId of this.manuallyDraggedIds) {
+          const p = current.get(malId);
+          if (p) m.set(malId, p);
+        }
+        // Apply fresh computed positions for every auto-layout node
         for (const [malId, pos] of newPositions) {
-          if (!m.has(malId) && !this.manuallyDraggedIds.has(malId)) {
+          if (!this.manuallyDraggedIds.has(malId)) {
             m.set(malId, pos);
           }
         }
@@ -412,14 +419,15 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     const toPos = pos.get(edge.toMalId);
     if (!fromPos || !toPos) return '';
 
-    // V9: all nodes same size — uniform NODE_W x NODE_H
-    const x1 = fromPos.x + NODE_W / 2;
-    const y1 = fromPos.y + NODE_H / 2;
-    const x2 = toPos.x + NODE_W / 2;
-    const y2 = toPos.y + NODE_H / 2;
-
-    const cx = (x1 + x2) / 2;
-    return `M ${x1} ${y1} C ${cx} ${y1} ${cx} ${y2} ${x2} ${y2}`;
+    // All nodes share the same y row.  Draw a left-to-right horizontal line
+    // connecting the right edge of the left card to the left edge of the right card
+    // so arrows never overlap a card and always point in the reading direction.
+    const leftPos = fromPos.x <= toPos.x ? fromPos : toPos;
+    const rightPos = fromPos.x <= toPos.x ? toPos : fromPos;
+    const lx = leftPos.x + NODE_W;   // right edge of left card
+    const rx = rightPos.x;           // left edge of right card
+    const y = leftPos.y + NODE_H / 2;
+    return `M ${lx} ${y} L ${rx} ${y}`;
   }
 
   private _touchDist(event: TouchEvent): number {
