@@ -17,6 +17,7 @@ import { AnimeService } from '../services/anime.service';
 import { UserPreferencesService } from '../services/user-preferences.service';
 import { ProviderStateService } from '../services/provider-state.service';
 import { PlexDeepLinkService } from '../services/plex-deep-link.service';
+import { PopupService } from '../services/popup.service';
 import { AnimeDetailsResponse, AnimeFilters, MalAnimeInfo } from '../models/anime.models';
 import { ScoreBadgeComponent } from '../anime-list/anime-card/score-badge/score-badge.component';
 import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../constants/genre-lists';
@@ -39,6 +40,10 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
   private providerState = inject(ProviderStateService);
   private translate = inject(TranslateService);
   private plexDeepLink = inject(PlexDeepLinkService);
+  private popupService = inject(PopupService);
+
+  /** Minimum character count above which the synopsis is considered truncated. */
+  private static readonly SYNOPSIS_TRUNCATE_THRESHOLD = 300;
 
   protected state = signal<LuckyState>('idle');
   protected result = signal<AnimeDetailsResponse | null>(null);
@@ -102,6 +107,15 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
     const a = this.anime;
     if (!a) return '';
     return a.malAnimes?.[0]?.synopsis ?? a.description ?? '';
+  }
+
+  protected get isSynopsisTruncated(): boolean {
+    return this.synopsis.length > LuckyPickComponent.SYNOPSIS_TRUNCATE_THRESHOLD;
+  }
+
+  protected openSynopsisModal(event?: Event): void {
+    event?.preventDefault();
+    this.popupService.openSynopsis(this.title, this.synopsis);
   }
 
   protected get malUrl(): string | null {

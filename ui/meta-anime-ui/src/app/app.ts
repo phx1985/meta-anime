@@ -14,6 +14,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { UpperCasePipe } from '@angular/common';
 import { filter } from 'rxjs/operators';
 import { ThemeService } from './services/theme.service';
 import { SettingsService } from './services/settings.service';
@@ -27,7 +28,7 @@ import { LuckyPickComponent } from './lucky-pick/lucky-pick.component';
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent, UpperCasePipe],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -56,6 +57,14 @@ export class App implements OnInit, AfterViewInit {
   /** Prevent rapid-fire clicks from re-opening while already open */
   private luckyPickBusy = false;
 
+  /** Available languages for the dropdown */
+  protected readonly availableLanguages: ReadonlyArray<{ code: string; label: string }> = [
+    { code: 'en', label: 'English' },
+    { code: 'fr', label: 'Français' },
+  ];
+  /** True while the language dropdown is open */
+  protected langDropdownOpen = signal<boolean>(false);
+
   /** Provider home-page URLs (populated from settings) */
   protected plexHomeUrl = signal<string | null>(null);
   protected sonarrHomeUrl = signal<string | null>(null);
@@ -65,14 +74,16 @@ export class App implements OnInit, AfterViewInit {
   protected bottomNavHidden = signal<boolean>(false);
   /**
    * True whenever any overlay / bottom-sheet / modal is open.
-   * Combines signals from this component (Lucky Pick) and from PopupService
-   * (disabled-provider, synopsis, sync-prompt modals, and the child-component
-   * filter / presets sheets registered via `childOverlayOpen`).
+   * Combines signals from this component (Lucky Pick, side drawer) and from
+   * PopupService (disabled-provider, synopsis, sync-prompt modals, and the
+   * child-component filter / presets sheets registered via `childOverlayOpen`).
    */
   protected anyOverlayOpen = computed(
     () =>
       this.luckyPickOpen() ||
+      this.menuOpen() ||
       this.popupService.childOverlayOpen() ||
+      this.popupService.addProviderModalOpen() ||
       !!this.popupService.disabledProvider() ||
       !!this.popupService.synopsisTitle() ||
       !!this.popupService.syncPromptProvider(),
@@ -236,10 +247,25 @@ export class App implements OnInit, AfterViewInit {
     this.lastScrollY = currentY;
   }
 
-  /** Close notification center when clicking anywhere outside it */
+  /**
+   * Touch-move guard: if any overlay is open, force the bottom nav hidden.
+   * This catches the case where scroll events are not fired (e.g. overscroll
+   * or rubber-banding on iOS) but the user is still swiping.
+   */
+  @HostListener('window:touchmove')
+  @HostListener('window:touchstart')
+  onWindowTouch(): void {
+    if (this.anyOverlayOpen()) {
+      this.bottomNavHidden.set(true);
+      this.lastScrollY = window.scrollY;
+    }
+  }
+
+  /** Close notification center and lang dropdown when clicking anywhere outside */
   @HostListener('document:click')
   onDocumentClick(): void {
     this.notifCenterOpen.set(false);
+    this.langDropdownOpen.set(false);
   }
 
   toggleNotifCenter(event: Event): void {
@@ -369,10 +395,20 @@ export class App implements OnInit, AfterViewInit {
     setTimeout(() => this.syncToastTop(), App.NAVBAR_COLLAPSE_MS);
   }
 
-  switchLanguage(): void {
-    const next = this.currentLang() === 'en' ? 'fr' : 'en';
+  switchLanguage(code?: string): void {
+    const next = code ?? (this.currentLang() === 'en' ? 'fr' : 'en');
     this.currentLang.set(next);
     this.translate.use(next);
+    this.langDropdownOpen.set(false);
+  }
+
+  toggleLangDropdown(event: Event): void {
+    event.stopPropagation();
+    this.langDropdownOpen.update((v) => !v);
+  }
+
+  closeLangDropdown(): void {
+    this.langDropdownOpen.set(false);
   }
 
   /** Called when the user clicks × on a notification-center item. */

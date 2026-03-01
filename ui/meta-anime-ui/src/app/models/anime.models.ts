@@ -147,6 +147,8 @@ export interface SavedFilterState {
   mediaType?: string[];
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+  /** Name of the active preset when the state was saved; absent when no preset was active. */
+  activePresetName?: string;
 }
 
 export interface FilterPreset {

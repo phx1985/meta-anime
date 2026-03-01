@@ -195,4 +195,127 @@ describe('AnimeListComponent', () => {
     expect(comp.filterOpen()).toBe(false);
     httpMock.expectOne((r) => r.url.includes('/api/v1/animes')).flush(emptyResponse);
   });
+
+  // ── Preset persistence tests ─────────────────────────────────────────────
+
+  it('should include activePresetName in saved filter snapshot when a preset is active', () => {
+    comp.activePresetName.set('My Preset');
+    comp.search();
+    httpMock.expectOne((r) => r.url.includes('/api/v1/animes')).flush(emptyResponse);
+
+    const raw = localStorage.getItem('meta-anime:lastUsedFilters');
+    expect(raw).toBeTruthy();
+    const snapshot = JSON.parse(raw!);
+    expect(snapshot.activePresetName).toBe('My Preset');
+  });
+
+  it('should not include activePresetName in saved snapshot when no preset is active', () => {
+    comp.activePresetName.set(null);
+    comp.search();
+    httpMock.expectOne((r) => r.url.includes('/api/v1/animes')).flush(emptyResponse);
+
+    const raw = localStorage.getItem('meta-anime:lastUsedFilters');
+    const snapshot = JSON.parse(raw!);
+    expect(snapshot.activePresetName).toBeUndefined();
+  });
+
+  it('should restore activePresetName from localStorage on init when autoApply is enabled', () => {
+    // The restore logic runs in the constructor, which already ran in beforeEach.
+    // Verify instead by directly testing that snapshotFilters() includes the preset name
+    // (the round-trip: save → restore → save again would carry the preset name through).
+    comp.activePresetName.set('Saved Preset');
+    comp.search();
+    httpMock.expectOne((r) => r.url.includes('/api/v1/animes')).flush(emptyResponse);
+
+    // Simulate what the constructor reads back on next init
+    const raw = localStorage.getItem('meta-anime:lastUsedFilters')!;
+    const snapshot = JSON.parse(raw);
+    // The restored value matches what was saved
+    expect(snapshot.activePresetName).toBe('Saved Preset');
+  });
+
+  it('should clear activePresetName when toggleGenre is called while preset is active', () => {
+    comp.activePresetName.set('Some Preset');
+    const fakeEvent = { stopPropagation: () => {} } as MouseEvent;
+    comp.toggleGenre('Action', fakeEvent);
+    expect(comp.activePresetName()).toBeNull();
+  });
+
+  it('should clear activePresetName when toggleTheme is called while preset is active', () => {
+    comp.activePresetName.set('Some Preset');
+    const fakeEvent = { stopPropagation: () => {} } as MouseEvent;
+    comp.toggleTheme('Mecha', fakeEvent);
+    expect(comp.activePresetName()).toBeNull();
+  });
+
+  it('should clear activePresetName when toggleDemographic is called while preset is active', () => {
+    comp.activePresetName.set('Some Preset');
+    const fakeEvent = { stopPropagation: () => {} } as MouseEvent;
+    comp.toggleDemographic('Shounen', fakeEvent);
+    expect(comp.activePresetName()).toBeNull();
+  });
+
+  it('should clear activePresetName when toggleSortOrder is called while preset is active', () => {
+    comp.activePresetName.set('Some Preset');
+    comp.toggleSortOrder();
+    expect(comp.activePresetName()).toBeNull();
+  });
+
+  it('should clear activePresetName when onSortByChange is called while preset is active', () => {
+    comp.activePresetName.set('Some Preset');
+    comp.onSortByChange();
+    expect(comp.activePresetName()).toBeNull();
+  });
+
+  it('should NOT clear activePresetName when no preset is active (invalidate is a no-op)', () => {
+    comp.activePresetName.set(null);
+    const fakeEvent = { stopPropagation: () => {} } as MouseEvent;
+    comp.toggleGenre('Action', fakeEvent);
+    expect(comp.activePresetName()).toBeNull();
+  });
+});
+
+describe('AnimeListComponent – constructor restore of activePresetName', () => {
+  let httpMock: HttpTestingController;
+
+  beforeEach(async () => {
+    // Set localStorage BEFORE the component is instantiated so the constructor picks it up
+    localStorage.setItem(
+      'meta-anime:lastUsedFilters',
+      JSON.stringify({ activePresetName: 'Constructor Preset' }),
+    );
+    localStorage.setItem('meta-anime:autoApplyLastFilters', 'true');
+
+    await TestBed.configureTestingModule({
+      imports: [AnimeListComponent],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        provideAnimations(),
+        provideTranslateService({ fallbackLang: 'en' }),
+      ],
+    }).compileComponents();
+
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    localStorage.removeItem('meta-anime:lastUsedFilters');
+    localStorage.removeItem('meta-anime:autoApplyLastFilters');
+    httpMock.verify();
+  });
+
+  it('should bind activePresetName from localStorage during construction', () => {
+    const fixture2 = TestBed.createComponent(AnimeListComponent);
+    const comp2 = fixture2.componentInstance;
+
+    // Constructor triggers auto-apply which calls search()
+    httpMock.match((r) => r.url.includes('/api/v1/settings')).forEach((r) => r.flush([]));
+    httpMock.match((r) => r.url.includes('/api/v1/animes')).forEach((r) =>
+      r.flush({ data: [], page: 1, pageSize: 20, totalCount: 0, totalPages: 0, hasNextPage: false, hasPreviousPage: false }),
+    );
+
+    expect(comp2.activePresetName()).toBe('Constructor Preset');
+  });
 });

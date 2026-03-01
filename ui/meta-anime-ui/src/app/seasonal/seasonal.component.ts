@@ -477,6 +477,11 @@ export class SeasonalComponent {
 
   // ── Genre / Theme / Demographic popups ───────────────────────────────────
 
+  /** Clears the active preset name when the user manually modifies any filter. */
+  private invalidatePreset(): void {
+    if (this.activePresetName()) this.activePresetName.set(null);
+  }
+
   toggleGenreDropdown(event: MouseEvent): void {
     event.stopPropagation();
     this.genreDropdownOpen = !this.genreDropdownOpen;
@@ -488,6 +493,7 @@ export class SeasonalComponent {
 
   toggleGenre(genre: string, event: MouseEvent): void {
     event.stopPropagation();
+    this.invalidatePreset();
     this.filterGenre.update((v) =>
       v.includes(genre) ? v.filter((g) => g !== genre) : [...v, genre],
     );
@@ -496,6 +502,7 @@ export class SeasonalComponent {
 
   clearGenres(event: MouseEvent): void {
     event.stopPropagation();
+    this.invalidatePreset();
     this.filterGenre.set([]);
   }
 
@@ -512,6 +519,7 @@ export class SeasonalComponent {
 
   toggleTheme(theme: string, event: MouseEvent): void {
     event.stopPropagation();
+    this.invalidatePreset();
     this.filterTheme.update((v) =>
       v.includes(theme) ? v.filter((t) => t !== theme) : [...v, theme],
     );
@@ -520,6 +528,7 @@ export class SeasonalComponent {
 
   clearThemes(event: MouseEvent): void {
     event.stopPropagation();
+    this.invalidatePreset();
     this.filterTheme.set([]);
   }
 
@@ -536,6 +545,7 @@ export class SeasonalComponent {
 
   toggleDemographic(demographic: string, event: MouseEvent): void {
     event.stopPropagation();
+    this.invalidatePreset();
     this.filterDemographic.update((v) =>
       v.includes(demographic) ? v.filter((d) => d !== demographic) : [...v, demographic],
     );
@@ -544,12 +554,14 @@ export class SeasonalComponent {
 
   clearDemographics(event: MouseEvent): void {
     event.stopPropagation();
+    this.invalidatePreset();
     this.filterDemographic.set([]);
   }
 
   // ── MAL status pills ──────────────────────────────────────────────────────
 
   toggleMalStatus(status: string): void {
+    this.invalidatePreset();
     this.filterMalStatus.update((current) => {
       if (current.includes(status)) {
         // Deselect: remove this pill
@@ -568,6 +580,7 @@ export class SeasonalComponent {
   // ── Media type pills ──────────────────────────────────────────────────────
 
   toggleMediaType(type: string): void {
+    this.invalidatePreset();
     this.filterMediaType.update((current) =>
       current.includes(type) ? current.filter((t) => t !== type) : [...current, type],
     );
@@ -577,20 +590,24 @@ export class SeasonalComponent {
 
   setGenreOperator(op: 'or' | 'and', event: MouseEvent): void {
     event.stopPropagation();
+    this.invalidatePreset();
     this.genreOperator.set(op);
   }
 
   setThemeOperator(op: 'or' | 'and', event: MouseEvent): void {
     event.stopPropagation();
+    this.invalidatePreset();
     this.themeOperator.set(op);
   }
 
   setDemographicOperator(op: 'or' | 'and', event: MouseEvent): void {
     event.stopPropagation();
+    this.invalidatePreset();
     this.demographicOperator.set(op);
   }
 
   setSortBy(value: string): void {
+    this.invalidatePreset();
     this.sortBy.set(value);
   }
 
@@ -604,6 +621,7 @@ export class SeasonalComponent {
   }
 
   toggleSortOrder(): void {
+    this.invalidatePreset();
     this.sortOrder.update((o) => (o === 'asc' ? 'desc' : 'asc'));
   }
 

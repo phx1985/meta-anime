@@ -7,9 +7,12 @@ import { MobileDetectionService } from './mobile-detection.service';
  *
  * - Desktop: opens the standard Plex web URL in a new tab.
  * - Mobile: attempts to launch the native Plex app via the `plex://` URI scheme.
- *   If the app is not installed (or the deep link does not execute within 500 ms),
- *   it gracefully falls back to opening the web URL in the browser — the click
- *   is never a "dead end".
+ *   The window `blur` event is used to detect when the native app has taken
+ *   focus (more reliable than `visibilitychange` on iOS/Android), preventing the
+ *   "double-open" bug where both the native app AND a new browser tab open
+ *   simultaneously.  If the app is not installed (page stays focused after
+ *   1 000 ms), the service gracefully falls back to opening the web URL in the
+ *   browser — the click is never a "dead end".
  */
 @Injectable({ providedIn: 'root' })
 export class PlexDeepLinkService {
@@ -20,7 +23,7 @@ export class PlexDeepLinkService {
   /**
    * Opens `webUrl` using the appropriate strategy:
    * - Desktop → `window.open(webUrl, '_blank', 'noopener,noreferrer')`
-   * - Mobile  → plex:// deep link, with a 500 ms fallback to the web URL.
+   * - Mobile  → plex:// deep link, with a 1 000 ms fallback to the web URL.
    */
   openLink(webUrl: string | null | undefined): void {
     if (!webUrl || !isPlatformBrowser(this.platformId)) return;
@@ -31,36 +34,38 @@ export class PlexDeepLinkService {
     }
 
     const deepLinkUri = this.buildPlexUri(webUrl);
-
-    // Listen for the page becoming hidden — that signals the native app took over.
+    const win = this.document.defaultView;
     let fallbackTimer: ReturnType<typeof setTimeout>;
 
-    const onVisibilityChange = (): void => {
-      if (this.document.hidden) {
-        clearTimeout(fallbackTimer);
-      }
+    // `blur` fires when the browser window loses focus — i.e. the native Plex
+    // app came to the foreground.  This is more reliable than `visibilitychange`
+    // on mobile Safari/Chrome which may not fire immediately.
+    const onBlur = (): void => {
+      clearTimeout(fallbackTimer);
     };
 
-    this.document.addEventListener('visibilitychange', onVisibilityChange, { once: true });
+    win?.addEventListener('blur', onBlur, { once: true });
 
-    // Attempt to open the native Plex app.
+    // Attempt to open the native Plex app without navigating the current page.
     this.document.location.href = deepLinkUri;
 
-    // If the page is still visible after 500 ms, the app was not installed — open web URL.
+    // If the window is still focused after 1 000 ms the app was not installed —
+    // open the web URL as fallback.
     fallbackTimer = setTimeout(() => {
-      this.document.removeEventListener('visibilitychange', onVisibilityChange);
+      win?.removeEventListener('blur', onBlur);
       if (!this.document.hidden) {
-        this.document.defaultView?.open(webUrl, '_blank', 'noopener,noreferrer');
+        win?.open(webUrl, '_blank', 'noopener,noreferrer');
       }
-    }, 500);
+    }, 1000);
   }
 
   /**
-   * Converts a Plex web URL to a native `plex://` URI scheme URL.
+   * Converts a Plex web URL to a native `plex://` URI scheme URL that opens the
+   * **details page** for a specific library item directly inside the Plex app.
    *
    * Example conversion:
    * `https://app.plex.tv/desktop/#!/server/{machineId}/details?key=/library/metadata/123`
-   * → `plex://preplay?key=%2Flibrary%2Fmetadata%2F123&server={machineId}`
+   * → `plex://server/{machineId}/details?key=%2Flibrary%2Fmetadata%2F123`
    *
    * Falls back to `plex://` (opens the Plex home screen) when the URL does not
    * match the expected deep-link pattern.
@@ -77,7 +82,9 @@ export class PlexDeepLinkService {
         const params = new URLSearchParams(query.replace(/^\?/, ''));
         const key = params.get('key');
         if (key) {
-          return `plex://preplay?key=${encodeURIComponent(key)}&server=${encodeURIComponent(serverId)}`;
+          // Use plex://server/{serverId}/details?key=... which routes directly
+          // to the item's details page in the native app.
+          return `plex://server/${encodeURIComponent(serverId)}/details?key=${encodeURIComponent(key)}`;
         }
       }
     } catch {
