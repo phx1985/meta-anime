@@ -117,7 +117,10 @@
             [attr.aria-label]="node.title"
             [title]="node.title"
           >
-            <div class="node-card-inner">
+            <div
+              class="node-card-inner"
+              [class]="mediaTypeClass(node.mediaType)"
+            >
               @if (node.coverImageUrl) {
                 <img
                   class="node-poster"
@@ -156,6 +159,34 @@
           <polygon points="28,1 36,4 28,7" class="legend-arrow legend-arrow--canonical" />
         </svg>
         <span>{{ 'franchise.legend.canonical' | translate }}</span>
+      </div>
+
+      <!-- Media type swatches -->
+      <div class="edge-legend-divider" aria-hidden="true"></div>
+      <span class="edge-legend-title">{{ 'franchise.legend.mediaTypes.title' | translate }}</span>
+      <div class="edge-legend-item">
+        <span class="legend-swatch legend-swatch--tv" aria-hidden="true"></span>
+        <span>{{ 'franchise.legend.mediaTypes.tv' | translate }}</span>
+      </div>
+      <div class="edge-legend-item">
+        <span class="legend-swatch legend-swatch--movie" aria-hidden="true"></span>
+        <span>{{ 'franchise.legend.mediaTypes.movie' | translate }}</span>
+      </div>
+      <div class="edge-legend-item">
+        <span class="legend-swatch legend-swatch--ova" aria-hidden="true"></span>
+        <span>{{ 'franchise.legend.mediaTypes.ova' | translate }}</span>
+      </div>
+      <div class="edge-legend-item">
+        <span class="legend-swatch legend-swatch--ona" aria-hidden="true"></span>
+        <span>{{ 'franchise.legend.mediaTypes.ona' | translate }}</span>
+      </div>
+      <div class="edge-legend-item">
+        <span class="legend-swatch legend-swatch--special" aria-hidden="true"></span>
+        <span>{{ 'franchise.legend.mediaTypes.special' | translate }}</span>
+      </div>
+      <div class="edge-legend-item">
+        <span class="legend-swatch legend-swatch--music" aria-hidden="true"></span>
+        <span>{{ 'franchise.legend.mediaTypes.music' | translate }}</span>
       </div>
     </div>
   }
@@ -205,6 +236,13 @@
             –
             {{ formatDateOrUnknown(quickLookNode()!.endDate) }}
           </p>
+
+          <!-- Media type pill -->
+          @if (quickLookNode()!.mediaType) {
+            <span class="ql-media-pill" [class]="mediaTypeClass(quickLookNode()!.mediaType, 'ql-media-pill')">
+              {{ 'animeCard.mediaType.' + quickLookNode()!.mediaType!.toLowerCase() | translate }}
+            </span>
+          }
 
           <!-- Synopsis (truncated, with Read More for long text) -->
           @if (quickLookNode()!.synopsis) {

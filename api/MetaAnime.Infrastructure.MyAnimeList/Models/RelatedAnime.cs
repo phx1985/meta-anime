@@ -24,4 +24,7 @@ public sealed class RelatedAnimeNode
 
     [JsonPropertyName("main_picture")]
     public MainPicture? MainPicture { get; set; }
+
+    [JsonPropertyName("media_type")]
+    public string? MediaType { get; set; }
 }

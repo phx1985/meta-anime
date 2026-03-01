@@ -508,7 +508,16 @@
         "legend": {
             "title": "Légende",
             "canonical": "Préquelle / Suite",
-            "indirect": "Dérivé / Récit secondaire"
+            "indirect": "Dérivé / Récit secondaire",
+            "mediaTypes": {
+                "title": "Types de médias",
+                "tv": "Série TV",
+                "movie": "Film",
+                "ova": "OVA",
+                "ona": "ONA",
+                "special": "Spécial",
+                "music": "Musique"
+            }
         },
         "relationType": {
             "prequel": "Préquelle",

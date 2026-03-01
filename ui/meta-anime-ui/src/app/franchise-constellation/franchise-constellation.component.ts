@@ -392,6 +392,17 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     return this.svc.graph()?.nodes.find((n) => n.isRoot)?.title;
   }
 
+  /**
+   * Returns a CSS modifier class for the media type of a node.
+   * @param mediaType  Raw media type string from the API (e.g. 'tv', 'movie').
+   * @param prefix     CSS class prefix (default: 'node-card-inner').
+   * Returns an empty string when no media type is available.
+   */
+  protected mediaTypeClass(mediaType: string | undefined, prefix = 'node-card-inner'): string {
+    if (!mediaType) return '';
+    return `${prefix}--${mediaType.toLowerCase().replace(/\s+/g, '_')}`;
+  }
+
   /** Formats an ISO date string for display; returns the i18n "N/A" fallback when absent or invalid. */
   protected formatDateOrUnknown(rawDate: string | undefined): string {
     if (!rawDate) return this.translate.instant('franchise.quickLook.unknownDate');

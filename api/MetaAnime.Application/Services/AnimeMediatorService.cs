@@ -1432,7 +1432,8 @@ public sealed class AnimeMediatorService(
                 r.Node.Title ?? string.Empty,
                 r.Node.MainPicture?.Large ?? r.Node.MainPicture?.Medium,
                 r.RelationType,
-                r.RelationTypeFormatted
+                r.RelationTypeFormatted,
+                r.Node.MediaType
             ));
 
         return Result.Success(new FranchiseConstellationResponse(
@@ -1442,7 +1443,8 @@ public sealed class AnimeMediatorService(
             anime.Synopsis,
             anime.StartDate,
             anime.EndDate,
-            relations
+            relations,
+            anime.MediaType
         ));
     }
 

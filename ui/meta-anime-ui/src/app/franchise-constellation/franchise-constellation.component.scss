@@ -181,6 +181,17 @@
   &--canonical { fill: rgba(157, 148, 255, 0.8); }
 }
 
+// ── Media-type color tokens ───────────────────────────────────────────────────
+// Colors deliberately match the app's existing status-pill palette so the
+// design language stays consistent across the whole UI.
+
+$media-tv:      #3b82f6; // blue  — same as "watching" pill
+$media-movie:   #ef4444; // red   — same as "dropped" pill
+$media-ova:     #22c55e; // green — same as "completed" pill
+$media-ona:     #f59e0b; // amber — same as "on_hold" pill
+$media-special: #a855f7; // purple — same as "plan_to_watch" pill
+$media-music:   #ec4899; // pink
+
 // ── Nodes ─────────────────────────────────────────────────────────────────────
 
 // Outer wrapper: position-only container — the graph engine sets left/top here.
@@ -276,6 +287,29 @@
   overflow: hidden;
 }
 
+// ── Media-type colored top border per node ────────────────────────────────────
+// Applied on .node-card-inner via [class] binding in the template.
+// Using border-top only (no box-shadow) keeps the GPU-composited nodeIn
+// animation (transform + opacity) unaffected.
+
+@mixin media-border($color) {
+  border-top: 4px solid $color;
+  // Trim the top border-radius so the border flush with the card corners
+  border-radius: 10px;
+  .node-poster,
+  .node-poster-placeholder {
+    border-radius: 6px 6px 0 0;
+  }
+}
+
+.node-card-inner--tv      { @include media-border($media-tv); }
+.node-card-inner--movie   { @include media-border($media-movie); }
+.node-card-inner--ova     { @include media-border($media-ova); }
+.node-card-inner--ona     { @include media-border($media-ona); }
+.node-card-inner--special,
+.node-card-inner--tv_special { @include media-border($media-special); }
+.node-card-inner--music   { @include media-border($media-music); }
+
 // ── V9: Truncation badge ──────────────────────────────────────────────────────
 .node-truncated-badge {
   position: absolute;
@@ -348,6 +382,29 @@
 
 .legend-arrow {
   &--canonical { fill: rgba(157, 148, 255, 0.8); }
+}
+
+// ── Media type legend swatches ────────────────────────────────────────────────
+
+.edge-legend-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0.2rem 0;
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+
+  &--tv      { background: $media-tv; }
+  &--movie   { background: $media-movie; }
+  &--ova     { background: $media-ova; }
+  &--ona     { background: $media-ona; }
+  &--special { background: $media-special; }
+  &--music   { background: $media-music; }
 }
 
 // ── Empty State ───────────────────────────────────────────────────────────────
@@ -508,6 +565,32 @@
   font-weight: 600;
   margin: 0;
   letter-spacing: 0.01em;
+}
+
+// Media type pill inside the Quick Look modal
+.ql-media-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0.55rem;
+  border-radius: 5px;
+  text-transform: uppercase;
+  align-self: flex-start;
+
+  // Default (unknown type) — use accent-primary as fallback
+  background: rgba(157, 148, 255, 0.14);
+  color: rgba(157, 148, 255, 0.9);
+  border: 1px solid rgba(157, 148, 255, 0.3);
+
+  &--tv      { background: rgba($media-tv,      0.14); color: $media-tv;      border: 1px solid rgba($media-tv,      0.3); }
+  &--movie   { background: rgba($media-movie,   0.14); color: $media-movie;   border: 1px solid rgba($media-movie,   0.3); }
+  &--ova     { background: rgba($media-ova,     0.14); color: $media-ova;     border: 1px solid rgba($media-ova,     0.3); }
+  &--ona     { background: rgba($media-ona,     0.14); color: $media-ona;     border: 1px solid rgba($media-ona,     0.3); }
+  &--special,
+  &--tv_special { background: rgba($media-special, 0.14); color: $media-special; border: 1px solid rgba($media-special, 0.3); }
+  &--music   { background: rgba($media-music,   0.14); color: $media-music;   border: 1px solid rgba($media-music,   0.3); }
 }
 
 // Synopsis — CSS clamp to 5 lines

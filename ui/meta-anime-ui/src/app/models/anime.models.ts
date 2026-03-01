@@ -202,6 +202,7 @@ export interface FranchiseRelation {
   coverImageUrl?: string;
   relationType?: string;
   relationTypeFormatted?: string;
+  mediaType?: string;
 }
 
 export interface FranchiseConstellationData {
@@ -211,6 +212,7 @@ export interface FranchiseConstellationData {
   synopsis?: string;
   startDate?: string;
   endDate?: string;
+  mediaType?: string;
   relations: FranchiseRelation[];
 }
 
@@ -222,6 +224,7 @@ export interface FranchiseGraphNode {
   synopsis?: string;
   startDate?: string;
   endDate?: string;
+  mediaType?: string;
   isRoot: boolean;
   /** True when this node has relations that were pruned (branch depth cap or 40-card limit). */
   isTruncated?: boolean;

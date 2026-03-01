@@ -508,7 +508,16 @@
         "legend": {
             "title": "Legend",
             "canonical": "Prequel / Sequel",
-            "indirect": "Spin-off / Side Story"
+            "indirect": "Spin-off / Side Story",
+            "mediaTypes": {
+                "title": "Media Types",
+                "tv": "TV Series",
+                "movie": "Movie",
+                "ova": "OVA",
+                "ona": "ONA",
+                "special": "Special",
+                "music": "Music"
+            }
         },
         "relationType": {
             "prequel": "Prequel",

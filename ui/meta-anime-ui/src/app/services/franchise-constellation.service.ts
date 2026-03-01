@@ -77,7 +77,7 @@ export class FranchiseConstellationService {
     const edgesMap = new Map<string, FranchiseGraphEdge>();
 
     // Seed the queue with the root node
-    const queue: Array<{ malId: string; title: string; coverImageUrl?: string }> = [
+    const queue: Array<{ malId: string; title: string; coverImageUrl?: string; mediaType?: string }> = [
       { malId: rootMalId, title: rootTitle, coverImageUrl: rootCoverUrl },
     ];
     nodesMap.set(rootMalId, {
@@ -106,6 +106,7 @@ export class FranchiseConstellationService {
           synopsis: result.synopsis,
           startDate: result.startDate,
           endDate: result.endDate,
+          mediaType: result.mediaType ?? item.mediaType,
           isRoot: item.malId === rootMalId,
         };
 
@@ -128,6 +129,7 @@ export class FranchiseConstellationService {
               malId: rel.malId,
               title: rel.title,
               coverImageUrl: rel.coverImageUrl,
+              mediaType: rel.mediaType,
               isRoot: false,
             });
           }
@@ -145,7 +147,7 @@ export class FranchiseConstellationService {
 
           // Enqueue if not yet visited
           if (!visited.has(rel.malId)) {
-            queue.push({ malId: rel.malId, title: rel.title, coverImageUrl: rel.coverImageUrl });
+            queue.push({ malId: rel.malId, title: rel.title, coverImageUrl: rel.coverImageUrl, mediaType: rel.mediaType });
           }
         }
 
