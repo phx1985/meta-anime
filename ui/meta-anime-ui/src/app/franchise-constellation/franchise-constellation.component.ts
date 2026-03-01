@@ -16,27 +16,21 @@ import { PopupService } from '../services/popup.service';
 import { FranchiseGraph, FranchiseGraphEdge, FranchiseGraphNode } from '../models/anime.models';
 
 // ── Layout constants ─────────────────────────────────────────────────────────
-/** Poster card dimensions for regular nodes */
 const NODE_W = 144;
 const NODE_H = 200;
-/** Slightly larger card for the root (clicked) anime */
 const CENTER_W = 160;
 const CENTER_H = 224;
-/** Horizontal gap between timeline columns */
-const H_GAP = 80;
-/** Vertical gap between nodes stacked in the same column */
-const V_GAP = 24;
-/** Canvas padding */
+const H_GAP = 88;
+const V_GAP = 28;
 const PADDING = 60;
-/** Fixed canvas size — large enough that dragged nodes never disappear */
 const CANVAS_W = 4000;
 const CANVAS_H = 3000;
-
-/** How many pixels of pointer movement before we commit to a drag (vs click). */
 const DRAG_THRESHOLD = 5;
 
-/** Maps a MAL relation_type to a depth delta for timeline positioning.
- *  Positive = goes RIGHT (later in story), negative = goes LEFT (earlier). */
+/** Relation types that represent direct canonical story progression. */
+const CANONICAL_TYPES = new Set(['prequel', 'sequel', 'parent_story']);
+
+/** Maps a MAL relation_type to a depth delta (column offset from root). */
 function relationDepthDelta(relationType: string | undefined): number {
   switch (relationType) {
     case 'prequel':
@@ -48,6 +42,16 @@ function relationDepthDelta(relationType: string | undefined): number {
     default:
       return 0;
   }
+}
+
+/** True when the relation_type represents a canonical story link. */
+function isCanonicalRelation(relationType: string | undefined): boolean {
+  return CANONICAL_TYPES.has(relationType ?? '');
+}
+
+export interface DisplayEdge {
+  d: string;
+  isCanonical: boolean;
 }
 
 @Component({
@@ -76,10 +80,13 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   );
 
   // ── Per-node draggable positions ──────────────────────────────────────────
-  /** Map<malId, {x, y}> — set once from layout algorithm, then updated by dragging. */
+  /** Map<malId, {x, y}> — updated by layout algorithm and user drags. */
   protected nodePositions = signal<Map<string, { x: number; y: number }>>(new Map());
 
-  /** All nodes with their current display positions merged in. */
+  /** IDs of nodes the user has manually repositioned — layout won't touch these. */
+  private manuallyDraggedIds = new Set<string>();
+
+  /** All nodes merged with their current display positions. */
   protected displayNodes = computed<Array<FranchiseGraphNode & { x: number; y: number }>>(() => {
     const g = this.svc.graph();
     const pos = this.nodePositions();
@@ -91,13 +98,16 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     }));
   });
 
-  /** Edges as SVG path strings. Recomputed whenever node positions change (dragging). */
-  protected edges = computed<Array<{ d: string; relationType?: string }>>(() => {
+  /** Edges with path string + canonical flag. Recomputed on position or graph changes. */
+  protected edges = computed<DisplayEdge[]>(() => {
     const g = this.svc.graph();
     const pos = this.nodePositions();
     if (!g) return [];
     return g.edges
-      .map((e) => ({ d: this._edgePath(e, g, pos), relationType: e.relationType }))
+      .map((e) => ({
+        d: this._edgePath(e, g, pos),
+        isCanonical: isCanonicalRelation(e.relationType),
+      }))
       .filter((e) => e.d !== '');
   });
 
@@ -117,13 +127,32 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   private nodeDragActive = false;
 
   constructor() {
-    // Whenever loading finishes and a graph is available, compute initial positions.
+    // Re-layout on every BFS graph update (live-building).
+    // Only positions for nodes that don't yet have a position are computed,
+    // preventing existing auto-positioned (and manually-dragged) nodes from jumping.
     effect(() => {
       const g = this.svc.graph();
-      const loading = this.svc.loading();
-      if (g && !loading) {
-        this.nodePositions.set(this._computeInitialPositions(g));
-        // Center the view on the root node
+      if (!g) return;
+      const newPositions = this._computePositions(g);
+      this.nodePositions.update((current) => {
+        const merged = new Map(current);
+        for (const [malId, pos] of newPositions) {
+          // Only place nodes that have no existing position (new arrivals)
+          // and have not been manually repositioned by the user.
+          if (!merged.has(malId) && !this.manuallyDraggedIds.has(malId)) {
+            merged.set(malId, pos);
+          }
+        }
+        return merged;
+      });
+    });
+
+    // Reset local canvas state whenever a new franchise is opened (graph cleared).
+    effect(() => {
+      const g = this.svc.graph();
+      if (!g) {
+        this.nodePositions.set(new Map());
+        this.manuallyDraggedIds.clear();
         this.translateX.set(0);
         this.translateY.set(0);
         this.scale.set(1);
@@ -148,7 +177,7 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     this.svc.close();
   }
 
-  // ── Pointer events (wrap handles pan + node drag) ─────────────────────────
+  // ── Pointer events ────────────────────────────────────────────────────────
 
   onPointerDown(event: PointerEvent): void {
     const nodeEl = (event.target as HTMLElement).closest<HTMLElement>('[data-mal-id]');
@@ -157,7 +186,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     this.nodeDragActive = false;
 
     if (nodeEl) {
-      // Potential node drag
       const malId = nodeEl.dataset['malId']!;
       this.dragNodeId = malId;
       const pos = this.nodePositions().get(malId) ?? { x: 0, y: 0 };
@@ -166,7 +194,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
       this.nodeDragOffsetX = pos.x - canvasX;
       this.nodeDragOffsetY = pos.y - canvasY;
     } else {
-      // Pan the canvas
       this.isPanning = true;
       this.panStartX = event.clientX;
       this.panStartY = event.clientY;
@@ -199,8 +226,10 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   }
 
   onPointerUp(): void {
-    // Treat as a click on a node only if there was no significant drag
-    if (this.dragNodeId && !this.nodeDragActive) {
+    if (this.dragNodeId && this.nodeDragActive) {
+      // Mark this node as manually repositioned
+      this.manuallyDraggedIds.add(this.dragNodeId);
+    } else if (this.dragNodeId && !this.nodeDragActive) {
       this.openMalPage(this.dragNodeId);
     }
     this.dragNodeId = null;
@@ -236,84 +265,120 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     window.open(`https://myanimelist.net/anime/${malId}`, '_blank', 'noopener,noreferrer');
   }
 
-  /** Title of the root node (for the header). */
   protected get rootTitle(): string | undefined {
     return this.svc.graph()?.nodes.find((n) => n.isRoot)?.title;
   }
 
-  /** Returns the i18n key for a given raw MAL relation_type. */
-  relationI18nKey(typeKey: string | undefined): string {
-    return `franchise.relationType.${typeKey ?? 'other'}`;
-  }
-
-  // ── Timeline layout algorithm ─────────────────────────────────────────────
-
-  private _computeInitialPositions(graph: FranchiseGraph): Map<string, { x: number; y: number }> {
+  // ── Layout algorithm ──────────────────────────────────────────────────────
+  /**
+   * Computes balanced node positions.
+   * The canonical trunk (root + prequels/sequels) is vertically centered in the canvas.
+   * Indirect nodes (spin-offs, side stories, etc.) fan above/below the trunk.
+   */
+  private _computePositions(graph: FranchiseGraph): Map<string, { x: number; y: number }> {
     const positions = new Map<string, { x: number; y: number }>();
-    const depthMap = new Map<string, number>(); // malId → timeline column index
+    const depthMap = new Map<string, number>();
 
-    // BFS from root to assign depths along the timeline
+    // BFS from root to assign timeline depths
     depthMap.set(graph.rootMalId, 0);
-    const bfsQueue = [graph.rootMalId];
+    const bfsQ = [graph.rootMalId];
     const processed = new Set<string>([graph.rootMalId]);
 
-    while (bfsQueue.length > 0) {
-      const currentId = bfsQueue.shift()!;
-      const currentDepth = depthMap.get(currentId) ?? 0;
+    while (bfsQ.length > 0) {
+      const cur = bfsQ.shift()!;
+      const curDepth = depthMap.get(cur) ?? 0;
 
       for (const edge of graph.edges) {
         let neighborId: string;
         let delta: number;
-
-        if (edge.fromMalId === currentId) {
+        if (edge.fromMalId === cur) {
           neighborId = edge.toMalId;
           delta = relationDepthDelta(edge.relationType);
-        } else if (edge.toMalId === currentId) {
+        } else if (edge.toMalId === cur) {
           neighborId = edge.fromMalId;
-          // Invert: if current is the "to" end of a prequel edge, current is newer → from is older
           delta = -relationDepthDelta(edge.relationType);
         } else {
           continue;
         }
-
         if (!processed.has(neighborId)) {
           processed.add(neighborId);
-          depthMap.set(neighborId, currentDepth + delta);
-          bfsQueue.push(neighborId);
+          depthMap.set(neighborId, curDepth + delta);
+          bfsQ.push(neighborId);
         }
       }
     }
 
-    // Fall back: any node not reachable via edges stays at depth 0
+    // Fall back: unreachable nodes stay at depth 0
     for (const node of graph.nodes) {
-      if (!depthMap.has(node.malId)) {
-        depthMap.set(node.malId, 0);
-      }
+      if (!depthMap.has(node.malId)) depthMap.set(node.malId, 0);
     }
 
-    // Group nodes by depth
+    // Group by depth column
     const depthGroups = new Map<number, string[]>();
     for (const [malId, depth] of depthMap) {
       if (!depthGroups.has(depth)) depthGroups.set(depth, []);
       depthGroups.get(depth)!.push(malId);
     }
 
-    // Translate depths to pixel columns (normalize so minimum depth = 0)
+    // Normalize so min depth = 0
     const depths = Array.from(depthGroups.keys()).sort((a, b) => a - b);
     const minDepth = depths[0] ?? 0;
+    const canvasCenterY = CANVAS_H / 2;
 
     depths.forEach((depth) => {
       const col = depth - minDepth;
-      const colNodes = depthGroups.get(depth)!;
       const colX = PADDING + col * (NODE_W + H_GAP);
+      // Sort nodes in each column by malId for stable, deterministic ordering
+      const colNodes = depthGroups.get(depth)!.sort();
 
-      colNodes.forEach((malId, rowIdx) => {
+      // Separate canonical trunk nodes from indirect/side-story nodes for this column.
+      // A node is considered "trunk" if ALL edges connecting it to this column are canonical.
+      // The root node is always trunk.
+      const trunkIds: string[] = [];
+      const sideIds: string[] = [];
+
+      for (const malId of colNodes) {
+        const node = graph.nodes.find((n) => n.malId === malId);
+        if (!node) continue;
+        if (node.isRoot) {
+          trunkIds.push(malId);
+          continue;
+        }
+        // Check if this node is connected to an adjacent column via a canonical edge
+        const hasCanonicalEdge = graph.edges.some(
+          (e) =>
+            (e.fromMalId === malId || e.toMalId === malId) &&
+            isCanonicalRelation(e.relationType),
+        );
+        if (hasCanonicalEdge) {
+          trunkIds.push(malId);
+        } else {
+          sideIds.push(malId);
+        }
+      }
+
+      // Layout trunk: centered around canvasCenterY
+      const trunkH = trunkIds.length * NODE_H + Math.max(0, trunkIds.length - 1) * V_GAP;
+      const trunkStartY = canvasCenterY - trunkH / 2;
+      trunkIds.forEach((malId, i) => {
         const isRoot = graph.nodes.find((n) => n.malId === malId)?.isRoot ?? false;
         const nodeH = isRoot ? CENTER_H : NODE_H;
         positions.set(malId, {
           x: colX,
-          y: PADDING + rowIdx * (nodeH + V_GAP),
+          y: trunkStartY + i * (nodeH + V_GAP),
         });
+      });
+
+      // Layout side nodes: alternate above/below the trunk
+      const trunkTopY = trunkStartY;
+      const trunkBottomY = trunkStartY + trunkH;
+      sideIds.forEach((malId, i) => {
+        const above = i % 2 === 0;
+        const slotIdx = Math.floor(i / 2);
+        const y = above
+          ? trunkTopY - (slotIdx + 1) * (NODE_H + V_GAP)
+          : trunkBottomY + slotIdx * (NODE_H + V_GAP);
+        positions.set(malId, { x: colX, y });
       });
     });
 
@@ -340,13 +405,11 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     const toW = toNode.isRoot ? CENTER_W : NODE_W;
     const toH = toNode.isRoot ? CENTER_H : NODE_H;
 
-    // Connect center-to-center of the two nodes
     const x1 = fromPos.x + fromW / 2;
     const y1 = fromPos.y + fromH / 2;
     const x2 = toPos.x + toW / 2;
     const y2 = toPos.y + toH / 2;
 
-    // Bezier with horizontal control points for a smooth S-curve
     const cx = (x1 + x2) / 2;
     return `M ${x1} ${y1} C ${cx} ${y1} ${cx} ${y2} ${x2} ${y2}`;
   }

@@ -4,7 +4,6 @@
   display: contents;
 }
 
-// Full-screen glassmorphism overlay
 .constellation-overlay {
   position: fixed;
   top: 0;
@@ -12,7 +11,7 @@
   width: 100%;
   height: 100dvh;
   z-index: 1099;
-  background: rgba(10, 15, 25, 0.88);
+  background: rgba(10, 15, 25, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   display: flex;
@@ -21,7 +20,7 @@
   animation: overlayIn 0.25s ease both;
 }
 
-// Close button — 48×48 px, top-right
+// Close button
 .constellation-close {
   position: absolute;
   top: env(safe-area-inset-top, 1rem);
@@ -37,29 +36,20 @@
   justify-content: center;
   cursor: pointer;
   z-index: 10;
-  transition:
-    background 0.15s,
-    transform 0.15s;
+  transition: background 0.15s, transform 0.15s;
 
-  svg {
-    width: 20px;
-    height: 20px;
-    pointer-events: none;
-  }
+  svg { width: 20px; height: 20px; pointer-events: none; }
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: scale(1.08);
-  }
+  &:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.08); }
 }
 
-// Header area
+// Header
 .constellation-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
-  padding: 1.1rem 4rem 0.5rem;
+  gap: 0.3rem;
+  padding: 1rem 4rem 0.5rem;
   flex-shrink: 0;
 }
 
@@ -96,51 +86,33 @@
   text-overflow: ellipsis;
 }
 
-// ── Loading State ─────────────────────────────────────────────────────────────
+// ── Live-building status pill ─────────────────────────────────────────────────
 
-.constellation-loading {
-  flex: 1;
+.loading-pill {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-}
-
-.loading-svg {
-  width: 160px;
-  height: 60px;
-}
-
-.loading-node {
-  fill: var(--accent-primary, #9d94ff);
-
-  &--pulse1 { animation: pulse 1.6s ease-in-out 0s infinite; }
-  &--pulse2 { animation: pulse 1.6s ease-in-out 0.35s infinite; }
-  &--pulse3 { animation: pulse 1.6s ease-in-out 0.7s infinite; }
-}
-
-.loading-edge {
-  stroke: var(--accent-primary, #9d94ff);
-  stroke-width: 2;
-  opacity: 0.5;
-  stroke-dasharray: 5 4;
-  animation: dashMove 0.9s linear infinite;
-}
-
-.loading-arrow {
-  fill: var(--accent-primary, #9d94ff);
-  opacity: 0.7;
-}
-
-.loading-label {
-  font-size: 0.85rem;
+  gap: 0.4rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(157, 148, 255, 0.12);
+  border: 1px solid rgba(157, 148, 255, 0.25);
+  font-size: 0.72rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.65);
-  letter-spacing: 0.04em;
-  animation: textPulse 1.6s ease-in-out infinite;
-  margin: 0;
-  text-align: center;
+  color: rgba(157, 148, 255, 0.9);
+  animation: pillFadeIn 0.3s ease both;
+}
+
+.loading-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-primary, #9d94ff);
+  animation: pillDotPulse 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.loading-pill-text {
+  white-space: nowrap;
 }
 
 // ── Error State ───────────────────────────────────────────────────────────────
@@ -157,7 +129,7 @@
   p { font-size: 0.82rem; margin: 0; text-align: center; max-width: 320px; }
 }
 
-// ── Graph Container (pan/zoom viewport) ──────────────────────────────────────
+// ── Graph viewport ────────────────────────────────────────────────────────────
 
 .constellation-graph-wrap {
   flex: 1;
@@ -185,72 +157,73 @@
   overflow: visible;
 }
 
+// ── UML-style edges ───────────────────────────────────────────────────────────
+
 .graph-edge {
   fill: none;
-  stroke: rgba(157, 148, 255, 0.45);
   stroke-width: 1.8;
+
+  // Solid line for canonical story progression (prequel / sequel / parent_story)
+  &--canonical {
+    stroke: rgba(157, 148, 255, 0.7);
+    stroke-dasharray: none;
+  }
+
+  // Dashed line for indirect media (spin-off, side story, alternative, etc.)
+  &--indirect {
+    stroke: rgba(157, 148, 255, 0.38);
+    stroke-dasharray: 6 4;
+  }
 }
 
 .graph-arrow-head {
-  fill: rgba(157, 148, 255, 0.55);
+  &--canonical { fill: rgba(157, 148, 255, 0.8); }
+  &--indirect  { fill: rgba(157, 148, 255, 0.45); }
 }
 
 // ── Nodes ─────────────────────────────────────────────────────────────────────
 
 .constellation-node {
   position: absolute;
-  width: 144px; // NODE_W
+  width: 144px;
   cursor: grab;
   border-radius: 10px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: rgba(18, 20, 36, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(18, 20, 36, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  transition:
-    box-shadow 0.18s;
-  animation: nodeIn 0.4s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  transition: box-shadow 0.18s;
+  animation: nodeIn 0.35s cubic-bezier(0.34, 1.3, 0.64, 1) both;
 
-  &:active {
-    cursor: grabbing;
-    z-index: 100;
-  }
+  &:active { cursor: grabbing; z-index: 100; }
+  &:hover  { z-index: 10; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65); }
 
-  &:hover {
-    z-index: 10;
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65);
-  }
-
-  // Root node: pulsating accent glow
   &--root {
-    width: 160px; // CENTER_W
+    width: 160px;
     border: 2px solid var(--accent-primary, #9d94ff);
     box-shadow:
       0 0 0 2px var(--accent-primary, #9d94ff),
       0 0 24px rgba(157, 148, 255, 0.5),
       0 8px 32px rgba(0, 0, 0, 0.5);
     animation:
-      nodeIn 0.4s cubic-bezier(0.34, 1.4, 0.64, 1) both,
+      nodeIn 0.35s cubic-bezier(0.34, 1.3, 0.64, 1) both,
       centerGlow 2.4s ease-in-out infinite;
     z-index: 1;
   }
 }
 
-// ── Poster image ─────────────────────────────────────────────────────────────
-
 .node-poster {
   width: 100%;
-  height: 200px; // NODE_H
+  height: 200px;
   object-fit: cover;
   object-position: top center;
   display: block;
   flex-shrink: 0;
-  pointer-events: none; // prevent browser image drag
+  pointer-events: none;
 
-  .constellation-node--root & {
-    height: 224px; // CENTER_H
-  }
+  .constellation-node--root & { height: 224px; }
 }
 
 .node-poster-placeholder {
@@ -266,13 +239,8 @@
   flex-shrink: 0;
   pointer-events: none;
 
-  .constellation-node--root & {
-    height: 224px;
-    font-size: 3rem;
-  }
+  .constellation-node--root & { height: 224px; font-size: 3rem; }
 }
-
-// ── Node meta (title) ─────────────────────────────────────────────────────────
 
 .node-meta {
   padding: 0.5rem 0.55rem 0.55rem;
@@ -292,9 +260,68 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 
-  .constellation-node--root & {
-    font-size: 0.75rem;
+  .constellation-node--root & { font-size: 0.75rem; }
+}
+
+// ── Edge Legend ───────────────────────────────────────────────────────────────
+
+.edge-legend {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(10, 14, 26, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+  z-index: 5;
+  animation: pillFadeIn 0.4s ease both;
+}
+
+.edge-legend-title {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 0.1rem;
+}
+
+.edge-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.edge-legend-svg {
+  width: 36px;
+  height: 8px;
+  flex-shrink: 0;
+}
+
+.legend-line {
+  stroke-width: 1.8;
+
+  &--canonical {
+    stroke: rgba(157, 148, 255, 0.8);
   }
+
+  &--indirect {
+    stroke: rgba(157, 148, 255, 0.45);
+    stroke-dasharray: 4 3;
+  }
+}
+
+.legend-arrow {
+  &--canonical { fill: rgba(157, 148, 255, 0.8); }
+  &--indirect  { fill: rgba(157, 148, 255, 0.45); }
 }
 
 // ── Empty State ───────────────────────────────────────────────────────────────
@@ -315,23 +342,9 @@
   to { opacity: 1; }
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 0.9; }
-  50% { opacity: 0.25; }
-}
-
-@keyframes textPulse {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
-}
-
-@keyframes dashMove {
-  to { stroke-dashoffset: -18; }
-}
-
 @keyframes nodeIn {
-  from { opacity: 0; transform: scale(0.88) translateY(10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; transform: scale(0.85) translateY(12px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
 }
 
 @keyframes centerGlow {
@@ -347,4 +360,14 @@
       0 0 36px rgba(157, 148, 255, 0.75),
       0 8px 40px rgba(0, 0, 0, 0.5);
   }
+}
+
+@keyframes pillFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pillDotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
 }

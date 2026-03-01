@@ -138,9 +138,9 @@ export class FranchiseConstellationService {
           edges: Array.from(edgesMap.values()),
         });
 
-        // Respect MAL API rate limit — 350 ms between calls
+        // Respect MAL API rate limit — 200 ms between calls
         if (queue.length > 0 && !signal.aborted) {
-          await this._delay(350, signal);
+          await this._delay(200, signal);
         }
       } catch (err) {
         if (signal.aborted) return;

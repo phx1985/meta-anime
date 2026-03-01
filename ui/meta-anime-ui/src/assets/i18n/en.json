@@ -503,6 +503,11 @@
         "close": "Close",
         "viewButton": "View Franchise Constellation",
         "openOnMal": "Open {{title}} on MyAnimeList",
+        "legend": {
+            "title": "Legend",
+            "canonical": "Prequel / Sequel",
+            "indirect": "Spin-off / Side Story"
+        },
         "relationType": {
             "prequel": "Prequel",
             "sequel": "Sequel",

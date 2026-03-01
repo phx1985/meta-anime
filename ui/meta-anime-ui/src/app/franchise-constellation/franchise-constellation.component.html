@@ -24,43 +24,36 @@
   <!-- Header -->
   <div class="constellation-header">
     <div class="constellation-title-row">
-      <!-- Timeline / family-tree icon -->
-      <svg class="constellation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-        <rect x="1" y="9" width="5" height="6" rx="1.5" />
-        <rect x="9.5" y="9" width="5" height="6" rx="1.5" />
-        <rect x="18" y="9" width="5" height="6" rx="1.5" />
-        <line x1="6" y1="12" x2="9.5" y2="12" />
-        <line x1="14.5" y1="12" x2="18" y2="12" />
-        <polyline points="9 12 7.5 12 7.5 5.5 16.5 5.5 16.5 12 15 12" />
+      <!-- Elegant branching-timeline icon -->
+      <svg class="constellation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="4" cy="12" r="2" />
+        <circle cx="12" cy="12" r="2" />
+        <circle cx="20" cy="12" r="2" />
+        <line x1="6" y1="12" x2="10" y2="12" />
+        <line x1="14" y1="12" x2="18" y2="12" />
+        <path d="M12 10 V6 M9 6 h6" />
+        <path d="M12 14 V18 M9 18 h6" />
       </svg>
       <span class="constellation-title-label">{{ 'franchise.title' | translate }}</span>
     </div>
-    @if (svc.graph()) {
+
+    <!-- Live-building status pill (visible only while BFS is running) -->
+    @if (svc.loading()) {
+      <div class="loading-pill" aria-live="polite">
+        <span class="loading-pill-dot"></span>
+        <span class="loading-pill-text">
+          {{ 'franchise.loadingProgress' | translate: { count: svc.loadingCount() } }}
+        </span>
+      </div>
+    }
+
+    @if (rootTitle) {
       <span class="constellation-anime-name">{{ rootTitle }}</span>
     }
   </div>
 
-  <!-- ── Loading state ─────────────────────────────────────────────────── -->
-  @if (svc.loading()) {
-    <div class="constellation-loading">
-      <!-- Pulsing L-to-R node-network SVG -->
-      <svg class="loading-svg" viewBox="0 0 160 60" fill="none" aria-hidden="true">
-        <circle class="loading-node loading-node--pulse1" cx="20" cy="30" r="8" />
-        <circle class="loading-node loading-node--pulse2" cx="80" cy="30" r="10" />
-        <circle class="loading-node loading-node--pulse3" cx="140" cy="30" r="8" />
-        <line class="loading-edge" x1="28" y1="30" x2="70" y2="30" />
-        <line class="loading-edge" x1="90" y1="30" x2="132" y2="30" />
-        <polygon class="loading-arrow" points="73,27 80,30 73,33" />
-        <polygon class="loading-arrow" points="133,27 140,30 133,33" />
-      </svg>
-      <p class="loading-label">
-        {{ 'franchise.loadingProgress' | translate: { count: svc.loadingCount() } }}
-      </p>
-    </div>
-  }
-
   <!-- ── Error state ───────────────────────────────────────────────────── -->
-  @if (svc.error() && !svc.loading()) {
+  @if (svc.error() && !svc.graph()) {
     <div class="constellation-error">
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
         <circle cx="12" cy="12" r="10" />
@@ -71,8 +64,8 @@
     </div>
   }
 
-  <!-- ── Graph ─────────────────────────────────────────────────────────── -->
-  @if (svc.graph() && !svc.loading()) {
+  <!-- ── Graph (shown immediately as soon as first node is available) ─── -->
+  @if (svc.graph()) {
     <div
       class="constellation-graph-wrap"
       (pointerdown)="onPointerDown($event)"
@@ -94,15 +87,20 @@
           aria-hidden="true"
         >
           <defs>
-            <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-              <polygon points="0 0, 8 3, 0 6" class="graph-arrow-head" />
+            <!-- Arrowhead for canonical (solid) edges -->
+            <marker id="arrow-canonical" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" class="graph-arrow-head graph-arrow-head--canonical" />
+            </marker>
+            <!-- Arrowhead for indirect (dashed) edges -->
+            <marker id="arrow-indirect" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" class="graph-arrow-head graph-arrow-head--indirect" />
             </marker>
           </defs>
           @for (edge of edges(); track $index) {
             <path
-              class="graph-edge"
+              [class]="edge.isCanonical ? 'graph-edge graph-edge--canonical' : 'graph-edge graph-edge--indirect'"
               [attr.d]="edge.d"
-              marker-end="url(#arrowhead)"
+              [attr.marker-end]="edge.isCanonical ? 'url(#arrow-canonical)' : 'url(#arrow-indirect)'"
             />
           }
         </svg>
@@ -121,7 +119,6 @@
             [attr.aria-label]="translate.instant('franchise.openOnMal', { title: node.title })"
             [title]="node.title"
           >
-            <!-- Poster cover image -->
             @if (node.coverImageUrl) {
               <img
                 class="node-poster"
@@ -132,8 +129,6 @@
             } @else {
               <div class="node-poster-placeholder">{{ node.title.charAt(0) }}</div>
             }
-
-            <!-- Title + relation badge (shown by edges, not here for root) -->
             <div class="node-meta">
               <span class="node-title">{{ node.title }}</span>
             </div>
@@ -147,5 +142,24 @@
         <p>{{ 'franchise.empty' | translate }}</p>
       </div>
     }
+
+    <!-- ── Edge legend (bottom-left) ─────────────────────────────────── -->
+    <div class="edge-legend" aria-label="Legend">
+      <span class="edge-legend-title">{{ 'franchise.legend.title' | translate }}</span>
+      <div class="edge-legend-item">
+        <svg class="edge-legend-svg" viewBox="0 0 36 8" aria-hidden="true">
+          <line x1="0" y1="4" x2="28" y2="4" class="legend-line legend-line--canonical" />
+          <polygon points="28,1 36,4 28,7" class="legend-arrow legend-arrow--canonical" />
+        </svg>
+        <span>{{ 'franchise.legend.canonical' | translate }}</span>
+      </div>
+      <div class="edge-legend-item">
+        <svg class="edge-legend-svg" viewBox="0 0 36 8" aria-hidden="true">
+          <line x1="0" y1="4" x2="28" y2="4" class="legend-line legend-line--indirect" />
+          <polygon points="28,1 36,4 28,7" class="legend-arrow legend-arrow--indirect" />
+        </svg>
+        <span>{{ 'franchise.legend.indirect' | translate }}</span>
+      </div>
+    </div>
   }
 </div>
