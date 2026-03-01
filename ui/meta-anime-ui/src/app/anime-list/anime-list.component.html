@@ -258,6 +258,7 @@
                 class="filter-input"
                 type="text"
                 [(ngModel)]="filterTitle"
+                (input)="invalidatePreset()"
                 (keydown.enter)="search()"
                 [placeholder]="'animeList.filter.titlePlaceholder' | translate"
               />
@@ -276,7 +277,7 @@
                       type="button"
                       class="op-btn"
                       [class.op-btn--active]="genreOperator === 'or'"
-                      (click)="genreOperator = 'or'"
+                      (click)="genreOperator = 'or'; invalidatePreset()"
                     >
                       OR
                     </button>
@@ -284,7 +285,7 @@
                       type="button"
                       class="op-btn"
                       [class.op-btn--active]="genreOperator === 'and'"
-                      (click)="genreOperator = 'and'"
+                      (click)="genreOperator = 'and'; invalidatePreset()"
                     >
                       AND
                     </button>
@@ -351,7 +352,7 @@
                       type="button"
                       class="op-btn"
                       [class.op-btn--active]="themeOperator === 'or'"
-                      (click)="themeOperator = 'or'"
+                      (click)="themeOperator = 'or'; invalidatePreset()"
                     >
                       OR
                     </button>
@@ -359,7 +360,7 @@
                       type="button"
                       class="op-btn"
                       [class.op-btn--active]="themeOperator === 'and'"
-                      (click)="themeOperator = 'and'"
+                      (click)="themeOperator = 'and'; invalidatePreset()"
                     >
                       AND
                     </button>
@@ -426,7 +427,7 @@
                       type="button"
                       class="op-btn"
                       [class.op-btn--active]="demographicOperator === 'or'"
-                      (click)="demographicOperator = 'or'"
+                      (click)="demographicOperator = 'or'; invalidatePreset()"
                     >
                       OR
                     </button>
@@ -434,7 +435,7 @@
                       type="button"
                       class="op-btn"
                       [class.op-btn--active]="demographicOperator === 'and'"
-                      (click)="demographicOperator = 'and'"
+                      (click)="demographicOperator = 'and'; invalidatePreset()"
                     >
                       AND
                     </button>
@@ -504,7 +505,7 @@
                     type="button"
                     class="filter-pill"
                     [class.filter-pill--active]="filterWatchState.includes(s.value)"
-                    (click)="filterWatchState = togglePill(filterWatchState, s.value)"
+                    (click)="filterWatchState = togglePill(filterWatchState, s.value); invalidatePreset()"
                   >
                     {{ s.labelKey | translate }}
                   </button>
@@ -521,7 +522,7 @@
                     type="button"
                     class="filter-pill"
                     [class.filter-pill--active]="filterAiringStatus.includes(s.value)"
-                    (click)="filterAiringStatus = togglePill(filterAiringStatus, s.value)"
+                    (click)="filterAiringStatus = togglePill(filterAiringStatus, s.value); invalidatePreset()"
                   >
                     {{ s.labelKey | translate }}
                   </button>
@@ -538,7 +539,7 @@
                     type="button"
                     class="filter-pill"
                     [class.filter-pill--active]="filterMediaType.includes(t.value)"
-                    (click)="filterMediaType = togglePill(filterMediaType, t.value)"
+                    (click)="filterMediaType = togglePill(filterMediaType, t.value); invalidatePreset()"
                   >
                     {{ t.labelKey | translate }}
                   </button>
@@ -556,7 +557,7 @@
                       type="button"
                       class="filter-pill"
                       [class.filter-pill--active]="filterCodec.includes(c.value)"
-                      (click)="filterCodec = togglePill(filterCodec, c.value)"
+                      (click)="filterCodec = togglePill(filterCodec, c.value); invalidatePreset()"
                     >
                       {{ c.labelKey | translate }}
                     </button>
@@ -572,7 +573,7 @@
                     type="button"
                     class="filter-pill"
                     [class.filter-pill--active]="filterHasFile === 'any'"
-                    (click)="filterHasFile = 'any'"
+                    (click)="filterHasFile = 'any'; invalidatePreset()"
                   >
                     {{ 'animeList.filter.any' | translate }}
                   </button>
@@ -580,7 +581,7 @@
                     type="button"
                     class="filter-pill"
                     [class.filter-pill--active]="filterHasFile === 'yes'"
-                    (click)="filterHasFile = 'yes'"
+                    (click)="filterHasFile = 'yes'; invalidatePreset()"
                   >
                     {{ 'animeList.filter.hasFileYes' | translate }}
                   </button>
@@ -588,7 +589,7 @@
                     type="button"
                     class="filter-pill"
                     [class.filter-pill--active]="filterHasFile === 'no'"
-                    (click)="filterHasFile = 'no'"
+                    (click)="filterHasFile = 'no'; invalidatePreset()"
                   >
                     {{ 'animeList.filter.hasFileNo' | translate }}
                   </button>
@@ -943,7 +944,7 @@
               type="button"
               class="op-btn"
               [class.op-btn--active]="genreOperator === 'or'"
-              (click)="genreOperator = 'or'"
+              (click)="genreOperator = 'or'; invalidatePreset()"
             >
               OR
             </button>
@@ -951,7 +952,7 @@
               type="button"
               class="op-btn"
               [class.op-btn--active]="genreOperator === 'and'"
-              (click)="genreOperator = 'and'"
+              (click)="genreOperator = 'and'; invalidatePreset()"
             >
               AND
             </button>
@@ -1058,7 +1059,7 @@
               type="button"
               class="op-btn"
               [class.op-btn--active]="themeOperator === 'or'"
-              (click)="themeOperator = 'or'"
+              (click)="themeOperator = 'or'; invalidatePreset()"
             >
               OR
             </button>
@@ -1066,7 +1067,7 @@
               type="button"
               class="op-btn"
               [class.op-btn--active]="themeOperator === 'and'"
-              (click)="themeOperator = 'and'"
+              (click)="themeOperator = 'and'; invalidatePreset()"
             >
               AND
             </button>
@@ -1178,7 +1179,7 @@
               type="button"
               class="op-btn"
               [class.op-btn--active]="demographicOperator === 'or'"
-              (click)="demographicOperator = 'or'"
+              (click)="demographicOperator = 'or'; invalidatePreset()"
             >
               OR
             </button>
@@ -1186,7 +1187,7 @@
               type="button"
               class="op-btn"
               [class.op-btn--active]="demographicOperator === 'and'"
-              (click)="demographicOperator = 'and'"
+              (click)="demographicOperator = 'and'; invalidatePreset()"
             >
               AND
             </button>
