@@ -1,7 +1,11 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
 import { AnimeService } from './anime.service';
-import { FranchiseConstellationData } from '../models/anime.models';
+import {
+  FranchiseConstellationData,
+  FranchiseGraph,
+  FranchiseGraphNode,
+  FranchiseGraphEdge,
+} from '../models/anime.models';
 
 @Injectable({ providedIn: 'root' })
 export class FranchiseConstellationService {
@@ -9,67 +13,176 @@ export class FranchiseConstellationService {
 
   /** Whether the constellation overlay is visible. */
   readonly isOpen = signal(false);
-  /** True while the MAL API request is in flight. */
+  /** True while the BFS queue is not yet empty. */
   readonly loading = signal(false);
-  /** Non-null when the request failed. */
+  /** Non-null when the initial fetch failed. */
   readonly error = signal<string | null>(null);
-  /** The franchise data once loaded. */
-  readonly data = signal<FranchiseConstellationData | null>(null);
+  /** The full franchise graph, populated progressively by BFS. */
+  readonly graph = signal<FranchiseGraph | null>(null);
+  /** Number of nodes whose relations have been fetched so far (for progress label). */
+  readonly loadingCount = signal(0);
 
-  /** Session-scoped in-memory cache — bypasses repeated API calls within the same session. */
-  private readonly cache = new Map<string, FranchiseConstellationData>();
+  /** Session-scoped cache keyed by root malId → complete FranchiseGraph. */
+  private readonly cache = new Map<string, FranchiseGraph>();
+
+  /** AbortController for cancelling an ongoing BFS when a new one starts or overlay closes. */
+  private abortCtrl: AbortController | null = null;
 
   /**
-   * Opens the constellation overlay for the given MAL anime ID.
-   * Uses cached data when available; otherwise fires one MAL API call.
+   * Opens the constellation overlay and starts a BFS crawl of the entire franchise.
    */
-  open(malId: string, title: string, coverImageUrl?: string): void {
+  open(rootMalId: string, rootTitle: string, rootCoverUrl?: string): void {
+    // Cancel any ongoing BFS first
+    this.abortCtrl?.abort();
+    this.abortCtrl = new AbortController();
+
     this.error.set(null);
-    this.data.set(null);
+    this.graph.set(null);
+    this.loadingCount.set(0);
     this.isOpen.set(true);
 
-    if (this.cache.has(malId)) {
-      this.data.set(this.cache.get(malId)!);
+    if (this.cache.has(rootMalId)) {
+      this.graph.set(this.cache.get(rootMalId)!);
       this.loading.set(false);
       return;
     }
 
     this.loading.set(true);
-    this.animeService.getFranchiseConstellation(malId).subscribe({
-      next: (result) => {
-        // Merge cover/title from local data when MAL doesn't return them
-        const data: FranchiseConstellationData = {
-          malId: result.malId ?? malId,
-          title: result.title || title,
-          coverImageUrl: result.coverImageUrl ?? coverImageUrl,
-          relations: result.relations ?? [],
-        };
-        this.cache.set(malId, data);
-        this.data.set(data);
-        this.loading.set(false);
-      },
-      error: (err: unknown) => {
-        this.error.set(this._extractErrorMessage(err));
-        this.loading.set(false);
-      },
-    });
+    void this._runBfs(rootMalId, rootTitle, rootCoverUrl, this.abortCtrl.signal);
   }
 
   close(): void {
     this.isOpen.set(false);
+    this.abortCtrl?.abort();
   }
 
-  private _extractErrorMessage(err: unknown): string {
-    if (err instanceof HttpErrorResponse) {
-      if (typeof err.error === 'string' && err.error.length > 0) return err.error;
-      if (err.error && typeof err.error === 'object') {
-        const obj = err.error as Record<string, unknown>;
-        const msg = obj['message'] ?? obj['title'] ?? obj['errorMessage'];
-        if (typeof msg === 'string') return msg;
+  // ── BFS crawler ──────────────────────────────────────────────────────────────
+
+  private async _runBfs(
+    rootMalId: string,
+    rootTitle: string,
+    rootCoverUrl: string | undefined,
+    signal: AbortSignal,
+  ): Promise<void> {
+    /** IDs whose relations have already been fetched (prevents re-fetching). */
+    const visited = new Set<string>();
+    /** All discovered nodes, keyed by malId. */
+    const nodesMap = new Map<string, FranchiseGraphNode>();
+    /** All discovered edges, keyed by "fromId→toId" for deduplication. */
+    const edgesMap = new Map<string, FranchiseGraphEdge>();
+
+    // Seed the queue with the root node
+    const queue: Array<{ malId: string; title: string; coverImageUrl?: string }> = [
+      { malId: rootMalId, title: rootTitle, coverImageUrl: rootCoverUrl },
+    ];
+    nodesMap.set(rootMalId, {
+      malId: rootMalId,
+      title: rootTitle,
+      coverImageUrl: rootCoverUrl,
+      isRoot: true,
+    });
+
+    while (queue.length > 0 && !signal.aborted) {
+      const item = queue.shift()!;
+
+      // Skip if already visited (cycle detection)
+      if (visited.has(item.malId)) continue;
+      visited.add(item.malId);
+
+      try {
+        const result = await this._fetchNode(item.malId, signal);
+        if (signal.aborted) return;
+
+        // Update the node with richer data from the API response
+        nodesMap.set(item.malId, {
+          malId: item.malId,
+          title: result.title || item.title,
+          coverImageUrl: result.coverImageUrl ?? item.coverImageUrl,
+          isRoot: item.malId === rootMalId,
+        });
+
+        // Process each relation returned by the API
+        for (const rel of result.relations ?? []) {
+          // Ensure the related node exists in our map
+          if (!nodesMap.has(rel.malId)) {
+            nodesMap.set(rel.malId, {
+              malId: rel.malId,
+              title: rel.title,
+              coverImageUrl: rel.coverImageUrl,
+              isRoot: false,
+            });
+          }
+
+          // Add edge (avoid duplicates by checking both directions)
+          const fwd = `${item.malId}→${rel.malId}`;
+          const rev = `${rel.malId}→${item.malId}`;
+          if (!edgesMap.has(fwd) && !edgesMap.has(rev)) {
+            edgesMap.set(fwd, {
+              fromMalId: item.malId,
+              toMalId: rel.malId,
+              relationType: rel.relationType,
+            });
+          }
+
+          // Enqueue if not yet visited
+          if (!visited.has(rel.malId)) {
+            queue.push({ malId: rel.malId, title: rel.title, coverImageUrl: rel.coverImageUrl });
+          }
+        }
+
+        // Update progress counter and emit partial graph for UI feedback
+        this.loadingCount.set(visited.size);
+        this.graph.set({
+          rootMalId,
+          nodes: Array.from(nodesMap.values()),
+          edges: Array.from(edgesMap.values()),
+        });
+
+        // Respect MAL API rate limit — 350 ms between calls
+        if (queue.length > 0 && !signal.aborted) {
+          await this._delay(350, signal);
+        }
+      } catch (err) {
+        if (signal.aborted) return;
+        // A single node failure is non-fatal — log and continue BFS
+        console.warn(`[FranchiseConstellation] Failed to fetch relations for ${item.malId}:`, err);
       }
-      return err.message || 'Failed to load franchise data';
     }
-    if (err instanceof Error) return err.message;
-    return 'Failed to load franchise data';
+
+    if (!signal.aborted) {
+      const finalGraph: FranchiseGraph = {
+        rootMalId,
+        nodes: Array.from(nodesMap.values()),
+        edges: Array.from(edgesMap.values()),
+      };
+      this.cache.set(rootMalId, finalGraph);
+      this.graph.set(finalGraph);
+      this.loading.set(false);
+    }
+  }
+
+  /** Wraps the HTTP observable as a Promise so we can use async/await. */
+  private _fetchNode(malId: string, signal: AbortSignal): Promise<FranchiseConstellationData> {
+    return new Promise((resolve, reject) => {
+      const sub = this.animeService.getFranchiseConstellation(malId).subscribe({
+        next: resolve,
+        error: reject,
+      });
+      signal.addEventListener('abort', () => {
+        sub.unsubscribe();
+        reject(new DOMException('BFS aborted', 'AbortError'));
+      });
+    });
+  }
+
+  /** Returns a promise that resolves after `ms` milliseconds, or rejects if aborted. */
+  private _delay(ms: number, signal: AbortSignal): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const id = setTimeout(resolve, ms);
+      signal.addEventListener('abort', () => {
+        clearTimeout(id);
+        reject(new DOMException('BFS aborted', 'AbortError'));
+      });
+    });
   }
 }

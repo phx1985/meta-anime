@@ -35,8 +35,8 @@
       </svg>
       <span class="constellation-title-label">{{ 'franchise.title' | translate }}</span>
     </div>
-    @if (svc.data()) {
-      <span class="constellation-anime-name">{{ svc.data()!.title }}</span>
+    @if (svc.graph()) {
+      <span class="constellation-anime-name">{{ rootTitle }}</span>
     }
   </div>
 
@@ -53,7 +53,9 @@
         <polygon class="loading-arrow" points="73,27 80,30 73,33" />
         <polygon class="loading-arrow" points="133,27 140,30 133,33" />
       </svg>
-      <p class="loading-label">{{ 'franchise.loading' | translate }}</p>
+      <p class="loading-label">
+        {{ 'franchise.loadingProgress' | translate: { count: svc.loadingCount() } }}
+      </p>
     </div>
   }
 
@@ -70,7 +72,7 @@
   }
 
   <!-- ── Graph ─────────────────────────────────────────────────────────── -->
-  @if (svc.data() && !svc.loading()) {
+  @if (svc.graph() && !svc.loading()) {
     <div
       class="constellation-graph-wrap"
       (pointerdown)="onPointerDown($event)"
@@ -81,17 +83,16 @@
       <div
         class="constellation-graph"
         [style.transform]="graphTransform()"
-        [style.width.px]="graphWidth()"
-        [style.height.px]="graphHeight()"
+        [style.width.px]="CANVAS_W"
+        [style.height.px]="CANVAS_H"
       >
         <!-- SVG layer for edges -->
         <svg
           class="graph-svg"
-          [attr.width]="graphWidth()"
-          [attr.height]="graphHeight()"
+          [attr.width]="CANVAS_W"
+          [attr.height]="CANVAS_H"
           aria-hidden="true"
         >
-          <!-- Arrow-head marker definition -->
           <defs>
             <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
               <polygon points="0 0, 8 3, 0 6" class="graph-arrow-head" />
@@ -107,16 +108,13 @@
         </svg>
 
         <!-- Nodes layer -->
-        @for (node of nodes(); track node.malId + node.zone) {
+        @for (node of displayNodes(); track node.malId) {
           <div
             class="constellation-node"
-            [class.constellation-node--center]="node.isCenter"
-            [class.constellation-node--left]="node.zone === 'left'"
-            [class.constellation-node--right]="node.zone === 'right'"
-            [class.constellation-node--other]="node.zone === 'other'"
+            [class.constellation-node--root]="node.isRoot"
+            [attr.data-mal-id]="node.malId"
             [style.left.px]="node.x"
             [style.top.px]="node.y"
-            (click)="openMalPage(node.malId)"
             role="button"
             tabindex="0"
             (keydown.enter)="openMalPage(node.malId)"
@@ -135,21 +133,16 @@
               <div class="node-poster-placeholder">{{ node.title.charAt(0) }}</div>
             }
 
-            <!-- Title + relation badge -->
+            <!-- Title + relation badge (shown by edges, not here for root) -->
             <div class="node-meta">
               <span class="node-title">{{ node.title }}</span>
-              @if (!node.isCenter && node.relationTypeKey) {
-                <span class="node-relation-badge">
-                  {{ relationI18nKey(node.relationTypeKey) | translate }}
-                </span>
-              }
             </div>
           </div>
         }
       </div>
     </div>
 
-    @if (!nodes().length || nodes().length === 1) {
+    @if (!displayNodes().length || displayNodes().length === 1) {
       <div class="constellation-empty">
         <p>{{ 'franchise.empty' | translate }}</p>
       </div>

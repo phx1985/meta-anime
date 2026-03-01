@@ -211,6 +211,29 @@ export interface FranchiseConstellationData {
   relations: FranchiseRelation[];
 }
 
+/** A single node in the full BFS-crawled franchise graph. */
+export interface FranchiseGraphNode {
+  malId: string;
+  title: string;
+  coverImageUrl?: string;
+  isRoot: boolean;
+}
+
+/** A directed edge in the franchise graph. */
+export interface FranchiseGraphEdge {
+  fromMalId: string;
+  toMalId: string;
+  /** Raw MAL relation_type (e.g. 'prequel', 'sequel') from `fromMalId`'s perspective. */
+  relationType?: string;
+}
+
+/** Full multi-hop franchise graph produced by BFS. */
+export interface FranchiseGraph {
+  rootMalId: string;
+  nodes: FranchiseGraphNode[];
+  edges: FranchiseGraphEdge[];
+}
+
 /** Serialisable snapshot of the seasonal filter panel state for saved presets. */
 export interface SeasonalSavedFilterState {
   genre?: string[];

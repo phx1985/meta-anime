@@ -192,40 +192,35 @@
   }
 }
 
-// ── Franchise Constellation floating trigger ──────────────────────────────────
-.cover-constellation-btn {
-  position: absolute;
-  bottom: 0.45rem;
-  left: 0.45rem;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: rgba(10, 12, 24, 0.82);
-  border: 1.5px solid rgba(157, 148, 255, 0.6);
-  color: rgba(157, 148, 255, 0.9);
+// ── Franchise Constellation meta-row trigger ──────────────────────────────────
+.meta-constellation-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1.5px solid rgba(157, 148, 255, 0.4);
+  color: rgba(157, 148, 255, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 3;
-  backdrop-filter: blur(4px);
   transition:
     background 0.15s,
     border-color 0.15s,
-    color 0.15s,
-    transform 0.15s;
+    color 0.15s;
 
   svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     pointer-events: none;
   }
 
   &:hover {
-    background: rgba(157, 148, 255, 0.25);
+    background: rgba(157, 148, 255, 0.12);
     border-color: var(--accent-primary, #9d94ff);
-    color: #fff;
-    transform: scale(1.1);
+    color: var(--accent-primary, #9d94ff);
   }
 }
 

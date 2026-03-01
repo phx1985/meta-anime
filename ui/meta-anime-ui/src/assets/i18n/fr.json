@@ -498,6 +498,7 @@
     "franchise": {
         "title": "Constellation de Franchise",
         "loading": "Cartographie des données de franchise...",
+        "loadingProgress": "Cartographie en cours... ({{count}} nœuds trouvés)",
         "empty": "Aucun anime lié trouvé dans les données de franchise.",
         "close": "Fermer",
         "viewButton": "Voir la Constellation de Franchise",

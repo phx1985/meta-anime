@@ -134,12 +134,13 @@
 }
 
 .loading-label {
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.6);
-  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.04em;
   animation: textPulse 1.6s ease-in-out infinite;
   margin: 0;
+  text-align: center;
 }
 
 // ── Error State ───────────────────────────────────────────────────────────────
@@ -175,7 +176,7 @@
   will-change: transform;
 }
 
-// SVG edge layer fills the graph area
+// SVG edge layer
 .graph-svg {
   position: absolute;
   top: 0;
@@ -186,12 +187,12 @@
 
 .graph-edge {
   fill: none;
-  stroke: rgba(157, 148, 255, 0.5);
-  stroke-width: 2;
+  stroke: rgba(157, 148, 255, 0.45);
+  stroke-width: 1.8;
 }
 
 .graph-arrow-head {
-  fill: rgba(157, 148, 255, 0.6);
+  fill: rgba(157, 148, 255, 0.55);
 }
 
 // ── Nodes ─────────────────────────────────────────────────────────────────────
@@ -199,7 +200,7 @@
 .constellation-node {
   position: absolute;
   width: 144px; // NODE_W
-  cursor: pointer;
+  cursor: grab;
   border-radius: 10px;
   overflow: hidden;
   display: flex;
@@ -208,18 +209,21 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   transition:
-    transform 0.18s cubic-bezier(0.34, 1.4, 0.64, 1),
     box-shadow 0.18s;
   animation: nodeIn 0.4s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 
-  &:hover {
-    transform: translateY(-4px) scale(1.02);
-    z-index: 2;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  &:active {
+    cursor: grabbing;
+    z-index: 100;
   }
 
-  // ── Center node: pulsating golden/accent glow — no "You Are Here" text ────
-  &--center {
+  &:hover {
+    z-index: 10;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65);
+  }
+
+  // Root node: pulsating accent glow
+  &--root {
     width: 160px; // CENTER_W
     border: 2px solid var(--accent-primary, #9d94ff);
     box-shadow:
@@ -230,10 +234,6 @@
       nodeIn 0.4s cubic-bezier(0.34, 1.4, 0.64, 1) both,
       centerGlow 2.4s ease-in-out infinite;
     z-index: 1;
-
-    &:hover {
-      transform: translateY(-4px) scale(1.02);
-    }
   }
 }
 
@@ -241,16 +241,15 @@
 
 .node-poster {
   width: 100%;
-  // Center node: 160px wide, ~224px tall (aspect 4:5.6)
-  // Related nodes: 144px wide, ~200px tall (aspect 4:5.56)
-  height: 200px;
+  height: 200px; // NODE_H
   object-fit: cover;
   object-position: top center;
   display: block;
   flex-shrink: 0;
+  pointer-events: none; // prevent browser image drag
 
-  .constellation-node--center & {
-    height: 224px;
+  .constellation-node--root & {
+    height: 224px; // CENTER_H
   }
 }
 
@@ -265,14 +264,15 @@
   font-weight: 800;
   color: rgba(255, 255, 255, 0.4);
   flex-shrink: 0;
+  pointer-events: none;
 
-  .constellation-node--center & {
+  .constellation-node--root & {
     height: 224px;
     font-size: 3rem;
   }
 }
 
-// ── Node meta (title + badge) ─────────────────────────────────────────────────
+// ── Node meta (title) ─────────────────────────────────────────────────────────
 
 .node-meta {
   padding: 0.5rem 0.55rem 0.55rem;
@@ -287,44 +287,13 @@
   font-weight: 700;
   color: rgba(255, 255, 255, 0.92);
   line-height: 1.35;
-  // Allow up to 4 lines — no hard clamp that cuts off long titles
   display: -webkit-box;
   -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
 
-  .constellation-node--center & {
+  .constellation-node--root & {
     font-size: 0.75rem;
-  }
-}
-
-.node-relation-badge {
-  align-self: flex-start;
-  font-size: 0.6rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.12rem 0.45rem;
-  border-radius: 4px;
-  white-space: nowrap;
-  line-height: 1.4;
-
-  .constellation-node--left & {
-    background: rgba(99, 172, 255, 0.15);
-    color: #63acff;
-    border: 1px solid rgba(99, 172, 255, 0.3);
-  }
-
-  .constellation-node--right & {
-    background: rgba(52, 211, 153, 0.15);
-    color: #34d399;
-    border: 1px solid rgba(52, 211, 153, 0.3);
-  }
-
-  .constellation-node--other & {
-    background: rgba(157, 148, 255, 0.15);
-    color: var(--accent-primary, #9d94ff);
-    border: 1px solid rgba(157, 148, 255, 0.3);
   }
 }
 
@@ -365,7 +334,6 @@
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-// Pulsating golden/accent glow for the center "You Are Here" node
 @keyframes centerGlow {
   0%, 100% {
     box-shadow:

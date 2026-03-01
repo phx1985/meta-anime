@@ -498,6 +498,7 @@
     "franchise": {
         "title": "Franchise Constellation",
         "loading": "Mapping Franchise Data...",
+        "loadingProgress": "Mapping Franchise... ({{count}} nodes found)",
         "empty": "No related anime found in the franchise data.",
         "close": "Close",
         "viewButton": "View Franchise Constellation",
