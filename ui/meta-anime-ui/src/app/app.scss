@@ -56,26 +56,10 @@
   color: var(--accent-primary) !important;
 }
 
-// Mobile menu collapse — Angular-driven, smooth max-height animation
+// Mobile menu collapse — on mobile the drawer replaces this; keep desktop flex behavior
 .navbar-collapse {
   @media (max-width: 991.98px) {
-    display: flex;
-    width: 100%;
-    flex-direction: column;
-    overflow: hidden;
-    max-height: 0;
-    transition: max-height 0.3s ease;
-    order: 4;
-
-    &.show {
-      max-height: 60rem;
-      padding-top: 0.5rem;
-      padding-bottom: 0.5rem;
-    }
-
-    .navbar-nav {
-      display: none; // hidden on mobile — bottom nav handles primary navigation
-    }
+    display: none; // drawer handles all mobile navigation
   }
 
   @media (min-width: 992px) {
@@ -107,6 +91,7 @@
     .btn-lucky,
     .btn-settings,
     .btn-lang,
+    .lang-dropdown-wrap,
     .btn-os-theme,
     .btn-theme-toggle,
     .navbar-divider {
@@ -162,7 +147,11 @@
   flex-shrink: 0;
 }
 
-// ── Language button ────────────────────────────────────────────────────────────
+// ── Language button & dropdown ─────────────────────────────────────────────────
+.lang-dropdown-wrap {
+  position: relative;
+}
+
 .btn-lang {
   display: inline-flex;
   align-items: center;
@@ -185,6 +174,55 @@
     color: var(--accent-primary);
     border-color: var(--accent-primary);
     background: rgba(108, 99, 255, 0.06);
+  }
+}
+
+.lang-chevron {
+  transition: transform 0.18s ease;
+  &--open { transform: rotate(180deg); }
+}
+
+.lang-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 130px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+  z-index: 9999;
+  overflow: hidden;
+  animation: langDropIn 0.15s ease both;
+}
+
+@keyframes langDropIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.lang-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.55rem 1rem;
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease, color 0.12s ease;
+
+  &:hover {
+    background: var(--bg-secondary);
+    color: var(--accent-primary);
+  }
+
+  &--active {
+    color: var(--accent-primary);
+    font-weight: 700;
   }
 }
 
@@ -1098,97 +1136,160 @@
   white-space: pre-line;
 }
 
-// ── Mobile menu extras (inside hamburger, visible only on mobile) ──────────────
+// ── Mobile Side Drawer ─────────────────────────────────────────────────────────
 
-.mobile-menu-extras {
-  display: none; // hidden on desktop
+.drawer-backdrop {
+  display: none;
 
   @media (max-width: 991.98px) {
     display: block;
-    width: 100%;
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    animation: drawerBdIn 0.22s ease;
   }
 }
 
-.mobile-menu-sep {
-  height: 1px;
-  background: var(--navbar-border);
-  margin: 0.25rem 0;
+@keyframes drawerBdIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-.mobile-menu-section {
-  padding: 0.5rem 0;
+.drawer {
+  display: none;
+
+  @media (max-width: 991.98px) {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(320px, 88vw);
+    z-index: 1201;
+    background: var(--card-bg);
+    border-left: 1px solid var(--card-border);
+    box-shadow: -12px 0 48px rgba(0, 0, 0, 0.32);
+    animation: drawerSlideIn 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
 
-.mobile-menu-section-label {
+@keyframes drawerSlideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--card-border);
+  flex-shrink: 0;
+  padding-top: max(1rem, env(safe-area-inset-top, 1rem));
+}
+
+.drawer-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.drawer-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: var(--card-border);
+    color: var(--text-primary);
+  }
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.75rem 0;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.drawer-section-label {
   display: block;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
-  padding: 0.25rem 0.75rem 0.4rem;
+  padding: 0.4rem 1.25rem 0.3rem;
 }
 
-.mobile-menu-providers {
+.drawer-sep {
+  height: 1px;
+  background: var(--card-border);
+  margin: 0.5rem 1.25rem;
+}
+
+.drawer-providers {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  padding: 0 0.5rem;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0 0.75rem;
 }
 
-.mobile-menu-provider-link {
-  display: inline-flex;
+.drawer-provider {
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  min-height: 44px;
-  padding: 0.5rem 0.75rem;
-  border-radius: 10px;
-  font-size: 0.88rem;
+  gap: 0.9rem;
+  min-height: 56px;
+  padding: 0.75rem 0.75rem;
+  border-radius: 12px;
+  font-size: 1rem;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   text-decoration: none;
   background: transparent;
-  border: 1px solid var(--card-border);
+  border: none;
   cursor: pointer;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
+  transition: background 0.15s;
 
   &:hover {
     background: var(--bg-secondary);
-    color: var(--accent-primary);
-    border-color: var(--accent-primary);
   }
 
-  img {
-    display: block;
-    flex-shrink: 0;
-  }
+  img { flex-shrink: 0; }
 
   &--disabled {
     opacity: 0.45;
     filter: grayscale(1);
-
-    &:hover {
-      opacity: 0.6;
-      filter: grayscale(0.5);
-    }
   }
 }
 
-.mobile-menu-link {
+.drawer-nav-link {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  min-height: 48px;
-  padding: 0.75rem 1rem;
-  font-size: 0.95rem;
+  gap: 0.9rem;
+  min-height: 56px;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
   font-weight: 500;
   color: var(--text-secondary);
   text-decoration: none;
-  border-radius: 0;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: background 0.15s, color 0.15s;
 
   &:hover {
     background: var(--bg-secondary);
@@ -1197,20 +1298,114 @@
 
   &--active {
     color: var(--accent-primary);
+    font-weight: 600;
   }
 
-  svg {
-    flex-shrink: 0;
-    opacity: 0.7;
+  svg { flex-shrink: 0; opacity: 0.75; }
+}
+
+// ── Drawer: big theme toggle ───────────────────────────────────────────────────
+.drawer-theme-toggle {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.4rem 1.25rem 0.75rem;
+}
+
+.drawer-theme-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 52px;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  border: 2px solid var(--card-border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+
+  &:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+
+  &--active {
+    border-color: var(--accent-primary);
+    background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+    color: var(--accent-primary);
   }
 }
 
-.mobile-menu-controls {
+.drawer-os-btn {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5rem 1rem 0.75rem;
-  flex-wrap: wrap;
+  min-height: 52px;
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: var(--bg-secondary);
+    color: var(--accent-primary);
+  }
+
+  &--active {
+    color: var(--accent-primary);
+    font-weight: 600;
+  }
+
+  svg { flex-shrink: 0; }
+}
+
+.drawer-os-check {
+  margin-left: auto;
+  color: var(--accent-primary);
+}
+
+// ── Drawer: language selector ──────────────────────────────────────────────────
+.drawer-lang-options {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.4rem 1.25rem 0.75rem;
+}
+
+.drawer-lang-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  border: 2px solid var(--card-border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+
+  &:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+
+  &--active {
+    border-color: var(--accent-primary);
+    background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+    color: var(--accent-primary);
+  }
 }
 
 // Also ensure mobile nav-link touch targets are large enough

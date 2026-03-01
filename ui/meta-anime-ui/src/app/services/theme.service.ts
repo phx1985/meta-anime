@@ -45,6 +45,15 @@ export class ThemeService {
     localStorage.setItem(this.STORAGE_KEY, this.isDarkTheme() ? 'dark' : 'light');
   }
 
+  setDarkTheme(dark: boolean): void {
+    // Manual set disables OS follow
+    if (this.followOsTheme()) {
+      this.setFollowOsTheme(false);
+    }
+    this.isDarkTheme.set(dark);
+    localStorage.setItem(this.STORAGE_KEY, dark ? 'dark' : 'light');
+  }
+
   setFollowOsTheme(val: boolean): void {
     this.followOsTheme.set(val);
     localStorage.setItem(this.FOLLOW_OS_KEY, val ? 'true' : 'false');

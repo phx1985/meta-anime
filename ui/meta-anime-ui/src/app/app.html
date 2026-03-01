@@ -2,135 +2,31 @@
   <div class="container">
     <a class="navbar-brand" routerLink="/">Meta Anime<span class="navbar-page-label" aria-hidden="true">@if (currentPageKey()) { · {{ currentPageKey() | translate }} }</span></a>
 
-    <!-- Mobile hamburger (Angular-driven) -->
+    <!-- Mobile hamburger — opens side drawer -->
     <button class="navbar-toggler" type="button" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen()"
       aria-controls="navbarNav" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <div class="navbar-collapse" [class.show]="menuOpen()" id="navbarNav">
+    <!-- Desktop nav links (hidden on mobile) -->
+    <div class="navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
-          <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
-            (click)="closeMenu()">
+          <a class="nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
             {{ 'nav.home' | translate }}
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/animes" routerLinkActive="active" (click)="closeMenu()">
+          <a class="nav-link" routerLink="/animes" routerLinkActive="active">
             {{ 'nav.animes' | translate }}
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" routerLink="/seasonal" routerLinkActive="active" (click)="closeMenu()">
+          <a class="nav-link" routerLink="/seasonal" routerLinkActive="active">
             {{ 'nav.seasonal' | translate }}
           </a>
         </li>
       </ul>
-
-      <!-- ── Mobile-only extras inside hamburger menu ── -->
-      <div class="mobile-menu-extras">
-        <div class="mobile-menu-sep" aria-hidden="true"></div>
-
-        <!-- Provider links -->
-        <div class="mobile-menu-section">
-          <span class="mobile-menu-section-label">{{ 'nav.providers' | translate }}</span>
-          <div class="mobile-menu-providers">
-            <a class="mobile-menu-provider-link" [href]="malHomeUrl" target="_blank" rel="noopener noreferrer"
-              (click)="closeMenu()">
-              <img src="assets/images/mal.svg" alt="MAL" width="22" height="22" />
-              <span>MyAnimeList</span>
-            </a>
-            @if (sonarrHomeUrl()) {
-              @if (providerState.sonarrEnabled()) {
-                <a class="mobile-menu-provider-link" [href]="sonarrHomeUrl()" target="_blank" rel="noopener noreferrer"
-                  (click)="closeMenu()">
-                  <img src="assets/images/sonarr.svg" alt="Sonarr" width="22" height="22" />
-                  <span>Sonarr</span>
-                </a>
-              } @else {
-                <button type="button" class="mobile-menu-provider-link mobile-menu-provider-link--disabled"
-                  (click)="openDisabledProviderModal('sonarr', $event)">
-                  <img src="assets/images/sonarr.svg" alt="Sonarr" width="22" height="22" />
-                  <span>Sonarr</span>
-                </button>
-              }
-            }
-            @if (plexHomeUrl()) {
-              @if (providerState.plexEnabled()) {
-                <a class="mobile-menu-provider-link" href="javascript:void(0)" (click)="openPlexHomeLink($event); closeMenu()">
-                  <img src="assets/images/plex.svg" alt="Plex" width="22" height="22" />
-                  <span>Plex</span>
-                </a>
-              } @else {
-                <button type="button" class="mobile-menu-provider-link mobile-menu-provider-link--disabled"
-                  (click)="openDisabledProviderModal('plex', $event)">
-                  <img src="assets/images/plex.svg" alt="Plex" width="22" height="22" />
-                  <span>Plex</span>
-                </button>
-              }
-            }
-          </div>
-        </div>
-
-        <div class="mobile-menu-sep" aria-hidden="true"></div>
-
-        <!-- Settings link -->
-        <a class="mobile-menu-link" routerLink="/settings" routerLinkActive="mobile-menu-link--active"
-          (click)="closeMenu()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            aria-hidden="true">
-            <circle cx="12" cy="12" r="3" />
-            <path
-              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
-          {{ 'nav.settings' | translate }}
-        </a>
-
-        <div class="mobile-menu-sep" aria-hidden="true"></div>
-
-        <!-- Theme and language controls -->
-        <div class="mobile-menu-controls">
-          <button class="btn-lang" type="button" (click)="switchLanguage()" [title]="'lang.switch' | translate">
-            {{ 'lang.switch' | translate }}
-          </button>
-          <button class="btn-os-theme" type="button" [class.btn-os-theme--active]="themeService.followOsTheme()"
-            (click)="toggleFollowOs()" [title]="'theme.followOs' | translate"
-            [attr.aria-pressed]="themeService.followOsTheme()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              aria-hidden="true">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-              <line x1="8" y1="21" x2="16" y2="21" />
-              <line x1="12" y1="17" x2="12" y2="21" />
-            </svg>
-          </button>
-          <button class="btn-theme-toggle" type="button" (click)="toggleTheme()" [title]="'theme.toggle' | translate"
-            [attr.aria-label]="'theme.toggle' | translate">
-            <span class="btn-theme-track">
-              <span class="btn-theme-thumb" [class.btn-theme-thumb--dark]="themeService.isDarkTheme()">
-                @if (themeService.isDarkTheme()) {
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-                } @else {
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  aria-hidden="true">
-                  <circle cx="12" cy="12" r="5" />
-                  <line x1="12" y1="1" x2="12" y2="3" />
-                  <line x1="12" y1="21" x2="12" y2="23" />
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                  <line x1="1" y1="12" x2="3" y2="12" />
-                  <line x1="21" y1="12" x2="23" y2="12" />
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </svg>
-                }
-              </span>
-            </span>
-          </button>
-        </div>
-      </div>
     </div>
 
     <div class="navbar-actions">
@@ -300,10 +196,28 @@
 
       <span class="navbar-divider" aria-hidden="true"></span>
 
-      <!-- Language switcher -->
-      <button class="btn-lang" type="button" (click)="switchLanguage()" [title]="'lang.switch' | translate">
-        {{ 'lang.switch' | translate }}
-      </button>
+      <!-- Language dropdown (desktop) -->
+      <div class="lang-dropdown-wrap" (click)="$event.stopPropagation()">
+        <button class="btn-lang" type="button" (click)="toggleLangDropdown($event)"
+          [attr.aria-expanded]="langDropdownOpen()" [title]="'lang.selectLanguage' | translate">
+          {{ currentLang() | uppercase }}
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            aria-hidden="true" class="lang-chevron" [class.lang-chevron--open]="langDropdownOpen()">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+        @if (langDropdownOpen()) {
+          <div class="lang-dropdown" role="listbox" [attr.aria-label]="'lang.selectLanguage' | translate">
+            @for (lang of availableLanguages; track lang.code) {
+              <button type="button" class="lang-option" role="option"
+                [class.lang-option--active]="currentLang() === lang.code"
+                (click)="switchLanguage(lang.code)">
+                {{ lang.label }}
+              </button>
+            }
+          </div>
+        }
+      </div>
 
       <!-- OS-theme follow toggle -->
       <button class="btn-os-theme" type="button" [class.btn-os-theme--active]="themeService.followOsTheme()"
@@ -350,7 +264,149 @@
   </div>
 </nav>
 
+<!-- ── Mobile Side Drawer ────────────────────────────────────────────────── -->
+@if (menuOpen()) {
+<div class="drawer-backdrop" (click)="closeMenu()" aria-hidden="true"></div>
+<aside class="drawer" [class.drawer--open]="menuOpen()" role="dialog" aria-modal="true"
+  [attr.aria-label]="'nav.menu' | translate">
+  <!-- Drawer header -->
+  <div class="drawer-header">
+    <span class="drawer-title">Meta Anime</span>
+    <button class="drawer-close" type="button" (click)="closeMenu()" aria-label="Close menu">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Scrollable body -->
+  <div class="drawer-body">
+
+    <!-- Provider links -->
+    <div class="drawer-section-label">{{ 'nav.providers' | translate }}</div>
+    <div class="drawer-providers">
+      <a class="drawer-provider" [href]="malHomeUrl" target="_blank" rel="noopener noreferrer"
+        (click)="closeMenu()">
+        <img src="assets/images/mal.svg" alt="MAL" width="28" height="28" />
+        <span>MyAnimeList</span>
+      </a>
+      @if (sonarrHomeUrl()) {
+        @if (providerState.sonarrEnabled()) {
+          <a class="drawer-provider" [href]="sonarrHomeUrl()" target="_blank" rel="noopener noreferrer"
+            (click)="closeMenu()">
+            <img src="assets/images/sonarr.svg" alt="Sonarr" width="28" height="28" />
+            <span>Sonarr</span>
+          </a>
+        } @else {
+          <button type="button" class="drawer-provider drawer-provider--disabled"
+            (click)="openDisabledProviderModal('sonarr', $event)">
+            <img src="assets/images/sonarr.svg" alt="Sonarr" width="28" height="28" />
+            <span>Sonarr</span>
+          </button>
+        }
+      }
+      @if (plexHomeUrl()) {
+        @if (providerState.plexEnabled()) {
+          <a class="drawer-provider" href="javascript:void(0)" (click)="openPlexHomeLink($event); closeMenu()">
+            <img src="assets/images/plex.svg" alt="Plex" width="28" height="28" />
+            <span>Plex</span>
+          </a>
+        } @else {
+          <button type="button" class="drawer-provider drawer-provider--disabled"
+            (click)="openDisabledProviderModal('plex', $event)">
+            <img src="assets/images/plex.svg" alt="Plex" width="28" height="28" />
+            <span>Plex</span>
+          </button>
+        }
+      }
+    </div>
+
+    <div class="drawer-sep" aria-hidden="true"></div>
+
+    <!-- Settings link -->
+    <a class="drawer-nav-link" routerLink="/settings" routerLinkActive="drawer-nav-link--active"
+      (click)="closeMenu()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        aria-hidden="true">
+        <circle cx="12" cy="12" r="3" />
+        <path
+          d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      </svg>
+      {{ 'nav.settings' | translate }}
+    </a>
+
+    <div class="drawer-sep" aria-hidden="true"></div>
+
+    <!-- ── Big theme toggle row ── -->
+    <div class="drawer-section-label">{{ 'theme.label' | translate }}</div>
+    <div class="drawer-theme-toggle">
+      <button class="drawer-theme-btn" type="button"
+        [class.drawer-theme-btn--active]="!themeService.isDarkTheme()"
+        (click)="themeService.setDarkTheme(false)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          aria-hidden="true">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+        {{ 'theme.light' | translate }}
+      </button>
+      <button class="drawer-theme-btn" type="button"
+        [class.drawer-theme-btn--active]="themeService.isDarkTheme()"
+        (click)="themeService.setDarkTheme(true)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+        {{ 'theme.dark' | translate }}
+      </button>
+    </div>
+
+    <!-- OS follow toggle row -->
+    <button class="drawer-os-btn" type="button" [class.drawer-os-btn--active]="themeService.followOsTheme()"
+      (click)="toggleFollowOs()" [attr.aria-pressed]="themeService.followOsTheme()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        aria-hidden="true">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+        <line x1="8" y1="21" x2="16" y2="21" />
+        <line x1="12" y1="17" x2="12" y2="21" />
+      </svg>
+      {{ 'theme.followOs' | translate }}
+      @if (themeService.followOsTheme()) {
+        <svg class="drawer-os-check" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      }
+    </button>
+
+    <div class="drawer-sep" aria-hidden="true"></div>
+
+    <!-- ── Language selector ── -->
+    <div class="drawer-section-label">{{ 'lang.selectLanguage' | translate }}</div>
+    <div class="drawer-lang-options">
+      @for (lang of availableLanguages; track lang.code) {
+        <button type="button" class="drawer-lang-btn"
+          [class.drawer-lang-btn--active]="currentLang() === lang.code"
+          (click)="switchLanguage(lang.code)">
+          {{ lang.label }}
+        </button>
+      }
+    </div>
+
+  </div>
+</aside>
+}
+
 <router-outlet />
+
 
 <!-- ── Mobile Bottom Navigation Bar ─────────────────────────────────────── -->
 <nav class="bottom-nav" [class.bottom-nav--hidden]="bottomNavHidden() || anyOverlayOpen()" aria-label="Primary navigation">
