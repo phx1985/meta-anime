@@ -25,6 +25,12 @@ export class PopupService {
    */
   readonly addProviderModalOpen = signal(false);
 
+  /**
+   * Set to `true` by the franchise constellation component when the full-screen
+   * overlay is open.  Included in the global anyOverlayOpen check.
+   */
+  readonly franchiseConstellationOpen = signal(false);
+
   // ── Disabled-provider interception modal ─────────────────────────────────────
 
   /** Which provider is currently blocked; `null` means the modal is closed. */

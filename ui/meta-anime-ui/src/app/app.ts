@@ -24,11 +24,13 @@ import { ProviderStateService } from './services/provider-state.service';
 import { PopupService } from './services/popup.service';
 import { PlexDeepLinkService } from './services/plex-deep-link.service';
 import { LuckyPickComponent } from './lucky-pick/lucky-pick.component';
+import { FranchiseConstellationComponent } from './franchise-constellation/franchise-constellation.component';
+import { FranchiseConstellationService } from './services/franchise-constellation.service';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent, UpperCasePipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent, UpperCasePipe, FranchiseConstellationComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -42,6 +44,7 @@ export class App implements OnInit, AfterViewInit {
   private destroyRef = inject(DestroyRef);
   readonly providerState = inject(ProviderStateService);
   readonly popupService = inject(PopupService);
+  readonly franchiseConstellationSvc = inject(FranchiseConstellationService);
   private plexDeepLink = inject(PlexDeepLinkService);
 
   @ViewChild('navbarEl', { read: ElementRef }) private navbarEl?: ElementRef<HTMLElement>;
@@ -84,6 +87,7 @@ export class App implements OnInit, AfterViewInit {
       this.menuOpen() ||
       this.popupService.childOverlayOpen() ||
       this.popupService.addProviderModalOpen() ||
+      this.popupService.franchiseConstellationOpen() ||
       !!this.popupService.disabledProvider() ||
       !!this.popupService.synopsisTitle() ||
       !!this.popupService.syncPromptProvider(),

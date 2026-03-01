@@ -1,0 +1,307 @@
+<!-- Glassmorphism full-screen overlay -->
+<div
+  class="constellation-overlay"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-label]="'franchise.title' | translate"
+>
+  <!-- Close button -->
+  <button
+    type="button"
+    class="constellation-close"
+    (click)="close()"
+    [attr.aria-label]="'franchise.close' | translate"
+    [title]="'franchise.close' | translate"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <path d="M18 6L6 18M6 6l12 12" />
+    </svg>
+  </button>
+
+  <!-- Header -->
+  <div class="constellation-header">
+    <div class="constellation-title-row">
+      <!-- fa-code-branch style: branching chronological roadmap icon -->
+      <svg class="constellation-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="4.5" cy="15.5" r="1.8" />
+        <line x1="4.5" y1="13.7" x2="4.5" y2="9" />
+        <circle cx="4.5" cy="2.5" r="1.8" />
+        <line x1="4.5" y1="9" x2="4.5" y2="4.3" />
+        <circle cx="13.5" cy="2.5" r="1.8" />
+        <path d="M4.5 9 C4.5 4.5 13.5 4.5 13.5 4.3" />
+      </svg>
+      <span class="constellation-title-label">{{ 'franchise.title' | translate }}</span>
+    </div>
+
+    @if (rootTitle) {
+      <span class="constellation-anime-name">{{ rootTitle }}</span>
+    }
+  </div>
+
+  <!-- ── Error state ───────────────────────────────────────────────────── -->
+  @if (svc.error() && !svc.graph()) {
+    <div class="constellation-error">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
+      </svg>
+      <p>{{ svc.error() }}</p>
+    </div>
+  }
+
+  <!-- ── Centered loading overlay ─────────────────────────────────────── -->
+  @if (svc.loading() && !svc.graph()) {
+    <div class="loading-center" aria-live="polite">
+      <div class="loading-pill">
+        <span class="loading-pill-dot"></span>
+        <span class="loading-pill-text">
+          {{ 'franchise.loadingProgress' | translate: { count: svc.loadingCount() } }}
+        </span>
+      </div>
+    </div>
+  }
+
+  <!-- ── Graph (shown immediately as soon as first node is available) ─── -->
+  @if (svc.graph()) {
+    <div
+      class="constellation-graph-wrap"
+      [class.constellation-graph-wrap--locked]="svc.loading()"
+      (pointerdown)="onPointerDown($event)"
+      (pointermove)="onPointerMove($event)"
+      (pointerup)="onPointerUp()"
+      (pointercancel)="onPointerUp()"
+      (wheel)="onWheel($event)"
+      (touchstart)="onTouchStart($event)"
+      (touchmove)="onTouchMove($event)"
+    >
+      <!-- In-canvas loading progress pill (shown while BFS is still running) -->
+      @if (svc.loading()) {
+        <div class="loading-pill loading-pill--in-canvas" aria-live="polite">
+          <span class="loading-pill-dot"></span>
+          <span class="loading-pill-text">
+            {{ 'franchise.loadingProgress' | translate: { count: svc.loadingCount() } }}
+          </span>
+        </div>
+      }
+
+      <div
+        class="constellation-graph"
+        [style.transform]="graphTransform()"
+        [style.width.px]="CANVAS_W"
+        [style.height.px]="CANVAS_H"
+      >
+        <!-- SVG layer for edges -->
+        <svg
+          class="graph-svg"
+          [attr.width]="CANVAS_W"
+          [attr.height]="CANVAS_H"
+          aria-hidden="true"
+        >
+          <defs>
+            <!-- Arrowhead for canonical (solid) edges -->
+            <marker id="arrow-canonical" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" class="graph-arrow-head graph-arrow-head--canonical" />
+            </marker>
+          </defs>
+
+          @for (edge of edges(); track $index) {
+            <path
+              class="graph-edge graph-edge--canonical"
+              [attr.d]="edge.d"
+              marker-end="url(#arrow-canonical)"
+            />
+          }
+        </svg>
+
+        <!-- Nodes layer -->
+        @for (node of displayNodes(); track node.malId) {
+          <div
+            class="constellation-node"
+            [attr.data-mal-id]="node.malId"
+            [style.left.px]="node.x"
+            [style.top.px]="node.y"
+            role="button"
+            tabindex="0"
+            (keydown.enter)="openQuickLook(node.malId)"
+            (keydown.space)="openQuickLook(node.malId)"
+            [attr.aria-label]="node.title"
+            [title]="node.title"
+          >
+            <div
+              class="node-card-inner"
+              [class]="mediaTypeClass(node.mediaType)"
+            >
+              @if (node.coverImageUrl) {
+                <img
+                  class="node-poster"
+                  [src]="node.coverImageUrl"
+                  [alt]="node.title"
+                  loading="lazy"
+                />
+              } @else {
+                <div class="node-poster-placeholder">{{ node.title.charAt(0) }}</div>
+              }
+              <div class="node-meta">
+                <span class="node-title">{{ node.title }}</span>
+              </div>
+              <!-- V9: Truncation badge — shown when BFS pruned hidden relations -->
+              @if (node.isTruncated) {
+                <div class="node-truncated-badge" [title]="'franchise.truncated' | translate" aria-hidden="true">•••</div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (!displayNodes().length || displayNodes().length === 1) {
+      <div class="constellation-empty">
+        <p>{{ 'franchise.empty' | translate }}</p>
+      </div>
+    }
+
+    <!-- ── Desktop Legend (bottom-left) ───────────────────────────────── -->
+    <div class="edge-legend edge-legend--desktop" aria-label="Legend">
+      <span class="edge-legend-title">{{ 'franchise.legend.title' | translate }}</span>
+      <div class="edge-legend-item">
+        <svg class="edge-legend-svg" viewBox="0 0 36 8" aria-hidden="true">
+          <line x1="0" y1="4" x2="28" y2="4" class="legend-line legend-line--canonical" />
+          <polygon points="28,1 36,4 28,7" class="legend-arrow legend-arrow--canonical" />
+        </svg>
+        <span>{{ 'franchise.legend.canonical' | translate }}</span>
+      </div>
+
+      @if (presentMediaTypes().length) {
+        <!-- Media type swatches — only types present in this franchise -->
+        <div class="edge-legend-divider" aria-hidden="true"></div>
+        <span class="edge-legend-title">{{ 'franchise.legend.mediaTypes.title' | translate }}</span>
+        @for (type of presentMediaTypes(); track type) {
+          <div class="edge-legend-item">
+            <span class="legend-swatch" [class]="'legend-swatch--' + type" aria-hidden="true"></span>
+            <span>{{ 'franchise.legend.mediaTypes.' + type | translate }}</span>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- ── Mobile legend toggle button ───────────────────────────────── -->
+    <button
+      type="button"
+      class="legend-toggle-btn"
+      (click)="toggleLegend()"
+      [attr.aria-expanded]="legendOpen()"
+      [attr.aria-label]="'franchise.legend.title' | translate"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="8.01" />
+        <line x1="12" y1="12" x2="12" y2="16" />
+      </svg>
+    </button>
+
+    <!-- ── Mobile legend bottom-sheet ────────────────────────────────── -->
+    @if (legendOpen()) {
+      <div class="legend-sheet-backdrop" (click)="toggleLegend()" aria-hidden="true"></div>
+      <div class="legend-sheet" role="dialog" [attr.aria-label]="'franchise.legend.title' | translate">
+        <div class="legend-sheet-handle" aria-hidden="true"></div>
+        <span class="edge-legend-title">{{ 'franchise.legend.title' | translate }}</span>
+        <div class="edge-legend-item">
+          <svg class="edge-legend-svg" viewBox="0 0 36 8" aria-hidden="true">
+            <line x1="0" y1="4" x2="28" y2="4" class="legend-line legend-line--canonical" />
+            <polygon points="28,1 36,4 28,7" class="legend-arrow legend-arrow--canonical" />
+          </svg>
+          <span>{{ 'franchise.legend.canonical' | translate }}</span>
+        </div>
+        @if (presentMediaTypes().length) {
+          <div class="edge-legend-divider" aria-hidden="true"></div>
+          <span class="edge-legend-title">{{ 'franchise.legend.mediaTypes.title' | translate }}</span>
+          @for (type of presentMediaTypes(); track type) {
+            <div class="edge-legend-item">
+              <span class="legend-swatch" [class]="'legend-swatch--' + type" aria-hidden="true"></span>
+              <span>{{ 'franchise.legend.mediaTypes.' + type | translate }}</span>
+            </div>
+          }
+        }
+      </div>
+    }
+  }
+
+  <!-- ── Quick Look modal (layered over the full constellation) ──────── -->
+  @if (quickLookNode()) {
+    <div
+      class="ql-backdrop"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="quickLookNode()!.title"
+      (click)="closeQuickLook()"
+    >
+      <div class="ql-modal" (click)="$event.stopPropagation()">
+        <!-- Close button -->
+        <button
+          type="button"
+          class="ql-close"
+          (click)="closeQuickLook()"
+          [attr.aria-label]="'franchise.close' | translate"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+
+        <!-- Poster -->
+        @if (quickLookNode()!.coverImageUrl) {
+          <img
+            class="ql-poster"
+            [src]="quickLookNode()!.coverImageUrl"
+            [alt]="quickLookNode()!.title"
+          />
+        } @else {
+          <div class="ql-poster-placeholder" aria-hidden="true">
+            {{ quickLookNode()!.title.charAt(0) }}
+          </div>
+        }
+
+        <!-- Body -->
+        <div class="ql-body">
+          <h2 class="ql-title">{{ quickLookNode()!.title }}</h2>
+
+          <!-- Airing dates -->
+          <p class="ql-dates">
+            {{ formatDateOrUnknown(quickLookNode()!.startDate) }}
+            –
+            {{ formatDateOrUnknown(quickLookNode()!.endDate) }}
+          </p>
+
+          <!-- Media type pill -->
+          @if (quickLookNode()!.mediaType) {
+            <span class="ql-media-pill" [class]="mediaTypeClass(quickLookNode()!.mediaType, 'ql-media-pill')">
+              {{ 'animeCard.mediaType.' + quickLookNode()!.mediaType!.toLowerCase() | translate }}
+            </span>
+          }
+
+          <!-- Synopsis (truncated, with Read More for long text) -->
+          @if (quickLookNode()!.synopsis) {
+            <p class="ql-synopsis">{{ quickLookNode()!.synopsis }}</p>
+            @if (quickLookSynopsisLong()) {
+              <button type="button" class="ql-read-more" (click)="onQuickLookReadMore()">
+                {{ 'franchise.quickLook.readMore' | translate }}
+              </button>
+            }
+          }
+        </div>
+
+        <!-- Action buttons -->
+        <div class="ql-actions">
+          <button type="button" class="ql-btn ql-btn--close" (click)="closeQuickLook()">
+            {{ 'franchise.close' | translate }}
+          </button>
+          <button type="button" class="ql-btn ql-btn--mal" (click)="openNodeOnMal()">
+            <img class="ql-mal-icon" src="assets/images/mal.svg" alt="" aria-hidden="true" />
+            {{ 'franchise.quickLook.openInMal' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

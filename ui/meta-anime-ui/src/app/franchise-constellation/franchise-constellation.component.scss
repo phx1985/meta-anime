@@ -1,0 +1,750 @@
+// ── Franchise Constellation Overlay ─────────────────────────────────────────
+
+:host {
+  display: contents;
+}
+
+.constellation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100dvh;
+  z-index: 1099;
+  background: rgba(10, 15, 25, 0.9);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: overlayIn 0.25s ease both;
+}
+
+// Close button
+.constellation-close {
+  position: absolute;
+  top: env(safe-area-inset-top, 1rem);
+  right: env(safe-area-inset-right, 1rem);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.15s, transform 0.15s;
+
+  svg { width: 20px; height: 20px; pointer-events: none; }
+
+  &:hover { background: rgba(255, 255, 255, 0.2); transform: scale(1.08); }
+}
+
+// Header — compact padding to reclaim vertical canvas space
+.constellation-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.55rem 4rem 0.35rem;
+  flex-shrink: 0;
+}
+
+.constellation-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-primary, #9d94ff);
+}
+
+.constellation-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--accent-primary, #9d94ff);
+  flex-shrink: 0;
+}
+
+.constellation-title-label {
+  color: var(--accent-primary, #9d94ff);
+}
+
+.constellation-anime-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  text-align: center;
+  max-width: 72vw;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// ── Centered loading overlay (before any graph nodes arrive) ─────────────────
+
+.loading-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// ── Live-building status pill ─────────────────────────────────────────────────
+
+.loading-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(157, 148, 255, 0.12);
+  border: 1px solid rgba(157, 148, 255, 0.25);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(157, 148, 255, 0.9);
+  animation: pillFadeIn 0.3s ease both;
+
+  // In-canvas variant: absolute overlay within the graph-wrap during live build
+  &--in-canvas {
+    position: absolute;
+    top: 0.75rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 6;
+    pointer-events: none;
+  }
+}
+
+.loading-pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-primary, #9d94ff);
+  animation: pillDotPulse 1s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.loading-pill-text {
+  white-space: nowrap;
+}
+
+// ── Error State ───────────────────────────────────────────────────────────────
+
+.constellation-error {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: rgba(239, 68, 68, 0.9);
+
+  p { font-size: 0.82rem; margin: 0; text-align: center; max-width: 320px; }
+}
+
+// ── Graph viewport ────────────────────────────────────────────────────────────
+
+.constellation-graph-wrap {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+
+  &:active { cursor: grabbing; }
+
+  // V6: Observe-then-play lock — no pointer interaction while building
+  &--locked {
+    cursor: default !important;
+    pointer-events: none;
+  }
+}
+
+.constellation-graph {
+  position: absolute;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+// SVG edge layer
+.graph-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+// ── UML-style edges ───────────────────────────────────────────────────────────
+
+.graph-edge {
+  fill: none;
+  stroke-width: 1.8;
+  animation: edgeIn 0.2s ease-out 0.18s both;
+
+  // Solid line for canonical story progression (prequel / sequel)
+  &--canonical {
+    stroke: rgba(157, 148, 255, 0.7);
+    stroke-dasharray: none;
+  }
+}
+
+.graph-arrow-head {
+  &--canonical { fill: rgba(157, 148, 255, 0.8); }
+}
+
+// ── Media-type color tokens ───────────────────────────────────────────────────
+// Colors deliberately match the app's existing status-pill palette so the
+// design language stays consistent across the whole UI.
+
+$media-tv:      #3b82f6; // blue  — same as "watching" pill
+$media-movie:   #ef4444; // red   — same as "dropped" pill
+$media-ova:     #22c55e; // green — same as "completed" pill
+$media-ona:     #f59e0b; // amber — same as "on_hold" pill
+$media-special: #a855f7; // purple — same as "plan_to_watch" pill
+$media-music:   #ec4899; // pink
+
+// ── Nodes ─────────────────────────────────────────────────────────────────────
+
+// Outer wrapper: position-only container — the graph engine sets left/top here.
+// No animation here so coordinate updates never fight the CSS transition.
+.constellation-node {
+  position: absolute;
+  width: 144px;
+  cursor: grab;
+  overflow: visible; // allow truncation badge to overflow
+  clip-path: none; // ensure badge is visible
+
+  &:active { cursor: grabbing; z-index: 100; }
+  &:hover  { z-index: 10; }
+  &:hover .node-card-inner { box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65); }
+}
+
+// Inner wrapper: the actual visual card that is animated.
+// Keeping animation here means the GPU-composited slide/fade never interferes
+// with the outer wrapper's left/top coordinate updates from the layout engine.
+.node-card-inner {
+  position: relative; // establishes stacking context for truncation badge
+  width: 100%;
+  border-radius: 10px;
+  overflow: visible; // allow truncation badge to overflow
+  display: flex;
+  flex-direction: column;
+  background: rgba(18, 20, 36, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  transition: box-shadow 0.18s;
+  animation: nodeIn 0.18s ease-out both;
+  will-change: transform, opacity;
+}
+
+.node-poster {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  flex-shrink: 0;
+  pointer-events: none;
+  border-radius: 9px 9px 0 0; // clip inside the card
+}
+
+.node-poster-placeholder {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(145deg, rgba(157, 148, 255, 0.18), rgba(157, 148, 255, 0.04));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.4);
+  flex-shrink: 0;
+  pointer-events: none;
+  border-radius: 9px 9px 0 0;
+}
+
+.node-meta {
+  padding: 0.5rem 0.55rem 0.55rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 0 0 9px 9px;
+  background: inherit;
+}
+
+.node-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// ── Media-type colored LEFT border per node (prominent ribbon) ────────────────
+// border-left: 6px solid gives a clear visual cue at a glance.
+// Using border-left (not box-shadow) keeps will-change: transform, opacity
+// on node-card-inner and the GPU-composited nodeIn animation unaffected.
+
+@mixin media-left-border($color) {
+  border-left: 6px solid $color;
+  border-radius: 10px;
+  .node-poster,
+  .node-poster-placeholder {
+    // top-left radius is smaller (4 px) to align flush with the 6 px left ribbon;
+    // top-right matches the card's own corner (9 px inside the 10 px outer radius).
+    border-radius: 4px 9px 0 0;
+  }
+}
+
+.node-card-inner--tv      { @include media-left-border($media-tv); }
+.node-card-inner--movie   { @include media-left-border($media-movie); }
+.node-card-inner--ova     { @include media-left-border($media-ova); }
+.node-card-inner--ona     { @include media-left-border($media-ona); }
+.node-card-inner--special,
+.node-card-inner--tv_special { @include media-left-border($media-special); }
+.node-card-inner--music   { @include media-left-border($media-music); }
+
+// ── V9: Truncation badge ──────────────────────────────────────────────────────
+.node-truncated-badge {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(157, 148, 255, 0.18);
+  border: 1px solid rgba(157, 148, 255, 0.45);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: rgba(157, 148, 255, 0.9);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+}
+
+// ── Edge Legend — desktop (bottom-left floating box) ─────────────────────────
+
+.edge-legend {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: rgba(10, 14, 26, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: none;
+  z-index: 5;
+  animation: pillFadeIn 0.4s ease both;
+}
+
+.edge-legend-title {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 0.1rem;
+}
+
+.edge-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.edge-legend-svg {
+  width: 36px;
+  height: 8px;
+  flex-shrink: 0;
+}
+
+.legend-line {
+  stroke-width: 1.8;
+
+  &--canonical {
+    stroke: rgba(157, 148, 255, 0.8);
+  }
+}
+
+.legend-arrow {
+  &--canonical { fill: rgba(157, 148, 255, 0.8); }
+}
+
+// ── Media type legend swatches ────────────────────────────────────────────────
+
+.edge-legend-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0.2rem 0;
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+
+  &--tv      { background: $media-tv; }
+  &--movie   { background: $media-movie; }
+  &--ova     { background: $media-ova; }
+  &--ona     { background: $media-ona; }
+  &--special,
+  &--tv_special { background: $media-special; }
+  &--music   { background: $media-music; }
+}
+
+// ── Mobile: legend toggle button & bottom-sheet ───────────────────────────────
+
+// The floating legend box is desktop-only
+.edge-legend--desktop {
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+// Floating "ⓘ" button shown only on mobile (bottom-right corner)
+.legend-toggle-btn {
+  display: none; // hidden on desktop
+
+  @media (max-width: 768px) {
+    display: flex;
+    position: absolute;
+    bottom: 1.25rem;
+    right: 1.25rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(10, 14, 26, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(157, 148, 255, 0.9);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 6;
+    transition: background 0.15s;
+
+    svg { width: 22px; height: 22px; pointer-events: none; }
+
+    &:hover { background: rgba(157, 148, 255, 0.2); }
+  }
+}
+
+// Translucent backdrop behind the bottom-sheet
+.legend-sheet-backdrop {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 7;
+    background: rgba(0, 0, 0, 0.4);
+    animation: overlayIn 0.15s ease both;
+  }
+}
+
+// Bottom-sheet panel
+.legend-sheet {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 8;
+    padding: 1rem 1.25rem calc(1rem + env(safe-area-inset-bottom, 0px));
+    background: rgba(12, 14, 28, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: none;
+    border-radius: 16px 16px 0 0;
+    animation: sheetIn 0.22s cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+}
+
+.legend-sheet-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.25);
+  align-self: center;
+  margin-bottom: 0.4rem;
+}
+
+// ── Empty State ───────────────────────────────────────────────────────────────
+
+.constellation-empty {
+  padding: 1rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.82rem;
+
+  p { margin: 0; }
+}
+
+// ── Animations ────────────────────────────────────────────────────────────────
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes nodeIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+@keyframes pillFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes edgeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pillDotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.7); }
+}
+
+@keyframes sheetIn {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+// ── Quick Look modal ──────────────────────────────────────────────────────────
+
+// Full-coverage backdrop inside the constellation (position:fixed parent)
+.ql-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: overlayIn 0.18s ease both;
+}
+
+// Centered card
+.ql-modal {
+  position: relative;
+  background: rgba(14, 16, 28, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 360px;
+  max-height: 88vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  animation: nodeIn 0.18s ease-out both;
+  overscroll-behavior: contain;
+}
+
+// Modal close button (absolute, top-right)
+.ql-close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  flex-shrink: 0;
+  transition: background 0.15s;
+
+  svg { width: 15px; height: 15px; pointer-events: none; }
+  &:hover { background: rgba(255, 255, 255, 0.2); }
+}
+
+// Large poster (fills card width)
+.ql-poster {
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  border-radius: 13px 13px 0 0;
+  flex-shrink: 0;
+}
+
+.ql-poster-placeholder {
+  width: 100%;
+  height: 200px;
+  background: linear-gradient(145deg, rgba(157, 148, 255, 0.18), rgba(157, 148, 255, 0.04));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.4);
+  border-radius: 13px 13px 0 0;
+  flex-shrink: 0;
+}
+
+// Scrollable body below the poster
+.ql-body {
+  padding: 0.9rem 1rem 0.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  flex: 1;
+}
+
+.ql-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0;
+  line-height: 1.35;
+  padding-right: 2rem; // avoid overlap with close button
+}
+
+.ql-dates {
+  font-size: 0.73rem;
+  color: rgba(157, 148, 255, 0.85);
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+// Media type pill inside the Quick Look modal
+.ql-media-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0.15rem 0.55rem;
+  border-radius: 5px;
+  text-transform: uppercase;
+  align-self: flex-start;
+
+  // Default (unknown type) — use accent-primary as fallback
+  background: rgba(157, 148, 255, 0.14);
+  color: rgba(157, 148, 255, 0.9);
+  border: 1px solid rgba(157, 148, 255, 0.3);
+
+  &--tv      { background: rgba($media-tv,      0.14); color: $media-tv;      border: 1px solid rgba($media-tv,      0.3); }
+  &--movie   { background: rgba($media-movie,   0.14); color: $media-movie;   border: 1px solid rgba($media-movie,   0.3); }
+  &--ova     { background: rgba($media-ova,     0.14); color: $media-ova;     border: 1px solid rgba($media-ova,     0.3); }
+  &--ona     { background: rgba($media-ona,     0.14); color: $media-ona;     border: 1px solid rgba($media-ona,     0.3); }
+  &--special,
+  &--tv_special { background: rgba($media-special, 0.14); color: $media-special; border: 1px solid rgba($media-special, 0.3); }
+  &--music   { background: rgba($media-music,   0.14); color: $media-music;   border: 1px solid rgba($media-music,   0.3); }
+}
+
+// Synopsis — CSS clamp to 5 lines
+.ql-synopsis {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.6;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// "Read More" trigger
+.ql-read-more {
+  background: none;
+  border: none;
+  color: var(--accent-primary, #9d94ff);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.15rem 0 0.5rem;
+  align-self: flex-start;
+
+  &:hover { text-decoration: underline; }
+}
+
+// Action row at the bottom of the modal
+.ql-actions {
+  display: flex;
+  gap: 0.55rem;
+  padding: 0.75rem 1rem 1rem;
+  flex-shrink: 0;
+}
+
+// Shared button shell
+.ql-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  text-decoration: none;
+  white-space: nowrap;
+
+  // "Close" variant
+  &--close {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.85);
+
+    &:hover { background: rgba(255, 255, 255, 0.14); }
+  }
+
+  // "Open in MAL" variant — MAL blue tint
+  &--mal {
+    background: rgba(47, 132, 181, 0.15);
+    border: 1px solid rgba(47, 132, 181, 0.35);
+    color: rgba(255, 255, 255, 0.9);
+
+    &:hover { background: rgba(47, 132, 181, 0.25); }
+  }
+}
+
+// MAL logo inside the button
+.ql-mal-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}

@@ -59,6 +59,8 @@
         "yearSelect": "Sélectionner une année",
         "prevYear": "Année précédente",
         "nextYear": "Année suivante",
+        "prevSeason": "Saison précédente",
+        "nextSeason": "Saison suivante",
         "openMal": "Ouvrir sur MyAnimeList",
         "loading": "Chargement des animes saisonniers…",
         "error": "Échec du chargement des animes saisonniers. Veuillez réessayer plus tard.",
@@ -275,6 +277,7 @@
             "ova": "OVA",
             "ona": "ONA",
             "special": "Spécial",
+            "tv_special": "Spécial TV",
             "music": "Musique",
             "unknown": "Inconnu"
         },
@@ -494,6 +497,49 @@
         "dark": "Sombre",
         "followOs": "Suivre le thème du système",
         "label": "Thème"
+    },
+    "franchise": {
+        "title": "Constellation de Franchise",
+        "loading": "Cartographie des données de franchise...",
+        "loadingProgress": "Cartographie en cours... ({{count}} nœuds trouvés)",
+        "empty": "Aucun anime lié trouvé dans les données de franchise.",
+        "close": "Fermer",
+        "viewButton": "Voir la Constellation de Franchise",
+        "openOnMal": "Ouvrir {{title}} sur MyAnimeList",
+        "mainStoryline": "Histoire Principale",
+        "truncated": "Plus…",
+        "legend": {
+            "title": "Légende",
+            "canonical": "Préquelle / Suite",
+            "indirect": "Dérivé / Récit secondaire",
+            "mediaTypes": {
+                "title": "Types de médias",
+                "tv": "Série TV",
+                "movie": "Film",
+                "ova": "OVA",
+                "ona": "ONA",
+                "special": "Spécial",
+                "tv_special": "Spécial TV",
+                "music": "Musique"
+            }
+        },
+        "relationType": {
+            "prequel": "Préquelle",
+            "sequel": "Suite",
+            "alternative_version": "Version alternative",
+            "alternative_setting": "Contexte alternatif",
+            "parent_story": "Récit parent",
+            "side_story": "Récit secondaire",
+            "summary": "Résumé",
+            "spin_off": "Dérivé",
+            "character": "Personnage",
+            "other": "Autre"
+        },
+        "quickLook": {
+            "unknownDate": "N/D",
+            "readMore": "Lire plus",
+            "openInMal": "Ouvrir sur MAL"
+        }
     },
     "genres": {
         "Action": "Action",

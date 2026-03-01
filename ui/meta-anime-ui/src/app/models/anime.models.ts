@@ -194,6 +194,57 @@ export interface SeasonalAnimeItem {
 
 export type SeasonName = 'winter' | 'spring' | 'summer' | 'fall';
 
+// ── Franchise Constellation ──────────────────────────────────────────────────
+
+export interface FranchiseRelation {
+  malId: string;
+  title: string;
+  coverImageUrl?: string;
+  relationType?: string;
+  relationTypeFormatted?: string;
+  mediaType?: string;
+}
+
+export interface FranchiseConstellationData {
+  malId: string;
+  title: string;
+  coverImageUrl?: string;
+  synopsis?: string;
+  startDate?: string;
+  endDate?: string;
+  mediaType?: string;
+  relations: FranchiseRelation[];
+}
+
+/** A single node in the full BFS-crawled franchise graph. */
+export interface FranchiseGraphNode {
+  malId: string;
+  title: string;
+  coverImageUrl?: string;
+  synopsis?: string;
+  startDate?: string;
+  endDate?: string;
+  mediaType?: string;
+  isRoot: boolean;
+  /** True when this node has relations that were pruned (branch depth cap or 40-card limit). */
+  isTruncated?: boolean;
+}
+
+/** A directed edge in the franchise graph. */
+export interface FranchiseGraphEdge {
+  fromMalId: string;
+  toMalId: string;
+  /** Raw MAL relation_type (e.g. 'prequel', 'sequel') from `fromMalId`'s perspective. */
+  relationType?: string;
+}
+
+/** Full multi-hop franchise graph produced by BFS. */
+export interface FranchiseGraph {
+  rootMalId: string;
+  nodes: FranchiseGraphNode[];
+  edges: FranchiseGraphEdge[];
+}
+
 /** Serialisable snapshot of the seasonal filter panel state for saved presets. */
 export interface SeasonalSavedFilterState {
   genre?: string[];

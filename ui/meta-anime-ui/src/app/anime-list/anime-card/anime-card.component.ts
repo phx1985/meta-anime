@@ -6,6 +6,7 @@ import { ScoreBadgeComponent } from './score-badge/score-badge.component';
 import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../../constants/genre-lists';
 import { PopupService } from '../../services/popup.service';
 import { PlexDeepLinkService } from '../../services/plex-deep-link.service';
+import { FranchiseConstellationService } from '../../services/franchise-constellation.service';
 
 @Component({
   selector: 'app-anime-card',
@@ -29,6 +30,7 @@ export class AnimeCardComponent {
   private translate = inject(TranslateService);
   private popupService = inject(PopupService);
   private plexDeepLink = inject(PlexDeepLinkService);
+  protected franchiseConstellation = inject(FranchiseConstellationService);
 
   showAltTitles = signal(false);
   showLightbox = signal(false);
@@ -292,5 +294,11 @@ export class AnimeCardComponent {
     if (!this.plexUrl) return;
     event.preventDefault();
     this.plexDeepLink.openLink(this.plexUrl);
+  }
+
+  openFranchiseConstellation(): void {
+    const malId = this.mal?.id;
+    if (!malId) return;
+    this.franchiseConstellation.open(malId, this.displayTitle, this.coverImageUrl);
   }
 }

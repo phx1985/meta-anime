@@ -1418,4 +1418,34 @@ public sealed class AnimeMediatorService(
 
     #endregion
 
+    public async Task<Result<FranchiseConstellationResponse>> GetFranchiseConstellationAsync(string malId)
+    {
+        var result = await malAnimeSource.GetWithRelatedAnimeAsync(malId);
+        if (result.IsFailure)
+            return Result.Failure<FranchiseConstellationResponse>(result.Error);
+
+        var anime = result.Value;
+        var relations = (anime.RelatedAnime ?? [])
+            .Where(r => r.Node != null)
+            .Select(r => new FranchiseRelationDto(
+                r.Node!.Id.ToString(),
+                r.Node.Title ?? string.Empty,
+                r.Node.MainPicture?.Large ?? r.Node.MainPicture?.Medium,
+                r.RelationType,
+                r.RelationTypeFormatted,
+                r.Node.MediaType
+            ));
+
+        return Result.Success(new FranchiseConstellationResponse(
+            anime.Id.ToString(),
+            anime.Title ?? string.Empty,
+            anime.MainPicture?.Large ?? anime.MainPicture?.Medium,
+            anime.Synopsis,
+            anime.StartDate,
+            anime.EndDate,
+            relations,
+            anime.MediaType
+        ));
+    }
+
 }

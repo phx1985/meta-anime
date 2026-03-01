@@ -10,6 +10,7 @@ import {
   CreateAnimeRequest,
   UpdateAnimeRequest,
   SeasonalAnimeItem,
+  FranchiseConstellationData,
 } from '../models/anime.models';
 import { MalListStatusRequest } from '../models/sonarr.models';
 
@@ -95,5 +96,9 @@ export class AnimeService {
 
   refreshMalToken(): Observable<void> {
     return this.http.post<void>(`${this.malBase}/token/refresh`, null);
+  }
+
+  getFranchiseConstellation(malId: string): Observable<FranchiseConstellationData> {
+    return this.http.get<FranchiseConstellationData>(`${this.malBase}/franchise/${malId}`);
   }
 }

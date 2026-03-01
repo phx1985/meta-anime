@@ -38,6 +38,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
                                            "media_type, " +
                                            "mean, " +
                                            "num_episodes";
+    private const string FRANCHISE_FIELDS = "id,title,main_picture,synopsis,start_date,end_date,media_type,related_anime{node{id,title,main_picture,media_type},relation_type,relation_type_formatted}";
     #endregion
 
     #region IMalAnimeSourceService Implementation
@@ -178,6 +179,46 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
 
         return Result.Success<IList<MalAnime>>(filtered);
     }
+    public async Task<Result<MalAnime>> GetWithRelatedAnimeAsync(string id)
+    {
+        var baseUrl = await GetBaseUrlAsync();
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            return Result.Failure<MalAnime>(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."));
+        }
+
+        var token = await malTokenService.GetAccessTokenAsync();
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return Result.Failure<MalAnime>(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
+        }
+
+        var (response, _) = await ExecuteWithAutoRefreshAsync(
+            token,
+            t => FetchAnimeWithRelatedAsync(baseUrl, id, t));
+        var json = response.Content!;
+        if (response.IsSuccessful)
+        {
+            var result = JsonSerializer.Deserialize<MalAnime>(json)!;
+            return Result.Success(result);
+        }
+        else
+        {
+            var error = JsonSerializer.Deserialize<MalError>(json)!;
+            return Result.Failure<MalAnime>(new Error(error.Message));
+        }
+    }
+
+    private async Task<RestResponse> FetchAnimeWithRelatedAsync(string baseUrl, string id, string token)
+    {
+        var animeUri = new Uri($"{baseUrl}/anime/{id}?fields={FRANCHISE_FIELDS}");
+        var restClient = new RestClient(animeUri);
+        var restRequest = new RestRequest { Method = Method.Get };
+        restRequest.AddHeader("Authorization", $"Bearer {token}");
+
+        return await ExecuteRequestAsync(restClient, restRequest);
+    }
+
     public async Task<Result> UpdateListStatusAsync(string animeId, string status, int numWatchedEpisodes, int score)
     {
         var baseUrl = await GetBaseUrlAsync();
