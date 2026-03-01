@@ -9,14 +9,7 @@ import {
 
 /** Hard cap: stop fetching when the graph reaches this many nodes. */
 const MAX_NODES = 40;
-/**
- * Branch depth limit.
- * Trunk nodes (prequel/sequel) are always at depth 0.
- * A direct side branch is depth 1; a side-branch of a side-branch is depth 2.
- * Nodes at depth ≥ MAX_BRANCH_DEPTH will not have their own relations fetched.
- */
-const MAX_BRANCH_DEPTH = 2;
-/** Relation types that constitute the canonical main trunk. */
+/** Relation types that constitute the canonical main trunk (prequel/sequel only). */
 const TRUNK_RELATION_TYPES = new Set(['prequel', 'sequel']);
 
 @Injectable({ providedIn: 'root' })
@@ -83,9 +76,9 @@ export class FranchiseConstellationService {
     /** All discovered edges, keyed by "fromId→toId" for deduplication. */
     const edgesMap = new Map<string, FranchiseGraphEdge>();
 
-    // Seed the queue with the root node (branchDepth=0 for trunk)
-    const queue: Array<{ malId: string; title: string; coverImageUrl?: string; branchDepth: number }> = [
-      { malId: rootMalId, title: rootTitle, coverImageUrl: rootCoverUrl, branchDepth: 0 },
+    // Seed the queue with the root node
+    const queue: Array<{ malId: string; title: string; coverImageUrl?: string }> = [
+      { malId: rootMalId, title: rootTitle, coverImageUrl: rootCoverUrl },
     ];
     nodesMap.set(rootMalId, {
       malId: rootMalId,
@@ -101,25 +94,6 @@ export class FranchiseConstellationService {
       if (visited.has(item.malId)) continue;
       visited.add(item.malId);
 
-      // V9: Do not fetch relations for deep branch nodes (≥ MAX_BRANCH_DEPTH).
-      // Mark such nodes as truncated so the UI can show a "..." badge.
-      if (item.branchDepth >= MAX_BRANCH_DEPTH) {
-        const existing = nodesMap.get(item.malId);
-        if (existing) {
-          nodesMap.set(item.malId, { ...existing, isTruncated: true });
-        }
-        this.loadingCount.set(visited.size);
-        this.graph.set({
-          rootMalId,
-          nodes: Array.from(nodesMap.values()),
-          edges: Array.from(edgesMap.values()),
-        });
-        if (queue.length > 0 && !signal.aborted) {
-          await this._delay(200, signal);
-        }
-        continue;
-      }
-
       try {
         const result = await this._fetchNode(item.malId, signal);
         if (signal.aborted) return;
@@ -132,23 +106,18 @@ export class FranchiseConstellationService {
           isRoot: item.malId === rootMalId,
         };
 
-        // Track whether any relations were pruned for this node
+        // Track whether any relations were pruned by the 40-card kill switch
         let hasHiddenRelations = false;
 
-        // Process each relation returned by the API
+        // Process ONLY prequel/sequel relations — ignore spin-offs, side stories, etc.
         for (const rel of result.relations ?? []) {
-          const isTrunkRelation = TRUNK_RELATION_TYPES.has(rel.relationType ?? '');
+          if (!TRUNK_RELATION_TYPES.has(rel.relationType ?? '')) continue;
 
-          // V9: 40-card kill switch — stop adding nodes once hard cap is reached
+          // 40-card kill switch — stop adding nodes once hard cap is reached
           if (nodesMap.size >= MAX_NODES && !nodesMap.has(rel.malId)) {
             hasHiddenRelations = true;
             continue;
           }
-
-          // V9: Branch depth limit — non-trunk relations from depth ≥ MAX_BRANCH_DEPTH-1
-          // are not followed. (We still allow the node to exist at depth MAX_BRANCH_DEPTH
-          // so it renders, but we skip fetching ITS relations above.)
-          const neighborBranchDepth = isTrunkRelation ? 0 : item.branchDepth + 1;
 
           // Ensure the related node exists in our map
           if (!nodesMap.has(rel.malId)) {
@@ -173,12 +142,7 @@ export class FranchiseConstellationService {
 
           // Enqueue if not yet visited
           if (!visited.has(rel.malId)) {
-            queue.push({
-              malId: rel.malId,
-              title: rel.title,
-              coverImageUrl: rel.coverImageUrl,
-              branchDepth: neighborBranchDepth,
-            });
+            queue.push({ malId: rel.malId, title: rel.title, coverImageUrl: rel.coverImageUrl });
           }
         }
 

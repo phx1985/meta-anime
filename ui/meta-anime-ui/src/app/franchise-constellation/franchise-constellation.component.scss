@@ -169,22 +169,15 @@
   fill: none;
   stroke-width: 1.8;
 
-  // Solid line for canonical story progression (prequel / sequel / parent_story)
+  // Solid line for canonical story progression (prequel / sequel)
   &--canonical {
     stroke: rgba(157, 148, 255, 0.7);
     stroke-dasharray: none;
-  }
-
-  // Dashed line for indirect media (spin-off, side story, alternative, etc.)
-  &--indirect {
-    stroke: rgba(157, 148, 255, 0.38);
-    stroke-dasharray: 6 4;
   }
 }
 
 .graph-arrow-head {
   &--canonical { fill: rgba(157, 148, 255, 0.8); }
-  &--indirect  { fill: rgba(157, 148, 255, 0.45); }
 }
 
 // ── Nodes ─────────────────────────────────────────────────────────────────────
@@ -288,27 +281,6 @@
   z-index: 5;
 }
 
-// ── V9: Trunk bounding box (Core Storyline) ───────────────────────────────────
-
-.trunk-bbox {
-  fill: rgba(157, 148, 255, 0.04);
-  stroke: rgba(157, 148, 255, 0.28);
-  stroke-width: 1.5;
-  stroke-dasharray: 6 4;
-  pointer-events: none;
-}
-
-.trunk-bbox-label {
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  fill: rgba(157, 148, 255, 0.55);
-  pointer-events: none;
-  dominant-baseline: auto;
-}
-
 // ── Edge Legend ───────────────────────────────────────────────────────────────
 
 .edge-legend {
@@ -358,16 +330,10 @@
   &--canonical {
     stroke: rgba(157, 148, 255, 0.8);
   }
-
-  &--indirect {
-    stroke: rgba(157, 148, 255, 0.45);
-    stroke-dasharray: 4 3;
-  }
 }
 
 .legend-arrow {
   &--canonical { fill: rgba(157, 148, 255, 0.8); }
-  &--indirect  { fill: rgba(157, 148, 255, 0.45); }
 }
 
 // ── Empty State ───────────────────────────────────────────────────────────────

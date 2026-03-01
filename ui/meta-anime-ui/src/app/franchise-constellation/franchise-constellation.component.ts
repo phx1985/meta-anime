@@ -15,12 +15,11 @@ import { FranchiseConstellationService } from '../services/franchise-constellati
 import { PopupService } from '../services/popup.service';
 import { FranchiseGraph, FranchiseGraphEdge, FranchiseGraphNode } from '../models/anime.models';
 
-// ── Layout constants (V9: uniform card sizes + fishbone layout) ──────────────
+// ── Layout constants (Final Pivot: uniform cards, 1D horizontal timeline) ────
 const NODE_W = 144;
 const NODE_H = 200;
-/** V9: All nodes use the same size — root is highlighted via glow only. */
+/** Generous horizontal gap so directional arrows are clearly visible. */
 const H_GAP = 200;
-const V_GAP = 80;
 const PADDING = 120;
 const CANVAS_W = 8000;
 const CANVAS_H = 6000;
@@ -30,15 +29,8 @@ const HEADER_APPROX_H = 90;
 const DRAG_THRESHOLD = 5;
 const MIN_SCALE = 0.05;
 const MAX_SCALE = 3;
-/** Padding around the trunk bounding box outline. */
-const TRUNK_BBOX_PAD = 24;
 
 const TRUNK_TYPES = new Set(['prequel', 'sequel']);
-const CANONICAL_TYPES = new Set(['prequel', 'sequel', 'parent_story']);
-
-function isCanonicalRelation(relationType: string | undefined): boolean {
-  return CANONICAL_TYPES.has(relationType ?? '');
-}
 
 function isTrunkRelation(relationType: string | undefined): boolean {
   return TRUNK_TYPES.has(relationType ?? '');
@@ -93,7 +85,7 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     }));
   });
 
-  /** UML edges — path string plus canonical/indirect flag. */
+  /** Timeline edges — all are canonical (prequel/sequel solid arrows). */
   protected edges = computed<DisplayEdge[]>(() => {
     const g = this.svc.graph();
     const pos = this.nodePositions();
@@ -101,40 +93,9 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     return g.edges
       .map((e) => ({
         d: this._edgePath(e, g, pos),
-        isCanonical: isCanonicalRelation(e.relationType),
+        isCanonical: true,
       }))
       .filter((e) => e.d !== '');
-  });
-
-  /**
-   * Bounding box around the trunk (main storyline) nodes, used to render
-   * the "Core Storyline" highlight rectangle in the SVG layer.
-   * Returns null when there are no trunk nodes yet.
-   */
-  protected trunkBbox = computed<{ x: number; y: number; w: number; h: number } | null>(() => {
-    const g = this.svc.graph();
-    const pos = this.nodePositions();
-    if (!g) return null;
-
-    const trunkIds = this._computeTrunkNodeIds(g);
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-
-    for (const malId of trunkIds) {
-      const p = pos.get(malId);
-      if (!p) continue;
-      if (p.x < minX) minX = p.x;
-      if (p.y < minY) minY = p.y;
-      if (p.x + NODE_W > maxX) maxX = p.x + NODE_W;
-      if (p.y + NODE_H > maxY) maxY = p.y + NODE_H;
-    }
-
-    if (!isFinite(minX)) return null;
-    return {
-      x: minX - TRUNK_BBOX_PAD,
-      y: minY - TRUNK_BBOX_PAD,
-      w: maxX - minX + TRUNK_BBOX_PAD * 2,
-      h: maxY - minY + TRUNK_BBOX_PAD * 2,
-    };
   });
 
   // ── Pointer state ─────────────────────────────────────────────────────────
@@ -161,7 +122,7 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
       const g = this.svc.graph();
       if (!g) return;
 
-      const newPositions = this._computeFishbonePositions(g);
+      const newPositions = this._computeTimelinePositions(g);
 
       // Merge: only insert nodes that don't already have a position and were
       // not manually repositioned by the user.
@@ -314,12 +275,13 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     return this.svc.graph()?.nodes.find((n) => n.isRoot)?.title;
   }
 
-  // ── V9 Fishbone "Trunk and Branch" layout ─────────────────────────────────
+  // ── Final Pivot: 1D Horizontal Timeline layout ────────────────────────────
 
   /**
-   * Runs trunk BFS following only prequel/sequel edges from root.
-   * Returns Map<malId, rawColumn> where column 0 = root's column.
-   * Shared by the layout algorithm and the trunk bounding-box computed signal.
+   * Runs BFS following only prequel/sequel edges from root.
+   * Returns Map<malId, rawColumn> where column 0 = root's column,
+   * prequel neighbours get column − 1, sequel neighbours get column + 1.
+   * Used to determine left-to-right relationship order (prequels left, sequels right).
    */
   private _computeTrunkCols(graph: FranchiseGraph): Map<string, number> {
     const trunkCols = new Map<string, number>();
@@ -357,20 +319,14 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     return trunkCols;
   }
 
-  /** Returns the set of trunk node IDs (used by the `trunkBbox` computed signal). */
-  private _computeTrunkNodeIds(graph: FranchiseGraph): Set<string> {
-    return new Set(this._computeTrunkCols(graph).keys());
-  }
-
   /**
-   * Positions every node using a strict fishbone layout.
-   * V9: All nodes use NODE_W × NODE_H (uniform grid — root is NOT larger).
+   * Places all nodes in a single straight horizontal line ordered by
+   * relationship: prequels to the left, sequels to the right of the root.
+   * Since the service only fetches prequel/sequel relations, every node
+   * in the graph is part of this single timeline — no branches exist.
    */
-  private _computeFishbonePositions(graph: FranchiseGraph): Map<string, { x: number; y: number }> {
+  private _computeTimelinePositions(graph: FranchiseGraph): Map<string, { x: number; y: number }> {
     const positions = new Map<string, { x: number; y: number }>();
-
-    // ── Phase 1: Trunk placement ──────────────────────────────────────────
-    // Reuse _computeTrunkCols to avoid duplicating the BFS logic.
     const trunkCols = this._computeTrunkCols(graph);
     const colValues = Array.from(trunkCols.values());
     const minCol = Math.min(...colValues);
@@ -380,68 +336,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
       const x = PADDING + col * (NODE_W + H_GAP);
       const y = TRUNK_CENTER_Y - NODE_H / 2;
       positions.set(malId, { x, y });
-    }
-
-    // ── Phase 2: Branch nodes ─────────────────────────────────────────────
-    const trunkNodeIds = new Set(trunkCols.keys());
-    const branchNodes = graph.nodes
-      .filter((n) => !trunkNodeIds.has(n.malId))
-      .sort((a, b) => a.malId.localeCompare(b.malId));
-
-    const findTrunkAnchor = (branchMalId: string): string => {
-      for (const edge of graph.edges) {
-        const nbr =
-          edge.fromMalId === branchMalId
-            ? edge.toMalId
-            : edge.toMalId === branchMalId
-              ? edge.fromMalId
-              : null;
-        if (nbr && trunkNodeIds.has(nbr)) return nbr;
-      }
-      for (const edge1 of graph.edges) {
-        const hop1 =
-          edge1.fromMalId === branchMalId
-            ? edge1.toMalId
-            : edge1.toMalId === branchMalId
-              ? edge1.fromMalId
-              : null;
-        if (!hop1) continue;
-        for (const edge2 of graph.edges) {
-          const hop2 =
-            edge2.fromMalId === hop1
-              ? edge2.toMalId
-              : edge2.toMalId === hop1
-                ? edge2.fromMalId
-                : null;
-          if (hop2 && trunkNodeIds.has(hop2)) return hop2;
-        }
-      }
-      return graph.rootMalId;
-    };
-
-    const aboveCount = new Map<string, number>();
-    const belowCount = new Map<string, number>();
-
-    for (const branchNode of branchNodes) {
-      const anchorId = findTrunkAnchor(branchNode.malId);
-      const anchorPos = positions.get(anchorId);
-      if (!anchorPos) continue;
-
-      const a = aboveCount.get(anchorId) ?? 0;
-      const b = belowCount.get(anchorId) ?? 0;
-
-      const goAbove = a <= b;
-      let y: number;
-
-      if (goAbove) {
-        y = TRUNK_CENTER_Y - NODE_H / 2 - (a + 1) * (NODE_H + V_GAP);
-        aboveCount.set(anchorId, a + 1);
-      } else {
-        y = TRUNK_CENTER_Y + NODE_H / 2 + V_GAP + b * (NODE_H + V_GAP);
-        belowCount.set(anchorId, b + 1);
-      }
-
-      positions.set(branchNode.malId, { x: anchorPos.x, y });
     }
 
     return positions;
