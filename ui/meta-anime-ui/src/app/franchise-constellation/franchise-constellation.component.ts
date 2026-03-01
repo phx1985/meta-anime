@@ -197,12 +197,12 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
       (r) => !LEFT_TYPES.has(r.relationType ?? '') && !RIGHT_TYPES.has(r.relationType ?? ''),
     );
 
-    // Helper: total column height for N items
-    const colH = (count: number, h: number) =>
-      count > 0 ? count * h + (count - 1) * V_GAP : 0;
+    // Helper: total span for N items of size `itemSize` separated by `gap`
+    const totalSpan = (count: number, itemSize: number, gap: number) =>
+      count > 0 ? count * itemSize + (count - 1) * gap : 0;
 
-    const leftColH = colH(prequels.length, NODE_H);
-    const rightColH = colH(sequels.length, NODE_H);
+    const leftColH = totalSpan(prequels.length, NODE_H, V_GAP);
+    const rightColH = totalSpan(sequels.length, NODE_H, V_GAP);
     // Main row height is the tallest of the three center-row zones
     const mainRowH = Math.max(leftColH, CENTER_H, rightColH);
 
@@ -251,7 +251,7 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     });
 
     // Other nodes (bottom row, centered beneath center node)
-    const othersRowW = colH(others.length, NODE_W); // reuse helper for width
+    const othersRowW = totalSpan(others.length, NODE_W, H_GAP);
     const othersStartX = centerX + CENTER_W / 2 - othersRowW / 2;
     others.forEach((rel, i) => {
       nodes.push({
