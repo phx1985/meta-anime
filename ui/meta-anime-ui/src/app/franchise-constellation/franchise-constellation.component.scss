@@ -140,6 +140,12 @@
   user-select: none;
 
   &:active { cursor: grabbing; }
+
+  // V6: Observe-then-play lock — no pointer interaction while building
+  &--locked {
+    cursor: default !important;
+    pointer-events: none;
+  }
 }
 
 .constellation-graph {

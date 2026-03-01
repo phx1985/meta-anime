@@ -1,9 +1,6 @@
 <!-- Glassmorphism full-screen overlay -->
 <div
   class="constellation-overlay"
-  (wheel)="onWheel($event)"
-  (touchstart)="onTouchStart($event)"
-  (touchmove)="onTouchMove($event)"
   role="dialog"
   aria-modal="true"
   [attr.aria-label]="'franchise.title' | translate"
@@ -24,15 +21,14 @@
   <!-- Header -->
   <div class="constellation-header">
     <div class="constellation-title-row">
-      <!-- Elegant branching-timeline icon -->
-      <svg class="constellation-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="4" cy="12" r="2" />
-        <circle cx="12" cy="12" r="2" />
-        <circle cx="20" cy="12" r="2" />
-        <line x1="6" y1="12" x2="10" y2="12" />
-        <line x1="14" y1="12" x2="18" y2="12" />
-        <path d="M12 10 V6 M9 6 h6" />
-        <path d="M12 14 V18 M9 18 h6" />
+      <!-- fa-code-branch style: branching chronological roadmap icon -->
+      <svg class="constellation-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="4.5" cy="15.5" r="1.8" />
+        <line x1="4.5" y1="13.7" x2="4.5" y2="9" />
+        <circle cx="4.5" cy="2.5" r="1.8" />
+        <line x1="4.5" y1="9" x2="4.5" y2="4.3" />
+        <circle cx="13.5" cy="2.5" r="1.8" />
+        <path d="M4.5 9 C4.5 4.5 13.5 4.5 13.5 4.3" />
       </svg>
       <span class="constellation-title-label">{{ 'franchise.title' | translate }}</span>
     </div>
@@ -68,10 +64,14 @@
   @if (svc.graph()) {
     <div
       class="constellation-graph-wrap"
+      [class.constellation-graph-wrap--locked]="svc.loading()"
       (pointerdown)="onPointerDown($event)"
       (pointermove)="onPointerMove($event)"
       (pointerup)="onPointerUp()"
       (pointercancel)="onPointerUp()"
+      (wheel)="onWheel($event)"
+      (touchstart)="onTouchStart($event)"
+      (touchmove)="onTouchMove($event)"
     >
       <div
         class="constellation-graph"
