@@ -275,6 +275,27 @@
         </svg>
         MAL
       </a>
+      @if (mal?.id) {
+        <button
+          type="button"
+          class="action action--constellation"
+          (click)="openFranchiseConstellation()"
+          aria-label="View Franchise Constellation"
+          title="View Franchise Constellation"
+        >
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon" aria-hidden="true">
+            <circle cx="3.5" cy="3.5" r="1.2" fill="currentColor" />
+            <circle cx="12.5" cy="3.5" r="1.2" fill="currentColor" />
+            <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+            <circle cx="3.5" cy="12.5" r="1.2" fill="currentColor" />
+            <circle cx="12.5" cy="12.5" r="1.2" fill="currentColor" />
+            <line x1="3.5" y1="3.5" x2="8" y2="8" stroke="currentColor" stroke-width="1" />
+            <line x1="12.5" y1="3.5" x2="8" y2="8" stroke="currentColor" stroke-width="1" />
+            <line x1="3.5" y1="12.5" x2="8" y2="8" stroke="currentColor" stroke-width="1" />
+            <line x1="12.5" y1="12.5" x2="8" y2="8" stroke="currentColor" stroke-width="1" />
+          </svg>
+        </button>
+      }
     </div>
 
     @if (codecSegments !== null || sizeOnDisk) {

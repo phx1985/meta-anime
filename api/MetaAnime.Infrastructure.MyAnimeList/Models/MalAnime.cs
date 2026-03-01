@@ -38,6 +38,9 @@ public partial class MalAnime
     public string? Title { get; set; }
     [JsonPropertyName("num_episodes")]
     public int NumEpisodes { get; set; }
+
+    [JsonPropertyName("related_anime")]
+    public List<RelatedAnimeEdge>? RelatedAnime { get; set; }
 }
 
 public sealed class MalStartSeason

@@ -194,6 +194,23 @@ export interface SeasonalAnimeItem {
 
 export type SeasonName = 'winter' | 'spring' | 'summer' | 'fall';
 
+// ── Franchise Constellation ──────────────────────────────────────────────────
+
+export interface FranchiseRelation {
+  malId: string;
+  title: string;
+  coverImageUrl?: string;
+  relationType?: string;
+  relationTypeFormatted?: string;
+}
+
+export interface FranchiseConstellationData {
+  malId: string;
+  title: string;
+  coverImageUrl?: string;
+  relations: FranchiseRelation[];
+}
+
 /** Serialisable snapshot of the seasonal filter panel state for saved presets. */
 export interface SeasonalSavedFilterState {
   genre?: string[];

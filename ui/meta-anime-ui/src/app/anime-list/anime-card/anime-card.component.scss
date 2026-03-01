@@ -526,6 +526,18 @@
     border-color: #2e51a2;
     background: rgba(46, 81, 162, 0.1);
   }
+
+  &--constellation {
+    padding: 0.25rem 0.45rem;
+    color: var(--text-muted);
+    border-color: var(--card-border);
+
+    &:hover {
+      color: var(--accent-primary);
+      border-color: var(--accent-primary);
+      background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+    }
+  }
 }
 
 .action-icon {

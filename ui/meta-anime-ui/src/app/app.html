@@ -571,6 +571,11 @@
   </div>
 </div>
 }
+<!-- ── Franchise Constellation Overlay ──────────────────────────────────── -->
+@if (franchiseConstellationSvc.isOpen()) {
+  <app-franchise-constellation />
+}
+
 <!-- ── Synopsis Modal ───────────────────────────────────────────────────── -->
 @if (synopsisModal()) {
 <div class="synopsis-backdrop"
