@@ -20,6 +20,33 @@ public sealed class MalController(
     private static readonly string[] ValidListStatuses =
         ["watching", "completed", "on_hold", "dropped", "plan_to_watch"];
 
+    /// <summary>Returns the franchise constellation (related anime) for the given MAL anime ID.</summary>
+    [HttpGet("franchise/{malId}")]
+    [Authorize]
+    public async Task<ActionResult> GetFranchiseConstellation(string malId)
+    {
+        if (string.IsNullOrWhiteSpace(malId))
+            return BadRequest(PresentationConstants.Messages.MalAnimeIdRequired);
+
+        try
+        {
+            var result = await animeMediatorService.GetFranchiseConstellationAsync(malId);
+
+            if (result.IsFailure)
+            {
+                logger.LogError("Franchise constellation fetch failed for anime '{MalId}': {Error}", malId, result.Error.Message);
+                return StatusCode(500, result.Error.Message);
+            }
+
+            return Ok(result.Value);
+        }
+        catch (MalAuthenticationException ex)
+        {
+            logger.LogWarning("MAL authentication failure when fetching franchise for '{MalId}': {Message}", malId, ex.Message);
+            return Unauthorized(new { code = "MAL.AuthenticationFailed", message = ex.Message });
+        }
+    }
+
     /// <summary>Adds or updates an anime entry in the authenticated user's MAL list.</summary>
     [HttpPut("list/{animeId}")]
     [Authorize]

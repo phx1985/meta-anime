@@ -9,4 +9,5 @@ public interface IMalAnimeSourceService<T> : IAnimeSourceService<T>
 {
     Task<Result<IList<T>>> GetSeasonalAsync(int year, string season);
     Task<Result> UpdateListStatusAsync(string animeId, string status, int numWatchedEpisodes, int score);
+    Task<Result<T>> GetWithRelatedAnimeAsync(string animeId);
 }

@@ -15,6 +15,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { trigger, style, animate, transition } from '@angular/animations';
 import { PopupService } from '../../services/popup.service';
 import { PlexDeepLinkService } from '../../services/plex-deep-link.service';
+import { FranchiseConstellationService } from '../../services/franchise-constellation.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SeasonalAnimeItem } from '../../models/anime.models';
 import { ScoreBadgeComponent } from '../../anime-list/anime-card/score-badge/score-badge.component';
@@ -69,6 +70,7 @@ export class SeasonalCardComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private popupService = inject(PopupService);
   private plexDeepLink = inject(PlexDeepLinkService);
+  protected franchiseConstellation = inject(FranchiseConstellationService);
 
   showLightbox = signal(false);
 
@@ -295,6 +297,14 @@ export class SeasonalCardComponent implements OnInit {
 
   openSynopsisModal(): void {
     this.popupService.openSynopsis(this.displayTitle, this.description);
+  }
+
+  openFranchiseConstellation(): void {
+    this.franchiseConstellation.open(
+      this.anime.malId,
+      this.displayTitle,
+      this.coverImageUrl,
+    );
   }
   openLightbox(): void {
     if (this.coverImageUrl) this.showLightbox.set(true);

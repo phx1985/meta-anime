@@ -277,6 +277,7 @@
             "ova": "OVA",
             "ona": "ONA",
             "special": "Special",
+            "tv_special": "TV Special",
             "music": "Music",
             "unknown": "Unknown"
         },
@@ -496,6 +497,49 @@
         "dark": "Dark",
         "followOs": "Sync with OS theme",
         "label": "Theme"
+    },
+    "franchise": {
+        "title": "Franchise Constellation",
+        "loading": "Mapping Franchise Data...",
+        "loadingProgress": "Mapping Franchise... ({{count}} nodes found)",
+        "empty": "No related anime found in the franchise data.",
+        "close": "Close",
+        "viewButton": "View Franchise Constellation",
+        "openOnMal": "Open {{title}} on MyAnimeList",
+        "mainStoryline": "Main Storyline",
+        "truncated": "More…",
+        "legend": {
+            "title": "Legend",
+            "canonical": "Prequel / Sequel",
+            "indirect": "Spin-off / Side Story",
+            "mediaTypes": {
+                "title": "Media Types",
+                "tv": "TV Series",
+                "movie": "Movie",
+                "ova": "OVA",
+                "ona": "ONA",
+                "special": "Special",
+                "tv_special": "TV Special",
+                "music": "Music"
+            }
+        },
+        "relationType": {
+            "prequel": "Prequel",
+            "sequel": "Sequel",
+            "alternative_version": "Alternative Version",
+            "alternative_setting": "Alternative Setting",
+            "parent_story": "Parent Story",
+            "side_story": "Side Story",
+            "summary": "Summary",
+            "spin_off": "Spin-off",
+            "character": "Character",
+            "other": "Other"
+        },
+        "quickLook": {
+            "unknownDate": "N/A",
+            "readMore": "Read More",
+            "openInMal": "Open in MAL"
+        }
     },
     "genres": {
         "Action": "Action",
