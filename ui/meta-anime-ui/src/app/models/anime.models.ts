@@ -208,6 +208,9 @@ export interface FranchiseConstellationData {
   malId: string;
   title: string;
   coverImageUrl?: string;
+  synopsis?: string;
+  startDate?: string;
+  endDate?: string;
   relations: FranchiseRelation[];
 }
 
@@ -216,6 +219,9 @@ export interface FranchiseGraphNode {
   malId: string;
   title: string;
   coverImageUrl?: string;
+  synopsis?: string;
+  startDate?: string;
+  endDate?: string;
   isRoot: boolean;
   /** True when this node has relations that were pruned (branch depth cap or 40-card limit). */
   isTruncated?: boolean;

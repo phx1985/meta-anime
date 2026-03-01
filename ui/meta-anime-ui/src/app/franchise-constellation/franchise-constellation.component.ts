@@ -99,6 +99,20 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   /** Subset of graph nodes currently rendered in the DOM. */
   protected visibleNodeIds = signal<Set<string>>(new Set());
 
+  // ── Quick Look modal ──────────────────────────────────────────────────────
+  /** Node currently open in the Quick Look modal; null when closed. */
+  protected quickLookNode = signal<FranchiseGraphNode | null>(null);
+  /** True when the Quick Look synopsis text needs a "Read More" trigger. */
+  protected readonly quickLookSynopsisLong = computed(
+    () => (this.quickLookNode()?.synopsis?.length ?? 0) > 200,
+  );
+
+  private readonly nodeMap = computed<Map<string, FranchiseGraphNode>>(() => {
+    const g = this.svc.graph();
+    if (!g) return new Map();
+    return new Map(g.nodes.map((n) => [n.malId, n]));
+  });
+
   /** All graph nodes merged with their current canvas positions (visible only). */
   protected displayNodes = computed<Array<FranchiseGraphNode & { x: number; y: number }>>(() => {
     const g = this.svc.graph();
@@ -230,7 +244,11 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    this.svc.close();
+    if (this.quickLookNode()) {
+      this.closeQuickLook();
+    } else {
+      this.svc.close();
+    }
   }
 
   @HostListener('window:resize')
@@ -308,7 +326,7 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     if (this.dragNodeId && this.nodeDragActive) {
       this.manuallyDraggedIds.add(this.dragNodeId);
     } else if (this.dragNodeId && !this.nodeDragActive) {
-      this.openMalPage(this.dragNodeId);
+      this.openQuickLook(this.dragNodeId);
     }
     this.dragNodeId = null;
     this.nodeDragActive = false;
@@ -347,8 +365,39 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     window.open(`https://myanimelist.net/anime/${malId}`, '_blank', 'noopener,noreferrer');
   }
 
+  // ── Quick Look modal ──────────────────────────────────────────────────────
+
+  openQuickLook(malId: string): void {
+    const node = this.nodeMap().get(malId);
+    if (node) this.quickLookNode.set(node);
+  }
+
+  closeQuickLook(): void {
+    this.quickLookNode.set(null);
+  }
+
+  onQuickLookReadMore(): void {
+    const node = this.quickLookNode();
+    if (!node?.synopsis) return;
+    this.popupService.openSynopsis(node.title, node.synopsis);
+  }
+
+  openNodeOnMal(): void {
+    const node = this.quickLookNode();
+    if (!node) return;
+    this.openMalPage(node.malId);
+  }
+
   protected get rootTitle(): string | undefined {
     return this.svc.graph()?.nodes.find((n) => n.isRoot)?.title;
+  }
+
+  /** Formats an ISO date string for display; returns the i18n "N/A" fallback when absent or invalid. */
+  protected formatDateOrUnknown(rawDate: string | undefined): string {
+    if (!rawDate) return this.translate.instant('franchise.quickLook.unknownDate');
+    const d = new Date(rawDate);
+    if (isNaN(d.getTime())) return rawDate;
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
   // ── Render queue (sequential appearance animation) ────────────────────────

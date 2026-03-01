@@ -112,8 +112,9 @@
             [style.top.px]="node.y"
             role="button"
             tabindex="0"
-            (keydown.enter)="openMalPage(node.malId)"
-            [attr.aria-label]="translate.instant('franchise.openOnMal', { title: node.title })"
+            (keydown.enter)="openQuickLook(node.malId)"
+            (keydown.space)="openQuickLook(node.malId)"
+            [attr.aria-label]="node.title"
             [title]="node.title"
           >
             <div class="node-card-inner">
@@ -155,6 +156,77 @@
           <polygon points="28,1 36,4 28,7" class="legend-arrow legend-arrow--canonical" />
         </svg>
         <span>{{ 'franchise.legend.canonical' | translate }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- ── Quick Look modal (layered over the full constellation) ──────── -->
+  @if (quickLookNode()) {
+    <div
+      class="ql-backdrop"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="quickLookNode()!.title"
+      (click)="closeQuickLook()"
+    >
+      <div class="ql-modal" (click)="$event.stopPropagation()">
+        <!-- Close button -->
+        <button
+          type="button"
+          class="ql-close"
+          (click)="closeQuickLook()"
+          [attr.aria-label]="'franchise.close' | translate"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+
+        <!-- Poster -->
+        @if (quickLookNode()!.coverImageUrl) {
+          <img
+            class="ql-poster"
+            [src]="quickLookNode()!.coverImageUrl"
+            [alt]="quickLookNode()!.title"
+          />
+        } @else {
+          <div class="ql-poster-placeholder" aria-hidden="true">
+            {{ quickLookNode()!.title.charAt(0) }}
+          </div>
+        }
+
+        <!-- Body -->
+        <div class="ql-body">
+          <h2 class="ql-title">{{ quickLookNode()!.title }}</h2>
+
+          <!-- Airing dates -->
+          <p class="ql-dates">
+            {{ formatDateOrUnknown(quickLookNode()!.startDate) }}
+            –
+            {{ formatDateOrUnknown(quickLookNode()!.endDate) }}
+          </p>
+
+          <!-- Synopsis (truncated, with Read More for long text) -->
+          @if (quickLookNode()!.synopsis) {
+            <p class="ql-synopsis">{{ quickLookNode()!.synopsis }}</p>
+            @if (quickLookSynopsisLong()) {
+              <button type="button" class="ql-read-more" (click)="onQuickLookReadMore()">
+                {{ 'franchise.quickLook.readMore' | translate }}
+              </button>
+            }
+          }
+        </div>
+
+        <!-- Action buttons -->
+        <div class="ql-actions">
+          <button type="button" class="ql-btn ql-btn--close" (click)="closeQuickLook()">
+            {{ 'franchise.close' | translate }}
+          </button>
+          <button type="button" class="ql-btn ql-btn--mal" (click)="openNodeOnMal()">
+            <img class="ql-mal-icon" src="assets/images/mal.svg" alt="" aria-hidden="true" />
+            {{ 'franchise.quickLook.openInMal' | translate }}
+          </button>
+        </div>
       </div>
     </div>
   }

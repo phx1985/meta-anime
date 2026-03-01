@@ -1439,6 +1439,9 @@ public sealed class AnimeMediatorService(
             anime.Id.ToString(),
             anime.Title ?? string.Empty,
             anime.MainPicture?.Large ?? anime.MainPicture?.Medium,
+            anime.Synopsis,
+            anime.StartDate,
+            anime.EndDate,
             relations
         ));
     }

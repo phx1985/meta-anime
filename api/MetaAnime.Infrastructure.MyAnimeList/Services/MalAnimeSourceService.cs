@@ -38,7 +38,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
                                            "media_type, " +
                                            "mean, " +
                                            "num_episodes";
-    private const string FRANCHISE_FIELDS = "id,title,main_picture,related_anime{node{id,title,main_picture},relation_type,relation_type_formatted}";
+    private const string FRANCHISE_FIELDS = "id,title,main_picture,synopsis,start_date,end_date,related_anime{node{id,title,main_picture},relation_type,relation_type_formatted}";
     #endregion
 
     #region IMalAnimeSourceService Implementation

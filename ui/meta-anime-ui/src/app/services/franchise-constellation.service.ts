@@ -103,6 +103,9 @@ export class FranchiseConstellationService {
           malId: item.malId,
           title: result.title || item.title,
           coverImageUrl: result.coverImageUrl ?? item.coverImageUrl,
+          synopsis: result.synopsis,
+          startDate: result.startDate,
+          endDate: result.endDate,
           isRoot: item.malId === rootMalId,
         };
 

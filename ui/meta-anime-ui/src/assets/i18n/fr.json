@@ -521,6 +521,11 @@
             "spin_off": "Dérivé",
             "character": "Personnage",
             "other": "Autre"
+        },
+        "quickLook": {
+            "unknownDate": "N/D",
+            "readMore": "Lire plus",
+            "openInMal": "Ouvrir sur MAL"
         }
     },
     "genres": {

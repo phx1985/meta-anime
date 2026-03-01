@@ -521,6 +521,11 @@
             "spin_off": "Spin-off",
             "character": "Character",
             "other": "Other"
+        },
+        "quickLook": {
+            "unknownDate": "N/A",
+            "readMore": "Read More",
+            "openInMal": "Open in MAL"
         }
     },
     "genres": {
