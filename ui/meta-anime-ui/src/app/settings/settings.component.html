@@ -216,15 +216,13 @@
                     </div>
                     <div class="integration-card__action">
                       @if (malConnected()) {
-                        <span class="badge-connected">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
+                        <span class="enrollment-status" aria-live="polite">
+                          <span class="enrollment-status__dot" aria-hidden="true"></span>
                           {{ 'settings.enrollment.connected' | translate }}
                         </span>
                         <button
                           type="button"
-                          class="btn btn-sm btn-outline-danger disconnect-btn"
+                          class="enrollment-disconnect-btn"
                           (click)="disconnectMal()"
                           [disabled]="malDisconnecting()"
                         >
@@ -236,7 +234,7 @@
                       } @else {
                         <button
                           type="button"
-                          class="btn btn-sm btn-primary connect-btn"
+                          class="enrollment-connect-btn"
                           (click)="connectMal()"
                           [disabled]="malConnecting()"
                         >
@@ -265,15 +263,13 @@
                     </div>
                     <div class="integration-card__action">
                       @if (plexConnected()) {
-                        <span class="badge-connected">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
+                        <span class="enrollment-status" aria-live="polite">
+                          <span class="enrollment-status__dot" aria-hidden="true"></span>
                           {{ 'settings.enrollment.connected' | translate }}
                         </span>
                         <button
                           type="button"
-                          class="btn btn-sm btn-outline-danger disconnect-btn"
+                          class="enrollment-disconnect-btn"
                           (click)="disconnectPlex()"
                           [disabled]="plexDisconnecting()"
                         >
@@ -285,7 +281,7 @@
                       } @else {
                         <button
                           type="button"
-                          class="btn btn-sm btn-primary connect-btn"
+                          class="enrollment-connect-btn"
                           (click)="connectPlex()"
                           [disabled]="plexConnecting()"
                         >

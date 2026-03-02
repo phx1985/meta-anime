@@ -195,7 +195,9 @@ export class SettingsComponent {
 
   categories = computed(() => {
     const available = new Set(Object.keys(this.grouped()));
-    return SettingsComponent.CATEGORY_ORDER.filter((c) => available.has(c));
+    return SettingsComponent.CATEGORY_ORDER.filter(
+      (c) => available.has(c) || SettingsComponent.INTEGRATION_CARD_CATS.has(c),
+    );
   });
 
   navItems = computed<string[]>(() => [...this.categories(), 'sync']);
@@ -245,6 +247,8 @@ export class SettingsComponent {
   private static readonly PLEX_POLL_MAX = 40;
 
   private static readonly CATEGORY_ORDER = ['mal', 'kometa', 'plex', 'sonarr', 'app'];
+  /** Categories that always appear even when they have no regular settings (they have integration cards). */
+  private static readonly INTEGRATION_CARD_CATS = new Set(['mal', 'plex']);
 
   /** Locale-aware date formatter — uses current app language */
   fmtDate(iso: string): string {
