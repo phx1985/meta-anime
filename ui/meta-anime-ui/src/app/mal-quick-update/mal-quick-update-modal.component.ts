@@ -131,12 +131,6 @@ export class MalQuickUpdateModalComponent implements OnInit {
           this.saving.set(false);
           // Invoke card's local-state callback before dismissing
           ctx.onSaveSuccess?.(status, episodes, score);
-          this.notifService.push({
-            id: `mal-update-${Date.now()}`,
-            severity: 'success',
-            titleKey: 'malQuickUpdate.saveSuccess',
-            messageKey: 'malQuickUpdate.saveSuccessMsg',
-          });
           this.dismiss();
         },
         error: () => {
