@@ -63,6 +63,7 @@ public sealed class GetSettingsQueryHandler(
                 SelectOptions: ["all", "future", "missing", "existing", "recent", "pilot", "firstSeason", "lastSeason", "monitorSpecials", "unmonitorSpecials", "none"]),
 
             // ── MyAnimeList ───────────────────────────────────────────────────
+            new(SettingsKeys.MalClientId, "mal", false, true, Get(SettingsKeys.MalClientId)),
             // Enrollment status (read-only, managed via /mal/auth endpoints)
             new("MAL:Connected", "mal", false, false, malConnected ? "true" : "false", "enrollment"),
             new(SettingsKeys.MalTokenRefreshedAt, "mal", false, false, Get(SettingsKeys.MalTokenRefreshedAt), "info"),

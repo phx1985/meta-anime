@@ -236,7 +236,7 @@
                           type="button"
                           class="enrollment-connect-btn"
                           (click)="connectMal()"
-                          [disabled]="malConnecting()"
+                          [disabled]="malConnecting() || !malClientIdConfigured()"
                         >
                           @if (malConnecting()) {
                             <span class="spinner-border spinner-border-sm me-1" role="status"></span>

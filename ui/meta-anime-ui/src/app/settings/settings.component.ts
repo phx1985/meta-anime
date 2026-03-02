@@ -216,7 +216,9 @@ export class SettingsComponent {
     return host.trim().length > 0 && this.plexConnected();
   });
 
-  malClientIdConfigured = computed(() => this.malConnected());
+  malClientIdConfigured = computed(
+    () => (this.settings().find((s) => s.key === 'MAL:ClientId')?.value ?? '').trim().length > 0,
+  );
 
   forms: Record<string, FormGroup> = {};
 
