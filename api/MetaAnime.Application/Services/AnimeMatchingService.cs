@@ -1,5 +1,7 @@
-﻿using MetaAnime.Core.Interfaces.Services;
+﻿using MetaAnime.Core;
+using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
+using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Sync;
 using MetaAnime.Domain.Entities;
 using MetaAnime.Domain.Enums;
@@ -14,7 +16,8 @@ public sealed class AnimeMatchingService(
     IKometaAnimeJsonService<KometaRaw> kometaAnimeJsonService,
     IKometaAnimeMappingService kometaAnimeMappingService,
     IAnimeMappingService mappingService,
-    IAnimeService animeService)
+    IAnimeService animeService,
+    IPropertyBagRepository propertyBagRepository)
     : IAnimeMatchingService
 {
     public async Task<Result> MatchAsync(bool forceRefreshKometaMapping = false, ISyncProgressNotifier? progressNotifier = null)
@@ -134,6 +137,12 @@ public sealed class AnimeMatchingService(
             await NotifyAsync(progressNotifier, SyncStepKeys.Match, SyncStepState.Error, null, sw, addMappingsResult.Error.Message);
             return Result.Failure(addMappingsResult.Error);
         }
+
+        // Capture the completion time immediately after all matching work is done.
+        // Persist it before notifying clients so that any frontend poll triggered
+        // by the Done event will always see the saved date.
+        var completedAt = DateTime.UtcNow.ToString("O");
+        await propertyBagRepository.UpsertAsync(SettingsKeys.LastSyncDate, completedAt);
 
         await NotifyAsync(progressNotifier, SyncStepKeys.Match, SyncStepState.Done, 100, sw);
         return Result.Success();

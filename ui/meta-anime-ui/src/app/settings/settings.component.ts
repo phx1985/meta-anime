@@ -22,6 +22,7 @@ import { UserPreferencesService } from '../services/user-preferences.service';
 import { ProviderStateService } from '../services/provider-state.service';
 import { PopupService } from '../services/popup.service';
 import { SonarrService } from '../services/sonarr.service';
+import { EnrollmentService } from '../services/enrollment.service';
 import { SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
 import { SyncStep } from '../models/sync-progress.models';
@@ -79,6 +80,7 @@ export class SettingsComponent {
   private sonarrService = inject(SonarrService);
   private providerState = inject(ProviderStateService);
   readonly popupService = inject(PopupService);
+  private enrollmentService = inject(EnrollmentService);
 
   loading = signal(true);
   error = signal(false);
@@ -103,10 +105,26 @@ export class SettingsComponent {
   syncHttpError = signal<string | null>(null);
   currentLang = signal(this.translate.currentLang ?? this.translate.defaultLang ?? 'en');
 
+  // ── Enrollment state ──────────────────────────────────────────────────────
+  malConnected = signal(false);
+  malConnecting = signal(false);
+  malDisconnecting = signal(false);
+
+  plexConnected = signal(false);
+  plexConnecting = signal(false);
+  plexDisconnecting = signal(false);
+  private plexPollIntervalId: ReturnType<typeof setInterval> | null = null;
+
   /** Provider name when sync prompt is showing — delegated to PopupService */
   get syncPromptProvider() { return this.popupService.syncPromptProvider; }
   /** `true` while the sync-prompt exit animation is playing */
   get syncPromptLeaving() { return this.popupService.syncPromptLeaving; }
+
+  // ── Kometa URL warning dialog ─────────────────────────────────────────────
+  /** Non-null while the Kometa URL edit-warning dialog is open (holds the key). */
+  kometaWarnKey = signal<string | null>(null);
+  /** `true` while the warning dialog exit animation is playing. */
+  kometaWarnLeaving = signal(false);
 
   syncSteps = toSignal(this.signalR.steps$, { initialValue: [] as SyncStep[] });
   syncDone = toSignal(this.signalR.syncDone$, { initialValue: false });
@@ -133,7 +151,9 @@ export class SettingsComponent {
           s.key !== 'App:SyncInterval' &&
           !s.key.startsWith('System:') &&
           !SettingsComponent.SONARR_DEFAULT_KEYS.has(s.key) &&
-          !SettingsComponent.PROVIDER_ENABLED_KEYS.has(s.key),
+          !SettingsComponent.PROVIDER_ENABLED_KEYS.has(s.key) &&
+          s.fieldType !== 'enrollment' &&
+          s.fieldType !== 'info',
       )
       .reduce((acc, s) => {
         (acc[s.category] ??= []).push(s);
@@ -181,7 +201,9 @@ export class SettingsComponent {
 
   categories = computed(() => {
     const available = new Set(Object.keys(this.grouped()));
-    return SettingsComponent.CATEGORY_ORDER.filter((c) => available.has(c));
+    return SettingsComponent.CATEGORY_ORDER.filter(
+      (c) => available.has(c) || SettingsComponent.INTEGRATION_CARD_CATS.has(c),
+    );
   });
 
   navItems = computed<string[]>(() => [...this.categories(), 'sync']);
@@ -197,8 +219,7 @@ export class SettingsComponent {
   plexBasicConfigured = computed(() => {
     const list = this.settings();
     const host = list.find((s) => s.key === 'Plex:Host')?.value ?? '';
-    const token = list.find((s) => s.key === 'Plex:Token')?.value ?? '';
-    return host.trim().length > 0 && token.trim().length > 0;
+    return host.trim().length > 0 && this.plexConnected();
   });
 
   malClientIdConfigured = computed(
@@ -229,7 +250,17 @@ export class SettingsComponent {
     'Sonarr:Enabled',
   ]);
 
-  private static readonly CATEGORY_ORDER = ['mal', 'kometa', 'plex', 'sonarr', 'app'];
+  private static readonly PLEX_POLL_INTERVAL_MS = 3000;
+  /** Max number of polls before giving up (3 s × 40 = 2 minutes). */
+  private static readonly PLEX_POLL_MAX = 40;
+
+  private static readonly CATEGORY_ORDER = ['kometa', 'mal', 'plex', 'sonarr', 'app'];
+  /** Categories that always appear even when they have no regular settings (they have integration cards). */
+  private static readonly INTEGRATION_CARD_CATS = new Set(['mal', 'plex']);
+  /** Keys that must be treated as sensitive on the frontend regardless of the backend flag. */
+  private static readonly FRONTEND_SENSITIVE_KEYS = new Set(['MAL:ClientId']);
+  /** The Kometa JSON URL key that requires a warning before editing. */
+  private static readonly KOMETA_URL_KEY = 'Kometa:AnimeIdsJsonUrl';
 
   /** Locale-aware date formatter — uses current app language */
   fmtDate(iso: string): string {
@@ -279,6 +310,7 @@ export class SettingsComponent {
 
     this.destroyRef.onDestroy(() => {
       if (this.autoApplySavedTimer) clearTimeout(this.autoApplySavedTimer);
+      this.stopPlexPolling();
     });
 
     // Capture a pending highlight from the `?highlight=` query param (set by the
@@ -286,7 +318,7 @@ export class SettingsComponent {
     // the settings data loads asynchronously; we apply it after the data arrives.
     const pendingHighlight = this.route.snapshot.queryParams['highlight'] as string | undefined;
 
-    // Clear the query param immediately so back-navigation doesn't re-trigger it.
+    // Clear the query params immediately so back-navigation doesn't re-trigger them.
     if (pendingHighlight) {
       this.router.navigate([], {
         replaceUrl: true,
@@ -295,13 +327,19 @@ export class SettingsComponent {
       });
     }
 
+    // Load enrollment status
+    this.loadEnrollmentStatus();
+
     this.settingsService
       .getAll()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
-          this.settings.set(data);
-          this.buildForms(data);
+          const transformed = data.map((s) =>
+            SettingsComponent.FRONTEND_SENSITIVE_KEYS.has(s.key) ? { ...s, isSensitive: true } : s,
+          );
+          this.settings.set(transformed);
+          this.buildForms(transformed);
           this.loading.set(false);
           const first = this.navItems()[0];
           if (first) this.activeCategory.set(first);
@@ -337,6 +375,9 @@ export class SettingsComponent {
     this.signalR.syncDone$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((done) => {
       if (done) {
         this.syncing.set(false);
+        // Update immediately so the UI reflects completion without a round-trip delay,
+        // then reload from the backend to get the authoritative persisted value.
+        this.lastSyncDate.set(new Date().toISOString());
         this.loadSyncStatus();
       }
     });
@@ -357,6 +398,119 @@ export class SettingsComponent {
       });
   }
 
+  private loadEnrollmentStatus(): void {
+    this.enrollmentService
+      .getMalStatus()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (s) => this.malConnected.set(s.connected), error: () => {} });
+
+    this.enrollmentService
+      .getPlexStatus()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (s) => this.plexConnected.set(s.connected), error: () => {} });
+  }
+
+  connectMal(): void {
+    this.malConnecting.set(true);
+    this.enrollmentService
+      .initiateMalAuth()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.malConnecting.set(false);
+          // Redirect to MAL authorization URL; callback will redirect back to /settings
+          window.location.href = res.authorizationUrl;
+        },
+        error: () => {
+          this.malConnecting.set(false);
+        },
+      });
+  }
+
+  disconnectMal(): void {
+    this.malDisconnecting.set(true);
+    this.enrollmentService
+      .disconnectMal()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.malDisconnecting.set(false);
+          this.malConnected.set(false);
+        },
+        error: () => {
+          this.malDisconnecting.set(false);
+        },
+      });
+  }
+
+  connectPlex(): void {
+    this.plexConnecting.set(true);
+    this.enrollmentService
+      .initiatePlexPin()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          // Open Plex auth in new tab and start polling
+          window.open(res.authUrl, '_blank');
+          this.startPlexPolling(res.pinId);
+        },
+        error: () => {
+          this.plexConnecting.set(false);
+        },
+      });
+  }
+
+  private stopPlexPolling(): void {
+    if (this.plexPollIntervalId) {
+      clearInterval(this.plexPollIntervalId);
+      this.plexPollIntervalId = null;
+    }
+  }
+
+  private startPlexPolling(pinId: number): void {
+    let pollCount = 0;
+    this.stopPlexPolling();
+
+    this.plexPollIntervalId = setInterval(() => {
+      pollCount++;
+      this.enrollmentService
+        .pollPlexPin(pinId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (res) => {
+            if (res.connected) {
+              this.stopPlexPolling();
+              this.plexConnecting.set(false);
+              this.plexConnected.set(true);
+            } else if (pollCount >= SettingsComponent.PLEX_POLL_MAX) {
+              this.stopPlexPolling();
+              this.plexConnecting.set(false);
+            }
+          },
+          error: () => {
+            this.stopPlexPolling();
+            this.plexConnecting.set(false);
+          },
+        });
+    }, SettingsComponent.PLEX_POLL_INTERVAL_MS);
+  }
+
+  disconnectPlex(): void {
+    this.plexDisconnecting.set(true);
+    this.enrollmentService
+      .disconnectPlex()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.plexDisconnecting.set(false);
+          this.plexConnected.set(false);
+        },
+        error: () => {
+          this.plexDisconnecting.set(false);
+        },
+      });
+  }
+
   private buildForms(settings: SettingDefinition[]): void {
     const editingInit: Record<string, boolean> = {};
     const revealedInit: Record<string, boolean> = {};
@@ -371,6 +525,39 @@ export class SettingsComponent {
 
   slug(key: string): string {
     return fieldSlug(key);
+  }
+
+  /**
+   * Called from the "Edit" button.  For the Kometa JSON URL this first shows
+   * a warning dialog; for all other keys it switches directly to edit mode.
+   */
+  startEdit(key: string): void {
+    if (key === SettingsComponent.KOMETA_URL_KEY && !this.editing()[key]) {
+      this.kometaWarnKey.set(key);
+      this.kometaWarnLeaving.set(false);
+      return;
+    }
+    this.toggleEdit(key);
+  }
+
+  /** Close the Kometa warning without activating edit mode. */
+  dismissKometaWarning(): void {
+    this.kometaWarnLeaving.set(true);
+    setTimeout(() => {
+      this.kometaWarnKey.set(null);
+      this.kometaWarnLeaving.set(false);
+    }, 200);
+  }
+
+  /** Close the Kometa warning AND activate edit mode. */
+  confirmKometaWarning(): void {
+    const key = this.kometaWarnKey();
+    this.kometaWarnLeaving.set(true);
+    setTimeout(() => {
+      this.kometaWarnKey.set(null);
+      this.kometaWarnLeaving.set(false);
+      if (key) this.toggleEdit(key);
+    }, 200);
   }
 
   toggleEdit(key: string): void {

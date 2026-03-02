@@ -489,6 +489,28 @@
       "desc": "{{provider}} has been enabled. A manual sync is recommended to populate its data.",
       "dismiss": "Later",
       "goToSync": "Go to Sync"
+    },
+    "kometaWarn": {
+      "title": "Warning: Sensitive Setting",
+      "body": "Modifying the Kometa mapping file URL can break the connection between your Anime tracking and your Media server. Only proceed if you know exactly what you are doing.",
+      "proceed": "I Understand, Proceed"
+    },
+    "enrollment": {
+      "connected": "Connected",
+      "disconnect": "Disconnect",
+      "mal": {
+        "title": "MyAnimeList Account",
+        "desc": "Connect your MyAnimeList account to sync your watch list.",
+        "connect": "Connect MyAnimeList",
+        "connecting": "Completing authorization…",
+        "connectError": "Authorization failed. Please try connecting again."
+      },
+      "plex": {
+        "title": "Plex Account",
+        "desc": "Sign in with Plex to sync your anime library.",
+        "connect": "Sign in with Plex",
+        "waiting": "Waiting for Plex authorization in the opened tab..."
+      }
     }
   },
   "theme": {
@@ -664,7 +686,16 @@
       "action": "Go to Settings",
       "reloadFailed": "Token refreshed, but could not reload settings.",
       "reloadFailedMessage": "Please refresh the page to see the updated token status."
+    },
+    "malConnect": {
+      "successTitle": "MyAnimeList connected ✓",
+      "successMessage": "MyAnimeList connected successfully.",
+      "errorTitle": "MyAnimeList connection failed",
+      "errorMessage": "Authorization failed. Please try connecting again."
     }
+  },
+  "malCallback": {
+    "connecting": "Connecting to MyAnimeList..."
   },
   "toast": {
     "noSync": {
