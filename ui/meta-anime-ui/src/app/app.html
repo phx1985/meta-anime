@@ -571,6 +571,11 @@
   </div>
 </div>
 }
+<!-- ── MAL Quick-Update Modal ─────────────────────────────────────────── -->
+@if (popupService.malQuickUpdate()) {
+  <app-mal-quick-update-modal />
+}
+
 <!-- ── Franchise Constellation Overlay ──────────────────────────────────── -->
 @if (franchiseConstellationSvc.isOpen()) {
   <app-franchise-constellation />
