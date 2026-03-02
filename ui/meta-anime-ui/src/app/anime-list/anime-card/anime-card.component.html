@@ -1,4 +1,4 @@
-<article class="anime-card">
+<article class="anime-card" [class.neon-glow-active]="neonGlow()">
   <div class="card-main">
     <!-- ── Cover image ────────────────────────────────────────────────── -->
     <div
@@ -240,11 +240,12 @@
           [title]="'animeCard.openPlex' | translate"
           (click)="openPlexLink($event)"
         >
+          <img src="assets/images/plex.svg" alt="" class="action-logo" width="18" height="18" aria-hidden="true" />
           <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
             <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.4" />
             <path d="M6.5 5.5l5 2.5-5 2.5V5.5z" fill="currentColor" />
           </svg>
-          Plex
+          <span class="action-label">Plex</span>
         </a>
       }
       @if (sonarrEnabled) {
@@ -256,6 +257,7 @@
           rel="noopener noreferrer"
           [title]="'animeCard.openSonarr' | translate"
         >
+          <img src="assets/images/sonarr.svg" alt="" class="action-logo" width="18" height="18" aria-hidden="true" />
           <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
             <rect
               x="1.5"
@@ -273,17 +275,17 @@
               stroke-linecap="round"
             />
           </svg>
-          Sonarr
+          <span class="action-label">Sonarr</span>
         </a>
       }
-      <a
+      <button
+        type="button"
         class="action action--mal"
-        [attr.href]="malUrl"
-        [class.action--disabled]="!malUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-        [title]="'animeCard.openMal' | translate"
+        [class.action--disabled]="!mal?.id"
+        [title]="'malQuickUpdate.openModal' | translate"
+        (click)="openMalQuickUpdate()"
       >
+        <img src="assets/images/mal.svg" alt="" class="action-logo" width="18" height="18" aria-hidden="true" />
         <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
           <path
             d="M3 4h10M3 7h10M3 10h7M3 13h5"
@@ -292,8 +294,8 @@
             stroke-linecap="round"
           />
         </svg>
-        MAL
-      </a>
+        <span class="action-label">MAL</span>
+      </button>
     </div>
 
     @if (codecSegments !== null || sizeOnDisk) {

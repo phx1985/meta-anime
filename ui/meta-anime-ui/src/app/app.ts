@@ -26,11 +26,12 @@ import { PlexDeepLinkService } from './services/plex-deep-link.service';
 import { LuckyPickComponent } from './lucky-pick/lucky-pick.component';
 import { FranchiseConstellationComponent } from './franchise-constellation/franchise-constellation.component';
 import { FranchiseConstellationService } from './services/franchise-constellation.service';
+import { MalQuickUpdateModalComponent } from './mal-quick-update/mal-quick-update-modal.component';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent, UpperCasePipe, FranchiseConstellationComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent, UpperCasePipe, FranchiseConstellationComponent, MalQuickUpdateModalComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -90,7 +91,8 @@ export class App implements OnInit, AfterViewInit {
       this.popupService.franchiseConstellationOpen() ||
       !!this.popupService.disabledProvider() ||
       !!this.popupService.synopsisTitle() ||
-      !!this.popupService.syncPromptProvider(),
+      !!this.popupService.syncPromptProvider() ||
+      !!this.popupService.malQuickUpdate(),
   );
   /** i18n key of the active route – displayed as a page label in the top header on mobile */
   protected currentPageKey = signal<string>('');
@@ -270,6 +272,44 @@ export class App implements OnInit, AfterViewInit {
   onDocumentClick(): void {
     this.notifCenterOpen.set(false);
     this.langDropdownOpen.set(false);
+  }
+
+  /** Global Escape key handler — closes the topmost active overlay (PC accessibility). */
+  @HostListener('document:keydown.escape')
+  onGlobalEscape(): void {
+    // Synopsis and disabled-provider modals are higher-z layers — dismiss first.
+    if (this.popupService.malQuickUpdate()) {
+      this.popupService.dismissMalQuickUpdate();
+      return;
+    }
+    if (this.popupService.synopsisTitle()) {
+      this.dismissSynopsisModal();
+      return;
+    }
+    if (this.popupService.disabledProvider()) {
+      this.dismissDisabledProviderModal();
+      return;
+    }
+    // Settings page sync-prompt modal
+    if (this.popupService.syncPromptProvider()) {
+      this.popupService.dismissSyncPrompt();
+      return;
+    }
+    // Notification center / lang dropdown
+    if (this.notifCenterOpen()) {
+      this.notifCenterOpen.set(false);
+      return;
+    }
+    if (this.langDropdownOpen()) {
+      this.langDropdownOpen.set(false);
+      return;
+    }
+    // Side drawer (mobile)
+    if (this.menuOpen()) {
+      this.closeMenu();
+      return;
+    }
+    // LuckyPick and FranchiseConstellation handle their own Escape listeners.
   }
 
   toggleNotifCenter(event: Event): void {

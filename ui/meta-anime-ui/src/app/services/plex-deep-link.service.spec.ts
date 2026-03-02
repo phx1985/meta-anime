@@ -46,12 +46,12 @@ describe('PlexDeepLinkService', () => {
   describe('buildPlexUri', () => {
     beforeEach(() => setup(false));
 
-    it('converts a full Plex desktop URL to a plex://server/…/details deep link', () => {
+    it('converts a full Plex desktop URL to a plex://preplay/ mobile deep link', () => {
       const webUrl =
         'https://app.plex.tv/desktop/#!/server/abc123/details?key=%2Flibrary%2Fmetadata%2F456';
       const result = service.buildPlexUri(webUrl);
       expect(result).toBe(
-        'plex://server/abc123/details?key=%2Flibrary%2Fmetadata%2F456',
+        'plex://preplay/?metadataKey=%2Flibrary%2Fmetadata%2F456&metadataType=4&server=abc123',
       );
     });
 
@@ -98,11 +98,11 @@ describe('PlexDeepLinkService', () => {
   describe('openLink on mobile', () => {
     beforeEach(() => setup(true));
 
-    it('sets document.location.href to the plex://server/…/details URI on mobile', () => {
+    it('sets document.location.href to the plex://preplay/ mobile deep link URI on mobile', () => {
       const webUrl = 'https://app.plex.tv/desktop/#!/server/srv1/details?key=%2Flib%2F1';
       service.openLink(webUrl);
       expect(mockDocument.location!.href).toBe(
-        'plex://server/srv1/details?key=%2Flib%2F1',
+        'plex://preplay/?metadataKey=%2Flib%2F1&metadataType=4&server=srv1',
       );
     });
 

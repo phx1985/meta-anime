@@ -282,7 +282,15 @@
 
           <!-- Synopsis (truncated, with Read More for long text) -->
           @if (quickLookNode()!.synopsis) {
-            <p class="ql-synopsis">{{ quickLookNode()!.synopsis }}</p>
+            <p
+              class="ql-synopsis"
+              [class.ql-synopsis--clickable]="quickLookSynopsisLong()"
+              [attr.role]="quickLookSynopsisLong() ? 'button' : null"
+              [attr.tabindex]="quickLookSynopsisLong() ? 0 : null"
+              (click)="quickLookSynopsisLong() && onQuickLookReadMore()"
+              (keydown.enter)="quickLookSynopsisLong() && onQuickLookReadMore()"
+              (keydown.space)="quickLookSynopsisLong() && onQuickLookReadMore()"
+            >{{ quickLookNode()!.synopsis }}</p>
             @if (quickLookSynopsisLong()) {
               <button type="button" class="ql-read-more" (click)="onQuickLookReadMore()">
                 {{ 'franchise.quickLook.readMore' | translate }}

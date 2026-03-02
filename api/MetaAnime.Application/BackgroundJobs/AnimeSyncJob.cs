@@ -9,6 +9,7 @@ namespace MetaAnime.Application.BackgroundJobs;
 
 public sealed class AnimeSyncJob(
     IAnimeMatchingService animeMatchingService,
+    ISyncProgressNotifier progressNotifier,
     ILogger<AnimeSyncJob> logger)
 {
     /// <summary>
@@ -20,7 +21,7 @@ public sealed class AnimeSyncJob(
 
         try
         {
-            var matchResult = await animeMatchingService.MatchAsync();
+            var matchResult = await animeMatchingService.MatchAsync(progressNotifier: progressNotifier);
 
             if (matchResult.IsSuccess)
             {
