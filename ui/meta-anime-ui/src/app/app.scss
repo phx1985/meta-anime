@@ -108,9 +108,11 @@
   }
 }
 
-// Dark mode: make the hamburger icon bright white for high contrast
-[data-theme='dark'] .navbar-toggler-icon {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255%2C 255%2C 255%2C 0.92%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+// Dark mode: force the hamburger icon to bright white.
+// Bootstrap's .navbar-light .navbar-toggler-icon has specificity (0,2,0); adding
+// the `html` element selector raises ours to (0,2,1) and wins without !important.
+html[data-theme='dark'] .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255%2C 255%2C 255%2C 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 // ── Provider quick links ───────────────────────────────────────────────────────

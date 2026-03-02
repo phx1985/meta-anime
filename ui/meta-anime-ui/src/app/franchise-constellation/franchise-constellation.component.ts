@@ -17,11 +17,13 @@ import { FranchiseGraph, FranchiseGraphEdge, FranchiseGraphNode } from '../model
 
 // ── Layout constants ──────────────────────────────────────────────────────────
 const NODE_W = 144;
-const NODE_H = 200;
+/** Conservative node height accounting for dynamic text wrapping on long titles. */
+const NODE_H = 260;
 /** Horizontal gap between nodes within a row. */
 const H_GAP = 80;
-/** Vertical gap between rows (bottom of tallest node to top of next row). */
-const V_GAP = 100;
+/** Vertical gap between rows (bottom of tallest node to top of next row).
+ *  Kept large so that tall cards with wrapped text never overlap the row below. */
+const V_GAP = 200;
 /** Gap between stacked parallel nodes within a single column step. */
 const PARALLEL_GAP = 12;
 /** Horizontal control-point offset for U-turn bezier curves at row ends. */

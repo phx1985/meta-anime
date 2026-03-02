@@ -284,6 +284,11 @@ export class App implements OnInit, AfterViewInit {
       this.dismissDisabledProviderModal();
       return;
     }
+    // Settings page sync-prompt modal
+    if (this.popupService.syncPromptProvider()) {
+      this.popupService.dismissSyncPrompt();
+      return;
+    }
     // Notification center / lang dropdown
     if (this.notifCenterOpen()) {
       this.notifCenterOpen.set(false);
