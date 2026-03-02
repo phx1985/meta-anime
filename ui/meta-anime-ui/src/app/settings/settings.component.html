@@ -312,6 +312,22 @@
                             >🔒</span
                           >
                         }
+                        @if (setting.key === 'MAL:ClientId') {
+                          <button
+                            type="button"
+                            class="setting-help-btn"
+                            (click)="malHelpOpen.set(true)"
+                            [attr.aria-label]="'helpModal.mal.title' | translate"
+                          >?</button>
+                        }
+                        @if (setting.key === 'Sonarr:ApiKey') {
+                          <button
+                            type="button"
+                            class="setting-help-btn"
+                            (click)="sonarrHelpOpen.set(true)"
+                            [attr.aria-label]="'helpModal.sonarr.title' | translate"
+                          >?</button>
+                        }
                       </div>
                       <div class="setting-desc">
                         {{ 'settings.fields.' + slug(setting.key) + '.desc' | translate }}
@@ -1211,3 +1227,16 @@
     </div>
   </div>
 }
+
+<!-- ── Help Modals ─────────────────────────────────────────────────────────── -->
+<app-help-modal
+  type="mal"
+  [visible]="malHelpOpen()"
+  (closed)="malHelpOpen.set(false)"
+/>
+
+<app-help-modal
+  type="sonarr"
+  [visible]="sonarrHelpOpen()"
+  (closed)="sonarrHelpOpen.set(false)"
+/>

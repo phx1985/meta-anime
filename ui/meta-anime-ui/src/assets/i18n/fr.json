@@ -1065,5 +1065,69 @@
     "saveErrorMsg": "Impossible de mettre à jour votre liste MAL. Veuillez réessayer.",
     "openInMal": "Ouvrir dans MyAnimeList",
     "scoreRequired": "— note requise"
+  },
+  "helpModal": {
+    "mal": {
+      "title": "Comment obtenir votre Client ID MAL",
+      "step1": "Allez sur myanimelist.net et connectez-vous à votre compte.",
+      "step2": "Accédez à Compte → API (ou allez sur myanimelist.net/apiconfig).",
+      "step3": "Cliquez sur \"Créer un ID\" et remplissez les détails de l'application.",
+      "step4": "Définissez l'URL de redirection sur l'URL de cette application.",
+      "step5": "Copiez le \"Client ID\" et collez-le dans le champ OAuth Client ID."
+    },
+    "sonarr": {
+      "title": "Comment trouver votre clé API Sonarr",
+      "step1": "Ouvrez Sonarr dans votre navigateur et allez dans Paramètres → Général.",
+      "step2": "Cherchez la section \"Sécurité\" — votre clé API s'y trouve.",
+      "step3": "Copiez la clé API et collez-la dans le champ ci-dessus."
+    }
+  },
+  "wizard": {
+    "next": "Suivant →",
+    "back": "Retour",
+    "skip": "Ignorer cette étape",
+    "helpLabel": "Aide",
+    "step1": {
+      "title": "Bienvenue sur MetaAnime",
+      "desc": "Votre hub de gestion d'animés. Connectez vos fournisseurs pour commencer.",
+      "feature1": "Synchronisez automatiquement votre liste MyAnimeList",
+      "feature2": "Suivez les animés dans Sonarr et Plex",
+      "feature3": "Parcourez les sorties saisonnières et gérez votre bibliothèque",
+      "getStarted": "Commencer"
+    },
+    "step2": {
+      "title": "Connecter MyAnimeList",
+      "desc": "MyAnimeList est requis pour utiliser MetaAnime. Connectez votre compte pour synchroniser votre liste.",
+      "clientIdHint": "Vous avez besoin d'un OAuth Client ID depuis le portail développeur MAL.",
+      "connectBtn": "Connecter MyAnimeList",
+      "connected": "MyAnimeList connecté"
+    },
+    "step3": {
+      "title": "Connecter Plex (Optionnel)",
+      "desc": "Liez votre compte Plex pour voir quels animés sont dans votre bibliothèque.",
+      "connectBtn": "Se connecter avec Plex",
+      "connected": "Plex connecté",
+      "waiting": "En attente de l'autorisation Plex dans l'onglet ouvert…"
+    },
+    "step4": {
+      "title": "Connecter Sonarr (Optionnel)",
+      "desc": "Configurez Sonarr pour suivre et gérer les téléchargements de séries animées.",
+      "hostLabel": "URL du serveur Sonarr",
+      "hostPlaceholder": "ex. http://localhost:8989",
+      "apiKeyLabel": "Clé API",
+      "apiKeyPlaceholder": "Votre clé API Sonarr",
+      "connectBtn": "Connecter & Continuer"
+    },
+    "step5": {
+      "title": "Récapitulatif & Sync initiale",
+      "desc": "Votre configuration est prête ! Lancez une première synchronisation pour remplir votre bibliothèque.",
+      "runSync": "Lancer la première sync"
+    },
+    "step6": {
+      "title": "C'est prêt !",
+      "desc": "MetaAnime est prêt à l'emploi. Votre bibliothèque sera synchronisée automatiquement.",
+      "hint": "Vous pouvez toujours modifier vos paramètres depuis la page Paramètres.",
+      "finish": "Aller au tableau de bord"
+    }
   }
 }
