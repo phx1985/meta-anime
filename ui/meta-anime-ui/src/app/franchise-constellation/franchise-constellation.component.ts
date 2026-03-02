@@ -22,14 +22,11 @@ const NODE_H = 260;
 /** Horizontal gap between nodes within a row. */
 const H_GAP = 80;
 /** Vertical gap between rows (bottom of tallest node to top of next row).
- *  Acts as the exclusive "traffic lane" for U-turn bezier edges. */
-const V_GAP = 150;
+ *  Row-jump edges exit/enter vertically (bottom→top) so only a modest lane is
+ *  needed — enough for the bezier arc to clear the card corners. */
+const V_GAP = 80;
 /** Gap between stacked parallel nodes within a single column step. */
 const PARALLEL_GAP = 12;
-/** Horizontal outward offset for U-turn bezier control points.
- *  The swoop extends this many pixels beyond the end-column card centre, placing
- *  it in the margin outside the grid — never over any card. */
-const UTURN_SWOOP = 80;
 const PADDING = 40;
 const CANVAS_W = 8000;
 const CANVAS_H = 10000;
@@ -717,35 +714,23 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
       }
     }
 
-    // ── Cross-row: U-turn bezier ─────────────────────────────────────────────
-    // In the snake layout each U-turn connects the end of one row to the start
-    // of the next; both share nearly the same canvas X (rightmost for LTR→RTL,
-    // leftmost for RTL→LTR).  Control points are offset OUTWARD horizontally
-    // (away from the card grid) so the curve swoops elegantly through the gap
-    // lane without touching any card:
-    //   LTR → RTL  swoop extends to the RIGHT  (+UTURN_SWOOP)
-    //   RTL → LTR  swoop extends to the LEFT   (-UTURN_SWOOP)
-    // Y-range of the bezier is bounded by the convex hull [fromCy … toCy], so
-    // the curve never leaves the vertical traffic-lane space (V_GAP).
+    // ── Cross-row: vertical-drop bezier ─────────────────────────────────────
+    // Rule B (Row Jump): the edge exits from the BOTTOM-CENTRE of the earlier
+    // node and enters the TOP-CENTRE of the later node.  By placing both cubic
+    // control points at the vertical midpoint (same X as start/end respectively)
+    // the curve departs straight DOWN and arrives straight UP.  The path travels
+    // only through the V_GAP lane between rows and never swings sideways into
+    // any card region.
     const fromCx = earlierPos.x + NODE_W / 2; // bottom-centre of earlier node
     const fromCy = earlierPos.y + NODE_H;
     const toCx = laterPos.x + NODE_W / 2;     // top-centre of later node
     const toCy = laterPos.y;
-    const s = UTURN_SWOOP;
+    const midY = (fromCy + toCy) / 2;
 
-    if (earlierMeta.row % 2 === 0) {
-      // LTR → RTL: swoop curves to the RIGHT
-      return (
-        `M ${fromCx} ${fromCy} ` +
-        `C ${fromCx + s} ${fromCy} ${toCx + s} ${toCy} ${toCx} ${toCy}`
-      );
-    } else {
-      // RTL → LTR: swoop curves to the LEFT
-      return (
-        `M ${fromCx} ${fromCy} ` +
-        `C ${fromCx - s} ${fromCy} ${toCx - s} ${toCy} ${toCx} ${toCy}`
-      );
-    }
+    return (
+      `M ${fromCx} ${fromCy} ` +
+      `C ${fromCx} ${midY} ${toCx} ${midY} ${toCx} ${toCy}`
+    );
   }
 
   private _touchDist(event: TouchEvent): number {
