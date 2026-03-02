@@ -52,12 +52,15 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 
   @media (max-width: 500px) {
     // Increased height and padding for mobile 30% scaling
-    padding: 4.5rem 1.25rem 2rem;
-    min-height: 350px;
+    padding: 3.5rem 1.25rem 1.5rem;
+    min-height: 0;
     border-radius: 18px;
     // Clamp to the visible viewport so the close button and all content stay accessible
     max-height: calc(100dvh - 2rem);
     overflow-y: auto;
+    // Hide the scrollbar — content is controlled by line-clamp
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
   }
 }
 
@@ -418,8 +421,8 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 
   @media (max-width: 500px) {
     // Increased 30% for Mobile view (previously 120x170)
-    width: 156px;
-    height: 221px;
+    width: 120px;
+    height: 170px;
   }
 }
 
@@ -566,7 +569,7 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
   overflow: hidden;
 
   @media (max-width: 500px) {
-    -webkit-line-clamp: 8;
+    -webkit-line-clamp: 3;
   }
 
   &--clickable {

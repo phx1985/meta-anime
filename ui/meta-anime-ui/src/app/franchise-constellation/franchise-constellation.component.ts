@@ -17,15 +17,16 @@ import { FranchiseGraph, FranchiseGraphEdge, FranchiseGraphNode } from '../model
 
 // ── Layout constants ──────────────────────────────────────────────────────────
 const NODE_W = 144;
-const NODE_H = 200;
+/** Conservative node height accounting for dynamic text wrapping on long titles. */
+const NODE_H = 260;
 /** Horizontal gap between nodes within a row. */
 const H_GAP = 80;
-/** Vertical gap between rows (bottom of tallest node to top of next row). */
-const V_GAP = 100;
+/** Vertical gap between rows (bottom of tallest node to top of next row).
+ *  Row-jump edges exit/enter vertically (bottom→top) so only a modest lane is
+ *  needed — enough for the bezier arc to clear the card corners. */
+const V_GAP = 80;
 /** Gap between stacked parallel nodes within a single column step. */
 const PARALLEL_GAP = 12;
-/** Horizontal control-point offset for U-turn bezier curves at row ends. */
-const UTURN_RADIUS = 80;
 const PADDING = 40;
 const CANVAS_W = 8000;
 const CANVAS_H = 10000;
@@ -713,29 +714,23 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
       }
     }
 
-    // ── Cross-row: U-turn bezier ─────────────────────────────────────────────
-    // The earlier node sits at the end of its row; the later node starts the
-    // next row.  Both share the same canvas X (rightmost or leftmost column).
-    // A cubic bezier with control points offset horizontally creates the swoop.
+    // ── Cross-row: vertical-drop bezier ─────────────────────────────────────
+    // Rule B (Row Jump): the edge exits from the BOTTOM-CENTRE of the earlier
+    // node and enters the TOP-CENTRE of the later node.  By placing both cubic
+    // control points at the vertical midpoint (same X as start/end respectively)
+    // the curve departs straight DOWN and arrives straight UP.  The path travels
+    // only through the V_GAP lane between rows and never swings sideways into
+    // any card region.
     const fromCx = earlierPos.x + NODE_W / 2; // bottom-centre of earlier node
     const fromCy = earlierPos.y + NODE_H;
     const toCx = laterPos.x + NODE_W / 2;     // top-centre of later node
     const toCy = laterPos.y;
-    const r = UTURN_RADIUS;
+    const midY = (fromCy + toCy) / 2;
 
-    if (earlierMeta.row % 2 === 0) {
-      // LTR → RTL: turn curves to the RIGHT
-      return (
-        `M ${fromCx} ${fromCy} ` +
-        `C ${fromCx + r} ${fromCy} ${toCx + r} ${toCy} ${toCx} ${toCy}`
-      );
-    } else {
-      // RTL → LTR: turn curves to the LEFT
-      return (
-        `M ${fromCx} ${fromCy} ` +
-        `C ${fromCx - r} ${fromCy} ${toCx - r} ${toCy} ${toCx} ${toCy}`
-      );
-    }
+    return (
+      `M ${fromCx} ${fromCy} ` +
+      `C ${fromCx} ${midY} ${toCx} ${midY} ${toCx} ${toCy}`
+    );
   }
 
   private _touchDist(event: TouchEvent): number {
