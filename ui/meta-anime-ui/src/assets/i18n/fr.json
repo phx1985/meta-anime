@@ -489,6 +489,21 @@
       "desc": "{{provider}} a été activé. Une synchronisation manuelle est recommandée pour charger ses données.",
       "dismiss": "Plus tard",
       "goToSync": "Aller à la Synchronisation"
+    },
+    "enrollment": {
+      "connected": "Connecté",
+      "disconnect": "Déconnecter",
+      "mal": {
+        "title": "Compte MyAnimeList",
+        "desc": "Connectez votre compte MyAnimeList pour synchroniser votre liste de suivi.",
+        "connect": "Connecter MyAnimeList"
+      },
+      "plex": {
+        "title": "Compte Plex",
+        "desc": "Connectez-vous avec Plex pour synchroniser votre bibliothèque anime.",
+        "connect": "Se connecter avec Plex",
+        "waiting": "En attente de l'autorisation Plex dans l'onglet ouvert..."
+      }
     }
   },
   "theme": {

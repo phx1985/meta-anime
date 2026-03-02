@@ -68,8 +68,18 @@ public static class ServicesExtensions
         services.AddScoped<IKometaAnimeMappingService, KometaAnimeMappingService>();
         services.AddScoped<ISonarrAnimeSourceService<SonarrSeries>, SonarrAnimeSourceService>();
         services.AddScoped<IPlexAnimeSourceService<PlexMedia>, PlexAnimeSourceService>();
+        services.AddScoped<IPlexAuthService, PlexAuthService>();
         services.AddScoped<IMalAnimeSourceService<MalAnime>, MalAnimeSourceService>();
         services.AddScoped<IMalTokenService, MalTokenService>();
+        services.AddScoped<IMalOAuthService, MalOAuthService>();
+
+        // Named HttpClient for calls to plex.tv (used by PlexAuthService)
+        services.AddHttpClient("PlexTV", client =>
+        {
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+            client.DefaultRequestHeaders.Add("X-Plex-Product", "MetaAnime");
+            client.DefaultRequestHeaders.Add("X-Plex-Client-Identifier", MetaAnime.Infrastructure.Plex.Constants.PlexClientIdentifier);
+        });
         services.AddScoped<ICacheEntryService, CacheEntryService>();
         services.AddScoped<IAnimeService, AnimeService>();
         services.AddScoped<IAnimeMappingService, AnimeMappingService>();

@@ -22,6 +22,7 @@ import { UserPreferencesService } from '../services/user-preferences.service';
 import { ProviderStateService } from '../services/provider-state.service';
 import { PopupService } from '../services/popup.service';
 import { SonarrService } from '../services/sonarr.service';
+import { EnrollmentService } from '../services/enrollment.service';
 import { SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
 import { SyncStep } from '../models/sync-progress.models';
@@ -79,6 +80,7 @@ export class SettingsComponent {
   private sonarrService = inject(SonarrService);
   private providerState = inject(ProviderStateService);
   readonly popupService = inject(PopupService);
+  private enrollmentService = inject(EnrollmentService);
 
   loading = signal(true);
   error = signal(false);
@@ -102,6 +104,16 @@ export class SettingsComponent {
   lastSyncDate = signal<string | null>(null);
   syncHttpError = signal<string | null>(null);
   currentLang = signal(this.translate.currentLang ?? this.translate.defaultLang ?? 'en');
+
+  // ── Enrollment state ──────────────────────────────────────────────────────
+  malConnected = signal(false);
+  malConnecting = signal(false);
+  malDisconnecting = signal(false);
+
+  plexConnected = signal(false);
+  plexConnecting = signal(false);
+  plexDisconnecting = signal(false);
+  private plexPollIntervalId: ReturnType<typeof setInterval> | null = null;
 
   /** Provider name when sync prompt is showing — delegated to PopupService */
   get syncPromptProvider() { return this.popupService.syncPromptProvider; }
@@ -133,7 +145,9 @@ export class SettingsComponent {
           s.key !== 'App:SyncInterval' &&
           !s.key.startsWith('System:') &&
           !SettingsComponent.SONARR_DEFAULT_KEYS.has(s.key) &&
-          !SettingsComponent.PROVIDER_ENABLED_KEYS.has(s.key),
+          !SettingsComponent.PROVIDER_ENABLED_KEYS.has(s.key) &&
+          s.fieldType !== 'enrollment' &&
+          s.fieldType !== 'info',
       )
       .reduce((acc, s) => {
         (acc[s.category] ??= []).push(s);
@@ -197,13 +211,10 @@ export class SettingsComponent {
   plexBasicConfigured = computed(() => {
     const list = this.settings();
     const host = list.find((s) => s.key === 'Plex:Host')?.value ?? '';
-    const token = list.find((s) => s.key === 'Plex:Token')?.value ?? '';
-    return host.trim().length > 0 && token.trim().length > 0;
+    return host.trim().length > 0 && this.plexConnected();
   });
 
-  malClientIdConfigured = computed(
-    () => (this.settings().find((s) => s.key === 'MAL:ClientId')?.value ?? '').trim().length > 0,
-  );
+  malClientIdConfigured = computed(() => this.malConnected());
 
   forms: Record<string, FormGroup> = {};
 
@@ -228,6 +239,10 @@ export class SettingsComponent {
     'Plex:Enabled',
     'Sonarr:Enabled',
   ]);
+
+  private static readonly PLEX_POLL_INTERVAL_MS = 3000;
+  /** Max number of polls before giving up (3 s × 40 = 2 minutes). */
+  private static readonly PLEX_POLL_MAX = 40;
 
   private static readonly CATEGORY_ORDER = ['mal', 'kometa', 'plex', 'sonarr', 'app'];
 
@@ -279,21 +294,27 @@ export class SettingsComponent {
 
     this.destroyRef.onDestroy(() => {
       if (this.autoApplySavedTimer) clearTimeout(this.autoApplySavedTimer);
+      this.stopPlexPolling();
     });
 
     // Capture a pending highlight from the `?highlight=` query param (set by the
     // disabled-provider modal's "Go to Settings" button).  We store it now because
     // the settings data loads asynchronously; we apply it after the data arrives.
     const pendingHighlight = this.route.snapshot.queryParams['highlight'] as string | undefined;
+    const malConnectedParam = this.route.snapshot.queryParams['malConnected'] as string | undefined;
+    const malErrorParam = this.route.snapshot.queryParams['malError'] as string | undefined;
 
-    // Clear the query param immediately so back-navigation doesn't re-trigger it.
-    if (pendingHighlight) {
+    // Clear the query params immediately so back-navigation doesn't re-trigger them.
+    if (pendingHighlight || malConnectedParam || malErrorParam) {
       this.router.navigate([], {
         replaceUrl: true,
         queryParams: {},
         relativeTo: this.route,
       });
     }
+
+    // Load enrollment status
+    this.loadEnrollmentStatus();
 
     this.settingsService
       .getAll()
@@ -353,6 +374,119 @@ export class SettingsComponent {
         next: (status) => this.lastSyncDate.set(status.lastSyncDate),
         error: () => {
           /* non-critical — ignore */
+        },
+      });
+  }
+
+  private loadEnrollmentStatus(): void {
+    this.enrollmentService
+      .getMalStatus()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (s) => this.malConnected.set(s.connected), error: () => {} });
+
+    this.enrollmentService
+      .getPlexStatus()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: (s) => this.plexConnected.set(s.connected), error: () => {} });
+  }
+
+  connectMal(): void {
+    this.malConnecting.set(true);
+    this.enrollmentService
+      .initiateMalAuth()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.malConnecting.set(false);
+          // Redirect to MAL authorization URL; callback will redirect back to /settings
+          window.location.href = res.authorizationUrl;
+        },
+        error: () => {
+          this.malConnecting.set(false);
+        },
+      });
+  }
+
+  disconnectMal(): void {
+    this.malDisconnecting.set(true);
+    this.enrollmentService
+      .disconnectMal()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.malDisconnecting.set(false);
+          this.malConnected.set(false);
+        },
+        error: () => {
+          this.malDisconnecting.set(false);
+        },
+      });
+  }
+
+  connectPlex(): void {
+    this.plexConnecting.set(true);
+    this.enrollmentService
+      .initiatePlexPin()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          // Open Plex auth in new tab and start polling
+          window.open(res.authUrl, '_blank');
+          this.startPlexPolling(res.pinId);
+        },
+        error: () => {
+          this.plexConnecting.set(false);
+        },
+      });
+  }
+
+  private stopPlexPolling(): void {
+    if (this.plexPollIntervalId) {
+      clearInterval(this.plexPollIntervalId);
+      this.plexPollIntervalId = null;
+    }
+  }
+
+  private startPlexPolling(pinId: number): void {
+    let pollCount = 0;
+    this.stopPlexPolling();
+
+    this.plexPollIntervalId = setInterval(() => {
+      pollCount++;
+      this.enrollmentService
+        .pollPlexPin(pinId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (res) => {
+            if (res.connected) {
+              this.stopPlexPolling();
+              this.plexConnecting.set(false);
+              this.plexConnected.set(true);
+            } else if (pollCount >= SettingsComponent.PLEX_POLL_MAX) {
+              this.stopPlexPolling();
+              this.plexConnecting.set(false);
+            }
+          },
+          error: () => {
+            this.stopPlexPolling();
+            this.plexConnecting.set(false);
+          },
+        });
+    }, SettingsComponent.PLEX_POLL_INTERVAL_MS);
+  }
+
+  disconnectPlex(): void {
+    this.plexDisconnecting.set(true);
+    this.enrollmentService
+      .disconnectPlex()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.plexDisconnecting.set(false);
+          this.plexConnected.set(false);
+        },
+        error: () => {
+          this.plexDisconnecting.set(false);
         },
       });
   }

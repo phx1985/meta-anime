@@ -11,13 +11,11 @@ namespace MetaAnime.Infrastructure.MyAnimeList.Services;
 public sealed class MalTokenService(
     IPropertyBagRepository propertyBagRepository) : IMalTokenService
 {
-    private const string AccessTokenKey = "MAL_ACCESS_TOKEN";
-    private const string RefreshTokenKey = "MAL_REFRESH_TOKEN";
     private const string TokenUrl = "https://myanimelist.net/v1/oauth2/token";
 
     public async Task<string?> GetAccessTokenAsync()
     {
-        var entry = await propertyBagRepository.GetByKeyAsync(AccessTokenKey);
+        var entry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.MalAccessToken);
         if (entry is not null)
         {
             return entry.Value;
@@ -26,6 +24,12 @@ public sealed class MalTokenService(
         // Fall back to legacy API token stored in PropertyBag
         var legacyEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.MalApiToken);
         return string.IsNullOrWhiteSpace(legacyEntry?.Value) ? null : legacyEntry.Value;
+    }
+
+    public async Task<bool> IsConnectedAsync()
+    {
+        var token = await GetAccessTokenAsync();
+        return !string.IsNullOrWhiteSpace(token);
     }
 
     public async Task<Result> RefreshTokenAsync()
@@ -77,10 +81,10 @@ public sealed class MalTokenService(
             return Result.Failure(new Error(Constants.Errors.InvalidResponse, "MAL token response was invalid"));
         }
 
-        await propertyBagRepository.UpsertAsync(AccessTokenKey, tokenResponse.AccessToken);
+        await propertyBagRepository.UpsertAsync(SettingsKeys.MalAccessToken, tokenResponse.AccessToken);
         if (!string.IsNullOrWhiteSpace(tokenResponse.RefreshToken))
         {
-            await propertyBagRepository.UpsertAsync(RefreshTokenKey, tokenResponse.RefreshToken);
+            await propertyBagRepository.UpsertAsync(SettingsKeys.MalRefreshTokenInternal, tokenResponse.RefreshToken);
         }
 
         await propertyBagRepository.UpsertAsync(
@@ -92,7 +96,7 @@ public sealed class MalTokenService(
 
     private async Task<string?> GetCurrentRefreshTokenAsync()
     {
-        var entry = await propertyBagRepository.GetByKeyAsync(RefreshTokenKey);
+        var entry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.MalRefreshTokenInternal);
         if (entry is not null)
         {
             return entry.Value;

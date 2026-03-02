@@ -207,6 +207,98 @@
 
               <!-- Setting rows (always visible) -->
               <div class="settings-rows">
+                <!-- MAL Integration Card -->
+                @if (cat === 'mal') {
+                  <div class="integration-card">
+                    <div class="integration-card__info">
+                      <div class="integration-card__title">{{ 'settings.enrollment.mal.title' | translate }}</div>
+                      <div class="integration-card__desc">{{ 'settings.enrollment.mal.desc' | translate }}</div>
+                    </div>
+                    <div class="integration-card__action">
+                      @if (malConnected()) {
+                        <span class="badge-connected">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                          {{ 'settings.enrollment.connected' | translate }}
+                        </span>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-danger disconnect-btn"
+                          (click)="disconnectMal()"
+                          [disabled]="malDisconnecting()"
+                        >
+                          @if (malDisconnecting()) {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                          }
+                          {{ 'settings.enrollment.disconnect' | translate }}
+                        </button>
+                      } @else {
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-primary connect-btn"
+                          (click)="connectMal()"
+                          [disabled]="malConnecting()"
+                        >
+                          @if (malConnecting()) {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                          }
+                          {{ 'settings.enrollment.mal.connect' | translate }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- Plex Integration Card -->
+                @if (cat === 'plex') {
+                  <div class="integration-card">
+                    <div class="integration-card__info">
+                      <div class="integration-card__title">{{ 'settings.enrollment.plex.title' | translate }}</div>
+                      <div class="integration-card__desc">
+                        @if (plexConnecting()) {
+                          {{ 'settings.enrollment.plex.waiting' | translate }}
+                        } @else {
+                          {{ 'settings.enrollment.plex.desc' | translate }}
+                        }
+                      </div>
+                    </div>
+                    <div class="integration-card__action">
+                      @if (plexConnected()) {
+                        <span class="badge-connected">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                          {{ 'settings.enrollment.connected' | translate }}
+                        </span>
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-danger disconnect-btn"
+                          (click)="disconnectPlex()"
+                          [disabled]="plexDisconnecting()"
+                        >
+                          @if (plexDisconnecting()) {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                          }
+                          {{ 'settings.enrollment.disconnect' | translate }}
+                        </button>
+                      } @else {
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-primary connect-btn"
+                          (click)="connectPlex()"
+                          [disabled]="plexConnecting()"
+                        >
+                          @if (plexConnecting()) {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                          }
+                          {{ 'settings.enrollment.plex.connect' | translate }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+
                   @for (setting of grouped()[cat]; track trackByKey($index, setting)) {
                   <div
                     class="setting-row"
