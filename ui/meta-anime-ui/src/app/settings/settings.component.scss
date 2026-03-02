@@ -1677,28 +1677,31 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.35rem 0.85rem;
+  padding: 0.35rem 0.9rem;
   font-size: 0.78rem;
-  font-weight: 500;
-  color: var(--text-muted, #6c757d);
+  font-weight: 600;
+  color: var(--text-muted, #6b7280);
   background: transparent;
-  border: 1px solid var(--card-border, rgba(0, 0, 0, 0.12));
+  border: 1px solid var(--card-border, rgba(107, 114, 128, 0.35));
   border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
   transition:
     color 0.18s ease,
     border-color 0.18s ease,
-    background 0.18s ease;
+    background 0.18s ease,
+    box-shadow 0.18s ease;
 
   &:hover:not(:disabled) {
     color: #ef4444;
-    border-color: rgba(239, 68, 68, 0.5);
-    background: rgba(239, 68, 68, 0.06);
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
   }
 
   &:active:not(:disabled) {
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(239, 68, 68, 0.14);
+    box-shadow: none;
   }
 
   &:disabled {

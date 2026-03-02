@@ -681,7 +681,16 @@
       "action": "Aller aux Paramètres",
       "reloadFailed": "Jeton actualisé, mais impossible de recharger les paramètres.",
       "reloadFailedMessage": "Veuillez actualiser la page pour voir le statut du jeton mis à jour."
+    },
+    "malConnect": {
+      "successTitle": "MyAnimeList connecté ✓",
+      "successMessage": "MyAnimeList a été connecté avec succès.",
+      "errorTitle": "Échec de la connexion MyAnimeList",
+      "errorMessage": "L'autorisation a échoué. Veuillez réessayer."
     }
+  },
+  "malCallback": {
+    "connecting": "Connexion à MyAnimeList en cours..."
   },
   "toast": {
     "noSync": {

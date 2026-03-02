@@ -40,7 +40,7 @@ export class EnrollmentService {
   }
 
   initiateMalAuth(): Observable<MalAuthInitiateResponse> {
-    const redirectUri = window.location.origin + '/settings';
+    const redirectUri = window.location.origin + '/auth/mal/callback';
     return this.http.get<MalAuthInitiateResponse>(
       `${this.malBase}/initiate`,
       { params: { redirectUri } },

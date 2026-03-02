@@ -681,7 +681,16 @@
       "action": "Go to Settings",
       "reloadFailed": "Token refreshed, but could not reload settings.",
       "reloadFailedMessage": "Please refresh the page to see the updated token status."
+    },
+    "malConnect": {
+      "successTitle": "MyAnimeList connected ✓",
+      "successMessage": "MyAnimeList connected successfully.",
+      "errorTitle": "MyAnimeList connection failed",
+      "errorMessage": "Authorization failed. Please try connecting again."
     }
+  },
+  "malCallback": {
+    "connecting": "Connecting to MyAnimeList..."
   },
   "toast": {
     "noSync": {

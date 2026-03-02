@@ -109,8 +109,6 @@ export class SettingsComponent {
   malConnected = signal(false);
   malConnecting = signal(false);
   malDisconnecting = signal(false);
-  malExchanging = signal(false);
-  malExchangeError = signal(false);
 
   plexConnected = signal(false);
   plexConnecting = signal(false);
@@ -309,36 +307,14 @@ export class SettingsComponent {
     // disabled-provider modal's "Go to Settings" button).  We store it now because
     // the settings data loads asynchronously; we apply it after the data arrives.
     const pendingHighlight = this.route.snapshot.queryParams['highlight'] as string | undefined;
-    const malConnectedParam = this.route.snapshot.queryParams['malConnected'] as string | undefined;
-    const malErrorParam = this.route.snapshot.queryParams['malError'] as string | undefined;
-    const malCallbackCode = this.route.snapshot.queryParams['code'] as string | undefined;
-    const malCallbackState = this.route.snapshot.queryParams['state'] as string | undefined;
 
     // Clear the query params immediately so back-navigation doesn't re-trigger them.
-    if (pendingHighlight || malConnectedParam || malErrorParam || malCallbackCode) {
+    if (pendingHighlight) {
       this.router.navigate([], {
         replaceUrl: true,
         queryParams: {},
         relativeTo: this.route,
       });
-    }
-
-    // Handle SPA OAuth callback: MAL redirected back here with ?code=&state=
-    if (malCallbackCode && malCallbackState) {
-      this.malExchanging.set(true);
-      this.enrollmentService
-        .exchangeMalCode(malCallbackCode, malCallbackState)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: () => {
-            this.malExchanging.set(false);
-            this.malConnected.set(true);
-          },
-          error: () => {
-            this.malExchanging.set(false);
-            this.malExchangeError.set(true);
-          },
-        });
     }
 
     // Load enrollment status
