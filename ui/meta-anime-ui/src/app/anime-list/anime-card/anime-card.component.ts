@@ -305,7 +305,30 @@ export class AnimeCardComponent {
   openPlexLink(event: Event): void {
     if (!this.plexUrl) return;
     event.preventDefault();
-    this.plexDeepLink.openLink(this.plexUrl);
+    this.plexDeepLink.openLink(this.plexUrl, this.anime.title);
+  }
+
+  openMalQuickUpdate(): void {
+    const malId = this.mal?.id;
+    if (!malId) return;
+    this.popupService.openMalQuickUpdate({
+      malId,
+      title: this.displayTitle,
+      coverImageUrl: this.coverImageUrl,
+      malUrl: this.malUrl ?? undefined,
+      currentStatus: this.localMalStatus() ?? this.mal?.viewState,
+      currentEpisodes: this.localMalEpisodes() ?? this.mal?.progression?.episodesWatched,
+      currentScore: this.localMalScore() ?? this.mal?.rating?.myScore,
+      totalEpisodes: this.mal?.progression?.totalEpisodes,
+      seriesStatus: this.mal?.status,
+      onSaveSuccess: (status, episodes, score) => {
+        this.localMalStatus.set(status);
+        this.localMalEpisodes.set(episodes);
+        this.localMalScore.set(score > 0 ? score : null);
+        this.neonGlow.set(true);
+        setTimeout(() => this.neonGlow.set(false), 2200);
+      },
+    });
   }
 
   openMalQuickUpdate(): void {
