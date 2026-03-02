@@ -22,12 +22,11 @@ const NODE_H = 260;
 /** Horizontal gap between nodes within a row. */
 const H_GAP = 80;
 /** Vertical gap between rows (bottom of tallest node to top of next row).
- *  Kept large so that tall cards with wrapped text never overlap the row below. */
-const V_GAP = 200;
+ *  This space acts as an exclusive "traffic lane" for the U-turn bezier edges;
+ *  it must be large enough that the curve never clips any anime card. */
+const V_GAP = 280;
 /** Gap between stacked parallel nodes within a single column step. */
 const PARALLEL_GAP = 12;
-/** Horizontal control-point offset for U-turn bezier curves at row ends. */
-const UTURN_RADIUS = 80;
 const PADDING = 40;
 const CANVAS_W = 8000;
 const CANVAS_H = 10000;
@@ -717,27 +716,25 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
 
     // ── Cross-row: U-turn bezier ─────────────────────────────────────────────
     // The earlier node sits at the end of its row; the later node starts the
-    // next row.  Both share the same canvas X (rightmost or leftmost column).
-    // A cubic bezier with control points offset horizontally creates the swoop.
+    // next row.  We route the edge through the dedicated vertical "traffic lane"
+    // (the V_GAP space between rows) by using vertical control points instead of
+    // horizontal ones.  This keeps the curve from ever overlapping a card:
+    //   • CP1 at (fromCx, midLaneY) — pulls the exit tangent straight DOWN
+    //   • CP2 at (toCx,   midLaneY) — pulls the entry tangent straight UP
+    // Horizontal movement between fromCx and toCx happens in the centre of the
+    // gap, completely clear of both the row above and the row below.
     const fromCx = earlierPos.x + NODE_W / 2; // bottom-centre of earlier node
     const fromCy = earlierPos.y + NODE_H;
     const toCx = laterPos.x + NODE_W / 2;     // top-centre of later node
     const toCy = laterPos.y;
-    const r = UTURN_RADIUS;
+    // Midpoint of the vertical lane — both control points sit here so the
+    // curve is symmetric and stays inside the gap at all times.
+    const midLaneY = (fromCy + toCy) / 2;
 
-    if (earlierMeta.row % 2 === 0) {
-      // LTR → RTL: turn curves to the RIGHT
-      return (
-        `M ${fromCx} ${fromCy} ` +
-        `C ${fromCx + r} ${fromCy} ${toCx + r} ${toCy} ${toCx} ${toCy}`
-      );
-    } else {
-      // RTL → LTR: turn curves to the LEFT
-      return (
-        `M ${fromCx} ${fromCy} ` +
-        `C ${fromCx - r} ${fromCy} ${toCx - r} ${toCy} ${toCx} ${toCy}`
-      );
-    }
+    return (
+      `M ${fromCx} ${fromCy} ` +
+      `C ${fromCx} ${midLaneY} ${toCx} ${midLaneY} ${toCx} ${toCy}`
+    );
   }
 
   private _touchDist(event: TouchEvent): number {
