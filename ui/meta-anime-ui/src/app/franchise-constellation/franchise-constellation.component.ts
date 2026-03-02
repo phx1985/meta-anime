@@ -22,11 +22,14 @@ const NODE_H = 260;
 /** Horizontal gap between nodes within a row. */
 const H_GAP = 80;
 /** Vertical gap between rows (bottom of tallest node to top of next row).
- *  This space acts as an exclusive "traffic lane" for the U-turn bezier edges;
- *  it must be large enough that the curve never clips any anime card. */
-const V_GAP = 280;
+ *  Acts as the exclusive "traffic lane" for U-turn bezier edges. */
+const V_GAP = 150;
 /** Gap between stacked parallel nodes within a single column step. */
 const PARALLEL_GAP = 12;
+/** Horizontal outward offset for U-turn bezier control points.
+ *  The swoop extends this many pixels beyond the end-column card centre, placing
+ *  it in the margin outside the grid — never over any card. */
+const UTURN_SWOOP = 80;
 const PADDING = 40;
 const CANVAS_W = 8000;
 const CANVAS_H = 10000;
@@ -715,26 +718,34 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     }
 
     // ── Cross-row: U-turn bezier ─────────────────────────────────────────────
-    // The earlier node sits at the end of its row; the later node starts the
-    // next row.  We route the edge through the dedicated vertical "traffic lane"
-    // (the V_GAP space between rows) by using vertical control points instead of
-    // horizontal ones.  This keeps the curve from ever overlapping a card:
-    //   • CP1 at (fromCx, midLaneY) — pulls the exit tangent straight DOWN
-    //   • CP2 at (toCx,   midLaneY) — pulls the entry tangent straight UP
-    // Horizontal movement between fromCx and toCx happens in the centre of the
-    // gap, completely clear of both the row above and the row below.
+    // In the snake layout each U-turn connects the end of one row to the start
+    // of the next; both share nearly the same canvas X (rightmost for LTR→RTL,
+    // leftmost for RTL→LTR).  Control points are offset OUTWARD horizontally
+    // (away from the card grid) so the curve swoops elegantly through the gap
+    // lane without touching any card:
+    //   LTR → RTL  swoop extends to the RIGHT  (+UTURN_SWOOP)
+    //   RTL → LTR  swoop extends to the LEFT   (-UTURN_SWOOP)
+    // Y-range of the bezier is bounded by the convex hull [fromCy … toCy], so
+    // the curve never leaves the vertical traffic-lane space (V_GAP).
     const fromCx = earlierPos.x + NODE_W / 2; // bottom-centre of earlier node
     const fromCy = earlierPos.y + NODE_H;
     const toCx = laterPos.x + NODE_W / 2;     // top-centre of later node
     const toCy = laterPos.y;
-    // Midpoint of the vertical lane — both control points sit here so the
-    // curve is symmetric and stays inside the gap at all times.
-    const midLaneY = (fromCy + toCy) / 2;
+    const s = UTURN_SWOOP;
 
-    return (
-      `M ${fromCx} ${fromCy} ` +
-      `C ${fromCx} ${midLaneY} ${toCx} ${midLaneY} ${toCx} ${toCy}`
-    );
+    if (earlierMeta.row % 2 === 0) {
+      // LTR → RTL: swoop curves to the RIGHT
+      return (
+        `M ${fromCx} ${fromCy} ` +
+        `C ${fromCx + s} ${fromCy} ${toCx + s} ${toCy} ${toCx} ${toCy}`
+      );
+    } else {
+      // RTL → LTR: swoop curves to the LEFT
+      return (
+        `M ${fromCx} ${fromCy} ` +
+        `C ${fromCx - s} ${fromCy} ${toCx - s} ${toCy} ${toCx} ${toCy}`
+      );
+    }
   }
 
   private _touchDist(event: TouchEvent): number {
