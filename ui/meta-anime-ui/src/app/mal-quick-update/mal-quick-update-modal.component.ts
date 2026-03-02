@@ -46,6 +46,24 @@ export class MalQuickUpdateModalComponent implements OnInit {
   protected ctx = computed(() => this.popup.malQuickUpdate());
   protected leaving = computed(() => this.popup.malQuickUpdateLeaving());
 
+  /** True when the current status is "completed" */
+  protected isCompleted = computed(() => this.selectedStatus() === 'completed');
+
+  /**
+   * Validation: Completed shows must have a score before saving.
+   * Also a status must be selected.
+   */
+  protected canSave = computed(
+    () =>
+      !!this.selectedStatus() &&
+      !(this.isCompleted() && this.selectedScore() === 0),
+  );
+
+  /** Show score-required hint only when completed is selected but score is 0 */
+  protected showScoreRequired = computed(
+    () => this.isCompleted() && this.selectedScore() === 0,
+  );
+
   ngOnInit(): void {
     const ctx = this.popup.malQuickUpdate();
     if (ctx) {
@@ -61,6 +79,14 @@ export class MalQuickUpdateModalComponent implements OnInit {
 
   protected selectStatus(status: string): void {
     this.selectedStatus.set(status);
+    // Auto-fill episodes when "Completed" is selected and total is known
+    if (status === 'completed') {
+      const ctx = this.ctx();
+      const total = ctx?.totalEpisodes;
+      if (total && total > 0) {
+        this.episodesWatched.set(total);
+      }
+    }
   }
 
   protected selectScore(score: number): void {
@@ -89,17 +115,22 @@ export class MalQuickUpdateModalComponent implements OnInit {
 
   protected save(): void {
     const ctx = this.ctx();
-    if (!ctx?.malId || this.saving()) return;
+    if (!ctx?.malId || this.saving() || !this.canSave()) return;
     this.saving.set(true);
+    const status = this.selectedStatus() || 'watching';
+    const episodes = this.episodesWatched();
+    const score = this.selectedScore();
     this.animeService
       .updateMalListStatus(ctx.malId, {
-        status: this.selectedStatus() || 'watching',
-        numWatchedEpisodes: this.episodesWatched(),
-        score: this.selectedScore(),
+        status,
+        numWatchedEpisodes: episodes,
+        score,
       })
       .subscribe({
         next: () => {
           this.saving.set(false);
+          // Invoke card's local-state callback before dismissing
+          ctx.onSaveSuccess?.(status, episodes, score);
           this.notifService.push({
             id: `mal-update-${Date.now()}`,
             severity: 'success',

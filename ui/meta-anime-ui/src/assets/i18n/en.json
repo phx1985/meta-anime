@@ -1031,6 +1031,8 @@
     "saveSuccess": "List updated",
     "saveSuccessMsg": "Your MAL list has been updated.",
     "saveError": "Update failed",
-    "saveErrorMsg": "Could not update your MAL list. Please try again."
+    "saveErrorMsg": "Could not update your MAL list. Please try again.",
+    "openInMal": "Open in MyAnimeList",
+    "scoreRequired": "— score required"
   }
 }

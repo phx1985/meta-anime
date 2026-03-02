@@ -127,6 +127,25 @@
   overflow: hidden;
 }
 
+// "Open in MAL" inline link below title
+.mal-qu-open-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #2e51a2;
+  text-decoration: none;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+  width: fit-content;
+
+  &:hover {
+    opacity: 1;
+    text-decoration: underline;
+  }
+}
+
 // ── Sections ─────────────────────────────────────────────────────────────────
 
 .mal-qu-section {
@@ -158,6 +177,15 @@
   color: var(--accent-primary);
   letter-spacing: 0.02em;
   text-transform: none;
+}
+
+// Shown when "Completed" is active but no score selected
+.mal-qu-score-required {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #ef4444;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 // ── Watch-status grid ────────────────────────────────────────────────────────
@@ -309,6 +337,12 @@
   gap: 0.3rem;
   flex-wrap: nowrap;
   align-items: center;
+
+  &--required {
+    .mal-qu-score-btn {
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+  }
 }
 
 .mal-qu-score-btn {
@@ -356,6 +390,7 @@
   display: flex;
   gap: 0.6rem;
   justify-content: flex-end;
+  align-items: center;
   margin-top: 0.15rem;
 }
 
@@ -411,27 +446,61 @@
   flex-shrink: 0;
 }
 
+// "Open in MAL" secondary footer button
+.mal-qu-mal-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 9px;
+  border: 1.5px solid rgba(46, 81, 162, 0.4);
+  background: rgba(46, 81, 162, 0.08);
+  color: #2e51a2;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  margin-right: auto; // push save + cancel to right
+
+  &:hover {
+    background: rgba(46, 81, 162, 0.15);
+    border-color: rgba(46, 81, 162, 0.7);
+  }
+}
+
 // ── Mobile tweaks ─────────────────────────────────────────────────────────────
 
-@media (max-width: 400px) {
+@media (max-width: 500px) {
   .mal-qu-modal {
     padding: 1.25rem 1rem 1rem;
     border-radius: 14px;
   }
 
+  // ── Score: "zero-scroll" 2×5 grid on mobile ──────────────────────────────
+  // Row 1: 1–5  |  Row 2: 6–10
+  .mal-qu-score-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(2, auto);
+    gap: 0.35rem;
+  }
+
   .mal-qu-score-btn {
-    height: 32px;
-    font-size: 0.7rem;
-    border-radius: 6px;
+    height: 44px; // fat-finger target
+    font-size: 0.85rem;
+    border-radius: 9px;
+    min-width: 0;
+    flex: none; // not used in grid, defensive reset
   }
 
   .mal-qu-step-btn {
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
   }
 
   .mal-qu-eps-input {
-    height: 38px;
+    height: 44px;
   }
 }
 

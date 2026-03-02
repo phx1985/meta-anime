@@ -41,7 +41,7 @@
           class="mal-qu-cover"
           [src]="ctx()!.coverImageUrl"
           [alt]="ctx()!.title"
-          loading="lazy"
+          loading="eager"
         />
       } @else {
         <div class="mal-qu-cover mal-qu-cover--placeholder" aria-hidden="true">
@@ -54,6 +54,22 @@
           <span>{{ 'malQuickUpdate.title' | translate }}</span>
         </div>
         <h3 class="mal-qu-title">{{ ctx()?.title }}</h3>
+        @if (ctx()?.malUrl) {
+          <a
+            class="mal-qu-open-link"
+            [href]="ctx()!.malUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            [title]="'malQuickUpdate.openInMal' | translate"
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            {{ 'malQuickUpdate.openInMal' | translate }}
+          </a>
+        }
       </div>
     </div>
 
@@ -129,8 +145,16 @@
         @if (selectedScore() > 0) {
           <span class="mal-qu-score-label">— {{ selectedScore() }}/10</span>
         }
+        @if (showScoreRequired()) {
+          <span class="mal-qu-score-required">{{ 'malQuickUpdate.scoreRequired' | translate }}</span>
+        }
       </label>
-      <div class="mal-qu-score-row" role="radiogroup" [attr.aria-label]="'malQuickUpdate.score' | translate">
+      <div
+        class="mal-qu-score-row"
+        role="radiogroup"
+        [attr.aria-label]="'malQuickUpdate.score' | translate"
+        [class.mal-qu-score-row--required]="showScoreRequired()"
+      >
         @for (n of scores; track n) {
           <button
             type="button"
@@ -153,11 +177,28 @@
       <button type="button" class="mal-qu-cancel-btn" (click)="dismiss()">
         {{ 'common.cancel' | translate }}
       </button>
+      @if (ctx()?.malUrl) {
+        <a
+          class="mal-qu-mal-link-btn"
+          [href]="ctx()!.malUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          [title]="'malQuickUpdate.openInMal' | translate"
+        >
+          <img src="assets/images/mal.svg" alt="" width="14" height="14" aria-hidden="true" />
+          MAL
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+        </a>
+      }
       <button
         type="button"
         class="mal-qu-save-btn"
         (click)="save()"
-        [disabled]="saving() || !selectedStatus()"
+        [disabled]="saving() || !canSave()"
       >
         @if (saving()) {
           <span class="mal-qu-spinner" aria-hidden="true"></span>

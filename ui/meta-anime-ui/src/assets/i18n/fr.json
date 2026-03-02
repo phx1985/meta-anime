@@ -1031,6 +1031,8 @@
     "saveSuccess": "Liste mise à jour",
     "saveSuccessMsg": "Votre liste MAL a été mise à jour.",
     "saveError": "Échec de la mise à jour",
-    "saveErrorMsg": "Impossible de mettre à jour votre liste MAL. Veuillez réessayer."
+    "saveErrorMsg": "Impossible de mettre à jour votre liste MAL. Veuillez réessayer.",
+    "openInMal": "Ouvrir dans MyAnimeList",
+    "scoreRequired": "— note requise"
   }
 }

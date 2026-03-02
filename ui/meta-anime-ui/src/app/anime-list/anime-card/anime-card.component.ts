@@ -35,6 +35,17 @@ export class AnimeCardComponent {
   showAltTitles = signal(false);
   showLightbox = signal(false);
 
+  // ── Local MAL overrides (updated immediately after a successful quick-update) ─
+  /** Overridden view-state (e.g. 'watching', 'completed') after a quick-update. */
+  private localMalStatus = signal<string | null>(null);
+  /** Overridden episodes-watched count after a quick-update. */
+  private localMalEpisodes = signal<number | null>(null);
+  /** Overridden personal score after a quick-update. */
+  private localMalScore = signal<number | null>(null);
+
+  /** `true` while the neon-glow success animation is playing. */
+  neonGlow = signal(false);
+
   @HostListener('document:keydown.escape')
   onEscape(): void {
     if (this.showLightbox()) this.showLightbox.set(false);
@@ -104,7 +115,7 @@ export class AnimeCardComponent {
 
   /** MAL list status (watching / completed / on_hold / dropped / plan_to_watch) */
   get malViewState(): string | undefined {
-    return this.mal?.viewState;
+    return this.localMalStatus() ?? this.mal?.viewState;
   }
 
   /** MAL series airing status (finished_airing / currently_airing / not_yet_aired) */
@@ -175,7 +186,7 @@ export class AnimeCardComponent {
   }
 
   get myScore(): number {
-    return this.mal?.rating?.myScore ?? 0;
+    return this.localMalScore() ?? this.mal?.rating?.myScore ?? 0;
   }
 
   // ── Dates ─────────────────────────────────────────────────────────────────
@@ -203,10 +214,11 @@ export class AnimeCardComponent {
   }
 
   get malProgress(): { watched: number; total: number } | undefined {
+    const localEps = this.localMalEpisodes();
     const p = this.mal?.progression;
-    return p && p.totalEpisodes > 0
-      ? { watched: p.episodesWatched, total: p.totalEpisodes }
-      : undefined;
+    if (!p || p.totalEpisodes <= 0) return undefined;
+    const watched = localEps !== null ? localEps : p.episodesWatched;
+    return { watched, total: p.totalEpisodes };
   }
 
   // ── Storage / codec ───────────────────────────────────────────────────────
@@ -303,10 +315,19 @@ export class AnimeCardComponent {
       malId,
       title: this.displayTitle,
       coverImageUrl: this.coverImageUrl,
+      malUrl: this.malUrl ?? undefined,
       currentStatus: this.mal?.viewState,
-      currentEpisodes: this.mal?.progression?.episodesWatched,
-      currentScore: this.mal?.rating?.myScore,
+      currentEpisodes: this.localMalEpisodes() ?? this.mal?.progression?.episodesWatched,
+      currentScore: this.localMalScore() ?? this.mal?.rating?.myScore,
       totalEpisodes: this.mal?.progression?.totalEpisodes,
+      seriesStatus: this.mal?.status,
+      onSaveSuccess: (status, episodes, score) => {
+        this.localMalStatus.set(status);
+        this.localMalEpisodes.set(episodes);
+        this.localMalScore.set(score > 0 ? score : null);
+        this.neonGlow.set(true);
+        setTimeout(() => this.neonGlow.set(false), 2200);
+      },
     });
   }
 

@@ -4,10 +4,15 @@ export interface MalQuickUpdateContext {
   malId: string;
   title: string;
   coverImageUrl?: string;
+  malUrl?: string;
   currentStatus?: string;
   currentEpisodes?: number;
   currentScore?: number;
   totalEpisodes?: number;
+  /** MAL series airing status — used to auto-fill episodes on Completed */
+  seriesStatus?: string;
+  /** Called on successful save so the originating card can update its local state immediately. */
+  onSaveSuccess?: (status: string, episodes: number, score: number) => void;
 }
 
 /**
