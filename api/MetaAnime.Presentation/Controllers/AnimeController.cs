@@ -149,14 +149,13 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
     /// <summary>
     /// Manually triggers a full cache refresh and anime matching across sources.
     /// The job is enqueued via Hangfire and runs in the background; SignalR broadcasts
-    /// progress to connected clients.
+    /// progress to connected clients. Kometa mappings are always refreshed.
     /// </summary>
-    /// <param name="forceRefreshKometaMapping">If true, forces a refresh of the Kometa mapping data before matching</param>
     [HttpPost("sync")]
     [Authorize]
-    public IActionResult SyncAll([FromQuery] bool forceRefreshKometaMapping = false)
+    public IActionResult SyncAll()
     {
-        backgroundJobClient.Enqueue<AnimeSyncJob>(job => job.SyncAnimeMetadata(forceRefreshKometaMapping));
+        backgroundJobClient.Enqueue<AnimeSyncJob>(job => job.SyncAnimeMetadata(true));
 
         return Accepted(new { message = "Sync started" });
     }

@@ -51,7 +51,7 @@ public sealed class AnimeSyncJob(
 
         recurringJobManager.AddOrUpdate<AnimeSyncJob>(
             Constants.JobNames.AnimeMetadataSync,
-            job => job.SyncAnimeMetadata(),
+            job => job.SyncAnimeMetadata(true),
             cronExpr);
     }
 

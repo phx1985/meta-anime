@@ -77,12 +77,8 @@ export class AnimeService {
     return this.http.delete<void>(`${this.base}/${id}`);
   }
 
-  syncAnimes(forceRefreshKometaMapping?: boolean): Observable<void> {
-    let params = new HttpParams();
-    if (forceRefreshKometaMapping !== undefined) {
-      params = params.set('forceRefreshKometaMapping', forceRefreshKometaMapping);
-    }
-    return this.http.post<void>(`${this.base}/sync`, null, { params });
+  syncAnimes(): Observable<void> {
+    return this.http.post<void>(`${this.base}/sync`, null);
   }
 
   getSeasonalAnimes(year: number, season: string): Observable<SeasonalAnimeItem[]> {
