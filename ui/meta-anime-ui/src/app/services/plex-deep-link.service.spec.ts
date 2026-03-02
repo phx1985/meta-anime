@@ -51,7 +51,7 @@ describe('PlexDeepLinkService', () => {
         'https://app.plex.tv/desktop/#!/server/abc123/details?key=%2Flibrary%2Fmetadata%2F456';
       const result = service.buildPlexUri(webUrl);
       expect(result).toBe(
-        'plex://server/abc123/details?key=%2Flibrary%2Fmetadata%2F456',
+        'plex://preplay/?metadataKey=%2Flibrary%2Fmetadata%2F456&metadataType=4&server=abc123',
       );
     });
 
@@ -120,7 +120,7 @@ describe('PlexDeepLinkService', () => {
       const webUrl = 'https://app.plex.tv/desktop/#!/server/srv1/details?key=%2Flib%2F1';
       service.openLink(webUrl);
       expect(mockDocument.location!.href).toBe(
-        'plex://server/srv1/details?key=%2Flib%2F1',
+        'plex://preplay/?metadataKey=%2Flib%2F1&metadataType=4&server=srv1',
       );
     });
 
