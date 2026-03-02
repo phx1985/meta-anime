@@ -272,6 +272,35 @@ export class App implements OnInit, AfterViewInit {
     this.langDropdownOpen.set(false);
   }
 
+  /** Global Escape key handler — closes the topmost active overlay (PC accessibility). */
+  @HostListener('document:keydown.escape')
+  onGlobalEscape(): void {
+    // Synopsis and disabled-provider modals are higher-z layers — dismiss first.
+    if (this.popupService.synopsisTitle()) {
+      this.dismissSynopsisModal();
+      return;
+    }
+    if (this.popupService.disabledProvider()) {
+      this.dismissDisabledProviderModal();
+      return;
+    }
+    // Notification center / lang dropdown
+    if (this.notifCenterOpen()) {
+      this.notifCenterOpen.set(false);
+      return;
+    }
+    if (this.langDropdownOpen()) {
+      this.langDropdownOpen.set(false);
+      return;
+    }
+    // Side drawer (mobile)
+    if (this.menuOpen()) {
+      this.closeMenu();
+      return;
+    }
+    // LuckyPick and FranchiseConstellation handle their own Escape listeners.
+  }
+
   toggleNotifCenter(event: Event): void {
     event.stopPropagation();
     this.notifCenterOpen.update((v) => !v);

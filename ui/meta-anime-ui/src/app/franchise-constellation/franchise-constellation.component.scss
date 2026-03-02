@@ -682,6 +682,13 @@ $media-music:   #ec4899; // pink
   -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
   overflow: hidden;
+
+  &--clickable {
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.15s;
+    &:hover { opacity: 0.8; }
+  }
 }
 
 // "Read More" trigger
