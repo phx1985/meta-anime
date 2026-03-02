@@ -24,8 +24,11 @@ export class PlexDeepLinkService {
    * Opens `webUrl` using the appropriate strategy:
    * - Desktop → `window.open(webUrl, '_blank', 'noopener,noreferrer')`
    * - Mobile  → plex:// deep link, with a 1 000 ms fallback to the web URL.
+   *
+   * @param title  Optional anime title used as a search fallback when the
+   *               ratingKey cannot be extracted from `webUrl`.
    */
-  openLink(webUrl: string | null | undefined): void {
+  openLink(webUrl: string | null | undefined, title?: string): void {
     if (!webUrl || !isPlatformBrowser(this.platformId)) return;
 
     if (!this.mobileDetection.isMobile()) {
@@ -33,7 +36,7 @@ export class PlexDeepLinkService {
       return;
     }
 
-    const deepLinkUri = this.buildPlexUri(webUrl);
+    const deepLinkUri = this.buildPlexUri(webUrl, title);
     const win = this.document.defaultView;
     let fallbackTimer: ReturnType<typeof setTimeout>;
 
@@ -65,16 +68,15 @@ export class PlexDeepLinkService {
    *
    * Example conversion:
    * `https://app.plex.tv/desktop/#!/server/{machineId}/details?key=/library/metadata/123`
-   * → `plex://preplay/?metadataKey=%2Flibrary%2Fmetadata%2F123&metadataType=4&server={machineId}`
+   * → `plex://server/{machineId}/details?key=%2Flibrary%2Fmetadata%2F123`
    *
-   * The `plex://preplay/` scheme is the documented mobile intent recognised by the
-   * native Plex app on iOS and Android to navigate directly to a specific show.
-   * `metadataType=4` identifies the item as a TV show/series.
+   * Search fallback (when ratingKey cannot be extracted but a title is provided):
+   * → `plex://server/all/details?search={encodedTitle}`
    *
-   * Falls back to `plex://` (opens the Plex home screen) when the URL does not
-   * match the expected deep-link pattern.
+   * Falls back to `plex://` (opens the Plex home screen) when neither the URL
+   * matches the expected deep-link pattern nor a title is provided.
    */
-  buildPlexUri(webUrl: string): string {
+  buildPlexUri(webUrl: string, title?: string): string {
     try {
       const url = new URL(webUrl);
       // Hash is like #!/server/{machineId}/details?key=/library/metadata/123
@@ -86,13 +88,18 @@ export class PlexDeepLinkService {
         const params = new URLSearchParams(query.replace(/^\?/, ''));
         const key = params.get('key');
         if (key) {
-          // Use plex://preplay/ which is the native mobile intent understood by
-          // both the iOS and Android Plex apps to open a specific show page.
-          return `plex://preplay/?metadataKey=${encodeURIComponent(key)}&metadataType=4&server=${encodeURIComponent(serverId)}`;
+          // plex://server/{machineId}/details?key={ratingKey} is the native URI
+          // scheme recognised by both the iOS and Android Plex apps to navigate
+          // directly to a specific show's details page.
+          return `plex://server/${encodeURIComponent(serverId)}/details?key=${encodeURIComponent(key)}`;
         }
       }
     } catch {
-      // Malformed URL — fall through to default.
+      // Malformed URL — fall through to search fallback or default.
+    }
+    // Search fallback: navigate to the item via title search in the native app.
+    if (title) {
+      return `plex://server/all/details?search=${encodeURIComponent(title)}`;
     }
     // Generic Plex deep link: opens the Plex home screen in the native app.
     return 'plex://';

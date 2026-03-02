@@ -292,7 +292,7 @@ export class SeasonalCardComponent implements OnInit {
   openPlexLink(event: Event): void {
     if (!this.anime.plexUrl) return;
     event.preventDefault();
-    this.plexDeepLink.openLink(this.anime.plexUrl);
+    this.plexDeepLink.openLink(this.anime.plexUrl, this.anime.title);
   }
 
   openSynopsisModal(): void {

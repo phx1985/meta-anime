@@ -1,4 +1,5 @@
 using MetaAnime.Application;
+using MetaAnime.Application.BackgroundJobs;
 using MetaAnime.Application.Interfaces;
 using MetaAnime.Application.Services;
 using MetaAnime.Core.Interfaces.Repositories;
@@ -82,6 +83,7 @@ public static class ServicesExtensions
         services.AddScoped<IPropertyBagRepository, PropertyBagRepository>();
 
         services.AddScoped<ISyncProgressNotifier, SyncProgressNotifier>();
+        services.AddScoped<AnimeSyncJob>();
         services.AddHostedService<SettingsSeedService>();
     }
 

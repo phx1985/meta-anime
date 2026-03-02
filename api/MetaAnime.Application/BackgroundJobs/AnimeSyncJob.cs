@@ -15,13 +15,13 @@ public sealed class AnimeSyncJob(
     /// <summary>
     /// Synchronizes anime metadata from external sources
     /// </summary>
-    public async Task SyncAnimeMetadata()
+    public async Task SyncAnimeMetadata(bool forceRefreshKometaMapping = false)
     {
         logger.LogInformation(Constants.LogMessages.AnimeSyncJob.Starting, DateTime.UtcNow);
 
         try
         {
-            var matchResult = await animeMatchingService.MatchAsync(progressNotifier: progressNotifier);
+            var matchResult = await animeMatchingService.MatchAsync(forceRefreshKometaMapping, progressNotifier);
 
             if (matchResult.IsSuccess)
             {

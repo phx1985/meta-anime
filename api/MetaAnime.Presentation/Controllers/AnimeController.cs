@@ -1,6 +1,8 @@
 ﻿using Asp.Versioning;
+using Hangfire;
 using Mediator;
 using ApplicationConstants = MetaAnime.Application.Constants;
+using MetaAnime.Application.BackgroundJobs;
 using MetaAnime.Application.Commands;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Queries;
@@ -12,7 +14,7 @@ namespace MetaAnime.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/animes")]
-public sealed class AnimeController(IMediator mediator)
+public sealed class AnimeController(IMediator mediator, IBackgroundJobClient backgroundJobClient)
     : ControllerBase
 {
     [HttpGet("statistics")]
@@ -146,21 +148,16 @@ public sealed class AnimeController(IMediator mediator)
 
     /// <summary>
     /// Manually triggers a full cache refresh and anime matching across sources.
-    /// This operation fetches fresh data from Plex, MAL, and Sonarr APIs, updates the cache,
-    /// and performs matching using Kometa mapping data.
+    /// The job is enqueued via Hangfire and runs in the background; SignalR broadcasts
+    /// progress to connected clients.
     /// </summary>
     /// <param name="forceRefreshKometaMapping">If true, forces a refresh of the Kometa mapping data before matching</param>
     [HttpPost("sync")]
     [Authorize]
-    public async Task<IActionResult> SyncAll([FromQuery] bool forceRefreshKometaMapping = false)
+    public IActionResult SyncAll([FromQuery] bool forceRefreshKometaMapping = false)
     {
-        var result = await mediator.Send(new MatchAnimeCommand(forceRefreshKometaMapping));
+        backgroundJobClient.Enqueue<AnimeSyncJob>(job => job.SyncAnimeMetadata(forceRefreshKometaMapping));
 
-        if (result.IsFailure)
-        {
-            return StatusCode(500, result.Error.Message);
-        }
-
-        return Ok(new { message = "Cache refresh and matching completed successfully" });
+        return Accepted(new { message = "Sync started" });
     }
 }
