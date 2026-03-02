@@ -120,6 +120,12 @@ export class SettingsComponent {
   /** `true` while the sync-prompt exit animation is playing */
   get syncPromptLeaving() { return this.popupService.syncPromptLeaving; }
 
+  // ── Kometa URL warning dialog ─────────────────────────────────────────────
+  /** Non-null while the Kometa URL edit-warning dialog is open (holds the key). */
+  kometaWarnKey = signal<string | null>(null);
+  /** `true` while the warning dialog exit animation is playing. */
+  kometaWarnLeaving = signal(false);
+
   syncSteps = toSignal(this.signalR.steps$, { initialValue: [] as SyncStep[] });
   syncDone = toSignal(this.signalR.syncDone$, { initialValue: false });
   syncError = toSignal(this.signalR.syncError$, { initialValue: false });
@@ -248,9 +254,13 @@ export class SettingsComponent {
   /** Max number of polls before giving up (3 s × 40 = 2 minutes). */
   private static readonly PLEX_POLL_MAX = 40;
 
-  private static readonly CATEGORY_ORDER = ['mal', 'kometa', 'plex', 'sonarr', 'app'];
+  private static readonly CATEGORY_ORDER = ['kometa', 'mal', 'plex', 'sonarr', 'app'];
   /** Categories that always appear even when they have no regular settings (they have integration cards). */
   private static readonly INTEGRATION_CARD_CATS = new Set(['mal', 'plex']);
+  /** Keys that must be treated as sensitive on the frontend regardless of the backend flag. */
+  private static readonly FRONTEND_SENSITIVE_KEYS = new Set(['MAL:ClientId']);
+  /** The Kometa JSON URL key that requires a warning before editing. */
+  private static readonly KOMETA_URL_KEY = 'Kometa:AnimeIdsJsonUrl';
 
   /** Locale-aware date formatter — uses current app language */
   fmtDate(iso: string): string {
@@ -325,8 +335,11 @@ export class SettingsComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
-          this.settings.set(data);
-          this.buildForms(data);
+          const transformed = data.map((s) =>
+            SettingsComponent.FRONTEND_SENSITIVE_KEYS.has(s.key) ? { ...s, isSensitive: true } : s,
+          );
+          this.settings.set(transformed);
+          this.buildForms(transformed);
           this.loading.set(false);
           const first = this.navItems()[0];
           if (first) this.activeCategory.set(first);
@@ -509,6 +522,39 @@ export class SettingsComponent {
 
   slug(key: string): string {
     return fieldSlug(key);
+  }
+
+  /**
+   * Called from the "Edit" button.  For the Kometa JSON URL this first shows
+   * a warning dialog; for all other keys it switches directly to edit mode.
+   */
+  startEdit(key: string): void {
+    if (key === SettingsComponent.KOMETA_URL_KEY && !this.editing()[key]) {
+      this.kometaWarnKey.set(key);
+      this.kometaWarnLeaving.set(false);
+      return;
+    }
+    this.toggleEdit(key);
+  }
+
+  /** Close the Kometa warning without activating edit mode. */
+  dismissKometaWarning(): void {
+    this.kometaWarnLeaving.set(true);
+    setTimeout(() => {
+      this.kometaWarnKey.set(null);
+      this.kometaWarnLeaving.set(false);
+    }, 200);
+  }
+
+  /** Close the Kometa warning AND activate edit mode. */
+  confirmKometaWarning(): void {
+    const key = this.kometaWarnKey();
+    this.kometaWarnLeaving.set(true);
+    setTimeout(() => {
+      this.kometaWarnKey.set(null);
+      this.kometaWarnLeaving.set(false);
+      if (key) this.toggleEdit(key);
+    }, 200);
   }
 
   toggleEdit(key: string): void {

@@ -490,6 +490,11 @@
       "dismiss": "Later",
       "goToSync": "Go to Sync"
     },
+    "kometaWarn": {
+      "title": "Warning: Sensitive Setting",
+      "body": "Modifying the Kometa mapping file URL can break the connection between your Anime tracking and your Media server. Only proceed if you know exactly what you are doing.",
+      "proceed": "I Understand, Proceed"
+    },
     "enrollment": {
       "connected": "Connected",
       "disconnect": "Disconnect",

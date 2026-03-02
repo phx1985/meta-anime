@@ -1515,6 +1515,43 @@
   }
 }
 
+// ── Kometa URL warning dialog extras ─────────────────────────────────────────
+.kometa-warn-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f59e0b;
+  margin-bottom: 0.25rem;
+  flex-shrink: 0;
+}
+
+.kometa-warn-proceed-btn {
+  padding: 0.55rem 1.2rem;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+  background: rgba(245, 158, 11, 0.18);
+  color: #f59e0b;
+
+  &:hover {
+    background: rgba(245, 158, 11, 0.28);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.97);
+  }
+}
+
 // ── Setting row saved (success) flash ─────────────────────────────────────────
 // Same green (#10b981) used by badgeMinimalSave and slider-row--saved above.
 

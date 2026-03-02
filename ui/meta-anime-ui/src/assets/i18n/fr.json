@@ -490,6 +490,11 @@
       "dismiss": "Plus tard",
       "goToSync": "Aller à la Synchronisation"
     },
+    "kometaWarn": {
+      "title": "Attention : Paramètre Sensible",
+      "body": "Modifier l'URL du fichier de correspondance Kometa peut rompre la connexion entre votre suivi d'animés et votre serveur multimédia. Ne continuez que si vous savez exactement ce que vous faites.",
+      "proceed": "Je comprends, Continuer"
+    },
     "enrollment": {
       "connected": "Connecté",
       "disconnect": "Déconnecter",
