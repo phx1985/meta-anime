@@ -129,7 +129,7 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
   openPlexLink(event: Event): void {
     if (!this.plexUrl) return;
     event.preventDefault();
-    this.plexDeepLink.openLink(this.plexUrl);
+    this.plexDeepLink.openLink(this.plexUrl, this.title);
   }
 
   protected get mal(): MalAnimeInfo | undefined {

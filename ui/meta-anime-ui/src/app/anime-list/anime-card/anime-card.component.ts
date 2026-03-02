@@ -305,7 +305,7 @@ export class AnimeCardComponent {
   openPlexLink(event: Event): void {
     if (!this.plexUrl) return;
     event.preventDefault();
-    this.plexDeepLink.openLink(this.plexUrl);
+    this.plexDeepLink.openLink(this.plexUrl, this.anime.title);
   }
 
   openMalQuickUpdate(): void {
