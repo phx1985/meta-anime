@@ -27,6 +27,7 @@ export class HelpModalComponent implements OnChanges {
   @Output() closed = new EventEmitter<void>();
 
   protected leaving = signal(false);
+  protected copied = signal(false);
 
   ngOnChanges(): void {
     if (!this.visible) {
@@ -40,5 +41,15 @@ export class HelpModalComponent implements OnChanges {
       this.leaving.set(false);
       this.closed.emit();
     }, 200);
+  }
+
+  protected copyCallbackUrl(): void {
+    if (!this.callbackUrl) return;
+    navigator.clipboard.writeText(this.callbackUrl).then(() => {
+      this.copied.set(true);
+      setTimeout(() => this.copied.set(false), 2000);
+    }).catch(() => {
+      // Clipboard API not available in non-secure contexts; fail silently
+    });
   }
 }

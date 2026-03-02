@@ -339,6 +339,25 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
             ? Result.Success()
             : Result.Failure(new("sonarr.remove", $"Failed to remove series (HTTP {(int)resp.StatusCode}): {resp.Content ?? "no details"}"));
     }
+    public async Task<Result<IList<SonarrTagInfo>>> GetAllTagsAsync()
+    {
+        var (host, apiKey, _, isConfigured) = await GetSettingsAsync();
+
+        if (!isConfigured)
+            return Result.Failure<IList<SonarrTagInfo>>(new("sonarr.notConfigured", "Sonarr is not configured."));
+
+        var restClient = new RestClient(host);
+        var restRequest = new RestRequest("api/v3/tag");
+        restRequest.AddParameter("apikey", apiKey);
+        var response = await restClient.ExecuteAsync(restRequest);
+
+        if (!response.IsSuccessful)
+            return Result.Failure<IList<SonarrTagInfo>>(new("sonarr.tags", $"Failed to fetch Sonarr tags: {response.StatusCode}"));
+
+        var sonarrTags = JsonSerializer.Deserialize<SonarrTag[]>(response.Content!, jsonOptions) ?? Array.Empty<SonarrTag>();
+        IList<SonarrTagInfo> result = sonarrTags.Select(t => new SonarrTagInfo(t.Id, t.Label)).ToList();
+        return Result.Success(result);
+    }
     #endregion
 
     #region Private Methods

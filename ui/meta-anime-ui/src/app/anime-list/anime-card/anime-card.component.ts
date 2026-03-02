@@ -26,6 +26,8 @@ export class AnimeCardComponent {
   @Input() plexEnabled = true;
   /** Whether the Sonarr provider is enabled globally (controls visibility of Sonarr action). */
   @Input() sonarrEnabled = true;
+  /** Fallback Sonarr base URL when per-anime URL is not available (from settings). */
+  @Input() sonarrBaseUrl: string | null = null;
 
   private translate = inject(TranslateService);
   private popupService = inject(PopupService);
@@ -277,7 +279,7 @@ export class AnimeCardComponent {
   }
 
   get sonarrUrl(): string | null {
-    return this.sonarr?.url ?? null;
+    return this.sonarr?.url ?? this.sonarrBaseUrl ?? null;
   }
 
   get plexUrl(): string | null {

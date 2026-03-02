@@ -1070,15 +1070,17 @@
     "mal": {
       "title": "Comment obtenir votre Client ID MAL",
       "step1": "Allez sur myanimelist.net et connectez-vous à votre compte.",
-      "step2": "Accédez à Compte → API (ou allez sur myanimelist.net/apiconfig).",
+      "step2prefix": "Accédez à Compte → API (ou allez sur ",
+      "step2suffix": ").",
       "step3": "Cliquez sur \"Créer un ID\" et remplissez les détails de l'application.",
       "step4": "Définissez l'URL de redirection sur l'URL suivante (copiez-la exactement) :",
-      "step5": "Copiez le \"Client ID\" et collez-le dans le champ OAuth Client ID."
+      "step5": "Copiez le \"Client ID\" et collez-le dans le champ OAuth Client ID.",
+      "copy": "Copier l'URL"
     },
     "sonarr": {
       "title": "Comment trouver votre clé API Sonarr",
       "step1": "Ouvrez Sonarr dans votre navigateur et allez dans Paramètres → Général.",
-      "step2": "Cherchez la section \"Sécurité\" — votre clé API s'y trouve.",
+      "step2": "Votre clé API se trouve dans la section Sécurité de cette page.",
       "step3": "Copiez la clé API et collez-la dans le champ ci-dessus."
     }
   },
@@ -1086,10 +1088,11 @@
     "next": "Suivant →",
     "back": "Retour",
     "skip": "Ignorer cette étape",
+    "optional": "(Optionnel)",
     "helpLabel": "Aide",
     "step1": {
       "title": "Bienvenue sur MetaAnime",
-      "desc": "Votre hub de gestion d'animés. Connectez vos fournisseurs pour commencer.",
+      "desc": "Synchronisez Sonarr, Plex et MyAnimeList pour une gestion centralisée des animés.",
       "feature1": "Synchronisez automatiquement votre liste MyAnimeList",
       "feature2": "Suivez les animés dans Sonarr et Plex",
       "feature3": "Parcourez les sorties saisonnières et gérez votre bibliothèque",
@@ -1107,23 +1110,35 @@
     "step3": {
       "title": "Connecter Plex (Optionnel)",
       "desc": "Liez votre compte Plex pour voir quels animés sont dans votre bibliothèque.",
+      "disclaimer": "💡 Pour une meilleure expérience, créez une bibliothèque Plex dédiée aux animés.",
+      "serverUrlLabel": "URL du serveur Plex",
+      "serverUrlPlaceholder": "ex. http://localhost:32400",
       "connectBtn": "Se connecter avec Plex",
       "connected": "Plex connecté",
-      "waiting": "En attente de l'autorisation Plex dans l'onglet ouvert…"
+      "waiting": "En attente de l'autorisation Plex dans l'onglet ouvert…",
+      "loadingLibraries": "Chargement des bibliothèques Plex…",
+      "selectLibraries": "Sélectionnez vos bibliothèques Animé"
     },
     "step4": {
       "title": "Connecter Sonarr (Optionnel)",
       "desc": "Configurez Sonarr pour suivre et gérer les téléchargements de séries animées.",
-      "hostLabel": "URL du serveur Sonarr",
-      "hostPlaceholder": "ex. http://localhost:8989",
+      "disclaimer": "💡 Il est recommandé de définir un tag Sonarr dédié aux animés pour filtrer correctement.",
+      "localUrlLabel": "URL locale du serveur",
+      "localUrlPlaceholder": "ex. http://localhost:8989",
+      "remoteUrlLabel": "URL distante",
+      "remoteUrlPlaceholder": "ex. https://sonarr.votredomaine.com",
       "apiKeyLabel": "Clé API",
       "apiKeyPlaceholder": "Votre clé API Sonarr",
+      "testAndLoadTags": "Tester la connexion & charger les tags",
+      "selectTags": "Sélectionnez vos tags Animé",
       "connectBtn": "Connecter & Continuer"
     },
     "step5": {
       "title": "Récapitulatif & Sync initiale",
       "desc": "Votre configuration est prête ! Lancez une première synchronisation pour remplir votre bibliothèque.",
-      "runSync": "Lancer la première sync"
+      "runSync": "Lancer la première sync",
+      "configured": "Configuré",
+      "skipped": "Ignoré"
     },
     "step6": {
       "title": "C'est prêt !",

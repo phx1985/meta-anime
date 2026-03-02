@@ -27,12 +27,12 @@
         }
       </div>
 
-      <!-- Steps -->
-      <div class="wizard-body">
+      <!-- Steps (keyed by animStep to trigger the animation) -->
+      <div class="wizard-body" [@slideStep]="animStep()">
 
         <!-- Step 1: Welcome -->
         @if (step() === 1) {
-          <div class="wizard-step" @slideStep>
+          <div class="wizard-step">
             <div class="wizard-step-icon wizard-step-icon--welcome" aria-hidden="true">
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -59,7 +59,7 @@
 
         <!-- Step 2: MyAnimeList -->
         @if (step() === 2) {
-          <div class="wizard-step" @slideStep>
+          <div class="wizard-step">
             <div class="wizard-step-icon wizard-step-icon--mal" aria-hidden="true">
               <img src="assets/images/mal.svg" alt="MyAnimeList" width="32" height="32" />
             </div>
@@ -120,51 +120,110 @@
 
         <!-- Step 3: Plex -->
         @if (step() === 3) {
-          <div class="wizard-step" @slideStep>
+          <div class="wizard-step">
             <div class="wizard-step-icon wizard-step-icon--plex" aria-hidden="true">
               <img src="assets/images/plex.svg" alt="Plex" width="32" height="32" />
             </div>
             <h2 class="wizard-title">{{ 'wizard.step3.title' | translate }}</h2>
             <p class="wizard-desc">{{ 'wizard.step3.desc' | translate }}</p>
-            @if (plexConnected()) {
+            <p class="wizard-disclaimer">{{ 'wizard.step3.disclaimer' | translate }}</p>
+
+            @if (!plexConnected()) {
+              <div class="wizard-form">
+                <div class="wizard-field">
+                  <label class="wizard-label" for="plex-server-url">
+                    {{ 'wizard.step3.serverUrlLabel' | translate }}
+                  </label>
+                  <input
+                    id="plex-server-url"
+                    type="url"
+                    class="wizard-input"
+                    [formControl]="plexServerUrlControl"
+                    [placeholder]="'wizard.step3.serverUrlPlaceholder' | translate"
+                    autocomplete="off"
+                  />
+                </div>
+              </div>
+
+              @if (plexConnecting()) {
+                <div class="wizard-waiting-hint">
+                  <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  {{ 'wizard.step3.waiting' | translate }}
+                </div>
+              } @else {
+                <button type="button" class="wizard-primary-btn" (click)="savePlexUrlAndConnect()">
+                  {{ 'wizard.step3.connectBtn' | translate }}
+                </button>
+              }
+            } @else {
               <div class="wizard-connected-badge" aria-label="{{ 'wizard.step3.connected' | translate }}">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
                 {{ 'wizard.step3.connected' | translate }}
               </div>
-            } @else if (plexConnecting()) {
-              <div class="wizard-waiting-hint">
-                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                {{ 'wizard.step3.waiting' | translate }}
-              </div>
-            } @else {
-              <button type="button" class="wizard-primary-btn" (click)="connectPlex()">
-                {{ 'wizard.step3.connectBtn' | translate }}
-              </button>
+
+              <!-- Library selection -->
+              @if (plexLibrariesLoading()) {
+                <div class="wizard-waiting-hint">
+                  <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  {{ 'wizard.step3.loadingLibraries' | translate }}
+                </div>
+              } @else if (plexLibraries().length > 0) {
+                <div class="wizard-library-section">
+                  <p class="wizard-label">{{ 'wizard.step3.selectLibraries' | translate }}</p>
+                  <div class="wizard-tag-grid">
+                    @for (lib of plexLibraries(); track lib.key) {
+                      <button
+                        type="button"
+                        class="wizard-tag-chip"
+                        [class.wizard-tag-chip--selected]="isPlexLibSelected(lib.key)"
+                        (click)="togglePlexLibrary(lib.key)"
+                      >
+                        {{ lib.title }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
             }
           </div>
         }
 
         <!-- Step 4: Sonarr -->
         @if (step() === 4) {
-          <div class="wizard-step" @slideStep>
+          <div class="wizard-step">
             <div class="wizard-step-icon wizard-step-icon--sonarr" aria-hidden="true">
               <img src="assets/images/sonarr.svg" alt="Sonarr" width="32" height="32" />
             </div>
             <h2 class="wizard-title">{{ 'wizard.step4.title' | translate }}</h2>
             <p class="wizard-desc">{{ 'wizard.step4.desc' | translate }}</p>
+            <p class="wizard-disclaimer">{{ 'wizard.step4.disclaimer' | translate }}</p>
             <form [formGroup]="sonarrForm" class="wizard-form" (ngSubmit)="saveSonarrAndContinue()">
               <div class="wizard-field">
-                <label class="wizard-label" for="sonarr-host">
-                  {{ 'wizard.step4.hostLabel' | translate }}
+                <label class="wizard-label" for="sonarr-local-url">
+                  {{ 'wizard.step4.localUrlLabel' | translate }}
                 </label>
                 <input
-                  id="sonarr-host"
+                  id="sonarr-local-url"
                   type="url"
                   class="wizard-input"
-                  formControlName="host"
-                  [placeholder]="'wizard.step4.hostPlaceholder' | translate"
+                  formControlName="localUrl"
+                  [placeholder]="'wizard.step4.localUrlPlaceholder' | translate"
+                  autocomplete="off"
+                />
+              </div>
+              <div class="wizard-field">
+                <label class="wizard-label" for="sonarr-remote-url">
+                  {{ 'wizard.step4.remoteUrlLabel' | translate }}
+                  <span class="wizard-optional">{{ 'wizard.optional' | translate }}</span>
+                </label>
+                <input
+                  id="sonarr-remote-url"
+                  type="url"
+                  class="wizard-input"
+                  formControlName="remoteUrl"
+                  [placeholder]="'wizard.step4.remoteUrlPlaceholder' | translate"
                   autocomplete="off"
                 />
               </div>
@@ -191,6 +250,42 @@
                   autocomplete="off"
                 />
               </div>
+
+              <!-- Test & Load Tags -->
+              @if (!sonarrTagsLoaded()) {
+                <button
+                  type="button"
+                  class="wizard-secondary-btn"
+                  [disabled]="sonarrTagsLoading() || sonarrForm.get('localUrl')?.invalid || sonarrForm.get('apiKey')?.invalid"
+                  (click)="testSonarrAndLoadTags()"
+                >
+                  @if (sonarrTagsLoading()) {
+                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                  }
+                  {{ 'wizard.step4.testAndLoadTags' | translate }}
+                </button>
+              }
+              @if (sonarrTagsError()) {
+                <div class="wizard-error" role="alert">{{ sonarrTagsError() }}</div>
+              }
+              @if (sonarrTagsLoaded() && sonarrTags().length > 0) {
+                <div class="wizard-library-section">
+                  <p class="wizard-label">{{ 'wizard.step4.selectTags' | translate }}</p>
+                  <div class="wizard-tag-grid">
+                    @for (tag of sonarrTags(); track tag.id) {
+                      <button
+                        type="button"
+                        class="wizard-tag-chip"
+                        [class.wizard-tag-chip--selected]="isSonarrTagSelected(tag.id)"
+                        (click)="toggleSonarrTag(tag.id)"
+                      >
+                        {{ tag.label }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+
               @if (sonarrError()) {
                 <div class="wizard-error" role="alert">{{ sonarrError() }}</div>
               }
@@ -200,7 +295,7 @@
 
         <!-- Step 5: Recap & Sync -->
         @if (step() === 5) {
-          <div class="wizard-step" @slideStep>
+          <div class="wizard-step">
             <div class="wizard-step-icon wizard-step-icon--sync" aria-hidden="true">
               <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <polyline points="1 4 1 10 7 10" />
@@ -211,25 +306,28 @@
             <h2 class="wizard-title">{{ 'wizard.step5.title' | translate }}</h2>
             <p class="wizard-desc">{{ 'wizard.step5.desc' | translate }}</p>
 
-            <!-- Checklist -->
-            <ul class="wizard-checklist">
-              <li class="wizard-check-item" [class.wizard-check-item--ok]="malConnected()">
-                <span class="wizard-check-icon" aria-hidden="true">
-                  @if (malConnected()) { ✅ } @else { ❌ }
+            <!-- Status badges -->
+            <ul class="wizard-status-list">
+              <li class="wizard-status-item">
+                <span class="wizard-status-dot" [class.wizard-status-dot--ok]="malConnected()" aria-hidden="true"></span>
+                <span class="wizard-status-name">MyAnimeList</span>
+                <span class="wizard-status-badge" [class.wizard-status-badge--ok]="malConnected()" [class.wizard-status-badge--skip]="!malConnected()">
+                  {{ (malConnected() ? 'wizard.step5.configured' : 'wizard.step5.skipped') | translate }}
                 </span>
-                <span>MyAnimeList</span>
               </li>
-              <li class="wizard-check-item" [class.wizard-check-item--ok]="plexConnected()">
-                <span class="wizard-check-icon" aria-hidden="true">
-                  @if (plexConnected()) { ✅ } @else { ❌ }
+              <li class="wizard-status-item">
+                <span class="wizard-status-dot" [class.wizard-status-dot--ok]="plexConnected()" aria-hidden="true"></span>
+                <span class="wizard-status-name">Plex</span>
+                <span class="wizard-status-badge" [class.wizard-status-badge--ok]="plexConnected()" [class.wizard-status-badge--skip]="!plexConnected()">
+                  {{ (plexConnected() ? 'wizard.step5.configured' : 'wizard.step5.skipped') | translate }}
                 </span>
-                <span>Plex</span>
               </li>
-              <li class="wizard-check-item" [class.wizard-check-item--ok]="sonarrSaved()">
-                <span class="wizard-check-icon" aria-hidden="true">
-                  @if (sonarrSaved()) { ✅ } @else { ❌ }
+              <li class="wizard-status-item">
+                <span class="wizard-status-dot" [class.wizard-status-dot--ok]="sonarrSaved()" aria-hidden="true"></span>
+                <span class="wizard-status-name">Sonarr</span>
+                <span class="wizard-status-badge" [class.wizard-status-badge--ok]="sonarrSaved()" [class.wizard-status-badge--skip]="!sonarrSaved()">
+                  {{ (sonarrSaved() ? 'wizard.step5.configured' : 'wizard.step5.skipped') | translate }}
                 </span>
-                <span>Sonarr</span>
               </li>
             </ul>
 
@@ -263,7 +361,7 @@
 
         <!-- Step 6: Success -->
         @if (step() === 6) {
-          <div class="wizard-step wizard-step--success" @slideStep>
+          <div class="wizard-step wizard-step--success">
             <div class="wizard-success-icon" aria-hidden="true">🎉</div>
             <h2 class="wizard-title">{{ 'wizard.step6.title' | translate }}</h2>
             <p class="wizard-desc">{{ 'wizard.step6.desc' | translate }}</p>
@@ -302,7 +400,7 @@
 
           @if (step() === 3) {
             @if (plexConnected()) {
-              <button type="button" class="wizard-next-btn" (click)="nextStep()">
+              <button type="button" class="wizard-next-btn" (click)="savePlexLibrariesAndNext()">
                 {{ 'wizard.next' | translate }}
               </button>
             } @else {
@@ -376,4 +474,3 @@
   [visible]="sonarrHelpOpen()"
   (closed)="sonarrHelpOpen.set(false)"
 />
-

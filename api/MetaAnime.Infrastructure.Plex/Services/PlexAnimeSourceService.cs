@@ -133,6 +133,40 @@ public sealed class PlexAnimeSourceService(IPropertyBagRepository propertyBagRep
         return Result.Success(machineIdentifier);
     }
 
+    public async Task<Result<IList<PlexLibraryInfo>>> GetLibrariesAsync()
+    {
+        var tokenEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexToken);
+        var hostEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexHost);
+
+        var token = tokenEntry?.Value ?? string.Empty;
+        var host = hostEntry?.Value ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(host))
+        {
+            return Result.Failure<IList<PlexLibraryInfo>>(new Error(Constants.Errors.NotConfigured, "Plex token or server URL is not configured."));
+        }
+
+        var plexAPI = PlexAPI.Builder()
+            .WithToken(token)
+            .WithServerUrl(host)
+            .WithClient(new SpeakeasyHttpClient2())
+            .Build();
+
+        var response = await plexAPI.Library.GetSectionsAsync();
+        var sections = response.Object?.MediaContainer?.Directory;
+
+        if (sections == null)
+        {
+            return Result.Success<IList<PlexLibraryInfo>>(new List<PlexLibraryInfo>());
+        }
+
+        var libraries = sections
+            .Select(s => new PlexLibraryInfo(s.Key ?? string.Empty, s.Title ?? string.Empty, s.Type.ToString() ?? string.Empty))
+            .ToList<PlexLibraryInfo>();
+
+        return Result.Success<IList<PlexLibraryInfo>>(libraries);
+    }
+
     #region Private Methods
     private static PlexMedia MapToPlexMedia(Components.Metadata metadata)
         => new()

@@ -119,9 +119,6 @@
   flex: 1;
   position: relative;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 0.75rem 0;
 }
 
@@ -133,6 +130,7 @@
   gap: 1rem;
   padding: 0.25rem 0;
   width: 100%;
+  position: relative;
 
   &--success {
     gap: 1.25rem;
@@ -352,6 +350,135 @@
   }
 }
 
+// ── Disclaimer ─────────────────────────────────────────────────────────────
+
+.wizard-disclaimer {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: rgba(108, 99, 255, 0.06);
+  border: 1px solid rgba(108, 99, 255, 0.15);
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  margin: 0;
+  text-align: center;
+  max-width: 380px;
+  line-height: 1.5;
+}
+
+// ── Optional label ──────────────────────────────────────────────────────────
+
+.wizard-optional {
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 0.35rem;
+  opacity: 0.7;
+}
+
+// ── Status list (replaces old checklist on step 5) ──────────────────────────
+
+.wizard-status-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+  max-width: 300px;
+  text-align: left;
+}
+
+.wizard-status-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.wizard-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--card-border);
+  transition: background 0.25s, box-shadow 0.25s;
+
+  &--ok {
+    background: #28c76f;
+    box-shadow: 0 0 6px rgba(40, 199, 111, 0.55);
+  }
+}
+
+.wizard-status-name {
+  flex: 1;
+}
+
+.wizard-status-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
+  &--ok {
+    background: rgba(40, 199, 111, 0.12);
+    border: 1px solid rgba(40, 199, 111, 0.3);
+    color: #28c76f;
+  }
+
+  &--skip {
+    background: var(--bg-secondary);
+    border: 1px solid var(--card-border);
+    color: var(--text-muted);
+  }
+}
+
+// ── Library / tag selection ──────────────────────────────────────────────────
+
+.wizard-library-section {
+  width: 100%;
+  max-width: 380px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wizard-tag-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.wizard-tag-chip {
+  padding: 0.35rem 0.8rem;
+  border-radius: 20px;
+  border: 1px solid var(--card-border);
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+  }
+
+  &--selected {
+    background: rgba(108, 99, 255, 0.12);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    box-shadow: 0 0 6px rgba(108, 99, 255, 0.25);
+  }
+}
+
 // ── Checklist ─────────────────────────────────────────────────────────────
 
 .wizard-checklist {
@@ -534,5 +661,16 @@
   &:hover {
     background: var(--bg-secondary);
     color: var(--text-primary);
+  }
+}
+
+.wizard-secondary-btn {
+  @extend %wizard-btn-base;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--accent-primary);
+
+  &:hover:not(:disabled) {
+    background: rgba(108, 99, 255, 0.1);
   }
 }

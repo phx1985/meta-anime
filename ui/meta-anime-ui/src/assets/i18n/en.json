@@ -1070,15 +1070,17 @@
     "mal": {
       "title": "How to get your MAL Client ID",
       "step1": "Go to myanimelist.net and sign in to your account.",
-      "step2": "Navigate to Account → API (or go to myanimelist.net/apiconfig).",
+      "step2prefix": "Navigate to Account → API (or go to ",
+      "step2suffix": ").",
       "step3": "Click \"Create ID\" and fill in the application details (name, description, app type).",
       "step4": "Set the App Redirect URL to the following URL (copy exactly):",
-      "step5": "Copy the \"Client ID\" and paste it into the OAuth Client ID field."
+      "step5": "Copy the \"Client ID\" and paste it into the OAuth Client ID field.",
+      "copy": "Copy URL"
     },
     "sonarr": {
       "title": "How to find your Sonarr API Key",
       "step1": "Open Sonarr in your browser and go to Settings → General.",
-      "step2": "Look for the \"Security\" section — your API Key is listed there.",
+      "step2": "Your API Key is listed in the Security section on that page.",
       "step3": "Copy the API Key and paste it into the field above."
     }
   },
@@ -1086,10 +1088,11 @@
     "next": "Next →",
     "back": "Back",
     "skip": "Skip this step",
+    "optional": "(Optional)",
     "helpLabel": "Help",
     "step1": {
       "title": "Welcome to MetaAnime",
-      "desc": "Your personal anime management hub. Connect your providers to get started.",
+      "desc": "Sync Sonarr, Plex, and MyAnimeList for centralized anime monitoring and management.",
       "feature1": "Sync your MyAnimeList watch list automatically",
       "feature2": "Track anime in Sonarr and Plex",
       "feature3": "Browse seasonal releases and manage your library",
@@ -1107,23 +1110,35 @@
     "step3": {
       "title": "Connect Plex (Optional)",
       "desc": "Link your Plex account to see which anime are in your library and which are missing.",
+      "disclaimer": "💡 For the best matching experience, create a dedicated Anime-only library in Plex.",
+      "serverUrlLabel": "Plex Server URL",
+      "serverUrlPlaceholder": "e.g. http://localhost:32400",
       "connectBtn": "Sign in with Plex",
       "connected": "Plex connected",
-      "waiting": "Waiting for Plex authorization in the opened tab…"
+      "waiting": "Waiting for Plex authorization in the opened tab…",
+      "loadingLibraries": "Loading Plex libraries…",
+      "selectLibraries": "Select your Anime libraries"
     },
     "step4": {
       "title": "Connect Sonarr (Optional)",
       "desc": "Configure Sonarr to track and manage anime series downloads.",
-      "hostLabel": "Sonarr Server URL",
-      "hostPlaceholder": "e.g. http://localhost:8989",
+      "disclaimer": "💡 Setting a specific Sonarr tag for anime is required to filter and identify series correctly.",
+      "localUrlLabel": "Local Server URL",
+      "localUrlPlaceholder": "e.g. http://localhost:8989",
+      "remoteUrlLabel": "Remote URL",
+      "remoteUrlPlaceholder": "e.g. https://sonarr.yourdomain.com",
       "apiKeyLabel": "API Key",
       "apiKeyPlaceholder": "Your Sonarr API key",
+      "testAndLoadTags": "Test Connection & Load Tags",
+      "selectTags": "Select your Anime tags",
       "connectBtn": "Connect & Continue"
     },
     "step5": {
       "title": "Recap & Initial Sync",
       "desc": "Your setup is looking great! Run a first sync to populate your library.",
-      "runSync": "Run First Sync"
+      "runSync": "Run First Sync",
+      "configured": "Configured",
+      "skipped": "Skipped"
     },
     "step6": {
       "title": "All Set!",

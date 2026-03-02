@@ -105,7 +105,23 @@ public sealed class SonarrController(
         }
         return NoContent();
     }
+
+    /// <summary>Returns all tags defined in the connected Sonarr instance.</summary>
+    [HttpGet("tags")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<SonarrTagDto>>> GetTags()
+    {
+        var result = await animeMediatorService.GetAllSonarrTagsAsync();
+        if (result.IsFailure)
+        {
+            logger.LogError("Failed to fetch Sonarr tags: {Error}", result.Error.Message);
+            return StatusCode(500, result.Error.Message);
+        }
+        return Ok(result.Value.Select(t => new SonarrTagDto(t.Id, t.Label)));
+    }
 }
+
+public sealed record SonarrTagDto(int Id, string Label);
 
 public sealed record SonarrAddSeriesRequest(int TvdbId, string RootFolderPath, int QualityProfileId, string Monitor = "all", bool SeasonFolder = true, string? MalId = null)
 {

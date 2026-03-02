@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using MetaAnime.Core.Interfaces.Services;
+using MetaAnime.Infrastructure.Plex.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -11,6 +12,7 @@ namespace MetaAnime.Controllers;
 [Route("api/v{version:apiVersion}/plex/auth")]
 public sealed class PlexAuthController(
     IPlexAuthService plexAuthService,
+    IPlexAnimeSourceService<PlexMedia> plexAnimeSourceService,
     ILogger<PlexAuthController> logger) : ControllerBase
 {
     /// <summary>
@@ -80,8 +82,25 @@ public sealed class PlexAuthController(
         logger.LogInformation("Plex account disconnected");
         return NoContent();
     }
+
+    /// <summary>Returns the list of available library sections from the connected Plex server.</summary>
+    [HttpGet("libraries")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<PlexLibraryResponse>>> GetLibraries()
+    {
+        var result = await plexAnimeSourceService.GetLibrariesAsync();
+
+        if (result.IsFailure)
+        {
+            logger.LogError("Failed to fetch Plex libraries: {Error}", result.Error.Message);
+            return StatusCode(500, result.Error.Message);
+        }
+
+        return Ok(result.Value.Select(l => new PlexLibraryResponse(l.Key, l.Title, l.Type)));
+    }
 }
 
 public sealed record PlexAuthInitiateResponse(int PinId, string AuthUrl);
 public sealed record PlexAuthPollResponse(bool Connected);
 public sealed record PlexAuthStatusResponse(bool Connected);
+public sealed record PlexLibraryResponse(string Key, string Title, string Type);
