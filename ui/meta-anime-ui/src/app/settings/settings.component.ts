@@ -375,6 +375,9 @@ export class SettingsComponent {
     this.signalR.syncDone$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((done) => {
       if (done) {
         this.syncing.set(false);
+        // Update immediately so the UI reflects completion without a round-trip delay,
+        // then reload from the backend to get the authoritative persisted value.
+        this.lastSyncDate.set(new Date().toISOString());
         this.loadSyncStatus();
       }
     });
