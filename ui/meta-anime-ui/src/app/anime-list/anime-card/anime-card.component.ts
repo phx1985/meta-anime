@@ -296,6 +296,20 @@ export class AnimeCardComponent {
     this.plexDeepLink.openLink(this.plexUrl);
   }
 
+  openMalQuickUpdate(): void {
+    const malId = this.mal?.id;
+    if (!malId) return;
+    this.popupService.openMalQuickUpdate({
+      malId,
+      title: this.displayTitle,
+      coverImageUrl: this.coverImageUrl,
+      currentStatus: this.mal?.viewState,
+      currentEpisodes: this.mal?.progression?.episodesWatched,
+      currentScore: this.mal?.rating?.myScore,
+      totalEpisodes: this.mal?.progression?.totalEpisodes,
+    });
+  }
+
   openFranchiseConstellation(): void {
     const malId = this.mal?.id;
     if (!malId) return;

@@ -1,0 +1,169 @@
+<div
+  class="mal-qu-backdrop"
+  [class.mal-qu-backdrop--leaving]="leaving()"
+  (click)="dismiss()"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-label]="'malQuickUpdate.title' | translate"
+>
+  <div
+    class="mal-qu-modal"
+    [class.mal-qu-modal--leaving]="leaving()"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Close button -->
+    <button
+      type="button"
+      class="mal-qu-close"
+      (click)="dismiss()"
+      [attr.aria-label]="'common.close' | translate"
+    >
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+
+    <!-- ── Header: cover + title ── -->
+    <div class="mal-qu-header">
+      @if (ctx()?.coverImageUrl) {
+        <img
+          class="mal-qu-cover"
+          [src]="ctx()!.coverImageUrl"
+          [alt]="ctx()!.title"
+          loading="lazy"
+        />
+      } @else {
+        <div class="mal-qu-cover mal-qu-cover--placeholder" aria-hidden="true">
+          {{ ctx()?.title?.charAt(0) }}
+        </div>
+      }
+      <div class="mal-qu-header-text">
+        <div class="mal-qu-badge">
+          <img src="assets/images/mal.svg" alt="" width="14" height="14" aria-hidden="true" />
+          <span>{{ 'malQuickUpdate.title' | translate }}</span>
+        </div>
+        <h3 class="mal-qu-title">{{ ctx()?.title }}</h3>
+      </div>
+    </div>
+
+    <!-- ── Watch Status ── -->
+    <div class="mal-qu-section">
+      <label class="mal-qu-label">{{ 'malQuickUpdate.status' | translate }}</label>
+      <div class="mal-qu-status-grid" role="radiogroup" [attr.aria-label]="'malQuickUpdate.status' | translate">
+        @for (s of statuses; track s) {
+          <button
+            type="button"
+            class="mal-qu-status-btn mal-qu-status-btn--{{ s }}"
+            [class.mal-qu-status-btn--active]="selectedStatus() === s"
+            (click)="selectStatus(s)"
+            role="radio"
+            [attr.aria-checked]="selectedStatus() === s"
+          >
+            {{ 'animeCard.malStatus.' + s | translate }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- ── Episodes Watched ── -->
+    <div class="mal-qu-section">
+      <label class="mal-qu-label" for="mal-qu-eps">
+        {{ 'malQuickUpdate.episodes' | translate }}
+        @if (ctx()?.totalEpisodes) {
+          <span class="mal-qu-total">/ {{ ctx()!.totalEpisodes }}</span>
+        }
+      </label>
+      <div class="mal-qu-stepper">
+        <button
+          type="button"
+          class="mal-qu-step-btn"
+          (click)="decrementEpisodes()"
+          [disabled]="episodesWatched() <= 0"
+          aria-label="Decrease"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+        <input
+          id="mal-qu-eps"
+          type="number"
+          class="mal-qu-eps-input"
+          [value]="episodesWatched()"
+          min="0"
+          [max]="ctx()?.totalEpisodes ?? 99999"
+          (change)="onEpisodesInput($event)"
+          (blur)="onEpisodesInput($event)"
+          aria-label="Episodes watched"
+        />
+        <button
+          type="button"
+          class="mal-qu-step-btn"
+          (click)="incrementEpisodes()"
+          [disabled]="ctx()?.totalEpisodes != null && episodesWatched() >= (ctx()?.totalEpisodes ?? 99999)"
+          aria-label="Increase"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Score selector (polymorphic: 1–10 pill buttons) ── -->
+    <div class="mal-qu-section">
+      <label class="mal-qu-label">
+        {{ 'malQuickUpdate.score' | translate }}
+        @if (selectedScore() > 0) {
+          <span class="mal-qu-score-label">— {{ selectedScore() }}/10</span>
+        }
+      </label>
+      <div class="mal-qu-score-row" role="radiogroup" [attr.aria-label]="'malQuickUpdate.score' | translate">
+        @for (n of scores; track n) {
+          <button
+            type="button"
+            class="mal-qu-score-btn"
+            [class.mal-qu-score-btn--active]="selectedScore() === n"
+            [class.mal-qu-score-btn--filled]="selectedScore() >= n && selectedScore() > 0"
+            (click)="selectScore(n)"
+            role="radio"
+            [attr.aria-checked]="selectedScore() === n"
+            [attr.title]="n"
+          >
+            {{ n }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- ── Save button ── -->
+    <div class="mal-qu-footer">
+      <button type="button" class="mal-qu-cancel-btn" (click)="dismiss()">
+        {{ 'common.cancel' | translate }}
+      </button>
+      <button
+        type="button"
+        class="mal-qu-save-btn"
+        (click)="save()"
+        [disabled]="saving() || !selectedStatus()"
+      >
+        @if (saving()) {
+          <span class="mal-qu-spinner" aria-hidden="true"></span>
+        }
+        {{ saving() ? ('malQuickUpdate.saving' | translate) : ('malQuickUpdate.save' | translate) }}
+      </button>
+    </div>
+  </div>
+</div>

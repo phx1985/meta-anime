@@ -278,13 +278,12 @@
           <span class="action-label">Sonarr</span>
         </a>
       }
-      <a
+      <button
+        type="button"
         class="action action--mal"
-        [attr.href]="malUrl"
-        [class.action--disabled]="!malUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-        [title]="'animeCard.openMal' | translate"
+        [class.action--disabled]="!mal?.id"
+        [title]="'malQuickUpdate.openModal' | translate"
+        (click)="openMalQuickUpdate()"
       >
         <img src="assets/images/mal.svg" alt="" class="action-logo" width="18" height="18" aria-hidden="true" />
         <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="action-icon">
@@ -296,7 +295,7 @@
           />
         </svg>
         <span class="action-label">MAL</span>
-      </a>
+      </button>
     </div>
 
     @if (codecSegments !== null || sizeOnDisk) {

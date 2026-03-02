@@ -1,5 +1,15 @@
 import { Injectable, WritableSignal, signal } from '@angular/core';
 
+export interface MalQuickUpdateContext {
+  malId: string;
+  title: string;
+  coverImageUrl?: string;
+  currentStatus?: string;
+  currentEpisodes?: number;
+  currentScore?: number;
+  totalEpisodes?: number;
+}
+
 /**
  * Central service for all application modal/popup state.
  * Components must not manage their own modal signals; delegate here instead.
@@ -80,6 +90,22 @@ export class PopupService {
 
   dismissSynopsis(): void {
     this._animateOut(this.synopsisLeaving, () => this.synopsisTitle.set(null));
+  }
+
+  // ── MAL Quick-Update modal ────────────────────────────────────────────────────
+
+  /** Context of the anime being quick-updated; `null` means the modal is closed. */
+  readonly malQuickUpdate = signal<MalQuickUpdateContext | null>(null);
+  /** `true` while the exit animation is playing. */
+  readonly malQuickUpdateLeaving = signal(false);
+
+  openMalQuickUpdate(ctx: MalQuickUpdateContext): void {
+    this.malQuickUpdate.set(ctx);
+    this.malQuickUpdateLeaving.set(false);
+  }
+
+  dismissMalQuickUpdate(): void {
+    this._animateOut(this.malQuickUpdateLeaving, () => this.malQuickUpdate.set(null));
   }
 
   // ── Shared helpers ────────────────────────────────────────────────────────────
