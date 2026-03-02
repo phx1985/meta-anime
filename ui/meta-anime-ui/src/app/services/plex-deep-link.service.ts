@@ -65,7 +65,11 @@ export class PlexDeepLinkService {
    *
    * Example conversion:
    * `https://app.plex.tv/desktop/#!/server/{machineId}/details?key=/library/metadata/123`
-   * → `plex://server/{machineId}/details?key=%2Flibrary%2Fmetadata%2F123`
+   * → `plex://preplay/?metadataKey=%2Flibrary%2Fmetadata%2F123&metadataType=4&server={machineId}`
+   *
+   * The `plex://preplay/` scheme is the documented mobile intent recognised by the
+   * native Plex app on iOS and Android to navigate directly to a specific show.
+   * `metadataType=4` identifies the item as a TV show/series.
    *
    * Falls back to `plex://` (opens the Plex home screen) when the URL does not
    * match the expected deep-link pattern.
@@ -82,9 +86,9 @@ export class PlexDeepLinkService {
         const params = new URLSearchParams(query.replace(/^\?/, ''));
         const key = params.get('key');
         if (key) {
-          // Use plex://server/{serverId}/details?key=... which routes directly
-          // to the item's details page in the native app.
-          return `plex://server/${encodeURIComponent(serverId)}/details?key=${encodeURIComponent(key)}`;
+          // Use plex://preplay/ which is the native mobile intent understood by
+          // both the iOS and Android Plex apps to open a specific show page.
+          return `plex://preplay/?metadataKey=${encodeURIComponent(key)}&metadataType=4&server=${encodeURIComponent(serverId)}`;
         }
       }
     } catch {
