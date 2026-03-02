@@ -130,6 +130,7 @@ export class SettingsComponent {
   // ── Help modals ───────────────────────────────────────────────────────────
   malHelpOpen = signal(false);
   sonarrHelpOpen = signal(false);
+  readonly malCallbackUrl = window.location.origin + '/auth/mal/callback';
 
   syncSteps = toSignal(this.signalR.steps$, { initialValue: [] as SyncStep[] });
   syncDone = toSignal(this.signalR.syncDone$, { initialValue: false });

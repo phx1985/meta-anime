@@ -116,6 +116,20 @@
   }
 }
 
+.help-callback-url {
+  display: block;
+  margin-top: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--card-border);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  word-break: break-all;
+}
+
 .help-btn-close {
   margin-top: 0.5rem;
   padding: 0.5rem 1.5rem;

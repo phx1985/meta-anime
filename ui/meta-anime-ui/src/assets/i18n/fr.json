@@ -1072,7 +1072,7 @@
       "step1": "Allez sur myanimelist.net et connectez-vous à votre compte.",
       "step2": "Accédez à Compte → API (ou allez sur myanimelist.net/apiconfig).",
       "step3": "Cliquez sur \"Créer un ID\" et remplissez les détails de l'application.",
-      "step4": "Définissez l'URL de redirection sur l'URL de cette application.",
+      "step4": "Définissez l'URL de redirection sur l'URL suivante (copiez-la exactement) :",
       "step5": "Copiez le \"Client ID\" et collez-le dans le champ OAuth Client ID."
     },
     "sonarr": {
@@ -1098,7 +1098,9 @@
     "step2": {
       "title": "Connecter MyAnimeList",
       "desc": "MyAnimeList est requis pour utiliser MetaAnime. Connectez votre compte pour synchroniser votre liste.",
-      "clientIdHint": "Vous avez besoin d'un OAuth Client ID depuis le portail développeur MAL.",
+      "clientIdHint": "Connecté via votre OAuth Client ID MAL.",
+      "clientIdLabel": "OAuth Client ID",
+      "clientIdPlaceholder": "Collez votre Client ID MAL ici",
       "connectBtn": "Connecter MyAnimeList",
       "connected": "MyAnimeList connecté"
     },

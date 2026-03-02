@@ -8,7 +8,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -59,6 +59,8 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
 
   readonly fmtElapsed = fmtElapsed;
   readonly TOTAL_STEPS = 6;
+  /** The exact OAuth callback URL that the user must register in MAL developer portal */
+  readonly malCallbackUrl = window.location.origin + '/auth/mal/callback';
 
   step = signal(1);
 
@@ -68,6 +70,7 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   // ── MAL state ─────────────────────────────────────────────────────────────
   malConnected = signal(false);
   malConnecting = signal(false);
+  malClientIdControl = new FormControl('', [Validators.required]);
 
   // ── Plex state ────────────────────────────────────────────────────────────
   plexConnected = signal(false);
@@ -121,6 +124,17 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   private loadInitialState(): void {
     const wizardActive = localStorage.getItem(WIZARD_ACTIVE_KEY) === 'true';
 
+    // Pre-populate Client ID from settings if already set (non-critical; failure is silent)
+    this.settingsService.getAll()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (settings) => {
+          const clientId = settings.find((s) => s.key === 'MAL:ClientId')?.value ?? '';
+          if (clientId) this.malClientIdControl.setValue(clientId);
+        },
+        error: (_err) => { /* Non-critical pre-population; wizard still works without it */ },
+      });
+
     this.enrollmentService
       .getMalStatus()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -167,15 +181,31 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   // ── MAL ───────────────────────────────────────────────────────────────────
 
   connectMal(): void {
+    const clientId = (this.malClientIdControl.value ?? '').trim();
+    if (!clientId) return;
+
     this.malConnecting.set(true);
     localStorage.setItem(WIZARD_ACTIVE_KEY, 'true');
-    this.enrollmentService
-      .initiateMalAuth()
+
+    // Save the Client ID to settings first, then initiate OAuth
+    this.settingsService
+      .update('MAL:ClientId', { value: clientId })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (res) => {
-          this.malConnecting.set(false);
-          window.location.href = res.authorizationUrl;
+        next: () => {
+          this.enrollmentService
+            .initiateMalAuth()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: (res) => {
+                this.malConnecting.set(false);
+                window.location.href = res.authorizationUrl;
+              },
+              error: () => {
+                this.malConnecting.set(false);
+                localStorage.removeItem(WIZARD_ACTIVE_KEY);
+              },
+            });
         },
         error: () => {
           this.malConnecting.set(false);

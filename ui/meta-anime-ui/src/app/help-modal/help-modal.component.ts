@@ -22,6 +22,8 @@ export type HelpModalType = 'mal' | 'sonarr';
 export class HelpModalComponent implements OnChanges {
   @Input({ required: true }) type!: HelpModalType;
   @Input() visible = false;
+  /** The exact OAuth callback URL to display in the MAL help steps (e.g. window.location.origin + '/auth/mal/callback'). */
+  @Input() callbackUrl?: string;
   @Output() closed = new EventEmitter<void>();
 
   protected leaving = signal(false);

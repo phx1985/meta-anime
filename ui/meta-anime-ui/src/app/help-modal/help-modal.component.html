@@ -40,7 +40,12 @@
           <li>{{ 'helpModal.mal.step1' | translate }}</li>
           <li>{{ 'helpModal.mal.step2' | translate }}</li>
           <li>{{ 'helpModal.mal.step3' | translate }}</li>
-          <li>{{ 'helpModal.mal.step4' | translate }}</li>
+          <li>
+            {{ 'helpModal.mal.step4' | translate }}
+            @if (callbackUrl) {
+              <code class="help-callback-url">{{ callbackUrl }}</code>
+            }
+          </li>
           <li>{{ 'helpModal.mal.step5' | translate }}</li>
         }
         @if (type === 'sonarr') {

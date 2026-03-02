@@ -1,4 +1,11 @@
 <div class="wizard-page">
+  <!-- Animated bokeh background -->
+  <div class="wizard-bokeh" aria-hidden="true">
+    @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]; track i) {
+      <div class="wizard-bokeh__blob"></div>
+    }
+  </div>
+
   <div class="wizard-card">
     @if (initializing()) {
       <div class="wizard-loading">
@@ -58,36 +65,55 @@
             </div>
             <h2 class="wizard-title">{{ 'wizard.step2.title' | translate }}</h2>
             <p class="wizard-desc">{{ 'wizard.step2.desc' | translate }}</p>
-            <div class="wizard-hint-row">
-              <span class="wizard-hint">{{ 'wizard.step2.clientIdHint' | translate }}</span>
-              <button
-                type="button"
-                class="wizard-help-btn"
-                (click)="malHelpOpen.set(true)"
-                [attr.aria-label]="'wizard.helpLabel' | translate"
-              >
-                ?
-              </button>
-            </div>
-            @if (malConnected()) {
-              <div class="wizard-connected-badge">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                {{ 'wizard.step2.connected' | translate }}
+
+            @if (!malConnected()) {
+              <!-- Client ID input -->
+              <div class="wizard-form">
+                <div class="wizard-field">
+                  <div class="wizard-label-row">
+                    <label class="wizard-label" for="mal-client-id">
+                      {{ 'wizard.step2.clientIdLabel' | translate }}
+                    </label>
+                    <button
+                      type="button"
+                      class="wizard-help-btn"
+                      (click)="malHelpOpen.set(true)"
+                      [attr.aria-label]="'wizard.helpLabel' | translate"
+                    >
+                      ?
+                    </button>
+                  </div>
+                  <input
+                    id="mal-client-id"
+                    type="text"
+                    class="wizard-input"
+                    [formControl]="malClientIdControl"
+                    [placeholder]="'wizard.step2.clientIdPlaceholder' | translate"
+                    autocomplete="off"
+                  />
+                </div>
               </div>
-            } @else {
               <button
                 type="button"
                 class="wizard-primary-btn"
                 (click)="connectMal()"
-                [disabled]="malConnecting()"
+                [disabled]="malConnecting() || malClientIdControl.invalid"
               >
                 @if (malConnecting()) {
                   <span class="spinner-border spinner-border-sm me-1" role="status"></span>
                 }
                 {{ 'wizard.step2.connectBtn' | translate }}
               </button>
+            } @else {
+              <div class="wizard-hint-row">
+                <span class="wizard-hint">{{ 'wizard.step2.clientIdHint' | translate }}</span>
+              </div>
+              <div class="wizard-connected-badge" aria-label="{{ 'wizard.step2.connected' | translate }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                {{ 'wizard.step2.connected' | translate }}
+              </div>
             }
           </div>
         }
@@ -101,7 +127,7 @@
             <h2 class="wizard-title">{{ 'wizard.step3.title' | translate }}</h2>
             <p class="wizard-desc">{{ 'wizard.step3.desc' | translate }}</p>
             @if (plexConnected()) {
-              <div class="wizard-connected-badge">
+              <div class="wizard-connected-badge" aria-label="{{ 'wizard.step3.connected' | translate }}">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
@@ -341,6 +367,7 @@
 <app-help-modal
   type="mal"
   [visible]="malHelpOpen()"
+  [callbackUrl]="malCallbackUrl"
   (closed)="malHelpOpen.set(false)"
 />
 
@@ -349,3 +376,4 @@
   [visible]="sonarrHelpOpen()"
   (closed)="sonarrHelpOpen.set(false)"
 />
+

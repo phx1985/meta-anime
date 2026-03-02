@@ -1072,7 +1072,7 @@
       "step1": "Go to myanimelist.net and sign in to your account.",
       "step2": "Navigate to Account → API (or go to myanimelist.net/apiconfig).",
       "step3": "Click \"Create ID\" and fill in the application details (name, description, app type).",
-      "step4": "Set the App Redirect URL to the URL of this app.",
+      "step4": "Set the App Redirect URL to the following URL (copy exactly):",
       "step5": "Copy the \"Client ID\" and paste it into the OAuth Client ID field."
     },
     "sonarr": {
@@ -1098,7 +1098,9 @@
     "step2": {
       "title": "Connect MyAnimeList",
       "desc": "MyAnimeList is required to use MetaAnime. Connect your account to sync your anime list.",
-      "clientIdHint": "You need an OAuth Client ID from the MAL developer portal.",
+      "clientIdHint": "Connected via your MAL OAuth Client ID.",
+      "clientIdLabel": "OAuth Client ID",
+      "clientIdPlaceholder": "Paste your MAL Client ID here",
       "connectBtn": "Connect MyAnimeList",
       "connected": "MyAnimeList connected"
     },
