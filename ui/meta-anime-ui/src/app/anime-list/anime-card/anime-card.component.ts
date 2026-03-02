@@ -316,7 +316,7 @@ export class AnimeCardComponent {
       title: this.displayTitle,
       coverImageUrl: this.coverImageUrl,
       malUrl: this.malUrl ?? undefined,
-      currentStatus: this.mal?.viewState,
+      currentStatus: this.localMalStatus() ?? this.mal?.viewState,
       currentEpisodes: this.localMalEpisodes() ?? this.mal?.progression?.episodesWatched,
       currentScore: this.localMalScore() ?? this.mal?.rating?.myScore,
       totalEpisodes: this.mal?.progression?.totalEpisodes,
