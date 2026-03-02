@@ -10,6 +10,10 @@ export interface MalAuthInitiateResponse {
   authorizationUrl: string;
 }
 
+export interface MalCallbackResponse {
+  connected: boolean;
+}
+
 export interface PlexAuthStatusResponse {
   connected: boolean;
 }
@@ -36,7 +40,15 @@ export class EnrollmentService {
   }
 
   initiateMalAuth(): Observable<MalAuthInitiateResponse> {
-    return this.http.get<MalAuthInitiateResponse>(`${this.malBase}/initiate`);
+    const redirectUri = window.location.origin + '/settings';
+    return this.http.get<MalAuthInitiateResponse>(
+      `${this.malBase}/initiate`,
+      { params: { redirectUri } },
+    );
+  }
+
+  exchangeMalCode(code: string, state: string): Observable<MalCallbackResponse> {
+    return this.http.post<MalCallbackResponse>(`${this.malBase}/callback`, { code, state });
   }
 
   disconnectMal(): Observable<void> {

@@ -1,4 +1,6 @@
 using Asp.Versioning;
+using MetaAnime.Core;
+using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,16 +13,20 @@ namespace MetaAnime.Controllers;
 [Route("api/v{version:apiVersion}/mal/auth")]
 public sealed class MalAuthController(
     IMalOAuthService malOAuthService,
+    IPropertyBagRepository propertyBagRepository,
     ILogger<MalAuthController> logger) : ControllerBase
 {
     /// <summary>
     /// Returns the OAuth authorization URL the user should be redirected to.
+    /// The caller must supply the redirect URI (the Angular SPA route that will handle the callback).
     /// </summary>
     [HttpGet("initiate")]
     [Authorize]
-    public async Task<ActionResult<MalAuthInitiateResponse>> Initiate()
+    public async Task<ActionResult<MalAuthInitiateResponse>> Initiate([FromQuery] string redirectUri)
     {
-        var redirectUri = BuildCallbackUri();
+        if (string.IsNullOrWhiteSpace(redirectUri))
+            return BadRequest("redirectUri query parameter is required.");
+
         var result = await malOAuthService.GetAuthorizationUrlAsync(redirectUri);
 
         if (result.IsFailure)
@@ -33,29 +39,39 @@ public sealed class MalAuthController(
     }
 
     /// <summary>
-    /// OAuth callback — exchanges the authorization code for tokens and redirects to the settings page.
+    /// SPA callback — the Angular frontend posts the code and state here after MAL redirects
+    /// back to the frontend URL.  The backend exchanges the code for tokens and returns the result.
     /// </summary>
-    [HttpGet("callback")]
-    [AllowAnonymous]
-    public async Task<ActionResult> Callback([FromQuery] string code, [FromQuery] string state)
+    [HttpPost("callback")]
+    [Authorize]
+    public async Task<ActionResult<MalCallbackResponse>> Callback([FromBody] MalCallbackRequest body)
     {
-        if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(state))
+        if (string.IsNullOrWhiteSpace(body.Code) || string.IsNullOrWhiteSpace(body.State))
         {
-            logger.LogWarning("MAL OAuth callback received with missing code or state");
-            return Redirect("/settings?malError=invalid_callback");
+            logger.LogWarning("MAL OAuth SPA callback received with missing code or state");
+            return BadRequest("code and state are required.");
         }
 
-        var redirectUri = BuildCallbackUri();
-        var result = await malOAuthService.ExchangeCodeAsync(code, state, redirectUri);
+        var redirectUriEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.MalOAuthRedirectUri);
+        var redirectUri = redirectUriEntry?.Value;
+        if (string.IsNullOrWhiteSpace(redirectUri) ||
+            !Uri.TryCreate(redirectUri, UriKind.Absolute, out var parsedUri) ||
+            (parsedUri.Scheme != Uri.UriSchemeHttps && parsedUri.Scheme != Uri.UriSchemeHttp))
+        {
+            logger.LogError("MAL OAuth SPA callback: stored redirectUri not found or invalid");
+            return StatusCode(500, "OAuth session expired. Please restart the authorization flow.");
+        }
+
+        var result = await malOAuthService.ExchangeCodeAsync(body.Code, body.State, redirectUri);
 
         if (result.IsFailure)
         {
             logger.LogError("MAL OAuth code exchange failed: {Error}", result.Error.Message);
-            return Redirect("/settings?malError=exchange_failed");
+            return StatusCode(500, "Authorization failed. Please try connecting again.");
         }
 
         logger.LogInformation("MAL OAuth flow completed successfully");
-        return Redirect("/settings?malConnected=true");
+        return Ok(new MalCallbackResponse(true));
     }
 
     /// <summary>Returns whether a MAL access token is currently stored.</summary>
@@ -83,13 +99,9 @@ public sealed class MalAuthController(
         logger.LogInformation("MAL account disconnected");
         return NoContent();
     }
-
-    private string BuildCallbackUri()
-    {
-        var request = HttpContext.Request;
-        return $"{request.Scheme}://{request.Host}/api/v1/mal/auth/callback";
-    }
 }
 
 public sealed record MalAuthInitiateResponse(string AuthorizationUrl);
 public sealed record MalAuthStatusResponse(bool Connected);
+public sealed record MalCallbackRequest(string Code, string State);
+public sealed record MalCallbackResponse(bool Connected);

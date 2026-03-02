@@ -53,5 +53,6 @@ public static class SettingsKeys
     // Internal OAuth state (temporary keys used during enrollment flows)
     public const string MalOAuthState = "System:MalOAuthState";
     public const string MalOAuthCodeVerifier = "System:MalOAuthCodeVerifier";
+    public const string MalOAuthRedirectUri = "System:MalOAuthRedirectUri";
     public const string PlexOAuthPinId = "System:PlexOAuthPinId";
 }

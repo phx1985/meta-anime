@@ -496,7 +496,9 @@
       "mal": {
         "title": "MyAnimeList Account",
         "desc": "Connect your MyAnimeList account to sync your watch list.",
-        "connect": "Connect MyAnimeList"
+        "connect": "Connect MyAnimeList",
+        "connecting": "Completing authorization…",
+        "connectError": "Authorization failed. Please try connecting again."
       },
       "plex": {
         "title": "Plex Account",

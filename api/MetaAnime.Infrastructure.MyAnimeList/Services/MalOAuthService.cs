@@ -37,6 +37,7 @@ public sealed class MalOAuthService(
         // Persist for later verification
         await propertyBagRepository.UpsertAsync(SettingsKeys.MalOAuthCodeVerifier, codeVerifier);
         await propertyBagRepository.UpsertAsync(SettingsKeys.MalOAuthState, state);
+        await propertyBagRepository.UpsertAsync(SettingsKeys.MalOAuthRedirectUri, redirectUri);
 
         // MAL uses "plain" code challenge method (challenge == verifier)
         var authUrl = $"{webBase}/v1/oauth2/authorize" +

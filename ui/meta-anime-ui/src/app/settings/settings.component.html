@@ -215,7 +215,12 @@
                       <div class="integration-card__desc">{{ 'settings.enrollment.mal.desc' | translate }}</div>
                     </div>
                     <div class="integration-card__action">
-                      @if (malConnected()) {
+                      @if (malExchanging()) {
+                        <button type="button" class="enrollment-connect-btn" disabled>
+                          <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                          {{ 'settings.enrollment.mal.connecting' | translate }}
+                        </button>
+                      } @else if (malConnected()) {
                         <span class="enrollment-status" aria-live="polite">
                           <span class="enrollment-status__dot" aria-hidden="true"></span>
                           {{ 'settings.enrollment.connected' | translate }}
@@ -243,6 +248,9 @@
                           }
                           {{ 'settings.enrollment.mal.connect' | translate }}
                         </button>
+                        @if (malExchangeError()) {
+                          <div class="field-error mt-1">{{ 'settings.enrollment.mal.connectError' | translate }}</div>
+                        }
                       }
                     </div>
                   </div>

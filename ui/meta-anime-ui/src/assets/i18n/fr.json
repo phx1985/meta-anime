@@ -496,7 +496,9 @@
       "mal": {
         "title": "Compte MyAnimeList",
         "desc": "Connectez votre compte MyAnimeList pour synchroniser votre liste de suivi.",
-        "connect": "Connecter MyAnimeList"
+        "connect": "Connecter MyAnimeList",
+        "connecting": "Finalisation de l'autorisation…",
+        "connectError": "Autorisation échouée. Veuillez réessayer."
       },
       "plex": {
         "title": "Compte Plex",
