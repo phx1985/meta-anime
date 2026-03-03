@@ -97,13 +97,13 @@ public sealed class AnimeMatchingService(
             return Result.Failure(deleteMappingsResult.Error);
         }
 
-        var animeMappings = new List<AnimeMapping>();
+        List<AnimeMapping> animeMappings = [];
         // Platforms are ordered by priority (Tvdb > Imdb > Tmdb)
-        var platformMappings = new Dictionary<MediaPlatform, KometaAnimePlatform>
+        Dictionary<MediaPlatform, KometaAnimePlatform> platformMappings = new()
         {
-            { MediaPlatform.Tvdb, KometaAnimePlatform.Tvdb },
-            { MediaPlatform.Imdb, KometaAnimePlatform.Imdb },
-            { MediaPlatform.Tmdb, KometaAnimePlatform.TmdbShow }
+            [MediaPlatform.Tvdb] = KometaAnimePlatform.Tvdb,
+            [MediaPlatform.Imdb] = KometaAnimePlatform.Imdb,
+            [MediaPlatform.Tmdb] = KometaAnimePlatform.TmdbShow
         };
 
         foreach (var anime in allAnimes)

@@ -1,5 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { SyncStep } from '../../models/sync-progress.models';
 import { fmtElapsed } from '../../utils/format.utils';
@@ -25,17 +24,17 @@ const PROVIDER_IMAGES: Record<string, string> = {
   selector: 'app-sync-step',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe],
   templateUrl: './sync-step.component.html',
   styleUrl: './sync-step.component.scss',
 })
 export class SyncStepComponent {
-  @Input({ required: true }) step!: SyncStep;
+  readonly step = input.required<SyncStep>();
 
   readonly providerImages = PROVIDER_IMAGES;
   readonly fmtElapsed = fmtElapsed;
 
   get providerImg(): string {
-    return this.providerImages[this.step.stepKey] ?? this.providerImages['app'];
+    return this.providerImages[this.step().stepKey] ?? this.providerImages['app'];
   }
 }

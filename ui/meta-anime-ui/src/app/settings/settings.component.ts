@@ -114,7 +114,11 @@ export class SettingsComponent {
   showEnableForm = signal(false);
   enablePasswordInput = signal('');
   enablePasswordConfirm = signal('');
-  changePwForm!: FormGroup;
+  changePwForm = this.fb.group({
+    currentPassword: ['', Validators.required],
+    newPassword: ['', Validators.required],
+    confirmPassword: ['', Validators.required],
+  }, { validators: this.passwordsMatchValidator });
 
   private securitySuccessTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -362,12 +366,6 @@ export class SettingsComponent {
 
   constructor() {
     this.signalR.connect();
-
-    this.changePwForm = this.fb.group({
-      currentPassword: ['', Validators.required],
-      newPassword: ['', Validators.required],
-      confirmPassword: ['', Validators.required],
-    }, { validators: this.passwordsMatchValidator });
 
     this.destroyRef.onDestroy(() => {
       if (this.autoApplySavedTimer) clearTimeout(this.autoApplySavedTimer);
@@ -968,18 +966,6 @@ export class SettingsComponent {
     if (step.stepKey === 'plex' && !this.plexEnabled()) return false;
     if (step.stepKey === 'sonarr' && !this.sonarrEnabled()) return false;
     return true;
-  }
-
-  trackByKey(_: number, s: SettingDefinition): string {
-    return s.key;
-  }
-
-  trackByCategory(_: number, cat: string): string {
-    return cat;
-  }
-
-  trackByStepKey(_: number, s: SyncStep): string {
-    return s.stepKey;
   }
 
   triggerSync(): void {

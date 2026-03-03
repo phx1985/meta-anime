@@ -1,14 +1,14 @@
 <li
   class="sync-step"
-  [class.sync-step--done]="step.state === 'done'"
-  [class.sync-step--running]="step.state === 'running'"
-  [class.sync-step--error]="step.state === 'error'"
-  [class.sync-step--pending]="step.state === 'pending'"
+  [class.sync-step--done]="step().state === 'done'"
+  [class.sync-step--running]="step().state === 'running'"
+  [class.sync-step--error]="step().state === 'error'"
+  [class.sync-step--pending]="step().state === 'pending'"
 >
   <span class="sync-step-provider" aria-hidden="true">
     <img
       [src]="providerImg"
-      [alt]="step.stepKey"
+      [alt]="step().stepKey"
       width="16"
       height="16"
       class="sync-step-provider-img"
@@ -16,7 +16,7 @@
   </span>
 
   <span class="sync-step-icon" aria-hidden="true">
-    @switch (step.state) {
+    @switch (step().state) {
       @case ('done') {
         <svg
           width="11"
@@ -53,26 +53,26 @@
 
   <div class="sync-step-body">
     <span class="sync-step-label">
-      {{ 'settings.sync.step.' + step.stepKey | translate }}
+      {{ 'settings.sync.step.' + step().stepKey | translate }}
     </span>
-    @if (step.state === 'running' || step.state === 'done') {
-      <span class="sync-step-elapsed">{{ fmtElapsed(step.elapsedMs) }}</span>
+    @if (step().state === 'running' || step().state === 'done') {
+      <span class="sync-step-elapsed">{{ fmtElapsed(step().elapsedMs) }}</span>
     }
-    @if (step.errorMessage) {
-      <span class="sync-step-error">{{ step.errorMessage }}</span>
+    @if (step().errorMessage) {
+      <span class="sync-step-error">{{ step().errorMessage }}</span>
     }
   </div>
 
-  @if (step.state === 'running') {
+  @if (step().state === 'running') {
     <div
       class="sync-step-progress"
       role="progressbar"
-      [attr.aria-valuenow]="step.progressPercent ?? null"
+      [attr.aria-valuenow]="step().progressPercent ?? null"
       aria-valuemin="0"
       aria-valuemax="100"
     >
-      @if (step.progressPercent !== undefined) {
-        <div class="sync-step-progress-fill" [style.width.%]="step.progressPercent"></div>
+      @if (step().progressPercent !== undefined) {
+        <div class="sync-step-progress-fill" [style.width.%]="step().progressPercent"></div>
       } @else {
         <div class="sync-step-progress-fill sync-step-progress-fill--indeterminate"></div>
       }

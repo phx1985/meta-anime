@@ -97,7 +97,7 @@ public sealed class AnimeMappingRepository(MetaAnimeDbContext dbContext) : IAnim
 
     public async Task<IEnumerable<AnimeMapping>> GetByAniDbIdsAsync(IEnumerable<string> aniDbIds)
     {
-        var idList = aniDbIds.ToList();
+        List<string> idList = [..aniDbIds];
         return await dbContext.AnimeMappings
             .AsNoTracking()
             .Include(am => am.Anime)

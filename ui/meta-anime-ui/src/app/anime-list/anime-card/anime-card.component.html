@@ -8,9 +8,9 @@
       [class.cover--clickable]="!!coverImageUrl"
     >
       @if (coverImageUrl) {
-        <img [src]="coverImageUrl" [alt]="anime.title" class="cover-img" loading="lazy" />
+        <img [src]="coverImageUrl" [alt]="anime().title" class="cover-img" loading="lazy" />
       } @else {
-        <div class="cover-placeholder">{{ anime.title.charAt(0) }}</div>
+        <div class="cover-placeholder">{{ anime().title.charAt(0) }}</div>
       }
     </div>
 
@@ -108,7 +108,7 @@
           @for (g of pureGenres; track g) {
             <span
               class="genre-tag"
-              [class.genre-tag--highlighted]="activeGenres.length > 0 && activeGenres.includes(g)"
+              [class.genre-tag--highlighted]="activeGenres().length > 0 && activeGenres().includes(g)"
               >{{ translateGenre(g) }}</span
             >
           }
@@ -119,7 +119,7 @@
           @for (t of themes; track t) {
             <span
               class="genre-tag genre-tag--theme"
-              [class.genre-tag--highlighted]="activeThemes.length > 0 && activeThemes.includes(t)"
+              [class.genre-tag--highlighted]="activeThemes().length > 0 && activeThemes().includes(t)"
               >{{ translateGenre(t) }}</span
             >
           }
@@ -131,7 +131,7 @@
             <span
               class="genre-tag genre-tag--demographic"
               [class.genre-tag--highlighted]="
-                activeDemographics.length > 0 && activeDemographics.includes(d)
+                activeDemographics().length > 0 && activeDemographics().includes(d)
               "
               >{{ translateGenre(d) }}</span
             >
@@ -231,7 +231,7 @@
   <!-- ── Footer ──────────────────────────────────────────────────────── -->
   <div class="card-footer">
     <div class="footer-actions">
-      @if (plexEnabled) {
+      @if (plexEnabled()) {
         <a
           class="action action--plex"
           href="javascript:void(0)"
@@ -248,7 +248,7 @@
           <span class="action-label">Plex</span>
         </a>
       }
-      @if (sonarrEnabled) {
+      @if (sonarrEnabled()) {
         <a
           class="action action--sonarr"
           [attr.href]="sonarrUrl"
@@ -368,7 +368,7 @@
     <img
       class="lightbox-img"
       [src]="coverImageUrl"
-      [alt]="anime.title"
+      [alt]="anime().title"
       (click)="$event.stopPropagation()"
     />
   </div>
