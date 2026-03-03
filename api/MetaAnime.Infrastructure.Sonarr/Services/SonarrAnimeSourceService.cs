@@ -339,6 +339,48 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
             ? Result.Success()
             : Result.Failure(new("sonarr.remove", $"Failed to remove series (HTTP {(int)resp.StatusCode}): {resp.Content ?? "no details"}"));
     }
+    public async Task<Result<IList<SonarrTagInfo>>> GetAllTagsAsync()
+    {
+        var (host, apiKey, _, isConfigured) = await GetSettingsAsync();
+
+        if (!isConfigured)
+            return Result.Failure<IList<SonarrTagInfo>>(new("sonarr.notConfigured", "Sonarr is not configured."));
+
+        var restClient = new RestClient(host);
+        var restRequest = new RestRequest("api/v3/tag");
+        restRequest.AddParameter("apikey", apiKey);
+        var response = await restClient.ExecuteAsync(restRequest);
+
+        if (!response.IsSuccessful)
+            return Result.Failure<IList<SonarrTagInfo>>(new("sonarr.tags", $"Failed to fetch Sonarr tags: {response.StatusCode}"));
+
+        var sonarrTags = JsonSerializer.Deserialize<SonarrTag[]>(response.Content!, jsonOptions) ?? Array.Empty<SonarrTag>();
+        IList<SonarrTagInfo> result = sonarrTags.Select(t => new SonarrTagInfo(t.Id, t.Label)).ToList();
+        return Result.Success(result);
+    }
+
+    public async Task<Result<SonarrTagInfo>> CreateTagAsync(string label)
+    {
+        var (host, apiKey, _, isConfigured) = await GetSettingsAsync();
+
+        if (!isConfigured)
+            return Result.Failure<SonarrTagInfo>(new("sonarr.notConfigured", "Sonarr is not configured."));
+
+        var restClient = new RestClient(host);
+        var restRequest = new RestRequest("api/v3/tag", Method.Post);
+        restRequest.AddQueryParameter("apikey", apiKey);
+        restRequest.AddJsonBody(new { label });
+        var response = await restClient.ExecuteAsync(restRequest);
+
+        if (!response.IsSuccessful)
+            return Result.Failure<SonarrTagInfo>(new("sonarr.createTag", $"Failed to create Sonarr tag: {response.StatusCode}"));
+
+        var created = JsonSerializer.Deserialize<SonarrTag>(response.Content!, jsonOptions);
+        if (created == null)
+            return Result.Failure<SonarrTagInfo>(new("sonarr.createTag", "Invalid response when creating tag"));
+
+        return Result.Success(new SonarrTagInfo(created.Id, created.Label));
+    }
     #endregion
 
     #region Private Methods

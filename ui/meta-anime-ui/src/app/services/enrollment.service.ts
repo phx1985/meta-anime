@@ -27,6 +27,12 @@ export interface PlexAuthPollResponse {
   connected: boolean;
 }
 
+export interface PlexLibrary {
+  key: string;
+  title: string;
+  type: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class EnrollmentService {
   private http = inject(HttpClient);
@@ -71,5 +77,9 @@ export class EnrollmentService {
 
   disconnectPlex(): Observable<void> {
     return this.http.delete<void>(`${this.plexBase}/disconnect`);
+  }
+
+  getPlexLibraries(): Observable<PlexLibrary[]> {
+    return this.http.get<PlexLibrary[]>(`${this.plexBase}/libraries`);
   }
 }

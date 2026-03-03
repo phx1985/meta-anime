@@ -9,6 +9,11 @@ import {
   SonarrAddResult,
 } from '../models/sonarr.models';
 
+export interface SonarrTag {
+  id: number;
+  label: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SonarrService {
   private http = inject(HttpClient);
@@ -22,6 +27,14 @@ export class SonarrService {
 
   getOptions(): Observable<SonarrOptionsResponse> {
     return this.http.get<SonarrOptionsResponse>(`${this.base}/options`);
+  }
+
+  getTags(): Observable<SonarrTag[]> {
+    return this.http.get<SonarrTag[]>(`${this.base}/tags`);
+  }
+
+  createTag(label: string): Observable<SonarrTag> {
+    return this.http.post<SonarrTag>(`${this.base}/tags`, { label });
   }
 
   lookup(term: string): Observable<SonarrLookupResult[]> {

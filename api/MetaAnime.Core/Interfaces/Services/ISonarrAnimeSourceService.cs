@@ -31,6 +31,12 @@ public interface ISonarrAnimeSourceService<T> : IAnimeSourceService<T>
 
     /// <summary>Removes a Sonarr series by its Sonarr series ID (does not delete episode files).</summary>
     Task<Result> RemoveSeriesAsync(int sonarrId);
+
+    /// <summary>Returns all tags defined in the Sonarr instance with their ID and label.</summary>
+    Task<Result<IList<SonarrTagInfo>>> GetAllTagsAsync();
+
+    /// <summary>Creates a new tag in the Sonarr instance and returns the created tag.</summary>
+    Task<Result<SonarrTagInfo>> CreateTagAsync(string label);
 }
 
 /// <summary>Light-weight projection returned by GetSeriesByCodecAsync.</summary>
@@ -58,3 +64,6 @@ public sealed record SonarrAddedSeries(int Id, string Title, string TitleSlug);
 /// <summary>Single result from the Sonarr series lookup API.</summary>
 /// <param name="AlreadyInLibrary">True when Sonarr already tracks this series (Id > 0).</param>
 public sealed record SonarrLookupItem(int TvdbId, string Title, int? Year, string? TitleSlug, string? RemotePoster, string? Overview, bool AlreadyInLibrary = false);
+
+/// <summary>A tag defined in the Sonarr instance.</summary>
+public sealed record SonarrTagInfo(int Id, string Label);

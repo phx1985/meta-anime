@@ -8,4 +8,8 @@ public interface IPlexAnimeSourceService<T> : IAnimeSourceService<T>
     where T : IAnimeConvertible
 {
     Task<Result<string>> GetMachineIdentifierAsync();
+    /// <summary>Returns all available Plex library sections (id, name, type).</summary>
+    Task<Result<IList<PlexLibraryInfo>>> GetLibrariesAsync();
 }
+
+public sealed record PlexLibraryInfo(string Key, string Title, string Type);

@@ -10,9 +10,12 @@ public sealed class SpeakeasyHttpClient2 : SpeakeasyHttpClient, IDisposable
 {
     private bool _disposed;
 
-    public SpeakeasyHttpClient2()
+    public SpeakeasyHttpClient2(string? token = null)
     {
         httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        // Ensure X-Plex-Token is always sent to the local Plex server on every request.
+        if (!string.IsNullOrWhiteSpace(token))
+            httpClient.DefaultRequestHeaders.Add("X-Plex-Token", token);
     }
 
     public void Dispose()

@@ -623,6 +623,31 @@
   cursor: help;
 }
 
+.setting-help-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #fff;
+  }
+}
+
 .badge-saved {
   font-size: 0.75rem;
   font-weight: 600;
@@ -1760,4 +1785,118 @@
   border-radius: 999px;
   padding: 0.2rem 0.6rem;
   white-space: nowrap;
+}
+
+// ── Dynamic picker groups (Plex sections / Sonarr tags) ───────────────────
+
+.picker-group {
+  margin-top: 0.5rem;
+}
+
+.picker-group__desc {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--card-border);
+}
+
+.picker-load-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.65rem 1rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--accent-primary);
+  background: rgba(108, 99, 255, 0.08);
+  color: var(--accent-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover:not(:disabled) { background: rgba(108, 99, 255, 0.15); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.picker-loading {
+  display: flex;
+  align-items: center;
+  margin: 0.65rem 1rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.picker-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.65rem 1rem 0;
+}
+
+.picker-chip {
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  border: 1px solid var(--card-border);
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+
+  &:hover { border-color: var(--accent-primary); color: var(--text-primary); }
+
+  &--selected {
+    background: rgba(108, 99, 255, 0.12);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+  }
+}
+
+.picker-create-row {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem 0;
+
+  @media (max-width: 480px) { flex-direction: column; }
+}
+
+.picker-create-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  outline: none;
+  &:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 2px rgba(108,99,255,0.12); }
+}
+
+.picker-create-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--accent-primary);
+  background: rgba(108, 99, 255, 0.08);
+  color: var(--accent-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+
+  &:hover:not(:disabled) { background: rgba(108, 99, 255, 0.15); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.picker-save-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 1rem;
 }

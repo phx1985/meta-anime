@@ -46,7 +46,8 @@ export class MalCallbackComponent implements OnInit {
             titleKey: 'notifications.malConnect.successTitle',
             messageKey: 'notifications.malConnect.successMessage',
           });
-          this.router.navigate(['/settings']);
+          const wizardActive = localStorage.getItem('wizard_active') === 'true';
+          this.router.navigate([wizardActive ? '/welcome' : '/settings']);
         },
         error: () => {
           this.notifService.push({

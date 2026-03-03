@@ -1,3 +1,4 @@
+@if (!isWizardRoute()) {
 <nav class="navbar navbar-expand-lg sticky-top" #navbarEl>
   <div class="container">
     <a class="navbar-brand" routerLink="/">Meta Anime<span class="navbar-page-label" aria-hidden="true">@if (currentPageKey()) { · {{ currentPageKey() | translate }} }</span></a>
@@ -263,6 +264,7 @@
     </div>
   </div>
 </nav>
+} <!-- /!isWizardRoute() top nav -->
 
 <!-- ── Mobile Side Drawer ────────────────────────────────────────────────── -->
 @if (menuOpen()) {
@@ -409,6 +411,7 @@
 
 
 <!-- ── Mobile Bottom Navigation Bar ─────────────────────────────────────── -->
+@if (!isWizardRoute()) {
 <nav class="bottom-nav" [class.bottom-nav--hidden]="bottomNavHidden() || anyOverlayOpen()" aria-label="Primary navigation">
   <a class="bottom-nav-item" routerLink="/" routerLinkActive="bottom-nav-item--active"
     [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">
@@ -448,6 +451,7 @@
     <span>{{ 'nav.lucky' | translate }}</span>
   </button>
 </nav>
+} <!-- /!isWizardRoute() bottom nav -->
 
 <!-- ── Toast stack (top-right, below navbar) ──────────────────────────────── -->
 <div class="toast-stack" [style.top.px]="toastTopPx()" aria-live="polite" aria-atomic="false">

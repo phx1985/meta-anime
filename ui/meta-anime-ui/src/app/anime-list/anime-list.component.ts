@@ -158,6 +158,8 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   showNsfw = signal(true);
   /** Elapsed ms for the last search request (null until first search completes) */
   searchElapsedMs = signal<number | null>(null);
+  /** Fallback Sonarr URL (RemoteUrl ?? Host) used for the per-anime Sonarr button when sonarr.url is null. */
+  sonarrBaseUrl = signal<string | null>(null);
 
   /** Whether the filter body is expanded */
   filterOpen = signal(true);
@@ -411,6 +413,21 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
       .getShowNsfw()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((show) => this.showNsfw.set(show));
+
+    // Load the Sonarr base URL (RemoteUrl ?? Host) for the per-anime Sonarr button fallback
+    this.settingsService
+      .getAll()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (settings) => {
+          const url =
+            settings.find((s) => s.key === 'Sonarr:RemoteUrl')?.value?.trim() ||
+            settings.find((s) => s.key === 'Sonarr:Host')?.value?.trim() ||
+            null;
+          this.sonarrBaseUrl.set(url);
+        },
+        error: () => {},
+      });
 
     this.translateService.onLangChange
       .pipe(takeUntilDestroyed(this.destroyRef))

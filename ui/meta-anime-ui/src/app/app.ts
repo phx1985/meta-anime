@@ -74,6 +74,8 @@ export class App implements OnInit, AfterViewInit {
   protected sonarrHomeUrl = signal<string | null>(null);
   protected readonly malHomeUrl = 'https://myanimelist.net';
 
+  /** True while the setup wizard route is active — hides global nav during onboarding */
+  protected isWizardRoute = signal<boolean>(false);
   /** True while the bottom nav bar is retracted (scroll-down hide on mobile) */
   protected bottomNavHidden = signal<boolean>(false);
   /**
@@ -128,6 +130,12 @@ export class App implements OnInit, AfterViewInit {
     this.syncSignalR.connect();
 
     // Track active route for the mobile page-context label
+    let prevWasWizard = false;
+    // Initialise wizard-route signal synchronously before any NavigationEnd fires
+    const initialPath = '/' + this.router.url.replace(/^\//, '').split('?')[0].split('#')[0].split('/')[0];
+    this.isWizardRoute.set(initialPath === '/welcome');
+    prevWasWizard = initialPath === '/welcome';
+
     this.router.events
       .pipe(
         filter((e): e is NavigationEnd => e instanceof NavigationEnd),
@@ -137,9 +145,16 @@ export class App implements OnInit, AfterViewInit {
         // Strip query params and hash, then map to a page i18n key ('' for unmapped routes)
         const path = '/' + e.urlAfterRedirects.replace(/^\//, '').split('?')[0].split('#')[0].split('/')[0];
         this.currentPageKey.set(App.PAGE_KEYS[path] ?? '');
+        this.isWizardRoute.set(path === '/welcome');
         // Always reveal the bottom nav when navigating to a new page
         this.bottomNavHidden.set(false);
         this.lastScrollY = 0;
+        // When leaving the wizard, refresh provider URLs and state so nav links appear instantly
+        if (prevWasWizard && path !== '/welcome') {
+          this.loadProviderUrls();
+          this.providerState.refresh();
+        }
+        prevWasWizard = path === '/welcome';
       });
 
     // Sync done → success notification (fires on every transition false→true, not on replay)
@@ -213,6 +228,11 @@ export class App implements OnInit, AfterViewInit {
     });
 
     // Load provider URLs for navbar quick-links
+    this.loadProviderUrls();
+  }
+
+  /** Load/refresh provider home-page URLs from saved settings */
+  private loadProviderUrls(): void {
     this.settingsService.getAll().subscribe({
       next: (settings) => {
         const plexHost = settings.find((s) => s.key === 'Plex:Host')?.value ?? null;
