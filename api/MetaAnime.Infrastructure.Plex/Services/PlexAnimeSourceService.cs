@@ -145,6 +145,12 @@ public sealed class PlexAnimeSourceService(
 
     public async Task<Result<string>> GetMachineIdentifierAsync()
     {
+        // Return the cached value immediately — avoids a live Plex SDK round-trip on every request
+        // and guarantees the ID is available even when the local Plex server is temporarily offline.
+        var cached = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexMachineIdentifier);
+        if (!string.IsNullOrWhiteSpace(cached?.Value))
+            return Result.Success(cached.Value);
+
         var (plexAPI, _, _, _, isConfigured) = await GetSettingsAsync();
 
         if (!isConfigured)
@@ -160,6 +166,8 @@ public sealed class PlexAnimeSourceService(
             return Result.Failure<string>(new Error(Constants.Errors.MachineIdentifierNotFound, "Could not retrieve machine identifier."));
         }
 
+        // Persist so future calls (and the settings API) can read it without hitting Plex each time.
+        await propertyBagRepository.UpsertAsync(SettingsKeys.PlexMachineIdentifier, machineIdentifier);
         return Result.Success(machineIdentifier);
     }
 

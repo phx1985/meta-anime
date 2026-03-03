@@ -12,6 +12,7 @@ public static class SettingsKeys
     public const string PlexHost = "Plex:Host";
     public const string PlexToken = "Plex:Token";
     public const string PlexAnimeSections = "Plex:AnimeSections";
+    public const string PlexMachineIdentifier = "Plex:MachineIdentifier";
 
     // Sonarr
     public const string SonarrEnabled = "Sonarr:Enabled";

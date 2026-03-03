@@ -115,6 +115,7 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   sonarrTagsLoaded = signal(false);
   sonarrTagsError = signal('');
   sonarrSelectedTagIds = signal<number[]>([]);
+  sonarrTagsTouched = signal(false);
   sonarrRootFolders = signal<{ id: number; path: string }[]>([]);
   sonarrQualityProfiles = signal<{ id: number; name: string }[]>([]);
   sonarrOptionsLoading = signal(false);
@@ -368,6 +369,7 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   toggleSonarrTag(id: number): void {
     const c = this.sonarrSelectedTagIds();
     this.sonarrSelectedTagIds.set(c.includes(id) ? c.filter((t) => t !== id) : [...c, id]);
+    this.sonarrTagsTouched.set(true);
   }
   isSonarrTagSelected(id: number): boolean { return this.sonarrSelectedTagIds().includes(id); }
 
