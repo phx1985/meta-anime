@@ -21,8 +21,8 @@ import { NotificationService } from '../services/notification.service';
 import { UserPreferencesService } from '../services/user-preferences.service';
 import { ProviderStateService } from '../services/provider-state.service';
 import { PopupService } from '../services/popup.service';
-import { SonarrService } from '../services/sonarr.service';
-import { EnrollmentService } from '../services/enrollment.service';
+import { SonarrService, SonarrTag } from '../services/sonarr.service';
+import { EnrollmentService, PlexLibrary } from '../services/enrollment.service';
 import { SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
 import { SyncStep } from '../models/sync-progress.models';
@@ -158,6 +158,7 @@ export class SettingsComponent {
           !s.key.startsWith('System:') &&
           !SettingsComponent.SONARR_DEFAULT_KEYS.has(s.key) &&
           !SettingsComponent.PROVIDER_ENABLED_KEYS.has(s.key) &&
+          !SettingsComponent.PICKER_KEYS.has(s.key) &&
           s.fieldType !== 'enrollment' &&
           s.fieldType !== 'info',
       )
@@ -186,6 +187,24 @@ export class SettingsComponent {
       !this.sonarrOptionsLoading() &&
       this.sonarrOptionsError() === '',
   );
+
+  // ── Plex library picker (dynamic) ─────────────────────────────────────────
+  plexLibsForSettings = signal<PlexLibrary[]>([]);
+  plexLibsLoading = signal(false);
+  plexLibsError = signal('');
+  plexSelectedSectionKeys = signal<string[]>([]);
+  plexLibsSaved = signal(false);
+  private plexLibsSavedTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // ── Sonarr tag picker (dynamic) ───────────────────────────────────────────
+  sonarrTagsForSettings = signal<SonarrTag[]>([]);
+  sonarrTagsForSettingsLoading = signal(false);
+  sonarrTagsForSettingsError = signal('');
+  sonarrSelectedTagLabels = signal<string[]>([]);
+  sonarrTagsSaved = signal(false);
+  private sonarrTagsSavedTimer: ReturnType<typeof setTimeout> | null = null;
+  sonarrNewTagLabelSettings = signal('');
+  sonarrCreatingTagSettings = signal(false);
 
   sonarrDefaultSettings = computed(() => {
     const order = [
@@ -228,9 +247,12 @@ export class SettingsComponent {
     return host.trim().length > 0 && this.plexConnected();
   });
 
-  malClientIdConfigured = computed(
-    () => (this.settings().find((s) => s.key === 'MAL:ClientId')?.value ?? '').trim().length > 0,
-  );
+  malClientIdConfigured = computed(() => {
+    const list = this.settings();
+    const clientId = (list.find((s) => s.key === 'MAL:ClientId')?.value ?? '').trim();
+    const clientSecret = (list.find((s) => s.key === 'MAL:ClientSecret')?.value ?? '').trim();
+    return clientId.length > 0 && clientSecret.length > 0;
+  });
 
   forms: Record<string, FormGroup> = {};
 
@@ -255,6 +277,10 @@ export class SettingsComponent {
     'Plex:Enabled',
     'Sonarr:Enabled',
   ]);
+  private static readonly PICKER_KEYS = new Set([
+    'Plex:AnimeSections',
+    'Sonarr:AnimeTags',
+  ]);
 
   private static readonly PLEX_POLL_INTERVAL_MS = 3000;
   /** Max number of polls before giving up (3 s × 40 = 2 minutes). */
@@ -264,7 +290,7 @@ export class SettingsComponent {
   /** Categories that always appear even when they have no regular settings (they have integration cards). */
   private static readonly INTEGRATION_CARD_CATS = new Set(['mal', 'plex']);
   /** Keys that must be treated as sensitive on the frontend regardless of the backend flag. */
-  private static readonly FRONTEND_SENSITIVE_KEYS = new Set(['MAL:ClientId']);
+  private static readonly FRONTEND_SENSITIVE_KEYS = new Set(['MAL:ClientId', 'MAL:ClientSecret']);
   /** The Kometa JSON URL key that requires a warning before editing. */
   private static readonly KOMETA_URL_KEY = 'Kometa:AnimeIdsJsonUrl';
 
@@ -349,6 +375,11 @@ export class SettingsComponent {
           this.loading.set(false);
           const first = this.navItems()[0];
           if (first) this.activeCategory.set(first);
+          // Initialize dynamic picker selections from saved values
+          const plexSections = data.find((s) => s.key === 'Plex:AnimeSections')?.value ?? '';
+          if (plexSections.trim()) this.plexSelectedSectionKeys.set(plexSections.split(',').map((v) => v.trim()).filter(Boolean));
+          const sonarrTags = data.find((s) => s.key === 'Sonarr:AnimeTags')?.value ?? '';
+          if (sonarrTags.trim()) this.sonarrSelectedTagLabels.set(sonarrTags.split(',').map((v) => v.trim()).filter(Boolean));
 
           if (pendingHighlight) {
             // Use scrollToSection() — handles navbar offset, highlight scale animation,
@@ -365,6 +396,12 @@ export class SettingsComponent {
             }
           }
           this.loadSonarrDefaults();
+
+          // Auto-load dynamic pickers if the provider is already configured
+          const plexEnabledVal = data.find((s) => s.key === 'Plex:Enabled')?.value === 'true';
+          if (plexEnabledVal) this.loadPlexLibsForSettings();
+          const sonarrEnabledVal = data.find((s) => s.key === 'Sonarr:Enabled')?.value === 'true';
+          if (sonarrEnabledVal) this.loadSonarrTagsForSettings();
         },
         error: () => {
           this.error.set(true);
@@ -967,5 +1004,96 @@ export class SettingsComponent {
 
   clearSyncLog(): void {
     this.signalR.resetSteps();
+  }
+
+  // ── Plex library picker ───────────────────────────────────────────────────
+
+  loadPlexLibsForSettings(): void {
+    this.plexLibsLoading.set(true);
+    this.plexLibsError.set('');
+    this.enrollmentService.getPlexLibraries()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (libs) => { this.plexLibsForSettings.set(libs); this.plexLibsLoading.set(false); },
+        error: () => { this.plexLibsError.set('Failed to load libraries'); this.plexLibsLoading.set(false); },
+      });
+  }
+
+  togglePlexSection(key: string): void {
+    const c = this.plexSelectedSectionKeys();
+    this.plexSelectedSectionKeys.set(c.includes(key) ? c.filter((k) => k !== key) : [...c, key]);
+  }
+
+  isPlexSectionSelected(key: string): boolean { return this.plexSelectedSectionKeys().includes(key); }
+
+  savePlexSections(): void {
+    const value = this.plexSelectedSectionKeys().join(',');
+    this.savingKey.set('Plex:AnimeSections');
+    this.settingsService.update('Plex:AnimeSections', { value })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.savingKey.set(null);
+          this.settings.update((list) => list.map((s) => s.key === 'Plex:AnimeSections' ? { ...s, value } : s));
+          if (this.plexLibsSavedTimer) clearTimeout(this.plexLibsSavedTimer);
+          this.plexLibsSaved.set(true);
+          this.plexLibsSavedTimer = setTimeout(() => this.plexLibsSaved.set(false), 2000);
+        },
+        error: () => { this.savingKey.set(null); },
+      });
+  }
+
+  // ── Sonarr tag picker ─────────────────────────────────────────────────────
+
+  loadSonarrTagsForSettings(): void {
+    this.sonarrTagsForSettingsLoading.set(true);
+    this.sonarrTagsForSettingsError.set('');
+    this.sonarrService.getTags()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (tags) => { this.sonarrTagsForSettings.set(tags); this.sonarrTagsForSettingsLoading.set(false); },
+        error: () => { this.sonarrTagsForSettingsError.set('Failed to load tags'); this.sonarrTagsForSettingsLoading.set(false); },
+      });
+  }
+
+  toggleSonarrTagInSettings(label: string): void {
+    const c = this.sonarrSelectedTagLabels();
+    this.sonarrSelectedTagLabels.set(c.includes(label) ? c.filter((l) => l !== label) : [...c, label]);
+  }
+
+  isSonarrTagSelectedInSettings(label: string): boolean { return this.sonarrSelectedTagLabels().includes(label); }
+
+  saveSonarrTagsInSettings(): void {
+    const value = this.sonarrSelectedTagLabels().join(',');
+    this.savingKey.set('Sonarr:AnimeTags');
+    this.settingsService.update('Sonarr:AnimeTags', { value })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.savingKey.set(null);
+          this.settings.update((list) => list.map((s) => s.key === 'Sonarr:AnimeTags' ? { ...s, value } : s));
+          if (this.sonarrTagsSavedTimer) clearTimeout(this.sonarrTagsSavedTimer);
+          this.sonarrTagsSaved.set(true);
+          this.sonarrTagsSavedTimer = setTimeout(() => this.sonarrTagsSaved.set(false), 2000);
+        },
+        error: () => { this.savingKey.set(null); },
+      });
+  }
+
+  createSonarrTagInSettings(): void {
+    const label = this.sonarrNewTagLabelSettings().trim();
+    if (!label) return;
+    this.sonarrCreatingTagSettings.set(true);
+    this.sonarrService.createTag(label)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (tag) => {
+          this.sonarrTagsForSettings.update((tags) => [...tags, tag]);
+          this.sonarrSelectedTagLabels.update((labels) => [...labels, tag.label]);
+          this.sonarrNewTagLabelSettings.set('');
+          this.sonarrCreatingTagSettings.set(false);
+        },
+        error: () => { this.sonarrCreatingTagSettings.set(false); },
+      });
   }
 }

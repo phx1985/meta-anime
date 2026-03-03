@@ -28,7 +28,7 @@
       </div>
 
       <!-- Steps (keyed by animStep to trigger the animation) -->
-      <div class="wizard-body" [@slideStep]="animStep()">
+      <div class="wizard-body" [@fadeStep]="animStep()">
 
         <!-- Step 1: Welcome -->
         @if (step() === 1) {
@@ -67,6 +67,32 @@
             <p class="wizard-desc">{{ 'wizard.step2.desc' | translate }}</p>
 
             @if (!malConnected()) {
+              <!-- Callback URL info box -->
+              <div class="wizard-callback-box">
+                <span class="wizard-callback-label">{{ 'wizard.step2.callbackUrlLabel' | translate }}</span>
+                <div class="wizard-callback-row">
+                  <code class="wizard-callback-url">{{ malCallbackUrl }}</code>
+                  <button
+                    type="button"
+                    class="wizard-callback-copy-btn"
+                    (click)="copyMalCallbackUrl()"
+                    [attr.aria-label]="(malCallbackCopied() ? 'wizard.step2.callbackUrlCopied' : 'wizard.step2.callbackUrlCopy') | translate"
+                  >
+                    @if (malCallbackCopied()) {
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      {{ 'wizard.step2.callbackUrlCopied' | translate }}
+                    } @else {
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                      {{ 'wizard.step2.callbackUrlCopy' | translate }}
+                    }
+                  </button>
+                </div>
+              </div>
               <!-- Client ID input -->
               <div class="wizard-form">
                 <div class="wizard-field">
@@ -92,17 +118,30 @@
                     autocomplete="off"
                   />
                 </div>
+                <div class="wizard-field">
+                  <label class="wizard-label" for="mal-client-secret">
+                    {{ 'wizard.step2.clientSecretLabel' | translate }}
+                  </label>
+                  <input
+                    id="mal-client-secret"
+                    type="password"
+                    class="wizard-input"
+                    [formControl]="malClientSecretControl"
+                    [placeholder]="'wizard.step2.clientSecretPlaceholder' | translate"
+                    autocomplete="off"
+                  />
+                </div>
               </div>
               <button
                 type="button"
                 class="wizard-primary-btn"
                 (click)="connectMal()"
-                [disabled]="malConnecting() || malClientIdControl.invalid"
+                [disabled]="malConnecting() || malClientIdControl.invalid || malClientSecretControl.invalid"
               >
                 @if (malConnecting()) {
                   <span class="spinner-border spinner-border-sm me-1" role="status"></span>
                 }
-                {{ 'wizard.step2.connectBtn' | translate }}
+                {{ malConnecting() ? ('wizard.step2.connectingBtn' | translate) : ('wizard.step2.connectBtn' | translate) }}
               </button>
             } @else {
               <div class="wizard-hint-row">
@@ -151,7 +190,12 @@
                   {{ 'wizard.step3.waiting' | translate }}
                 </div>
               } @else {
-                <button type="button" class="wizard-primary-btn" (click)="savePlexUrlAndConnect()">
+                <button
+                  type="button"
+                  class="wizard-primary-btn"
+                  (click)="savePlexUrlAndConnect()"
+                  [disabled]="plexConnecting() || plexServerUrlControl.invalid"
+                >
                   {{ 'wizard.step3.connectBtn' | translate }}
                 </button>
               }
@@ -268,22 +312,102 @@
               @if (sonarrTagsError()) {
                 <div class="wizard-error" role="alert">{{ sonarrTagsError() }}</div>
               }
-              @if (sonarrTagsLoaded() && sonarrTags().length > 0) {
+              @if (sonarrTagsLoaded()) {
                 <div class="wizard-library-section">
                   <p class="wizard-label">{{ 'wizard.step4.selectTags' | translate }}</p>
-                  <div class="wizard-tag-grid">
-                    @for (tag of sonarrTags(); track tag.id) {
-                      <button
-                        type="button"
-                        class="wizard-tag-chip"
-                        [class.wizard-tag-chip--selected]="isSonarrTagSelected(tag.id)"
-                        (click)="toggleSonarrTag(tag.id)"
-                      >
-                        {{ tag.label }}
-                      </button>
-                    }
+                  @if (sonarrTags().length > 0) {
+                    <div class="wizard-tag-grid">
+                      @for (tag of sonarrTags(); track tag.id) {
+                        <button
+                          type="button"
+                          class="wizard-tag-chip"
+                          [class.wizard-tag-chip--selected]="isSonarrTagSelected(tag.id)"
+                          (click)="toggleSonarrTag(tag.id)"
+                        >
+                          {{ tag.label }}
+                        </button>
+                      }
+                    </div>
+                  }
+                  <!-- Create new tag -->
+                  <div class="wizard-tag-create-row">
+                    <input
+                      type="text"
+                      class="wizard-input wizard-tag-create-input"
+                      [value]="sonarrNewTagLabel()"
+                      (input)="sonarrNewTagLabel.set($any($event.target).value)"
+                      [placeholder]="'wizard.step4.newTagPlaceholder' | translate"
+                    />
+                    <button
+                      type="button"
+                      class="wizard-secondary-btn wizard-tag-create-btn"
+                      [disabled]="sonarrCreatingTag() || !sonarrNewTagLabel().trim()"
+                      (click)="createSonarrTag()"
+                    >
+                      @if (sonarrCreatingTag()) {
+                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                      }
+                      {{ 'wizard.step4.createTagBtn' | translate }}
+                    </button>
                   </div>
                 </div>
+
+                <!-- Series Defaults -->
+                @if (sonarrRootFolders().length > 0 || sonarrQualityProfiles().length > 0) {
+                  <div class="wizard-defaults-section">
+                    <p class="wizard-label wizard-defaults-title">{{ 'wizard.step4.defaultsTitle' | translate }}</p>
+
+                    @if (sonarrRootFolders().length > 0) {
+                      <div class="wizard-field">
+                        <label class="wizard-label" for="sonarr-root-folder">
+                          {{ 'wizard.step4.rootFolderLabel' | translate }}
+                        </label>
+                        <select id="sonarr-root-folder" class="wizard-input wizard-select" formControlName="rootFolder">
+                          @for (rf of sonarrRootFolders(); track rf.id) {
+                            <option [value]="rf.path">{{ rf.path }}</option>
+                          }
+                        </select>
+                      </div>
+                    }
+
+                    @if (sonarrQualityProfiles().length > 0) {
+                      <div class="wizard-field">
+                        <label class="wizard-label" for="sonarr-quality-profile">
+                          {{ 'wizard.step4.qualityProfileLabel' | translate }}
+                        </label>
+                        <select id="sonarr-quality-profile" class="wizard-input wizard-select" formControlName="qualityProfile">
+                          @for (qp of sonarrQualityProfiles(); track qp.id) {
+                            <option [value]="qp.name">{{ qp.name }}</option>
+                          }
+                        </select>
+                      </div>
+                    }
+
+                    <div class="wizard-field">
+                      <label class="wizard-label" for="sonarr-monitor">
+                        {{ 'wizard.step4.monitorLabel' | translate }}
+                      </label>
+                      <select id="sonarr-monitor" class="wizard-input wizard-select" formControlName="monitor">
+                        @for (opt of MONITOR_OPTIONS; track opt) {
+                          <option [value]="opt">{{ 'wizard.step4.monitor.' + opt | translate }}</option>
+                        }
+                      </select>
+                    </div>
+
+                    <div class="wizard-toggle-row">
+                      <span class="wizard-label">{{ 'wizard.step4.seasonFolderLabel' | translate }}</span>
+                      <button
+                        type="button"
+                        class="wizard-toggle-btn"
+                        [class.wizard-toggle-btn--on]="sonarrForm.get('seasonFolder')?.value"
+                        (click)="sonarrForm.patchValue({ seasonFolder: !sonarrForm.get('seasonFolder')?.value })"
+                        [attr.aria-pressed]="sonarrForm.get('seasonFolder')?.value"
+                      >
+                        <span class="wizard-toggle-knob"></span>
+                      </button>
+                    </div>
+                  </div>
+                }
               }
 
               @if (sonarrError()) {
@@ -339,7 +463,6 @@
               <div class="wizard-sync-progress">
                 @for (step of syncSteps(); track step.stepKey) {
                   <div class="wizard-sync-row">
-                    <span class="wizard-sync-label">{{ step.stepKey }}</span>
                     <span class="wizard-sync-state wizard-sync-state--{{ step.state }}">
                       @if (step.state === 'running') {
                         <span class="spinner-border spinner-border-sm" role="status"></span>
@@ -349,9 +472,12 @@
                         ✗
                       }
                     </span>
-                    @if (step.elapsedMs != null) {
-                      <span class="wizard-sync-elapsed">{{ fmtElapsed(step.elapsedMs) }}</span>
-                    }
+                    <span class="wizard-sync-label">{{ step.stepKey }}</span>
+                    <span class="wizard-sync-elapsed">
+                      @if (step.elapsedMs != null) {
+                        {{ fmtElapsed(step.elapsedMs) }}
+                      }
+                    </span>
                   </div>
                 }
               </div>
@@ -415,7 +541,7 @@
               <button
                 type="button"
                 class="wizard-next-btn"
-                [disabled]="sonarrSaving()"
+                [disabled]="sonarrSaving() || (sonarrTagsLoaded() && sonarrTags().length > 0 && sonarrSelectedTagIds().length === 0)"
                 (click)="saveSonarrAndContinue()"
               >
                 @if (sonarrSaving()) {

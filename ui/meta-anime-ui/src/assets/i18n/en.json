@@ -372,7 +372,8 @@
       },
       "Plex_AnimeSections": {
         "name": "Anime Library IDs",
-        "desc": "Comma-separated Plex library section IDs that contain anime."
+        "desc": "Comma-separated Plex library section IDs that contain anime.",
+        "loadBtn": "Load Libraries"
       },
       "Sonarr_Host": {
         "name": "Server URL",
@@ -384,7 +385,8 @@
       },
       "Sonarr_AnimeTags": {
         "name": "Anime Tags",
-        "desc": "Comma-separated Sonarr tag names used to identify anime series."
+        "desc": "Comma-separated Sonarr tag names used to identify anime series.",
+        "loadBtn": "Load Tags"
       },
       "Sonarr_RemoteUrl": {
         "name": "Remote URL",
@@ -475,7 +477,9 @@
       "addDefaultsGroup": "Add Series Defaults",
       "configureFirst": "Configure Sonarr Host URL and API Key above to unlock these defaults.",
       "connectionError": "Could not connect to Sonarr. Check your Host URL and API Key.",
-      "loadingOptions": "Loading Sonarr options…"
+      "loadingOptions": "Loading Sonarr options…",
+      "createTagPlaceholder": "New tag name...",
+      "createTagBtn": "Create"
     },
     "provider": {
       "enabled": "Enabled",
@@ -1068,13 +1072,14 @@
   },
   "helpModal": {
     "mal": {
-      "title": "How to get your MAL Client ID",
+      "title": "How to get your MAL Client ID & Secret",
       "step1": "Go to myanimelist.net and sign in to your account.",
       "step2prefix": "Navigate to Account → API (or go to ",
       "step2suffix": ").",
-      "step3": "Click \"Create ID\" and fill in the application details (name, description, app type).",
+      "step3": "Click \"Create ID\", fill in the application details, and set the App Type to \"Web\".",
       "step4": "Set the App Redirect URL to the following URL (copy exactly):",
-      "step5": "Copy the \"Client ID\" and paste it into the OAuth Client ID field.",
+      "step5": "Copy both the \"Client ID\" and \"Client Secret\" shown on the page.",
+      "step6": "Paste the Client ID and Client Secret into the respective fields below.",
       "copy": "Copy URL"
     },
     "sonarr": {
@@ -1104,7 +1109,13 @@
       "clientIdHint": "Connected via your MAL OAuth Client ID.",
       "clientIdLabel": "OAuth Client ID",
       "clientIdPlaceholder": "Paste your MAL Client ID here",
+      "clientSecretLabel": "OAuth Client Secret",
+      "clientSecretPlaceholder": "Paste your MAL Client Secret here",
+      "callbackUrlLabel": "App Redirect URL (copy this exactly into MAL)",
+      "callbackUrlCopy": "Copy",
+      "callbackUrlCopied": "Copied!",
       "connectBtn": "Connect MyAnimeList",
+      "connectingBtn": "Redirecting...",
       "connected": "MyAnimeList connected"
     },
     "step3": {
@@ -1131,7 +1142,25 @@
       "apiKeyPlaceholder": "Your Sonarr API key",
       "testAndLoadTags": "Test Connection & Load Tags",
       "selectTags": "Select your Anime tags",
-      "connectBtn": "Connect & Continue"
+      "connectBtn": "Connect & Continue",
+      "newTagPlaceholder": "New tag name...",
+      "createTagBtn": "Create Tag",
+      "defaultsTitle": "Add Series Defaults",
+      "rootFolderLabel": "Root Folder",
+      "qualityProfileLabel": "Quality Profile",
+      "seasonFolderLabel": "Use Season Folder",
+      "monitorLabel": "Monitor",
+      "monitor": {
+        "all": "All Episodes",
+        "future": "Future",
+        "missing": "Missing",
+        "existing": "Existing",
+        "recent": "Recent",
+        "pilot": "Pilot",
+        "firstSeason": "First Season",
+        "lastSeason": "Last Season",
+        "none": "None"
+      }
     },
     "step5": {
       "title": "Recap & Initial Sync",

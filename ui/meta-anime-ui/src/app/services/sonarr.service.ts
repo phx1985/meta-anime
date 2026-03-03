@@ -33,6 +33,10 @@ export class SonarrService {
     return this.http.get<SonarrTag[]>(`${this.base}/tags`);
   }
 
+  createTag(label: string): Observable<SonarrTag> {
+    return this.http.post<SonarrTag>(`${this.base}/tags`, { label });
+  }
+
   lookup(term: string): Observable<SonarrLookupResult[]> {
     const params = new HttpParams().set('term', term);
     return this.http.get<SonarrLookupResult[]>(`${this.base}/lookup`, { params });

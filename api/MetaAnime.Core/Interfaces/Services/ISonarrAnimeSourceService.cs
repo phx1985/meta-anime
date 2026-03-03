@@ -34,6 +34,9 @@ public interface ISonarrAnimeSourceService<T> : IAnimeSourceService<T>
 
     /// <summary>Returns all tags defined in the Sonarr instance with their ID and label.</summary>
     Task<Result<IList<SonarrTagInfo>>> GetAllTagsAsync();
+
+    /// <summary>Creates a new tag in the Sonarr instance and returns the created tag.</summary>
+    Task<Result<SonarrTagInfo>> CreateTagAsync(string label);
 }
 
 /// <summary>Light-weight projection returned by GetSeriesByCodecAsync.</summary>

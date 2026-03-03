@@ -119,9 +119,27 @@ public sealed class SonarrController(
         }
         return Ok(result.Value.Select(t => new SonarrTagDto(t.Id, t.Label)));
     }
+
+    /// <summary>Creates a new tag in the connected Sonarr instance.</summary>
+    [HttpPost("tags")]
+    [Authorize]
+    public async Task<ActionResult<SonarrTagDto>> CreateTag([FromBody] CreateSonarrTagRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Label))
+            return BadRequest("Tag label is required.");
+
+        var result = await animeMediatorService.CreateSonarrTagAsync(request.Label.Trim());
+        if (result.IsFailure)
+        {
+            logger.LogError("Failed to create Sonarr tag '{Label}': {Error}", request.Label, result.Error.Message);
+            return StatusCode(500, result.Error.Message);
+        }
+        return Ok(new SonarrTagDto(result.Value.Id, result.Value.Label));
+    }
 }
 
 public sealed record SonarrTagDto(int Id, string Label);
+public sealed record CreateSonarrTagRequest(string Label);
 
 public sealed record SonarrAddSeriesRequest(int TvdbId, string RootFolderPath, int QualityProfileId, string Monitor = "all", bool SeasonFolder = true, string? MalId = null)
 {
