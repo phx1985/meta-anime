@@ -42,14 +42,15 @@
 
     @if (isResult()) {
     <div class="lucky-result" role="region" [attr.aria-label]="'luckyPick.resultAriaLabel' | translate">
-      @if (coverImageUrl) {
-      <div class="lucky-result__backdrop" aria-hidden="true">
-        <img [src]="coverImageUrl" alt="" class="lucky-result__backdrop-img" />
-      </div>
-      }
+
       <div class="lucky-result__body">
         @if (coverImageUrl) {
-        <img [src]="coverImageUrl" [alt]="title" class="lucky-result__cover" />
+        <img
+          [src]="coverImageUrl"
+          [alt]="title"
+          class="lucky-result__cover lucky-result__cover--clickable"
+          (click)="toggleFullScreenImage()"
+        />
         } @else {
         <div class="lucky-result__cover lucky-result__cover--placeholder">
           {{ title.charAt(0) }}
@@ -203,3 +204,19 @@
 
   </div>
 </div>
+
+@if (isImageExpanded()) {
+  <div
+    class="lucky-cover-overlay"
+    (click)="isImageExpanded.set(false)"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Full-size poster"
+  >
+    <img
+      [src]="coverImageUrl"
+      [alt]="title"
+      class="lucky-cover-overlay__img"
+    />
+  </div>
+}
