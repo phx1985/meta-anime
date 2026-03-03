@@ -18,6 +18,7 @@
 
 | | Feature | Description |
 |--|---------|-------------|
+| 🕸️ | **Franchise Constellation** | Interactive graph of franchise relationships — explore prequels, sequels, and spin-offs with a zoomable, draggable canvas |
 | ⚡ | **Lightning-Fast Sync** | PostgreSQL bulk inserts keep your entire library synchronized in seconds, not minutes |
 | 🗺️ | **Kometa Mapping** | Cross-references AniDB, TVDB, TMDB, and IMDB IDs via Kometa's community mapping files for pinpoint-accurate matching across Plex, Sonarr, and MAL |
 | 🎲 | **Feeling Lucky** | Randomized "pick me something to watch" picker, filtered by your own preferences — finished series, plan-to-watch, with local files |
@@ -42,11 +43,12 @@ Simply drop the container, open your browser, and you will be greeted by the Set
 On first run, MetaAnime guides you through a **beautiful, step-by-step configuration wizard**:
 
 1. **Welcome** — choose your language
-2. **MyAnimeList** — connect via OAuth2 (Client ID + Client Secret) or skip
-3. **Plex** — enter your Plex Media Server URL and token, then pick your anime libraries from a live list
-4. **Sonarr** — enter your Sonarr URL and API key, select the tags that identify anime series
-5. **Kometa** — confirm or override the Kometa anime-ID mapping URL
-6. **Initial Sync** — run the first sync with live progress steps before entering the main app
+2. **Security** — optionally set an admin password to protect the app (skippable)
+3. **MyAnimeList** — connect via OAuth2 (Client ID + Client Secret) — required to proceed
+4. **Plex** — enter your Plex Media Server URL and token, then pick your anime libraries from a live list (skippable)
+5. **Sonarr** — enter your Sonarr URL and API key, select or create the tags that identify anime series (skippable)
+6. **Recap & Sync** — review your configured providers and kick off the first sync with live progress steps
+7. **Done** — you are in 🎉
 
 No config files to edit. No YAML to learn. Just click through the wizard and you are done.
 
