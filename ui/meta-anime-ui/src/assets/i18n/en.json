@@ -372,7 +372,8 @@
       },
       "Plex_AnimeSections": {
         "name": "Anime Library IDs",
-        "desc": "Comma-separated Plex library section IDs that contain anime."
+        "desc": "Comma-separated Plex library section IDs that contain anime.",
+        "loadBtn": "Load Libraries"
       },
       "Sonarr_Host": {
         "name": "Server URL",
@@ -384,7 +385,8 @@
       },
       "Sonarr_AnimeTags": {
         "name": "Anime Tags",
-        "desc": "Comma-separated Sonarr tag names used to identify anime series."
+        "desc": "Comma-separated Sonarr tag names used to identify anime series.",
+        "loadBtn": "Load Tags"
       },
       "Sonarr_RemoteUrl": {
         "name": "Remote URL",
@@ -475,7 +477,9 @@
       "addDefaultsGroup": "Add Series Defaults",
       "configureFirst": "Configure Sonarr Host URL and API Key above to unlock these defaults.",
       "connectionError": "Could not connect to Sonarr. Check your Host URL and API Key.",
-      "loadingOptions": "Loading Sonarr options…"
+      "loadingOptions": "Loading Sonarr options…",
+      "createTagPlaceholder": "New tag name...",
+      "createTagBtn": "Create"
     },
     "provider": {
       "enabled": "Enabled",
@@ -489,6 +493,28 @@
       "desc": "{{provider}} has been enabled. A manual sync is recommended to populate its data.",
       "dismiss": "Later",
       "goToSync": "Go to Sync"
+    },
+    "kometaWarn": {
+      "title": "Warning: Sensitive Setting",
+      "body": "Modifying the Kometa mapping file URL can break the connection between your Anime tracking and your Media server. Only proceed if you know exactly what you are doing.",
+      "proceed": "I Understand, Proceed"
+    },
+    "enrollment": {
+      "connected": "Connected",
+      "disconnect": "Disconnect",
+      "mal": {
+        "title": "MyAnimeList Account",
+        "desc": "Connect your MyAnimeList account to sync your watch list.",
+        "connect": "Connect MyAnimeList",
+        "connecting": "Completing authorization…",
+        "connectError": "Authorization failed. Please try connecting again."
+      },
+      "plex": {
+        "title": "Plex Account",
+        "desc": "Sign in with Plex to sync your anime library.",
+        "connect": "Sign in with Plex",
+        "waiting": "Waiting for Plex authorization in the opened tab..."
+      }
     }
   },
   "theme": {
@@ -664,7 +690,16 @@
       "action": "Go to Settings",
       "reloadFailed": "Token refreshed, but could not reload settings.",
       "reloadFailedMessage": "Please refresh the page to see the updated token status."
+    },
+    "malConnect": {
+      "successTitle": "MyAnimeList connected ✓",
+      "successMessage": "MyAnimeList connected successfully.",
+      "errorTitle": "MyAnimeList connection failed",
+      "errorMessage": "Authorization failed. Please try connecting again."
     }
+  },
+  "malCallback": {
+    "connecting": "Connecting to MyAnimeList..."
   },
   "toast": {
     "noSync": {
@@ -1034,5 +1069,111 @@
     "saveErrorMsg": "Could not update your MAL list. Please try again.",
     "openInMal": "Open in MyAnimeList",
     "scoreRequired": "— score required"
+  },
+  "helpModal": {
+    "mal": {
+      "title": "How to get your MAL Client ID & Secret",
+      "step1": "Go to myanimelist.net and sign in to your account.",
+      "step2prefix": "Navigate to Account → API (or go to ",
+      "step2suffix": ").",
+      "step3": "Click \"Create ID\", fill in the application details, and set the App Type to \"Web\".",
+      "step4": "Set the App Redirect URL to the following URL (copy exactly):",
+      "step5": "Copy both the \"Client ID\" and \"Client Secret\" shown on the page.",
+      "step6": "Paste the Client ID and Client Secret into the respective fields below.",
+      "copy": "Copy URL"
+    },
+    "sonarr": {
+      "title": "How to find your Sonarr API Key",
+      "step1": "Open Sonarr in your browser and go to Settings → General.",
+      "step2": "Your API Key is listed in the Security section on that page.",
+      "step3": "Copy the API Key and paste it into the field above."
+    }
+  },
+  "wizard": {
+    "next": "Next →",
+    "back": "Back",
+    "skip": "Skip this step",
+    "optional": "(Optional)",
+    "helpLabel": "Help",
+    "step1": {
+      "title": "Welcome to MetaAnime",
+      "desc": "Sync Sonarr, Plex, and MyAnimeList for centralized anime monitoring and management.",
+      "feature1": "Sync your MyAnimeList watch list automatically",
+      "feature2": "Track anime in Sonarr and Plex",
+      "feature3": "Browse seasonal releases and manage your library",
+      "getStarted": "Get Started"
+    },
+    "step2": {
+      "title": "Connect MyAnimeList",
+      "desc": "MyAnimeList is required to use MetaAnime. Connect your account to sync your anime list.",
+      "clientIdHint": "Connected via your MAL OAuth Client ID.",
+      "clientIdLabel": "OAuth Client ID",
+      "clientIdPlaceholder": "Paste your MAL Client ID here",
+      "clientSecretLabel": "OAuth Client Secret",
+      "clientSecretPlaceholder": "Paste your MAL Client Secret here",
+      "callbackUrlLabel": "App Redirect URL (copy this exactly into MAL)",
+      "callbackUrlCopy": "Copy",
+      "callbackUrlCopied": "Copied!",
+      "connectBtn": "Connect MyAnimeList",
+      "connectingBtn": "Redirecting...",
+      "connected": "MyAnimeList connected"
+    },
+    "step3": {
+      "title": "Connect Plex (Optional)",
+      "desc": "Link your Plex account to see which anime are in your library and which are missing.",
+      "disclaimer": "💡 For the best matching experience, create a dedicated Anime-only library in Plex.",
+      "serverUrlLabel": "Plex Server URL",
+      "serverUrlPlaceholder": "e.g. http://localhost:32400",
+      "connectBtn": "Sign in with Plex",
+      "connected": "Plex connected",
+      "waiting": "Waiting for Plex authorization in the opened tab…",
+      "loadingLibraries": "Loading Plex libraries…",
+      "selectLibraries": "Select your Anime libraries"
+    },
+    "step4": {
+      "title": "Connect Sonarr (Optional)",
+      "desc": "Configure Sonarr to track and manage anime series downloads.",
+      "disclaimer": "💡 Setting a specific Sonarr tag for anime is required to filter and identify series correctly.",
+      "localUrlLabel": "Local Server URL",
+      "localUrlPlaceholder": "e.g. http://localhost:8989",
+      "remoteUrlLabel": "Remote URL",
+      "remoteUrlPlaceholder": "e.g. https://sonarr.yourdomain.com",
+      "apiKeyLabel": "API Key",
+      "apiKeyPlaceholder": "Your Sonarr API key",
+      "testAndLoadTags": "Test Connection & Load Tags",
+      "selectTags": "Select your Anime tags",
+      "connectBtn": "Connect & Continue",
+      "newTagPlaceholder": "New tag name...",
+      "createTagBtn": "Create Tag",
+      "defaultsTitle": "Add Series Defaults",
+      "rootFolderLabel": "Root Folder",
+      "qualityProfileLabel": "Quality Profile",
+      "seasonFolderLabel": "Use Season Folder",
+      "monitorLabel": "Monitor",
+      "monitor": {
+        "all": "All Episodes",
+        "future": "Future",
+        "missing": "Missing",
+        "existing": "Existing",
+        "recent": "Recent",
+        "pilot": "Pilot",
+        "firstSeason": "First Season",
+        "lastSeason": "Last Season",
+        "none": "None"
+      }
+    },
+    "step5": {
+      "title": "Recap & Initial Sync",
+      "desc": "Your setup is looking great! Run a first sync to populate your library.",
+      "runSync": "Run First Sync",
+      "configured": "Configured",
+      "skipped": "Skipped"
+    },
+    "step6": {
+      "title": "All Set!",
+      "desc": "MetaAnime is ready to use. Your library will stay in sync automatically.",
+      "hint": "You can always change your settings later from the Settings page.",
+      "finish": "Go to Dashboard"
+    }
   }
 }

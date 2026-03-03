@@ -207,6 +207,142 @@
 
               <!-- Setting rows (always visible) -->
               <div class="settings-rows">
+                <!-- MAL Integration Card -->
+                @if (cat === 'mal') {
+                  <div class="integration-card">
+                    <div class="integration-card__info">
+                      <div class="integration-card__title">{{ 'settings.enrollment.mal.title' | translate }}</div>
+                      <div class="integration-card__desc">{{ 'settings.enrollment.mal.desc' | translate }}</div>
+                    </div>
+                    <div class="integration-card__action">
+                      @if (malConnected()) {
+                        <span class="enrollment-status" aria-live="polite">
+                          <span class="enrollment-status__dot" aria-hidden="true"></span>
+                          {{ 'settings.enrollment.connected' | translate }}
+                        </span>
+                        <button
+                          type="button"
+                          class="enrollment-disconnect-btn"
+                          (click)="disconnectMal()"
+                          [disabled]="malDisconnecting()"
+                        >
+                          @if (malDisconnecting()) {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                          }
+                          {{ 'settings.enrollment.disconnect' | translate }}
+                        </button>
+                      } @else {
+                        <button
+                          type="button"
+                          class="enrollment-connect-btn"
+                          (click)="connectMal()"
+                          [disabled]="malConnecting() || !malClientIdConfigured()"
+                        >
+                          @if (malConnecting()) {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                          }
+                          {{ 'settings.enrollment.mal.connect' | translate }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <!-- Plex Integration Card -->
+                @if (cat === 'plex') {
+                  <div class="integration-card">
+                    <div class="integration-card__info">
+                      <div class="integration-card__title">{{ 'settings.enrollment.plex.title' | translate }}</div>
+                      <div class="integration-card__desc">
+                        @if (plexConnecting()) {
+                          {{ 'settings.enrollment.plex.waiting' | translate }}
+                        } @else {
+                          {{ 'settings.enrollment.plex.desc' | translate }}
+                        }
+                      </div>
+                    </div>
+                    <div class="integration-card__action">
+                      @if (plexConnected()) {
+                        <span class="enrollment-status" aria-live="polite">
+                          <span class="enrollment-status__dot" aria-hidden="true"></span>
+                          {{ 'settings.enrollment.connected' | translate }}
+                        </span>
+                        <button
+                          type="button"
+                          class="enrollment-disconnect-btn"
+                          (click)="disconnectPlex()"
+                          [disabled]="plexDisconnecting()"
+                        >
+                          @if (plexDisconnecting()) {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                          }
+                          {{ 'settings.enrollment.disconnect' | translate }}
+                        </button>
+                      } @else {
+                        <button
+                          type="button"
+                          class="enrollment-connect-btn"
+                          (click)="connectPlex()"
+                          [disabled]="plexConnecting()"
+                        >
+                          @if (plexConnecting()) {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                          }
+                          {{ 'settings.enrollment.plex.connect' | translate }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+
+                @if (cat === 'plex') {
+                  <!-- ── Plex Anime Sections picker ─────────────────────────── -->
+                  <div class="pref-group picker-group">
+                    <div class="pref-group__header">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                      </svg>
+                      <span>{{ 'settings.fields.Plex_AnimeSections.name' | translate }}</span>
+                    </div>
+                    <div class="picker-group__desc">{{ 'settings.fields.Plex_AnimeSections.desc' | translate }}</div>
+                    @if (plexLibsLoading()) {
+                      <div class="picker-loading">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>{{ 'settings.fields.Plex_AnimeSections.loadBtn' | translate }}…</span>
+                      </div>
+                    }
+                    @if (plexLibsError() && !plexLibsLoading()) {
+                      <div class="sonarr-defaults-error">{{ plexLibsError() }}</div>
+                      <button type="button" class="picker-load-btn" (click)="loadPlexLibsForSettings()">
+                        ↺ Retry
+                      </button>
+                    }
+                    @if (plexLibsForSettings().length > 0) {
+                      <div class="picker-chip-grid">
+                        @for (lib of plexLibsForSettings(); track lib.key) {
+                          <button
+                            type="button"
+                            class="picker-chip"
+                            [class.picker-chip--selected]="isPlexSectionSelected(lib.key)"
+                            (click)="togglePlexSection(lib.key)"
+                          >{{ lib.title }}</button>
+                        }
+                      </div>
+                      <div class="picker-save-row">
+                        <button type="button" class="btn btn-sm btn-primary" [disabled]="isSaving('Plex:AnimeSections')" (click)="savePlexSections()">
+                          @if (isSaving('Plex:AnimeSections')) {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                          }
+                          {{ 'settings.save' | translate }}
+                        </button>
+                        @if (plexLibsSaved()) {
+                          <span class="badge-saved">&#10003; {{ 'settings.saved' | translate }}</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+
                   @for (setting of grouped()[cat]; track trackByKey($index, setting)) {
                   <div
                     class="setting-row"
@@ -223,6 +359,22 @@
                             role="img"
                             >🔒</span
                           >
+                        }
+                        @if (setting.key === 'MAL:ClientId') {
+                          <button
+                            type="button"
+                            class="setting-help-btn"
+                            (click)="malHelpOpen.set(true)"
+                            [attr.aria-label]="'helpModal.mal.title' | translate"
+                          >?</button>
+                        }
+                        @if (setting.key === 'Sonarr:ApiKey') {
+                          <button
+                            type="button"
+                            class="setting-help-btn"
+                            (click)="sonarrHelpOpen.set(true)"
+                            [attr.aria-label]="'helpModal.sonarr.title' | translate"
+                          >?</button>
                         }
                       </div>
                       <div class="setting-desc">
@@ -379,7 +531,7 @@
                             }
                             <button
                               class="btn btn-sm btn-outline-secondary edit-btn"
-                              (click)="toggleEdit(setting.key)"
+                              (click)="startEdit(setting.key)"
                             >
                               <svg
                                 width="12"
@@ -501,6 +653,72 @@
                   </div>
                 }
                 @if (cat === 'sonarr') {
+                  <!-- ── Sonarr Anime Tags picker ───────────────────────────── -->
+                  <div class="pref-group picker-group">
+                    <div class="pref-group__header">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+                      </svg>
+                      <span>{{ 'settings.fields.Sonarr_AnimeTags.name' | translate }}</span>
+                    </div>
+                    <div class="picker-group__desc">{{ 'settings.fields.Sonarr_AnimeTags.desc' | translate }}</div>
+                    @if (sonarrTagsForSettingsLoading()) {
+                      <div class="picker-loading">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>{{ 'settings.fields.Sonarr_AnimeTags.loadBtn' | translate }}…</span>
+                      </div>
+                    }
+                    @if (sonarrTagsForSettingsError() && !sonarrTagsForSettingsLoading()) {
+                      <div class="sonarr-defaults-error">{{ sonarrTagsForSettingsError() }}</div>
+                      <button type="button" class="picker-load-btn" (click)="loadSonarrTagsForSettings()">
+                        ↺ Retry
+                      </button>
+                    }
+                    @if (sonarrTagsForSettings().length > 0) {
+                      <div class="picker-chip-grid">
+                        @for (tag of sonarrTagsForSettings(); track tag.id) {
+                          <button
+                            type="button"
+                            class="picker-chip"
+                            [class.picker-chip--selected]="isSonarrTagSelectedInSettings(tag.label)"
+                            (click)="toggleSonarrTagInSettings(tag.label)"
+                          >{{ tag.label }}</button>
+                        }
+                      </div>
+                      <!-- Create new tag -->
+                      <div class="picker-create-row">
+                        <input
+                          type="text"
+                          class="picker-create-input"
+                          [value]="sonarrNewTagLabelSettings()"
+                          (input)="sonarrNewTagLabelSettings.set($any($event.target).value)"
+                          [placeholder]="'settings.sonarr.createTagPlaceholder' | translate"
+                        />
+                        <button
+                          type="button"
+                          class="picker-create-btn"
+                          [disabled]="sonarrCreatingTagSettings() || !sonarrNewTagLabelSettings().trim()"
+                          (click)="createSonarrTagInSettings()"
+                        >
+                          @if (sonarrCreatingTagSettings()) {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                          }
+                          {{ 'settings.sonarr.createTagBtn' | translate }}
+                        </button>
+                      </div>
+                      <div class="picker-save-row">
+                        <button type="button" class="btn btn-sm btn-primary" [disabled]="isSaving('Sonarr:AnimeTags')" (click)="saveSonarrTagsInSettings()">
+                          @if (isSaving('Sonarr:AnimeTags')) {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                          }
+                          {{ 'settings.save' | translate }}
+                        </button>
+                        @if (sonarrTagsSaved()) {
+                          <span class="badge-saved">&#10003; {{ 'settings.saved' | translate }}</span>
+                        }
+                      </div>
+                    }
+                  </div>
                   <!-- ── Add Series Defaults sub-group ──────────────────────── -->
                   <div
                     id="sonarr-add-defaults"
@@ -1092,3 +1310,48 @@
     </div>
   </div>
 }
+
+<!-- ── Kometa URL Edit Warning Dialog ─────────────────────────────────────── -->
+@if (kometaWarnKey()) {
+  <div class="sync-prompt-backdrop kometa-warn-backdrop"
+       [class.sync-prompt-backdrop--leaving]="kometaWarnLeaving()"
+       (click)="dismissKometaWarning()"
+       role="dialog" aria-modal="true"
+       [attr.aria-label]="'settings.kometaWarn.title' | translate">
+    <div class="sync-prompt-modal kometa-warn-modal"
+         [class.sync-prompt-modal--leaving]="kometaWarnLeaving()"
+         (click)="$event.stopPropagation()">
+      <div class="kometa-warn-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <h3 class="sync-prompt-title">{{ 'settings.kometaWarn.title' | translate }}</h3>
+      <p class="sync-prompt-desc">{{ 'settings.kometaWarn.body' | translate }}</p>
+      <div class="sync-prompt-actions">
+        <button type="button" class="sync-prompt-btn sync-prompt-btn--secondary" (click)="dismissKometaWarning()">
+          {{ 'common.cancel' | translate }}
+        </button>
+        <button type="button" class="sync-prompt-btn kometa-warn-proceed-btn" (click)="confirmKometaWarning()">
+          {{ 'settings.kometaWarn.proceed' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Help Modals ─────────────────────────────────────────────────────────── -->
+<app-help-modal
+  type="mal"
+  [visible]="malHelpOpen()"
+  [callbackUrl]="malCallbackUrl"
+  (closed)="malHelpOpen.set(false)"
+/>
+
+<app-help-modal
+  type="sonarr"
+  [visible]="sonarrHelpOpen()"
+  (closed)="sonarrHelpOpen.set(false)"
+/>

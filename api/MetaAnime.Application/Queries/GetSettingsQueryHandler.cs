@@ -2,11 +2,15 @@ using Mediator;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Repositories;
+using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Queries;
 
-public sealed class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRepository)
+public sealed class GetSettingsQueryHandler(
+    IPropertyBagRepository propertyBagRepository,
+    IMalTokenService malTokenService,
+    IPlexAuthService plexAuthService)
     : IRequestHandler<GetSettingsQuery, Result<IEnumerable<SettingDefinition>>>
 {
     public async ValueTask<Result<IEnumerable<SettingDefinition>>> Handle(GetSettingsQuery request, CancellationToken cancellationToken)
@@ -16,7 +20,10 @@ public sealed class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRe
             var allEntries = (await propertyBagRepository.GetAllAsync())
                 .ToDictionary(e => e.Key, e => e.Value);
 
-            var definitions = BuildDefinitions(allEntries);
+            var malConnected = await malTokenService.IsConnectedAsync();
+            var plexConnected = await plexAuthService.IsConnectedAsync();
+
+            var definitions = BuildDefinitions(allEntries, malConnected, plexConnected);
             return Result.Success(definitions);
         }
         catch (Exception ex)
@@ -25,7 +32,10 @@ public sealed class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRe
         }
     }
 
-    private static IEnumerable<SettingDefinition> BuildDefinitions(Dictionary<string, string> bag)
+    private static IEnumerable<SettingDefinition> BuildDefinitions(
+        Dictionary<string, string> bag,
+        bool malConnected,
+        bool plexConnected)
     {
         string Get(string key) => bag.TryGetValue(key, out var v) ? v : string.Empty;
 
@@ -34,8 +44,10 @@ public sealed class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRe
             // ── Plex ──────────────────────────────────────────────────────────
             new(SettingsKeys.PlexEnabled, "plex", false, false, Get(SettingsKeys.PlexEnabled), "boolean"),
             new(SettingsKeys.PlexHost, "plex", false, true, Get(SettingsKeys.PlexHost)),
-            new(SettingsKeys.PlexToken, "plex", true, true, Get(SettingsKeys.PlexToken)),
             new(SettingsKeys.PlexAnimeSections, "plex", false, true, Get(SettingsKeys.PlexAnimeSections)),
+            new(SettingsKeys.PlexMachineIdentifier, "plex", false, false, Get(SettingsKeys.PlexMachineIdentifier), "info"),
+            // Enrollment status (read-only, managed via /plex/auth endpoints)
+            new("Plex:Connected", "plex", false, false, plexConnected ? "true" : "false", "enrollment"),
 
             // ── Sonarr ────────────────────────────────────────────────────────
             new(SettingsKeys.SonarrEnabled, "sonarr", false, false, Get(SettingsKeys.SonarrEnabled), "boolean"),
@@ -52,10 +64,10 @@ public sealed class GetSettingsQueryHandler(IPropertyBagRepository propertyBagRe
                 SelectOptions: ["all", "future", "missing", "existing", "recent", "pilot", "firstSeason", "lastSeason", "monitorSpecials", "unmonitorSpecials", "none"]),
 
             // ── MyAnimeList ───────────────────────────────────────────────────
-            new(SettingsKeys.MalApiToken, "mal", true, false, Get(SettingsKeys.MalApiToken)),
-            new(SettingsKeys.MalClientId, "mal", false, false, Get(SettingsKeys.MalClientId)),
-            new(SettingsKeys.MalClientSecret, "mal", true, false, Get(SettingsKeys.MalClientSecret)),
-            new(SettingsKeys.MalRefreshToken, "mal", true, false, Get(SettingsKeys.MalRefreshToken)),
+            new(SettingsKeys.MalClientId, "mal", false, true, Get(SettingsKeys.MalClientId)),
+            new(SettingsKeys.MalClientSecret, "mal", true, true, Get(SettingsKeys.MalClientSecret)),
+            // Enrollment status (read-only, managed via /mal/auth endpoints)
+            new("MAL:Connected", "mal", false, false, malConnected ? "true" : "false", "enrollment"),
             new(SettingsKeys.MalTokenRefreshedAt, "mal", false, false, Get(SettingsKeys.MalTokenRefreshedAt), "info"),
 
             // ── Kometa ────────────────────────────────────────────────────────

@@ -372,7 +372,8 @@
       },
       "Plex_AnimeSections": {
         "name": "IDs des bibliothèques anime",
-        "desc": "IDs de sections de bibliothèque Plex contenant des animes, séparés par des virgules."
+        "desc": "IDs de sections de bibliothèque Plex contenant des animes, séparés par des virgules.",
+        "loadBtn": "Charger les bibliothèques"
       },
       "Sonarr_Host": {
         "name": "URL du serveur",
@@ -384,7 +385,8 @@
       },
       "Sonarr_AnimeTags": {
         "name": "Tags anime",
-        "desc": "Noms de tags Sonarr utilisés pour identifier les séries anime, séparés par des virgules."
+        "desc": "Noms de tags Sonarr utilisés pour identifier les séries anime, séparés par des virgules.",
+        "loadBtn": "Charger les tags"
       },
       "Sonarr_RemoteUrl": {
         "name": "URL distante",
@@ -475,7 +477,9 @@
       "addDefaultsGroup": "Paramètres par défaut (ajout)",
       "configureFirst": "Configurez l'URL du serveur Sonarr et la clé API ci-dessus pour débloquer ces paramètres.",
       "connectionError": "Impossible de se connecter à Sonarr. Vérifiez l'URL et la clé API.",
-      "loadingOptions": "Chargement des options Sonarr…"
+      "loadingOptions": "Chargement des options Sonarr…",
+      "createTagPlaceholder": "Nom du nouveau tag...",
+      "createTagBtn": "Créer"
     },
     "provider": {
       "enabled": "Activé",
@@ -489,6 +493,28 @@
       "desc": "{{provider}} a été activé. Une synchronisation manuelle est recommandée pour charger ses données.",
       "dismiss": "Plus tard",
       "goToSync": "Aller à la Synchronisation"
+    },
+    "kometaWarn": {
+      "title": "Attention : Paramètre Sensible",
+      "body": "Modifier l'URL du fichier de correspondance Kometa peut rompre la connexion entre votre suivi d'animés et votre serveur multimédia. Ne continuez que si vous savez exactement ce que vous faites.",
+      "proceed": "Je comprends, Continuer"
+    },
+    "enrollment": {
+      "connected": "Connecté",
+      "disconnect": "Déconnecter",
+      "mal": {
+        "title": "Compte MyAnimeList",
+        "desc": "Connectez votre compte MyAnimeList pour synchroniser votre liste de suivi.",
+        "connect": "Connecter MyAnimeList",
+        "connecting": "Finalisation de l'autorisation…",
+        "connectError": "Autorisation échouée. Veuillez réessayer."
+      },
+      "plex": {
+        "title": "Compte Plex",
+        "desc": "Connectez-vous avec Plex pour synchroniser votre bibliothèque anime.",
+        "connect": "Se connecter avec Plex",
+        "waiting": "En attente de l'autorisation Plex dans l'onglet ouvert..."
+      }
     }
   },
   "theme": {
@@ -664,7 +690,16 @@
       "action": "Aller aux Paramètres",
       "reloadFailed": "Jeton actualisé, mais impossible de recharger les paramètres.",
       "reloadFailedMessage": "Veuillez actualiser la page pour voir le statut du jeton mis à jour."
+    },
+    "malConnect": {
+      "successTitle": "MyAnimeList connecté ✓",
+      "successMessage": "MyAnimeList a été connecté avec succès.",
+      "errorTitle": "Échec de la connexion MyAnimeList",
+      "errorMessage": "L'autorisation a échoué. Veuillez réessayer."
     }
+  },
+  "malCallback": {
+    "connecting": "Connexion à MyAnimeList en cours..."
   },
   "toast": {
     "noSync": {
@@ -1034,5 +1069,111 @@
     "saveErrorMsg": "Impossible de mettre à jour votre liste MAL. Veuillez réessayer.",
     "openInMal": "Ouvrir dans MyAnimeList",
     "scoreRequired": "— note requise"
+  },
+  "helpModal": {
+    "mal": {
+      "title": "Comment obtenir votre Client ID & Secret MAL",
+      "step1": "Allez sur myanimelist.net et connectez-vous à votre compte.",
+      "step2prefix": "Accédez à Compte → API (ou allez sur ",
+      "step2suffix": ").",
+      "step3": "Cliquez sur \"Créer un ID\", remplissez les détails et sélectionnez le type d'application \"Web\".",
+      "step4": "Définissez l'URL de redirection sur l'URL suivante (copiez-la exactement) :",
+      "step5": "Copiez le \"Client ID\" et le \"Client Secret\" affichés sur la page.",
+      "step6": "Collez le Client ID et le Client Secret dans les champs correspondants.",
+      "copy": "Copier l'URL"
+    },
+    "sonarr": {
+      "title": "Comment trouver votre clé API Sonarr",
+      "step1": "Ouvrez Sonarr dans votre navigateur et allez dans Paramètres → Général.",
+      "step2": "Votre clé API se trouve dans la section Sécurité de cette page.",
+      "step3": "Copiez la clé API et collez-la dans le champ ci-dessus."
+    }
+  },
+  "wizard": {
+    "next": "Suivant →",
+    "back": "Retour",
+    "skip": "Ignorer cette étape",
+    "optional": "(Optionnel)",
+    "helpLabel": "Aide",
+    "step1": {
+      "title": "Bienvenue sur MetaAnime",
+      "desc": "Synchronisez Sonarr, Plex et MyAnimeList pour une gestion centralisée des animés.",
+      "feature1": "Synchronisez automatiquement votre liste MyAnimeList",
+      "feature2": "Suivez les animés dans Sonarr et Plex",
+      "feature3": "Parcourez les sorties saisonnières et gérez votre bibliothèque",
+      "getStarted": "Commencer"
+    },
+    "step2": {
+      "title": "Connecter MyAnimeList",
+      "desc": "MyAnimeList est requis pour utiliser MetaAnime. Connectez votre compte pour synchroniser votre liste.",
+      "clientIdHint": "Connecté via votre OAuth Client ID MAL.",
+      "clientIdLabel": "OAuth Client ID",
+      "clientIdPlaceholder": "Collez votre Client ID MAL ici",
+      "clientSecretLabel": "OAuth Client Secret",
+      "clientSecretPlaceholder": "Collez votre Client Secret MAL ici",
+      "callbackUrlLabel": "URL de redirection (à copier exactement dans MAL)",
+      "callbackUrlCopy": "Copier",
+      "callbackUrlCopied": "Copié !",
+      "connectBtn": "Connecter MyAnimeList",
+      "connectingBtn": "Redirection en cours...",
+      "connected": "MyAnimeList connecté"
+    },
+    "step3": {
+      "title": "Connecter Plex (Optionnel)",
+      "desc": "Liez votre compte Plex pour voir quels animés sont dans votre bibliothèque.",
+      "disclaimer": "💡 Pour une meilleure expérience, créez une bibliothèque Plex dédiée aux animés.",
+      "serverUrlLabel": "URL du serveur Plex",
+      "serverUrlPlaceholder": "ex. http://localhost:32400",
+      "connectBtn": "Se connecter avec Plex",
+      "connected": "Plex connecté",
+      "waiting": "En attente de l'autorisation Plex dans l'onglet ouvert…",
+      "loadingLibraries": "Chargement des bibliothèques Plex…",
+      "selectLibraries": "Sélectionnez vos bibliothèques Animé"
+    },
+    "step4": {
+      "title": "Connecter Sonarr (Optionnel)",
+      "desc": "Configurez Sonarr pour suivre et gérer les téléchargements de séries animées.",
+      "disclaimer": "💡 Il est recommandé de définir un tag Sonarr dédié aux animés pour filtrer correctement.",
+      "localUrlLabel": "URL locale du serveur",
+      "localUrlPlaceholder": "ex. http://localhost:8989",
+      "remoteUrlLabel": "URL distante",
+      "remoteUrlPlaceholder": "ex. https://sonarr.votredomaine.com",
+      "apiKeyLabel": "Clé API",
+      "apiKeyPlaceholder": "Votre clé API Sonarr",
+      "testAndLoadTags": "Tester la connexion & charger les tags",
+      "selectTags": "Sélectionnez vos tags Animé",
+      "connectBtn": "Connecter & Continuer",
+      "newTagPlaceholder": "Nom du nouveau tag...",
+      "createTagBtn": "Créer le tag",
+      "defaultsTitle": "Paramètres par défaut",
+      "rootFolderLabel": "Dossier racine",
+      "qualityProfileLabel": "Profil de qualité",
+      "seasonFolderLabel": "Dossier par saison",
+      "monitorLabel": "Surveiller",
+      "monitor": {
+        "all": "Tous les épisodes",
+        "future": "Futurs",
+        "missing": "Manquants",
+        "existing": "Existants",
+        "recent": "Récents",
+        "pilot": "Pilote",
+        "firstSeason": "Première saison",
+        "lastSeason": "Dernière saison",
+        "none": "Aucun"
+      }
+    },
+    "step5": {
+      "title": "Récapitulatif & Sync initiale",
+      "desc": "Votre configuration est prête ! Lancez une première synchronisation pour remplir votre bibliothèque.",
+      "runSync": "Lancer la première sync",
+      "configured": "Configuré",
+      "skipped": "Ignoré"
+    },
+    "step6": {
+      "title": "C'est prêt !",
+      "desc": "MetaAnime est prêt à l'emploi. Votre bibliothèque sera synchronisée automatiquement.",
+      "hint": "Vous pouvez toujours modifier vos paramètres depuis la page Paramètres.",
+      "finish": "Aller au tableau de bord"
+    }
   }
 }

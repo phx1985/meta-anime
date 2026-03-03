@@ -6,7 +6,7 @@ import { ApiConstants } from '../constants/api.constants';
 import { RuntimeConfigService } from './runtime-config.service';
 
 /** Ordered step keys matching the backend emission sequence */
-const STEP_KEYS = ['kometa', 'plex', 'mal', 'sonarr', 'matching'] as const;
+const STEP_KEYS = ['kometa', 'mal', 'plex', 'sonarr', 'matching'] as const;
 
 function makeInitialSteps(): SyncStep[] {
   return STEP_KEYS.map((key) => ({

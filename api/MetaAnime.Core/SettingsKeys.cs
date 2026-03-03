@@ -12,6 +12,7 @@ public static class SettingsKeys
     public const string PlexHost = "Plex:Host";
     public const string PlexToken = "Plex:Token";
     public const string PlexAnimeSections = "Plex:AnimeSections";
+    public const string PlexMachineIdentifier = "Plex:MachineIdentifier";
 
     // Sonarr
     public const string SonarrEnabled = "Sonarr:Enabled";
@@ -42,7 +43,17 @@ public static class SettingsKeys
     public const string AppSyncInterval = "App:SyncInterval";
     public const string AppTitleSimilarityThreshold = "App:TitleSimilarityThreshold";
 
+    // Internal token storage keys (managed exclusively by backend OAuth flows)
+    public const string MalAccessToken = "MAL_ACCESS_TOKEN";
+    public const string MalRefreshTokenInternal = "MAL_REFRESH_TOKEN";
+
     // System (not user-configurable)
     public const string LastSyncDate = "System:LastSyncDate";
     public const string MalTokenRefreshedAt = "System:MalTokenRefreshedAt";
+
+    // Internal OAuth state (temporary keys used during enrollment flows)
+    public const string MalOAuthState = "System:MalOAuthState";
+    public const string MalOAuthCodeVerifier = "System:MalOAuthCodeVerifier";
+    public const string MalOAuthRedirectUri = "System:MalOAuthRedirectUri";
+    public const string PlexOAuthPinId = "System:PlexOAuthPinId";
 }

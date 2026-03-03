@@ -1,4 +1,7 @@
-﻿using LukeHagar.PlexAPI.SDK;
+﻿using System.Net.Http.Headers;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using LukeHagar.PlexAPI.SDK;
 using LukeHagar.PlexAPI.SDK.Models.Requests;
 using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Repositories;
@@ -10,8 +13,21 @@ using Components = LukeHagar.PlexAPI.SDK.Models.Components;
 
 namespace MetaAnime.Infrastructure.Plex.Services;
 
-public sealed class PlexAnimeSourceService(IPropertyBagRepository propertyBagRepository) : IPlexAnimeSourceService<PlexMedia>
+public sealed class PlexAnimeSourceService(
+    IPropertyBagRepository propertyBagRepository) : IPlexAnimeSourceService<PlexMedia>
 {
+    /// <summary>
+    /// JSON options for Plex API responses.
+    /// Case-sensitive matching is intentional: Plex returns BOTH "guid" (lowercase string,
+    /// the item's own Plex URI) and "Guid" (PascalCase array of external IDs).
+    /// Case-insensitive mode causes a JsonException because both names collapse to the same
+    /// property and the deserializer tries to put the string value into List&lt;PlexGuid&gt;.
+    /// All DTOs use explicit [JsonPropertyName] attributes instead.
+    /// </summary>
+    private static readonly JsonSerializerOptions PlexJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = false,
+    };
 
     private static int[] ParseAnimeSections(string sections)
     {
@@ -32,7 +48,7 @@ public sealed class PlexAnimeSourceService(IPropertyBagRepository propertyBagRep
         }
     }
 
-    private async Task<(IPlexAPI plexAPI, int[] animeSections, bool isConfigured)> GetSettingsAsync()
+    private async Task<(IPlexAPI plexAPI, string host, string token, int[] animeSections, bool isConfigured)> GetSettingsAsync()
     {
         var hostEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexHost);
         var tokenEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexToken);
@@ -49,15 +65,15 @@ public sealed class PlexAnimeSourceService(IPropertyBagRepository propertyBagRep
         var plexAPI = PlexAPI.Builder()
             .WithToken(token)
             .WithServerUrl(host)
-            .WithClient(new SpeakeasyHttpClient2())
+            .WithClient(new SpeakeasyHttpClient2(token))
             .Build();
 
-        return (plexAPI, animeSections, isConfigured);
+        return (plexAPI, host, token, animeSections, isConfigured);
     }
 
     public async Task<Result<IList<PlexMedia>>> GetAllAsync()
     {
-        var (plexAPI, animeSections, isConfigured) = await GetSettingsAsync();
+        var (_, host, token, animeSections, isConfigured) = await GetSettingsAsync();
         var results = new List<PlexMedia>();
 
         if (!isConfigured)
@@ -65,35 +81,49 @@ public sealed class PlexAnimeSourceService(IPropertyBagRepository propertyBagRep
             return Result.Success<IList<PlexMedia>>(results);
         }
 
-        var showRequest = new ListContentRequest
+        // Use a dedicated handler + client with a generous timeout for large Plex library dumps.
+        // The global Aspire AddStandardResilienceHandler applies a 30-second total-request timeout
+        // to every IHttpClientFactory client; we bypass it here by creating the client directly.
+        using var handler = new SocketsHttpHandler
         {
-            SectionId = animeSections[0].ToString(),
-            MediaQuery = new Components.MediaQuery
-            {
-                Type = Components.MediaType.TvShow
-            },
-            XPlexContainerSize = null,
-            IncludeMeta = Components.BoolInt.True,
-            IncludeGuids = Components.BoolInt.True
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
         };
-        var res = await plexAPI.Content.ListContentAsync(showRequest);
-
-        res.RawResponse.EnsureSuccessStatusCode();
-
-        var mediaContainer = res.MediaContainerWithMetadata?.MediaContainer;
-        if (mediaContainer?.Metadata == null)
+        using var httpClient = new HttpClient(handler)
         {
-            return Result.Success<IList<PlexMedia>>(results);
-        }
+            Timeout = TimeSpan.FromMinutes(5),
+        };
+        httpClient.DefaultRequestHeaders.Add("X-Plex-Token", token);
+        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-        results.AddRange(mediaContainer.Metadata.Select(MapToPlexMedia));
+        foreach (var sectionId in animeSections)
+        {
+            var url = $"{host.TrimEnd('/')}/library/sections/{sectionId}/all?type=2&includeGuids=1";
+            try
+            {
+                // ResponseHeadersRead: start reading the JSON stream as soon as the first byte
+                // arrives — avoids buffering the entire payload into memory before deserialization.
+                using var httpResponse = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+                httpResponse.EnsureSuccessStatusCode();
+                await using var stream = await httpResponse.Content.ReadAsStreamAsync();
+                var sectionResponse = await JsonSerializer.DeserializeAsync<PlexSectionAllResponse>(stream, PlexJsonOptions);
+                var metadata = sectionResponse?.MediaContainer?.Metadata;
+                if (metadata == null) continue;
+
+                results.AddRange(metadata.Select(MapToPlexMedia));
+            }
+            catch
+            {
+                // Skip sections that fail to load rather than aborting the entire sync
+                continue;
+            }
+        }
 
         return Result.Success<IList<PlexMedia>>(results);
     }
 
     public async Task<Result<PlexMedia>> GetByIdAsync(string id)
     {
-        var (plexAPI, _, isConfigured) = await GetSettingsAsync();
+        var (plexAPI, _, _, _, isConfigured) = await GetSettingsAsync();
 
         if (!isConfigured)
         {
@@ -115,7 +145,13 @@ public sealed class PlexAnimeSourceService(IPropertyBagRepository propertyBagRep
 
     public async Task<Result<string>> GetMachineIdentifierAsync()
     {
-        var (plexAPI, _, isConfigured) = await GetSettingsAsync();
+        // Return the cached value immediately — avoids a live Plex SDK round-trip on every request
+        // and guarantees the ID is available even when the local Plex server is temporarily offline.
+        var cached = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexMachineIdentifier);
+        if (!string.IsNullOrWhiteSpace(cached?.Value))
+            return Result.Success(cached.Value);
+
+        var (plexAPI, _, _, _, isConfigured) = await GetSettingsAsync();
 
         if (!isConfigured)
         {
@@ -130,10 +166,57 @@ public sealed class PlexAnimeSourceService(IPropertyBagRepository propertyBagRep
             return Result.Failure<string>(new Error(Constants.Errors.MachineIdentifierNotFound, "Could not retrieve machine identifier."));
         }
 
+        // Persist so future calls (and the settings API) can read it without hitting Plex each time.
+        await propertyBagRepository.UpsertAsync(SettingsKeys.PlexMachineIdentifier, machineIdentifier);
         return Result.Success(machineIdentifier);
     }
 
+    public async Task<Result<IList<PlexLibraryInfo>>> GetLibrariesAsync()
+    {
+        var tokenEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexToken);
+        var hostEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexHost);
+
+        var token = tokenEntry?.Value ?? string.Empty;
+        var host = hostEntry?.Value ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(host))
+        {
+            return Result.Failure<IList<PlexLibraryInfo>>(new Error(Constants.Errors.NotConfigured, "Plex token or server URL is not configured."));
+        }
+
+        var plexAPI = PlexAPI.Builder()
+            .WithToken(token)
+            .WithServerUrl(host)
+            .WithClient(new SpeakeasyHttpClient2(token))
+            .Build();
+
+        var response = await plexAPI.Library.GetSectionsAsync();
+        var sections = response.Object?.MediaContainer?.Directory;
+
+        if (sections == null)
+        {
+            return Result.Success<IList<PlexLibraryInfo>>(new List<PlexLibraryInfo>());
+        }
+
+        var libraries = sections
+            .Select(s => new PlexLibraryInfo(s.Key ?? string.Empty, s.Title ?? string.Empty, s.Type.ToString() ?? string.Empty))
+            .ToList<PlexLibraryInfo>();
+
+        return Result.Success<IList<PlexLibraryInfo>>(libraries);
+    }
+
     #region Private Methods
+    private static PlexMedia MapToPlexMedia(PlexMetadataItem metadata)
+        => new()
+        {
+            Description = metadata.Summary ?? string.Empty,
+            Id = metadata.RatingKey ?? string.Empty,
+            Title = metadata.Title ?? string.Empty,
+            ExternalGuilds = metadata.ExternalGuids?.Select(g => g.Id ?? string.Empty).ToArray() ?? [],
+            ViewedLeafCount = metadata.ViewedLeafCount ?? 0,
+            LeafCount = metadata.LeafCount ?? 0
+        };
+
     private static PlexMedia MapToPlexMedia(Components.Metadata metadata)
         => new()
         {
@@ -144,5 +227,30 @@ public sealed class PlexAnimeSourceService(IPropertyBagRepository propertyBagRep
             ViewedLeafCount = metadata?.ViewedLeafCount ?? 0,
             LeafCount = metadata?.LeafCount ?? 0
         };
+    #endregion
+
+    #region Direct HTTP response DTOs
+    // Plex's JSON has a deliberate case collision:
+    //   "guid"  (lowercase) → a single string — the item's own internal Plex URI
+    //   "Guid"  (PascalCase) → an array of external-ID objects (tvdb://, anidb://, etc.)
+    // Every property uses an explicit [JsonPropertyName] so case-sensitive deserialisation
+    // maps each field to exactly the right C# property with no ambiguity.
+    private sealed record PlexSectionAllResponse(
+        [property: JsonPropertyName("MediaContainer")] PlexMetadataContainer? MediaContainer);
+
+    private sealed record PlexMetadataContainer(
+        [property: JsonPropertyName("Metadata")] List<PlexMetadataItem>? Metadata);
+
+    private sealed record PlexMetadataItem(
+        [property: JsonPropertyName("ratingKey")]       string? RatingKey,
+        [property: JsonPropertyName("title")]           string? Title,
+        [property: JsonPropertyName("summary")]         string? Summary,
+        [property: JsonPropertyName("guid")]            string? PlexInternalGuid,
+        [property: JsonPropertyName("Guid")]            List<PlexGuid>? ExternalGuids,
+        [property: JsonPropertyName("viewedLeafCount")] int? ViewedLeafCount,
+        [property: JsonPropertyName("leafCount")]       int? LeafCount);
+
+    private sealed record PlexGuid(
+        [property: JsonPropertyName("id")] string? Id);
     #endregion
 }

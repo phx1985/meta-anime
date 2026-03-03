@@ -128,6 +128,19 @@ public sealed class AnimeService(
             // SignalR messages so the UI can track per-provider progress.
             var sw = Stopwatch.StartNew();
 
+            // ── Step: MAL ────────────────────────────────────────────────────────
+            await NotifyAsync(progressNotifier, SyncStepKeys.Mal, SyncStepState.Running, 0, sw);
+            var malResult = await malAnimeSourceService.GetAllAsync();
+            if (malResult.IsFailure)
+            {
+                logger.LogError("MAL sync failed: {ErrorCode} — {ErrorMessage}", malResult.Error.Code, malResult.Error.Message);
+                await NotifyAsync(progressNotifier, SyncStepKeys.Mal, SyncStepState.Error, null, sw, malResult.Error.Message);
+                return Result.Failure<IEnumerable<Anime>>(malResult.Error);
+            }
+            logger.LogInformation("MAL sync fetched {Count} anime in {ElapsedMs}ms", malResult.Value.Count, sw.ElapsedMilliseconds);
+            await NotifyAsync(progressNotifier, SyncStepKeys.Mal, SyncStepState.Done, 100, sw);
+            sw.Restart();
+
             // ── Step: Plex ───────────────────────────────────────────────────────
             IList<PlexMedia> plexAnimes = [];
             if (plexEnabled)
@@ -145,19 +158,6 @@ public sealed class AnimeService(
                 await NotifyAsync(progressNotifier, SyncStepKeys.Plex, SyncStepState.Done, 100, sw);
                 sw.Restart();
             }
-
-            // ── Step: MAL ────────────────────────────────────────────────────────
-            await NotifyAsync(progressNotifier, SyncStepKeys.Mal, SyncStepState.Running, 0, sw);
-            var malResult = await malAnimeSourceService.GetAllAsync();
-            if (malResult.IsFailure)
-            {
-                logger.LogError("MAL sync failed: {ErrorCode} — {ErrorMessage}", malResult.Error.Code, malResult.Error.Message);
-                await NotifyAsync(progressNotifier, SyncStepKeys.Mal, SyncStepState.Error, null, sw, malResult.Error.Message);
-                return Result.Failure<IEnumerable<Anime>>(malResult.Error);
-            }
-            logger.LogInformation("MAL sync fetched {Count} anime in {ElapsedMs}ms", malResult.Value.Count, sw.ElapsedMilliseconds);
-            await NotifyAsync(progressNotifier, SyncStepKeys.Mal, SyncStepState.Done, 100, sw);
-            sw.Restart();
 
             // ── Step: Sonarr ─────────────────────────────────────────────────────
             IList<SonarrSeries> sonarrAnimes = [];

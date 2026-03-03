@@ -1448,4 +1448,10 @@ public sealed class AnimeMediatorService(
         ));
     }
 
+    public Task<Result<IList<SonarrTagInfo>>> GetAllSonarrTagsAsync()
+        => sonarrAnimeSource.GetAllTagsAsync();
+
+    public Task<Result<SonarrTagInfo>> CreateSonarrTagAsync(string label)
+        => sonarrAnimeSource.CreateTagAsync(label);
+
 }
