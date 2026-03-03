@@ -71,6 +71,8 @@ export class App implements OnInit, AfterViewInit {
     { code: 'en', label: 'English' },
     { code: 'fr', label: 'Français' },
   ];
+  /** Blob indices for the global bokeh background (20 particles) */
+  protected readonly bokehBlobs = Array.from({ length: 20 }, (_, i) => i + 1);
   /** True while the language dropdown is open */
   protected langDropdownOpen = signal<boolean>(false);
 

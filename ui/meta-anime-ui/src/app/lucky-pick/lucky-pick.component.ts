@@ -47,6 +47,7 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
 
   protected state = signal<LuckyState>('idle');
   protected result = signal<AnimeDetailsResponse | null>(null);
+  protected isImageExpanded = signal(false);
 
   /** Randomly-selected humorous button phrases, rerolled on every spin */
   protected plexPhrase      = signal(this.pickPhrase('luckyPick.phrases.plex'));
@@ -94,6 +95,10 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
 
   protected get coverImageUrl(): string | undefined {
     return this.anime?.malAnimes?.[0]?.coverImageUrl;
+  }
+
+  protected toggleFullScreenImage(): void {
+    this.isImageExpanded.update(v => !v);
   }
 
   protected get title(): string {
