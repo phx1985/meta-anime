@@ -29,12 +29,12 @@
           [class.settings-mobile-subnav__btn--provider-disabled]="!isProviderEnabled(cat)"
           (click)="scrollToSection(cat)"
           [attr.aria-label]="
-            cat !== 'sync'
-              ? ('settings.category.' + cat + '.name' | translate)
-              : ('settings.sync.card.title' | translate)
+            cat === 'sync' ? ('settings.sync.card.title' | translate)
+              : cat === 'security' ? ('settings.security.title' | translate)
+              : ('settings.category.' + cat + '.name' | translate)
           "
         >
-          @if (cat !== 'sync') {
+          @if (cat !== 'sync' && cat !== 'security') {
             <img
               [src]="providerImages[cat]"
               [alt]="cat"
@@ -43,7 +43,7 @@
               class="settings-mobile-subnav__icon"
               aria-hidden="true"
             />
-          } @else {
+          } @else if (cat === 'sync') {
             <svg
               width="18"
               height="18"
@@ -56,6 +56,19 @@
               <polyline points="1 4 1 10 7 10" />
               <polyline points="23 20 23 14 17 14" />
               <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+            </svg>
+          } @else {
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
           }
         </button>
@@ -76,7 +89,7 @@
                 [class.sidenav-btn--provider-disabled]="!isProviderEnabled(cat)"
                 (click)="scrollToSection(cat)"
               >
-                @if (cat !== 'sync') {
+                @if (cat !== 'sync' && cat !== 'security') {
                   <img
                     [src]="providerImages[cat]"
                     [alt]="cat"
@@ -85,7 +98,7 @@
                     class="sidenav-icon"
                     aria-hidden="true"
                   />
-                } @else {
+                } @else if (cat === 'sync') {
                   <svg
                     width="16"
                     height="16"
@@ -100,13 +113,29 @@
                     <polyline points="23 20 23 14 17 14" />
                     <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
                   </svg>
+                } @else {
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    class="sidenav-icon"
+                    aria-hidden="true"
+                  >
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
                 }
 
                 <span class="sidenav-label">
-                  @if (cat !== 'sync') {
-                    {{ 'settings.category.' + cat + '.name' | translate }}
-                  } @else {
+                  @if (cat === 'sync') {
                     {{ 'settings.sync.card.title' | translate }}
+                  } @else if (cat === 'security') {
+                    {{ 'settings.security.title' | translate }}
+                  } @else {
+                    {{ 'settings.category.' + cat + '.name' | translate }}
                   }
                 </span>
 
@@ -1266,6 +1295,298 @@
           </div>
         </div>
         <!-- /sync-card -->
+
+        <!-- ── Security Card ──────────────────────────────────────────────────── -->
+        <div
+          class="settings-card mb-4"
+          id="section-security"
+          [class.settings-card--highlighted]="highlighted() === 'security'"
+          [class.settings-card--dimmed]="highlighted() !== null && highlighted() !== 'security'"
+        >
+          <div class="settings-card-header">
+            <div class="provider-logo" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <div class="category-header-text">
+              <h2 class="category-title mb-0">{{ 'settings.security.title' | translate }}</h2>
+              <p class="category-desc mb-0">{{ 'settings.security.subtitle' | translate }}</p>
+            </div>
+          </div>
+
+          <div class="settings-rows">
+            @if (securityLoading()) {
+              <div class="d-flex justify-content-center py-3">
+                <div class="spinner-border spinner-border-sm" role="status"></div>
+              </div>
+            } @else {
+              <!-- Status row -->
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-name">
+                    @if (securityEnabled()) {
+                      🔒 {{ 'settings.security.enabledLabel' | translate }}
+                    } @else {
+                      🔓 {{ 'settings.security.disabledLabel' | translate }}
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <!-- Success / Error feedback -->
+              @if (securitySuccess()) {
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <span class="badge-saved">&#10003; {{ securitySuccess() }}</span>
+                  </div>
+                </div>
+              }
+              @if (securityError()) {
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <span class="text-danger small">{{ securityError() }}</span>
+                  </div>
+                </div>
+              }
+
+              <!-- Disable section (only when enabled) -->
+              @if (securityEnabled()) {
+                @if (!showDisableForm()) {
+                  <div class="setting-row">
+                    <div class="setting-info">
+                      <div class="setting-name">{{ 'settings.security.disableToggleLabel' | translate }}</div>
+                    </div>
+                    <div class="setting-value-area">
+                      <div class="display-actions">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-danger"
+                          (click)="toggleDisableForm()"
+                        >
+                          {{ 'settings.security.disableToggleLabel' | translate }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="setting-row setting-row--editing">
+                    <div class="setting-info">
+                      <div class="setting-name">{{ 'settings.security.disableConfirmLabel' | translate }}</div>
+                    </div>
+                    <div class="setting-value-area">
+                      <div class="edit-form">
+                        <div class="input-with-eye">
+                          <input
+                            type="password"
+                            class="form-control form-control-sm setting-input"
+                            [placeholder]="'settings.security.disableConfirmPlaceholder' | translate"
+                            [value]="disablePasswordInput()"
+                            (input)="disablePasswordInput.set($any($event.target).value)"
+                          />
+                        </div>
+                        <div class="edit-actions">
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-danger"
+                            [disabled]="securitySaving() || !disablePasswordInput()"
+                            (click)="disableAuth()"
+                          >
+                            @if (securitySaving()) {
+                              <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            }
+                            {{ 'settings.security.disableBtn' | translate }}
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary"
+                            (click)="toggleDisableForm()"
+                            [disabled]="securitySaving()"
+                          >
+                            {{ 'settings.cancel' | translate }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+
+                <!-- Change password group -->
+                <div class="pref-group">
+                  <div class="pref-group__header">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <span>{{ 'settings.security.changePasswordTitle' | translate }}</span>
+                  </div>
+                  <form [formGroup]="changePwForm" (ngSubmit)="changePassword()" novalidate>
+                    <!-- Current password -->
+                    <div class="setting-row">
+                      <div class="setting-info">
+                        <div class="setting-name">{{ 'settings.security.currentPasswordLabel' | translate }}</div>
+                      </div>
+                      <div class="setting-value-area">
+                        <div class="input-with-eye">
+                          <input
+                            type="password"
+                            class="form-control form-control-sm setting-input"
+                            formControlName="currentPassword"
+                            [placeholder]="'settings.security.currentPasswordPlaceholder' | translate"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <!-- New password -->
+                    <div class="setting-row">
+                      <div class="setting-info">
+                        <div class="setting-name">{{ 'settings.security.newPasswordLabel' | translate }}</div>
+                      </div>
+                      <div class="setting-value-area">
+                        <div class="input-with-eye">
+                          <input
+                            type="password"
+                            class="form-control form-control-sm setting-input"
+                            formControlName="newPassword"
+                            [placeholder]="'settings.security.newPasswordPlaceholder' | translate"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Confirm password -->
+                    <div class="setting-row">
+                      <div class="setting-info">
+                        <div class="setting-name">{{ 'settings.security.confirmPasswordLabel' | translate }}</div>
+                      </div>
+                      <div class="setting-value-area">
+                        <div class="input-with-eye">
+                          <input
+                            type="password"
+                            class="form-control form-control-sm setting-input"
+                            formControlName="confirmPassword"
+                            [placeholder]="'settings.security.confirmPasswordPlaceholder' | translate"
+                          />
+                        </div>
+                        @if (changePwForm.hasError('mismatch') && changePwForm.get('confirmPassword')?.dirty) {
+                          <div class="form-text text-danger">{{ 'settings.security.passwordMismatch' | translate }}</div>
+                        }
+                      </div>
+                    </div>
+                    <!-- Submit -->
+                    <div class="setting-row">
+                      <div class="setting-info"></div>
+                      <div class="setting-value-area">
+                        <div class="edit-actions">
+                          <button
+                            type="submit"
+                            class="btn btn-sm btn-primary"
+                            [disabled]="changePwForm.invalid || securitySaving()"
+                          >
+                            @if (securitySaving()) {
+                              <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            }
+                            {{ 'settings.security.changeBtn' | translate }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              } @else {
+                <!-- Re-enable section (only when disabled) -->
+                @if (!showEnableForm()) {
+                  <div class="setting-row">
+                    <div class="setting-info">
+                      <div class="setting-name">{{ 'settings.security.enableToggleLabel' | translate }}</div>
+                    </div>
+                    <div class="setting-value-area">
+                      <div class="display-actions">
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-primary"
+                          (click)="toggleEnableForm()"
+                        >
+                          {{ 'settings.security.enableToggleLabel' | translate }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="pref-group">
+                    <div class="pref-group__header">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                      <span>{{ 'settings.security.enablePasswordTitle' | translate }}</span>
+                    </div>
+                    <div class="setting-row">
+                      <div class="setting-info">
+                        <div class="setting-name">{{ 'settings.security.newPasswordLabel' | translate }}</div>
+                      </div>
+                      <div class="setting-value-area">
+                        <div class="input-with-eye">
+                          <input
+                            type="password"
+                            class="form-control form-control-sm setting-input"
+                            [placeholder]="'settings.security.newPasswordPlaceholder' | translate"
+                            [value]="enablePasswordInput()"
+                            (input)="enablePasswordInput.set($any($event.target).value)"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div class="setting-row">
+                      <div class="setting-info">
+                        <div class="setting-name">{{ 'settings.security.confirmPasswordLabel' | translate }}</div>
+                      </div>
+                      <div class="setting-value-area">
+                        <div class="input-with-eye">
+                          <input
+                            type="password"
+                            class="form-control form-control-sm setting-input"
+                            [placeholder]="'settings.security.confirmPasswordPlaceholder' | translate"
+                            [value]="enablePasswordConfirm()"
+                            (input)="enablePasswordConfirm.set($any($event.target).value)"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div class="setting-row">
+                      <div class="setting-info"></div>
+                      <div class="setting-value-area">
+                        <div class="edit-actions">
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-primary"
+                            [disabled]="securitySaving() || !enablePasswordInput()"
+                            (click)="enableAuth()"
+                          >
+                            @if (securitySaving()) {
+                              <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            }
+                            {{ 'settings.security.enableBtn' | translate }}
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary"
+                            (click)="toggleEnableForm()"
+                            [disabled]="securitySaving()"
+                          >
+                            {{ 'settings.cancel' | translate }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                }
+              }
+            }
+          </div>
+        </div>
+        <!-- /security-card -->
+
       </div>
       <!-- /settings-main -->
     </div>

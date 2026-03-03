@@ -9,9 +9,9 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { trigger, transition, style, animate, query, group } from '@angular/animations';
 import confetti from 'canvas-confetti';
@@ -23,6 +23,7 @@ import { NotificationService } from '../services/notification.service';
 import { SonarrService, SonarrTag } from '../services/sonarr.service';
 import { HelpModalComponent } from '../help-modal/help-modal.component';
 import { ProviderStateService } from '../services/provider-state.service';
+import { AuthService } from '../services/auth.service';
 import { SyncStep } from '../models/sync-progress.models';
 import { fmtElapsed } from '../utils/format.utils';
 import { filter } from 'rxjs/operators';
@@ -68,12 +69,26 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   private notifService = inject(NotificationService);
   private sonarrService = inject(SonarrService);
   private providerState = inject(ProviderStateService);
+  private authService = inject(AuthService);
+  private translate = inject(TranslateService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
 
+  currentLang = signal<string>(this.translate.currentLang ?? 'en');
+
+  readonly availableLanguages: ReadonlyArray<{ code: string; label: string }> = [
+    { code: 'en', label: 'English' },
+    { code: 'fr', label: 'Français' },
+  ];
+
+  switchLanguage(code: string): void {
+    this.currentLang.set(code);
+    this.translate.use(code);
+  }
+
   readonly fmtElapsed = fmtElapsed;
-  readonly TOTAL_STEPS = 6;
+  readonly TOTAL_STEPS = 7;
   readonly malCallbackUrl = window.location.origin + '/auth/mal/callback';
 
   step = signal(1);
@@ -81,6 +96,18 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
 
   // Loading state
   initializing = signal(true);
+
+  // Security (step 2)
+  securityForm: FormGroup = this.fb.group(
+    {
+      enableAuth: [false],
+      password: [''],
+      confirmPassword: [''],
+    },
+    { validators: this.passwordMatchValidator },
+  );
+  securitySaving = signal(false);
+  securityError = signal('');
 
   // MAL state
   malConnected = signal(false);
@@ -148,7 +175,7 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
 
   constructor() {
     effect(() => {
-      if (this.step() === 6) {
+      if (this.step() === 7) {
         this.launchFireworks();
       }
     });
@@ -206,8 +233,8 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
         next: (s) => {
           this.malConnected.set(s.connected);
           if (s.connected && wizardActive) {
-            this.step.set(3);
-            this.animStep.set(3);
+            this.step.set(4);
+            this.animStep.set(4);
             this.loadPlexStatus();
           }
           this.initializing.set(false);
@@ -244,6 +271,34 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   goToStep(n: number): void { this.step.set(n); this.animStep.set(n); }
   nextStep(): void { const n = this.step() + 1; this.step.set(n); this.animStep.set(n); }
   prevStep(): void { const p = Math.max(1, this.step() - 1); this.step.set(p); this.animStep.set(p); }
+
+  // Security (step 2)
+  private passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
+    const pw = group.get('password')?.value as string;
+    const cpw = group.get('confirmPassword')?.value as string;
+    const enabled = group.get('enableAuth')?.value as boolean;
+    if (!enabled) return null;
+    return pw === cpw ? null : { passwordMismatch: true };
+  }
+
+  saveSecurityAndNext(): void {
+    const { enableAuth, password } = this.securityForm.value as { enableAuth: boolean; password: string };
+    if (!enableAuth) { this.nextStep(); return; }
+
+    if (this.securityForm.invalid) return;
+
+    this.securitySaving.set(true);
+    this.securityError.set('');
+    this.authService.setupPassword(password)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => { this.securitySaving.set(false); this.nextStep(); },
+        error: (err: unknown) => {
+          this.securitySaving.set(false);
+          this.securityError.set(err instanceof HttpErrorResponse ? (err.error?.message ?? err.message) : 'Failed to set password');
+        },
+      });
+  }
 
   // MAL
   connectMal(): void {

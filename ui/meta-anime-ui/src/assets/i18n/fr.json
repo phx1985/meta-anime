@@ -16,7 +16,8 @@
       "goToSettings": "Aller aux Paramètres",
       "close": "Fermer"
     },
-    "menu": "Menu"
+    "menu": "Menu",
+    "logout": "Se déconnecter"
   },
   "home": {
     "title": "Meta Anime",
@@ -515,6 +516,33 @@
         "connect": "Se connecter avec Plex",
         "waiting": "En attente de l'autorisation Plex dans l'onglet ouvert..."
       }
+    },
+    "security": {
+      "title": "Sécurité",
+      "subtitle": "Gérez la protection par mot de passe administrateur.",
+      "enabledLabel": "La protection par mot de passe est activée",
+      "disabledLabel": "La protection par mot de passe est désactivée",
+      "enableToggleLabel": "Activer le mot de passe administrateur",
+      "disableToggleLabel": "Désactiver le mot de passe administrateur",
+      "enablePasswordTitle": "Activer la protection par mot de passe",
+      "enableBtn": "Activer la protection",
+      "successEnabled": "Protection par mot de passe activée.",
+      "disableConfirmLabel": "Mot de passe actuel (requis pour désactiver)",
+      "disableConfirmPlaceholder": "Entrez votre mot de passe actuel",
+      "disableBtn": "Désactiver la protection",
+      "changePasswordTitle": "Changer le mot de passe",
+      "currentPasswordLabel": "Mot de passe actuel",
+      "currentPasswordPlaceholder": "Entrez le mot de passe actuel",
+      "newPasswordLabel": "Nouveau mot de passe",
+      "newPasswordPlaceholder": "Entrez un nouveau mot de passe",
+      "confirmPasswordLabel": "Confirmer le nouveau mot de passe",
+      "confirmPasswordPlaceholder": "Ré-entrez le nouveau mot de passe",
+      "changeBtn": "Mettre à jour le mot de passe",
+      "passwordMismatch": "Les mots de passe ne correspondent pas.",
+      "successDisabled": "Protection par mot de passe désactivée.",
+      "successChanged": "Mot de passe mis à jour avec succès.",
+      "errorWrong": "Le mot de passe actuel est incorrect.",
+      "errorGeneric": "Une erreur est survenue. Veuillez réessayer."
     }
   },
   "theme": {
@@ -1104,6 +1132,16 @@
       "getStarted": "Commencer"
     },
     "step2": {
+      "title": "Mot de passe administrateur (Optionnel)",
+      "desc": "Protégez MetaAnime avec un mot de passe. Vous pouvez ignorer cette étape et l'activer plus tard.",
+      "enableLabel": "Activer le mot de passe administrateur",
+      "passwordLabel": "Mot de passe",
+      "passwordPlaceholder": "Entrez un mot de passe fort",
+      "confirmLabel": "Confirmer le mot de passe",
+      "confirmPlaceholder": "Ré-entrez votre mot de passe",
+      "passwordMismatch": "Les mots de passe ne correspondent pas."
+    },
+    "step3": {
       "title": "Connecter MyAnimeList",
       "desc": "MyAnimeList est requis pour utiliser MetaAnime. Connectez votre compte pour synchroniser votre liste.",
       "clientIdHint": "Connecté via votre OAuth Client ID MAL.",
@@ -1118,7 +1156,7 @@
       "connectingBtn": "Redirection en cours...",
       "connected": "MyAnimeList connecté"
     },
-    "step3": {
+    "step4": {
       "title": "Connecter Plex (Optionnel)",
       "desc": "Liez votre compte Plex pour voir quels animés sont dans votre bibliothèque.",
       "disclaimer": "💡 Pour une meilleure expérience, créez une bibliothèque Plex dédiée aux animés.",
@@ -1130,7 +1168,7 @@
       "loadingLibraries": "Chargement des bibliothèques Plex…",
       "selectLibraries": "Sélectionnez vos bibliothèques Animé"
     },
-    "step4": {
+    "step5": {
       "title": "Connecter Sonarr (Optionnel)",
       "desc": "Configurez Sonarr pour suivre et gérer les téléchargements de séries animées.",
       "disclaimer": "💡 Il est recommandé de définir un tag Sonarr dédié aux animés pour filtrer correctement.",
@@ -1162,18 +1200,82 @@
         "none": "Aucun"
       }
     },
-    "step5": {
+    "step6": {
       "title": "Récapitulatif & Sync initiale",
       "desc": "Votre configuration est prête ! Lancez une première synchronisation pour remplir votre bibliothèque.",
       "runSync": "Lancer la première sync",
       "configured": "Configuré",
       "skipped": "Ignoré"
     },
-    "step6": {
+    "step7": {
       "title": "C'est prêt !",
       "desc": "MetaAnime est prêt à l'emploi. Votre bibliothèque sera synchronisée automatiquement.",
       "hint": "Vous pouvez toujours modifier vos paramètres depuis la page Paramètres.",
       "finish": "Aller au tableau de bord"
     }
+  },
+  "login": {
+    "title": "MetaAnime",
+    "subtitle": "Accès administrateur requis",
+    "passwordLabel": "Mot de passe",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe",
+    "submit": "Se connecter",
+    "errorGeneric": "Une erreur est survenue. Veuillez réessayer.",
+    "forgotTitle": "Mot de passe oublié ?",
+    "forgotDesc": "Bloqué dehors ? Ouvrez votre appsettings.json ou les variables d'environnement Docker, définissez le flag ci-dessous sur true, et redémarrez le serveur MetaAnime pour réinitialiser le mot de passe.",
+    "wrongPasswordMessages": [
+      "Beau essai, hacker.",
+      "Vous avez tapé ça avec vos coudes ?",
+      "Accès refusé. La police de l'anime a été dépêchée.",
+      "Vos compétences au clavier sont aussi mauvaises que les CGI de bas étage.",
+      "Mot de passe incorrect. Regardez quelques épisodes de remplissage et réessayez.",
+      "Non. Essayez la Force. Ou simplement le bon mot de passe.",
+      "Mauvais mot de passe. Avez-vous essayé de regarder plus d'isekai pour l'inspiration ?",
+      "Ce n'est pas ça. Même le clone d'ombre de Naruto ne vous aiderait pas ici.",
+      "Accès refusé. Votre vitesse de frappe rivalise avec un paresseux regardant un épisode récapitulatif.",
+      "Ce mot de passe est aussi faux qu'un anime doublé.",
+      "Incorrect. Peut-être que le mot de passe est dans un autre château.",
+      "401 Non autorisé. Tout comme cet arc de remplissage que personne n'avait demandé.",
+      "Mauvais. Même le personnage secondaire le plus faible ferait mieux.",
+      "Avez-vous oublié votre mot de passe ou testez-vous simplement ma patience ?",
+      "Ce n'est pas le mot de passe. Comme les fois précédentes. Et celles d'avant.",
+      "Refusé. Le boss final rit de votre tentative.",
+      "Non. La clé de ce château nécessite un vrai effort.",
+      "Même Goku ne pourrait pas passer avec ce mauvais mot de passe.",
+      "Accès bloqué. Vous avez déclenché le drapeau de mort.",
+      "Mauvaise réponse. Le conseil a délibéré et rejeté votre candidature.",
+      "Ce mot de passe a l'énergie d'un épisode de plage slice-of-life.",
+      "Non. Retournez dans le donjon tutoriel.",
+      "Accès refusé. Votre statistique INT est trop faible.",
+      "Ce n'est pas ça. Même l'arc d'entraînement ne vous a pas préparé à ça.",
+      "Mauvais mot de passe. Le pare-feu tsundere dit : 'C-c'est pas comme si je te laissais entrer !'",
+      "Incorrect. Votre tentative a été ajoutée à la compilation cringe.",
+      "Refusé. Vous ne passerez pas — pas sans le bon mot de passe.",
+      "Ce mot de passe a été exilé dans le royaume des ombres.",
+      "Erreur 401 : Votre mot de passe était plus faible qu'un méchant de remplissage.",
+      "Non. La protection fait son travail. Contrairement à vous.",
+      "Incorrect. Je m'attendais à mieux de votre part.",
+      "Accès révoqué. Le conseil étudiant a voté à l'unanimité contre vous.",
+      "Mauvais. Même le personnage comique finit par avoir raison.",
+      "Ce mot de passe a l'armure de l'intrigue d'un personnage qui meurt à l'épisode 1.",
+      "Accès refusé. Veuillez investir plus de points dans 'Frappe au clavier'.",
+      "Non. Ce n'est même pas ma forme finale — et vous échouez déjà.",
+      "Mauvais mot de passe. Le protagoniste ne ferait jamais cette erreur.",
+      "Refusé. Vous avez débloqué la route 'Mauvaise fin'.",
+      "Incorrect. Consultez peut-être le sage mentor pour des conseils.",
+      "Ce mot de passe a déclenché un échec critique.",
+      "Accès refusé. Votre tentative a l'énergie d'un épisode récapitulatif.",
+      "Mauvais. La fée des mots de passe pleure pour vous.",
+      "Non. Zéro sur dix. Ne voudrais pas authentifier à nouveau.",
+      "Refusé. Cette zone est gardée par un mot de passe de rang S.",
+      "Incorrect. Le sceau de ce donjon reste intact.",
+      "Ce mot de passe a été propulsé dans le multivers.",
+      "Mauvais. Même le protagoniste du harem comprend plus vite.",
+      "Accès refusé. Votre chakra de mot de passe est insuffisant.",
+      "Non. Les boules de dragon ne peuvent pas vous aider maintenant.",
+      "Incorrect. L'univers lui-même refuse votre tentative."
+    ]
   }
 }

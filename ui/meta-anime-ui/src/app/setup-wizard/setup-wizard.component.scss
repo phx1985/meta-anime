@@ -236,6 +236,37 @@
   flex-shrink: 0;
 }
 
+// ── Language switcher (step 1) ─────────────────────────────────────────────
+.wizard-lang-switcher {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1.25rem;
+}
+
+.wizard-lang-btn {
+  flex: 1;
+  max-width: 130px;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--card-border);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover { border-color: var(--accent-primary); color: var(--text-primary); }
+
+  &--active {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #fff;
+    font-weight: 600;
+  }
+}
+
 .wizard-hint-row {
   display: flex;
   align-items: center;

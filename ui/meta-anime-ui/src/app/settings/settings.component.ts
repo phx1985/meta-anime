@@ -7,7 +7,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, timer } from 'rxjs';
@@ -22,6 +22,7 @@ import { UserPreferencesService } from '../services/user-preferences.service';
 import { ProviderStateService } from '../services/provider-state.service';
 import { PopupService } from '../services/popup.service';
 import { SonarrService, SonarrTag } from '../services/sonarr.service';
+import { AuthService } from '../services/auth.service';
 import { EnrollmentService, PlexLibrary } from '../services/enrollment.service';
 import { SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
@@ -77,6 +78,7 @@ export class SettingsComponent {
   private translate = inject(TranslateService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private authService = inject(AuthService);
   readonly userPrefs = inject(UserPreferencesService);
   private sonarrService = inject(SonarrService);
   private providerState = inject(ProviderStateService);
@@ -100,6 +102,21 @@ export class SettingsComponent {
   private luckyPrefsSavedTimer: ReturnType<typeof setTimeout> | null = null;
 
   sliderPreview = signal<Record<string, string | undefined>>({});
+
+  // ── Security card ─────────────────────────────────────────────────────────
+  securityEnabled = signal(false);
+  securityLoading = signal(false);
+  securitySaving = signal(false);
+  securityError = signal('');
+  securitySuccess = signal('');
+  showDisableForm = signal(false);
+  disablePasswordInput = signal('');
+  showEnableForm = signal(false);
+  enablePasswordInput = signal('');
+  enablePasswordConfirm = signal('');
+  changePwForm!: FormGroup;
+
+  private securitySuccessTimer: ReturnType<typeof setTimeout> | null = null;
 
   syncing = signal(false);
   lastSyncDate = signal<string | null>(null);
@@ -231,7 +248,7 @@ export class SettingsComponent {
     );
   });
 
-  navItems = computed<string[]>(() => [...this.categories(), 'sync']);
+  navItems = computed<string[]>(() => [...this.categories(), 'sync', 'security']);
 
   plexEnabled = computed(
     () => this.settings().find((s) => s.key === 'Plex:Enabled')?.value === 'true',
@@ -310,7 +327,9 @@ export class SettingsComponent {
   hasSyncActivity = computed(() => this.syncSteps().some((s) => s.state !== 'pending'));
 
   sectionId(cat: string): string {
-    return cat === 'sync' ? 'sync-section' : `section-${cat}`;
+    if (cat === 'sync') return 'sync-section';
+    if (cat === 'security') return 'section-security';
+    return `section-${cat}`;
   }
 
   scrollToSection(cat: string): void {
@@ -340,6 +359,12 @@ export class SettingsComponent {
   constructor() {
     this.signalR.connect();
 
+    this.changePwForm = this.fb.group({
+      currentPassword: ['', Validators.required],
+      newPassword: ['', Validators.required],
+      confirmPassword: ['', Validators.required],
+    }, { validators: this.passwordsMatchValidator });
+
     this.destroyRef.onDestroy(() => {
       if (this.autoApplySavedTimer) clearTimeout(this.autoApplySavedTimer);
       this.stopPlexPolling();
@@ -361,6 +386,7 @@ export class SettingsComponent {
 
     // Load enrollment status
     this.loadEnrollmentStatus();
+    this.loadSecurityStatus();
 
     this.settingsService
       .getAll()
@@ -1095,5 +1121,119 @@ export class SettingsComponent {
         },
         error: () => { this.sonarrCreatingTagSettings.set(false); },
       });
+  }
+
+  // ── Security card methods ─────────────────────────────────────────────────
+
+  private passwordsMatchValidator(group: FormGroup): { mismatch: true } | null {
+    const np = group.get('newPassword')?.value;
+    const cp = group.get('confirmPassword')?.value;
+    return np && cp && np !== cp ? { mismatch: true } : null;
+  }
+
+  loadSecurityStatus(): void {
+    this.securityLoading.set(true);
+    this.authService.getStatus()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (s) => { this.securityEnabled.set(s.requiresAuth); this.securityLoading.set(false); },
+        error: () => { this.securityLoading.set(false); },
+      });
+  }
+
+  toggleDisableForm(): void {
+    this.showDisableForm.update((v) => !v);
+    this.disablePasswordInput.set('');
+    this.securityError.set('');
+  }
+
+  toggleEnableForm(): void {
+    this.showEnableForm.update((v) => !v);
+    this.enablePasswordInput.set('');
+    this.enablePasswordConfirm.set('');
+    this.securityError.set('');
+  }
+
+  enableAuth(): void {
+    const pwd = this.enablePasswordInput();
+    const confirm = this.enablePasswordConfirm();
+    if (!pwd) return;
+    if (pwd !== confirm) {
+      this.securityError.set(this.translate.instant('settings.security.passwordMismatch'));
+      return;
+    }
+    this.securitySaving.set(true);
+    this.securityError.set('');
+    this.authService.setupPassword(pwd)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.securitySaving.set(false);
+          this.securityEnabled.set(true);
+          this.showEnableForm.set(false);
+          this.enablePasswordInput.set('');
+          this.enablePasswordConfirm.set('');
+          this.flashSecuritySuccess('settings.security.successEnabled');
+        },
+        error: () => {
+          this.securitySaving.set(false);
+          this.securityError.set(this.translate.instant('settings.security.errorGeneric'));
+        },
+      });
+  }
+
+  disableAuth(): void {
+    const pwd = this.disablePasswordInput();
+    if (!pwd) return;
+    this.securitySaving.set(true);
+    this.securityError.set('');
+    this.authService.disableAuth(pwd)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.securitySaving.set(false);
+          this.securityEnabled.set(false);
+          this.showDisableForm.set(false);
+          this.disablePasswordInput.set('');
+          this.authService.logout();
+          this.flashSecuritySuccess('settings.security.successDisabled');
+        },
+        error: (err: unknown) => {
+          this.securitySaving.set(false);
+          const status = (err as { status?: number }).status;
+          this.securityError.set(
+            this.translate.instant(status === 401 ? 'settings.security.errorWrong' : 'settings.security.errorGeneric')
+          );
+        },
+      });
+  }
+
+  changePassword(): void {
+    if (this.changePwForm.invalid) return;
+    const { currentPassword, newPassword } = this.changePwForm.value as { currentPassword: string; newPassword: string };
+    this.securitySaving.set(true);
+    this.securityError.set('');
+    this.authService.changePassword(currentPassword, newPassword)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.securitySaving.set(false);
+          this.changePwForm.reset();
+          this.flashSecuritySuccess('settings.security.successChanged');
+        },
+        error: (err: unknown) => {
+          this.securitySaving.set(false);
+          const status = (err as { status?: number }).status;
+          this.securityError.set(
+            this.translate.instant(status === 401 ? 'settings.security.errorWrong' : 'settings.security.errorGeneric')
+          );
+        },
+      });
+  }
+
+  private flashSecuritySuccess(key: string): void {
+    if (this.securitySuccessTimer) clearTimeout(this.securitySuccessTimer);
+    this.securitySuccess.set(this.translate.instant(key));
+    this.securitySuccessTimer = setTimeout(() => this.securitySuccess.set(''), 3000);
   }
 }

@@ -16,7 +16,8 @@
       "goToSettings": "Go to Settings",
       "close": "Close"
     },
-    "menu": "Menu"
+    "menu": "Menu",
+    "logout": "Sign Out"
   },
   "home": {
     "title": "Meta Anime",
@@ -515,6 +516,33 @@
         "connect": "Sign in with Plex",
         "waiting": "Waiting for Plex authorization in the opened tab..."
       }
+    },
+    "security": {
+      "title": "Security",
+      "subtitle": "Manage admin password protection for MetaAnime.",
+      "enabledLabel": "Password protection is enabled",
+      "disabledLabel": "Password protection is disabled",
+      "enableToggleLabel": "Enable admin password",
+      "disableToggleLabel": "Disable admin password",
+      "enablePasswordTitle": "Enable Admin Password",
+      "enableBtn": "Enable Protection",
+      "successEnabled": "Password protection enabled.",
+      "disableConfirmLabel": "Current Password (required to disable)",
+      "disableConfirmPlaceholder": "Enter your current password",
+      "disableBtn": "Disable Protection",
+      "changePasswordTitle": "Change Password",
+      "currentPasswordLabel": "Current Password",
+      "currentPasswordPlaceholder": "Enter current password",
+      "newPasswordLabel": "New Password",
+      "newPasswordPlaceholder": "Enter new password",
+      "confirmPasswordLabel": "Confirm New Password",
+      "confirmPasswordPlaceholder": "Re-enter new password",
+      "changeBtn": "Update Password",
+      "passwordMismatch": "Passwords do not match.",
+      "successDisabled": "Password protection disabled.",
+      "successChanged": "Password updated successfully.",
+      "errorWrong": "Current password is incorrect.",
+      "errorGeneric": "An error occurred. Please try again."
     }
   },
   "theme": {
@@ -1104,6 +1132,16 @@
       "getStarted": "Get Started"
     },
     "step2": {
+      "title": "Admin Password (Optional)",
+      "desc": "Protect MetaAnime with a password. You can skip this and enable it later from Settings.",
+      "enableLabel": "Enable Admin Password",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "Enter a strong password",
+      "confirmLabel": "Confirm Password",
+      "confirmPlaceholder": "Re-enter your password",
+      "passwordMismatch": "Passwords do not match."
+    },
+    "step3": {
       "title": "Connect MyAnimeList",
       "desc": "MyAnimeList is required to use MetaAnime. Connect your account to sync your anime list.",
       "clientIdHint": "Connected via your MAL OAuth Client ID.",
@@ -1118,7 +1156,7 @@
       "connectingBtn": "Redirecting...",
       "connected": "MyAnimeList connected"
     },
-    "step3": {
+    "step4": {
       "title": "Connect Plex (Optional)",
       "desc": "Link your Plex account to see which anime are in your library and which are missing.",
       "disclaimer": "💡 For the best matching experience, create a dedicated Anime-only library in Plex.",
@@ -1130,7 +1168,7 @@
       "loadingLibraries": "Loading Plex libraries…",
       "selectLibraries": "Select your Anime libraries"
     },
-    "step4": {
+    "step5": {
       "title": "Connect Sonarr (Optional)",
       "desc": "Configure Sonarr to track and manage anime series downloads.",
       "disclaimer": "💡 Setting a specific Sonarr tag for anime is required to filter and identify series correctly.",
@@ -1162,18 +1200,82 @@
         "none": "None"
       }
     },
-    "step5": {
+    "step6": {
       "title": "Recap & Initial Sync",
       "desc": "Your setup is looking great! Run a first sync to populate your library.",
       "runSync": "Run First Sync",
       "configured": "Configured",
       "skipped": "Skipped"
     },
-    "step6": {
+    "step7": {
       "title": "All Set!",
       "desc": "MetaAnime is ready to use. Your library will stay in sync automatically.",
       "hint": "You can always change your settings later from the Settings page.",
       "finish": "Go to Dashboard"
     }
+  },
+  "login": {
+    "title": "MetaAnime",
+    "subtitle": "Admin access required",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "submit": "Sign In",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "forgotTitle": "Forgot password?",
+    "forgotDesc": "Locked out? Open your appsettings.json or Docker env vars, set the flag below to true, and restart the MetaAnime server to wipe the password and regain access.",
+    "wrongPasswordMessages": [
+      "Nice try, hacker.",
+      "Did you type that with your elbows?",
+      "Access Denied. The Anime Police have been dispatched.",
+      "Your keyboard skills are as bad as bad CGI anime.",
+      "Password incorrect. Go watch some filler episodes and try again.",
+      "Nope. Try using the Force. Or just the correct password.",
+      "Wrong password. Have you tried watching more isekai for inspiration?",
+      "That's not it. Even Naruto's shadow clone jutsu wouldn't help you here.",
+      "Access denied. Your typing speed rivals a sloth watching a recap episode.",
+      "That password is as wrong as a dubbed anime.",
+      "Incorrect. Maybe the password is in another castle.",
+      "401 Unauthorized. Just like that one filler arc nobody asked for.",
+      "Wrong. Even the weakest side character could do better.",
+      "Did you forget your password or are you just testing my patience?",
+      "That's not the password. Neither was the last one. Or the one before.",
+      "Denied. The final boss laughs at your password attempt.",
+      "Nope. The key to this castle requires actual effort.",
+      "Even Goku couldn't power through that wrong password.",
+      "Access blocked. You've triggered the death flag.",
+      "Wrong answer. The council has deliberated and rejected your application.",
+      "That password has the energy of a slice-of-life beach episode.",
+      "No. Go back to the tutorial dungeon.",
+      "Access denied. Your INT stat is too low.",
+      "That's not it. Even the training arc didn't prepare you for this.",
+      "Wrong password. The tsundere firewall says: 'It's not like I let you in or anything!'",
+      "Incorrect. Your password attempt has been added to the cringe compilation.",
+      "Denied. You shall not pass — not without the correct password.",
+      "That password has been exiled to the shadow realm.",
+      "Error 401: Your password was weaker than a filler villain.",
+      "Nope. The password protection is doing its job. Unlike you.",
+      "Incorrect. I expected more from someone with your level.",
+      "Access revoked. The student council has voted unanimously against you.",
+      "Wrong. Even the comic relief character gets things right eventually.",
+      "That password has the plot armor of a character who dies in episode 1.",
+      "Access denied. Please insert more skill points into 'Typing'.",
+      "Nope. This isn't even my final form — and you're already failing.",
+      "Wrong password. The protagonist would never make this mistake.",
+      "Denied. You've unlocked the 'Bad End' route.",
+      "Incorrect. Perhaps consult the wise mentor character for guidance.",
+      "That password triggered a critical miss.",
+      "Access denied. Your password attempt has the energy of a recap episode.",
+      "Wrong. The password fairy weeps for you.",
+      "Nope. Zero out of ten. Would not authenticate again.",
+      "Denied. This area is guarded by an S-rank password.",
+      "Incorrect. The seal on this dungeon remains unbroken.",
+      "That password has been yeeted into the multiverse.",
+      "Wrong. Even the harem protagonist figures things out faster.",
+      "Access denied. Your password chakra is insufficient.",
+      "Nope. The dragon balls cannot help you now.",
+      "Access denied. Your password chakra has been sealed."
+    ]
   }
 }
