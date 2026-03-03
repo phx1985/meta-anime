@@ -51,6 +51,10 @@ public static class SettingsKeys
     public const string LastSyncDate = "System:LastSyncDate";
     public const string MalTokenRefreshedAt = "System:MalTokenRefreshedAt";
 
+    // Admin authentication (stored as hashed value; absent = public mode)
+    public const string AdminPasswordHash = "System:AdminPasswordHash";
+    public const string JwtSecret = "System:JwtSecret";
+
     // Internal OAuth state (temporary keys used during enrollment flows)
     public const string MalOAuthState = "System:MalOAuthState";
     public const string MalOAuthCodeVerifier = "System:MalOAuthCodeVerifier";

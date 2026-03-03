@@ -1,0 +1,94 @@
+<div class="login-page">
+  <div class="login-bokeh" aria-hidden="true">
+    @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+      <div class="login-bokeh__blob"></div>
+    }
+  </div>
+
+  <div class="login-card">
+    <!-- Logo / Icon -->
+    <div class="login-icon" aria-hidden="true">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      </svg>
+    </div>
+
+    <h1 class="login-title">{{ 'login.title' | translate }}</h1>
+    <p class="login-subtitle">{{ 'login.subtitle' | translate }}</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="login-form" novalidate>
+      <!-- Error message -->
+      @if (errorMessage()) {
+        <div class="login-error" role="alert">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <!-- Password field -->
+      <div class="login-field">
+        <label for="password" class="login-label">{{ 'login.passwordLabel' | translate }}</label>
+        <div class="login-input-group">
+          <input
+            id="password"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            class="login-input"
+            [placeholder]="'login.passwordPlaceholder' | translate"
+            autocomplete="current-password"
+            autofocus
+          />
+          <button
+            type="button"
+            class="login-toggle-pw"
+            (click)="togglePassword()"
+            [attr.aria-label]="(showPassword() ? 'login.hidePassword' : 'login.showPassword') | translate"
+          >
+            @if (showPassword()) {
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+            } @else {
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            }
+          </button>
+        </div>
+      </div>
+
+      <!-- Language switcher -->
+      <div class="login-lang-switcher">
+        @for (lang of availableLanguages; track lang.code) {
+          <button
+            type="button"
+            class="login-lang-btn"
+            [class.login-lang-btn--active]="currentLang() === lang.code"
+            (click)="switchLanguage(lang.code)"
+          >{{ lang.label }}</button>
+        }
+      </div>
+
+      <!-- Submit button -->
+      <button
+        type="submit"
+        class="login-btn"
+        [disabled]="form.invalid || submitting()"
+      >
+        @if (submitting()) {
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+        }
+        {{ 'login.submit' | translate }}
+      </button>
+    </form>
+
+    <!-- Forgot password help -->
+    <details class="login-forgot">
+      <summary class="login-forgot__summary">{{ 'login.forgotTitle' | translate }}</summary>
+      <p class="login-forgot__body">{{ 'login.forgotDesc' | translate }}</p>
+      <code class="login-forgot__code">Authentication:ResetAdminPassword</code>
+    </details>
+  </div>
+</div>

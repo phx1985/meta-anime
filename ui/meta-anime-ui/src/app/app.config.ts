@@ -11,6 +11,7 @@ import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { routes } from './app.routes';
 import { apiKeyInterceptor } from './interceptors/api-key.interceptor';
+import { authInterceptor } from './interceptors/auth.interceptor';
 import { malAuthInterceptor } from './interceptors/mal-auth.interceptor';
 import { RuntimeConfigService } from './services/runtime-config.service';
 
@@ -19,7 +20,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideAnimations(),
-    provideHttpClient(withInterceptors([apiKeyInterceptor, malAuthInterceptor])),
+    provideHttpClient(withInterceptors([apiKeyInterceptor, authInterceptor, malAuthInterceptor])),
     provideRouter(
       routes,
       withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'top' }),
