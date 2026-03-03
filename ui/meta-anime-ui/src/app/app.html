@@ -1,4 +1,4 @@
-@if (!isWizardRoute()) {
+@if (!hideNavRoute()) {
 <nav class="navbar navbar-expand-lg sticky-top" #navbarEl>
   <div class="container">
     <a class="navbar-brand" routerLink="/">Meta Anime<span class="navbar-page-label" aria-hidden="true">@if (currentPageKey()) { · {{ currentPageKey() | translate }} }</span></a>
@@ -195,6 +195,18 @@
         </svg>
       </button>
 
+      @if (isAuthenticated()) {
+        <button class="btn-logout" type="button" (click)="logout()"
+          [attr.aria-label]="'nav.logout' | translate" [title]="'nav.logout' | translate">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </button>
+      }
+
       <span class="navbar-divider" aria-hidden="true"></span>
 
       <!-- Language dropdown (desktop) -->
@@ -264,7 +276,7 @@
     </div>
   </div>
 </nav>
-} <!-- /!isWizardRoute() top nav -->
+} <!-- /!hideNavRoute() top nav -->
 
 <!-- ── Mobile Side Drawer ────────────────────────────────────────────────── -->
 @if (menuOpen()) {
@@ -339,6 +351,18 @@
       {{ 'nav.settings' | translate }}
     </a>
 
+    @if (isAuthenticated()) {
+      <button type="button" class="drawer-nav-link drawer-logout-btn" (click)="logout(); closeMenu()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        {{ 'nav.logout' | translate }}
+      </button>
+    }
+
     <div class="drawer-sep" aria-hidden="true"></div>
 
     <!-- ── Big theme toggle row ── -->
@@ -411,7 +435,7 @@
 
 
 <!-- ── Mobile Bottom Navigation Bar ─────────────────────────────────────── -->
-@if (!isWizardRoute()) {
+@if (!hideNavRoute()) {
 <nav class="bottom-nav" [class.bottom-nav--hidden]="bottomNavHidden() || anyOverlayOpen()" aria-label="Primary navigation">
   <a class="bottom-nav-item" routerLink="/" routerLinkActive="bottom-nav-item--active"
     [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">
@@ -451,7 +475,7 @@
     <span>{{ 'nav.lucky' | translate }}</span>
   </button>
 </nav>
-} <!-- /!isWizardRoute() bottom nav -->
+} <!-- /!hideNavRoute() bottom nav -->
 
 <!-- ── Toast stack (top-right, below navbar) ──────────────────────────────── -->
 <div class="toast-stack" [style.top.px]="toastTopPx()" aria-live="polite" aria-atomic="false">

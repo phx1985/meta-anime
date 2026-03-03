@@ -90,6 +90,7 @@
     .provider-links,
     .btn-lucky,
     .btn-settings,
+    .btn-logout,
     .btn-lang,
     .lang-dropdown-wrap,
     .btn-os-theme,
@@ -430,6 +431,50 @@ html[data-theme='dark'] .navbar-toggler-icon {
   }
 }
 
+
+// ── Logout icon button ─────────────────────────────────────────────────────────
+.btn-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid var(--navbar-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: #ef4444;
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.06);
+    outline: none;
+  }
+}
+
+// ── Drawer logout button ──────────────────────────────────────────────────────
+.drawer-logout-btn {
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+
+  svg { opacity: 0.75; }
+
+  &:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.06);
+
+    svg { opacity: 1; }
+  }
+}
 
 .notif-badge {
   position: absolute;

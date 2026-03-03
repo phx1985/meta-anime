@@ -27,6 +27,7 @@ import { LuckyPickComponent } from './lucky-pick/lucky-pick.component';
 import { FranchiseConstellationComponent } from './franchise-constellation/franchise-constellation.component';
 import { FranchiseConstellationService } from './services/franchise-constellation.service';
 import { MalQuickUpdateModalComponent } from './mal-quick-update/mal-quick-update-modal.component';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -47,6 +48,7 @@ export class App implements OnInit, AfterViewInit {
   readonly popupService = inject(PopupService);
   readonly franchiseConstellationSvc = inject(FranchiseConstellationService);
   private plexDeepLink = inject(PlexDeepLinkService);
+  private authService = inject(AuthService);
 
   @ViewChild('navbarEl', { read: ElementRef }) private navbarEl?: ElementRef<HTMLElement>;
 
@@ -61,6 +63,9 @@ export class App implements OnInit, AfterViewInit {
   /** Prevent rapid-fire clicks from re-opening while already open */
   private luckyPickBusy = false;
 
+  /** True when a JWT token is stored — controls logout button visibility. */
+  protected isAuthenticated = computed(() => this.authService.isAuthenticated());
+
   /** Available languages for the dropdown */
   protected readonly availableLanguages: ReadonlyArray<{ code: string; label: string }> = [
     { code: 'en', label: 'English' },
@@ -74,8 +79,8 @@ export class App implements OnInit, AfterViewInit {
   protected sonarrHomeUrl = signal<string | null>(null);
   protected readonly malHomeUrl = 'https://myanimelist.net';
 
-  /** True while the setup wizard route is active — hides global nav during onboarding */
-  protected isWizardRoute = signal<boolean>(false);
+  /** True while the top navbar and bottom mobile nav must be hidden (wizard or login routes) */
+  protected hideNavRoute = signal<boolean>(false);
   /** True while the bottom nav bar is retracted (scroll-down hide on mobile) */
   protected bottomNavHidden = signal<boolean>(false);
   /**
@@ -131,9 +136,9 @@ export class App implements OnInit, AfterViewInit {
 
     // Track active route for the mobile page-context label
     let prevWasWizard = false;
-    // Initialise wizard-route signal synchronously before any NavigationEnd fires
+    // Initialise nav-hide signal synchronously before any NavigationEnd fires
     const initialPath = '/' + this.router.url.replace(/^\//, '').split('?')[0].split('#')[0].split('/')[0];
-    this.isWizardRoute.set(initialPath === '/welcome');
+    this.hideNavRoute.set(initialPath === '/welcome' || initialPath === '/login');
     prevWasWizard = initialPath === '/welcome';
 
     this.router.events
@@ -145,7 +150,7 @@ export class App implements OnInit, AfterViewInit {
         // Strip query params and hash, then map to a page i18n key ('' for unmapped routes)
         const path = '/' + e.urlAfterRedirects.replace(/^\//, '').split('?')[0].split('#')[0].split('/')[0];
         this.currentPageKey.set(App.PAGE_KEYS[path] ?? '');
-        this.isWizardRoute.set(path === '/welcome');
+        this.hideNavRoute.set(path === '/welcome' || path === '/login');
         // Always reveal the bottom nav when navigating to a new page
         this.bottomNavHidden.set(false);
         this.lastScrollY = 0;
@@ -473,6 +478,12 @@ export class App implements OnInit, AfterViewInit {
 
   closeLangDropdown(): void {
     this.langDropdownOpen.set(false);
+  }
+
+  /** Logs out the current admin session and navigates to the login page. */
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 
   /** Called when the user clicks × on a notification-center item. */

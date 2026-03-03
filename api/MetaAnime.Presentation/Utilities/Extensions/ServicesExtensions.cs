@@ -159,7 +159,11 @@ public static class ServicesExtensions
     /// <param name="services"></param>
     public static void SetupAuthentication(this IServiceCollection services)
     {
-        services.AddAuthentication("ApiKey").AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>("ApiKey", options => { });
+        services.AddSingleton<IAdminAuthService, AdminAuthService>();
+
+        services.AddAuthentication("MetaAnime")
+            .AddScheme<AuthenticationSchemeOptions, FlexAuthHandler>("MetaAnime", _ => { });
+
         services.AddAuthorization();
     }
 

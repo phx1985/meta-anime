@@ -5,6 +5,7 @@ using MetaAnime.Core.Settings;
 using MetaAnime.Hubs;
 using MetaAnime.Utilities.Extensions;
 using MetaAnime.Utilities.Hangfire;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -111,6 +112,16 @@ app.UseCors();
 app.UseResponseCaching();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Reset admin password if the flag is set (recovery mechanism).
+var authOptions = app.Services.GetRequiredService<IOptions<MetaAnime.Core.Settings.AuthenticationSettings>>();
+if (authOptions.Value.ResetAdminPassword)
+{
+    using var resetScope = app.Services.CreateScope();
+    var propRepo = resetScope.ServiceProvider.GetRequiredService<MetaAnime.Core.Interfaces.Repositories.IPropertyBagRepository>();
+    await propRepo.DeleteAsync(MetaAnime.Core.SettingsKeys.AdminPasswordHash);
+    app.Logger.LogWarning("AdminPasswordHash has been reset. Remove Authentication:ResetAdminPassword from config to re-enable password protection.");
+}
 
 // Hangfire Dashboard — open in Development (browser can't send X-Api-Key),
 // protected by HangfireAuthorizationFilter in all other environments.
