@@ -17,11 +17,14 @@ export class ProviderStateService {
 
   private readonly _plexEnabled = signal<boolean>(true);
   private readonly _sonarrEnabled = signal<boolean>(true);
+  private readonly _plexMachineId = signal<string>('');
 
   /** Whether the Plex provider is enabled (default: true). */
   readonly plexEnabled = this._plexEnabled.asReadonly();
   /** Whether the Sonarr provider is enabled (default: true). */
   readonly sonarrEnabled = this._sonarrEnabled.asReadonly();
+  /** The Plex server's MachineIdentifier (empty until loaded from settings). */
+  readonly plexMachineId = this._plexMachineId.asReadonly();
 
   constructor() {
     this.refresh();
@@ -39,6 +42,9 @@ export class ProviderStateService {
           );
           this._sonarrEnabled.set(
             settings.find((s) => s.key === 'Sonarr:Enabled')?.value === 'true',
+          );
+          this._plexMachineId.set(
+            settings.find((s) => s.key === 'Plex:MachineIdentifier')?.value ?? '',
           );
         },
         error: () => {

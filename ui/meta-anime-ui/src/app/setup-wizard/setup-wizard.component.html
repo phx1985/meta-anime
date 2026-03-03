@@ -314,7 +314,10 @@
               }
               @if (sonarrTagsLoaded()) {
                 <div class="wizard-library-section">
-                  <p class="wizard-label">{{ 'wizard.step4.selectTags' | translate }}</p>
+                  <p class="wizard-label">
+                    {{ 'wizard.step4.selectTags' | translate }}
+                    <span class="wizard-required" aria-hidden="true">*</span>
+                  </p>
                   @if (sonarrTags().length > 0) {
                     <div class="wizard-tag-grid">
                       @for (tag of sonarrTags(); track tag.id) {
@@ -328,6 +331,11 @@
                         </button>
                       }
                     </div>
+                    @if (sonarrTagsTouched() && sonarrSelectedTagIds().length === 0) {
+                      <p class="wizard-field-hint wizard-field-hint--error" role="alert">
+                        At least one tag is required.
+                      </p>
+                    }
                   }
                   <!-- Create new tag -->
                   <div class="wizard-tag-create-row">
@@ -537,21 +545,20 @@
           }
 
           @if (step() === 4) {
+            <button type="button" class="wizard-skip-btn" (click)="nextStep()">
+              {{ 'wizard.skip' | translate }}
+            </button>
             @if (sonarrForm.valid) {
               <button
                 type="button"
                 class="wizard-next-btn"
-                [disabled]="sonarrSaving() || (sonarrTagsLoaded() && sonarrTags().length > 0 && sonarrSelectedTagIds().length === 0)"
+                [disabled]="sonarrSaving() || !sonarrTagsLoaded() || sonarrSelectedTagIds().length === 0"
                 (click)="saveSonarrAndContinue()"
               >
                 @if (sonarrSaving()) {
                   <span class="spinner-border spinner-border-sm me-1" role="status"></span>
                 }
                 {{ 'wizard.step4.connectBtn' | translate }}
-              </button>
-            } @else {
-              <button type="button" class="wizard-skip-btn" (click)="nextStep()">
-                {{ 'wizard.skip' | translate }}
               </button>
             }
           }

@@ -45,6 +45,7 @@ public sealed class GetSettingsQueryHandler(
             new(SettingsKeys.PlexEnabled, "plex", false, false, Get(SettingsKeys.PlexEnabled), "boolean"),
             new(SettingsKeys.PlexHost, "plex", false, true, Get(SettingsKeys.PlexHost)),
             new(SettingsKeys.PlexAnimeSections, "plex", false, true, Get(SettingsKeys.PlexAnimeSections)),
+            new(SettingsKeys.PlexMachineIdentifier, "plex", false, false, Get(SettingsKeys.PlexMachineIdentifier), "info"),
             // Enrollment status (read-only, managed via /plex/auth endpoints)
             new("Plex:Connected", "plex", false, false, plexConnected ? "true" : "false", "enrollment"),
 
