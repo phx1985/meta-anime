@@ -44,7 +44,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
     #region IMalAnimeSourceService Implementation
     public async Task<Result<IList<MalAnime>>> GetAllAsync()
     {
-        var malApiAnimes = new List<MalAnime>();
+        List<MalAnime> malApiAnimes = [];
 
         var baseUrl = await GetBaseUrlAsync();
         if (string.IsNullOrWhiteSpace(baseUrl))
@@ -136,7 +136,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
 
         // Fetch all pages from MAL (limit=500 per request, loop until no next page)
         const int perPage = 500;
-        var allItems = new List<MalAnime>();
+        List<MalAnime> allItems = [];
         string? nextUrl = $"{baseUrl}/anime/season/{year}/{season}?limit={perPage}&offset=0&nsfw=true&fields={SEASONAL_FIELDS}&sort=anime_score";
 
         while (nextUrl != null)
@@ -160,7 +160,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
             {
                 // 404 means MAL has no data for this season yet (e.g. a future season) — treat as empty.
                 if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                    return Result.Success<IList<MalAnime>>(new List<MalAnime>());
+                    return Result.Success<IList<MalAnime>>([]);
 
                 MalError? malError = null;
                 try { malError = JsonSerializer.Deserialize<MalError>(json); }

@@ -74,7 +74,7 @@ public sealed class PlexAnimeSourceService(
     public async Task<Result<IList<PlexMedia>>> GetAllAsync()
     {
         var (_, host, token, animeSections, isConfigured) = await GetSettingsAsync();
-        var results = new List<PlexMedia>();
+        List<PlexMedia> results = [];
 
         if (!isConfigured)
         {
@@ -195,7 +195,7 @@ public sealed class PlexAnimeSourceService(
 
         if (sections == null)
         {
-            return Result.Success<IList<PlexLibraryInfo>>(new List<PlexLibraryInfo>());
+            return Result.Success<IList<PlexLibraryInfo>>([]);
         }
 
         var libraries = sections

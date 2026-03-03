@@ -4,12 +4,11 @@ import {
   DestroyRef,
   HostBinding,
   HostListener,
-  Input,
   OnInit,
+  input,
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { trigger, style, animate, transition } from '@angular/animations';
@@ -36,7 +35,7 @@ import { Subject, debounceTime, switchMap, of, catchError, forkJoin } from 'rxjs
   selector: 'app-seasonal-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslatePipe, ScoreBadgeComponent],
+  imports: [FormsModule, TranslatePipe, ScoreBadgeComponent],
   templateUrl: './seasonal-card.component.html',
   styleUrl: './seasonal-card.component.scss',
   animations: [
@@ -53,15 +52,15 @@ import { Subject, debounceTime, switchMap, of, catchError, forkJoin } from 'rxjs
   ],
 })
 export class SeasonalCardComponent implements OnInit {
-  @Input({ required: true }) anime!: SeasonalAnimeItem;
+  readonly anime = input.required<SeasonalAnimeItem>();
   /** Genres selected in the parent filter — highlights matching genre tags on the card. */
-  @Input() activeGenres: string[] = [];
-  @Input() activeThemes: string[] = [];
-  @Input() activeDemographics: string[] = [];
+  readonly activeGenres = input<string[]>([]);
+  readonly activeThemes = input<string[]>([]);
+  readonly activeDemographics = input<string[]>([]);
   /** Whether the Plex provider is enabled globally. */
-  @Input() plexEnabled = true;
+  readonly plexEnabled = input(true);
   /** Whether the Sonarr provider is enabled globally. */
-  @Input() sonarrEnabled = true;
+  readonly sonarrEnabled = input(true);
 
   private translate = inject(TranslateService);
   private sonarrService = inject(SonarrService);
@@ -193,13 +192,13 @@ export class SeasonalCardComponent implements OnInit {
   }
 
   get coverImageUrl(): string | undefined {
-    return this.anime.coverImageUrl;
+    return this.anime().coverImageUrl;
   }
   get displayTitle(): string {
-    return this.anime.title;
+    return this.anime().title;
   }
   get description(): string {
-    return this.anime.synopsis ?? '';
+    return this.anime().synopsis ?? '';
   }
 
   get isTruncated(): boolean {
@@ -207,7 +206,7 @@ export class SeasonalCardComponent implements OnInit {
   }
 
   private get allMalGenres(): string[] {
-    return this.anime.genres ?? [];
+    return this.anime().genres ?? [];
   }
   /** MAL genre-category entries only. */
   get pureGenres(): string[] {
@@ -227,44 +226,44 @@ export class SeasonalCardComponent implements OnInit {
   }
 
   get displayMalScore(): number {
-    return this.anime.malScore ?? 0;
+    return this.anime().malScore ?? 0;
   }
   get startDate(): string | undefined {
-    return this.anime.startDate;
+    return this.anime().startDate;
   }
   get mediaType(): string | undefined {
-    return this.anime.mediaType;
+    return this.anime().mediaType;
   }
   get seriesStatus(): string | undefined {
-    return this.anime.status;
+    return this.anime().status;
   }
   get malUrl(): string | null {
-    return this.anime.malUrl ?? null;
+    return this.anime().malUrl ?? null;
   }
 
   /** True when the anime is tracked in both Sonarr and MAL. */
   get allTracked(): boolean {
-    return this.anime.inSonarr && this.anime.inMal;
+    return this.anime().inSonarr && this.anime().inMal;
   }
 
   /** True when the anime is tracked in exactly one of Sonarr / MAL (but not both). */
   get partiallyTracked(): boolean {
-    return this.anime.inSonarr !== this.anime.inMal;
+    return this.anime().inSonarr !== this.anime().inMal;
   }
 
   /** True when at least one writable provider does not have this anime. */
   get anyMissing(): boolean {
-    return !this.anime.inSonarr || !this.anime.inMal;
+    return !this.anime().inSonarr || !this.anime().inMal;
   }
 
   /** True when Sonarr is the only missing provider (MAL has it, Sonarr does not). */
   get sonarrMissing(): boolean {
-    return this.partiallyTracked && !this.anime.inSonarr;
+    return this.partiallyTracked && !this.anime().inSonarr;
   }
 
   /** True when MAL is the only missing provider (Sonarr has it, MAL does not). */
   get malMissing(): boolean {
-    return this.partiallyTracked && !this.anime.inMal;
+    return this.partiallyTracked && !this.anime().inMal;
   }
 
   translateGenre(name: string): string {
@@ -290,9 +289,9 @@ export class SeasonalCardComponent implements OnInit {
   }
 
   openPlexLink(event: Event): void {
-    if (!this.anime.plexUrl) return;
+    if (!this.anime().plexUrl) return;
     event.preventDefault();
-    this.plexDeepLink.openLink(this.anime.plexUrl, this.anime.title);
+    this.plexDeepLink.openLink(this.anime().plexUrl, this.anime().title);
   }
 
   openSynopsisModal(): void {
@@ -301,7 +300,7 @@ export class SeasonalCardComponent implements OnInit {
 
   openFranchiseConstellation(): void {
     this.franchiseConstellation.open(
-      this.anime.malId,
+      this.anime().malId,
       this.displayTitle,
       this.coverImageUrl,
     );
@@ -317,8 +316,8 @@ export class SeasonalCardComponent implements OnInit {
 
   openAddModal(): void {
     // Only pre-select Sonarr if it is both missing AND enabled globally
-    this.addSonarr.set(!this.anime.inSonarr && this.sonarrEnabled);
-    this.addMal.set(!this.anime.inMal);
+    this.addSonarr.set(!this.anime().inSonarr && this.sonarrEnabled());
+    this.addMal.set(!this.anime().inMal);
     this.addError.set('');
     this.addSuccess.set(false);
     this.lastAddedSonarrId.set(null);
@@ -327,9 +326,9 @@ export class SeasonalCardComponent implements OnInit {
     this.malScore.set(0);
 
     // Auto-expand the first missing provider (skip Sonarr if disabled)
-    if (!this.anime.inSonarr && this.sonarrEnabled) {
+    if (!this.anime().inSonarr && this.sonarrEnabled()) {
       this.expandedProvider.set('sonarr');
-    } else if (!this.anime.inMal) {
+    } else if (!this.anime().inMal) {
       this.expandedProvider.set('mal');
     } else {
       this.expandedProvider.set(null);
@@ -339,7 +338,7 @@ export class SeasonalCardComponent implements OnInit {
     this.popupService.addProviderModalOpen.set(true);
 
     // Kick off Sonarr search + options when Sonarr is pre-selected and enabled
-    if (!this.anime.inSonarr && this.sonarrEnabled) {
+    if (!this.anime().inSonarr && this.sonarrEnabled()) {
       this.initSonarrSection();
     }
   }
@@ -394,13 +393,13 @@ export class SeasonalCardComponent implements OnInit {
   }
 
   get anythingSelected(): boolean {
-    return (!this.anime.inSonarr && this.addSonarr()) || (!this.anime.inMal && this.addMal());
+    return (!this.anime().inSonarr && this.addSonarr()) || (!this.anime().inMal && this.addMal());
   }
 
   confirmAdd(): void {
     if (this.addBusy() || !this.anythingSelected) return;
-    const willAddSonarr = !this.anime.inSonarr && this.addSonarr();
-    const willAddMal = !this.anime.inMal && this.addMal();
+    const willAddSonarr = !this.anime().inSonarr && this.addSonarr();
+    const willAddMal = !this.anime().inMal && this.addMal();
     this.addBusy.set(true);
     this.addError.set('');
     this.doAddSonarr(() => {
@@ -423,9 +422,9 @@ export class SeasonalCardComponent implements OnInit {
    *  2. English title if available
    *  3. Default title */
   private getSonarrSearchTerm(): string {
-    if (this.anime.tvdbId) return `tvdb:${this.anime.tvdbId}`;
-    if (this.anime.englishTitle?.trim()) return this.anime.englishTitle.trim();
-    return this.anime.title;
+    if (this.anime().tvdbId) return `tvdb:${this.anime().tvdbId}`;
+    if (this.anime().englishTitle?.trim()) return this.anime().englishTitle!.trim();
+    return this.anime().title;
   }
 
   /** Initialises the Sonarr search term + results and loads options from scratch. */
@@ -498,7 +497,7 @@ export class SeasonalCardComponent implements OnInit {
   }
 
   private doAddSonarr(onSuccess: () => void): void {
-    if (this.anime.inSonarr || !this.addSonarr()) {
+    if (this.anime().inSonarr || !this.addSonarr()) {
       onSuccess();
       return;
     }
@@ -517,14 +516,14 @@ export class SeasonalCardComponent implements OnInit {
         qualityProfileId: this.sonarrProfileId(),
         monitor: this.sonarrMonitor(),
         seasonFolder: this.sonarrSeasonFolder(),
-        malId: this.anime.malId,
+        malId: this.anime().malId,
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (result: SonarrAddResult) => {
           this.lastAddedSonarrId.set(result.sonarrId);
-          (this.anime as { inSonarr: boolean }).inSonarr = true;
-          if (result.sonarrUrl) (this.anime as { sonarrUrl?: string }).sonarrUrl = result.sonarrUrl;
+          (this.anime() as { inSonarr: boolean }).inSonarr = true;
+          if (result.sonarrUrl) (this.anime() as { sonarrUrl?: string }).sonarrUrl = result.sonarrUrl;
           onSuccess();
         },
         error: (err) => {
@@ -535,13 +534,13 @@ export class SeasonalCardComponent implements OnInit {
   }
 
   private doAddMal(onSuccess: () => void): void {
-    if (this.anime.inMal || !this.addMal()) {
+    if (this.anime().inMal || !this.addMal()) {
       onSuccess();
       return;
     }
 
     this.animeService
-      .updateMalListStatus(this.anime.malId, {
+      .updateMalListStatus(this.anime().malId, {
         status: this.malStatus(),
         numWatchedEpisodes: this.malEpisodes(),
         score: this.malScore(),
@@ -549,7 +548,7 @@ export class SeasonalCardComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          (this.anime as { inMal: boolean }).inMal = true;
+          (this.anime() as { inMal: boolean }).inMal = true;
           onSuccess();
         },
         error: (err) => {
@@ -560,12 +559,12 @@ export class SeasonalCardComponent implements OnInit {
               .pipe(takeUntilDestroyed(this.destroyRef))
               .subscribe({
                 next: () => {
-                  (this.anime as { inSonarr: boolean }).inSonarr = false;
-                  (this.anime as { sonarrUrl?: string }).sonarrUrl = undefined;
+                  (this.anime() as { inSonarr: boolean }).inSonarr = false;
+                  (this.anime() as { sonarrUrl?: string }).sonarrUrl = undefined;
                   this.lastAddedSonarrId.set(null);
                 },
                 error: () => {
-                  (this.anime as { inSonarr: boolean }).inSonarr = false;
+                  (this.anime() as { inSonarr: boolean }).inSonarr = false;
                   this.lastAddedSonarrId.set(null);
                 },
               });

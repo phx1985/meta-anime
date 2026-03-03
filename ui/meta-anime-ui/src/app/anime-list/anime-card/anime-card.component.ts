@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, Input, signal, inject, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, input, signal, inject, HostListener } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo } from '../../models/anime.models';
 import { ScoreBadgeComponent } from './score-badge/score-badge.component';
@@ -12,22 +12,22 @@ import { FranchiseConstellationService } from '../../services/franchise-constell
   selector: 'app-anime-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TranslatePipe, ScoreBadgeComponent],
+  imports: [TranslatePipe, ScoreBadgeComponent, DatePipe],
   templateUrl: './anime-card.component.html',
   styleUrl: './anime-card.component.scss',
 })
 export class AnimeCardComponent {
-  @Input({ required: true }) anime!: AnimeDetailsResponse;
+  readonly anime = input.required<AnimeDetailsResponse>();
   /** Genres actively selected in the parent filter — used to highlight matching tags. */
-  @Input() activeGenres: string[] = [];
-  @Input() activeThemes: string[] = [];
-  @Input() activeDemographics: string[] = [];
+  readonly activeGenres = input<string[]>([]);
+  readonly activeThemes = input<string[]>([]);
+  readonly activeDemographics = input<string[]>([]);
   /** Whether the Plex provider is enabled globally (controls visibility of Plex action). */
-  @Input() plexEnabled = true;
+  readonly plexEnabled = input(true);
   /** Whether the Sonarr provider is enabled globally (controls visibility of Sonarr action). */
-  @Input() sonarrEnabled = true;
+  readonly sonarrEnabled = input(true);
   /** Fallback Sonarr base URL when per-anime URL is not available (from settings). */
-  @Input() sonarrBaseUrl: string | null = null;
+  readonly sonarrBaseUrl = input<string | null>(null);
 
   private translate = inject(TranslateService);
   private popupService = inject(PopupService);
@@ -56,15 +56,15 @@ export class AnimeCardComponent {
   // ── Data accessors ────────────────────────────────────────────────────────
 
   get mal(): MalAnimeInfo | undefined {
-    return this.anime.malAnimes?.[0];
+    return this.anime().malAnimes?.[0];
   }
 
   get sonarr(): SonarrAnimeInfo | undefined {
-    return this.anime.sonarrAnimes?.[0];
+    return this.anime().sonarrAnimes?.[0];
   }
 
   get plex() {
-    return this.anime.plexAnimes?.[0];
+    return this.anime().plexAnimes?.[0];
   }
 
   // ── Title / image ─────────────────────────────────────────────────────────
@@ -79,15 +79,15 @@ export class AnimeCardComponent {
     const alt = this.mal?.alternativeTitles;
     if (alt) {
       if (lang === 'ja' && alt.ja) return alt.ja;
-      if (alt.en && alt.en !== this.anime.title) return alt.en;
+      if (alt.en && alt.en !== this.anime().title) return alt.en;
     }
-    return this.anime.title;
+    return this.anime().title;
   }
 
   get subtitle(): string | undefined {
     // Show the original DB title as subtitle when a localized title is shown
     const dt = this.displayTitle;
-    if (dt !== this.anime.title) return this.anime.title;
+    if (dt !== this.anime().title) return this.anime().title;
     // Otherwise show Japanese alt as subtitle
     const ja = this.mal?.alternativeTitles?.ja;
     return ja && ja !== dt ? ja : undefined;
@@ -106,7 +106,7 @@ export class AnimeCardComponent {
   // ── Description ───────────────────────────────────────────────────────────
 
   get description(): string {
-    return this.mal?.synopsis ?? this.anime.description ?? '';
+    return this.mal?.synopsis ?? this.anime().description ?? '';
   }
 
   get isTruncated(): boolean {
@@ -279,7 +279,7 @@ export class AnimeCardComponent {
   }
 
   get sonarrUrl(): string | null {
-    return this.sonarr?.url ?? this.sonarrBaseUrl ?? null;
+    return this.sonarr?.url ?? this.sonarrBaseUrl() ?? null;
   }
 
   get plexUrl(): string | null {
@@ -307,7 +307,7 @@ export class AnimeCardComponent {
   openPlexLink(event: Event): void {
     if (!this.plexUrl) return;
     event.preventDefault();
-    this.plexDeepLink.openLink(this.plexUrl, this.anime.title);
+    this.plexDeepLink.openLink(this.plexUrl, this.anime().title);
   }
 
   openMalQuickUpdate(): void {

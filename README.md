@@ -1,192 +1,157 @@
-# Meta Anime
+<div align="center">
 
-Meta Anime is a self-hosted, full-stack dashboard (Angular UI + ASP.NET Core API) that unifies your anime library across **Plex**, **Sonarr**, and **MyAnimeList** into a single, searchable interface — powered by [Kometa](https://github.com/Kometa-Team/Kometa) ID mappings for accurate cross-platform matching.
+# 🎌 MetaAnime
 
-## 🚀 Features
+### A self-hosted, ultra-lightweight hub for synchronizing MyAnimeList, Plex, and Sonarr
 
-* **Unified Anime Dashboard** — one view showing how many titles you have across Plex, Sonarr, and MAL, with a genre-distribution chart and a coverage-gap summary (e.g. titles in Sonarr not on MAL, or in Plex but not in Sonarr).
-* **Cross-Source Anime Library** — browse and search your entire collection with rich metadata pulled from all three sources simultaneously; filter by genre, theme, demographic, media type, codec, airing status, and MAL watch state.
-* **Seasonal Anime Browser** — explore any season by year and add titles directly to Sonarr (with quality profile and root-folder selection) and to your MAL list — all without leaving the app.
-* **Intelligent Cross-Platform Matching** — uses Kometa's AniDB ID mappings together with TVDB, IMDB, and TMDB identifiers to reliably link the same title across Plex, Sonarr, and MAL.
-* **Background Sync** — Hangfire-powered scheduled jobs keep all source data fresh automatically; trigger a manual sync at any time from the Settings page with real-time progress updates via SignalR.
-* **In-App Settings** — configure every integration (Sonarr, Plex, MAL, Kometa) directly from the UI without editing config files.
+[![Docker Pulls](https://img.shields.io/docker/pulls/phx1985/meta-anime?style=flat-square&logo=docker&label=Docker%20Pulls)](https://hub.docker.com/r/phx1985/meta-anime)
+[![GitHub Stars](https://img.shields.io/github/stars/phx1985/meta-anime?style=flat-square&logo=github)](https://github.com/phx1985/meta-anime)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+
+*Lovingly overengineered and relentlessly hyper-optimized with the help of [GitHub Copilot](https://github.com/features/copilot). 🤖✨*
+
+</div>
+
+---
+
+## ✨ Features
+
+| | Feature | Description |
+|--|---------|-------------|
+| 🕸️ | **Franchise Constellation** | Interactive graph of franchise relationships — explore prequels, sequels, and spin-offs with a zoomable, draggable canvas |
+| ⚡ | **Lightning-Fast Sync** | PostgreSQL bulk inserts keep your entire library synchronized in seconds, not minutes |
+| 🗺️ | **Kometa Mapping** | Cross-references AniDB, TVDB, TMDB, and IMDB IDs via Kometa's community mapping files for pinpoint-accurate matching across Plex, Sonarr, and MAL |
+| 🎲 | **Feeling Lucky** | Randomized "pick me something to watch" picker, filtered by your own preferences — finished series, plan-to-watch, with local files |
+| 🌸 | **Seasonal Browser** | Explore any season by year and add titles to Sonarr and MAL simultaneously, with quality profile and root-folder selection |
+| 📊 | **Unified Dashboard** | Library coverage across all three platforms in one view, with genre-distribution charts and gap analysis |
+| 🏗️ | **Ridiculously Lightweight** | The entire modern stack — .NET API, Angular UI, and PostgreSQL — ships as a **single container** managed by **s6-overlay**. No Compose file with five services. No orchestrator. One container, one volume, done. |
+
+---
+
+## 🚀 Getting Started
+
+### Zero Configuration Required
+
+MetaAnime is designed to just work out of the box.
+
+> **You do not need to create or configure an API key.** On the very first boot, a background init script automatically generates a cryptographically secure API key and database password using `openssl rand`, then writes them to `/config/appsettings.json`. The Angular frontend picks up the key automatically at runtime — you never have to touch it.
+
+Simply drop the container, open your browser, and you will be greeted by the Setup Wizard.
+
+### 🧙 The Setup Wizard
+
+On first run, MetaAnime guides you through a **beautiful, step-by-step configuration wizard**:
+
+1. **Welcome** — choose your language
+2. **Security** — optionally set an admin password to protect the app (skippable)
+3. **MyAnimeList** — connect via OAuth2 (Client ID + Client Secret) — required to proceed
+4. **Plex** — enter your Plex Media Server URL and token, then pick your anime libraries from a live list (skippable)
+5. **Sonarr** — enter your Sonarr URL and API key, select or create the tags that identify anime series (skippable)
+6. **Recap & Sync** — review your configured providers and kick off the first sync with live progress steps
+7. **Done** — you are in 🎉
+
+No config files to edit. No YAML to learn. Just click through the wizard and you are done.
+
+> **Advanced users:** Environment variables are supported if you want to pre-seed provider credentials into the container (useful for automated deployments). This is completely optional — everything can be configured through the UI wizard instead.
+
+---
+
+## 🐳 Installation
+
+### `docker run`
+
+```bash
+docker run -d \
+  --name meta-anime \
+  --restart unless-stopped \
+  -p 8080:8080 \
+  -e TZ=America/New_York \
+  -v meta-anime-config:/config \
+  ghcr.io/phx1985/meta-anime:latest
+```
+
+Open **http://localhost:8080** — the Setup Wizard will greet you on first launch.
+
+### `docker-compose.yml`
+
+```yaml
+services:
+  meta-anime:
+    image: ghcr.io/phx1985/meta-anime:latest
+    container_name: meta-anime
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - TZ=America/New_York
+    volumes:
+      - meta-anime-config:/config
+
+volumes:
+  meta-anime-config:
+```
+
+> **Data persistence** — the named volume maps to `/config` inside the container, which holds both the PostgreSQL data directory and the generated `appsettings.json`. Everything survives container restarts and upgrades automatically.
+
+---
 
 ## 🛠️ Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| API Framework | ASP.NET Core 10 (C# 14) |
-| Architecture | Clean Architecture (Domain / Core / Application / Infrastructure / Presentation) |
-| Database | PostgreSQL 17 + Entity Framework Core 10 |
-| Background Jobs | Hangfire |
-| Orchestration | .NET Aspire 13.x |
-| Frontend | Angular 21 |
-| Observability | OpenTelemetry (traces, metrics, logs) |
+| **API** | C# 14 / ASP.NET Core (.NET 10) |
+| **Frontend** | Angular 21+ (standalone components, signals, new control flow) |
+| **Database** | PostgreSQL 17 + Entity Framework Core 10 |
+| **Background Jobs** | Hangfire (scheduled + on-demand syncs) |
+| **Real-Time** | SignalR (live sync-progress updates) |
+| **Container** | linuxserver.io base image (Ubuntu Noble) + s6-overlay |
 
-## 🏗️ Architecture (Aspire Resources)
+---
 
-When you run the AppHost, Aspire manages three resources:
+## 👩‍💻 Developer Quick Start
 
-```
-MetaAnime.AppHost
-├── postgres          PostgreSQL 17 container  ──► volume-mounted, auto-migrated
-│   └── metaanime     database injected as ConnectionStrings__metaanime
-├── api               .NET API (MetaAnime.Presentation)
-│   ├── waits for postgres
-│   ├── auto-migrates the DB on startup
-│   └── exposes /health, /alive, /swagger, /hangfire
-└── ui                Angular dev server (npm run start)
-    ├── waits for api
-    ├── hot-reload enabled
-    └── proxies /api/* → api  (via proxy.conf.js)
-```
-
-`MetaAnime.ServiceDefaults` is a shared library injected into the API that wires up:
-* OpenTelemetry traces, metrics, and logs → forwarded to the Aspire Dashboard
-* Health checks at `/health` (all checks) and `/alive` (liveness probe)
-* HTTP client resilience and service discovery
-
-## ⚙️ Configuration
-
-Local settings live in `api/MetaAnime.Presentation/appsettings.Development.json` (gitignored — see [Quick Start](#-quick-start) below). The database connection string is injected automatically by Aspire; you do **not** need any `Postgres__*` keys for local development.
-
-| Category | Key | Description |
-|----------|-----|-------------|
-| **Authentication** | `Authentication__ApiKey` | **Required.** API Key sent as `X-Api-Key` header. |
-| **Sonarr** | `Sonarr__Host` | URL of your Sonarr instance (e.g. `http://sonarr:8989`). |
-| | `Sonarr__ApiKey` | Sonarr API key. |
-| | `Sonarr__AnimeTags` | Comma-separated Sonarr tags that identify anime (e.g. `anime`). |
-| | `Sonarr__RemoteUrl` | Optional public-facing Sonarr URL (e.g. `https://sonarr.example.com`) used for series links in the UI. Falls back to `Sonarr__Host` when not set. |
-| **Plex** | `Plex__Host` | URL of your Plex Media Server (e.g. `http://192.168.1.5:32400`). |
-| | `Plex__Token` | Plex authentication token (`X-Plex-Token`). |
-| | `Plex__AnimeSections` | Comma-separated Plex library section IDs containing anime. |
-| **MyAnimeList** | `MyAnimeList__ApiToken` | MAL API token / client ID. |
-| | `MyAnimeList__ClientId` | OAuth2 client ID (for automatic token refresh). |
-| | `MyAnimeList__RefreshToken` | Initial refresh token to bootstrap OAuth2. |
-| **Kometa** | `Kometa__AnimeIdsJsonUrl` | URL to the Kometa anime IDs JSON mapping file. |
-| **CORS** | `AllowedCorsOrigins` | JSON array of allowed origins in Development (default: `["http://localhost:4200"]`). |
-
-## 📦 Quick Start
+<details>
+<summary>Expand for local development with .NET Aspire</summary>
 
 ### Prerequisites
 
 | Tool | Purpose |
 |------|---------|
 | [.NET 10 SDK](https://dotnet.microsoft.com/download) | Build and run the API + AppHost |
-| [Node.js 22+ and npm](https://nodejs.org/) | Run the Angular dev server |
+| [Node.js 22+ / npm](https://nodejs.org/) | Run the Angular dev server |
 | [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Host the PostgreSQL container |
 
-> **No Aspire workload install needed.** Aspire 13.x ships as NuGet packages — `dotnet run` is all you need.
+> **No Aspire workload install needed.** Aspire 13.x ships as NuGet packages.
 
-### 1 · Clone the repository
+### Steps
 
 ```bash
+# 1. Clone
 git clone https://github.com/phx1985/meta-anime.git
 cd meta-anime
-```
 
-### 2 · Install npm dependencies *(first time only)*
-
-```bash
+# 2. Install UI dependencies (first time only)
 cd ui/meta-anime-ui && npm install && cd ../..
-```
 
-### 3 · Configure local credentials
-
-Copy the settings template and fill in your values:
-
-```bash
+# 3. Configure credentials
 cp api/MetaAnime.Presentation/appsettings.Development.json.template \
    api/MetaAnime.Presentation/appsettings.Development.json
-```
+# Edit the file and set at minimum Authentication__ApiKey
 
-Then edit `appsettings.Development.json` — at minimum set `Authentication__ApiKey`. Sonarr, Plex, and MAL settings are optional and can be added later. The file is gitignored and will never be committed.
-
-> **Prefer .NET User Secrets?** Store values outside the repo:
-> ```bash
-> dotnet user-secrets set "Authentication__ApiKey" "your-key" \
->     --project api/MetaAnime.Presentation
-> ```
-
-### 4 · Run the full stack
-
-```bash
+# 4. Run everything
 dotnet run --project MetaAnime.AppHost --launch-profile https
 ```
 
-Aspire starts everything in the correct order:
+Aspire starts PostgreSQL, the .NET API (auto-migrates on startup), and the Angular dev server in the correct order. The **Aspire Developer Dashboard** opens automatically.
 
-* Pulls and starts the **PostgreSQL 17** container
-* Starts the **.NET API** — waits for Postgres, then auto-applies EF Core migrations
-* Starts the **Angular dev server** — waits for the API, then opens a browser
+| Service | URL |
+|---------|-----|
+| Aspire Dashboard | https://localhost:17042 |
+| Angular UI | http://localhost:4200 |
+| API / Swagger | shown in Dashboard |
+| Hangfire | `<api-url>/hangfire` |
 
-The **Aspire Developer Dashboard** opens automatically in your browser.
-
-> **Visual Studio / Rider**: open `api/MetaAnime.sln`, set **MetaAnime.AppHost** as the startup project, and press **F5**. The `https` profile is the default.
-
-### 5 · Access the services
-
-| Service | URL | Notes |
-|---------|-----|-------|
-| **Aspire Dashboard** | https://localhost:17042 | Logs, traces, metrics for all resources |
-| **Angular UI** | http://localhost:4200 | Hot-reload enabled |
-| **API** | shown in Dashboard | Dynamic port; click the resource link |
-| **Swagger** | `<api-url>/swagger` | Interactive API docs |
-| **Hangfire** | `<api-url>/hangfire` | Background job monitor *(Development only — requires authentication in other environments)* |
-| **Health (all)** | `<api-url>/health` | Aggregated health check |
-| **Liveness** | `<api-url>/alive` | Liveness probe |
-
-### 6 · Stop the stack
-
-Press **Ctrl+C** in the terminal (or click **Stop** in Visual Studio). Aspire stops all processes and containers cleanly.
-
----
-
-## 🖥️ Aspire Dashboard
-
-The dashboard gives you full observability across all resources without any extra tooling:
-
-* **Resources** tab — live status, endpoint URLs, and environment variables for each resource
-* **Console** tab — combined stdout/stderr from the API and Angular dev server
-* **Structured Logs** tab — searchable, filterable log entries with trace context
-* **Traces** tab — distributed traces showing request flow across services
-* **Metrics** tab — ASP.NET Core, HTTP client, and .NET runtime metrics
-
-The Angular dev server (`ui`) forwards all `/api/*` requests to the API through `proxy.conf.js`, which reads the API endpoint from the `services__api__http__0` environment variable injected by Aspire.
-
----
-
-## 🔒 Authentication
-
-All API endpoints require an API key in the request header:
-
-```
-X-Api-Key: <your-configured-api-key>
-```
-
-The key is set via `Authentication__ApiKey` in `appsettings.Development.json` or User Secrets.
-
----
-
-## 🩺 Troubleshooting
-
-**`docker: command not found` or container won't start**
-Make sure Docker Desktop is running before starting the AppHost.
-
-**`ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL` not defined**
-You are running the AppHost without a launch profile. Always use:
-```bash
-dotnet run --project MetaAnime.AppHost --launch-profile https
-```
-
-**Angular UI shows CORS errors**
-Ensure the API is running (check the Dashboard Resources tab) and that `AllowedCorsOrigins` in your `appsettings.Development.json` includes `http://localhost:4200`.
-
-**`npm: command not found` when Aspire starts the UI**
-Install Node.js 22+ and run `npm install` in `ui/meta-anime-ui` before starting the AppHost.
-
-**Database migration errors on first run**
-The API automatically creates the migrations history table and runs all EF Core migrations on startup. If the API exits, check the Console tab in the Dashboard for details.
+</details>
 
 ---
 
@@ -198,5 +163,5 @@ The API automatically creates the migrations history table and runs all EF Core 
 
 ## 🙏 Acknowledgments
 
-* [**Kometa**](https://github.com/Kometa-Team/Kometa) — Meta Anime uses Kometa's anime ID mapping files to cross-reference AniDB, MAL, Plex, and other platform identifiers. Thank you to the Kometa team for maintaining this invaluable community resource!
+* [**Kometa**](https://github.com/Kometa-Team/Kometa) — MetaAnime relies on Kometa's anime ID mapping files to cross-reference AniDB, MAL, Plex, and other platform identifiers. Thank you to the Kometa team for maintaining this invaluable community resource!
 

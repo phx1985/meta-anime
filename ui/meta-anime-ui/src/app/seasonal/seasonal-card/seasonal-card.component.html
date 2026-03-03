@@ -68,9 +68,9 @@
       [class.cover--clickable]="!!coverImageUrl"
     >
       @if (coverImageUrl) {
-        <img [src]="coverImageUrl" [alt]="anime.title" class="cover-img" loading="lazy" />
+        <img [src]="coverImageUrl" [alt]="anime().title" class="cover-img" loading="lazy" />
       } @else {
-        <div class="cover-placeholder">{{ anime.title.charAt(0) }}</div>
+        <div class="cover-placeholder">{{ anime().title.charAt(0) }}</div>
       }
     </div>
 
@@ -128,7 +128,7 @@
           @for (g of pureGenres; track g) {
             <span
               class="genre-tag"
-              [class.genre-tag--highlighted]="activeGenres.length > 0 && activeGenres.includes(g)"
+              [class.genre-tag--highlighted]="activeGenres().length > 0 && activeGenres().includes(g)"
               >{{ translateGenre(g) }}</span
             >
           }
@@ -139,7 +139,7 @@
           @for (t of themes; track t) {
             <span
               class="genre-tag genre-tag--theme"
-              [class.genre-tag--highlighted]="activeThemes.length > 0 && activeThemes.includes(t)"
+              [class.genre-tag--highlighted]="activeThemes().length > 0 && activeThemes().includes(t)"
               >{{ translateGenre(t) }}</span
             >
           }
@@ -151,7 +151,7 @@
             <span
               class="genre-tag genre-tag--demographic"
               [class.genre-tag--highlighted]="
-                activeDemographics.length > 0 && activeDemographics.includes(d)
+                activeDemographics().length > 0 && activeDemographics().includes(d)
               "
               >{{ translateGenre(d) }}</span
             >
@@ -196,8 +196,8 @@
   <div class="card-footer">
     <div class="footer-actions">
       <!-- Plex: solid brand color + clickable when in Plex, greyed when not -->
-      @if (plexEnabled) {
-        @if (anime.inPlex && anime.plexUrl) {
+      @if (plexEnabled()) {
+        @if (anime().inPlex && anime().plexUrl) {
           <a
             class="action action--plex action--in-library"
             href="javascript:void(0)"
@@ -235,13 +235,13 @@
       }
 
       <!-- Sonarr: solid brand color + link when in library, greyed when not -->
-      @if (sonarrEnabled) {
-        @if (anime.inSonarr) {
+      @if (sonarrEnabled()) {
+        @if (anime().inSonarr) {
           <a
             class="action action--sonarr action--in-library"
-            [attr.href]="anime.sonarrUrl ?? null"
-            [attr.target]="anime.sonarrUrl ? '_blank' : null"
-            [attr.rel]="anime.sonarrUrl ? 'noopener noreferrer' : null"
+            [attr.href]="anime().sonarrUrl ?? null"
+            [attr.target]="anime().sonarrUrl ? '_blank' : null"
+            [attr.rel]="anime().sonarrUrl ? 'noopener noreferrer' : null"
             [title]="'animeCard.openSonarr' | translate"
           >
             <svg
@@ -301,7 +301,7 @@
       }
 
       <!-- MAL: solid brand color + link when in library, greyed when not -->
-      @if (anime.inMal) {
+      @if (anime().inMal) {
         <a
           class="action action--mal action--in-library"
           [attr.href]="malUrl ?? null"
@@ -463,7 +463,7 @@
     <img
       class="lightbox-img"
       [src]="coverImageUrl"
-      [alt]="anime.title"
+      [alt]="anime().title"
       (click)="$event.stopPropagation()"
     />
   </div>
@@ -511,9 +511,9 @@
       <!-- Anime context -->
       <div class="dialog__context">
         @if (coverImageUrl) {
-          <img [src]="coverImageUrl" [alt]="anime.title" class="dialog__context-thumb" />
+          <img [src]="coverImageUrl" [alt]="anime().title" class="dialog__context-thumb" />
         }
-        <span class="dialog__context-title">{{ anime.title }}</span>
+        <span class="dialog__context-title">{{ anime().title }}</span>
       </div>
 
       @if (addSuccess()) {
@@ -537,23 +537,23 @@
         <!-- ── Provider sections (accordion) ── -->
         <div class="dialog__body">
           <!-- ─── Sonarr section (hidden when Sonarr provider is disabled) ─── -->
-          @if (sonarrEnabled) {
+          @if (sonarrEnabled()) {
           <div
             class="prov-section"
-            [class.prov-section--locked]="anime.inSonarr"
-            [class.prov-section--on]="!anime.inSonarr && addSonarr()"
+            [class.prov-section--locked]="anime().inSonarr"
+            [class.prov-section--on]="!anime().inSonarr && addSonarr()"
             [class.prov-section--expanded]="expandedProvider() === 'sonarr'"
           >
             <div
               class="prov-section__head"
-              [class.prov-section__head--clickable]="!anime.inSonarr"
-              (click)="!anime.inSonarr && toggleAccordion('sonarr')"
+              [class.prov-section__head--clickable]="!anime().inSonarr"
+              (click)="!anime().inSonarr && toggleAccordion('sonarr')"
             >
               <img src="assets/images/sonarr.svg" class="prov-section__logo" alt="Sonarr" />
               <div class="prov-section__info">
                 <span class="prov-section__name">Sonarr</span>
                 <span class="prov-section__state">
-                  @if (anime.inSonarr) {
+                  @if (anime().inSonarr) {
                     {{ 'seasonal.alreadyTracked' | translate }}
                   } @else if (addSonarr()) {
                     {{ 'seasonal.willAdd' | translate }}
@@ -562,7 +562,7 @@
                   }
                 </span>
               </div>
-              @if (anime.inSonarr) {
+              @if (anime().inSonarr) {
                 <div class="prov-section__check" aria-hidden="true">
                   <svg
                     viewBox="0 0 16 16"
@@ -607,7 +607,7 @@
               }
             </div>
 
-            @if (!anime.inSonarr && expandedProvider() === 'sonarr') {
+            @if (!anime().inSonarr && expandedProvider() === 'sonarr') {
               <div class="prov-section__body" @accordionExpand>
                 @if (addSonarr()) {
                   <!-- Search -->
@@ -785,20 +785,20 @@
           <!-- ─── MAL section ─── -->
           <div
             class="prov-section"
-            [class.prov-section--locked]="anime.inMal"
-            [class.prov-section--on]="!anime.inMal && addMal()"
+            [class.prov-section--locked]="anime().inMal"
+            [class.prov-section--on]="!anime().inMal && addMal()"
             [class.prov-section--expanded]="expandedProvider() === 'mal'"
           >
             <div
               class="prov-section__head"
-              [class.prov-section__head--clickable]="!anime.inMal"
-              (click)="!anime.inMal && toggleAccordion('mal')"
+              [class.prov-section__head--clickable]="!anime().inMal"
+              (click)="!anime().inMal && toggleAccordion('mal')"
             >
               <img src="assets/images/mal.svg" class="prov-section__logo" alt="MyAnimeList" />
               <div class="prov-section__info">
                 <span class="prov-section__name">MyAnimeList</span>
                 <span class="prov-section__state">
-                  @if (anime.inMal) {
+                  @if (anime().inMal) {
                     {{ 'seasonal.alreadyTracked' | translate }}
                   } @else if (addMal()) {
                     {{ 'seasonal.willAdd' | translate }}
@@ -807,7 +807,7 @@
                   }
                 </span>
               </div>
-              @if (anime.inMal) {
+              @if (anime().inMal) {
                 <div class="prov-section__check" aria-hidden="true">
                   <svg
                     viewBox="0 0 16 16"
@@ -850,7 +850,7 @@
               }
             </div>
 
-            @if (!anime.inMal && expandedProvider() === 'mal') {
+            @if (!anime().inMal && expandedProvider() === 'mal') {
               <div class="prov-section__body" @accordionExpand>
                 @if (addMal()) {
                   <div class="field">
