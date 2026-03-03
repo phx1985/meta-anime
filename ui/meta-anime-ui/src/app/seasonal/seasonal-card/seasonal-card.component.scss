@@ -728,6 +728,9 @@
   gap: 0.75rem;
   // Allow body to shrink so footer stays visible
   min-height: 0;
+  // Explicit max-height so content scrolls reliably on small screens
+  // even if dvh / flex resolution doesn't behave as expected.
+  max-height: calc(80vh - 160px);
 }
 
 // Footer — always visible at bottom

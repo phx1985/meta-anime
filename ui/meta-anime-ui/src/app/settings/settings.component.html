@@ -346,30 +346,59 @@
                         ↺ Retry
                       </button>
                     }
-                    @if (plexLibsForSettings().length > 0) {
-                      <div class="picker-chip-grid">
-                        @for (lib of plexLibsForSettings(); track lib.key) {
-                          <button
-                            type="button"
-                            class="picker-chip"
-                            [class.picker-chip--selected]="isPlexSectionSelected(lib.key)"
-                            (click)="togglePlexSection(lib.key)"
-                          >{{ lib.title }}</button>
+                    <!-- Show only the selected libraries inline; full list is in the modal -->
+                    <div class="picker-selected-row">
+                      @if (plexSelectedSectionKeys().length === 0) {
+                        <span class="picker-none-selected">{{ 'settings.plex.noSectionsSelected' | translate }}</span>
+                      }
+                      @for (lib of plexLibsForSettings(); track lib.key) {
+                        @if (isPlexSectionSelected(lib.key)) {
+                          <span class="picker-chip picker-chip--selected picker-chip--display">{{ lib.title }}</span>
                         }
-                      </div>
-                      <div class="picker-save-row">
-                        <button type="button" class="btn btn-sm btn-primary" [disabled]="isSaving('Plex:AnimeSections')" (click)="savePlexSections()">
-                          @if (isSaving('Plex:AnimeSections')) {
-                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                          }
-                          {{ 'settings.save' | translate }}
-                        </button>
-                        @if (plexLibsSaved()) {
-                          <span class="badge-saved">&#10003; {{ 'settings.saved' | translate }}</span>
-                        }
-                      </div>
-                    }
+                      }
+                      <button type="button" class="picker-manage-btn" (click)="plexPickerOpen.set(true)">
+                        + {{ 'settings.plex.manageLibraries' | translate }}
+                      </button>
+                    </div>
                   </div>
+
+                  <!-- ── Plex Library Picker Modal ───────────────────────────── -->
+                  @if (plexPickerOpen()) {
+                    <div class="picker-modal-backdrop" (click)="plexPickerOpen.set(false)" role="dialog" aria-modal="true" aria-label="Select Plex Libraries">
+                      <div class="picker-modal" (click)="$event.stopPropagation()">
+                        <div class="picker-modal__header">
+                          <span class="picker-modal__title">{{ 'settings.plex.manageLibraries' | translate }}</span>
+                          <button type="button" class="picker-modal__close" (click)="plexPickerOpen.set(false)" aria-label="Close">✕</button>
+                        </div>
+                        <div class="picker-modal__body">
+                          @if (plexLibsForSettings().length === 0) {
+                            <p class="picker-modal__empty">{{ 'settings.plex.noLibrariesLoaded' | translate }}</p>
+                          }
+                          <div class="picker-chip-grid">
+                            @for (lib of plexLibsForSettings(); track lib.key) {
+                              <button
+                                type="button"
+                                class="picker-chip"
+                                [class.picker-chip--selected]="isPlexSectionSelected(lib.key)"
+                                (click)="togglePlexSection(lib.key)"
+                              >{{ lib.title }}</button>
+                            }
+                          </div>
+                        </div>
+                        <div class="picker-modal__footer">
+                          <button type="button" class="btn btn-sm btn-primary" [disabled]="isSaving('Plex:AnimeSections')" (click)="savePlexSections(); plexPickerOpen.set(false)">
+                            @if (isSaving('Plex:AnimeSections')) {
+                              <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            }
+                            {{ 'settings.save' | translate }}
+                          </button>
+                          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="plexPickerOpen.set(false)">
+                            {{ 'settings.cancel' | translate }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  }
                 }
 
                   @for (setting of grouped()[cat]; track trackByKey($index, setting)) {
@@ -703,51 +732,81 @@
                         ↺ Retry
                       </button>
                     }
-                    @if (sonarrTagsForSettings().length > 0) {
-                      <div class="picker-chip-grid">
-                        @for (tag of sonarrTagsForSettings(); track tag.id) {
-                          <button
-                            type="button"
-                            class="picker-chip"
-                            [class.picker-chip--selected]="isSonarrTagSelectedInSettings(tag.label)"
-                            (click)="toggleSonarrTagInSettings(tag.label)"
-                          >{{ tag.label }}</button>
+                    <!-- Show only selected tags inline; full list + create-tag are in the modal -->
+                    <div class="picker-selected-row">
+                      @if (sonarrSelectedTagLabels().length === 0) {
+                        <span class="picker-none-selected">{{ 'settings.sonarr.noTagsSelected' | translate }}</span>
+                      }
+                      @for (tag of sonarrTagsForSettings(); track tag.id) {
+                        @if (isSonarrTagSelectedInSettings(tag.label)) {
+                          <span class="picker-chip picker-chip--selected picker-chip--display">{{ tag.label }}</span>
                         }
-                      </div>
-                      <!-- Create new tag -->
-                      <div class="picker-create-row">
-                        <input
-                          type="text"
-                          class="picker-create-input"
-                          [value]="sonarrNewTagLabelSettings()"
-                          (input)="sonarrNewTagLabelSettings.set($any($event.target).value)"
-                          [placeholder]="'settings.sonarr.createTagPlaceholder' | translate"
-                        />
-                        <button
-                          type="button"
-                          class="picker-create-btn"
-                          [disabled]="sonarrCreatingTagSettings() || !sonarrNewTagLabelSettings().trim()"
-                          (click)="createSonarrTagInSettings()"
-                        >
-                          @if (sonarrCreatingTagSettings()) {
-                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                          }
-                          {{ 'settings.sonarr.createTagBtn' | translate }}
-                        </button>
-                      </div>
-                      <div class="picker-save-row">
-                        <button type="button" class="btn btn-sm btn-primary" [disabled]="isSaving('Sonarr:AnimeTags')" (click)="saveSonarrTagsInSettings()">
-                          @if (isSaving('Sonarr:AnimeTags')) {
-                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                          }
-                          {{ 'settings.save' | translate }}
-                        </button>
-                        @if (sonarrTagsSaved()) {
-                          <span class="badge-saved">&#10003; {{ 'settings.saved' | translate }}</span>
-                        }
-                      </div>
-                    }
+                      }
+                      <button type="button" class="picker-manage-btn" (click)="sonarrPickerOpen.set(true)">
+                        + {{ 'settings.sonarr.manageTags' | translate }}
+                      </button>
+                    </div>
                   </div>
+
+                  <!-- ── Sonarr Tag Picker Modal ─────────────────────────────── -->
+                  @if (sonarrPickerOpen()) {
+                    <div class="picker-modal-backdrop" (click)="sonarrPickerOpen.set(false)" role="dialog" aria-modal="true" aria-label="Manage Sonarr Tags">
+                      <div class="picker-modal" (click)="$event.stopPropagation()">
+                        <div class="picker-modal__header">
+                          <span class="picker-modal__title">{{ 'settings.sonarr.manageTags' | translate }}</span>
+                          <button type="button" class="picker-modal__close" (click)="sonarrPickerOpen.set(false)" aria-label="Close">✕</button>
+                        </div>
+                        <div class="picker-modal__body">
+                          @if (sonarrTagsForSettings().length === 0) {
+                            <p class="picker-modal__empty">{{ 'settings.sonarr.noTagsLoaded' | translate }}</p>
+                          }
+                          <div class="picker-chip-grid">
+                            @for (tag of sonarrTagsForSettings(); track tag.id) {
+                              <button
+                                type="button"
+                                class="picker-chip"
+                                [class.picker-chip--selected]="isSonarrTagSelectedInSettings(tag.label)"
+                                (click)="toggleSonarrTagInSettings(tag.label)"
+                              >{{ tag.label }}</button>
+                            }
+                          </div>
+                          <!-- Create new tag — moved inside modal to keep main screen clean -->
+                          <div class="picker-create-row picker-create-row--modal">
+                            <input
+                              type="text"
+                              class="picker-create-input"
+                              [value]="sonarrNewTagLabelSettings()"
+                              (input)="sonarrNewTagLabelSettings.set($any($event.target).value)"
+                              [placeholder]="'settings.sonarr.createTagPlaceholder' | translate"
+                            />
+                            <button
+                              type="button"
+                              class="picker-create-btn"
+                              [disabled]="sonarrCreatingTagSettings() || !sonarrNewTagLabelSettings().trim()"
+                              (click)="createSonarrTagInSettings()"
+                            >
+                              @if (sonarrCreatingTagSettings()) {
+                                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                              }
+                              {{ 'settings.sonarr.createTagBtn' | translate }}
+                            </button>
+                          </div>
+                        </div>
+                        <div class="picker-modal__footer">
+                          <button type="button" class="btn btn-sm btn-primary" [disabled]="isSaving('Sonarr:AnimeTags')" (click)="saveSonarrTagsInSettings(); sonarrPickerOpen.set(false)">
+                            @if (isSaving('Sonarr:AnimeTags')) {
+                              <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            }
+                            {{ 'settings.save' | translate }}
+                          </button>
+                          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="sonarrPickerOpen.set(false)">
+                            {{ 'settings.cancel' | translate }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  }
+
                   <!-- ── Add Series Defaults sub-group ──────────────────────── -->
                   <div
                     id="sonarr-add-defaults"

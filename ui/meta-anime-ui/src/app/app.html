@@ -431,8 +431,12 @@
 </aside>
 }
 
-<router-outlet />
+<!-- Global animated bokeh background — fixed, z-index: -1, renders on every page -->
+<div class="bokeh" aria-hidden="true">
+  @for (b of bokehBlobs; track b) { <div class="bokeh__blob"></div> }
+</div>
 
+<router-outlet />
 
 <!-- ── Mobile Bottom Navigation Bar ─────────────────────────────────────── -->
 @if (!hideNavRoute()) {

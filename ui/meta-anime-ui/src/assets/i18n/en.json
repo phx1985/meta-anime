@@ -148,7 +148,7 @@
     },
     "sonarrAlreadyInLibrary": "Already in Sonarr",
     "partiallyTracked": "Partially tracked — add to more providers",
-    "resultCount": "{{count}} result(s)",
+    "resultCount": "{{count}} results",
     "monitor": "Monitor",
     "seasonFolder": "Season Folder",
     "monitorTypes": {
@@ -167,9 +167,9 @@
   },
   "animeList": {
     "title": "Anime List",
-    "error": "Failed to load animes. Please try again later.",
-    "empty": "No animes found.",
-    "totalCount": "{{count}} anime(s) found",
+    "error": "Failed to load anime. Please try again later.",
+    "empty": "No anime found.",
+    "totalCount": "{{count}} anime found",
     "loadingMore": "Loading more…",
     "endOfResults": "You've reached the end of the list",
     "displayMode": "Display mode",
@@ -316,7 +316,7 @@
         "clearLog": "Clear log"
       },
       "step": {
-        "init": "Initialising sync",
+        "init": "Initializing sync",
         "kometa": "Loading Kometa mappings",
         "plex": "Fetching Plex library",
         "mal": "Fetching MyAnimeList entries",
@@ -442,7 +442,7 @@
       },
       "Sonarr_DefaultSeasonFolder": {
         "name": "Default Season Folder",
-        "desc": "Whether to organise episodes into per-season subfolders by default."
+        "desc": "Whether to organize episodes into per-season subfolders by default."
       },
       "Sonarr_DefaultMonitor": {
         "name": "Default Monitor",
@@ -479,14 +479,17 @@
       "configureFirst": "Configure Sonarr Host URL and API Key above to unlock these defaults.",
       "connectionError": "Could not connect to Sonarr. Check your Host URL and API Key.",
       "loadingOptions": "Loading Sonarr options…",
-      "createTagPlaceholder": "New tag name...",
-      "createTagBtn": "Create"
+      "createTagPlaceholder": "New tag name…",
+      "createTagBtn": "Create",
+      "manageTags": "Add/Manage Tags",
+      "noTagsSelected": "No tags selected",
+      "noTagsLoaded": "No tags loaded. Check your Sonarr connection."
     },
     "provider": {
       "enabled": "Enabled",
       "disabled": "Disabled",
       "enabledToggle": "Toggle provider enabled state",
-      "disabledHint": "Enable Sonarr in its settings card to use this feature",
+      "disabledHint": "Enable Sonarr in its settings card to use this feature.",
       "configureFirstTooltip": "Configure basic settings first to enable."
     },
     "syncPrompt": {
@@ -497,7 +500,7 @@
     },
     "kometaWarn": {
       "title": "Warning: Sensitive Setting",
-      "body": "Modifying the Kometa mapping file URL can break the connection between your Anime tracking and your Media server. Only proceed if you know exactly what you are doing.",
+      "body": "Modifying the Kometa mapping file URL can break the connection between your anime tracking and your media server. Only proceed if you know exactly what you are doing.",
       "proceed": "I Understand, Proceed"
     },
     "enrollment": {
@@ -514,8 +517,13 @@
         "title": "Plex Account",
         "desc": "Sign in with Plex to sync your anime library.",
         "connect": "Sign in with Plex",
-        "waiting": "Waiting for Plex authorization in the opened tab..."
+        "waiting": "Waiting for Plex authorization in a new browser tab…"
       }
+    },
+    "plex": {
+      "manageLibraries": "Add/Manage Libraries",
+      "noSectionsSelected": "No libraries selected",
+      "noLibrariesLoaded": "No libraries loaded. Check your Plex connection."
     },
     "security": {
       "title": "Security",

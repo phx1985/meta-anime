@@ -212,6 +212,8 @@ export class SettingsComponent {
   plexSelectedSectionKeys = signal<string[]>([]);
   plexLibsSaved = signal(false);
   private plexLibsSavedTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Controls the Plex library picker modal */
+  plexPickerOpen = signal(false);
 
   // ── Sonarr tag picker (dynamic) ───────────────────────────────────────────
   sonarrTagsForSettings = signal<SonarrTag[]>([]);
@@ -222,6 +224,8 @@ export class SettingsComponent {
   private sonarrTagsSavedTimer: ReturnType<typeof setTimeout> | null = null;
   sonarrNewTagLabelSettings = signal('');
   sonarrCreatingTagSettings = signal(false);
+  /** Controls the Sonarr tag picker modal */
+  sonarrPickerOpen = signal(false);
 
   sonarrDefaultSettings = computed(() => {
     const order = [
