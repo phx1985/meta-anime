@@ -124,28 +124,64 @@ export class AnimeDetailPanelComponent {
       .pipe(
         tap((mal) => {
           if (!this.animeId() && mal) {
-            this.isLoading.set(true);
             this.error.set(null);
+            // Immediately populate from seasonal item data if available (no spinner).
+            const seasonal = this.seasonalItem();
+            if (seasonal) {
+              this.anime.set(this.buildAnimeFromSeasonalItem(seasonal));
+              this.isLoading.set(false);
+            } else {
+              this.isLoading.set(true);
+            }
           } else if (!this.animeId() && !mal) {
             this.anime.set(null);
             this.localMalStatus.set(null);
             this.localMalEpisodes.set(null);
             this.localMalScore.set(null);
+            this.gallery.close();
           }
         }),
         switchMap((mal) => {
           if (this.animeId()) return of(null); // animeId already handled above
           if (!mal) return of(null);
+          // Still try to enrich from backend (more images, list status, etc.)
           return this.animeService.getAnimeByMalId(mal).pipe(catchError(() => of(null)));
         }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((data) => {
         if (!this.animeId()) {
-          this.anime.set(data);
+          // Only replace with backend data if it returned something — keeps seasonal fallback on failure.
+          if (data) this.anime.set(data);
           this.isLoading.set(false);
         }
       });
+  }
+
+  /** Builds a minimal AnimeDetailsResponse from a SeasonalAnimeItem so the panel
+   *  can render immediately without waiting for a backend round-trip. */
+  private buildAnimeFromSeasonalItem(item: SeasonalAnimeItem): AnimeDetailsResponse {
+    const malInfo: MalAnimeInfo = {
+      title: item.title,
+      id: item.malId,
+      url: item.malUrl,
+      coverImageUrl: item.coverImageUrl,
+      synopsis: item.synopsis,
+      genres: item.genres,
+      status: item.status,
+      mediaType: item.mediaType,
+      startDate: item.startDate,
+      rating: { malMean: item.malScore, myScore: 0 },
+      viewState: item.malViewState,
+    };
+    return {
+      aniDbId: item.malId,
+      title: item.title,
+      description: item.synopsis,
+      malAnimes: [malInfo],
+      sonarrAnimes: [],
+      plexAnimes: [],
+    };
   }
 
   @HostListener('document:keydown.escape')
