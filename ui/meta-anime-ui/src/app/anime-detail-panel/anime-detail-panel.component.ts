@@ -14,7 +14,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo } from '../models/anime.models';
+import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo, SeasonalAnimeItem } from '../models/anime.models';
 import { AnimeService } from '../services/anime.service';
 import { SafePipe } from './safe.pipe';
 import { ScoreBadgeComponent } from '../anime-list/anime-card/score-badge/score-badge.component';
@@ -55,6 +55,15 @@ export class AnimeDetailPanelComponent {
   readonly closed = output<void>();
   /** Fallback Sonarr base URL for the action button when per-anime URL is missing. */
   readonly sonarrBaseUrl = input<string | null>(null);
+  /** Seasonal item for the add-to-providers button. Only provided from the seasonal page. */
+  readonly seasonalItem = input<SeasonalAnimeItem | null>(null);
+  /** Emitted when the user clicks the "Add to Library" button in seasonal mode. */
+  readonly addRequested = output<void>();
+
+  get showAddButton(): boolean {
+    const s = this.seasonalItem();
+    return s !== null && (!s.inMal || !s.inSonarr);
+  }
 
   private animeService = inject(AnimeService);
   private destroyRef = inject(DestroyRef);

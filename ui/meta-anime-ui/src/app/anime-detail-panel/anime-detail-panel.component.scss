@@ -263,6 +263,17 @@
   &--plex   { background: rgba(229, 160, 13, 0.15); color: #e5a00d; border: 1px solid rgba(229, 160, 13, 0.3); }
   &--sonarr { background: rgba(53, 152, 219, 0.15); color: #3598db; border: 1px solid rgba(53, 152, 219, 0.3); }
 
+  &--add {
+    background: rgba(108, 99, 255, 0.15);
+    border: 1px solid rgba(108, 99, 255, 0.5);
+    color: var(--accent-primary);
+    &:hover {
+      background: rgba(108, 99, 255, 0.3);
+      border-color: var(--accent-primary);
+      opacity: 1;
+    }
+  }
+
   // ── Franchise Constellation — purple gradient ───────────────────────────
   &--constellation {
     background: linear-gradient(

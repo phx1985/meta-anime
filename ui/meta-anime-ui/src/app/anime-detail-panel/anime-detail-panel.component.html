@@ -1,4 +1,4 @@
-@if (animeId() !== null) {
+@if (animeId() !== null || malId() !== null) {
   <!-- Backdrop -->
   <div class="panel-backdrop" (click)="close()" aria-hidden="true" @fadeIn></div>
 
@@ -136,6 +136,20 @@
               </a>
             }
           </div>
+
+          @if (showAddButton) {
+            <button
+              type="button"
+              class="panel__action-btn panel__action-btn--add"
+              (click)="addRequested.emit()"
+              [title]="'seasonal.addToProviders' | translate"
+              [attr.aria-label]="'seasonal.addToProviders' | translate"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="20" height="20" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
+          }
 
           <!-- Explore Universe — full-width, below provider buttons -->
           <button
