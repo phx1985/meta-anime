@@ -103,6 +103,7 @@ export class AnimeDetailPanelComponent {
             this.localMalStatus.set(null);
             this.localMalEpisodes.set(null);
             this.localMalScore.set(null);
+            this.gallery.close();
           }
         }),
         switchMap((id) => {
@@ -168,6 +169,7 @@ export class AnimeDetailPanelComponent {
   }
 
   close(): void {
+    this.gallery.close();
     this.closed.emit();
   }
 

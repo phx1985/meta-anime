@@ -1131,14 +1131,10 @@
 .seasonal-grid {
   display: grid;
   gap: 1.25rem;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
 
   @media (max-width: 639px) {
     grid-template-columns: 1fr;
-  }
-
-  @media (min-width: 1200px) {
-    grid-template-columns: repeat(3, 1fr);
   }
 
   // Grid items: flex column so app-anime-card (already display:flex flex-direction:column)

@@ -13,9 +13,6 @@ import { trigger, style, animate, transition } from '@angular/animations';
 import { AnimeDetailsResponse, MalAnimeInfo, SeasonalAnimeItem, SonarrAnimeInfo } from '../../models/anime.models';
 import { ScoreBadgeComponent } from './score-badge/score-badge.component';
 import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../../constants/genre-lists';
-import { PopupService } from '../../services/popup.service';
-import { PlexDeepLinkService } from '../../services/plex-deep-link.service';
-import { FranchiseConstellationService } from '../../services/franchise-constellation.service';
 
 @Component({
   selector: 'app-anime-card',
@@ -48,16 +45,11 @@ export class AnimeCardComponent {
 
   // ── Seasonal mode inputs ──────────────────────────────────────────────────
   readonly seasonalItem = input<SeasonalAnimeItem | null>(null);
-  readonly sonarrEnabled = input(false);
-  readonly plexEnabled = input(false);
 
   // ── Seasonal mode output ──────────────────────────────────────────────────
   readonly openDetailsByMalId = output<string>();
 
   private translate = inject(TranslateService);
-  private popupService = inject(PopupService);
-  private plexDeepLink = inject(PlexDeepLinkService);
-  protected franchiseConstellation = inject(FranchiseConstellationService);
 
   showAltTitles = signal(false);
   showLightbox = signal(false);
@@ -87,47 +79,9 @@ export class AnimeCardComponent {
 
   // ── Seasonal data helpers (prefer seasonalItem when set) ──────────────────
 
-  get inMal(): boolean {
-    return this.seasonalItem()?.inMal ?? !!this.mal?.id;
-  }
-
-  get inSonarr(): boolean {
-    return this.seasonalItem()?.inSonarr ?? !!this.sonarr?.id;
-  }
-
-  get inPlex(): boolean {
-    return this.seasonalItem()?.inPlex ?? !!this.plex?.id;
-  }
-
-  get sonarrUrl(): string | null {
-    return this.seasonalItem()?.sonarrUrl ?? this.sonarr?.url ?? null;
-  }
-
-  get plexUrl(): string | null {
-    return this.seasonalItem()?.plexUrl ?? this.plex?.url ?? null;
-  }
-
-  get malUrl(): string | null {
-    return this.seasonalItem()?.malUrl ?? this.mal?.url ?? null;
-  }
-
   get malId(): string | null {
     return this.seasonalItem()?.malId ?? this.mal?.id ?? null;
   }
-
-  get tvdbId(): string | undefined {
-    return this.seasonalItem()?.tvdbId;
-  }
-
-  get englishTitle(): string | undefined {
-    return this.seasonalItem()?.englishTitle;
-  }
-
-  /** True when at least one provider has the anime tracked. */
-  get hasProviderData(): boolean {
-    return this.inMal || this.inSonarr || this.inPlex;
-  }
-
   // ── Title / image ─────────────────────────────────────────────────────────
 
   get coverImageUrl(): string | undefined {
@@ -272,27 +226,6 @@ export class AnimeCardComponent {
       return;
     }
     this.openDetails.emit(this.anime().aniDbId);
-  }
-
-  openMalPage(): void {
-    if (this.malUrl) window.open(this.malUrl, '_blank', 'noopener,noreferrer');
-  }
-
-  openPlexLink(event: Event): void {
-    const url = this.plexUrl;
-    if (!url) return;
-    event.preventDefault();
-    this.plexDeepLink.openLink(url, this.displayTitle);
-  }
-
-  openSynopsisModal(): void {
-    this.popupService.openSynopsis(this.displayTitle, this.description);
-  }
-
-  openFranchiseConstellation(): void {
-    const id = this.malId;
-    if (!id) return;
-    this.franchiseConstellation.open(id, this.displayTitle, this.coverImageUrl);
   }
 
   openLightbox(): void {

@@ -658,8 +658,6 @@
             <app-anime-card
               [anime]="seasonalToAnimeDetails(anime)"
               [seasonalItem]="anime"
-              [sonarrEnabled]="providerState.sonarrEnabled()"
-              [plexEnabled]="providerState.plexEnabled()"
               (openDetails)="openAnimeDetails($event)"
               (openDetailsByMalId)="openDetailsByMalId($event)"
             />
