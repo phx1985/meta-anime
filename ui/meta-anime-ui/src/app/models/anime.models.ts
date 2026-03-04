@@ -194,6 +194,7 @@ export interface SeasonalAnimeItem {
   tvdbId?: string;
   englishTitle?: string;
   malViewState?: string;
+  aniDbId?: string;
 }
 
 export type SeasonName = 'winter' | 'spring' | 'summer' | 'fall';

@@ -50,6 +50,8 @@ import { ProviderStateService } from '../services/provider-state.service';
 })
 export class AnimeDetailPanelComponent {
   readonly animeId = input<string | null>(null);
+  /** MAL ID to use when `animeId` is not set — fetches via the by-mal endpoint. */
+  readonly malId = input<string | null>(null);
   readonly closed = output<void>();
   /** Fallback Sonarr base URL for the action button when per-anime URL is missing. */
   readonly sonarrBaseUrl = input<string | null>(null);
@@ -79,32 +81,66 @@ export class AnimeDetailPanelComponent {
   neonGlow = signal(false);
 
   constructor() {
+    // Merge both id inputs: prefer animeId, fall back to malId-based lookup
     toObservable(this.animeId)
       .pipe(
         tap((id) => {
-          this.isLoading.set(!!id);
+          const mal = this.malId();
+          const isOpen = !!(id || mal);
+          this.isLoading.set(isOpen);
           this.error.set(null);
-          if (!id) {
+          if (!isOpen) {
             this.anime.set(null);
             this.localMalStatus.set(null);
             this.localMalEpisodes.set(null);
             this.localMalScore.set(null);
           }
         }),
-        switchMap((id) =>
-          id ? this.animeService.getAnime(id).pipe(catchError(() => of(null))) : of(null),
-        ),
+        switchMap((id) => {
+          if (id) return this.animeService.getAnime(id).pipe(catchError(() => of(null)));
+          const mal = this.malId();
+          if (mal) return this.animeService.getAnimeByMalId(mal).pipe(catchError(() => of(null)));
+          return of(null);
+        }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((data) => {
         this.anime.set(data);
         this.isLoading.set(false);
       });
+
+    // React to malId changes when animeId is null
+    toObservable(this.malId)
+      .pipe(
+        tap((mal) => {
+          if (!this.animeId() && mal) {
+            this.isLoading.set(true);
+            this.error.set(null);
+          } else if (!this.animeId() && !mal) {
+            this.anime.set(null);
+            this.localMalStatus.set(null);
+            this.localMalEpisodes.set(null);
+            this.localMalScore.set(null);
+          }
+        }),
+        switchMap((mal) => {
+          if (this.animeId()) return of(null); // animeId already handled above
+          if (!mal) return of(null);
+          return this.animeService.getAnimeByMalId(mal).pipe(catchError(() => of(null)));
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((data) => {
+        if (!this.animeId()) {
+          this.anime.set(data);
+          this.isLoading.set(false);
+        }
+      });
   }
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.animeId() !== null) this.close();
+    if (this.animeId() !== null || this.malId() !== null) this.close();
   }
 
   /** Track touch start X position for swipe-to-close gesture. */

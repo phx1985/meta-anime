@@ -655,13 +655,14 @@
       <div class="seasonal-grid" [@gridAnimation]="displayedAnimes().length">
         @for (anime of displayedAnimes(); track anime.malId) {
           <div class="seasonal-grid__cell">
-            <app-seasonal-card
-              [anime]="anime"
-              [activeGenres]="filterGenre()"
-              [activeThemes]="filterTheme()"
-              [activeDemographics]="filterDemographic()"
-              [plexEnabled]="providerState.plexEnabled()"
+            <app-anime-card
+              [anime]="seasonalToAnimeDetails(anime)"
+              [seasonalItem]="anime"
+              [showSeasonalAdd]="true"
               [sonarrEnabled]="providerState.sonarrEnabled()"
+              [plexEnabled]="providerState.plexEnabled()"
+              (openDetails)="openAnimeDetails($event)"
+              (openDetailsByMalId)="openDetailsByMalId($event)"
             />
           </div>
         }
@@ -1059,3 +1060,9 @@
     </div>
   </div>
 }
+
+<app-anime-detail-panel
+  [animeId]="selectedAnimeId()"
+  [malId]="selectedMalId()"
+  (closed)="closeAnimeDetails()"
+/>

@@ -800,6 +800,18 @@ public sealed class AnimeMediatorService(
         }
     }
 
+    public async Task<Result<AnimeDetailsResponse?>> GetByMalIdAsync(string malId)
+    {
+        var aniDbIdResult = await animeMappingService.GetAniDbIdByMalIdAsync(malId);
+        if (aniDbIdResult.IsFailure)
+            return Result.Failure<AnimeDetailsResponse?>(aniDbIdResult.Error);
+
+        if (aniDbIdResult.Value == null)
+            return Result.Success<AnimeDetailsResponse?>(null);
+
+        return await GetByIdAsync(aniDbIdResult.Value);
+    }
+
     public async Task<Result<IEnumerable<SonarrCodecSearchResponse>>> GetSonarrSeriesByCodecAsync(string codec)
     {
         try
@@ -1061,7 +1073,8 @@ public sealed class AnimeMediatorService(
                     SonarrUrl: sonarrUrl,
                     TvdbId: tvdbId,
                     EnglishTitle: anime.AlternativeTitles?.En,
-                    MalViewState: malViewState
+                    MalViewState: malViewState,
+                    AniDbId: aniDbId
                 );
             });
 

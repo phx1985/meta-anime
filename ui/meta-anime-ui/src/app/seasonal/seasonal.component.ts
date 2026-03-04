@@ -14,8 +14,13 @@ import {
   SeasonalFilterPreset,
   SeasonalSavedFilterState,
   SeasonName,
+  AnimeDetailsResponse,
+  MalAnimeInfo,
+  SonarrAnimeInfo,
+  PlexAnimeInfo,
 } from '../models/anime.models';
-import { SeasonalCardComponent } from './seasonal-card/seasonal-card.component';
+import { AnimeCardComponent } from '../anime-list/anime-card/anime-card.component';
+import { AnimeDetailPanelComponent } from '../anime-detail-panel/anime-detail-panel.component';
 import {
   GENRE_LIST,
   THEME_LIST,
@@ -70,7 +75,7 @@ function getCurrentSeason(month: number): SeasonName {
   selector: 'app-seasonal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslatePipe, SeasonalCardComponent, NgTemplateOutlet],
+  imports: [CommonModule, FormsModule, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, NgTemplateOutlet],
   templateUrl: './seasonal.component.html',
   styleUrl: './seasonal.component.scss',
   animations: [
@@ -116,6 +121,57 @@ export class SeasonalComponent {
   private translateService = inject(TranslateService);
   readonly providerState = inject(ProviderStateService);
   private readonly popupService = inject(PopupService);
+
+  // ── Detail panel ────────────────────────────────────────────────────────────
+  selectedAnimeId = signal<string | null>(null);
+  selectedMalId = signal<string | null>(null);
+
+  openAnimeDetails(id: string): void {
+    this.selectedAnimeId.set(id);
+    this.selectedMalId.set(null);
+  }
+
+  openDetailsByMalId(malId: string): void {
+    this.selectedMalId.set(malId);
+    this.selectedAnimeId.set(null);
+  }
+
+  closeAnimeDetails(): void {
+    this.selectedAnimeId.set(null);
+    this.selectedMalId.set(null);
+  }
+
+  /** Maps a SeasonalAnimeItem to AnimeDetailsResponse so AnimeCardComponent can render it.
+   * Provider sub-objects are only populated when the anime is tracked (smart provider icons). */
+  seasonalToAnimeDetails(item: SeasonalAnimeItem): AnimeDetailsResponse {
+    const malAnime: MalAnimeInfo = {
+      title: item.title,
+      id: item.inMal ? item.malId : undefined,
+      url: item.malUrl,
+      viewState: item.malViewState,
+      synopsis: item.synopsis,
+      genres: item.genres,
+      coverImageUrl: item.coverImageUrl,
+      startDate: item.startDate,
+      status: item.status,
+      mediaType: item.mediaType,
+      rating: { myScore: 0, malMean: item.malScore ?? 0 },
+    };
+    const sonarrAnimes: SonarrAnimeInfo[] = item.inSonarr
+      ? [{ title: item.title, url: item.sonarrUrl, exists: true }]
+      : [];
+    const plexAnimes: PlexAnimeInfo[] = item.inPlex
+      ? [{ title: item.title, url: item.plexUrl }]
+      : [];
+    return {
+      aniDbId: item.aniDbId ?? item.malId,
+      title: item.title,
+      description: item.synopsis,
+      malAnimes: [malAnime],
+      sonarrAnimes: sonarrAnimes.length > 0 ? sonarrAnimes : undefined,
+      plexAnimes: plexAnimes.length > 0 ? plexAnimes : undefined,
+    };
+  }
 
   private readonly _now = new Date();
   private readonly _maxYear = this._now.getFullYear();

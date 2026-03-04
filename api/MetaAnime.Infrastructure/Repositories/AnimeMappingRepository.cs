@@ -104,4 +104,14 @@ public sealed class AnimeMappingRepository(MetaAnimeDbContext dbContext) : IAnim
             .Where(am => idList.Contains(am.AniDbId))
             .ToListAsync();
     }
+
+    public async Task<string?> GetAniDbIdByMalIdAsync(string malId)
+    {
+        return await dbContext.AnimeMappings
+            .AsNoTracking()
+            .Include(am => am.Anime)
+            .Where(am => am.Anime!.AnimeSource == AnimeSource.MyAnimeList && am.Anime.SourceId == malId)
+            .Select(am => am.AniDbId)
+            .FirstOrDefaultAsync();
+    }
 }
