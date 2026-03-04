@@ -32,6 +32,8 @@ import {
   SavedFilterState,
 } from '../models/anime.models';
 import { AnimeCardComponent } from './anime-card/anime-card.component';
+import { AnimeDetailPanelComponent } from '../anime-detail-panel/anime-detail-panel.component';
+import { AnimeImageGalleryComponent } from '../anime-image-gallery/anime-image-gallery.component';
 import { StorageKeys } from '../constants/storage-keys';
 
 const PAGE_SIZE = 20;
@@ -95,7 +97,7 @@ export const MEDIA_TYPE_OPTIONS = [
   selector: 'app-anime-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, TranslatePipe, AnimeCardComponent, NgTemplateOutlet],
+  imports: [FormsModule, RouterLink, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, AnimeImageGalleryComponent, NgTemplateOutlet],
   templateUrl: './anime-list.component.html',
   styleUrl: './anime-list.component.scss',
   animations: [
@@ -155,6 +157,9 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   displayMode = signal<DisplayMode>(2);
   layoutState = signal(0);
   searched = signal(false);
+  selectedAnimeId = signal<string | null>(null);
+  /** Controls the first-time onboarding animation on the first card. */
+  cardHintActive = signal(!localStorage.getItem('card-hint-v1'));
   showNsfw = signal(true);
   /** Elapsed ms for the last search request (null until first search completes) */
   searchElapsedMs = signal<number | null>(null);
@@ -825,5 +830,18 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
       { threshold: 0 },
     );
     this.scrollObserver.observe(targetEl);
+  }
+
+  dismissCardHint(): void {
+    localStorage.setItem('card-hint-v1', '1');
+    this.cardHintActive.set(false);
+  }
+
+  openAnimeDetails(id: string): void {
+    this.selectedAnimeId.set(id);
+  }
+
+  closeAnimeDetails(): void {
+    this.selectedAnimeId.set(null);
   }
 }

@@ -815,16 +815,13 @@
       </p>
 
       <div class="anime-grid" [class]="'cols-' + displayMode()" [@gridLayout]="layoutState()">
-        @for (anime of animes(); track anime.aniDbId) {
+        @for (anime of animes(); track anime.aniDbId; let isFirst = $first) {
           <app-anime-card
             #animeCard
             [anime]="anime"
-            [activeGenres]="filterGenre()"
-            [activeThemes]="filterTheme()"
-            [activeDemographics]="filterDemographic()"
-            [plexEnabled]="providerState.plexEnabled()"
-            [sonarrEnabled]="providerState.sonarrEnabled()"
-            [sonarrBaseUrl]="sonarrBaseUrl()"
+            [showOnboardingHint]="isFirst && cardHintActive()"
+            (onboardingDismissed)="dismissCardHint()"
+            (openDetails)="openAnimeDetails($event)"
           />
         }
       </div>
@@ -1238,3 +1235,10 @@
     </div>
   </div>
 }
+
+<app-anime-detail-panel
+  [animeId]="selectedAnimeId()"
+  [sonarrBaseUrl]="sonarrBaseUrl()"
+  (closed)="closeAnimeDetails()"
+/>
+<app-anime-image-gallery />

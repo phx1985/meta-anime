@@ -54,6 +54,8 @@ export class App implements OnInit, AfterViewInit {
 
   protected currentLang = signal<string>('en');
   protected menuOpen = signal<boolean>(false);
+  /** True during the drawer close animation (keeps the DOM alive while it slides out). */
+  protected drawerClosing = signal<boolean>(false);
   protected notifCenterOpen = signal<boolean>(false);
   /** Dynamic top offset for the toast stack — tracks the actual navbar height */
   protected toastTopPx = signal<number>(72); // ~4.5rem default
@@ -95,6 +97,7 @@ export class App implements OnInit, AfterViewInit {
     () =>
       this.luckyPickOpen() ||
       this.menuOpen() ||
+      this.drawerClosing() ||
       this.popupService.childOverlayOpen() ||
       this.popupService.addProviderModalOpen() ||
       this.popupService.franchiseConstellationOpen() ||
@@ -436,6 +439,8 @@ export class App implements OnInit, AfterViewInit {
 
   /** Duration of the CSS `.navbar-collapse` max-height transition — keep in sync with app.scss */
   private static readonly NAVBAR_COLLAPSE_MS = 310;
+  /** Duration of the drawer slide-out CSS animation (must match SCSS keyframe). */
+  private static readonly DRAWER_CLOSE_ANIMATION_MS = 240;
 
   ngAfterViewInit(): void {
     this.syncToastTop();
@@ -456,14 +461,39 @@ export class App implements OnInit, AfterViewInit {
   }
 
   toggleMenu(): void {
-    this.menuOpen.update((v) => !v);
-    // Measure after the CSS max-height transition completes
-    setTimeout(() => this.syncToastTop(), App.NAVBAR_COLLAPSE_MS);
+    if (this.menuOpen()) {
+      this.closeMenu(); // plays the slide-out animation
+    } else {
+      this.menuOpen.set(true);
+      setTimeout(() => this.syncToastTop(), App.NAVBAR_COLLAPSE_MS);
+    }
   }
 
   closeMenu(): void {
+    // Keep the DOM alive for the slide-out animation, then remove.
+    this.drawerClosing.set(true);
     this.menuOpen.set(false);
-    setTimeout(() => this.syncToastTop(), App.NAVBAR_COLLAPSE_MS);
+    setTimeout(() => {
+      this.drawerClosing.set(false);
+      this.syncToastTop();
+    }, App.DRAWER_CLOSE_ANIMATION_MS);
+  }
+
+  // ── Drawer swipe-to-close (right-swipe closes the right-side nav drawer) ──
+  private drawerTouchStartX = 0;
+
+  @HostListener('window:touchstart', ['$event'])
+  onDrawerTouchStart(event: TouchEvent): void {
+    if (!this.menuOpen()) return;
+    this.drawerTouchStartX = event.touches[0].clientX;
+  }
+
+  @HostListener('window:touchend', ['$event'])
+  onDrawerTouchEnd(event: TouchEvent): void {
+    if (!this.menuOpen()) return;
+    const deltaX = event.changedTouches[0].clientX - this.drawerTouchStartX;
+    // Right-swipe ≥ 60 px dismisses the drawer (slides it back to the right edge)
+    if (deltaX >= 60) this.closeMenu();
   }
 
   switchLanguage(code?: string): void {

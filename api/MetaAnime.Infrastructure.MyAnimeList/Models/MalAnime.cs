@@ -41,6 +41,30 @@ public partial class MalAnime
 
     [JsonPropertyName("related_anime")]
     public List<RelatedAnimeEdge>? RelatedAnime { get; set; }
+
+    [JsonPropertyName("trailer")]
+    public MalTrailer? Trailer { get; set; }
+
+    [JsonPropertyName("pictures")]
+    public List<MalPicture>? Pictures { get; set; }
+}
+
+public sealed class MalTrailer
+{
+    [JsonPropertyName("youtube_id")]
+    public string? YoutubeId { get; set; }
+
+    [JsonPropertyName("url")]
+    public string? Url { get; set; }
+}
+
+public sealed class MalPicture
+{
+    [JsonPropertyName("medium")]
+    public string? Medium { get; set; }
+
+    [JsonPropertyName("large")]
+    public string? Large { get; set; }
 }
 
 public sealed class MalStartSeason

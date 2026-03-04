@@ -54,6 +54,10 @@ export interface MalAnimeInfo {
   coverImageUrl?: string;
   status?: string;
   mediaType?: string;
+  trailerUrl?: string;
+  popularity?: number;
+  rank?: number;
+  pictures?: string[];
 }
 
 export interface SonarrAnimeInfo {
