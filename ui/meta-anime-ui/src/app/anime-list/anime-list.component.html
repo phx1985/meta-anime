@@ -807,12 +807,28 @@
     } @else if (animes().length === 0) {
       <p class="text-muted">{{ 'animeList.empty' | translate }}</p>
     } @else {
-      <p class="anime-total-count mb-3">
-        {{ 'animeList.totalCount' | translate: { count: totalCount() } }}
-        @if (searchElapsedMs() !== null) {
-          <span class="elapsed-time">({{ searchElapsedMs() }}ms)</span>
-        }
-      </p>
+      <div class="results-bar mb-3">
+        <p class="anime-total-count mb-0">
+          {{ 'animeList.totalCount' | translate: { count: totalCount() } }}
+          @if (searchElapsedMs() !== null) {
+            <span class="elapsed-time">({{ searchElapsedMs() }}ms)</span>
+          }
+        </p>
+        <div class="provider-legend" aria-hidden="true">
+          <span class="legend-item">
+            <span class="legend-dot legend-dot--mal"></span>
+            <span class="legend-label">MAL</span>
+          </span>
+          <span class="legend-item">
+            <span class="legend-dot legend-dot--plex"></span>
+            <span class="legend-label">Plex</span>
+          </span>
+          <span class="legend-item">
+            <span class="legend-dot legend-dot--sonarr"></span>
+            <span class="legend-label">Sonarr</span>
+          </span>
+        </div>
+      </div>
 
       <div class="anime-grid" [class]="'cols-' + displayMode()" [@gridLayout]="layoutState()">
         @for (anime of animes(); track anime.aniDbId; let isFirst = $first) {

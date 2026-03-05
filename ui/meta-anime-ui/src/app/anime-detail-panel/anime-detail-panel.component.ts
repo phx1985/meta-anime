@@ -65,6 +65,27 @@ export class AnimeDetailPanelComponent {
     return s !== null && (!s.inMal || !s.inSonarr);
   }
 
+  get isTrackedOnMal(): boolean {
+    return !!(this.seasonalItem()?.inMal);
+  }
+
+  // ── Provider tracking — drives the tracking-status row in the panel ───────
+
+  get trackedByMal(): boolean {
+    const s = this.seasonalItem();
+    return s !== null ? s.inMal : !!(this.mal?.id);
+  }
+
+  get trackedBySonarr(): boolean {
+    const s = this.seasonalItem();
+    return s !== null ? s.inSonarr : !!(this.sonarr);
+  }
+
+  get trackedByPlex(): boolean {
+    const s = this.seasonalItem();
+    return s !== null ? s.inPlex : !!(this.plex);
+  }
+
   private animeService = inject(AnimeService);
   private destroyRef = inject(DestroyRef);
   private translate = inject(TranslateService);
@@ -81,6 +102,10 @@ export class AnimeDetailPanelComponent {
   anime = signal<AnimeDetailsResponse | null>(null);
   isLoading = signal(false);
   error = signal<string | null>(null);
+
+  // ── AKA popover — click-toggled list of alternative titles (works on mobile) ──
+  showAkaPopover = signal(false);
+  toggleAkaPopover(): void { this.showAkaPopover.update(v => !v); }
 
   // ── Local MAL overrides — immediate feedback after quick-update ──────────
   private localMalStatus = signal<string | null>(null);
@@ -237,6 +262,21 @@ export class AnimeDetailPanelComponent {
       if (alt.en && alt.en !== this.anime()?.title) return alt.en;
     }
     return this.anime()?.title ?? '';
+  }
+
+  get allAltTitles(): string[] {
+    const dt = this.displayTitle;
+    const alt = this.mal?.alternativeTitles;
+    if (!alt) return [];
+    const titles: string[] = [];
+    if (alt.en) titles.push(alt.en);
+    if (alt.ja) titles.push(alt.ja);
+    if (alt.synonyms) titles.push(...alt.synonyms);
+    return [...new Set(titles)].filter((t) => t !== dt);
+  }
+
+  get altTitlesTooltip(): string {
+    return this.allAltTitles.join('\n');
   }
 
   /** MAL list status with local override after quick-update */

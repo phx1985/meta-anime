@@ -180,6 +180,23 @@ export class AnimeCardComponent {
     return t !== key ? t : name;
   }
 
+  // ── Provider membership flags (drive ribbon indicators) ─────────────────
+
+  get inMal(): boolean {
+    const s = this.seasonalItem();
+    return s !== null ? s.inMal : !!(this.mal?.id);
+  }
+
+  get inSonarr(): boolean {
+    const s = this.seasonalItem();
+    return s !== null ? s.inSonarr : !!(this.sonarr);
+  }
+
+  get inPlex(): boolean {
+    const s = this.seasonalItem();
+    return s !== null ? s.inPlex : !!(this.plex);
+  }
+
   // ── Scores ────────────────────────────────────────────────────────────────
 
   get malScore(): number {
@@ -218,7 +235,10 @@ export class AnimeCardComponent {
     if (this.showOnboardingHint()) this.onboardingDismissed.emit();
     const seasonal = this.seasonalItem();
     if (seasonal) {
-      if (seasonal.aniDbId) {
+      // Only route to the local /api/v1/animes/{id} endpoint when the show is
+      // confirmed to be in the local library. Without this guard, shows that
+      // have an aniDbId but are not yet tracked locally produce a 404.
+      if (seasonal.aniDbId && (seasonal.inMal || seasonal.inSonarr || seasonal.inPlex)) {
         this.openDetails.emit(seasonal.aniDbId);
       } else {
         this.openDetailsByMalId.emit(seasonal.malId);

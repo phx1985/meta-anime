@@ -30,6 +30,7 @@ import {
 } from '../models/sonarr.models';
 import { AnimeCardComponent } from '../anime-list/anime-card/anime-card.component';
 import { AnimeDetailPanelComponent } from '../anime-detail-panel/anime-detail-panel.component';
+import { AnimeImageGalleryComponent } from '../anime-image-gallery/anime-image-gallery.component';
 import {
   GENRE_LIST,
   THEME_LIST,
@@ -84,7 +85,7 @@ function getCurrentSeason(month: number): SeasonName {
   selector: 'app-seasonal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, NgTemplateOutlet],
+  imports: [CommonModule, FormsModule, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, NgTemplateOutlet, AnimeImageGalleryComponent],
   templateUrl: './seasonal.component.html',
   styleUrl: './seasonal.component.scss',
   animations: [

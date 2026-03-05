@@ -31,36 +31,7 @@
             }
           </div>
 
-          <!-- alt-titles popover -->
-          @if (allAltTitles.length > 0) {
-            <div class="alt-wrap">
-              <button
-                class="alt-btn"
-                (click)="toggleAltTitles(); $event.stopPropagation()"
-                [attr.aria-expanded]="showAltTitles()"
-                [title]="'animeCard.altTitles' | translate"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  width="13"
-                  height="13"
-                >
-                  <path
-                    d="M3 4a1 1 0 0 1 1-1h12a1 1 0 0 1 0 2H4a1 1 0 0 1-1-1zm0 4a1 1 0 0 1 1-1h12a1 1 0 0 1 0 2H4a1 1 0 0 1-1-1zm0 4a1 1 0 0 1 1-1h7a1 1 0 0 1 0 2H4a1 1 0 0 1-1-1z"
-                  />
-                </svg>
-              </button>
-              @if (showAltTitles()) {
-                <div class="alt-popover" role="tooltip">
-                  @for (t of allAltTitles; track t) {
-                    <span class="alt-title">{{ t }}</span>
-                  }
-                </div>
-              }
-            </div>
-          }
+
         </div>
 
         <!-- Status pills row -->
@@ -144,6 +115,15 @@
     <!-- /card-content -->
   </div>
   <!-- /card-main -->
+
+  <!-- ── Provider dots — small colored circles, top-right of card content ── -->
+  @if (inMal || inSonarr || inPlex) {
+    <div class="provider-dots" aria-hidden="true">
+      @if (inSonarr) { <span class="dot dot--sonarr" title="Sonarr"></span> }
+      @if (inPlex)   { <span class="dot dot--plex"   title="Plex"></span>   }
+      @if (inMal)    { <span class="dot dot--mal"    title="MAL"></span>    }
+    </div>
+  }
 
   <!-- ── First-time onboarding hints ─────────────────────────────────────── -->
   @if (showOnboardingHint()) {

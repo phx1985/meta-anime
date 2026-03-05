@@ -24,6 +24,10 @@
   /* slider control */
   --slider-track-unfilled: rgba(128, 128, 160, 0.3);
   --slider-thumb-border: #ffffff;
+  /* provider brand colors — ribbons, legend dots, panel indicators */
+  --provider-mal:    #2f52a4;
+  --provider-plex:   #e5a00d;
+  --provider-sonarr: #00aae0;
 }
 
 [data-theme='dark'] {
@@ -50,6 +54,7 @@
   /* slider control */
   --slider-track-unfilled: rgba(160, 160, 200, 0.22);
   --slider-thumb-border: #1a1a2e;
+  /* provider colors inherit light-theme values — they are brand colors, not theme-sensitive */
 }
 
 // Global styles
@@ -111,4 +116,44 @@ body {
 ::-webkit-scrollbar-thumb {
   background: var(--accent-primary);
   border-radius: 3px;
+}
+
+// ─── Provider legend — shared by Anime List and Seasonal pages ────────────────
+
+.results-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.provider-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+}
+
+.legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &--mal    { background: var(--provider-mal);    }
+  &--plex   { background: var(--provider-plex);   }
+  &--sonarr { background: var(--provider-sonarr); }
+}
+
+.legend-label {
+  font-size: 0.63rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }

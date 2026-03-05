@@ -68,7 +68,26 @@
         <div class="panel__info-col">
           <!-- Title, alt title, pills, scores — flex: 1 pushes button area to bottom -->
           <div class="panel__title-block">
-            <h2 class="panel__title">{{ displayTitle }}</h2>
+            <div class="panel__title-row">
+              <h2 class="panel__title">{{ displayTitle }}</h2>
+              @if (allAltTitles.length > 0) {
+                <div class="panel__aka-wrap">
+                  <button
+                    type="button"
+                    class="panel__aka-btn"
+                    aria-label="Alternative titles"
+                    (click)="toggleAkaPopover()"
+                  >AKA</button>
+                  @if (showAkaPopover()) {
+                    <div class="panel__aka-popover" role="tooltip">
+                      @for (t of allAltTitles; track t) {
+                        <span class="panel__aka-popover-item">{{ t }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
             @if (mal?.alternativeTitles?.en && mal!.alternativeTitles!.en !== a.title) {
               <p class="panel__alt-title">{{ mal!.alternativeTitles!.en }}</p>
             }
@@ -82,6 +101,9 @@
               }
               @if (mal?.status) {
                 <span class="panel__pill panel__pill--status">{{ ('animeCard.seriesStatus.' + mal!.status) | translate }}</span>
+              }
+              @if (isTrackedOnMal && !malViewState) {
+                <span class="panel__pill panel__pill--mal-tracked">MAL ✓</span>
               }
             </div>
             <!-- Scores row -->
@@ -97,6 +119,7 @@
                 </div>
               }
             </div>
+
           </div>
 
           <!-- Provider action buttons — pinned to bottom of info-col by title-block flex: 1 -->
@@ -140,14 +163,14 @@
           @if (showAddButton) {
             <button
               type="button"
-              class="panel__action-btn panel__action-btn--add"
+              class="panel__action-btn panel__action-btn--add-library"
               (click)="addRequested.emit()"
-              [title]="'seasonal.addToProviders' | translate"
               [attr.aria-label]="'seasonal.addToProviders' | translate"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="20" height="20" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="15" height="15" aria-hidden="true">
                 <path d="M12 5v14M5 12h14" />
               </svg>
+              {{ 'seasonal.addToProviders' | translate }}
             </button>
           }
 
@@ -201,6 +224,24 @@
         }
       </div>
 
+      <!-- Genres / Themes / Demographics — quick-read tags above synopsis -->
+      @if (pureGenres.length || themes.length || demographics.length) {
+        <section class="panel__section">
+          <h3 class="panel__section-title">{{ 'animeDetailPanel.tags' | translate }}</h3>
+          <div class="panel__tags">
+            @for (g of pureGenres; track g) {
+              <span class="panel__tag panel__tag--genre">{{ g }}</span>
+            }
+            @for (t of themes; track t) {
+              <span class="panel__tag panel__tag--theme">{{ t }}</span>
+            }
+            @for (d of demographics; track d) {
+              <span class="panel__tag panel__tag--demographic">{{ d }}</span>
+            }
+          </div>
+        </section>
+      }
+
       <!-- Synopsis -->
       @if (mal?.synopsis) {
         <section class="panel__section">
@@ -223,24 +264,6 @@
               title="Trailer"
               loading="lazy"
             ></iframe>
-          </div>
-        </section>
-      }
-
-      <!-- Genres / Themes / Demographics -->
-      @if (pureGenres.length || themes.length || demographics.length) {
-        <section class="panel__section">
-          <h3 class="panel__section-title">{{ 'animeDetailPanel.tags' | translate }}</h3>
-          <div class="panel__tags">
-            @for (g of pureGenres; track g) {
-              <span class="panel__tag panel__tag--genre">{{ g }}</span>
-            }
-            @for (t of themes; track t) {
-              <span class="panel__tag panel__tag--theme">{{ t }}</span>
-            }
-            @for (d of demographics; track d) {
-              <span class="panel__tag panel__tag--demographic">{{ d }}</span>
-            }
           </div>
         </section>
       }

@@ -3,6 +3,7 @@
 :host {
   display: flex;
   flex-direction: column;
+  height: 100%;     // fill the grid cell height (set by align-items: stretch)
   position: relative;
   z-index: 0;
 }
@@ -12,10 +13,12 @@
   display: flex;
   flex-direction: column;
   flex: 1;
+  height: 100%;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 14px;
-  overflow: hidden;
+  overflow: visible;  // must be visible — tabs protrude from the right edge
+  z-index: 1;         // stacking context so z-index:-1 tabs slot behind card bg
   box-shadow: 0 2px 12px var(--card-shadow);
   transition:
     transform 0.3s cubic-bezier(0.34, 1.4, 0.64, 1),
@@ -64,11 +67,11 @@
 
 .card-cover {
   width: 175px;
-  min-height: 245px;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
   background: var(--bg-secondary);
+  align-self: stretch; // fills the full card height (replaces the old min-height: 245px)
 }
 
 .cover-img {
@@ -78,6 +81,10 @@
   object-position: top center;
   display: block;
   transition: transform 0.35s ease;
+  // Clip image to match the card's top-left corner radius
+  // (.anime-card uses overflow:visible so the card wrapper cannot clip)
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
 }
 
 .cover-placeholder {
@@ -91,6 +98,48 @@
   font-weight: 800;
   color: var(--text-muted);
   background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+}
+
+// ─── Provider edge-tabs — emerge from behind the right border ────────────────
+
+.provider-dots {
+  position: absolute;
+  top: 20px;
+  right: -12px;         // 12px protrusion beyond the card's right edge
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  z-index: -1;          // slot behind the card surface (card is z-index: 1)
+  pointer-events: auto;
+}
+
+.dot {
+  position: relative;
+  width: 12px;
+  height: 28px;
+  border-radius: 0 6px 6px 0;  // right side rounded, left flat (hidden under card)
+  flex-shrink: 0;
+  // Lateral depth shadow + inset top highlight + inset bottom darkening
+  box-shadow:
+    4px 2px 10px rgba(0, 0, 0, 0.55),         // strong rightward shadow = 3D depth
+    inset 0  1px 0 rgba(255, 255, 255, 0.35),  // top-edge light catch
+    inset 0 -1px 0 rgba(0, 0, 0, 0.30);       // bottom-edge darkening
+
+  &--mal    { background: var(--provider-mal);    }
+  &--plex   { background: var(--provider-plex);   }
+  &--sonarr { background: var(--provider-sonarr); }
+
+  // Fold crease — gradient shadow below each tab, simulating the wrap-behind depth
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.45), transparent);
+    pointer-events: none;
+  }
 }
 
 // ─── Main content area ───────────────────────────────────────────────────────
@@ -147,69 +196,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-// ─── Alt-titles ───────────────────────────────────────────────────────────────
-
-.alt-wrap {
-  position: relative;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-.alt-btn {
-  background: none;
-  border: 1px solid var(--card-border);
-  border-radius: 6px;
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  transition:
-    color 0.15s,
-    border-color 0.15s,
-    background 0.15s;
-  padding: 0;
-
-  &:hover,
-  &[aria-expanded='true'] {
-    color: var(--accent-primary);
-    border-color: var(--accent-primary);
-    background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
-  }
-}
-
-.alt-popover {
-  position: absolute;
-  top: calc(100% + 5px);
-  right: 0;
-  background: color-mix(in srgb, var(--bg-primary) 96%, transparent);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--card-border);
-  border-radius: 10px;
-  padding: 0.5rem 0.7rem;
-  min-width: 180px;
-  max-width: 260px;
-  z-index: 60;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  box-shadow: 0 8px 24px var(--card-shadow);
-  animation: popIn 0.18s ease both;
-}
-
-.alt-title {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  line-height: 1.4;
-
-  &::before {
-    content: '↪ ';
-    color: var(--text-muted);
-  }
 }
 
 // ─── Status pills ─────────────────────────────────────────────────────────────
@@ -275,6 +261,7 @@
   color: var(--text-secondary);
   line-height: 1.58;
   margin: 0;
+  flex-grow: 1;       // absorb available vertical space — keeps meta-row pinned at bottom
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;

@@ -646,22 +646,36 @@
 
     <!-- Anime grid -->
     @if (!loading() && filteredAnimes().length > 0) {
-      <p class="seasonal-result-count mb-2">
-        {{ 'seasonal.resultCount' | translate: { count: filteredAnimes().length } }}
-        @if (fetchElapsedMs() !== null) {
-          <span class="seasonal-elapsed-time">({{ fetchElapsedMs() }}ms)</span>
-        }
-      </p>
+      <div class="results-bar mb-2">
+        <p class="seasonal-result-count mb-0">
+          {{ 'seasonal.resultCount' | translate: { count: filteredAnimes().length } }}
+          @if (fetchElapsedMs() !== null) {
+            <span class="seasonal-elapsed-time">({{ fetchElapsedMs() }}ms)</span>
+          }
+        </p>
+        <div class="provider-legend" aria-hidden="true">
+          <span class="legend-item">
+            <span class="legend-dot legend-dot--mal"></span>
+            <span class="legend-label">MAL</span>
+          </span>
+          <span class="legend-item">
+            <span class="legend-dot legend-dot--plex"></span>
+            <span class="legend-label">Plex</span>
+          </span>
+          <span class="legend-item">
+            <span class="legend-dot legend-dot--sonarr"></span>
+            <span class="legend-label">Sonarr</span>
+          </span>
+        </div>
+      </div>
       <div class="seasonal-grid" [@gridAnimation]="displayedAnimes().length">
         @for (anime of displayedAnimes(); track anime.malId) {
-          <div class="seasonal-grid__cell">
-            <app-anime-card
-              [anime]="seasonalToAnimeDetails(anime)"
-              [seasonalItem]="anime"
-              (openDetails)="openAnimeDetails($event)"
-              (openDetailsByMalId)="openDetailsByMalId($event)"
-            />
-          </div>
+          <app-anime-card
+            [anime]="seasonalToAnimeDetails(anime)"
+            [seasonalItem]="anime"
+            (openDetails)="openAnimeDetails($event)"
+            (openDetailsByMalId)="openDetailsByMalId($event)"
+          />
         }
       </div>
     }
@@ -1219,3 +1233,5 @@
     </div>
   </div>
 }
+
+<app-anime-image-gallery />
