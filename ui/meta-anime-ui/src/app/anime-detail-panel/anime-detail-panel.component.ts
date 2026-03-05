@@ -3,10 +3,12 @@ import {
   Component,
   DestroyRef,
   HostListener,
+  effect,
   inject,
   input,
   output,
   signal,
+  untracked,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { DatePipe, TitleCasePipe } from '@angular/common';
@@ -14,7 +16,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo, SeasonalAnimeItem } from '../models/anime.models';
+import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo, PlexAnimeInfo, SeasonalAnimeItem } from '../models/anime.models';
 import { AnimeService } from '../services/anime.service';
 import { SafePipe } from './safe.pipe';
 import { ScoreBadgeComponent } from '../anime-list/anime-card/score-badge/score-badge.component';
@@ -65,9 +67,6 @@ export class AnimeDetailPanelComponent {
     return s !== null && (!s.inMal || !s.inSonarr);
   }
 
-  get isTrackedOnMal(): boolean {
-    return !!(this.seasonalItem()?.inMal);
-  }
 
   // ── Provider tracking — drives the tracking-status row in the panel ───────
 
@@ -121,10 +120,27 @@ export class AnimeDetailPanelComponent {
         tap((id) => {
           const mal = this.malId();
           const isOpen = !!(id || mal);
-          this.isLoading.set(isOpen);
           this.error.set(null);
-          if (!isOpen) {
-            this.anime.set(null);
+          if (isOpen) {
+            // Immediately populate from seasonal item data if available.
+            // This prevents a blank panel when `getAnime(aniDbId)` returns 404
+            // because the series was just added to Sonarr/MAL but hasn't been
+            // synced into the local MetaAnime DB yet.
+            const seasonal = this.seasonalItem();
+            if (seasonal) {
+              this.anime.set(this.buildAnimeFromSeasonalItem(seasonal));
+              this.isLoading.set(false);
+            } else if (!this.anime()) {
+              // Only show loading spinner when we have nothing to display yet.
+              // If anime() already has cached data, keep showing it rather than
+              // flashing a skeleton every time the panel re-opens.
+              this.isLoading.set(true);
+            }
+          } else {
+            // NOTE: anime is intentionally NOT cleared here — clearing it immediately
+            // would blank the panel during its 200ms slide-out animation.
+            // It will be replaced when the panel next opens.
+            this.isLoading.set(false);
             this.localMalStatus.set(null);
             this.localMalEpisodes.set(null);
             this.localMalScore.set(null);
@@ -140,7 +156,21 @@ export class AnimeDetailPanelComponent {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((data) => {
-        this.anime.set(data);
+        const seasonal = this.seasonalItem();
+        if (data) {
+          // Sonarr/Plex-only DB entries have no malAnimes. Supplement with seasonal
+          // MAL data so the panel always shows cover image, synopsis, ratings, etc.
+          if (!data.malAnimes?.length && seasonal) {
+            const fromSeasonal = this.buildAnimeFromSeasonalItem(seasonal);
+            this.anime.set({ ...fromSeasonal, ...data, malAnimes: fromSeasonal.malAnimes });
+          } else {
+            this.anime.set(data);
+          }
+        } else if (!this.anime()) {
+          // Backend returned null (404) and there is no existing data yet.
+          // Use the seasonal item as an immediate fallback so the panel is never empty.
+          if (seasonal) this.anime.set(this.buildAnimeFromSeasonalItem(seasonal));
+        }
         this.isLoading.set(false);
       });
 
@@ -155,11 +185,14 @@ export class AnimeDetailPanelComponent {
             if (seasonal) {
               this.anime.set(this.buildAnimeFromSeasonalItem(seasonal));
               this.isLoading.set(false);
-            } else {
+            } else if (!this.anime()) {
+              // Only show loading spinner when we have nothing to display yet.
               this.isLoading.set(true);
             }
           } else if (!this.animeId() && !mal) {
-            this.anime.set(null);
+            // NOTE: anime is intentionally NOT cleared here — clearing it immediately
+            // would blank the panel during its 200ms slide-out animation.
+            this.isLoading.set(false);
             this.localMalStatus.set(null);
             this.localMalEpisodes.set(null);
             this.localMalScore.set(null);
@@ -176,11 +209,40 @@ export class AnimeDetailPanelComponent {
       )
       .subscribe((data) => {
         if (!this.animeId()) {
-          // Only replace with backend data if it returned something — keeps seasonal fallback on failure.
-          if (data) this.anime.set(data);
+          const seasonal = this.seasonalItem();
+          if (data) {
+            // Sonarr/Plex-only DB entries have no malAnimes. Supplement with seasonal
+            // MAL data so the panel always shows cover image, synopsis, ratings, etc.
+            if (!data.malAnimes?.length && seasonal) {
+              const fromSeasonal = this.buildAnimeFromSeasonalItem(seasonal);
+              this.anime.set({ ...fromSeasonal, ...data, malAnimes: fromSeasonal.malAnimes });
+            } else {
+              this.anime.set(data);
+            }
+          } else if (!this.anime()) {
+            // Backend returned null (404) and there is no existing data yet.
+            // Use the seasonal item as an immediate fallback so the panel is never empty.
+            if (seasonal) this.anime.set(this.buildAnimeFromSeasonalItem(seasonal));
+          }
           this.isLoading.set(false);
         }
       });
+
+    // Safety-net: runs after every CD pass with guaranteed up-to-date signal values.
+    // Handles the timing gap where tap()/subscribe() fired before the [seasonalItem]
+    // input was propagated, leaving anime() null even though the panel is open.
+    effect(() => {
+      const isOpen = !!(this.animeId() || this.malId());
+      const seasonal = this.seasonalItem();
+      if (isOpen && seasonal) {
+        untracked(() => {
+          if (!this.anime()) {
+            this.anime.set(this.buildAnimeFromSeasonalItem(seasonal));
+            this.isLoading.set(false);
+          }
+        });
+      }
+    });
   }
 
   /** Builds a minimal AnimeDetailsResponse from a SeasonalAnimeItem so the panel
@@ -199,13 +261,19 @@ export class AnimeDetailPanelComponent {
       rating: { malMean: item.malScore, myScore: 0 },
       viewState: item.malViewState,
     };
+    const sonarrAnimes: SonarrAnimeInfo[] = item.inSonarr
+      ? [{ title: item.title, url: item.sonarrUrl, exists: true }]
+      : [];
+    const plexAnimes: PlexAnimeInfo[] = item.inPlex
+      ? [{ title: item.title, url: item.plexUrl }]
+      : [];
     return {
       aniDbId: item.malId,
       title: item.title,
       description: item.synopsis,
       malAnimes: [malInfo],
-      sonarrAnimes: [],
-      plexAnimes: [],
+      sonarrAnimes: sonarrAnimes.length > 0 ? sonarrAnimes : undefined,
+      plexAnimes: plexAnimes.length > 0 ? plexAnimes : undefined,
     };
   }
 

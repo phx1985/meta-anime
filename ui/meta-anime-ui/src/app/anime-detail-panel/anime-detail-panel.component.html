@@ -102,9 +102,7 @@
               @if (mal?.status) {
                 <span class="panel__pill panel__pill--status">{{ ('animeCard.seriesStatus.' + mal!.status) | translate }}</span>
               }
-              @if (isTrackedOnMal && !malViewState) {
-                <span class="panel__pill panel__pill--mal-tracked">MAL ✓</span>
-              }
+
             </div>
             <!-- Scores row -->
             <div class="panel__scores">
@@ -118,22 +116,35 @@
                   <app-score-badge [score]="myScore" [mine]="true" [titleKey]="'animeCard.myScore'" />
                 </div>
               }
+              @if (mal?.id) {
+                <button
+                  type="button"
+                  class="panel__mal-update-btn"
+                  (click)="openMalQuickUpdate()"
+                  [title]="'malQuickUpdate.openModal' | translate"
+                  [attr.aria-label]="'malQuickUpdate.openModal' | translate"
+                >
+                  <img src="assets/images/mal.svg" alt="" width="16" height="16" aria-hidden="true" />
+                  {{ 'malQuickUpdate.label' | translate }}
+                </button>
+              }
             </div>
 
           </div>
 
           <!-- Provider action buttons — pinned to bottom of info-col by title-block flex: 1 -->
           <div class="panel__actions">
-            @if (mal?.id) {
-              <button
-                type="button"
+            @if (mal?.url) {
+              <a
                 class="panel__action-btn panel__action-btn--mal"
-                (click)="openMalQuickUpdate()"
-                [title]="'malQuickUpdate.openModal' | translate"
-                [attr.aria-label]="'malQuickUpdate.openModal' | translate"
+                [href]="mal!.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                [title]="'malQuickUpdate.openInMal' | translate"
+                [attr.aria-label]="'malQuickUpdate.openInMal' | translate"
               >
                 <img src="assets/images/mal.svg" alt="" width="20" height="20" aria-hidden="true" />
-              </button>
+              </a>
             }
             @if (plexEnabled() && plexUrl) {
               <button

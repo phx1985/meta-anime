@@ -99,21 +99,6 @@
   min-width: 0;
 }
 
-.mal-qu-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #2e51a2;
-  background: rgba(46, 81, 162, 0.12);
-  border: 1px solid rgba(46, 81, 162, 0.25);
-  border-radius: 5px;
-  padding: 0.15rem 0.5rem;
-  width: fit-content;
-}
 
 .mal-qu-title {
   font-size: 1rem;
@@ -128,23 +113,6 @@
 }
 
 // "Open in MAL" inline link below title
-.mal-qu-open-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: #2e51a2;
-  text-decoration: none;
-  opacity: 0.8;
-  transition: opacity 0.15s;
-  width: fit-content;
-
-  &:hover {
-    opacity: 1;
-    text-decoration: underline;
-  }
-}
 
 // ── Sections ─────────────────────────────────────────────────────────────────
 
@@ -447,28 +415,6 @@
 }
 
 // "Open in MAL" secondary footer button
-.mal-qu-mal-link-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.5rem 0.85rem;
-  border-radius: 9px;
-  border: 1.5px solid rgba(46, 81, 162, 0.4);
-  background: rgba(46, 81, 162, 0.08);
-  color: #2e51a2;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-  margin-right: auto; // push save + cancel to right
-
-  &:hover {
-    background: rgba(46, 81, 162, 0.15);
-    border-color: rgba(46, 81, 162, 0.7);
-  }
-}
-
 // ── Mobile tweaks ─────────────────────────────────────────────────────────────
 
 @media (max-width: 500px) {

@@ -30,10 +30,19 @@
     box-shadow: 0 18px 40px var(--card-shadow);
   }
 
-  // ── Onboarding pulse glow ─────────────────────────────────────────────────
-  &--onboarding {
-    animation: cardIn 0.45s ease both, onboardingPulse 2s ease-in-out 0.6s infinite;
+  // ── Success glow — neon electrical discharge after successful add ─────────
+  &--success-glow {
     z-index: 10;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 15px;
+      pointer-events: none;
+      z-index: -1;
+      animation: neonAura 2.2s ease-out forwards;
+    }
   }
 }
 
@@ -416,6 +425,105 @@
       0 0 0 6px color-mix(in srgb, var(--accent-primary) 22%, transparent),
       0 0 24px 4px color-mix(in srgb, var(--accent-primary) 14%, transparent);
   }
+}
+
+// ─── Lightning bolt arcs — shown during success glow ─────────────────────────
+
+.lightning-arc {
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+  animation: arcFlicker 2.2s ease-out forwards;
+  filter: blur(2px) drop-shadow(0 0 2px rgba(255, 245, 160, 0.7))
+    drop-shadow(0 0 5px rgba(255, 214, 0, 0.5)) drop-shadow(0 0 11px rgba(255, 140, 0, 0.35))
+    drop-shadow(0 0 18px rgba(255, 120, 0, 0.2));
+
+  path {
+    fill: rgba(255, 240, 160, 0.55);
+  }
+
+  .bolt-branch {
+    fill: none;
+    stroke: rgba(255, 196, 30, 0.45);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  &--spark path {
+    fill: rgba(255, 248, 225, 0.55);
+  }
+
+  &--1  { width: 18px; height: 28px; top: -17px;  left: 17%;   animation-delay: 0.03s; }
+  &--2  { width: 14px; height: 22px; top: -14px;  right: 22%;  animation-delay: 0.29s; }
+  &--3  { width: 26px; height: 14px; top: 22%;    right: -16px; animation-delay: 0.11s; }
+  &--4  { width: 14px; height: 22px; bottom: 28%; right: -14px; animation-delay: 0.44s; }
+  &--5  { width: 18px; height: 26px; bottom: -16px; left: 26%; animation-delay: 0.2s;  }
+  &--6  { width: 24px; height: 12px; top: 47%;    left: -14px; animation-delay: 0.51s; }
+  &--7  { width: 11px; height: 18px; top: -11px;  left: 43%;   animation-delay: 0.64s; }
+  &--8  { width: 11px; height: 18px; bottom: -11px; right: 18%; animation-delay: 0.07s; }
+  &--9  { width: 10px; height: 10px; top: -5px;   left: 31%;   animation-delay: 0.15s; }
+  &--10 { width: 8px;  height: 8px;  top: 11%;    right: -4px; animation-delay: 0.37s; }
+}
+
+@keyframes arcFlicker {
+  0%   { opacity: 0; }
+  4%   { opacity: 0.55; }
+  9%   { opacity: 0.07; }
+  13%  { opacity: 0.55; }
+  22%  { opacity: 0; }
+  40%  { opacity: 0; }
+  44%  { opacity: 0.42; }
+  48%  { opacity: 0.03; }
+  52%  { opacity: 0.3; }
+  60%  { opacity: 0; }
+  78%  { opacity: 0; }
+  82%  { opacity: 0.18; }
+  87%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+@keyframes neonAura {
+  0% { box-shadow: none; }
+  5% {
+    box-shadow:
+      0 0 0px 2px rgba(255, 255, 255, 0.92),
+      0 0 10px 5px rgba(0, 245, 255, 1),
+      0 0 30px 12px rgba(0, 191, 255, 0.82),
+      0 0 65px 22px rgba(0, 120, 255, 0.45),
+      0 0 100px 35px rgba(0, 60, 255, 0.2);
+  }
+  10% {
+    box-shadow:
+      0 0 2px 3px rgba(200, 245, 255, 0.88),
+      0 0 10px 5px rgba(0, 229, 255, 0.92),
+      0 0 26px 10px rgba(0, 191, 255, 0.65),
+      0 0 55px 20px rgba(0, 140, 255, 0.38),
+      0 0 85px 30px rgba(0, 80, 255, 0.18);
+  }
+  20% {
+    box-shadow:
+      0 0 3px 2px rgba(0, 229, 255, 0.38),
+      0 0 10px 4px rgba(0, 180, 255, 0.18);
+  }
+  28% {
+    box-shadow:
+      0 0 5px 3px rgba(0, 240, 255, 0.82),
+      0 0 18px 7px rgba(0, 200, 255, 0.52),
+      0 0 38px 14px rgba(0, 130, 255, 0.28);
+  }
+  62% {
+    box-shadow:
+      0 0 3px 1px rgba(0, 229, 255, 0.22),
+      0 0 8px 3px rgba(0, 191, 255, 0.1);
+  }
+  80% {
+    box-shadow:
+      0 0 8px 4px rgba(0, 229, 255, 0.52),
+      0 0 24px 9px rgba(0, 191, 255, 0.28),
+      0 0 42px 14px rgba(0, 120, 255, 0.14);
+  }
+  93% { box-shadow: 0 0 2px 1px rgba(0, 229, 255, 0.14); }
+  100% { box-shadow: none; }
 }
 
 @keyframes hintFadeIn {
