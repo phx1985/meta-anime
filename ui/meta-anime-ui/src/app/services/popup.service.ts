@@ -103,6 +103,8 @@ export class PopupService {
   readonly malQuickUpdate = signal<MalQuickUpdateContext | null>(null);
   /** `true` while the exit animation is playing. */
   readonly malQuickUpdateLeaving = signal(false);
+  /** `true` while the MAL quick-update API call is in flight. */
+  readonly malQuickUpdateSaving = signal(false);
 
   openMalQuickUpdate(ctx: MalQuickUpdateContext): void {
     this.malQuickUpdate.set(ctx);
