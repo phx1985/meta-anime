@@ -41,6 +41,7 @@ import {
   NSFW_THEMES,
 } from '../constants/genre-lists';
 import { MEDIA_TYPE_OPTIONS } from '../anime-list/anime-list.component';
+import { AddSeriesWizardComponent } from '../add-series-wizard/add-series-wizard.component';
 
 const MIN_YEAR = 1963;
 
@@ -85,7 +86,7 @@ function getCurrentSeason(month: number): SeasonName {
   selector: 'app-seasonal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, NgTemplateOutlet, AnimeImageGalleryComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, NgTemplateOutlet, AnimeImageGalleryComponent, AddSeriesWizardComponent],
   templateUrl: './seasonal.component.html',
   styleUrl: './seasonal.component.scss',
   animations: [
@@ -182,6 +183,8 @@ export class SeasonalComponent {
   addSonarr = signal(false);
   addMal = signal(false);
   lastAddedSonarrId = signal<number | null>(null);
+  /** MAL ID of the last successfully added anime — drives the card success glow. Cleared after 2.1s. */
+  lastAddedMalId = signal<string | null>(null);
   expandedProvider = signal<'sonarr' | 'mal' | null>(null);
   sonarrRootFolders = signal<SonarrRootFolder[]>([]);
   sonarrQualityProfiles = signal<SonarrQualityProfile[]>([]);
@@ -1062,7 +1065,16 @@ export class SeasonalComponent {
       this.doAddMal(() => {
         this.addSuccess.set(true);
         this.addBusy.set(false);
-        setTimeout(() => { this.closeAddModal(); }, 1500);
+        const addedMalId = this.addModalItem()?.malId ?? null;
+        setTimeout(() => {
+          this.closeAddModal();
+          // Close the detail panel so the glowing card animation is fully visible.
+          this.closeAnimeDetails();
+          if (addedMalId) {
+            this.lastAddedMalId.set(addedMalId);
+            setTimeout(() => this.lastAddedMalId.set(null), 2100);
+          }
+        }, 1500);
       });
     });
   }
@@ -1147,8 +1159,10 @@ export class SeasonalComponent {
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (result: SonarrAddResult) => {
         this.lastAddedSonarrId.set(result.sonarrId);
-        (seasonal as { inSonarr: boolean }).inSonarr = true;
-        if (result.sonarrUrl) (seasonal as { sonarrUrl?: string }).sonarrUrl = result.sonarrUrl;
+        this._patchSeasonalItem(seasonal.malId, {
+          inSonarr: true,
+          ...(result.sonarrUrl ? { sonarrUrl: result.sonarrUrl } : {}),
+        });
         onSuccess();
       },
       error: (err) => {
@@ -1167,21 +1181,36 @@ export class SeasonalComponent {
       score: this.addMalScore(),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
-        (seasonal as { inMal: boolean }).inMal = true;
+        this._patchSeasonalItem(seasonal.malId, { inMal: true });
         onSuccess();
       },
       error: (err) => {
         const sonarrId = this.lastAddedSonarrId();
         if (sonarrId !== null) {
           this.sonarrService.removeSeries(sonarrId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-            next: () => { (seasonal as { inSonarr: boolean }).inSonarr = false; (seasonal as { sonarrUrl?: string }).sonarrUrl = undefined; this.lastAddedSonarrId.set(null); },
-            error: () => { (seasonal as { inSonarr: boolean }).inSonarr = false; this.lastAddedSonarrId.set(null); },
+            next: () => {
+              this._patchSeasonalItem(seasonal.malId, { inSonarr: false, sonarrUrl: undefined });
+              this.lastAddedSonarrId.set(null);
+            },
+            error: () => {
+              this._patchSeasonalItem(seasonal.malId, { inSonarr: false });
+              this.lastAddedSonarrId.set(null);
+            },
           });
         }
         this.addError.set(this._extractErrorMessage(err, 'seasonal.malAddError'));
         this.addBusy.set(false);
       },
     });
+  }
+
+  /** Immutably patches a SeasonalAnimeItem in both `animes` and `displayedAnimes` signals.
+   *  Replacing the object reference is required for OnPush change detection to fire on cards. */
+  private _patchSeasonalItem(malId: string, patch: Partial<SeasonalAnimeItem>): void {
+    const apply = (items: SeasonalAnimeItem[]) =>
+      items.map((a) => (a.malId === malId ? { ...a, ...patch } : a));
+    this.animes.update(apply);
+    this.displayedAnimes.update(apply);
   }
 
   private _extractErrorMessage(err: unknown, fallbackKey: string): string {

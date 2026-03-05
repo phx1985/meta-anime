@@ -2,11 +2,17 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
   HostListener,
+  afterEveryRender,
+  computed,
+  effect,
   inject,
   input,
   output,
   signal,
+  untracked,
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { DatePipe, TitleCasePipe } from '@angular/common';
@@ -14,7 +20,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo, SeasonalAnimeItem } from '../models/anime.models';
+import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo, PlexAnimeInfo, SeasonalAnimeItem } from '../models/anime.models';
 import { AnimeService } from '../services/anime.service';
 import { SafePipe } from './safe.pipe';
 import { ScoreBadgeComponent } from '../anime-list/anime-card/score-badge/score-badge.component';
@@ -65,9 +71,6 @@ export class AnimeDetailPanelComponent {
     return s !== null && (!s.inMal || !s.inSonarr);
   }
 
-  get isTrackedOnMal(): boolean {
-    return !!(this.seasonalItem()?.inMal);
-  }
 
   // ── Provider tracking — drives the tracking-status row in the panel ───────
 
@@ -113,6 +116,42 @@ export class AnimeDetailPanelComponent {
   private localMalScore = signal<number | null>(null);
   /** `true` while the neon-glow success animation plays after MAL save. */
   neonGlow = signal(false);
+  /** Mirrors `PopupService.malQuickUpdateSaving` — drives the running-glow on the Quick Update button. */
+  protected readonly malUpdating = this.popupService.malQuickUpdateSaving;
+
+  /** Reference to the Quick Update button element — used by afterRender to measure real pixel dimensions. */
+  private readonly malUpdateBtnRef = viewChild<ElementRef<HTMLButtonElement>>('malUpdateBtn');
+
+  /**
+   * Measured button dimensions, written by afterRender after every Angular render cycle.
+   * Using a separate signal (rather than reading offsetWidth inside computed) guarantees
+   * that the geometry is always derived from a post-layout DOM measurement.
+   */
+  private readonly _neonDims = signal({ w: 155, h: 38 });
+
+  /**
+   * All SVG geometry for the neon tracer, derived from the button's real pixel size.
+   * Constant-speed formula: perimeter / 280 px·s⁻¹, clamped to [0.9s, 2.5s].
+   */
+  readonly neonGeometry = computed(() => {
+    const { w, h } = this._neonDims();
+    const perimeter = 2 * (w - h) + Math.PI * h;
+    const cometLen  = Math.round(perimeter * 0.18);
+    const sparkLen  = Math.round(perimeter * 0.035);
+    const dur       = Math.min(2.5, Math.max(0.9, perimeter / 280));
+    const delayB    = -((sparkLen / perimeter) * dur);
+    return {
+      viewBox:    `0 0 ${w} ${h}`,
+      rx:         h / 2,
+      w,
+      h,
+      perimeter:  Math.round(perimeter),
+      dashA:      `${cometLen} ${Math.round(perimeter - cometLen)}`,
+      dashB:      `${sparkLen} ${Math.round(perimeter - sparkLen)}`,
+      animDur:    `${dur.toFixed(2)}s`,
+      animDelayB: `${delayB.toFixed(3)}s`,
+    };
+  });
 
   constructor() {
     // Merge both id inputs: prefer animeId, fall back to malId-based lookup
@@ -121,10 +160,27 @@ export class AnimeDetailPanelComponent {
         tap((id) => {
           const mal = this.malId();
           const isOpen = !!(id || mal);
-          this.isLoading.set(isOpen);
           this.error.set(null);
-          if (!isOpen) {
-            this.anime.set(null);
+          if (isOpen) {
+            // Immediately populate from seasonal item data if available.
+            // This prevents a blank panel when `getAnime(aniDbId)` returns 404
+            // because the series was just added to Sonarr/MAL but hasn't been
+            // synced into the local MetaAnime DB yet.
+            const seasonal = this.seasonalItem();
+            if (seasonal) {
+              this.anime.set(this.buildAnimeFromSeasonalItem(seasonal));
+              this.isLoading.set(false);
+            } else if (!this.anime()) {
+              // Only show loading spinner when we have nothing to display yet.
+              // If anime() already has cached data, keep showing it rather than
+              // flashing a skeleton every time the panel re-opens.
+              this.isLoading.set(true);
+            }
+          } else {
+            // NOTE: anime is intentionally NOT cleared here — clearing it immediately
+            // would blank the panel during its 200ms slide-out animation.
+            // It will be replaced when the panel next opens.
+            this.isLoading.set(false);
             this.localMalStatus.set(null);
             this.localMalEpisodes.set(null);
             this.localMalScore.set(null);
@@ -140,7 +196,21 @@ export class AnimeDetailPanelComponent {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((data) => {
-        this.anime.set(data);
+        const seasonal = this.seasonalItem();
+        if (data) {
+          // Sonarr/Plex-only DB entries have no malAnimes. Supplement with seasonal
+          // MAL data so the panel always shows cover image, synopsis, ratings, etc.
+          if (!data.malAnimes?.length && seasonal) {
+            const fromSeasonal = this.buildAnimeFromSeasonalItem(seasonal);
+            this.anime.set({ ...fromSeasonal, ...data, malAnimes: fromSeasonal.malAnimes });
+          } else {
+            this.anime.set(data);
+          }
+        } else if (!this.anime()) {
+          // Backend returned null (404) and there is no existing data yet.
+          // Use the seasonal item as an immediate fallback so the panel is never empty.
+          if (seasonal) this.anime.set(this.buildAnimeFromSeasonalItem(seasonal));
+        }
         this.isLoading.set(false);
       });
 
@@ -155,11 +225,14 @@ export class AnimeDetailPanelComponent {
             if (seasonal) {
               this.anime.set(this.buildAnimeFromSeasonalItem(seasonal));
               this.isLoading.set(false);
-            } else {
+            } else if (!this.anime()) {
+              // Only show loading spinner when we have nothing to display yet.
               this.isLoading.set(true);
             }
           } else if (!this.animeId() && !mal) {
-            this.anime.set(null);
+            // NOTE: anime is intentionally NOT cleared here — clearing it immediately
+            // would blank the panel during its 200ms slide-out animation.
+            this.isLoading.set(false);
             this.localMalStatus.set(null);
             this.localMalEpisodes.set(null);
             this.localMalScore.set(null);
@@ -176,11 +249,55 @@ export class AnimeDetailPanelComponent {
       )
       .subscribe((data) => {
         if (!this.animeId()) {
-          // Only replace with backend data if it returned something — keeps seasonal fallback on failure.
-          if (data) this.anime.set(data);
+          const seasonal = this.seasonalItem();
+          if (data) {
+            // Sonarr/Plex-only DB entries have no malAnimes. Supplement with seasonal
+            // MAL data so the panel always shows cover image, synopsis, ratings, etc.
+            if (!data.malAnimes?.length && seasonal) {
+              const fromSeasonal = this.buildAnimeFromSeasonalItem(seasonal);
+              this.anime.set({ ...fromSeasonal, ...data, malAnimes: fromSeasonal.malAnimes });
+            } else {
+              this.anime.set(data);
+            }
+          } else if (!this.anime()) {
+            // Backend returned null (404) and there is no existing data yet.
+            // Use the seasonal item as an immediate fallback so the panel is never empty.
+            if (seasonal) this.anime.set(this.buildAnimeFromSeasonalItem(seasonal));
+          }
           this.isLoading.set(false);
         }
       });
+
+    // Safety-net: runs after every CD pass with guaranteed up-to-date signal values.
+    // Handles the timing gap where tap()/subscribe() fired before the [seasonalItem]
+    // input was propagated, leaving anime() null even though the panel is open.
+    effect(() => {
+      const isOpen = !!(this.animeId() || this.malId());
+      const seasonal = this.seasonalItem();
+      if (isOpen && seasonal) {
+        untracked(() => {
+          if (!this.anime()) {
+            this.anime.set(this.buildAnimeFromSeasonalItem(seasonal));
+            this.isLoading.set(false);
+          }
+        });
+      }
+    });
+
+    // Measure the Quick Update button after every render so neonGeometry() always has
+    // accurate pixel dimensions regardless of layout context (mobile vs PC).
+    afterEveryRender(() => {
+      const el = this.malUpdateBtnRef()?.nativeElement;
+      if (!el || !this.malUpdating()) return;
+      const w = el.offsetWidth;
+      const h = el.offsetHeight;
+      if (w > 0 && h > 0) {
+        const cur = untracked(() => this._neonDims());
+        if (cur.w !== w || cur.h !== h) {
+          untracked(() => this._neonDims.set({ w, h }));
+        }
+      }
+    });
   }
 
   /** Builds a minimal AnimeDetailsResponse from a SeasonalAnimeItem so the panel
@@ -199,13 +316,19 @@ export class AnimeDetailPanelComponent {
       rating: { malMean: item.malScore, myScore: 0 },
       viewState: item.malViewState,
     };
+    const sonarrAnimes: SonarrAnimeInfo[] = item.inSonarr
+      ? [{ title: item.title, url: item.sonarrUrl, exists: true }]
+      : [];
+    const plexAnimes: PlexAnimeInfo[] = item.inPlex
+      ? [{ title: item.title, url: item.plexUrl }]
+      : [];
     return {
       aniDbId: item.malId,
       title: item.title,
       description: item.synopsis,
       malAnimes: [malInfo],
-      sonarrAnimes: [],
-      plexAnimes: [],
+      sonarrAnimes: sonarrAnimes.length > 0 ? sonarrAnimes : undefined,
+      plexAnimes: plexAnimes.length > 0 ? plexAnimes : undefined,
     };
   }
 

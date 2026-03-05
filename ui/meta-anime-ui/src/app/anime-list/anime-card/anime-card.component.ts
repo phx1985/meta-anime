@@ -49,6 +49,9 @@ export class AnimeCardComponent {
   // ── Seasonal mode output ──────────────────────────────────────────────────
   readonly openDetailsByMalId = output<string>();
 
+  /** When true, a brief blue glow animation plays on the card (successful add). */
+  readonly glowSuccess = input<boolean>(false);
+
   private translate = inject(TranslateService);
 
   showAltTitles = signal(false);

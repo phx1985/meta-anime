@@ -1,6 +1,7 @@
 <article
   class="anime-card"
   [class.anime-card--onboarding]="showOnboardingHint()"
+  [class.anime-card--success-glow]="glowSuccess()"
 >
   <div
     class="card-main"
@@ -141,6 +142,43 @@
 
 
 </article>
+
+<!-- ── Electrical arc bolts — shown during success glow ─────────────────── -->
+@if (glowSuccess()) {
+  <svg class="lightning-arc lightning-arc--1" viewBox="0 0 18 28" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M13 0 L5 12 L9 11 L2 26 L13 15 L8 16 Z" />
+    <path class="bolt-branch" d="M9 11 L16 20 L13 19 L15 24" />
+  </svg>
+  <svg class="lightning-arc lightning-arc--2" viewBox="0 0 14 22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M10 0 L3 10 L7 9 L1 21 L10 13 L5 14 Z" />
+  </svg>
+  <svg class="lightning-arc lightning-arc--3" viewBox="0 0 26 14" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M26 2 L13 5 L16 2 L2 5 L14 9 L11 5 Z" />
+    <path class="bolt-branch" d="M13 5 L18 13 L15 12" />
+  </svg>
+  <svg class="lightning-arc lightning-arc--4" viewBox="0 0 14 22" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M9 0 L2 9 L6 8 L1 21 L9 12 L5 13 Z" />
+  </svg>
+  <svg class="lightning-arc lightning-arc--5" viewBox="0 0 18 26" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M5 26 L13 14 L9 15 L16 1 L7 13 L11 12 Z" />
+    <path class="bolt-branch" d="M9 15 L2 21 L5 20 L3 25" />
+  </svg>
+  <svg class="lightning-arc lightning-arc--6" viewBox="0 0 24 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M0 2 L11 5 L8 1 L22 4 L10 8 L13 4 Z" />
+  </svg>
+  <svg class="lightning-arc lightning-arc--7" viewBox="0 0 11 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M8 0 L3 8 L6 7 L1 17 L8 10 L5 11 Z" />
+  </svg>
+  <svg class="lightning-arc lightning-arc--8" viewBox="0 0 11 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M3 0 L8 8 L5 7 L10 17 L3 10 L6 11 Z" />
+  </svg>
+  <svg class="lightning-arc lightning-arc--9 lightning-arc--spark" viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M5 0 L6.2 3.8 L10 5 L6.2 6.2 L5 10 L3.8 6.2 L0 5 L3.8 3.8 Z" />
+  </svg>
+  <svg class="lightning-arc lightning-arc--10 lightning-arc--spark" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M4 0 L5 3 L8 4 L5 5 L4 8 L3 5 L0 4 L3 3 Z" />
+  </svg>
+}
 
 <!-- ── Lightbox overlay ──────────────────────────────────────────────────── -->
 @if (showLightbox() && coverImageUrl) {

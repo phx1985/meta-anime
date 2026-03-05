@@ -73,6 +73,11 @@
     "addToMal": "Add to MAL",
     "addToProviders": "Add to Providers",
     "chooseProviders": "Choose where to add this anime",
+    "wizard": {
+      "stepChoose": "Choose",
+      "stepMatch": "Match",
+      "stepConfigure": "Configure"
+    },
     "allTracked": "Tracked in Sonarr & MAL",
     "alreadyTracked": "Already tracked ✓",
     "willAdd": "Will be added",
@@ -770,7 +775,9 @@
     "cancel": "Cancel",
     "add": "Add",
     "confirm": "Confirm",
-    "close": "Close"
+    "close": "Close",
+    "back": "Back",
+    "next": "Next"
   },
   "notFound": {
     "ariaLabel": "404 – Page not found",
@@ -1114,6 +1121,7 @@
   },
   "malQuickUpdate": {
     "title": "MAL Quick-Update",
+    "label": "Quick Update",
     "openModal": "Quick-update on MyAnimeList",
     "status": "Watch Status",
     "episodes": "Episodes Watched",
