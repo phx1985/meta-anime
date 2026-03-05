@@ -112,7 +112,6 @@ export class PopupService {
   }
 
   dismissMalQuickUpdate(): void {
-    this.malQuickUpdateSaving.set(false);
     this._animateOut(this.malQuickUpdateLeaving, () => this.malQuickUpdate.set(null));
   }
 

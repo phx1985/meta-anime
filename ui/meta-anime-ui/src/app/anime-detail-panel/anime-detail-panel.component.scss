@@ -334,38 +334,47 @@
   }
 
   &--updating {
-    overflow: hidden;
-    border-color: transparent !important;
+    overflow: visible !important;
+    border: none !important;
+    box-shadow: none !important;
     cursor: not-allowed;
 
-    &::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(0deg);
-      width: 220%;
-      height: 220%;
-      background: conic-gradient(
-        from 0deg,
-        transparent 0deg,
-        rgba(74, 144, 217, 0.0) 0deg,
-        rgba(74, 144, 217, 0.85) 60deg,
-        rgba(157, 206, 245, 1) 90deg,
-        transparent 150deg,
-        transparent 360deg
-      );
-      animation: malBtnGlowSpin 1.4s linear infinite;
-      z-index: 0;
+    // Keep text/icon strictly above the SVG tracer. Exclude SVG — it must stay position:absolute.
+    > *:not(svg) { position: relative; z-index: 2; }
+  }
+
+  // ── SVG neon tracer (injected into DOM when --updating is active) ─────────
+  &__neon-svg {
+    // !important overrides the > * rule in --updating which would put the SVG in flex flow
+    position: absolute !important;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+    z-index: 0;
+    // Ambient glow that breathes independently of the stroke trace
+    animation: neonGlow 2s ease-in-out infinite;
+  }
+
+  &__neon-rect {
+    fill: none;
+    stroke-linecap: round;
+
+    // Comet A — glowing cyan tail
+    // stroke-dasharray / stroke-dashoffset are bound via Angular [attr.*] from neonGeometry()
+    &--a {
+      stroke: #00e5ff;
+      stroke-width: 2.5;
+      animation: neonTrace var(--neon-dur, 1.4s) linear infinite;
     }
 
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 1.5px;
-      background: linear-gradient(135deg, rgba(47, 86, 138, 0.32), rgba(74, 144, 217, 0.18));
-      border-radius: 22.5px;
-      z-index: 1;
+    // Comet B — bright white spark at the leading edge
+    // animation-delay is bound via Angular [style.animation-delay] from neonGeometry()
+    &--b {
+      stroke: #e8f9ff;
+      stroke-width: 2;
+      animation: neonTrace var(--neon-dur, 1.4s) linear infinite;
     }
   }
 }
@@ -877,8 +886,22 @@
   }
 }
 
-@keyframes malBtnGlowSpin {
-  to {
-    transform: translate(-50%, -50%) rotate(360deg);
+// stroke-dashoffset traces the pill perimeter (≈ 344 SVG units) forward
+@keyframes neonTrace {
+  to { stroke-dashoffset: 0; }
+}
+
+// SVG drop-shadow breathes to simulate neon gas flicker
+@keyframes neonGlow {
+  0%, 100% {
+    filter:
+      drop-shadow(0 0 3px #00e5ff)
+      drop-shadow(0 0 7px #0099ff);
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 5px #00e5ff)
+      drop-shadow(0 0 14px #0077cc)
+      drop-shadow(0 0 22px #004f99);
   }
 }

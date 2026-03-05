@@ -2,13 +2,17 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
   HostListener,
+  afterEveryRender,
+  computed,
   effect,
   inject,
   input,
   output,
   signal,
   untracked,
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { DatePipe, TitleCasePipe } from '@angular/common';
@@ -114,6 +118,40 @@ export class AnimeDetailPanelComponent {
   neonGlow = signal(false);
   /** Mirrors `PopupService.malQuickUpdateSaving` — drives the running-glow on the Quick Update button. */
   protected readonly malUpdating = this.popupService.malQuickUpdateSaving;
+
+  /** Reference to the Quick Update button element — used by afterRender to measure real pixel dimensions. */
+  private readonly malUpdateBtnRef = viewChild<ElementRef<HTMLButtonElement>>('malUpdateBtn');
+
+  /**
+   * Measured button dimensions, written by afterRender after every Angular render cycle.
+   * Using a separate signal (rather than reading offsetWidth inside computed) guarantees
+   * that the geometry is always derived from a post-layout DOM measurement.
+   */
+  private readonly _neonDims = signal({ w: 155, h: 38 });
+
+  /**
+   * All SVG geometry for the neon tracer, derived from the button's real pixel size.
+   * Constant-speed formula: perimeter / 280 px·s⁻¹, clamped to [0.9s, 2.5s].
+   */
+  readonly neonGeometry = computed(() => {
+    const { w, h } = this._neonDims();
+    const perimeter = 2 * (w - h) + Math.PI * h;
+    const cometLen  = Math.round(perimeter * 0.18);
+    const sparkLen  = Math.round(perimeter * 0.035);
+    const dur       = Math.min(2.5, Math.max(0.9, perimeter / 280));
+    const delayB    = -((sparkLen / perimeter) * dur);
+    return {
+      viewBox:    `0 0 ${w} ${h}`,
+      rx:         h / 2,
+      w,
+      h,
+      perimeter:  Math.round(perimeter),
+      dashA:      `${cometLen} ${Math.round(perimeter - cometLen)}`,
+      dashB:      `${sparkLen} ${Math.round(perimeter - sparkLen)}`,
+      animDur:    `${dur.toFixed(2)}s`,
+      animDelayB: `${delayB.toFixed(3)}s`,
+    };
+  });
 
   constructor() {
     // Merge both id inputs: prefer animeId, fall back to malId-based lookup
@@ -243,6 +281,21 @@ export class AnimeDetailPanelComponent {
             this.isLoading.set(false);
           }
         });
+      }
+    });
+
+    // Measure the Quick Update button after every render so neonGeometry() always has
+    // accurate pixel dimensions regardless of layout context (mobile vs PC).
+    afterEveryRender(() => {
+      const el = this.malUpdateBtnRef()?.nativeElement;
+      if (!el || !this.malUpdating()) return;
+      const w = el.offsetWidth;
+      const h = el.offsetHeight;
+      if (w > 0 && h > 0) {
+        const cur = untracked(() => this._neonDims());
+        if (cur.w !== w || cur.h !== h) {
+          untracked(() => this._neonDims.set({ w, h }));
+        }
       }
     });
   }

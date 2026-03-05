@@ -116,8 +116,9 @@
                   <app-score-badge [score]="myScore" [mine]="true" [titleKey]="'animeCard.myScore'" />
                 </div>
               }
-              @if (mal?.id) {
+              @if (mal?.id && malViewState) {
                 <button
+                  #malUpdateBtn
                   type="button"
                   class="panel__mal-update-btn"
                   [class.panel__mal-update-btn--updating]="malUpdating()"
@@ -126,6 +127,37 @@
                   [title]="'malQuickUpdate.openModal' | translate"
                   [attr.aria-label]="'malQuickUpdate.openModal' | translate"
                 >
+                  @if (malUpdating()) {
+                    <!-- SVG neon tracer: stroke-dashoffset races the real pill perimeter.
+                         All geometry is computed from the button's actual offsetWidth/offsetHeight
+                         so the animation speed stays constant on mobile and wide PC layouts. -->
+                    <svg class="panel__mal-update-btn__neon-svg"
+                         aria-hidden="true"
+                         [attr.viewBox]="neonGeometry().viewBox"
+                         [style.--neon-dur]="neonGeometry().animDur">
+                      <!-- Comet A — glowing cyan tail (18% of perimeter) -->
+                      <rect class="panel__mal-update-btn__neon-rect panel__mal-update-btn__neon-rect--a"
+                            x="0" y="0"
+                            [attr.width]="neonGeometry().w"
+                            [attr.height]="neonGeometry().h"
+                            [attr.rx]="neonGeometry().rx"
+                            [attr.ry]="neonGeometry().rx"
+                            [attr.stroke-dasharray]="neonGeometry().dashA"
+                            [attr.stroke-dashoffset]="neonGeometry().perimeter"
+                            fill="none" stroke-width="2.5" />
+                      <!-- Comet B — bright white spark at the leading tip (3.5%) -->
+                      <rect class="panel__mal-update-btn__neon-rect panel__mal-update-btn__neon-rect--b"
+                            x="0" y="0"
+                            [attr.width]="neonGeometry().w"
+                            [attr.height]="neonGeometry().h"
+                            [attr.rx]="neonGeometry().rx"
+                            [attr.ry]="neonGeometry().rx"
+                            [attr.stroke-dasharray]="neonGeometry().dashB"
+                            [attr.stroke-dashoffset]="neonGeometry().perimeter"
+                            [style.animation-delay]="neonGeometry().animDelayB"
+                            fill="none" stroke-width="2" />
+                    </svg>
+                  }
                   <span class="panel__mal-update-btn__content">
                     <img src="assets/images/mal.svg" alt="" width="16" height="16" aria-hidden="true" />
                     {{ 'malQuickUpdate.label' | translate }}

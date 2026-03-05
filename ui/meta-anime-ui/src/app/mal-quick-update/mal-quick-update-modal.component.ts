@@ -38,6 +38,26 @@ export class MalQuickUpdateModalComponent implements OnInit {
   protected readonly statuses = MAL_STATUSES;
   protected readonly scores = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const;
 
+  // ── Score dial ────────────────────────────────────────────────────────────
+  private readonly ARC_LENGTH = Math.PI * 90; // π × r, r=90 in SVG viewBox
+
+  /** stroke-dashoffset for the SVG fill arc: 0 = full, ARC_LENGTH = empty. */
+  protected readonly dialDashoffset = computed(
+    () => this.ARC_LENGTH * (1 - this.selectedScore() / 10),
+  );
+
+  /** X coordinate of the thumb dot on the arc (SVG user units). */
+  protected readonly dialThumbX = computed(() => {
+    const θ = Math.PI * (1 - this.selectedScore() / 10);
+    return 100 + 90 * Math.cos(θ);
+  });
+
+  /** Y coordinate of the thumb dot on the arc (SVG user units). */
+  protected readonly dialThumbY = computed(() => {
+    const θ = Math.PI * (1 - this.selectedScore() / 10);
+    return 100 - 90 * Math.sin(θ);
+  });
+
   protected selectedStatus = signal<string>('');
   protected episodesWatched = signal<number>(0);
   protected selectedScore = signal<number>(0);
@@ -93,6 +113,10 @@ export class MalQuickUpdateModalComponent implements OnInit {
     this.selectedScore.set(this.selectedScore() === score ? 0 : score);
   }
 
+  protected onDialInput(event: Event): void {
+    this.selectedScore.set(Number((event.target as HTMLInputElement).value));
+  }
+
   protected incrementEpisodes(): void {
     const ctx = this.ctx();
     const max = ctx?.totalEpisodes ?? Infinity;
@@ -117,7 +141,6 @@ export class MalQuickUpdateModalComponent implements OnInit {
     const ctx = this.ctx();
     if (!ctx?.malId || this.saving() || !this.canSave()) return;
     this.saving.set(true);
-    this.popup.malQuickUpdateSaving.set(true);
     const status = this.selectedStatus() || 'watching';
     const episodes = this.episodesWatched();
     const score = this.selectedScore();
@@ -130,14 +153,16 @@ export class MalQuickUpdateModalComponent implements OnInit {
       .subscribe({
         next: () => {
           this.saving.set(false);
-          this.popup.malQuickUpdateSaving.set(false);
-          // Invoke card's local-state callback before dismissing
           ctx.onSaveSuccess?.(status, episodes, score);
+          // Dismiss immediately so the modal exits first, then start the glow
           this.dismiss();
+          setTimeout(() => {
+            this.popup.malQuickUpdateSaving.set(true);
+            setTimeout(() => this.popup.malQuickUpdateSaving.set(false), 800);
+          }, PopupService.MODAL_LEAVE_MS + 20);
         },
         error: () => {
           this.saving.set(false);
-          this.popup.malQuickUpdateSaving.set(false);
           this.notifService.push({
             id: `mal-update-err-${Date.now()}`,
             severity: 'error',
