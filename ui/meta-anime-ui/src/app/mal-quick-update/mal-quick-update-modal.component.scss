@@ -170,8 +170,8 @@
 
 // Status button base
 .mal-qu-status-btn {
-  padding: 0.45rem 0.3rem;
-  border-radius: 9px;
+  padding: 0.6rem 0.4rem;
+  border-radius: 12px;
   border: 1.5px solid var(--card-border);
   background: transparent;
   font-size: 0.72rem;
@@ -238,9 +238,9 @@
 }
 
 .mal-qu-step-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
   border: 1.5px solid var(--card-border);
   background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
   color: var(--accent-primary);
@@ -315,8 +315,8 @@
 
 .mal-qu-score-btn {
   flex: 1;
-  height: 36px;
-  border-radius: 8px;
+  aspect-ratio: 1;
+  border-radius: 50%;
   border: 1.5px solid var(--card-border);
   background: transparent;
   color: var(--text-muted);
@@ -415,6 +415,39 @@
 }
 
 // "Open in MAL" secondary footer button
+// ── Bottom sheet on mobile ────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  .mal-qu-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .mal-qu-modal {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 92dvh;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    animation: malQuSheetIn 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  }
+
+  .mal-qu-backdrop--leaving .mal-qu-modal {
+    animation: malQuSheetOut 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  .mal-qu-footer {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-primary);
+    padding-top: 0.75rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    margin-top: 0;
+    border-top: 1px solid var(--card-border);
+    z-index: 10;
+  }
+}
+
 // ── Mobile tweaks ─────────────────────────────────────────────────────────────
 
 @media (max-width: 500px) {
@@ -433,9 +466,8 @@
   }
 
   .mal-qu-score-btn {
-    height: 44px; // fat-finger target
     font-size: 0.85rem;
-    border-radius: 9px;
+    border-radius: 50%;
     min-width: 0;
     flex: none; // not used in grid, defensive reset
   }
@@ -481,6 +513,28 @@
   to {
     opacity: 0;
     transform: translateY(16px) scale(0.96);
+  }
+}
+
+@keyframes malQuSheetIn {
+  from {
+    transform: translateY(100%);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes malQuSheetOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
   }
 }
 

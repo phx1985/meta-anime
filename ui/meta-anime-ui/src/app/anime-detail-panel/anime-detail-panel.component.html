@@ -120,12 +120,16 @@
                 <button
                   type="button"
                   class="panel__mal-update-btn"
+                  [class.panel__mal-update-btn--updating]="malUpdating()"
+                  [disabled]="malUpdating()"
                   (click)="openMalQuickUpdate()"
                   [title]="'malQuickUpdate.openModal' | translate"
                   [attr.aria-label]="'malQuickUpdate.openModal' | translate"
                 >
-                  <img src="assets/images/mal.svg" alt="" width="16" height="16" aria-hidden="true" />
-                  {{ 'malQuickUpdate.label' | translate }}
+                  <span class="panel__mal-update-btn__content">
+                    <img src="assets/images/mal.svg" alt="" width="16" height="16" aria-hidden="true" />
+                    {{ 'malQuickUpdate.label' | translate }}
+                  </span>
                 </button>
               }
             </div>

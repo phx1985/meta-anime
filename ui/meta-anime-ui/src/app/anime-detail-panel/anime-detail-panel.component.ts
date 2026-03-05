@@ -112,6 +112,8 @@ export class AnimeDetailPanelComponent {
   private localMalScore = signal<number | null>(null);
   /** `true` while the neon-glow success animation plays after MAL save. */
   neonGlow = signal(false);
+  /** Mirrors `PopupService.malQuickUpdateSaving` — drives the running-glow on the Quick Update button. */
+  protected readonly malUpdating = this.popupService.malQuickUpdateSaving;
 
   constructor() {
     // Merge both id inputs: prefer animeId, fall back to malId-based lookup

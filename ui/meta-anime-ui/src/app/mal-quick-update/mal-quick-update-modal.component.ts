@@ -117,6 +117,7 @@ export class MalQuickUpdateModalComponent implements OnInit {
     const ctx = this.ctx();
     if (!ctx?.malId || this.saving() || !this.canSave()) return;
     this.saving.set(true);
+    this.popup.malQuickUpdateSaving.set(true);
     const status = this.selectedStatus() || 'watching';
     const episodes = this.episodesWatched();
     const score = this.selectedScore();
@@ -129,12 +130,14 @@ export class MalQuickUpdateModalComponent implements OnInit {
       .subscribe({
         next: () => {
           this.saving.set(false);
+          this.popup.malQuickUpdateSaving.set(false);
           // Invoke card's local-state callback before dismissing
           ctx.onSaveSuccess?.(status, episodes, score);
           this.dismiss();
         },
         error: () => {
           this.saving.set(false);
+          this.popup.malQuickUpdateSaving.set(false);
           this.notifService.push({
             id: `mal-update-err-${Date.now()}`,
             severity: 'error',
