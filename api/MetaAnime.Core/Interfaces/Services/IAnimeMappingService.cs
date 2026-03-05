@@ -17,6 +17,7 @@ public interface IAnimeMappingService
         string? titleFilter = null,
         AnimeSource? sourceFilter = null);
     Task<Result<IEnumerable<AnimeMapping>>> GetByAniDbIdsAsync(IEnumerable<string> aniDbIds);
+    Task<Result<string?>> GetAniDbIdByMalIdAsync(string malId);
     Task<Result> BulkDeleteAllAsync();
     Task<Result> BulkInsertAsync(IEnumerable<AnimeMapping> mappings);
 }

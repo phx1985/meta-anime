@@ -279,9 +279,9 @@
 } <!-- /!hideNavRoute() top nav -->
 
 <!-- ── Mobile Side Drawer ────────────────────────────────────────────────── -->
-@if (menuOpen()) {
-<div class="drawer-backdrop" (click)="closeMenu()" aria-hidden="true"></div>
-<aside class="drawer" [class.drawer--open]="menuOpen()" role="dialog" aria-modal="true"
+@if (menuOpen() || drawerClosing()) {
+<div class="drawer-backdrop" [class.drawer-backdrop--closing]="drawerClosing()" (click)="closeMenu()" aria-hidden="true"></div>
+<aside class="drawer" [class.drawer--open]="menuOpen()" [class.drawer--closing]="drawerClosing()" role="dialog" aria-modal="true"
   [attr.aria-label]="'nav.menu' | translate">
   <!-- Drawer header -->
   <div class="drawer-header">

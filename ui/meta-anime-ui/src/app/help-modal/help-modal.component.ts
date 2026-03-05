@@ -1,10 +1,9 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  EventEmitter,
-  Input,
-  OnChanges,
-  Output,
+  effect,
+  input,
+  output,
   signal,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -19,20 +18,20 @@ export type HelpModalType = 'mal' | 'sonarr';
   templateUrl: './help-modal.component.html',
   styleUrl: './help-modal.component.scss',
 })
-export class HelpModalComponent implements OnChanges {
-  @Input({ required: true }) type!: HelpModalType;
-  @Input() visible = false;
+export class HelpModalComponent {
+  readonly type = input.required<HelpModalType>();
+  readonly visible = input(false);
   /** The exact OAuth callback URL to display in the MAL help steps (e.g. window.location.origin + '/auth/mal/callback'). */
-  @Input() callbackUrl?: string;
-  @Output() closed = new EventEmitter<void>();
+  readonly callbackUrl = input<string>();
+  readonly closed = output<void>();
 
   protected leaving = signal(false);
   protected copied = signal(false);
 
-  ngOnChanges(): void {
-    if (!this.visible) {
-      this.leaving.set(false);
-    }
+  constructor() {
+    effect(() => {
+      if (!this.visible()) this.leaving.set(false);
+    });
   }
 
   protected dismiss(): void {
@@ -44,8 +43,9 @@ export class HelpModalComponent implements OnChanges {
   }
 
   protected copyCallbackUrl(): void {
-    if (!this.callbackUrl) return;
-    navigator.clipboard.writeText(this.callbackUrl).then(() => {
+    const url = this.callbackUrl();
+    if (!url) return;
+    navigator.clipboard.writeText(url).then(() => {
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 2000);
     }).catch(() => {

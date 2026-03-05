@@ -1,11 +1,11 @@
-@if (visible) {
+@if (visible()) {
   <div
     class="help-backdrop"
     [class.help-backdrop--leaving]="leaving()"
     (click)="dismiss()"
     role="dialog"
     aria-modal="true"
-    [attr.aria-label]="'helpModal.' + type + '.title' | translate"
+    [attr.aria-label]="'helpModal.' + type() + '.title' | translate"
   >
     <div
       class="help-modal"
@@ -33,10 +33,10 @@
         </svg>
       </div>
 
-      <h3 class="help-title">{{ 'helpModal.' + type + '.title' | translate }}</h3>
+      <h3 class="help-title">{{ 'helpModal.' + type() + '.title' | translate }}</h3>
 
       <ol class="help-steps">
-        @if (type === 'mal') {
+        @if (type() === 'mal') {
           <li>{{ 'helpModal.mal.step1' | translate }}</li>
           <li>
             {{ 'helpModal.mal.step2prefix' | translate }}<a href="https://myanimelist.net/apiconfig" target="_blank" rel="noopener noreferrer">myanimelist.net/apiconfig</a>{{ 'helpModal.mal.step2suffix' | translate }}
@@ -44,9 +44,9 @@
           <li>{{ 'helpModal.mal.step3' | translate }}</li>
           <li>
             {{ 'helpModal.mal.step4' | translate }}
-            @if (callbackUrl) {
+            @if (callbackUrl()) {
               <div class="help-callback-row">
-                <code class="help-callback-url">{{ callbackUrl }}</code>
+                <code class="help-callback-url">{{ callbackUrl() }}</code>
                 <button
                   type="button"
                   class="help-copy-btn"
@@ -71,7 +71,7 @@
           <li>{{ 'helpModal.mal.step5' | translate }}</li>
           <li>{{ 'helpModal.mal.step6' | translate }}</li>
         }
-        @if (type === 'sonarr') {
+        @if (type() === 'sonarr') {
           <li>{{ 'helpModal.sonarr.step1' | translate }}</li>
           <li>{{ 'helpModal.sonarr.step2' | translate }}</li>
           <li>{{ 'helpModal.sonarr.step3' | translate }}</li>

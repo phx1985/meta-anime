@@ -247,8 +247,28 @@
       "totalSizeDisk": "Total size"
     }
   },
+  "animeDetailPanel": {
+    "close": "Close",
+    "viewDetails": "Details",
+    "loading": "Loading details…",
+    "synopsis": "Synopsis",
+    "trailer": "Trailer",
+    "tags": "Genres & Themes",
+    "plexStatus": "Plex Watch Progress",
+    "sonarrStatus": "Sonarr",
+    "popularity": "Popularity",
+    "rank": "Rank",
+    "aired": "Aired",
+    "episodes": "Episodes",
+    "season": "Season",
+    "diskSize": "Series Size"
+  },
   "animeCard": {
     "altTitles": "Alternative titles",
+    "onboarding": {
+      "posterHint": "Click for Art",
+      "bodyHint": "Click for Details"
+    },
     "more": "more",
     "less": "less",
     "malScore": "MAL",
@@ -561,12 +581,13 @@
     "label": "Theme"
   },
   "franchise": {
-    "title": "Franchise Constellation",
+    "title": "Explore Universe",
     "loading": "Mapping Franchise Data...",
     "loadingProgress": "Mapping Franchise... ({{count}} nodes found)",
     "empty": "No related anime found in the franchise data.",
     "close": "Close",
     "viewButton": "View Franchise Constellation",
+    "explorerButton": "Explore Universe",
     "openOnMal": "Open {{title}} on MyAnimeList",
     "mainStoryline": "Main Storyline",
     "truncated": "More…",

@@ -97,11 +97,21 @@ public sealed class AnimeMappingRepository(MetaAnimeDbContext dbContext) : IAnim
 
     public async Task<IEnumerable<AnimeMapping>> GetByAniDbIdsAsync(IEnumerable<string> aniDbIds)
     {
-        var idList = aniDbIds.ToList();
+        List<string> idList = [..aniDbIds];
         return await dbContext.AnimeMappings
             .AsNoTracking()
             .Include(am => am.Anime)
             .Where(am => idList.Contains(am.AniDbId))
             .ToListAsync();
+    }
+
+    public async Task<string?> GetAniDbIdByMalIdAsync(string malId)
+    {
+        return await dbContext.AnimeMappings
+            .AsNoTracking()
+            .Include(am => am.Anime)
+            .Where(am => am.Anime!.AnimeSource == AnimeSource.MyAnimeList && am.Anime.SourceId == malId)
+            .Select(am => am.AniDbId)
+            .FirstOrDefaultAsync();
     }
 }

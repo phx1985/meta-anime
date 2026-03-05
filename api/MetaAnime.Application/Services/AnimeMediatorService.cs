@@ -800,6 +800,38 @@ public sealed class AnimeMediatorService(
         }
     }
 
+    public async Task<Result<AnimeDetailsResponse?>> GetByMalIdAsync(string malId)
+    {
+        var aniDbIdResult = await animeMappingService.GetAniDbIdByMalIdAsync(malId);
+        if (aniDbIdResult.IsFailure)
+            return Result.Failure<AnimeDetailsResponse?>(aniDbIdResult.Error);
+
+        if (aniDbIdResult.Value != null)
+            return await GetByIdAsync(aniDbIdResult.Value);
+
+        // Anime not found in local DB — fall back to live MAL API for a minimal response.
+        try
+        {
+            var malResult = await malAnimeSource.GetByIdAsync(malId);
+            if (malResult.IsFailure || malResult.Value == null)
+                return Result.Success<AnimeDetailsResponse?>(null);
+
+            var malInfo = new MalAnimeInfo(malResult.Value, myAnimeListHost);
+            var response = new AnimeDetailsResponse(
+                malId,
+                malResult.Value.Title ?? "Unknown",
+                malResult.Value.Synopsis,
+                [],
+                [malInfo],
+                []);
+            return Result.Success<AnimeDetailsResponse?>(response);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<AnimeDetailsResponse?>(new(Constants.Errors.GetByIdAsync, ex.Message));
+        }
+    }
+
     public async Task<Result<IEnumerable<SonarrCodecSearchResponse>>> GetSonarrSeriesByCodecAsync(string codec)
     {
         try
@@ -1061,7 +1093,8 @@ public sealed class AnimeMediatorService(
                     SonarrUrl: sonarrUrl,
                     TvdbId: tvdbId,
                     EnglishTitle: anime.AlternativeTitles?.En,
-                    MalViewState: malViewState
+                    MalViewState: malViewState,
+                    AniDbId: aniDbId
                 );
             });
 

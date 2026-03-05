@@ -86,6 +86,25 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
         return Ok(result.Value);
     }
 
+    [HttpGet("by-mal/{malId}")]
+    [Authorize]
+    public async Task<ActionResult<AnimeDetailsResponse>> GetByMalId(string malId)
+    {
+        var result = await mediator.Send(new GetAnimeByMalIdQuery(malId));
+
+        if (result.IsFailure)
+        {
+            return StatusCode(500, result.Error.Message);
+        }
+
+        if (result.Value == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(result.Value);
+    }
+
     [HttpPost]
     [Authorize]
     public async Task<ActionResult<AnimeResponse>> Create([FromBody] CreateAnimeRequest request)

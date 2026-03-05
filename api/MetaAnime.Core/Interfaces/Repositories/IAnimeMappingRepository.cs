@@ -27,6 +27,10 @@ public interface IAnimeMappingRepository
     /// Returns all AnimeMapping rows (with their Anime) for the given AniDbIds.
     /// </summary>
     Task<IEnumerable<AnimeMapping>> GetByAniDbIdsAsync(IEnumerable<string> aniDbIds);
+    /// <summary>
+    /// Returns the AniDbId for the anime mapped to the given MyAnimeList source ID, or null if not found.
+    /// </summary>
+    Task<string?> GetAniDbIdByMalIdAsync(string malId);
     Task BulkDeleteAllAsync();
     Task BulkInsertAsync(IEnumerable<AnimeMapping> mappings);
     Task AddAsync(AnimeMapping mapping);

@@ -1,0 +1,205 @@
+// ── Gallery Backdrop ──────────────────────────────────────────────────────────
+.gallery-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(0, 0, 0, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: zoom-out;
+}
+
+// ── Gallery Shell ─────────────────────────────────────────────────────────────
+.gallery-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 1201;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; // children re-enable as needed
+}
+
+// ── Close button ─────────────────────────────────────────────────────────────
+.gallery-close {
+  position: fixed;
+  top: 1.1rem;
+  right: 1.25rem;
+  z-index: 1202;
+  pointer-events: all;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+
+  &:hover {
+    background: rgba(108, 99, 255, 0.45);
+    border-color: rgba(157, 148, 255, 0.7);
+    transform: scale(1.08);
+  }
+}
+
+// ── Image wrapper ─────────────────────────────────────────────────────────────
+.gallery-img-wrap {
+  pointer-events: all;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: calc(100vw - 120px);
+  max-height: calc(100vh - 80px);
+}
+
+.gallery-img {
+  max-width: 100%;
+  max-height: calc(100vh - 80px);
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.85);
+  display: block;
+}
+
+// ── Loading overlay ───────────────────────────────────────────────────────────
+.gallery-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.38);
+  border-radius: 10px;
+  z-index: 1;
+}
+
+.gallery-spinner {
+  width: 38px;
+  height: 38px;
+  border: 3px solid rgba(255, 255, 255, 0.18);
+  border-top-color: rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+  animation: gallerySpinnerRotate 0.7s linear infinite;
+}
+
+@keyframes gallerySpinnerRotate {
+  to { transform: rotate(360deg); }
+}
+
+// ── Navigation arrows ─────────────────────────────────────────────────────────
+.gallery-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1202;
+  pointer-events: all;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: rgba(108, 99, 255, 0.45);
+    border-color: rgba(157, 148, 255, 0.7);
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  // Highlighted state during an active swipe gesture (replaces the old separate overlay)
+  &--active {
+    background: rgba(108, 99, 255, 0.55);
+    border-color: rgba(157, 148, 255, 0.7);
+    transform: translateY(-50%) scale(1.2);
+    transition: transform 0.08s ease, background 0.08s ease;
+  }
+
+  &--prev { left: 1rem; }
+  &--next { right: 1rem; }
+}
+
+// ── Dot indicators ────────────────────────────────────────────────────────────
+.gallery-dots {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1202;
+  pointer-events: all;
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.gallery-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  padding: 0;
+
+  &--active {
+    background: #fff;
+    transform: scale(1.3);
+  }
+
+  &:hover:not(.gallery-dot--active) {
+    background: rgba(255, 255, 255, 0.65);
+  }
+}
+
+// ── Counter ───────────────────────────────────────────────────────────────────
+.gallery-counter {
+  position: fixed;
+  top: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1202;
+  pointer-events: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 20px;
+  padding: 0.25rem 0.75rem;
+  letter-spacing: 0.04em;
+}
+
+// ── Mobile adjustments ────────────────────────────────────────────────────────
+@media (max-width: 576px) {
+  .gallery-img-wrap {
+    max-width: 100vw;
+    max-height: calc(100vh - 120px);
+    padding: 0 0.5rem;
+  }
+
+  .gallery-img {
+    max-height: calc(100vh - 120px);
+    border-radius: 6px;
+  }
+
+  .gallery-loading {
+    border-radius: 6px;
+  }
+
+  .gallery-nav {
+    width: 36px;
+    height: 36px;
+
+    &--prev { left: 0.35rem; }
+    &--next { right: 0.35rem; }
+  }
+}

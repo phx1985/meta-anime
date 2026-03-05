@@ -2,10 +2,12 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal, compute
 import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject, forkJoin, debounceTime, switchMap, of, catchError } from 'rxjs';
 import { trigger, state, style, animate, transition, query, stagger } from '@angular/animations';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
+import { SonarrService } from '../services/sonarr.service';
 import { FilterPresetService } from '../services/filter-preset.service';
 import { ProviderStateService } from '../services/provider-state.service';
 import { PopupService } from '../services/popup.service';
@@ -14,8 +16,21 @@ import {
   SeasonalFilterPreset,
   SeasonalSavedFilterState,
   SeasonName,
+  AnimeDetailsResponse,
+  MalAnimeInfo,
+  SonarrAnimeInfo,
+  PlexAnimeInfo,
 } from '../models/anime.models';
-import { SeasonalCardComponent } from './seasonal-card/seasonal-card.component';
+import {
+  SonarrRootFolder,
+  SonarrQualityProfile,
+  SonarrLookupResult,
+  SonarrAddResult,
+  SonarrMonitorType,
+} from '../models/sonarr.models';
+import { AnimeCardComponent } from '../anime-list/anime-card/anime-card.component';
+import { AnimeDetailPanelComponent } from '../anime-detail-panel/anime-detail-panel.component';
+import { AnimeImageGalleryComponent } from '../anime-image-gallery/anime-image-gallery.component';
 import {
   GENRE_LIST,
   THEME_LIST,
@@ -70,7 +85,7 @@ function getCurrentSeason(month: number): SeasonName {
   selector: 'app-seasonal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslatePipe, SeasonalCardComponent, NgTemplateOutlet],
+  imports: [CommonModule, FormsModule, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, NgTemplateOutlet, AnimeImageGalleryComponent],
   templateUrl: './seasonal.component.html',
   styleUrl: './seasonal.component.scss',
   animations: [
@@ -87,6 +102,16 @@ function getCurrentSeason(month: number): SeasonName {
       transition('closed => open', [
         style({ overflow: 'hidden' }),
         animate('320ms cubic-bezier(0.4, 0, 0.2, 1)'),
+      ]),
+    ]),
+    trigger('accordionExpand', [
+      transition(':enter', [
+        style({ height: '0', opacity: '0', overflow: 'hidden' }),
+        animate('280ms cubic-bezier(0.4, 0, 0.2, 1)', style({ height: '*', opacity: '1' })),
+      ]),
+      transition(':leave', [
+        style({ overflow: 'hidden' }),
+        animate('200ms cubic-bezier(0.4, 0, 1, 1)', style({ height: '0', opacity: '0' })),
       ]),
     ]),
     trigger('gridAnimation', [
@@ -116,6 +141,119 @@ export class SeasonalComponent {
   private translateService = inject(TranslateService);
   readonly providerState = inject(ProviderStateService);
   private readonly popupService = inject(PopupService);
+  private readonly sonarrService = inject(SonarrService);
+
+  // ── Detail panel ────────────────────────────────────────────────────────────
+  selectedAnimeId = signal<string | null>(null);
+  selectedMalId = signal<string | null>(null);
+
+  openAnimeDetails(id: string): void {
+    this.selectedAnimeId.set(id);
+    this.selectedMalId.set(null);
+  }
+
+  openDetailsByMalId(malId: string): void {
+    this.selectedMalId.set(malId);
+    this.selectedAnimeId.set(null);
+  }
+
+  closeAnimeDetails(): void {
+    this.selectedAnimeId.set(null);
+    this.selectedMalId.set(null);
+  }
+
+  /** Returns the SeasonalAnimeItem currently open in the Detail Panel (matched by malId or aniDbId). */
+  readonly selectedSeasonalItem = computed<SeasonalAnimeItem | null>(() => {
+    const malId = this.selectedMalId();
+    const aniDbId = this.selectedAnimeId();
+    if (!malId && !aniDbId) return null;
+    return this.animes().find(a =>
+      (malId && a.malId === malId) ||
+      (aniDbId && a.aniDbId === aniDbId)
+    ) ?? null;
+  });
+
+  // ── "Add to providers" modal — rendered at SeasonalComponent level ──────────
+  addModalItem = signal<SeasonalAnimeItem | null>(null);
+  showAddModal = signal(false);
+  addBusy = signal(false);
+  addError = signal('');
+  addSuccess = signal(false);
+  addSonarr = signal(false);
+  addMal = signal(false);
+  lastAddedSonarrId = signal<number | null>(null);
+  expandedProvider = signal<'sonarr' | 'mal' | null>(null);
+  sonarrRootFolders = signal<SonarrRootFolder[]>([]);
+  sonarrQualityProfiles = signal<SonarrQualityProfile[]>([]);
+  sonarrLoadingOptions = signal(false);
+  sonarrSearchTerm = signal('');
+  sonarrSearchResults = signal<SonarrLookupResult[]>([]);
+  sonarrSearching = signal(false);
+  sonarrSearchError = signal('');
+  sonarrSelected = signal<SonarrLookupResult | null>(null);
+  sonarrRootFolder = signal('');
+  sonarrProfileId = signal(0);
+  sonarrMonitor = signal<SonarrMonitorType>('all');
+  sonarrSeasonFolder = signal(true);
+  addMalStatus = signal('plan_to_watch');
+  addMalEpisodes = signal(0);
+  addMalScore = signal(0);
+
+  readonly sonarrMonitorTypes: { value: SonarrMonitorType; labelKey: string }[] = [
+    { value: 'all', labelKey: 'seasonal.monitorTypes.all' },
+    { value: 'future', labelKey: 'seasonal.monitorTypes.future' },
+    { value: 'missing', labelKey: 'seasonal.monitorTypes.missing' },
+    { value: 'existing', labelKey: 'seasonal.monitorTypes.existing' },
+    { value: 'recent', labelKey: 'seasonal.monitorTypes.recent' },
+    { value: 'pilot', labelKey: 'seasonal.monitorTypes.pilot' },
+    { value: 'firstSeason', labelKey: 'seasonal.monitorTypes.firstSeason' },
+    { value: 'lastSeason', labelKey: 'seasonal.monitorTypes.lastSeason' },
+    { value: 'monitorSpecials', labelKey: 'seasonal.monitorTypes.monitorSpecials' },
+    { value: 'unmonitorSpecials', labelKey: 'seasonal.monitorTypes.unmonitorSpecials' },
+    { value: 'none', labelKey: 'seasonal.monitorTypes.none' },
+  ];
+
+  readonly malStatuses = [
+    { value: 'watching', labelKey: 'seasonal.malStatus.watching' },
+    { value: 'completed', labelKey: 'seasonal.malStatus.completed' },
+    { value: 'on_hold', labelKey: 'seasonal.malStatus.on_hold' },
+    { value: 'dropped', labelKey: 'seasonal.malStatus.dropped' },
+    { value: 'plan_to_watch', labelKey: 'seasonal.malStatus.plan_to_watch' },
+  ];
+
+  private sonarrSearch$ = new Subject<string>();
+
+  /** Maps a SeasonalAnimeItem to AnimeDetailsResponse so AnimeCardComponent can render it.
+   * Provider sub-objects are only populated when the anime is tracked (smart provider icons). */
+  seasonalToAnimeDetails(item: SeasonalAnimeItem): AnimeDetailsResponse {
+    const malAnime: MalAnimeInfo = {
+      title: item.title,
+      id: item.inMal ? item.malId : undefined,
+      url: item.malUrl,
+      viewState: item.malViewState,
+      synopsis: item.synopsis,
+      genres: item.genres,
+      coverImageUrl: item.coverImageUrl,
+      startDate: item.startDate,
+      status: item.status,
+      mediaType: item.mediaType,
+      rating: { myScore: 0, malMean: item.malScore ?? 0 },
+    };
+    const sonarrAnimes: SonarrAnimeInfo[] = item.inSonarr
+      ? [{ title: item.title, url: item.sonarrUrl, exists: true }]
+      : [];
+    const plexAnimes: PlexAnimeInfo[] = item.inPlex
+      ? [{ title: item.title, url: item.plexUrl }]
+      : [];
+    return {
+      aniDbId: item.aniDbId ?? item.malId,
+      title: item.title,
+      description: item.synopsis,
+      malAnimes: [malAnime],
+      sonarrAnimes: sonarrAnimes.length > 0 ? sonarrAnimes : undefined,
+      plexAnimes: plexAnimes.length > 0 ? plexAnimes : undefined,
+    };
+  }
 
   private readonly _now = new Date();
   private readonly _maxYear = this._now.getFullYear();
@@ -448,6 +586,31 @@ export class SeasonalComponent {
 
     // Initial load
     this._loadCurrent();
+
+    // Wire up Sonarr search debounce for the add-to-providers modal
+    this.sonarrSearch$
+      .pipe(
+        debounceTime(350),
+        switchMap((term) => {
+          if (!term.trim()) return of([]);
+          this.sonarrSearching.set(true);
+          this.sonarrSearchError.set('');
+          return this.sonarrService.lookup(term).pipe(
+            catchError(() => {
+              this.sonarrSearchError.set(this.translateService.instant('seasonal.sonarrSearchError'));
+              return of([]);
+            }),
+          );
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((results) => {
+        this.sonarrSearchResults.set(results);
+        this.sonarrSearching.set(false);
+        if (this.sonarrSearchTerm().startsWith('tvdb:') && results.length === 1 && !results[0].alreadyInLibrary) {
+          this.sonarrSelected.set(results[0]);
+        }
+      });
   }
 
   // ── Year navigation ──────────────────────────────────────────────────────
@@ -810,5 +973,235 @@ export class SeasonalComponent {
           this.displayedAnimes.set([]); // clear displayed grid immediately
         },
       });
+  }
+
+  // ── Add to providers modal ────────────────────────────────────────────────
+
+  /** Called by the detail panel's "Add to Library" button. */
+  onDetailPanelAddRequested(): void {
+    const item = this.selectedSeasonalItem();
+    if (!item) return;
+    this.openAddModal(item);
+  }
+
+  openAddModal(seasonal: SeasonalAnimeItem): void {
+    this.addModalItem.set(seasonal);
+    this.addSonarr.set(!seasonal.inSonarr && this.providerState.sonarrEnabled());
+    this.addMal.set(!seasonal.inMal);
+    this.addError.set('');
+    this.addSuccess.set(false);
+    this.lastAddedSonarrId.set(null);
+    this.addMalStatus.set('plan_to_watch');
+    this.addMalEpisodes.set(0);
+    this.addMalScore.set(0);
+
+    if (!seasonal.inSonarr && this.providerState.sonarrEnabled()) {
+      this.expandedProvider.set('sonarr');
+    } else if (!seasonal.inMal) {
+      this.expandedProvider.set('mal');
+    } else {
+      this.expandedProvider.set(null);
+    }
+
+    this.showAddModal.set(true);
+    this.popupService.addProviderModalOpen.set(true);
+
+    if (!seasonal.inSonarr && this.providerState.sonarrEnabled()) {
+      this.initSonarrSection();
+    }
+  }
+
+  closeAddModal(): void {
+    this.showAddModal.set(false);
+    this.popupService.addProviderModalOpen.set(false);
+    this.expandedProvider.set(null);
+  }
+
+  toggleAccordion(provider: 'sonarr' | 'mal'): void {
+    const next = this.expandedProvider() === provider ? null : provider;
+    this.expandedProvider.set(next);
+    if (next === 'sonarr' && this.addSonarr()) this.ensureSonarrSearch();
+  }
+
+  toggleProvider(provider: 'sonarr' | 'mal'): void {
+    if (provider === 'sonarr') {
+      const next = !this.addSonarr();
+      this.addSonarr.set(next);
+      if (next) { this.expandedProvider.set('sonarr'); this.initSonarrSection(); }
+    } else {
+      const next = !this.addMal();
+      this.addMal.set(next);
+      if (next) this.expandedProvider.set('mal');
+    }
+  }
+
+  onSonarrSearchInput(term: string): void {
+    this.sonarrSearchTerm.set(term);
+    this.sonarrSelected.set(null);
+    this.sonarrSearch$.next(term);
+  }
+
+  selectSonarrResult(item: SonarrLookupResult): void {
+    if (item.alreadyInLibrary) return;
+    this.sonarrSelected.set(item);
+  }
+
+  get addModalInMal(): boolean { return this.addModalItem()?.inMal ?? false; }
+  get addModalInSonarr(): boolean { return this.addModalItem()?.inSonarr ?? false; }
+  get addModalCoverImageUrl(): string | undefined { return this.addModalItem()?.coverImageUrl; }
+  get addModalDisplayTitle(): string { return this.addModalItem()?.title ?? ''; }
+  get addModalAnythingSelected(): boolean {
+    return (!this.addModalInSonarr && this.addSonarr()) || (!this.addModalInMal && this.addMal());
+  }
+
+  confirmAdd(): void {
+    if (this.addBusy() || !this.addModalAnythingSelected) return;
+    this.addBusy.set(true);
+    this.addError.set('');
+    this.doAddSonarr(() => {
+      this.doAddMal(() => {
+        this.addSuccess.set(true);
+        this.addBusy.set(false);
+        setTimeout(() => { this.closeAddModal(); }, 1500);
+      });
+    });
+  }
+
+  private getSonarrSearchTerm(): string {
+    const seasonal = this.addModalItem()!;
+    if (seasonal.tvdbId) return `tvdb:${seasonal.tvdbId}`;
+    if (seasonal.englishTitle?.trim()) return seasonal.englishTitle.trim();
+    return seasonal.title;
+  }
+
+  private initSonarrSection(): void {
+    const term = this.getSonarrSearchTerm();
+    this.sonarrSearchTerm.set(term);
+    this.sonarrSelected.set(null);
+    this.sonarrSearchResults.set([]);
+    this.sonarrSearchError.set('');
+    this.sonarrSearch$.next('');
+    this.sonarrSearch$.next(term);
+    this.loadSonarrOptions();
+  }
+
+  private ensureSonarrSearch(): void {
+    if (this.sonarrSearchResults().length === 0 && !this.sonarrSearching()) {
+      const term = this.getSonarrSearchTerm();
+      this.sonarrSearchTerm.set(term);
+      this.sonarrSearch$.next('');
+      this.sonarrSearch$.next(term);
+    }
+    this.loadSonarrOptions();
+  }
+
+  private loadSonarrOptions(): void {
+    if (this.sonarrRootFolders().length > 0 || this.sonarrLoadingOptions()) return;
+    this.sonarrLoadingOptions.set(true);
+    forkJoin({
+      opts: this.sonarrService.getOptions(),
+      settings: this.settingsService.getAll(),
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ opts, settings }) => {
+          this.sonarrRootFolders.set(opts.rootFolders);
+          this.sonarrQualityProfiles.set(opts.qualityProfiles);
+          const getDefault = (key: string) => settings.find((s) => s.key === key)?.value ?? '';
+          const defaultRootFolder = getDefault('Sonarr:DefaultRootFolder');
+          const defaultProfileName = getDefault('Sonarr:DefaultQualityProfileName');
+          const defaultSeasonFolder = getDefault('Sonarr:DefaultSeasonFolder');
+          const defaultMonitor = getDefault('Sonarr:DefaultMonitor');
+          const folder = (defaultRootFolder ? opts.rootFolders.find((f) => f.path === defaultRootFolder) : null) ?? opts.rootFolders[0];
+          if (folder) this.sonarrRootFolder.set(folder.path);
+          const profile = (defaultProfileName ? opts.qualityProfiles.find((p) => p.name === defaultProfileName) : null) ?? opts.qualityProfiles[0];
+          if (profile) this.sonarrProfileId.set(profile.id);
+          if (defaultSeasonFolder) this.sonarrSeasonFolder.set(defaultSeasonFolder === 'true');
+          if (defaultMonitor && this.sonarrMonitorTypes.some((t) => t.value === defaultMonitor))
+            this.sonarrMonitor.set(defaultMonitor as SonarrMonitorType);
+          this.sonarrLoadingOptions.set(false);
+        },
+        error: () => {
+          this.addError.set(this.translateService.instant('seasonal.sonarrOptionsError'));
+          this.sonarrLoadingOptions.set(false);
+        },
+      });
+  }
+
+  private doAddSonarr(onSuccess: () => void): void {
+    const seasonal = this.addModalItem()!;
+    if (seasonal.inSonarr || !this.addSonarr()) { onSuccess(); return; }
+    const selected = this.sonarrSelected();
+    if (!selected) {
+      this.addError.set(this.translateService.instant('seasonal.sonarrNoneSelected'));
+      this.addBusy.set(false);
+      return;
+    }
+    this.sonarrService.addSeries({
+      tvdbId: selected.tvdbId,
+      rootFolderPath: this.sonarrRootFolder(),
+      qualityProfileId: this.sonarrProfileId(),
+      monitor: this.sonarrMonitor(),
+      seasonFolder: this.sonarrSeasonFolder(),
+      malId: seasonal.malId,
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (result: SonarrAddResult) => {
+        this.lastAddedSonarrId.set(result.sonarrId);
+        (seasonal as { inSonarr: boolean }).inSonarr = true;
+        if (result.sonarrUrl) (seasonal as { sonarrUrl?: string }).sonarrUrl = result.sonarrUrl;
+        onSuccess();
+      },
+      error: (err) => {
+        this.addError.set(this._extractErrorMessage(err, 'seasonal.sonarrAddError'));
+        this.addBusy.set(false);
+      },
+    });
+  }
+
+  private doAddMal(onSuccess: () => void): void {
+    const seasonal = this.addModalItem()!;
+    if (seasonal.inMal || !this.addMal()) { onSuccess(); return; }
+    this.animeService.updateMalListStatus(seasonal.malId, {
+      status: this.addMalStatus(),
+      numWatchedEpisodes: this.addMalEpisodes(),
+      score: this.addMalScore(),
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        (seasonal as { inMal: boolean }).inMal = true;
+        onSuccess();
+      },
+      error: (err) => {
+        const sonarrId = this.lastAddedSonarrId();
+        if (sonarrId !== null) {
+          this.sonarrService.removeSeries(sonarrId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+            next: () => { (seasonal as { inSonarr: boolean }).inSonarr = false; (seasonal as { sonarrUrl?: string }).sonarrUrl = undefined; this.lastAddedSonarrId.set(null); },
+            error: () => { (seasonal as { inSonarr: boolean }).inSonarr = false; this.lastAddedSonarrId.set(null); },
+          });
+        }
+        this.addError.set(this._extractErrorMessage(err, 'seasonal.malAddError'));
+        this.addBusy.set(false);
+      },
+    });
+  }
+
+  private _extractErrorMessage(err: unknown, fallbackKey: string): string {
+    const e = err as Record<string, unknown> | null | undefined;
+    if (!e) return this.translateService.instant(fallbackKey);
+    const body = e['error'];
+    if (typeof body === 'string' && body.length > 0) return body;
+    if (Array.isArray(body) && body.length > 0) {
+      const first = body[0];
+      if (first !== null && typeof first === 'object') {
+        const obj = first as Record<string, unknown>;
+        const msg = obj['errorMessage'] ?? obj['message'];
+        if (typeof msg === 'string') return msg;
+      }
+    }
+    if (body && typeof body === 'object') {
+      const obj = body as Record<string, unknown>;
+      const msg = obj['message'] ?? obj['title'] ?? obj['errorMessage'];
+      if (typeof msg === 'string') return msg;
+    }
+    return this.translateService.instant(fallbackKey);
   }
 }

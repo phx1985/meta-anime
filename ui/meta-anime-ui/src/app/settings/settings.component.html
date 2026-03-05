@@ -152,7 +152,7 @@
       <div class="settings-main">
         <!-- Main settings grid — disabled while sync is in progress -->
         <div [class.settings-grid--disabled]="syncing()">
-          @for (cat of categories(); track trackByCategory($index, cat)) {
+          @for (cat of categories(); track cat) {
             <div
               class="settings-card mb-4"
               [id]="'section-' + cat"
@@ -401,7 +401,7 @@
                   }
                 }
 
-                  @for (setting of grouped()[cat]; track trackByKey($index, setting)) {
+                  @for (setting of grouped()[cat]; track setting.key) {
                   <div
                     class="setting-row"
                     [class.setting-row--editing]="editing()[setting.key]"
@@ -1345,7 +1345,7 @@
             }
 
             <ol class="sync-hub-steps" aria-label="Sync steps">
-              @for (step of syncSteps(); track trackByStepKey($index, step)) {
+              @for (step of syncSteps(); track step.stepKey) {
                 @if (shouldShowSyncStep(step)) {
                   <app-sync-step [step]="step" />
                 }

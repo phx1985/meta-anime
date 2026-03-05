@@ -247,8 +247,28 @@
       "totalSizeDisk": "Taille totale"
     }
   },
+  "animeDetailPanel": {
+    "close": "Fermer",
+    "viewDetails": "Détails",
+    "loading": "Chargement…",
+    "synopsis": "Synopsis",
+    "trailer": "Bande-annonce",
+    "tags": "Genres & Thèmes",
+    "plexStatus": "Progression de Visionnage Plex",
+    "sonarrStatus": "Sonarr",
+    "popularity": "Popularité",
+    "rank": "Classement",
+    "aired": "Diffusion",
+    "episodes": "Épisodes",
+    "season": "Saison",
+    "diskSize": "Taille de la Série"
+  },
   "animeCard": {
     "altTitles": "Titres alternatifs",
+    "onboarding": {
+      "posterHint": "Voir l'Artwork",
+      "bodyHint": "Voir les Détails"
+    },
     "more": "plus",
     "less": "moins",
     "malScore": "MAL",
@@ -553,12 +573,13 @@
     "label": "Thème"
   },
   "franchise": {
-    "title": "Constellation de Franchise",
+    "title": "Explorer l'Univers",
     "loading": "Cartographie des données de franchise...",
     "loadingProgress": "Cartographie en cours... ({{count}} nœuds trouvés)",
     "empty": "Aucun anime lié trouvé dans les données de franchise.",
     "close": "Fermer",
     "viewButton": "Voir la Constellation de Franchise",
+    "explorerButton": "Explorer l'Univers",
     "openOnMal": "Ouvrir {{title}} sur MyAnimeList",
     "mainStoryline": "Histoire Principale",
     "truncated": "Plus…",
