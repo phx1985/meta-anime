@@ -1,12 +1,18 @@
-import { ChangeDetectionStrategy, Component, input, signal, inject, HostListener } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  input,
+  output,
+  signal,
+  inject,
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo } from '../../models/anime.models';
+import { trigger, style, animate, transition } from '@angular/animations';
+import { AnimeDetailsResponse, MalAnimeInfo, SeasonalAnimeItem, SonarrAnimeInfo } from '../../models/anime.models';
 import { ScoreBadgeComponent } from './score-badge/score-badge.component';
 import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../../constants/genre-lists';
-import { PopupService } from '../../services/popup.service';
-import { PlexDeepLinkService } from '../../services/plex-deep-link.service';
-import { FranchiseConstellationService } from '../../services/franchise-constellation.service';
 
 @Component({
   selector: 'app-anime-card',
@@ -15,42 +21,46 @@ import { FranchiseConstellationService } from '../../services/franchise-constell
   imports: [TranslatePipe, ScoreBadgeComponent, DatePipe],
   templateUrl: './anime-card.component.html',
   styleUrl: './anime-card.component.scss',
+  animations: [
+    trigger('accordionExpand', [
+      transition(':enter', [
+        style({ height: '0', opacity: '0', overflow: 'hidden' }),
+        animate('280ms cubic-bezier(0.4, 0, 0.2, 1)', style({ height: '*', opacity: '1' })),
+      ]),
+      transition(':leave', [
+        style({ overflow: 'hidden' }),
+        animate('200ms cubic-bezier(0.4, 0, 1, 1)', style({ height: '0', opacity: '0' })),
+      ]),
+    ]),
+  ],
 })
 export class AnimeCardComponent {
   readonly anime = input.required<AnimeDetailsResponse>();
-  /** Genres actively selected in the parent filter — used to highlight matching tags. */
-  readonly activeGenres = input<string[]>([]);
-  readonly activeThemes = input<string[]>([]);
-  readonly activeDemographics = input<string[]>([]);
-  /** Whether the Plex provider is enabled globally (controls visibility of Plex action). */
-  readonly plexEnabled = input(true);
-  /** Whether the Sonarr provider is enabled globally (controls visibility of Sonarr action). */
-  readonly sonarrEnabled = input(true);
-  /** Fallback Sonarr base URL when per-anime URL is not available (from settings). */
-  readonly sonarrBaseUrl = input<string | null>(null);
+  /** Emitted when the user clicks the card body to open the detail panel. */
+  readonly openDetails = output<string>();
+  /** When true, the first-time onboarding hints are shown on this card. */
+  readonly showOnboardingHint = input(false);
+  /** Emitted when the user dismisses the onboarding hint by interacting with the card. */
+  readonly onboardingDismissed = output<void>();
+
+  // ── Seasonal mode inputs ──────────────────────────────────────────────────
+  readonly seasonalItem = input<SeasonalAnimeItem | null>(null);
+
+  // ── Seasonal mode output ──────────────────────────────────────────────────
+  readonly openDetailsByMalId = output<string>();
 
   private translate = inject(TranslateService);
-  private popupService = inject(PopupService);
-  private plexDeepLink = inject(PlexDeepLinkService);
-  protected franchiseConstellation = inject(FranchiseConstellationService);
 
   showAltTitles = signal(false);
   showLightbox = signal(false);
 
-  // ── Local MAL overrides (updated immediately after a successful quick-update) ─
-  /** Overridden view-state (e.g. 'watching', 'completed') after a quick-update. */
-  private localMalStatus = signal<string | null>(null);
-  /** Overridden episodes-watched count after a quick-update. */
-  private localMalEpisodes = signal<number | null>(null);
-  /** Overridden personal score after a quick-update. */
-  private localMalScore = signal<number | null>(null);
-
-  /** `true` while the neon-glow success animation is playing. */
-  neonGlow = signal(false);
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.showLightbox()) this.showLightbox.set(false);
+    if (this.showLightbox()) {
+      this.showLightbox.set(false);
+    }
   }
 
   // ── Data accessors ────────────────────────────────────────────────────────
@@ -67,14 +77,21 @@ export class AnimeCardComponent {
     return this.anime().plexAnimes?.[0];
   }
 
+  // ── Seasonal data helpers (prefer seasonalItem when set) ──────────────────
+
+  get malId(): string | null {
+    return this.seasonalItem()?.malId ?? this.mal?.id ?? null;
+  }
   // ── Title / image ─────────────────────────────────────────────────────────
 
   get coverImageUrl(): string | undefined {
-    return this.mal?.coverImageUrl;
+    return this.seasonalItem()?.coverImageUrl ?? this.mal?.coverImageUrl;
   }
 
   /** Best-effort localised title based on current UI language */
   get displayTitle(): string {
+    const seasonal = this.seasonalItem();
+    if (seasonal) return seasonal.title;
     const lang = this.translate.currentLang ?? 'en';
     const alt = this.mal?.alternativeTitles;
     if (alt) {
@@ -85,10 +102,8 @@ export class AnimeCardComponent {
   }
 
   get subtitle(): string | undefined {
-    // Show the original DB title as subtitle when a localized title is shown
     const dt = this.displayTitle;
     if (dt !== this.anime().title) return this.anime().title;
-    // Otherwise show Japanese alt as subtitle
     const ja = this.mal?.alternativeTitles?.ja;
     return ja && ja !== dt ? ja : undefined;
   }
@@ -103,31 +118,24 @@ export class AnimeCardComponent {
     return [...new Set(titles)].filter((t) => t !== this.displayTitle);
   }
 
-  // ── Description ───────────────────────────────────────────────────────────
+  // ── Description (CSS-truncated to 3 lines — no "see more" modal) ──────────
 
   get description(): string {
-    return this.mal?.synopsis ?? this.anime().description ?? '';
-  }
-
-  get isTruncated(): boolean {
-    return this.description.length > 180;
+    return this.seasonalItem()?.synopsis ?? this.mal?.synopsis ?? this.anime().description ?? '';
   }
 
   // ── Status ────────────────────────────────────────────────────────────────
 
-  /** MAL list status (watching / completed / on_hold / dropped / plan_to_watch) */
   get malViewState(): string | undefined {
-    return this.localMalStatus() ?? this.mal?.viewState;
+    return this.mal?.viewState;
   }
 
-  /** MAL series airing status (finished_airing / currently_airing / not_yet_aired) */
   get seriesStatus(): string | undefined {
-    return this.mal?.status;
+    return this.seasonalItem()?.status ?? this.mal?.status;
   }
 
-  /** MAL media type (tv / ova / movie / special / ona / music / unknown) */
   get mediaType(): string | undefined {
-    return this.mal?.mediaType;
+    return this.seasonalItem()?.mediaType ?? this.mal?.mediaType;
   }
 
   mediaTypeLabel(type: string): string {
@@ -151,50 +159,58 @@ export class AnimeCardComponent {
   // ── Genres ────────────────────────────────────────────────────────────────
 
   private get allMalGenres(): string[] {
-    return this.mal?.genres ?? [];
+    return this.seasonalItem()?.genres ?? this.mal?.genres ?? [];
   }
 
-  /** MAL genre-category entries only. */
   get pureGenres(): string[] {
     return this.allMalGenres.filter((g) => GENRE_LIST.includes(g));
   }
 
-  /** MAL theme entries only. */
   get themes(): string[] {
     return this.allMalGenres.filter((g) => THEME_LIST.includes(g));
   }
 
-  /** MAL demographic entries only. */
   get demographics(): string[] {
     return this.allMalGenres.filter((g) => DEMOGRAPHIC_LIST.includes(g));
   }
 
-  /** @deprecated Use pureGenres — kept for any existing template references. */
-  get genres(): string[] {
-    return this.allMalGenres;
-  }
-
-  /** Translate a genre name — safe for names containing spaces */
   translateGenre(name: string): string {
     const key = `genres.${name}`;
     const t = this.translate.instant(key);
     return t !== key ? t : name;
   }
 
+  // ── Provider membership flags (drive ribbon indicators) ─────────────────
+
+  get inMal(): boolean {
+    const s = this.seasonalItem();
+    return s !== null ? s.inMal : !!(this.mal?.id);
+  }
+
+  get inSonarr(): boolean {
+    const s = this.seasonalItem();
+    return s !== null ? s.inSonarr : !!(this.sonarr);
+  }
+
+  get inPlex(): boolean {
+    const s = this.seasonalItem();
+    return s !== null ? s.inPlex : !!(this.plex);
+  }
+
   // ── Scores ────────────────────────────────────────────────────────────────
 
   get malScore(): number {
-    return this.mal?.rating?.malMean ?? 0;
+    return this.seasonalItem()?.malScore ?? this.mal?.rating?.malMean ?? 0;
   }
 
   get myScore(): number {
-    return this.localMalScore() ?? this.mal?.rating?.myScore ?? 0;
+    return this.mal?.rating?.myScore ?? 0;
   }
 
   // ── Dates ─────────────────────────────────────────────────────────────────
 
   get startDate(): string | undefined {
-    return this.mal?.startDate;
+    return this.seasonalItem()?.startDate ?? this.mal?.startDate;
   }
 
   get endDate(): string | undefined {
@@ -208,92 +224,28 @@ export class AnimeCardComponent {
     return d.getFullYear() > 1 ? d : undefined;
   }
 
-  // ── Progression ───────────────────────────────────────────────────────────
-
-  get plexProgress(): { watched: number; total: number } | undefined {
-    const p = this.plex?.progression;
-    return p ? { watched: p.viewedEpisodes, total: p.totalEpisodes } : undefined;
-  }
-
-  get malProgress(): { watched: number; total: number } | undefined {
-    const localEps = this.localMalEpisodes();
-    const p = this.mal?.progression;
-    if (!p || p.totalEpisodes <= 0) return undefined;
-    const watched = localEps !== null ? localEps : p.episodesWatched;
-    return { watched, total: p.totalEpisodes };
-  }
-
-  // ── Storage / codec ───────────────────────────────────────────────────────
-
-  /** Size on disk with localized unit (GB / Go) */
-  get sizeOnDisk(): string | undefined {
-    const bytes = this.sonarr?.sizeOnDisk;
-    if (!bytes) return undefined;
-    const gb = bytes / 1_073_741_824;
-    const unit = this.translate.instant('animeCard.sizeUnit');
-    return `${gb.toFixed(1)} ${unit}`;
-  }
-
-  /** Fixed 3-segment codec breakdown: H.265 / H.264 / Other — null when no files.
-   *  Segments with 0% are omitted so only meaningful codecs are shown. */
-  get codecSegments(): Array<{ label: string; pct: number }> | null {
-    const dist = this.sonarr?.codecDistribution;
-    if (!dist) return null;
-    const total = Object.values(dist).reduce((s, v) => s + v, 0);
-    if (total === 0) return null;
-    let h265 = 0,
-      h264 = 0,
-      other = 0;
-    for (const [codec, count] of Object.entries(dist)) {
-      const c = codec.toLowerCase();
-      // H.265 aliases: hevc, h265, h.265, x265, x.265
-      if (c === 'hevc' || c === 'h265' || c === 'h.265' || c === 'x265' || c === 'x.265')
-        h265 += count;
-      // H.264 aliases: avc, h264, h.264, x264, x.264, avc1
-      else if (
-        c === 'avc' ||
-        c === 'h264' ||
-        c === 'h.264' ||
-        c === 'x264' ||
-        c === 'x.264' ||
-        c === 'avc1'
-      )
-        h264 += count;
-      else other += count;
-    }
-    const pctH265 = Math.round((h265 / total) * 100);
-    const pctH264 = Math.round((h264 / total) * 100);
-    const pctOther = 100 - pctH265 - pctH264; // absorb rounding so segments always sum to 100
-    // Filter out 0% segments — only show codecs that are actually present
-    return [
-      { label: this.translate.instant('animeCard.codec.h265'), pct: pctH265 },
-      { label: this.translate.instant('animeCard.codec.h264'), pct: pctH264 },
-      { label: this.translate.instant('animeCard.codec.other'), pct: pctOther },
-    ].filter((s) => s.pct > 0);
-  }
-
-  // ── URLs ──────────────────────────────────────────────────────────────────
-
-  get malUrl(): string | null {
-    return this.mal?.url ?? null;
-  }
-
-  get sonarrUrl(): string | null {
-    return this.sonarr?.url ?? this.sonarrBaseUrl() ?? null;
-  }
-
-  get plexUrl(): string | null {
-    return this.plex?.url ?? null;
-  }
-
   // ── Interaction ───────────────────────────────────────────────────────────
 
   toggleAltTitles(): void {
     this.showAltTitles.update((v) => !v);
   }
 
-  openSynopsisModal(): void {
-    this.popupService.openSynopsis(this.displayTitle, this.description);
+  /** Opens the detail panel. Dismisses onboarding hint if it was shown. */
+  onContentClick(): void {
+    if (this.showOnboardingHint()) this.onboardingDismissed.emit();
+    const seasonal = this.seasonalItem();
+    if (seasonal) {
+      // Only route to the local /api/v1/animes/{id} endpoint when the show is
+      // confirmed to be in the local library. Without this guard, shows that
+      // have an aniDbId but are not yet tracked locally produce a 404.
+      if (seasonal.aniDbId && (seasonal.inMal || seasonal.inSonarr || seasonal.inPlex)) {
+        this.openDetails.emit(seasonal.aniDbId);
+      } else {
+        this.openDetailsByMalId.emit(seasonal.malId);
+      }
+      return;
+    }
+    this.openDetails.emit(this.anime().aniDbId);
   }
 
   openLightbox(): void {
@@ -302,40 +254,5 @@ export class AnimeCardComponent {
 
   closeLightbox(): void {
     this.showLightbox.set(false);
-  }
-
-  openPlexLink(event: Event): void {
-    if (!this.plexUrl) return;
-    event.preventDefault();
-    this.plexDeepLink.openLink(this.plexUrl, this.anime().title);
-  }
-
-  openMalQuickUpdate(): void {
-    const malId = this.mal?.id;
-    if (!malId) return;
-    this.popupService.openMalQuickUpdate({
-      malId,
-      title: this.displayTitle,
-      coverImageUrl: this.coverImageUrl,
-      malUrl: this.malUrl ?? undefined,
-      currentStatus: this.localMalStatus() ?? this.mal?.viewState,
-      currentEpisodes: this.localMalEpisodes() ?? this.mal?.progression?.episodesWatched,
-      currentScore: this.localMalScore() ?? this.mal?.rating?.myScore,
-      totalEpisodes: this.mal?.progression?.totalEpisodes,
-      seriesStatus: this.mal?.status,
-      onSaveSuccess: (status, episodes, score) => {
-        this.localMalStatus.set(status);
-        this.localMalEpisodes.set(episodes);
-        this.localMalScore.set(score > 0 ? score : null);
-        this.neonGlow.set(true);
-        setTimeout(() => this.neonGlow.set(false), 2200);
-      },
-    });
-  }
-
-  openFranchiseConstellation(): void {
-    const malId = this.mal?.id;
-    if (!malId) return;
-    this.franchiseConstellation.open(malId, this.displayTitle, this.coverImageUrl);
   }
 }

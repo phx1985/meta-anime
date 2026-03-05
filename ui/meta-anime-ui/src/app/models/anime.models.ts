@@ -54,6 +54,10 @@ export interface MalAnimeInfo {
   coverImageUrl?: string;
   status?: string;
   mediaType?: string;
+  trailerUrl?: string;
+  popularity?: number;
+  rank?: number;
+  pictures?: string[];
 }
 
 export interface SonarrAnimeInfo {
@@ -190,6 +194,7 @@ export interface SeasonalAnimeItem {
   tvdbId?: string;
   englishTitle?: string;
   malViewState?: string;
+  aniDbId?: string;
 }
 
 export type SeasonName = 'winter' | 'spring' | 'summer' | 'fall';

@@ -26,7 +26,9 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
                                                                     "media_type, " +
                                                                     "mean, " +
                                                                     "num_episodes, " +
-                                                                    "start_season";
+                                                                    "start_season, " +
+                                                                    "trailer{youtube_id,url}, " +
+                                                                    "pictures{medium,large}";
     private const string SEASONAL_FIELDS = "synopsis, " +
                                            "alternative_titles{en,ja}, " +
                                            "genres{id,name}, " +

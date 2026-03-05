@@ -18,5 +18,6 @@ public sealed record SeasonalAnimeResponse(
     string? SonarrUrl,
     string? TvdbId,
     string? EnglishTitle,
-    string? MalViewState
+    string? MalViewState,
+    string? AniDbId = null
 );

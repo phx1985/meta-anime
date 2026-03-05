@@ -1,0 +1,97 @@
+@if (gallery.images() !== null) {
+  <div class="gallery-backdrop" (click)="onBackdropClick()" @galleryFade aria-hidden="true"></div>
+
+  <div
+    class="gallery-shell"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Image Gallery"
+    @galleryFade
+  >
+    <!-- Close button -->
+    <button
+      type="button"
+      class="gallery-close"
+      (click)="gallery.close()"
+      aria-label="Close gallery"
+      title="Close (Esc)"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="20" height="20" aria-hidden="true">
+        <path d="M18 6L6 18M6 6l12 12" />
+      </svg>
+    </button>
+
+    <!-- Previous arrow — highlighted when user is actively swiping right -->
+    @if (hasMultiple) {
+      <button
+        type="button"
+        class="gallery-nav gallery-nav--prev"
+        [class.gallery-nav--active]="swipeHint() === 'prev'"
+        (click)="gallery.prev(); $event.stopPropagation()"
+        aria-label="Previous image"
+        title="Previous (←)"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+    }
+
+    <!-- Main image — wrapped in @for to re-create element on every navigation,
+         which triggers both the slide animation and a fresh (load) event -->
+    <div class="gallery-img-wrap" (click)="$event.stopPropagation()">
+      @for (img of [activeImage]; track img) {
+        <img
+          class="gallery-img"
+          [src]="img"
+          alt="Anime poster"
+          @imgSlide
+          (load)="onImageLoad()"
+          (error)="onImageError()"
+        />
+      }
+      <!-- Loading spinner overlay while image fetches -->
+      @if (imageLoading()) {
+        <div class="gallery-loading" aria-hidden="true">
+          <div class="gallery-spinner"></div>
+        </div>
+      }
+    </div>
+
+    <!-- Next arrow — highlighted when user is actively swiping left -->
+    @if (hasMultiple) {
+      <button
+        type="button"
+        class="gallery-nav gallery-nav--next"
+        [class.gallery-nav--active]="swipeHint() === 'next'"
+        (click)="gallery.next(); $event.stopPropagation()"
+        aria-label="Next image"
+        title="Next (→)"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" aria-hidden="true">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </button>
+    }
+
+    <!-- Dot indicators -->
+    @if (hasMultiple) {
+      <div class="gallery-dots" (click)="$event.stopPropagation()">
+        @for (img of images; track img; let i = $index) {
+          <button
+            type="button"
+            class="gallery-dot"
+            [class.gallery-dot--active]="i === activeIndex"
+            (click)="gallery.activeIndex.set(i)"
+            [attr.aria-label]="'Image ' + (i + 1)"
+          ></button>
+        }
+      </div>
+    }
+
+    <!-- Counter -->
+    @if (hasMultiple) {
+      <div class="gallery-counter">{{ activeIndex + 1 }} / {{ images.length }}</div>
+    }
+  </div>
+}

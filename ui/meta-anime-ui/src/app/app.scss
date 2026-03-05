@@ -1298,6 +1298,30 @@ html[data-theme='dark'] .navbar-toggler-icon {
   to   { transform: translateX(0); }
 }
 
+@keyframes drawerSlideOut {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+
+// Applied during the close animation to play the slide-out
+.drawer--closing {
+  @media (max-width: 991.98px) {
+    animation: drawerSlideOut 0.24s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+  }
+}
+
+// Fade out the backdrop in sync with the drawer slide
+.drawer-backdrop--closing {
+  @media (max-width: 991.98px) {
+    animation: drawerBdOut 0.22s ease forwards !important;
+  }
+}
+
+@keyframes drawerBdOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
 .drawer-header {
   display: flex;
   align-items: center;
