@@ -6,7 +6,7 @@
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/phx1985/meta-anime?style=flat-square&logo=docker&label=Docker%20Pulls)](https://hub.docker.com/r/phx1985/meta-anime)
 [![GitHub Stars](https://img.shields.io/github/stars/phx1985/meta-anime?style=flat-square&logo=github)](https://github.com/phx1985/meta-anime)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg?style=flat-square)](LICENSE)
 
 *Lovingly overengineered and relentlessly hyper-optimized with the help of [GitHub Copilot](https://github.com/features/copilot). 🤖✨*
 
@@ -157,7 +157,15 @@ Aspire starts PostgreSQL, the .NET API (auto-migrates on startup), and the Angul
 
 ## 📄 License
 
-[MIT](LICENSE)
+MetaAnime is released under the **[GNU Affero General Public License v3.0](LICENSE)** (AGPLv3).
+
+**TL;DR for the homelab community:**
+- ✅ **Free for personal and homelab use** — run it, modify it, enjoy it.
+- ✅ **Fork it and share improvements** — contributions are always welcome.
+- ⚠️ **If you modify it and deploy it over a network** (e.g. a public or shared service), you **must release your modified source code** under the same AGPLv3 license.
+- ❌ **No proprietary forks** — you cannot take this code, close the source, and monetize it as a hosted service.
+
+This ensures MetaAnime stays free and open for everyone in the self-hosting community, forever.
 
 ---
 

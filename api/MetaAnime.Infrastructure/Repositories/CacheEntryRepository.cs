@@ -1,8 +1,8 @@
-﻿using EFCore.BulkExtensions;
-using MetaAnime.Domain.Enums;
+﻿using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Caching;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Domain.Entities;
+using LinqToDB.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace MetaAnime.Infrastructure.Repositories;
@@ -56,9 +56,9 @@ public sealed class CacheEntryRepository(MetaAnimeDbContext dbContext) : ICacheE
 
     public async Task BulkInsertAsync(IEnumerable<CacheEntry> cacheEntries)
     {
-        SetCacheEntryIds(cacheEntries);
-        await dbContext.BulkInsertAsync(cacheEntries);
-        await dbContext.SaveChangesAsync();
+        var entryList = cacheEntries.ToList();
+        SetCacheEntryIds(entryList);
+        await dbContext.BulkCopyAsync(entryList);
     }
 
     public async Task BulkInsertAsync(IEnumerable<ICacheable> cacheables)

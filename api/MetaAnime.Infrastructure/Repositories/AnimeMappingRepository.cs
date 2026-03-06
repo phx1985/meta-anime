@@ -1,7 +1,7 @@
-﻿using EFCore.BulkExtensions;
-using MetaAnime.Core.Interfaces.Repositories;
+﻿using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Domain.Entities;
 using MetaAnime.Domain.Enums;
+using LinqToDB.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace MetaAnime.Infrastructure.Repositories;
@@ -15,11 +15,11 @@ public sealed class AnimeMappingRepository(MetaAnimeDbContext dbContext) : IAnim
 
     public async Task BulkInsertAsync(IEnumerable<AnimeMapping> mappings)
     {
-        foreach (var mapping in mappings)
+        var mappingList = mappings.ToList();
+        foreach (var mapping in mappingList)
             mapping.Id = Guid.CreateVersion7();
 
-        await dbContext.BulkInsertAsync(mappings);
-        await dbContext.SaveChangesAsync();
+        await dbContext.BulkCopyAsync(mappingList);
     }
 
     public async Task AddAsync(AnimeMapping mapping)
