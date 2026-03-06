@@ -113,52 +113,77 @@
 
 .provider-dots {
   position: absolute;
-  top: 20px;
-  right: -12px;         // 12px protrusion beyond the card's right edge
+  top: 18px;
+  right: -6px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  z-index: -1;          // slot behind the card surface (card is z-index: 1)
+  gap: 8px;             
+  z-index: 5;
   pointer-events: auto;
+  // Clean, singular drop-shadow for the whole ribbon shape
+  filter: drop-shadow(-2px 2px 2px rgba(0,0,0,0.25)); 
 }
 
 .dot {
+  --dot-color: var(--text-muted); 
+  &--mal    { --dot-color: var(--provider-mal); }
+  &--plex   { --dot-color: var(--provider-plex); }
+  &--sonarr { --dot-color: var(--provider-sonarr); }
+
   position: relative;
-  width: 12px;
-  height: 28px;
-  border-radius: 0 6px 6px 0;  // right side rounded, left flat (hidden under card)
+  width: 24px;
+  height: 22px;
+  
+  // Volume: Horizontal Gradient from Light (Tip/Left) to Dark (Base/Right)
+  // Gives a sleek, metallic ribbon feel
+  background: linear-gradient(
+    to right, 
+    color-mix(in srgb, var(--dot-color), white 20%) 0%, 
+    var(--dot-color) 40%,
+    color-mix(in srgb, var(--dot-color), black 10%) 100%
+  );
+  
+  // Shape: Pointy Top-Left, slanting down-right
+  // 0 0: Top Left (Sharp Point)
+  // 100% 0: Top Right
+  // 100% 100%: Bottom Right
+  // 25% 100%: Bottom Left (Indented)
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 25% 100%);
+  
+  // Radius on the outer (right) edge only
+  border-radius: 0 4px 4px 0;
+  
   flex-shrink: 0;
-  // Lateral depth shadow + inset top highlight + inset bottom darkening
-  box-shadow:
-    4px 2px 10px rgba(0, 0, 0, 0.55),         // strong rightward shadow = 3D depth
-    inset 0  1px 0 rgba(255, 255, 255, 0.35),  // top-edge light catch
-    inset 0 -1px 0 rgba(0, 0, 0, 0.30);       // bottom-edge darkening
+  transition: transform 0.2s ease;
 
-  &--mal    { background: var(--provider-mal);    }
-  &--plex   { background: var(--provider-plex);   }
-  &--sonarr { background: var(--provider-sonarr); }
-
-  // Fold crease — gradient shadow below each tab, simulating the wrap-behind depth
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -6px;
-    left: 0;
-    right: 0;
-    height: 6px;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.45), transparent);
-    pointer-events: none;
+  &:hover {
+    transform: translateX(-2px);
   }
 
-  // Light Mode Fix: Soften shadows and remove dark fold crease to prevent "glitchy" artifacts
-  :host-context([data-theme='light']) & {
-    box-shadow:
-      2px 1px 6px rgba(0, 0, 0, 0.12),
-      inset 0 1px 0 rgba(255, 255, 255, 0.6),
-      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+  // The "3D Anchor" - A tiny dark triangle at the top-left point
+  // Simulates the ribbon tucking into the card
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0; 
+    width: 6px;
+    height: 8px;
+    background: color-mix(in srgb, var(--dot-color), black 45%);
+    // Triangle at the very corner
+    clip-path: polygon(0 0, 100% 0, 0 100%);
+    z-index: 2; // Sit on top to accent the fold
+    opacity: 0.8;
+  }
+  
+  &::after { display: none; }
 
-    &::after {
-      display: none;
+  // Light Mode Refinements
+  :host-context([data-theme='light']) & {
+    filter: drop-shadow(-1px 2px 2px rgba(0,0,0,0.15)); 
+    
+    &::before {
+      opacity: 0.6;
     }
   }
 }
