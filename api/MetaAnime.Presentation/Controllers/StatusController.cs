@@ -6,7 +6,7 @@ namespace MetaAnime.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/status")]
+[Route("api/v1/status")]
 public sealed class StatusController : ControllerBase
 {
     /// <summary>

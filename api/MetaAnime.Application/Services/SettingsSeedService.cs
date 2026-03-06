@@ -69,7 +69,7 @@ public sealed class SettingsSeedService(
         var mal = malOptions.Value;
         var kometa = kometaOptions.Value;
 
-        return new Dictionary<string, string?>
+        return new()
         {
             [SettingsKeys.PlexHost] = plex.Host,
             [SettingsKeys.PlexToken] = plex.Token,

@@ -1,0 +1,907 @@
+:host {
+  display: contents;
+}
+
+// ── Backdrop ─────────────────────────────────────────────────────────────────
+.panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 1050;
+  cursor: pointer;
+}
+
+// ── Panel shell ──────────────────────────────────────────────────────────────
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 480px;
+  max-width: 100vw;
+  background: var(--bg-secondary);
+  border-left: 1px solid rgba(108, 99, 255, 0.2);
+  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.45), -2px 0 12px rgba(108, 99, 255, 0.15);
+  z-index: 1051;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-bottom: 2rem;
+
+  // Custom scrollbar
+  scrollbar-width: thin;
+  scrollbar-color: rgba(108, 99, 255, 0.4) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(108, 99, 255, 0.4);
+    border-radius: 2px;
+  }
+}
+
+// ── Close button ─────────────────────────────────────────────────────────────
+// position: absolute so it sits over the top-right corner without
+// participating in the flex column flow (which caused it to push content
+// down and then stick on top of the info text when scrolling).
+.panel__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(108, 99, 255, 0.35);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: rgba(108, 99, 255, 0.15);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+  }
+}
+
+// ── 2-Column Top Grid ─────────────────────────────────────────────────────────
+.panel__top-grid {
+  display: grid;
+  grid-template-columns: 42% 1fr;
+  min-height: 220px;
+}
+
+// ── Left: poster column ───────────────────────────────────────────────────────
+.panel__cover-col {
+  position: relative;
+  overflow: hidden;
+  cursor: zoom-in;
+  flex-shrink: 0;
+  min-width: 0; // prevent overflow in CSS grid cell
+}
+
+.panel__cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  min-height: 220px;
+  transition: transform 0.35s ease;
+
+  .panel__cover-col:hover & {
+    transform: scale(1.04);
+  }
+}
+
+.panel__cover-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+}
+
+.panel__cover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+  z-index: 2; // above gradient (1)
+
+  .panel__cover-col:hover & {
+    opacity: 1;
+  }
+}
+
+// ── Bottom gradient — mobile only (Spotify / Netflix poster bleed) ─────────────
+// Always-on gradient that blends the poster bottom into the panel background.
+.panel__cover-gradient {
+  display: none; // hidden on desktop — poster sits next to info-col, not above content
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 55%;
+  background: linear-gradient(to bottom, transparent 0%, var(--bg-secondary) 100%);
+  pointer-events: none;
+  z-index: 1; // above the image, below hover overlay
+}
+
+// ── Right: info column — title/pills/scores + action buttons + universe ────────
+.panel__info-col {
+  display: flex;
+  flex-direction: column;
+  // top: 2.75rem clears the absolute close button (0.75rem margin + 32 px height)
+  // right: 2.75rem keeps text from running under the button's horizontal footprint
+  padding: 2.75rem 2.75rem 0.85rem 1rem;
+  gap: 0.5rem;
+  border-left: 1px solid rgba(108, 99, 255, 0.12);
+  min-width: 0;
+}
+
+.panel__title-block {
+  flex: 1; // stretches to fill grid cell height, pushing buttons to the bottom
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+// Title row: title text + AKA badge side by side
+.panel__title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.panel__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+  margin: 0;
+  word-break: break-word;
+  flex: 1;
+  min-width: 0;
+}
+
+// AKA badge — small pill button; click opens a popover with all alt titles (works on mobile)
+.panel__aka-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.panel__aka-btn {
+  flex-shrink: 0;
+  margin-top: 2px;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+  color: var(--accent-primary);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 30%, transparent);
+  border-radius: 99px;
+  cursor: pointer;
+  line-height: 1.5;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent-primary) 20%, transparent);
+    border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
+  }
+}
+
+.panel__aka-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;       // anchor to right edge of button — opens inward toward screen center
+  left: auto;
+  z-index: 100;
+  min-width: 180px;
+  max-width: min(280px, 85vw);  // never wider than 85% of viewport on mobile
+  white-space: normal;          // allow long titles to wrap
+  background: var(--bg-primary);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 30%, transparent);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.panel__aka-popover-item {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.panel__alt-title {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0.15rem 0 0;
+  font-style: italic;
+  opacity: 0.8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ── Pills ────────────────────────────────────────────────────────────────────
+.panel__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+.panel__pill {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 99px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: capitalize;
+  background: rgba(108, 99, 255, 0.15);
+  color: var(--accent-primary);
+  border: 1px solid rgba(108, 99, 255, 0.3);
+
+  &--watching    { background: rgba(72, 199, 116, 0.15); color: #48c774; border-color: rgba(72, 199, 116, 0.35); }
+  &--completed   { background: rgba(62, 207, 207, 0.15); color: #3ecfcf; border-color: rgba(62, 207, 207, 0.35); }
+  &--on_hold     { background: rgba(255, 178, 56, 0.15); color: #ffb238; border-color: rgba(255, 178, 56, 0.35); }
+  &--dropped     { background: rgba(255, 80, 80, 0.15);  color: #ff5050; border-color: rgba(255, 80, 80, 0.35); }
+  &--plan_to_watch { background: rgba(108, 99, 255, 0.12); color: var(--accent-primary); border-color: rgba(108, 99, 255, 0.3); }
+  &--status      { background: rgba(157, 148, 255, 0.1); color: var(--text-muted); border-color: rgba(157, 148, 255, 0.2); }
+  &--media-type  { background: rgba(157, 148, 255, 0.1); color: var(--text-muted); border-color: rgba(157, 148, 255, 0.2); }
+}
+
+// ── Scores ───────────────────────────────────────────────────────────────────
+.panel__scores {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.4rem;
+}
+
+.panel__mal-update-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  padding: 0 1rem;
+  height: 38px;
+  border-radius: 24px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+  white-space: nowrap;
+  cursor: pointer;
+  background: linear-gradient(135deg, rgba(47, 86, 138, 0.28), rgba(74, 144, 217, 0.14));
+  color: #6baee8;
+  border: 1px solid rgba(74, 144, 217, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 10px rgba(47, 86, 138, 0.18);
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease, color 0.2s ease;
+
+  img { flex-shrink: 0; }
+
+  &:hover {
+    background: linear-gradient(135deg, rgba(47, 86, 138, 0.42), rgba(74, 144, 217, 0.24));
+    border-color: rgba(74, 144, 217, 0.6);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 4px 16px rgba(47, 86, 138, 0.32);
+    color: #9dcef5;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 5px rgba(47, 86, 138, 0.2);
+  }
+
+  &__content {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    pointer-events: none;
+  }
+
+  &--updating {
+    overflow: visible !important;
+    border: none !important;
+    box-shadow: none !important;
+    cursor: not-allowed;
+
+    // Keep text/icon strictly above the SVG tracer. Exclude SVG — it must stay position:absolute.
+    > *:not(svg) { position: relative; z-index: 2; }
+  }
+
+  // ── SVG neon tracer (injected into DOM when --updating is active) ─────────
+  &__neon-svg {
+    // !important overrides the > * rule in --updating which would put the SVG in flex flow
+    position: absolute !important;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: visible;
+    z-index: 0;
+    // Ambient glow that breathes independently of the stroke trace
+    animation: neonGlow 2s ease-in-out infinite;
+  }
+
+  &__neon-rect {
+    fill: none;
+    stroke-linecap: round;
+
+    // Comet A — glowing cyan tail
+    // stroke-dasharray / stroke-dashoffset are bound via Angular [attr.*] from neonGeometry()
+    &--a {
+      stroke: #00e5ff;
+      stroke-width: 2.5;
+      animation: neonTrace var(--neon-dur, 1.4s) linear infinite;
+    }
+
+    // Comet B — bright white spark at the leading edge
+    // animation-delay is bound via Angular [style.animation-delay] from neonGeometry()
+    &--b {
+      stroke: #e8f9ff;
+      stroke-width: 2;
+      animation: neonTrace var(--neon-dur, 1.4s) linear infinite;
+    }
+  }
+}
+
+// ── Provider action buttons row (dedicated row, always below the grid) ────────
+// Kept for backwards-compat; actual usage is now inside panel__info-col.
+.panel__actions-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid rgba(108, 99, 255, 0.1);
+  flex-shrink: 0;
+}
+
+// ── Inline action buttons inside info-col ────────────────────────────────────
+.panel__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  padding-top: 0.45rem;
+  border-top: 1px solid rgba(108, 99, 255, 0.1);
+}
+
+.panel__action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s, background 0.15s, border-color 0.15s, box-shadow 0.15s;
+
+  &:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  &--mal        { background: rgba(47, 86, 138, 0.25); color: #4a90d9; border: 1px solid rgba(74, 144, 217, 0.3); }
+  &--plex   { background: rgba(229, 160, 13, 0.15); color: #e5a00d; border: 1px solid rgba(229, 160, 13, 0.3); }
+  &--sonarr { background: rgba(53, 152, 219, 0.15); color: #3598db; border: 1px solid rgba(53, 152, 219, 0.3); }
+
+  &--add {
+    background: rgba(108, 99, 255, 0.15);
+    border: 1px solid rgba(108, 99, 255, 0.5);
+    color: var(--accent-primary);
+    &:hover {
+      background: rgba(108, 99, 255, 0.3);
+      border-color: var(--accent-primary);
+      opacity: 1;
+    }
+  }
+
+  &--add-library {
+    width: 100%;
+    height: auto;
+    min-height: 38px;
+    padding: 0.45rem 0.85rem;
+    font-size: 0.78rem;
+    gap: 0.45rem;
+    border-radius: 10px;
+    flex-shrink: 0;
+    background: var(--accent-primary);
+    color: #fff;
+    border: 1px solid var(--accent-primary);
+    &:hover {
+      background: color-mix(in srgb, var(--accent-primary) 85%, #000 15%);
+      border-color: color-mix(in srgb, var(--accent-primary) 85%, #000 15%);
+      box-shadow: 0 4px 16px rgba(108, 99, 255, 0.4);
+      opacity: 1;
+    }
+  }
+
+  // ── Franchise Constellation — purple gradient ───────────────────────────
+  &--constellation {
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--accent-primary) 18%, transparent),
+      color-mix(in srgb, var(--accent-primary) 10%, transparent)
+    );
+    color: var(--accent-primary);
+    border: 1px solid color-mix(in srgb, var(--accent-primary) 38%, transparent);
+
+    &:hover {
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--accent-primary) 30%, transparent),
+        color-mix(in srgb, var(--accent-primary) 20%, transparent)
+      );
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 18%, transparent);
+      opacity: 1;
+    }
+  }
+
+  // ── "Explore Universe" — full-width pill below the icon buttons ──────────
+  // MUST be declared AFTER the base 48×48 rules above so it wins the cascade.
+  &--universe {
+    width: 100%;
+    height: auto;
+    min-height: 38px;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.72rem;
+    gap: 0.4rem;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+}
+
+// ── Meta row ─────────────────────────────────────────────────────────────────
+.panel__meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  padding: 0.75rem 1.25rem 1rem;
+  border-top: 1px solid rgba(108, 99, 255, 0.08);
+  border-bottom: 1px solid rgba(108, 99, 255, 0.1);
+}
+
+.panel__meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.panel__meta-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.panel__meta-value {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+// ── Sections ─────────────────────────────────────────────────────────────────
+.panel__section {
+  padding: 1rem 1.25rem 0;
+}
+
+.panel__section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--accent-primary);
+  margin: 0 0 0.6rem;
+}
+
+// ── Synopsis ─────────────────────────────────────────────────────────────────
+.panel__synopsis {
+  font-size: 0.83rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin: 0;
+  white-space: pre-line;
+}
+
+// ── Trailer ──────────────────────────────────────────────────────────────────
+.panel__trailer-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-primary);
+}
+
+.panel__trailer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 10px;
+}
+
+// ── Tags ─────────────────────────────────────────────────────────────────────
+.panel__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.panel__tag {
+  padding: 0.2rem 0.6rem;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 500;
+
+  &--genre       { background: rgba(108, 99, 255, 0.15); color: var(--accent-primary); border: 1px solid rgba(108, 99, 255, 0.25); }
+  &--theme       { background: rgba(62, 207, 207, 0.1);  color: #3ecfcf;              border: 1px solid rgba(62, 207, 207, 0.25); }
+  &--demographic { background: rgba(255, 178, 56, 0.1);  color: #ffb238;              border: 1px solid rgba(255, 178, 56, 0.25); }
+}
+
+// ── Progress bars ────────────────────────────────────────────────────────────
+.panel__progress-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.panel__progress-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(108, 99, 255, 0.12);
+  overflow: hidden;
+}
+
+.panel__progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+  transition: width 0.4s ease;
+
+  &--plex {
+    background: linear-gradient(90deg, #e5a00d, #f5bc42);
+  }
+}
+
+.panel__progress-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+// ── Seasons ───────────────────────────────────────────────────────────────────
+.panel__seasons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.panel__season-row {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.panel__season-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+// ── Sonarr meta ───────────────────────────────────────────────────────────────
+.panel__sonarr-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+// ── Codec percentage breakdown pills ─────────────────────────────────────────
+.panel__codec-bar {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  margin-top: 0.35rem;
+}
+
+.panel__codec-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.22rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid var(--card-border, rgba(108, 99, 255, 0.18));
+  background: var(--bg-primary);
+  white-space: nowrap;
+
+  &:nth-child(1) .panel__codec-dot { background: var(--accent-primary); }
+  &:nth-child(2) .panel__codec-dot { background: #22c55e; }
+  &:nth-child(3) .panel__codec-dot { background: #94a3b8; }
+  &:nth-child(4) .panel__codec-dot { background: #64748b; }
+
+  // Size pill — HDD icon color (amber to distinguish from codec entries)
+  &--size .panel__codec-hdd-icon { color: #f59e0b; flex-shrink: 0; }
+  // Keep the amber dot rule for any pill that still uses the old dot structure
+  &--size .panel__codec-dot { background: #f59e0b !important; }
+}
+
+.panel__codec-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.panel__codec-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.panel__codec-pct {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Skeleton loading ──────────────────────────────────────────────────────────
+.panel__skeleton {
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.skeleton--hero {
+  display: flex;
+  gap: 1rem;
+}
+
+.skeleton__image {
+  width: 110px;
+  height: 155px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.skeleton__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.skeleton__line {
+  height: 12px;
+  border-radius: 6px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+
+  &--title  { height: 18px; width: 80%; }
+  &--short  { width: 55%; }
+  &--full   { width: 100%; }
+  &--medium { width: 65%; }
+}
+
+.skeleton__image,
+.skeleton__line {
+  background: linear-gradient(90deg,
+    rgba(108, 99, 255, 0.08) 25%,
+    rgba(108, 99, 255, 0.18) 50%,
+    rgba(108, 99, 255, 0.08) 75%
+  );
+  background-size: 400% 100%;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+// ── Neon-glow feedback pulse after MAL save ───────────────────────────────────
+.panel--mal-updated {
+  animation: panelMalGlow 2.2s ease-out forwards;
+}
+
+@keyframes panelMalGlow {
+  0%   { box-shadow: -8px 0 40px rgba(0, 0, 0, 0.45), -2px 0 12px rgba(108, 99, 255, 0.15); }
+  8%   {
+    box-shadow:
+      -8px 0 40px rgba(0, 0, 0, 0.45),
+      -2px 0 12px rgba(108, 99, 255, 0.15),
+      inset 0 0 0 2px rgba(0, 245, 255, 0.55),
+      0 0 30px rgba(0, 245, 255, 0.42);
+  }
+  28%  {
+    box-shadow:
+      -8px 0 40px rgba(0, 0, 0, 0.45),
+      -2px 0 12px rgba(108, 99, 255, 0.15),
+      inset 0 0 0 1px rgba(0, 200, 255, 0.25),
+      0 0 14px rgba(0, 200, 255, 0.2);
+  }
+  100% { box-shadow: -8px 0 40px rgba(0, 0, 0, 0.45), -2px 0 12px rgba(108, 99, 255, 0.15); }
+}
+
+.mt-3 { margin-top: 0.75rem; }
+
+// ── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 576px) {
+  .panel {
+    width: 100vw;
+    border-left: none;
+  }
+
+  // Convert grid → block so each cell is a block-level sibling.
+  // This is required for position: sticky to work correctly within the panel
+  // scroll container — grid/flex containing blocks can constrain the sticky range.
+  .panel__top-grid {
+    display: block;
+    min-height: auto;
+  }
+
+  // ── Pure CSS Sticky Hero Poster ───────────────────────────────────────────
+  // The poster sticks at viewport top while the info-col rises over it.
+  // No JS needed — the native scroll engine drives the depth effect.
+  .panel__cover-col {
+    position: sticky;
+    top: 0;
+    height: 55vh;
+    max-height: 400px;
+    z-index: 0;
+    overflow: hidden;
+    cursor: zoom-in;
+  }
+
+  // Activate the always-on bottom gradient: poster bleeds into the rising content
+  .panel__cover-gradient {
+    display: block;
+  }
+
+  .panel__cover-placeholder {
+    min-height: 0;
+    height: 100%;
+  }
+
+  // Fill the sticky container — no transforms, no scale tricks
+  .panel__cover {
+    min-height: 0;
+    height: 100%;
+    transform: none;
+    transition: none;
+    will-change: auto;
+  }
+
+  // Disable desktop hover zoom on touch devices
+  .panel__cover-col:hover .panel__cover {
+    transform: none;
+  }
+
+  // ── Info column: rises over the sticky poster ─────────────────────────────
+  // negative margin-top pulls the card up so it starts overlapping the poster.
+  // As the user scrolls, it glides over the pinned image — the parallax IS the
+  // difference in speed between the scrolling content (100%) and the sticky
+  // poster (0%) — pure CSS, zero JavaScript, zero lag.
+  .panel__info-col {
+    position: relative;
+    z-index: 2;
+    background: var(--bg-secondary);
+    margin-top: -5rem;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+    border-left: none;
+    border-top: none;
+    padding: 1.25rem 1.25rem 0.85rem 1rem;
+  }
+
+  // Everything below the top-grid: sit above the sticky poster in stacking order
+  .panel__meta-row {
+    position: relative;
+    z-index: 2;
+    background: var(--bg-secondary);
+  }
+
+  .panel__section {
+    position: relative;
+    z-index: 2;
+    background: var(--bg-secondary);
+  }
+
+  // Cancel flex: 1 on mobile — buttons sit tight directly below scores
+  .panel__title-block {
+    flex: none;
+  }
+
+  // Tighter on small screens since full width gives plenty of room
+  .panel__title {
+    font-size: 0.9rem;
+  }
+
+  // Universe button — full width is fine on mobile too
+  .panel__action-btn--universe {
+    font-size: 0.74rem;
+  }
+
+  // ── Accessibility: disable sticky parallax for users who prefer less motion ─
+  @media (prefers-reduced-motion: reduce) {
+    .panel__cover-col {
+      position: relative;
+      height: 260px;
+      max-height: 260px;
+      z-index: auto;
+    }
+
+    .panel__info-col {
+      margin-top: 0;
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
+}
+
+// stroke-dashoffset traces the pill perimeter (≈ 344 SVG units) forward
+@keyframes neonTrace {
+  to { stroke-dashoffset: 0; }
+}
+
+// SVG drop-shadow breathes to simulate neon gas flicker
+@keyframes neonGlow {
+  0%, 100% {
+    filter:
+      drop-shadow(0 0 3px #00e5ff)
+      drop-shadow(0 0 7px #0099ff);
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 5px #00e5ff)
+      drop-shadow(0 0 14px #0077cc)
+      drop-shadow(0 0 22px #004f99);
+  }
+}

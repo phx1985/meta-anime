@@ -1266,40 +1266,28 @@
   display: grid;
   align-items: stretch;
   gap: 1.25rem;
+  width: 100%;
+  min-width: 0;
   transition: grid-template-columns 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 
-  // Default: 2 columns
-  grid-template-columns: repeat(2, 1fr);
+  // Default: auto-fill with compact card widths
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
 
+  // Mobile — safe inline padding only; auto-fill naturally collapses to 1 column
   @media (max-width: 639px) {
-    grid-template-columns: 1fr;
+    padding-inline: 0.75rem;
   }
 
-  // 1 column mode
   &.cols-1 {
     grid-template-columns: 1fr;
   }
 
-  // 2 column mode (same as default)
   &.cols-2 {
-    grid-template-columns: repeat(2, 1fr);
-
-    @media (max-width: 639px) {
-      grid-template-columns: 1fr;
-    }
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   }
 
-  // 3 column mode — only meaningful on large screens (≥992 px)
   &.cols-3 {
-    grid-template-columns: repeat(3, 1fr);
-
-    @media (max-width: 991px) {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    @media (max-width: 639px) {
-      grid-template-columns: 1fr;
-    }
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
 }
 

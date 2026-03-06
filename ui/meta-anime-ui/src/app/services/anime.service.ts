@@ -65,6 +65,10 @@ export class AnimeService {
     return this.http.get<AnimeDetailsResponse>(`${this.base}/${id}`);
   }
 
+  getAnimeByMalId(malId: string): Observable<AnimeDetailsResponse> {
+    return this.http.get<AnimeDetailsResponse>(`${this.base}/by-mal/${malId}`);
+  }
+
   createAnime(request: CreateAnimeRequest): Observable<AnimeResponse> {
     return this.http.post<AnimeResponse>(this.base, request);
   }

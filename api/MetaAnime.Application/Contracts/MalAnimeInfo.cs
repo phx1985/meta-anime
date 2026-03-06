@@ -18,7 +18,11 @@ public sealed record MalAnimeInfo(
     MalAlternativeTitles? AlternativeTitles,
     string? CoverImageUrl,
     string? Status,
-    string? MediaType
+    string? MediaType,
+    string? TrailerUrl,
+    int? Popularity,
+    int? Rank,
+    string[]? Pictures
 )
 {
     public MalAnimeInfo(Anime? anime, string malBaseUrl)
@@ -37,7 +41,11 @@ public sealed record MalAnimeInfo(
             AlternativeTitles: null,
             CoverImageUrl: null,
             Status: null,
-            MediaType: null
+            MediaType: null,
+            TrailerUrl: null,
+            Popularity: null,
+            Rank: null,
+            Pictures: null
         )
     { }
 
@@ -68,7 +76,15 @@ public sealed record MalAnimeInfo(
                 : null,
             malAnime?.MainPicture?.Large ?? malAnime?.MainPicture?.Medium,
             malAnime?.Status,
-            malAnime?.MediaType
+            malAnime?.MediaType,
+            malAnime?.Trailer?.YoutubeId is { } ytId ? $"https://www.youtube-nocookie.com/embed/{ytId}" : null,
+            malAnime?.Popularity > 0 ? malAnime.Popularity : (int?)null,
+            malAnime?.Rank > 0 ? malAnime.Rank : (int?)null,
+            malAnime?.Pictures?
+                .Select(p => p.Large ?? p.Medium)
+                .Where(url => url != null)
+                .Select(url => url!)
+                .ToArray()
         )
     { }
 }

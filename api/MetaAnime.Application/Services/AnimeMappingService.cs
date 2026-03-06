@@ -93,4 +93,17 @@ public sealed class AnimeMappingService(IAnimeMappingRepository mappingRepositor
             return Result.Failure<IEnumerable<AnimeMapping>>(new(Constants.Errors.GetByAniDbIdsAsync, ex.Message));
         }
     }
+
+    public async Task<Result<string?>> GetAniDbIdByMalIdAsync(string malId)
+    {
+        try
+        {
+            var aniDbId = await mappingRepository.GetAniDbIdByMalIdAsync(malId);
+            return Result.Success(aniDbId);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<string?>(new(Constants.Errors.GetByAniDbIdsAsync, ex.Message));
+        }
+    }
 }

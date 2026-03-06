@@ -4,7 +4,7 @@
 .mal-qu-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 1050;
+  z-index: 1200;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   display: flex;
@@ -99,21 +99,6 @@
   min-width: 0;
 }
 
-.mal-qu-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #2e51a2;
-  background: rgba(46, 81, 162, 0.12);
-  border: 1px solid rgba(46, 81, 162, 0.25);
-  border-radius: 5px;
-  padding: 0.15rem 0.5rem;
-  width: fit-content;
-}
 
 .mal-qu-title {
   font-size: 1rem;
@@ -128,23 +113,6 @@
 }
 
 // "Open in MAL" inline link below title
-.mal-qu-open-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: #2e51a2;
-  text-decoration: none;
-  opacity: 0.8;
-  transition: opacity 0.15s;
-  width: fit-content;
-
-  &:hover {
-    opacity: 1;
-    text-decoration: underline;
-  }
-}
 
 // ── Sections ─────────────────────────────────────────────────────────────────
 
@@ -202,8 +170,8 @@
 
 // Status button base
 .mal-qu-status-btn {
-  padding: 0.45rem 0.3rem;
-  border-radius: 9px;
+  padding: 0.6rem 0.4rem;
+  border-radius: 12px;
   border: 1.5px solid var(--card-border);
   background: transparent;
   font-size: 0.72rem;
@@ -270,9 +238,9 @@
 }
 
 .mal-qu-step-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
   border: 1.5px solid var(--card-border);
   background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
   color: var(--accent-primary);
@@ -330,61 +298,188 @@
   }
 }
 
-// ── Score row (polymorphic: 1–10 numbered pill buttons) ──────────────────────
+// ── Compact section modifier ──────────────────────────────────────────────────
 
-.mal-qu-score-row {
-  display: flex;
-  gap: 0.3rem;
-  flex-wrap: nowrap;
-  align-items: center;
+.mal-qu-section--compact {
+  gap: 0.35rem;
 
-  &--required {
-    .mal-qu-score-btn {
-      border-color: rgba(239, 68, 68, 0.4);
-    }
+  .mal-qu-status-btn {
+    padding: 0.4rem 0.25rem;
+  }
+
+  .mal-qu-stepper {
+    gap: 0.4rem;
   }
 }
 
-.mal-qu-score-btn {
+// ── Score dial ────────────────────────────────────────────────────────────────
+
+.mal-qu-dial-wrap {
+  position: relative;
+  width: 200px;
+  height: 110px;
+  margin: 0 auto;
+  user-select: none;
+
+  &--required .mal-qu-dial-track {
+    stroke: rgba(239, 68, 68, 0.25);
+  }
+}
+
+.mal-qu-dial-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.mal-qu-dial-track {
+  stroke: rgba(255, 255, 255, 0.08);
+}
+
+.mal-qu-dial-fill {
+  transition: stroke-dashoffset 0.2s ease;
+}
+
+.mal-qu-dial-thumb {
+  fill: #fff;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+  pointer-events: none;
+}
+
+.mal-qu-dial-display {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: baseline;
+  gap: 0.2rem;
+  pointer-events: none;
+}
+
+.mal-qu-dial-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.mal-qu-dial-max {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.mal-qu-dial-unset {
+  font-size: 1.8rem;
+  font-weight: 300;
+  color: var(--text-muted);
+  opacity: 0.5;
+  line-height: 1;
+}
+
+.mal-qu-dial-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  z-index: 10;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+// ── Adaptive score: dial (mobile) vs chips (desktop) ─────────────────────────
+
+// Mobile dial wrapper — visible on mobile, hidden on desktop
+.mal-qu-score-dial {
+  display: flex;
+  justify-content: center;
+
+  @media (min-width: 769px) {
+    display: none;
+  }
+}
+
+// Desktop chip row — hidden on mobile
+.mal-qu-pc-score-row {
+  display: none;
+
+  @media (min-width: 769px) {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+  }
+
+  &--required .mal-qu-pc-score-btn {
+    border-color: rgba(239, 68, 68, 0.4);
+  }
+}
+
+// Score chip colors keyed to position (matches dial gradient: red→amber→blue→green)
+$score-colors: (
+  1: #ef4444,
+  2: #f87171,
+  3: #f59e0b,
+  4: #fbbf24,
+  5: #facc15,
+  6: #60a5fa,
+  7: #3b82f6,
+  8: #818cf8,
+  9: #34d399,
+  10: #22c55e,
+);
+
+.mal-qu-pc-score-btn {
   flex: 1;
-  height: 36px;
-  border-radius: 8px;
+  aspect-ratio: 1;
+  border-radius: 50%;
   border: 1.5px solid var(--card-border);
   background: transparent;
   color: var(--text-muted);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.1s;
   padding: 0;
   min-width: 0;
+  transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.1s, box-shadow 0.12s;
 
   &:hover {
-    background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
+    transform: translateY(-2px) scale(1.1);
     border-color: var(--accent-primary);
-    color: var(--accent-primary);
-    transform: translateY(-2px);
-  }
-
-  &--filled {
-    background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
-    border-color: color-mix(in srgb, var(--accent-primary) 40%, transparent);
     color: var(--accent-primary);
   }
 
-  &--active {
-    background: var(--accent-primary);
-    border-color: var(--accent-primary);
-    color: #fff;
-    box-shadow: 0 2px 10px color-mix(in srgb, var(--accent-primary) 40%, transparent);
-    transform: scale(1.08);
+  // Per-score accent colour on filled/active
+  @each $n, $color in $score-colors {
+    &:nth-child(#{$n}) {
+      &.mal-qu-pc-score-btn--filled {
+        background: color-mix(in srgb, #{$color} 14%, transparent);
+        border-color: color-mix(in srgb, #{$color} 50%, transparent);
+        color: #{$color};
+      }
+
+      &.mal-qu-pc-score-btn--active {
+        background: #{$color};
+        border-color: #{$color};
+        color: #fff;
+        box-shadow: 0 2px 10px color-mix(in srgb, #{$color} 40%, transparent);
+        transform: scale(1.15);
+      }
+    }
   }
 }
 
-// ── Footer actions ────────────────────────────────────────────────────────────
+
 
 .mal-qu-footer {
   display: flex;
@@ -447,25 +542,36 @@
 }
 
 // "Open in MAL" secondary footer button
-.mal-qu-mal-link-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.5rem 0.85rem;
-  border-radius: 9px;
-  border: 1.5px solid rgba(46, 81, 162, 0.4);
-  background: rgba(46, 81, 162, 0.08);
-  color: #2e51a2;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-  margin-right: auto; // push save + cancel to right
+// ── Bottom sheet on mobile ────────────────────────────────────────────────────
 
-  &:hover {
-    background: rgba(46, 81, 162, 0.15);
-    border-color: rgba(46, 81, 162, 0.7);
+@media (max-width: 768px) {
+  .mal-qu-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .mal-qu-modal {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    max-height: 92dvh;
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    animation: malQuSheetIn 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  }
+
+  .mal-qu-backdrop--leaving .mal-qu-modal {
+    animation: malQuSheetOut 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  .mal-qu-footer {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-primary);
+    padding-top: 0.75rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    margin-top: 0;
+    border-top: 1px solid var(--card-border);
+    z-index: 10;
   }
 }
 
@@ -475,23 +581,6 @@
   .mal-qu-modal {
     padding: 1.25rem 1rem 1rem;
     border-radius: 14px;
-  }
-
-  // ── Score: "zero-scroll" 2×5 grid on mobile ──────────────────────────────
-  // Row 1: 1–5  |  Row 2: 6–10
-  .mal-qu-score-row {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    grid-template-rows: repeat(2, auto);
-    gap: 0.35rem;
-  }
-
-  .mal-qu-score-btn {
-    height: 44px; // fat-finger target
-    font-size: 0.85rem;
-    border-radius: 9px;
-    min-width: 0;
-    flex: none; // not used in grid, defensive reset
   }
 
   .mal-qu-step-btn {
@@ -535,6 +624,28 @@
   to {
     opacity: 0;
     transform: translateY(16px) scale(0.96);
+  }
+}
+
+@keyframes malQuSheetIn {
+  from {
+    transform: translateY(100%);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes malQuSheetOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
   }
 }
 

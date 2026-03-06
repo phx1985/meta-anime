@@ -42,7 +42,7 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
         // Return empty list if Sonarr is not configured
         if (!isConfigured)
         {
-            return Result.Success<IList<SonarrSeries>>(new List<SonarrSeries>());
+            return Result.Success<IList<SonarrSeries>>([]);
         }
 
         var sonarrTags = await GetSonarrTagsAsync(host, apiKey, tags);
@@ -159,7 +159,7 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
         var (host, apiKey, _, isConfigured) = await GetSettingsAsync();
 
         if (!isConfigured)
-            return Result.Success<IList<SonarrSeriesCodecResult>>(new List<SonarrSeriesCodecResult>());
+            return Result.Success<IList<SonarrSeriesCodecResult>>([]);
 
         var allSeriesResult = await GetAllAsync();
         if (allSeriesResult.IsFailure)

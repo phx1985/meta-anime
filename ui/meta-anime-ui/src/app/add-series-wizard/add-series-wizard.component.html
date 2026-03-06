@@ -1,0 +1,325 @@
+<!-- Backdrop -->
+<div
+  class="add-dialog-backdrop"
+  (click)="closeRequested.emit()"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="add-dialog-title"
+>
+  <div class="dialog dialog--add" (click)="$event.stopPropagation()">
+    <!-- Mobile sheet handle -->
+    <div class="dialog__sheet-handle" aria-hidden="true"></div>
+
+    <!-- Header -->
+    <div class="dialog__header dialog__header--add">
+      <div class="dialog__header-text">
+        <h2 id="add-dialog-title" class="dialog__add-title">{{ 'seasonal.addToProviders' | translate }}</h2>
+        <p class="dialog__action-label">{{ 'seasonal.chooseProviders' | translate }}</p>
+      </div>
+      <button class="dialog__close-btn" type="button" (click)="closeRequested.emit()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Step indicator (desktop only) -->
+    <div class="wizard-steps" aria-hidden="true">
+      <div class="wizard-steps__item" [class.wizard-steps__item--active]="currentStep() === 1" [class.wizard-steps__item--done]="currentStep() > 1">
+        <span class="wizard-steps__circle">
+          @if (currentStep() > 1) {
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 8l3.5 3.5L13 4" /></svg>
+          } @else {
+            1
+          }
+        </span>
+        <span class="wizard-steps__label">{{ 'seasonal.wizard.stepChoose' | translate }}</span>
+      </div>
+      <div class="wizard-steps__connector" [class.wizard-steps__connector--done]="currentStep() > 1"></div>
+      <div class="wizard-steps__item" [class.wizard-steps__item--active]="currentStep() === 2" [class.wizard-steps__item--done]="currentStep() > 2" [class.wizard-steps__item--skipped]="!wizardStep2Applicable()">
+        <span class="wizard-steps__circle">
+          @if (currentStep() > 2) {
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 8l3.5 3.5L13 4" /></svg>
+          } @else {
+            2
+          }
+        </span>
+        <span class="wizard-steps__label">{{ 'seasonal.wizard.stepMatch' | translate }}</span>
+      </div>
+      <div class="wizard-steps__connector" [class.wizard-steps__connector--done]="currentStep() > 2"></div>
+      <div class="wizard-steps__item" [class.wizard-steps__item--active]="currentStep() === 3">
+        <span class="wizard-steps__circle">3</span>
+        <span class="wizard-steps__label">{{ 'seasonal.wizard.stepConfigure' | translate }}</span>
+      </div>
+    </div>
+
+    <!-- Anime context strip -->
+    <div class="dialog__context">
+      @if (coverImageUrl()) {
+        <img [src]="coverImageUrl()" [alt]="displayTitle()" class="dialog__context-thumb" />
+      }
+      <span class="dialog__context-title">{{ displayTitle() }}</span>
+    </div>
+
+    <!-- Success state -->
+    @if (addSuccess()) {
+      <div class="dialog__success-state">
+        <div class="success-circle success-circle--add">
+          <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path class="success-check" d="M6 16l7 7 13-13" />
+          </svg>
+        </div>
+        <p class="success-message">{{ 'seasonal.addSuccess' | translate }}</p>
+      </div>
+    } @else {
+      <!-- Scrollable wizard body -->
+      <div class="wizard-body">
+
+        <!-- ── STEP 1: Where to add? ── -->
+        @if (currentStep() === 1) {
+          <div class="choice-cards">
+            <!-- Sonarr card -->
+            @if (sonarrEnabled()) {
+              <button
+                type="button"
+                class="choice-card"
+                [class.choice-card--on]="addSonarr()"
+                [class.choice-card--locked]="addModalInSonarr()"
+                [attr.aria-pressed]="addSonarr()"
+                [disabled]="addModalInSonarr()"
+                (click)="!addModalInSonarr() && toggleProviderRequested.emit('sonarr')"
+              >
+                <img src="assets/images/sonarr.svg" class="choice-card__logo" alt="Sonarr" />
+                <span class="choice-card__name">Sonarr</span>
+                @if (addModalInSonarr()) {
+                  <div class="choice-card__tracked" aria-label="Already tracked">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M4 10l4.5 4.5L16 5"/>
+                    </svg>
+                    <span>{{ 'seasonal.alreadyTracked' | translate }}</span>
+                  </div>
+                } @else {
+                  <div class="prov-toggle" [class.prov-toggle--on]="addSonarr()" role="switch" [attr.aria-checked]="addSonarr()" aria-label="Toggle Sonarr"></div>
+                }
+              </button>
+            }
+
+            <!-- MAL card -->
+            <button
+              type="button"
+              class="choice-card"
+              [class.choice-card--on]="addMal()"
+              [class.choice-card--locked]="addModalInMal()"
+              [attr.aria-pressed]="addMal()"
+              [disabled]="addModalInMal()"
+              (click)="!addModalInMal() && toggleProviderRequested.emit('mal')"
+            >
+              <img src="assets/images/mal.svg" class="choice-card__logo" alt="MyAnimeList" />
+              <span class="choice-card__name">MyAnimeList</span>
+              @if (addModalInMal()) {
+                <div class="choice-card__tracked" aria-label="Already tracked">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 10l4.5 4.5L16 5"/>
+                  </svg>
+                  <span>{{ 'seasonal.alreadyTracked' | translate }}</span>
+                </div>
+              } @else {
+                <div class="prov-toggle" [class.prov-toggle--on]="addMal()" role="switch" [attr.aria-checked]="addMal()" aria-label="Toggle MAL"></div>
+              }
+            </button>
+          </div>
+        }
+
+        <!-- ── STEP 2: Find the show on Sonarr ── -->
+        @if (currentStep() === 2) {
+          <div class="step-section">
+            <div class="field">
+              <label class="field__label">{{ 'seasonal.sonarrSearch' | translate }}</label>
+              <div class="search-wrap">
+                <svg class="search-wrap__icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <circle cx="8" cy="8" r="5.5" /><path d="M14 14l3.5 3.5" stroke-linecap="round" />
+                </svg>
+                <input
+                  class="search-wrap__input"
+                  type="search"
+                  [ngModel]="sonarrSearchTerm()"
+                  (ngModelChange)="onSearchInput($event)"
+                  [placeholder]="'seasonal.sonarrSearchPlaceholder' | translate"
+                  autocomplete="off"
+                />
+                @if (sonarrSearching()) {
+                  <div class="search-wrap__spinner"></div>
+                }
+              </div>
+            </div>
+
+            @if (sonarrSearchError()) {
+              <p class="field__error">{{ sonarrSearchError() }}</p>
+            }
+
+            @if (sonarrSearchResults().length > 0) {
+              <div class="poster-carousel">
+                @for (item of sonarrSearchResults(); track item.tvdbId) {
+                  <button
+                    type="button"
+                    class="poster-card"
+                    [class.poster-card--active]="sonarrSelected()?.tvdbId === item.tvdbId"
+                    [class.poster-card--in-library]="item.alreadyInLibrary"
+                    [disabled]="item.alreadyInLibrary"
+                    [attr.aria-disabled]="item.alreadyInLibrary"
+                    [attr.aria-pressed]="sonarrSelected()?.tvdbId === item.tvdbId"
+                    (click)="onResultSelect(item)"
+                  >
+                    @if (item.remotePoster) {
+                      <img class="poster-card__image" [src]="item.remotePoster" [alt]="item.title" loading="lazy" />
+                    } @else {
+                      <div class="poster-card__image poster-card__image--empty">{{ item.title.charAt(0) }}</div>
+                    }
+                    <div class="poster-card__meta">
+                      <span class="poster-card__title">{{ item.title }}</span>
+                      @if (item.year) {
+                        <span class="poster-card__year">{{ item.year }}</span>
+                      }
+                    </div>
+                    @if (item.alreadyInLibrary) {
+                      <span class="poster-card__in-library">
+                        <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M3 8l3.5 3.5L13 4" /></svg>
+                      </span>
+                    }
+                    @if (sonarrSelected()?.tvdbId === item.tvdbId) {
+                      <div class="poster-card__selected-ring" aria-hidden="true"></div>
+                    }
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- ── STEP 3: Configure & Confirm ── -->
+        @if (currentStep() === 3) {
+          <div class="step-section">
+
+            <!-- Sonarr config -->
+            @if (addSonarr() && !addModalInSonarr()) {
+              <div class="config-block">
+                <div class="config-block__heading">
+                  <img src="assets/images/sonarr.svg" class="config-block__logo" alt="Sonarr" />
+                  <span>Sonarr</span>
+                </div>
+                @if (sonarrLoadingOptions()) {
+                  <div class="options-panel__loading"><div class="spinner spinner--sm"></div></div>
+                } @else {
+                  <div class="field">
+                    <label class="field__label">{{ 'seasonal.rootFolder' | translate }}</label>
+                    <select class="field__select" [ngModel]="sonarrRootFolder()" (ngModelChange)="onRootFolderChange($event)">
+                      @for (f of sonarrRootFolders(); track f.id) {
+                        <option [value]="f.path">{{ f.path }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label class="field__label">{{ 'seasonal.qualityProfile' | translate }}</label>
+                    <select class="field__select" [ngModel]="sonarrProfileId()" (ngModelChange)="onProfileIdChange($event)">
+                      @for (p of sonarrQualityProfiles(); track p.id) {
+                        <option [value]="p.id">{{ p.name }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label class="field__label">{{ 'seasonal.monitor' | translate }}</label>
+                    <select class="field__select" [ngModel]="sonarrMonitor()" (ngModelChange)="onMonitorChange($event)">
+                      @for (m of sonarrMonitorTypes; track m.value) {
+                        <option [value]="m.value">{{ m.labelKey | translate }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="field field--checkbox">
+                    <label class="field__checkbox-label">
+                      <input type="checkbox" class="field__checkbox" [ngModel]="sonarrSeasonFolder()" (ngModelChange)="onSeasonFolderChange($event)" />
+                      {{ 'seasonal.seasonFolder' | translate }}
+                    </label>
+                  </div>
+                  <p class="options-panel__note">{{ 'seasonal.sonarrAutoSettings' | translate }}</p>
+                }
+              </div>
+            }
+
+            <!-- MAL config -->
+            @if (addMal() && !addModalInMal()) {
+              <div class="config-block">
+                <div class="config-block__heading">
+                  <img src="assets/images/mal.svg" class="config-block__logo" alt="MyAnimeList" />
+                  <span>MyAnimeList</span>
+                </div>
+                <div class="field">
+                  <label class="field__label">{{ 'seasonal.malStatusLabel' | translate }}</label>
+                  <select class="field__select" [ngModel]="addMalStatus()" (ngModelChange)="onMalStatusChange($event)">
+                    @for (s of malStatuses; track s.value) {
+                      <option [value]="s.value">{{ s.labelKey | translate }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="field-row">
+                  <div class="field">
+                    <label class="field__label">{{ 'seasonal.episodesWatched' | translate }}</label>
+                    <input class="field__input" type="number" min="0" [ngModel]="addMalEpisodes()" (ngModelChange)="onMalEpisodesChange($event)" />
+                  </div>
+                  <div class="field">
+                    <label class="field__label">{{ 'seasonal.score' | translate }}</label>
+                    <input class="field__input" type="number" min="0" max="10" [ngModel]="addMalScore()" (ngModelChange)="onMalScoreChange($event)" />
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (addError()) {
+              <p class="field__error field__error--modal">{{ addError() }}</p>
+            }
+          </div>
+        }
+
+      </div><!-- /.wizard-body -->
+
+      <!-- Sticky footer with navigation -->
+      <div class="wizard-footer">
+        @if (currentStep() > 1) {
+          <button class="btn btn--ghost" type="button" (click)="goBack()">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14" aria-hidden="true"><path d="M10 4l-4 4 4 4" /></svg>
+            {{ 'common.back' | translate }}
+          </button>
+        } @else {
+          <button class="btn btn--ghost" type="button" (click)="closeRequested.emit()">{{ 'common.cancel' | translate }}</button>
+        }
+
+        <div class="wizard-footer__spacer"></div>
+
+        @if (currentStep() < 3) {
+          <button
+            class="btn btn--primary"
+            type="button"
+            [disabled]="!canGoNext()"
+            (click)="goNext()"
+          >
+            {{ 'common.next' | translate }}
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="14" height="14" aria-hidden="true"><path d="M6 4l4 4-4 4" /></svg>
+          </button>
+        } @else {
+          <button
+            class="btn btn--add"
+            type="button"
+            [disabled]="addBusy() || !addModalAnythingSelected()"
+            [attr.aria-busy]="addBusy() || null"
+            (click)="confirmAddRequested.emit()"
+          >
+            @if (addBusy()) {
+              <div class="spinner spinner--sm spinner--white"></div>
+            } @else {
+              {{ 'common.add' | translate }}
+            }
+          </button>
+        }
+      </div><!-- /.wizard-footer -->
+    }
+  </div><!-- /.dialog -->
+</div><!-- /.add-dialog-backdrop -->

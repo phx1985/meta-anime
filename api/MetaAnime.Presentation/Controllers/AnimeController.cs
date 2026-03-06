@@ -1,4 +1,4 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 using Hangfire;
 using Mediator;
 using ApplicationConstants = MetaAnime.Application.Constants;
@@ -13,7 +13,7 @@ namespace MetaAnime.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/animes")]
+[Route("api/v1/animes")]
 public sealed class AnimeController(IMediator mediator, IBackgroundJobClient backgroundJobClient)
     : ControllerBase
 {
@@ -72,6 +72,25 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
     public async Task<ActionResult<AnimeDetailsResponse>> GetById(string id)
     {
         var result = await mediator.Send(new GetAnimeByIdQuery(id));
+
+        if (result.IsFailure)
+        {
+            return StatusCode(500, result.Error.Message);
+        }
+
+        if (result.Value == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("by-mal/{malId}")]
+    [Authorize]
+    public async Task<ActionResult<AnimeDetailsResponse>> GetByMalId(string malId)
+    {
+        var result = await mediator.Send(new GetAnimeByMalIdQuery(malId));
 
         if (result.IsFailure)
         {

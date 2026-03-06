@@ -73,6 +73,11 @@
     "addToMal": "Ajouter à MAL",
     "addToProviders": "Ajouter aux fournisseurs",
     "chooseProviders": "Choisissez où ajouter cet anime",
+    "wizard": {
+      "stepChoose": "Choisir",
+      "stepMatch": "Correspondance",
+      "stepConfigure": "Configurer"
+    },
     "allTracked": "Suivi dans Sonarr & MAL",
     "alreadyTracked": "Déjà suivi ✓",
     "willAdd": "Sera ajouté",
@@ -247,8 +252,28 @@
       "totalSizeDisk": "Taille totale"
     }
   },
+  "animeDetailPanel": {
+    "close": "Fermer",
+    "viewDetails": "Détails",
+    "loading": "Chargement…",
+    "synopsis": "Synopsis",
+    "trailer": "Bande-annonce",
+    "tags": "Genres & Thèmes",
+    "plexStatus": "Progression de Visionnage Plex",
+    "sonarrStatus": "Sonarr",
+    "popularity": "Popularité",
+    "rank": "Classement",
+    "aired": "Diffusion",
+    "episodes": "Épisodes",
+    "season": "Saison",
+    "diskSize": "Taille de la Série"
+  },
   "animeCard": {
     "altTitles": "Titres alternatifs",
+    "onboarding": {
+      "posterHint": "Voir l'Artwork",
+      "bodyHint": "Voir les Détails"
+    },
     "more": "plus",
     "less": "moins",
     "malScore": "MAL",
@@ -553,12 +578,13 @@
     "label": "Thème"
   },
   "franchise": {
-    "title": "Constellation de Franchise",
+    "title": "Explorer l'Univers",
     "loading": "Cartographie des données de franchise...",
     "loadingProgress": "Cartographie en cours... ({{count}} nœuds trouvés)",
     "empty": "Aucun anime lié trouvé dans les données de franchise.",
     "close": "Fermer",
     "viewButton": "Voir la Constellation de Franchise",
+    "explorerButton": "Explorer l'Univers",
     "openOnMal": "Ouvrir {{title}} sur MyAnimeList",
     "mainStoryline": "Histoire Principale",
     "truncated": "Plus…",
@@ -741,7 +767,9 @@
     "cancel": "Annuler",
     "add": "Ajouter",
     "confirm": "Confirmer",
-    "close": "Fermer"
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant"
   },
   "notFound": {
     "ariaLabel": "404 – Page introuvable",
@@ -1085,6 +1113,7 @@
   },
   "malQuickUpdate": {
     "title": "Mise à jour rapide MAL",
+    "label": "Mise à jour rapide",
     "openModal": "Mise à jour rapide sur MyAnimeList",
     "status": "Statut de visionnage",
     "episodes": "Épisodes vus",

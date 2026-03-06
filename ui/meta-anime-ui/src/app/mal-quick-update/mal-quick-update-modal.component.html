@@ -49,32 +49,12 @@
         </div>
       }
       <div class="mal-qu-header-text">
-        <div class="mal-qu-badge">
-          <img src="assets/images/mal.svg" alt="" width="14" height="14" aria-hidden="true" />
-          <span>{{ 'malQuickUpdate.title' | translate }}</span>
-        </div>
         <h3 class="mal-qu-title">{{ ctx()?.title }}</h3>
-        @if (ctx()?.malUrl) {
-          <a
-            class="mal-qu-open-link"
-            [href]="ctx()!.malUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            [title]="'malQuickUpdate.openInMal' | translate"
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-              <polyline points="15 3 21 3 21 9"/>
-              <line x1="10" y1="14" x2="21" y2="3"/>
-            </svg>
-            {{ 'malQuickUpdate.openInMal' | translate }}
-          </a>
-        }
       </div>
     </div>
 
     <!-- ── Watch Status ── -->
-    <div class="mal-qu-section">
+    <div class="mal-qu-section mal-qu-section--compact">
       <label class="mal-qu-label">{{ 'malQuickUpdate.status' | translate }}</label>
       <div class="mal-qu-status-grid" role="radiogroup" [attr.aria-label]="'malQuickUpdate.status' | translate">
         @for (s of statuses; track s) {
@@ -93,7 +73,7 @@
     </div>
 
     <!-- ── Episodes Watched ── -->
-    <div class="mal-qu-section">
+    <div class="mal-qu-section mal-qu-section--compact">
       <label class="mal-qu-label" for="mal-qu-eps">
         {{ 'malQuickUpdate.episodes' | translate }}
         @if (ctx()?.totalEpisodes) {
@@ -138,36 +118,114 @@
       </div>
     </div>
 
-    <!-- ── Score selector (polymorphic: 1–10 pill buttons) ── -->
+    <!-- ── Score ── -->
     <div class="mal-qu-section">
       <label class="mal-qu-label">
         {{ 'malQuickUpdate.score' | translate }}
-        @if (selectedScore() > 0) {
-          <span class="mal-qu-score-label">— {{ selectedScore() }}/10</span>
-        }
         @if (showScoreRequired()) {
           <span class="mal-qu-score-required">{{ 'malQuickUpdate.scoreRequired' | translate }}</span>
         }
       </label>
+
+      <!-- Mobile: semi-circular dial (hidden on desktop) -->
+      <div class="mal-qu-score-dial">
+        <div
+          class="mal-qu-dial-wrap"
+          [class.mal-qu-dial-wrap--required]="showScoreRequired()"
+        >
+          <!-- SVG semi-circle -->
+          <svg
+            class="mal-qu-dial-svg"
+            viewBox="0 0 200 110"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <defs>
+              <linearGradient id="malDialGrad" gradientUnits="userSpaceOnUse" x1="10" y1="100" x2="190" y2="100">
+                <stop offset="0%"   stop-color="#ef4444" />
+                <stop offset="33%"  stop-color="#f59e0b" />
+                <stop offset="66%"  stop-color="#3b82f6" />
+                <stop offset="100%" stop-color="#22c55e" />
+              </linearGradient>
+            </defs>
+
+            <!-- Track arc -->
+            <path
+              class="mal-qu-dial-track"
+              d="M 10 100 A 90 90 0 0 1 190 100"
+              fill="none"
+              stroke-width="10"
+              stroke-linecap="round"
+            />
+
+            <!-- Fill arc -->
+            <path
+              class="mal-qu-dial-fill"
+              d="M 10 100 A 90 90 0 0 1 190 100"
+              fill="none"
+              stroke="url(#malDialGrad)"
+              stroke-width="10"
+              stroke-linecap="round"
+              stroke-dasharray="282.74"
+              [style.stroke-dashoffset]="dialDashoffset()"
+            />
+
+            <!-- Thumb dot (hidden when score = 0) -->
+            @if (selectedScore() > 0) {
+              <circle
+                class="mal-qu-dial-thumb"
+                [attr.cx]="dialThumbX()"
+                [attr.cy]="dialThumbY()"
+                r="7"
+              />
+            }
+          </svg>
+
+          <!-- Center score display -->
+          <div class="mal-qu-dial-display">
+            @if (selectedScore() > 0) {
+              <span class="mal-qu-dial-value">{{ selectedScore() }}</span>
+              <span class="mal-qu-dial-max">/10</span>
+            } @else {
+              <span class="mal-qu-dial-unset">—</span>
+            }
+          </div>
+
+          <!-- Invisible range control — covers the entire container -->
+          <input
+            type="range"
+            class="mal-qu-dial-input"
+            min="0"
+            max="10"
+            step="1"
+            [value]="selectedScore()"
+            (input)="onDialInput($event)"
+            [attr.aria-label]="'malQuickUpdate.score' | translate"
+            [attr.aria-valuenow]="selectedScore()"
+            aria-valuemin="0"
+            aria-valuemax="10"
+          />
+        </div>
+      </div>
+
+      <!-- Desktop: circular chip row (hidden on mobile) -->
       <div
-        class="mal-qu-score-row"
+        class="mal-qu-pc-score-row"
+        [class.mal-qu-pc-score-row--required]="showScoreRequired()"
         role="radiogroup"
         [attr.aria-label]="'malQuickUpdate.score' | translate"
-        [class.mal-qu-score-row--required]="showScoreRequired()"
       >
         @for (n of scores; track n) {
           <button
             type="button"
-            class="mal-qu-score-btn"
-            [class.mal-qu-score-btn--active]="selectedScore() === n"
-            [class.mal-qu-score-btn--filled]="selectedScore() >= n && selectedScore() > 0"
+            class="mal-qu-pc-score-btn"
+            [class.mal-qu-pc-score-btn--filled]="selectedScore() >= n && selectedScore() > 0"
+            [class.mal-qu-pc-score-btn--active]="selectedScore() === n"
             (click)="selectScore(n)"
             role="radio"
             [attr.aria-checked]="selectedScore() === n"
             [attr.title]="n"
-          >
-            {{ n }}
-          </button>
+          >{{ n }}</button>
         }
       </div>
     </div>
@@ -177,23 +235,6 @@
       <button type="button" class="mal-qu-cancel-btn" (click)="dismiss()">
         {{ 'common.cancel' | translate }}
       </button>
-      @if (ctx()?.malUrl) {
-        <a
-          class="mal-qu-mal-link-btn"
-          [href]="ctx()!.malUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          [title]="'malQuickUpdate.openInMal' | translate"
-        >
-          <img src="assets/images/mal.svg" alt="" width="14" height="14" aria-hidden="true" />
-          MAL
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-            <polyline points="15 3 21 3 21 9"/>
-            <line x1="10" y1="14" x2="21" y2="3"/>
-          </svg>
-        </a>
-      }
       <button
         type="button"
         class="mal-qu-save-btn"
