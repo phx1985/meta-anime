@@ -23,15 +23,21 @@ export class MalCallbackComponent implements OnInit {
   ngOnInit(): void {
     const code = this.route.snapshot.queryParams['code'] as string | undefined;
     const state = this.route.snapshot.queryParams['state'] as string | undefined;
+    const inWizard = this.notifService.wizardActive();
 
     if (!code || !state) {
-      this.notifService.push({
-        id: `mal-connect-error-${Date.now()}`,
-        severity: 'error',
-        titleKey: 'notifications.malConnect.errorTitle',
-        messageKey: 'notifications.malConnect.errorMessage',
-      });
-      this.router.navigate(['/settings']);
+      if (!inWizard) {
+        this.notifService.push({
+          id: `mal-connect-error-${Date.now()}`,
+          severity: 'error',
+          titleKey: 'notifications.malConnect.errorTitle',
+          messageKey: 'notifications.malConnect.errorMessage',
+        });
+      }
+      this.router.navigate(
+        [inWizard ? '/welcome' : '/settings'],
+        inWizard ? { queryParams: { mal_error: 'true' } } : undefined,
+      );
       return;
     }
 
@@ -40,23 +46,29 @@ export class MalCallbackComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.notifService.push({
-            id: `mal-connect-success-${Date.now()}`,
-            severity: 'success',
-            titleKey: 'notifications.malConnect.successTitle',
-            messageKey: 'notifications.malConnect.successMessage',
-          });
-          const wizardActive = localStorage.getItem('wizard_active') === 'true';
-          this.router.navigate([wizardActive ? '/welcome' : '/settings']);
+          if (!inWizard) {
+            this.notifService.push({
+              id: `mal-connect-success-${Date.now()}`,
+              severity: 'success',
+              titleKey: 'notifications.malConnect.successTitle',
+              messageKey: 'notifications.malConnect.successMessage',
+            });
+          }
+          this.router.navigate([inWizard ? '/welcome' : '/settings']);
         },
         error: () => {
-          this.notifService.push({
-            id: `mal-connect-error-${Date.now()}`,
-            severity: 'error',
-            titleKey: 'notifications.malConnect.errorTitle',
-            messageKey: 'notifications.malConnect.errorMessage',
-          });
-          this.router.navigate(['/settings']);
+          if (!inWizard) {
+            this.notifService.push({
+              id: `mal-connect-error-${Date.now()}`,
+              severity: 'error',
+              titleKey: 'notifications.malConnect.errorTitle',
+              messageKey: 'notifications.malConnect.errorMessage',
+            });
+          }
+          this.router.navigate(
+            [inWizard ? '/welcome' : '/settings'],
+            inWizard ? { queryParams: { mal_error: 'true' } } : undefined,
+          );
         },
       });
   }

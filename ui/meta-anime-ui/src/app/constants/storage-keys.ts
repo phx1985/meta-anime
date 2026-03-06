@@ -9,4 +9,5 @@ export const StorageKeys = {
   luckyOnlyFinished: 'meta-anime:luckyOnlyFinished',
   luckyOnlyPlanToWatch: 'meta-anime:luckyOnlyPlanToWatch',
   luckyOnlyWithFiles: 'meta-anime:luckyOnlyWithFiles',
+  language: 'meta-anime:language',
 } as const;

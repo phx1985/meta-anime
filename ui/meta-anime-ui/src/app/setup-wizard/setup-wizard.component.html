@@ -55,15 +55,63 @@
               </li>
             </ul>
             <!-- Language switcher -->
-            <div class="wizard-lang-switcher">
-              @for (lang of availableLanguages; track lang.code) {
+            <div class="wizard-selector-group">
+              <span class="wizard-selector-label">{{ 'wizard.step1.languageLabel' | translate }}</span>
+              <div class="wizard-lang-switcher">
+                @for (lang of availableLanguages; track lang.code) {
+                  <button
+                    type="button"
+                    class="wizard-lang-btn"
+                    [class.wizard-lang-btn--active]="currentLang() === lang.code"
+                    (click)="switchLanguage(lang.code)"
+                  >{{ lang.label }}</button>
+                }
+              </div>
+            </div>
+            <!-- Theme switcher -->
+            <div class="wizard-selector-group">
+              <span class="wizard-selector-label">{{ 'wizard.step1.themeLabel' | translate }}</span>
+              <div class="wizard-theme-switcher">
                 <button
                   type="button"
-                  class="wizard-lang-btn"
-                  [class.wizard-lang-btn--active]="currentLang() === lang.code"
-                  (click)="switchLanguage(lang.code)"
-                >{{ lang.label }}</button>
-              }
+                  class="wizard-theme-btn"
+                  [class.wizard-theme-btn--active]="currentTheme() === 'light'"
+                  (click)="setTheme('light')"
+                  [attr.aria-pressed]="currentTheme() === 'light'"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                  </svg>
+                  {{ 'wizard.step1.themeLight' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="wizard-theme-btn"
+                  [class.wizard-theme-btn--active]="currentTheme() === 'dark'"
+                  (click)="setTheme('dark')"
+                  [attr.aria-pressed]="currentTheme() === 'dark'"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  </svg>
+                  {{ 'wizard.step1.themeDark' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="wizard-theme-btn"
+                  [class.wizard-theme-btn--active]="currentTheme() === 'system'"
+                  (click)="setTheme('system')"
+                  [attr.aria-pressed]="currentTheme() === 'system'"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/>
+                  </svg>
+                  {{ 'wizard.step1.themeSystem' | translate }}
+                </button>
+              </div>
             </div>
           </div>
         }
@@ -140,6 +188,20 @@
             <h2 class="wizard-title">{{ 'wizard.step3.title' | translate }}</h2>
             <p class="wizard-desc">{{ 'wizard.step3.desc' | translate }}</p>
 
+            @if (malError()) {
+              <div class="wizard-auth-error" role="alert">
+                <svg class="wizard-auth-error__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <div class="wizard-auth-error__body">
+                  <strong>{{ 'wizard.step3.authErrorTitle' | translate }}</strong>
+                  <span>{{ 'wizard.step3.authErrorMessage' | translate }}</span>
+                </div>
+              </div>
+            }
+
             @if (!malConnected()) {
               <!-- Callback URL info box -->
               <div class="wizard-callback-box">
@@ -213,9 +275,9 @@
                 [disabled]="malConnecting() || malClientIdControl.invalid || malClientSecretControl.invalid"
               >
                 @if (malConnecting()) {
-                  <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 }
-                {{ malConnecting() ? ('wizard.step3.connectingBtn' | translate) : ('wizard.step3.connectBtn' | translate) }}
+                <span class="btn-label">{{ malConnecting() ? ('wizard.step3.connectingBtn' | translate) : ('wizard.step3.connectBtn' | translate) }}</span>
               </button>
             } @else {
               <div class="wizard-hint-row">
@@ -378,9 +440,9 @@
                   (click)="testSonarrAndLoadTags()"
                 >
                   @if (sonarrTagsLoading()) {
-                    <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                   }
-                  {{ 'wizard.step5.testAndLoadTags' | translate }}
+                  <span class="btn-label">{{ 'wizard.step5.testAndLoadTags' | translate }}</span>
                 </button>
               }
               @if (sonarrTagsError()) {
@@ -427,9 +489,9 @@
                       (click)="createSonarrTag()"
                     >
                       @if (sonarrCreatingTag()) {
-                        <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                       }
-                      {{ 'wizard.step5.createTagBtn' | translate }}
+                      <span class="btn-label">{{ 'wizard.step5.createTagBtn' | translate }}</span>
                     </button>
                   </div>
                 </div>
@@ -603,9 +665,9 @@
               (click)="saveSecurityAndNext()"
             >
               @if (securitySaving()) {
-                <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
               }
-              {{ 'wizard.next' | translate }}
+              <span class="btn-label">{{ 'wizard.next' | translate }}</span>
             </button>
           }
 
@@ -644,9 +706,9 @@
                 (click)="saveSonarrAndContinue()"
               >
                 @if (sonarrSaving()) {
-                  <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 }
-                {{ 'wizard.step5.connectBtn' | translate }}
+                <span class="btn-label">{{ 'wizard.step5.connectBtn' | translate }}</span>
               </button>
             }
           }
@@ -664,9 +726,9 @@
                 (click)="runSync()"
               >
                 @if (syncing()) {
-                  <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 }
-                {{ 'wizard.step6.runSync' | translate }}
+                <span class="btn-label">{{ 'wizard.step6.runSync' | translate }}</span>
               </button>
             }
           }

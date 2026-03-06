@@ -28,6 +28,7 @@ import { FranchiseConstellationComponent } from './franchise-constellation/franc
 import { FranchiseConstellationService } from './services/franchise-constellation.service';
 import { MalQuickUpdateModalComponent } from './mal-quick-update/mal-quick-update-modal.component';
 import { AuthService } from './services/auth.service';
+import { StorageKeys } from './constants/storage-keys';
 
 @Component({
   selector: 'app-root',
@@ -52,7 +53,7 @@ export class App implements OnInit, AfterViewInit {
 
   @ViewChild('navbarEl', { read: ElementRef }) private navbarEl?: ElementRef<HTMLElement>;
 
-  protected currentLang = signal<string>('en');
+  protected currentLang = signal<string>(localStorage.getItem(StorageKeys.language) || 'en');
   protected menuOpen = signal<boolean>(false);
   /** True during the drawer close animation (keeps the DOM alive while it slides out). */
   protected drawerClosing = signal<boolean>(false);
@@ -132,7 +133,7 @@ export class App implements OnInit, AfterViewInit {
   protected get synopsisLeaving() { return this.popupService.synopsisLeaving; }
 
   constructor() {
-    this.translate.use('en');
+    this.translate.use(localStorage.getItem(StorageKeys.language) || 'en');
   }
 
   ngOnInit(): void {
@@ -204,15 +205,10 @@ export class App implements OnInit, AfterViewInit {
 
     // Push "Welcome" notification once ever (idempotent by fixed id)
     this.notifService.push({
-      id: 'welcome-v1',
+      id: 'welcome-v2',
       severity: 'info',
       titleKey: 'notifications.welcome.title',
       messageKey: 'notifications.welcome.message',
-      action: {
-        labelKey: 'notifications.welcome.action',
-        route: ['/settings'],
-        fragment: 'sync-section',
-      },
     });
 
     // Push "no sync yet" warning if library has never been synced
@@ -500,6 +496,7 @@ export class App implements OnInit, AfterViewInit {
     const next = code ?? (this.currentLang() === 'en' ? 'fr' : 'en');
     this.currentLang.set(next);
     this.translate.use(next);
+    localStorage.setItem(StorageKeys.language, next);
     this.langDropdownOpen.set(false);
   }
 

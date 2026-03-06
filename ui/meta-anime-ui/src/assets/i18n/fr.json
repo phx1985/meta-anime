@@ -721,8 +721,7 @@
     },
     "welcome": {
       "title": "Bienvenue sur MetaAnime 👋",
-      "message": "MetaAnime centralise votre bibliothèque anime depuis Plex, Sonarr et MyAnimeList en un seul hub élégant. Commencez par lancer votre première synchronisation.",
-      "action": "Première sync"
+      "message": "La configuration est terminée. MetaAnime agrège désormais votre bibliothèque anime depuis Plex, Sonarr et MyAnimeList — tout en un seul endroit. Profitez-en !"
     },
     "noSync": {
       "title": "Synchronisation requise",
@@ -1158,7 +1157,12 @@
       "feature1": "Synchronisez automatiquement votre liste MyAnimeList",
       "feature2": "Suivez les animés dans Sonarr et Plex",
       "feature3": "Parcourez les sorties saisonnières et gérez votre bibliothèque",
-      "getStarted": "Commencer"
+      "getStarted": "Commencer",
+      "languageLabel": "Langue",
+      "themeLabel": "Thème",
+      "themeLight": "Clair",
+      "themeDark": "Sombre",
+      "themeSystem": "Système"
     },
     "step2": {
       "title": "Mot de passe administrateur (Optionnel)",
@@ -1182,8 +1186,10 @@
       "callbackUrlCopy": "Copier",
       "callbackUrlCopied": "Copié !",
       "connectBtn": "Connecter MyAnimeList",
-      "connectingBtn": "Redirection en cours...",
-      "connected": "MyAnimeList connecté"
+      "connectingBtn": "Redirection vers MyAnimeList...",
+      "connected": "MyAnimeList connecté",
+      "authErrorTitle": "Échec de la connexion",
+      "authErrorMessage": "L'authentification MyAnimeList a échoué. Veuillez vérifier votre Client ID et votre Client Secret et réessayer."
     },
     "step4": {
       "title": "Connecter Plex (Optionnel)",
