@@ -1,8 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>MetaAnime</RootNamespace>
     <UserSecretsId>4455767a-84f8-450d-b45f-1feee59978e5</UserSecretsId>
