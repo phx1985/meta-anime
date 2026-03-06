@@ -22,15 +22,16 @@ COPY api/ ./
 COPY MetaAnime.ServiceDefaults/ /MetaAnime.ServiceDefaults/
 RUN dotnet publish MetaAnime.Presentation/MetaAnime.Presentation.csproj \
     -c Release \
-    -o /app/publish \
-    --no-self-contained
+    -r linux-x64 \
+    --self-contained true \
+    -o /app/publish
 
 # =============================================================================
 # Stage 3: Final production image (linuxserver.io base)
 # =============================================================================
 FROM ghcr.io/linuxserver/baseimage-ubuntu:noble
 
-# Install PostgreSQL, openssl, and .NET 10 ASP.NET Core Runtime
+# Install PostgreSQL, openssl, and .NET 10 Runtime (host safety-net; ASP.NET Core is bundled in self-contained app)
 # hadolint ignore=DL3008,DL3009
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -43,12 +44,12 @@ RUN apt-get update \
     && wget -q https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb \
         -O /tmp/packages-microsoft-prod.deb \
     && dpkg -i /tmp/packages-microsoft-prod.deb \
-    && rm /tmp/packages-microsoft-prod.deb \
+    && apt-get purge -y --auto-remove wget \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
-        aspnetcore-runtime-10.0 \
+        dotnet-runtime-10.0 \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Copy compiled .NET application
 COPY --from=api-builder /app/publish /app
