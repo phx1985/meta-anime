@@ -6,6 +6,7 @@ using MetaAnime.Hubs;
 using MetaAnime.Utilities.Extensions;
 using MetaAnime.Utilities.Hangfire;
 using Microsoft.Extensions.Options;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -56,16 +57,15 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add API versioning
+// Add API versioning — .AddApiExplorer() is intentionally omitted: Asp.Versioning.Mvc.ApiExplorer 8.1.1
+// creates ApiParameterDescription objects with ModelMetadata=null on .NET 10, causing
+// IsConvertibleType / IsEnhancedModelMetadataSupported crashes at MapControllers() time.
+// Version substitution in OpenAPI paths is handled by the document transformer instead.
 builder.Services.AddApiVersioning(options =>
 {
     options.DefaultApiVersion = new Asp.Versioning.ApiVersion(1, 0);
     options.AssumeDefaultVersionWhenUnspecified = true;
     options.ReportApiVersions = true;
-}).AddApiExplorer(options =>
-{
-    options.GroupNameFormat = "'v'VVV";
-    options.SubstituteApiVersionInUrl = true;
 });
 
 // Configure Hangfire
@@ -81,8 +81,8 @@ builder.Services.AddHangfire(configuration => configuration
 
 builder.Services.AddHangfireServer();
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddEndpointsApiExplorer();
+// OpenAPI document generation (Microsoft.AspNetCore.OpenApi — no Swashbuckle, avoids
+// the IsConvertibleType / IsEnhancedModelMetadataSupported crash on .NET 10).
 builder.Services.AddSwaggerGenWithApiKey();
 builder.Services.AddCustomServices(builder.Configuration);
 builder.Services.SetupDatabase(builder.Configuration);
@@ -93,8 +93,11 @@ await app.Services.MigrateDatabaseAsync();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    // Native .NET 10 OpenAPI endpoint + Scalar UI (replaces Swashbuckle)
+    app.MapOpenApi();
+    app.MapScalarApiReference(opts => opts
+        .WithTitle("MetaAnime API")
+        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient));
 }
 
 app.MapDefaultEndpoints();

@@ -9,7 +9,7 @@ namespace MetaAnime.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/plex/auth")]
+[Route("api/v1/plex/auth")]
 public sealed class PlexAuthController(
     IPlexAuthService plexAuthService,
     IPlexAnimeSourceService<PlexMedia> plexAnimeSourceService,

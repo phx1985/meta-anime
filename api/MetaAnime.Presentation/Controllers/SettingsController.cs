@@ -13,7 +13,7 @@ namespace MetaAnime.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/settings")]
+[Route("api/v1/settings")]
 public sealed class SettingsController(IMediator mediator, IRecurringJobManager recurringJobManager) : ControllerBase
 {
     /// <summary>

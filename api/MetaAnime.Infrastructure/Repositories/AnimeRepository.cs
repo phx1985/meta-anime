@@ -1,8 +1,8 @@
-﻿using EFCore.BulkExtensions;
-using MetaAnime.Domain.Enums;
+﻿using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Mappers;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Domain.Entities;
+using LinqToDB.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace MetaAnime.Infrastructure.Repositories;
@@ -29,9 +29,8 @@ public sealed class AnimeRepository(MetaAnimeDbContext dbContext) : IAnimeReposi
                 externalAnimeIdentifier.AnimeId = anime.Id;
             }
         }
-        await dbContext.BulkInsertAsync(animeList);
-        await dbContext.BulkInsertAsync(animeList.SelectMany(a => a.ExternalAnimeIdentifiers));
-        await dbContext.SaveChangesAsync();
+        await dbContext.BulkCopyAsync(animeList);
+        await dbContext.BulkCopyAsync(animeList.SelectMany(a => a.ExternalAnimeIdentifiers).ToList());
     }
 
     public async Task BulkInsertAsync(IEnumerable<IAnimeConvertible> animeConvertibles)

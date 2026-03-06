@@ -1,8 +1,8 @@
-﻿using EFCore.BulkExtensions;
-using MetaAnime.Domain.Enums;
+﻿using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Domain.Entities;
 using MetaAnime.Infrastructure.Utilities.Extensions;
+using LinqToDB.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace MetaAnime.Infrastructure.Repositories;
@@ -87,12 +87,12 @@ public sealed class KometaAnimeMappingRepository(MetaAnimeDbContext dbContext)
     }
     public async Task BulkInsertAsync(IEnumerable<KometaAnimeMapping> kometaAnimeMappings)
     {
-        foreach (var kam in kometaAnimeMappings)
+        var mappingList = kometaAnimeMappings.ToList();
+        foreach (var kam in mappingList)
         {
             kam.Id = Guid.CreateVersion7();
         }
-        await dbContext.BulkInsertAsync(kometaAnimeMappings);
-        await dbContext.SaveChangesAsync();
+        await dbContext.BulkCopyAsync(mappingList);
     }
 
     public async Task<bool> AnyAsync()
