@@ -24,7 +24,6 @@ RUN dotnet publish MetaAnime.Presentation/MetaAnime.Presentation.csproj \
     -c Release \
     -r linux-x64 \
     --self-contained true \
-    -p:PublishTrimmed=true \
     -o /app/publish
 
 # =============================================================================
@@ -32,7 +31,7 @@ RUN dotnet publish MetaAnime.Presentation/MetaAnime.Presentation.csproj \
 # =============================================================================
 FROM ghcr.io/linuxserver/baseimage-ubuntu:noble
 
-# Install PostgreSQL, openssl, and .NET 10 Runtime (host only; ASP.NET Core is bundled in self-contained app)
+# Install PostgreSQL, openssl, and .NET 10 Runtime (host safety-net; ASP.NET Core is bundled in self-contained app)
 # hadolint ignore=DL3008,DL3009
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
