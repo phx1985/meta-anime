@@ -10,7 +10,7 @@ namespace MetaAnime.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/seasonal")]
+[Route("api/v1/seasonal")]
 public sealed class SeasonalController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

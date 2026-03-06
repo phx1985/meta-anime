@@ -11,7 +11,7 @@ namespace MetaAnime.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/mal")]
+[Route("api/v1/mal")]
 public sealed class MalController(
     IAnimeMediatorService animeMediatorService,
     IMalTokenService malTokenService,

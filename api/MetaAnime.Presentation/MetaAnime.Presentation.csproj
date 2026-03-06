@@ -9,7 +9,20 @@
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
     <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
+    <!-- PublishTrimmed intentionally omitted: MVC does not support trimming (IL2026).
+         The trimmer sets AppContext switch IsEnhancedModelMetadataSupported=false which
+         prevents ModelMetadata.InitializeDynamicTypeInformation() from running, causing
+         a NotSupportedException at startup inside InferParameterBindingInfoConvention. -->
   </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      TrimmerRootAssembly only preserves entry-point-reachable members; for assemblies
+      that are accessed purely via reflection or DI at runtime (MVC metadata providers,
+      API versioning) we need preserve="all" via a root descriptor file.
+    -->
+    <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Update="appsettings.Development.json">
@@ -20,7 +33,6 @@
 
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.1" />
-    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.1" />
     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
     <PackageReference Include="Hangfire.Core" Version="1.8.23" />
     <PackageReference Include="Hangfire.PostgreSql" Version="1.21.1" />
@@ -33,7 +45,7 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.3" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.4" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.13.1" />
   </ItemGroup>
 
   <ItemGroup>

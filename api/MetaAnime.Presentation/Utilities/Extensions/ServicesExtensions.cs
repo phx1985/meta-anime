@@ -17,10 +17,11 @@ using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
 using MetaAnime.Presentation.Hubs;
 using MetaAnime.Utilities.Authentication;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.OpenApi;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi;
 using MetaAnime.Core.Settings;
 
 namespace MetaAnime.Utilities.Extensions;
@@ -168,32 +169,73 @@ public static class ServicesExtensions
     }
 
     /// <summary>
-    /// Add swagger with API key
+    /// Registers the native .NET 10 OpenAPI document (Microsoft.AspNetCore.OpenApi) with
+    /// an API-key security scheme. Replaces Swashbuckle to avoid the
+    /// <c>IsConvertibleType / IsEnhancedModelMetadataSupported</c> crash on .NET 10 when
+    /// Asp.Versioning.Mvc.ApiExplorer is also registered.
     /// </summary>
-    /// <param name="services"></param>
-    /// <returns></returns>
     public static IServiceCollection AddSwaggerGenWithApiKey(this IServiceCollection services)
     {
-        services.AddSwaggerGen(c =>
+        services.AddOpenApi("v1", options =>
         {
-            c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+            options.AddDocumentTransformer((document, _, _) =>
             {
-                Description = "API Key Authentication",
-                Name = "X-Api-Key",
-                In = ParameterLocation.Header,
-                Type = SecuritySchemeType.ApiKey,
-                Scheme = "ApiKey"
-            });
-
-
-            c.AddSecurityRequirement(doc => new OpenApiSecurityRequirement
-            {
+                // Security scheme
+                document.Components ??= new();
+                document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+                document.Components.SecuritySchemes["ApiKey"] = new OpenApiSecurityScheme
                 {
-                    new OpenApiSecuritySchemeReference("ApiKey", doc),
-                    new List<string>()
+                    Type        = SecuritySchemeType.ApiKey,
+                    Name        = "X-Api-Key",
+                    In          = ParameterLocation.Header,
+                    Description = "API Key Authentication",
+                    Scheme      = "ApiKey",
+                };
+
+                (document.Security ??= []).Add(new OpenApiSecurityRequirement
+                {
+                    { new OpenApiSecuritySchemeReference("ApiKey", document), [] },
+                });
+
+                // Asp.Versioning.Mvc.ApiExplorer is not registered (.NET 10 incompatible),
+                // so route templates still contain {version:apiVersion}. Replace with "v1"
+                // so the OpenAPI paths are clean and usable.
+                if (document.Paths is { Count: > 0 })
+                {
+                    var rekeyed = document.Paths
+                        .ToDictionary(
+                            kvp => kvp.Key.Replace("{version}", "v1", StringComparison.OrdinalIgnoreCase),
+                            kvp => kvp.Value);
+                    document.Paths.Clear();
+                    foreach (var (k, v) in rekeyed)
+                        document.Paths.Add(k, v);
                 }
+
+                return Task.CompletedTask;
             });
         });
+
+        // Wrap the real IApiDescriptionGroupCollectionProvider so that any
+        // ApiParameterDescription without enhanced model metadata (ModelMetadata=null,
+        // typically {version:apiVersion} route params) is removed before
+        // Microsoft.AspNetCore.OpenApi reads IsConvertibleType and throws.
+        var existing = services.FirstOrDefault(
+            d => d.ServiceType == typeof(IApiDescriptionGroupCollectionProvider));
+
+        if (existing is not null)
+        {
+            services.Remove(existing);
+            services.AddSingleton<IApiDescriptionGroupCollectionProvider>(sp =>
+            {
+                var inner = existing.ImplementationType is not null
+                    ? (IApiDescriptionGroupCollectionProvider)ActivatorUtilities.CreateInstance(sp, existing.ImplementationType)
+                    : existing.ImplementationFactory is not null
+                        ? (IApiDescriptionGroupCollectionProvider)existing.ImplementationFactory(sp)
+                        : (IApiDescriptionGroupCollectionProvider)existing.ImplementationInstance!;
+
+                return new SafeApiDescriptionGroupCollectionProvider(inner);
+            });
+        }
 
         return services;
     }

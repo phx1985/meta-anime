@@ -10,7 +10,7 @@ namespace MetaAnime.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/mal/auth")]
+[Route("api/v1/mal/auth")]
 public sealed class MalAuthController(
     IMalOAuthService malOAuthService,
     IPropertyBagRepository propertyBagRepository,

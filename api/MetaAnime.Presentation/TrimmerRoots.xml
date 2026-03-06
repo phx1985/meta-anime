@@ -1,0 +1,52 @@
+<!--
+  IL Trimmer root descriptor - keeps entire assemblies from being stripped.
+
+  TrimmerRootAssembly only preserves members reachable from entry points; for assemblies
+  accessed purely via reflection or DI at runtime we need preserve="all".
+
+  Every assembly listed here produced IL2104 or IL2026 warnings during publish, meaning
+  it contains members flagged with [RequiresUnreferencedCode] or performs reflection
+  internally. Preserving them in full prevents runtime NotSupportedException /
+  MissingMethodException.
+
+  The trimming benefit still comes from the unused portions of the .NET base-class runtime
+  (System.*, Microsoft.Extensions.*, etc.) which ARE stripped by the trimmer.
+-->
+<linker>
+  <!-- ASP.NET Core MVC / API Explorer pipeline -->
+  <assembly fullname="Microsoft.AspNetCore.Mvc" preserve="all" />
+  <assembly fullname="Microsoft.AspNetCore.Mvc.Core" preserve="all" />
+  <assembly fullname="Microsoft.AspNetCore.Mvc.ApiExplorer" preserve="all" />
+  <assembly fullname="Microsoft.AspNetCore.Mvc.DataAnnotations" preserve="all" />
+
+  <!-- Swashbuckle - entirely reflection-driven -->
+  <assembly fullname="Swashbuckle.AspNetCore.Swagger" preserve="all" />
+  <assembly fullname="Swashbuckle.AspNetCore.SwaggerGen" preserve="all" />
+
+  <!-- API versioning -->
+  <assembly fullname="Asp.Versioning.Mvc" preserve="all" />
+  <assembly fullname="Asp.Versioning.Mvc.ApiExplorer" preserve="all" />
+  <assembly fullname="Asp.Versioning.Http" preserve="all" />
+
+  <!-- Hangfire - uses reflection for job type serialization/deserialization -->
+  <assembly fullname="Hangfire.Core" preserve="all" />
+  <assembly fullname="Hangfire.NetCore" preserve="all" />
+  <assembly fullname="Hangfire.PostgreSql" preserve="all" />
+
+  <!-- EF Core - uses reflection for entity configuration and query translation -->
+  <assembly fullname="Microsoft.EntityFrameworkCore" preserve="all" />
+  <assembly fullname="Microsoft.EntityFrameworkCore.Relational" preserve="all" />
+  <assembly fullname="Npgsql.EntityFrameworkCore.PostgreSQL" preserve="all" />
+
+  <!-- linq2db - uses reflection for type mapping and bulk copy -->
+  <assembly fullname="linq2db" preserve="all" />
+  <assembly fullname="linq2db.EntityFrameworkCore" preserve="all" />
+
+  <!-- Serialization / HTTP libraries -->
+  <assembly fullname="Newtonsoft.Json" preserve="all" />
+  <assembly fullname="RestSharp" preserve="all" />
+
+  <!-- Dapper (transitively pulled in by Hangfire) -->
+  <assembly fullname="Dapper" preserve="all" />
+  <assembly fullname="Dapper.AOT" preserve="all" />
+</linker>
