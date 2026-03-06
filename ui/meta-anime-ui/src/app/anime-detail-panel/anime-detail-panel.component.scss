@@ -773,6 +773,44 @@
 .mt-3 { margin-top: 0.75rem; }
 
 // ── Responsive ───────────────────────────────────────────────────────────────
+
+// ── Medium screens: switch to stacked layout when space is constrained ────────
+@media (max-width: 1366px), (max-height: 900px) {
+  .panel__top-grid {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+    flex-shrink: 0;
+  }
+
+  .panel__cover-col {
+    height: 40vh;
+    max-height: 350px;
+    min-height: 250px;
+    width: 100%;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .panel__cover-placeholder {
+    min-height: 280px;
+  }
+
+  .panel__info-col {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    height: auto;
+    overflow: visible;
+    border-left: none;
+    flex-shrink: 0;
+  }
+
+  .panel__title-block {
+    flex: 0 0 auto;
+  }
+}
+
 @media (max-width: 576px) {
   .panel {
     width: 100vw;

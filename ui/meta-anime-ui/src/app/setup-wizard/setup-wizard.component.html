@@ -606,23 +606,25 @@
             @if (syncing() || syncSteps().length > 0) {
               <div class="wizard-sync-progress">
                 @for (step of syncSteps(); track step.stepKey) {
-                  <div class="wizard-sync-row">
-                    <span class="wizard-sync-state wizard-sync-state--{{ step.state }}">
-                      @if (step.state === 'running') {
-                        <span class="spinner-border spinner-border-sm" role="status"></span>
-                      } @else if (step.state === 'done') {
-                        ✓
-                      } @else if (step.state === 'error') {
-                        ✗
-                      }
-                    </span>
-                    <span class="wizard-sync-label">{{ step.stepKey }}</span>
-                    <span class="wizard-sync-elapsed">
-                      @if (step.elapsedMs != null) {
-                        {{ fmtElapsed(step.elapsedMs) }}
-                      }
-                    </span>
-                  </div>
+                  @if (shouldShowStep(step.stepKey)) {
+                    <div class="wizard-sync-row">
+                      <span class="wizard-sync-state wizard-sync-state--{{ step.state }}">
+                        @if (step.state === 'running') {
+                          <span class="spinner-border spinner-border-sm" role="status"></span>
+                        } @else if (step.state === 'done') {
+                          ✓
+                        } @else if (step.state === 'error') {
+                          ✗
+                        }
+                      </span>
+                      <span class="wizard-sync-label">{{ step.stepKey }}</span>
+                      <span class="wizard-sync-elapsed">
+                        @if (step.elapsedMs != null) {
+                          {{ fmtElapsed(step.elapsedMs) }}
+                        }
+                      </span>
+                    </div>
+                  }
                 }
               </div>
             }

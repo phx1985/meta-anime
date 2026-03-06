@@ -290,6 +290,9 @@ export class SettingsComponent {
   /** Small delay (ms) after settings data arrives before calling scrollToSection —
    *  gives Angular one render cycle to stamp the section IDs into the DOM. */
   private static readonly DEEP_LINK_SCROLL_DELAY_MS = 120;
+  private static readonly PLEX_HOST_KEY = 'Plex:Host';
+  private static readonly PLEX_TOKEN_KEY = 'Plex:Token';
+  private static readonly PLEX_MACHINE_IDENTIFIER_KEY = 'Plex:MachineIdentifier';
   private static readonly SONARR_HOST_KEY = 'Sonarr:Host';
   private static readonly SONARR_API_KEY_KEY = 'Sonarr:ApiKey';
   private static readonly SONARR_DEFAULT_KEYS = new Set([
@@ -694,7 +697,7 @@ export class SettingsComponent {
       });
   }
 
-  save(setting: SettingDefinition): void {
+  async save(setting: SettingDefinition): Promise<void> {
     const form = this.forms[setting.key];
     if (!form) return;
 
@@ -707,7 +710,7 @@ export class SettingsComponent {
       .update(setting.key, { value })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
+        next: async () => {
           this.savingKey.set(null);
           this.savedKey.set(setting.key);
           this.editing.update((e) => ({ ...e, [setting.key]: false }));
@@ -717,6 +720,17 @@ export class SettingsComponent {
           setTimeout(() => {
             if (this.savedKey() === setting.key) this.savedKey.set(null);
           }, 3000);
+
+          // Handle Plex settings updates
+          if (
+            setting.key === SettingsComponent.PLEX_HOST_KEY ||
+            setting.key === SettingsComponent.PLEX_TOKEN_KEY ||
+            setting.key === SettingsComponent.PLEX_MACHINE_IDENTIFIER_KEY
+          ) {
+            await this.loadPlexLibsForSettings();
+          }
+
+          // Handle Sonarr settings updates
           if (
             setting.key === SettingsComponent.SONARR_HOST_KEY ||
             setting.key === SettingsComponent.SONARR_API_KEY_KEY
@@ -724,6 +738,7 @@ export class SettingsComponent {
             this.sonarrRootFolders.set([]);
             this.sonarrQualityProfiles.set([]);
             this.loadSonarrDefaults();
+            await this.loadSonarrTagsForSettings();
           }
         },
         error: () => {

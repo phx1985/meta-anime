@@ -13,7 +13,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  height: 100%;
+  height: 100%;     // fill the grid cell height (set by grid-auto-rows)
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 14px;
@@ -148,6 +148,18 @@
     height: 6px;
     background: linear-gradient(to bottom, rgba(0, 0, 0, 0.45), transparent);
     pointer-events: none;
+  }
+
+  // Light Mode Fix: Soften shadows and remove dark fold crease to prevent "glitchy" artifacts
+  :host-context([data-theme='light']) & {
+    box-shadow:
+      2px 1px 6px rgba(0, 0, 0, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+
+    &::after {
+      display: none;
+    }
   }
 }
 

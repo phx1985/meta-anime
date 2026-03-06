@@ -304,6 +304,12 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   nextStep(): void { const n = this.step() + 1; this.step.set(n); this.animStep.set(n); }
   prevStep(): void { const p = Math.max(1, this.step() - 1); this.step.set(p); this.animStep.set(p); }
 
+  shouldShowStep(stepKey: string): boolean {
+    if (stepKey.toLowerCase().includes('plex')) return this.plexConnected();
+    if (stepKey.toLowerCase().includes('sonarr')) return this.sonarrSaved();
+    return true;
+  }
+
   // Security (step 2)
   private passwordMatchValidator(group: AbstractControl): ValidationErrors | null {
     const pw = group.get('password')?.value as string;

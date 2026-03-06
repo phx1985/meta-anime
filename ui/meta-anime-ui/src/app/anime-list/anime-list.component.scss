@@ -1269,6 +1269,7 @@
   width: 100%;
   min-width: 0;
   transition: grid-template-columns 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  grid-auto-rows: 400px;  // enforce the same row height as the seasonal page
 
   // Default: auto-fill with compact card widths
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
