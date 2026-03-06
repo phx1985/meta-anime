@@ -187,7 +187,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   demographicSearch = '';
 
   // ── Preset state ──────────────────────────────────────────────────────────
-  savedPresets = signal<FilterPreset[]>([]);
+  readonly savedPresets = this.presetService.savedPresets;
   /** Whether the "save as preset" inline form is visible */
   showSavePreset = false;
   newPresetName = '';
@@ -411,8 +411,6 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
       this.popupService.childOverlayOpen.set(this.filterOpen() || this.presetsSheetOpen());
     }, { allowSignalWrites: true });
     this.destroyRef.onDestroy(() => this.popupService.childOverlayOpen.set(false));
-
-    this.savedPresets.set(this.presetService.getSavedPresets());
 
     this.settingsService
       .getShowNsfw()
@@ -699,7 +697,6 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
       filters: this.snapshotFilters(),
     };
     this.presetService.savePreset(preset);
-    this.savedPresets.set(this.presetService.getSavedPresets());
     this.showSavePreset = false;
     this.newPresetName = '';
   }
@@ -712,7 +709,6 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   deletePreset(id: string, event: MouseEvent): void {
     event.stopPropagation();
     this.presetService.deletePreset(id);
-    this.savedPresets.set(this.presetService.getSavedPresets());
   }
 
   // ── Private ───────────────────────────────────────────────────────────────

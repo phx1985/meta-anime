@@ -1,5 +1,7 @@
-import { Injectable, signal, effect } from '@angular/core';
+import { Injectable, signal, effect, inject } from '@angular/core';
 import { StorageKeys } from '../constants/storage-keys';
+import { PropertyBagService } from './property-bag.service';
+import { firstValueFrom } from 'rxjs';
 
 const AUTO_APPLY_KEY = StorageKeys.autoApplyLastFilters;
 const LAST_FILTERS_KEY = StorageKeys.lastUsedFilters;
@@ -9,68 +11,104 @@ const LUCKY_ONLY_WITH_FILES_KEY = StorageKeys.luckyOnlyWithFiles;
 
 @Injectable({ providedIn: 'root' })
 export class UserPreferencesService {
+  private propertyBag = inject(PropertyBagService);
+
   /** When true, the last used anime search filters are restored automatically on page load. */
-  readonly autoApplyLastFilters = signal<boolean>(this.loadBool(AUTO_APPLY_KEY));
+  readonly autoApplyLastFilters = signal<boolean>(false);
 
   // ── Lucky Pick preferences ─────────────────────────────────────────────────
   /** When true, "I'm Feeling Lucky" only selects from finished anime. Default: false */
-  readonly luckyOnlyFinished = signal<boolean>(this.loadBool(LUCKY_ONLY_FINISHED_KEY, false));
+  readonly luckyOnlyFinished = signal<boolean>(false);
   /** When true, "I'm Feeling Lucky" only selects from "Plan to Watch" entries. Default: true */
-  readonly luckyOnlyPlanToWatch = signal<boolean>(
-    this.loadBool(LUCKY_ONLY_PLAN_TO_WATCH_KEY, true),
-  );
+  readonly luckyOnlyPlanToWatch = signal<boolean>(true);
   /** When true, "I'm Feeling Lucky" only selects anime that have local files. Default: true */
-  readonly luckyOnlyWithFiles = signal<boolean>(this.loadBool(LUCKY_ONLY_WITH_FILES_KEY, true));
+  readonly luckyOnlyWithFiles = signal<boolean>(true);
+
+  private _lastFilters: string | null = null;
 
   constructor() {
-    effect(() => {
-      localStorage.setItem(AUTO_APPLY_KEY, this.autoApplyLastFilters() ? 'true' : 'false');
-    });
-    effect(() => {
-      localStorage.setItem(LUCKY_ONLY_FINISHED_KEY, this.luckyOnlyFinished() ? 'true' : 'false');
-    });
-    effect(() => {
-      localStorage.setItem(
-        LUCKY_ONLY_PLAN_TO_WATCH_KEY,
-        this.luckyOnlyPlanToWatch() ? 'true' : 'false',
-      );
-    });
-    effect(() => {
-      localStorage.setItem(
-        LUCKY_ONLY_WITH_FILES_KEY,
-        this.luckyOnlyWithFiles() ? 'true' : 'false',
-      );
-    });
+    // We no longer use effects to auto-save to localStorage.
+    // Instead, we explicitly call save() when values change.
+  }
+
+  async load(): Promise<void> {
+    try {
+      const allProps = await firstValueFrom(this.propertyBag.getAll());
+      const map = new Map(allProps.map((p) => [p.key, p.value]));
+
+      // Helper to load boolean with migration
+      const loadBool = (key: string, defaultVal: boolean, signalToSet: any) => {
+        if (map.has(key)) {
+          signalToSet.set(map.get(key) === 'true');
+        } else {
+          // Migration: Check localStorage
+          const local = localStorage.getItem(key);
+          if (local !== null) {
+            const val = local === 'true';
+            signalToSet.set(val);
+            // Upload to server
+            this.propertyBag.upsert(key, { value: local }).subscribe();
+            localStorage.removeItem(key);
+          } else {
+            signalToSet.set(defaultVal);
+          }
+        }
+      };
+
+      loadBool(AUTO_APPLY_KEY, false, this.autoApplyLastFilters);
+      loadBool(LUCKY_ONLY_FINISHED_KEY, false, this.luckyOnlyFinished);
+      loadBool(LUCKY_ONLY_PLAN_TO_WATCH_KEY, true, this.luckyOnlyPlanToWatch);
+      loadBool(LUCKY_ONLY_WITH_FILES_KEY, true, this.luckyOnlyWithFiles);
+
+      // Load last filters string
+      if (map.has(LAST_FILTERS_KEY)) {
+        this._lastFilters = map.get(LAST_FILTERS_KEY)!;
+      } else {
+        const local = localStorage.getItem(LAST_FILTERS_KEY);
+        if (local) {
+          this._lastFilters = local;
+          this.propertyBag.upsert(LAST_FILTERS_KEY, { value: local }).subscribe();
+          localStorage.removeItem(LAST_FILTERS_KEY);
+        }
+      }
+
+    } catch (err) {
+      console.error('Failed to load user preferences from server', err);
+      // Fallback to defaults or local storage if offline?
+      // For now, we assume server is available or we fail gracefully.
+    }
   }
 
   setAutoApplyLastFilters(value: boolean): void {
     this.autoApplyLastFilters.set(value);
+    this.saveBool(AUTO_APPLY_KEY, value);
   }
 
   setLuckyOnlyFinished(value: boolean): void {
     this.luckyOnlyFinished.set(value);
+    this.saveBool(LUCKY_ONLY_FINISHED_KEY, value);
   }
 
   setLuckyOnlyPlanToWatch(value: boolean): void {
     this.luckyOnlyPlanToWatch.set(value);
+    this.saveBool(LUCKY_ONLY_PLAN_TO_WATCH_KEY, value);
   }
 
   setLuckyOnlyWithFiles(value: boolean): void {
     this.luckyOnlyWithFiles.set(value);
+    this.saveBool(LUCKY_ONLY_WITH_FILES_KEY, value);
   }
 
   saveLastFilters(filters: string): void {
-    localStorage.setItem(LAST_FILTERS_KEY, filters);
+    this._lastFilters = filters;
+    this.propertyBag.upsert(LAST_FILTERS_KEY, { value: filters }).subscribe();
   }
 
   loadLastFilters(): string | null {
-    return localStorage.getItem(LAST_FILTERS_KEY);
+    return this._lastFilters;
   }
 
-  private loadBool(key: string, defaultValue = false): boolean {
-    if (typeof localStorage === 'undefined') return defaultValue;
-    const stored = localStorage.getItem(key);
-    if (stored === null) return defaultValue;
-    return stored === 'true';
+  private saveBool(key: string, value: boolean): void {
+    this.propertyBag.upsert(key, { value: value ? 'true' : 'false' }).subscribe();
   }
 }
