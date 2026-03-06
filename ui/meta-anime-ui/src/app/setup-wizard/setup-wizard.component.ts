@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   effect,
   inject,
@@ -10,7 +11,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { trigger, transition, style, animate, query, group } from '@angular/animations';
@@ -24,12 +25,13 @@ import { SonarrService, SonarrTag } from '../services/sonarr.service';
 import { HelpModalComponent } from '../help-modal/help-modal.component';
 import { ProviderStateService } from '../services/provider-state.service';
 import { AuthService } from '../services/auth.service';
+import { ThemeService } from '../services/theme.service';
+import { StorageKeys } from '../constants/storage-keys';
 import { SyncStep } from '../models/sync-progress.models';
 import { fmtElapsed } from '../utils/format.utils';
 import { filter } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 
-const WIZARD_ACTIVE_KEY = 'wizard_active';
 const PLEX_POLL_INTERVAL_MS = 3000;
 const PLEX_POLL_MAX = 40;
 
@@ -71,20 +73,36 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   private providerState = inject(ProviderStateService);
   private authService = inject(AuthService);
   private translate = inject(TranslateService);
+  readonly themeService = inject(ThemeService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private destroyRef = inject(DestroyRef);
 
-  currentLang = signal<string>(this.translate.currentLang ?? 'en');
+  currentLang = signal<string>(localStorage.getItem(StorageKeys.language) || 'en');
 
   readonly availableLanguages: ReadonlyArray<{ code: string; label: string }> = [
     { code: 'en', label: 'English' },
     { code: 'fr', label: 'Français' },
   ];
 
+  readonly currentTheme = computed<'light' | 'dark' | 'system'>(() => {
+    if (this.themeService.followOsTheme()) return 'system';
+    return this.themeService.isDarkTheme() ? 'dark' : 'light';
+  });
+
   switchLanguage(code: string): void {
     this.currentLang.set(code);
     this.translate.use(code);
+    localStorage.setItem(StorageKeys.language, code);
+  }
+
+  setTheme(theme: 'light' | 'dark' | 'system'): void {
+    if (theme === 'system') {
+      this.themeService.setFollowOsTheme(true);
+    } else {
+      this.themeService.setDarkTheme(theme === 'dark');
+    }
   }
 
   readonly fmtElapsed = fmtElapsed;
@@ -112,6 +130,7 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   // MAL state
   malConnected = signal(false);
   malConnecting = signal(false);
+  malError = signal(false);
   malClientIdControl = new FormControl('', [Validators.required]);
   malClientSecretControl = new FormControl('', [Validators.required]);
 
@@ -174,6 +193,9 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   }
 
   constructor() {
+    // Set wizard-active flag as early as possible so NotificationService
+    // suppresses all toasts before any lifecycle hooks fire.
+    this.notifService.setWizardActive(true);
     effect(() => {
       if (this.step() === 7) {
         this.launchFireworks();
@@ -195,7 +217,12 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   }
 
   private loadInitialState(): void {
-    const wizardActive = localStorage.getItem(WIZARD_ACTIVE_KEY) === 'true';
+    const malErrorParam = this.route.snapshot.queryParams['mal_error'] === 'true';
+
+    if (malErrorParam) {
+      // Clear the mal_error query param from the URL without re-triggering navigation
+      void this.router.navigate([], { replaceUrl: true, queryParams: {} });
+    }
 
     this.settingsService.getAll()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -232,10 +259,15 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (s) => {
           this.malConnected.set(s.connected);
-          if (s.connected && wizardActive) {
+          if (s.connected && this.notifService.wizardActive()) {
             this.step.set(4);
             this.animStep.set(4);
             this.loadPlexStatus();
+          } else if (!s.connected && this.notifService.wizardActive() && malErrorParam) {
+            // Returned from a failed MAL OAuth round-trip — stay on step 3 and show inline error
+            this.step.set(3);
+            this.animStep.set(3);
+            this.malError.set(true);
           }
           this.initializing.set(false);
         },
@@ -306,7 +338,7 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
     const clientSecret = (this.malClientSecretControl.value ?? '').trim();
     if (!clientId || !clientSecret) return;
     this.malConnecting.set(true);
-    localStorage.setItem(WIZARD_ACTIVE_KEY, 'true');
+    this.malError.set(false);
     forkJoin([
       this.settingsService.update('MAL:ClientId', { value: clientId }),
       this.settingsService.update('MAL:ClientSecret', { value: clientSecret }),
@@ -317,11 +349,11 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
           this.enrollmentService.initiateMalAuth()
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe({
-              next: (res) => { this.malConnecting.set(false); window.location.href = res.authorizationUrl; },
-              error: () => { this.malConnecting.set(false); localStorage.removeItem(WIZARD_ACTIVE_KEY); },
+              next: (res) => { window.location.href = res.authorizationUrl; },
+              error: () => { this.malConnecting.set(false); },
             });
         },
-        error: () => { this.malConnecting.set(false); localStorage.removeItem(WIZARD_ACTIVE_KEY); },
+        error: () => { this.malConnecting.set(false); },
       });
   }
 
@@ -502,6 +534,12 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
     if (this.syncing()) return;
     this.syncing.set(true);
     this.syncHttpError.set(null);
+    // Tell SignalR which provider steps to exclude from the done check.
+    // Kometa is never configured in the wizard; Plex and Sonarr are optional.
+    const disabled = new Set<string>(['kometa']);
+    if (!this.plexConnected()) disabled.add('plex');
+    if (!this.sonarrSaved()) disabled.add('sonarr');
+    this.signalR.setDisabledStepKeys(disabled);
     this.signalR.resetSteps();
     this.animeService.syncAnimes()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -516,7 +554,7 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   }
 
   // Completion
-  finish(): void { localStorage.removeItem(WIZARD_ACTIVE_KEY); this.providerState.refresh(); this.router.navigate(['/']); }
+  finish(): void { this.notifService.setWizardActive(false); this.providerState.refresh(); this.router.navigate(['/']); }
 
   private launchFireworks(): void {
     const duration = 3500;
@@ -534,5 +572,6 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.stopPlexPolling();
     if (this.malCallbackCopyTimer) clearTimeout(this.malCallbackCopyTimer);
+    this.notifService.setWizardActive(false);
   }
 }

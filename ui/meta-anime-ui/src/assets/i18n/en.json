@@ -729,8 +729,7 @@
     },
     "welcome": {
       "title": "Welcome to MetaAnime 👋",
-      "message": "MetaAnime aggregates your anime library from Plex, Sonarr and MyAnimeList into one elegant hub. Start by running your first sync.",
-      "action": "Run first sync"
+      "message": "Your setup is complete. MetaAnime is now aggregating your anime library from Plex, Sonarr and MyAnimeList — all in one place. Enjoy!"
     },
     "noSync": {
       "title": "First sync needed",
@@ -1166,7 +1165,12 @@
       "feature1": "Sync your MyAnimeList watch list automatically",
       "feature2": "Track anime in Sonarr and Plex",
       "feature3": "Browse seasonal releases and manage your library",
-      "getStarted": "Get Started"
+      "getStarted": "Get Started",
+      "languageLabel": "Language",
+      "themeLabel": "Theme",
+      "themeLight": "Light",
+      "themeDark": "Dark",
+      "themeSystem": "System"
     },
     "step2": {
       "title": "Admin Password (Optional)",
@@ -1190,8 +1194,10 @@
       "callbackUrlCopy": "Copy",
       "callbackUrlCopied": "Copied!",
       "connectBtn": "Connect MyAnimeList",
-      "connectingBtn": "Redirecting...",
-      "connected": "MyAnimeList connected"
+      "connectingBtn": "Redirecting to MyAnimeList...",
+      "connected": "MyAnimeList connected",
+      "authErrorTitle": "Connection failed",
+      "authErrorMessage": "MyAnimeList authentication failed. Please check your Client ID and Secret and try again."
     },
     "step4": {
       "title": "Connect Plex (Optional)",

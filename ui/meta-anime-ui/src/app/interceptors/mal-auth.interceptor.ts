@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { NotificationService } from '../services/notification.service';
 
@@ -18,19 +19,23 @@ function isMalAuthError(error: unknown): boolean {
 
 export const malAuthInterceptor: HttpInterceptorFn = (req, next) => {
   const notifService = inject(NotificationService);
+  const router = inject(Router);
   return next(req).pipe(
     catchError((error: unknown) => {
       if (isMalAuthError(error)) {
+        const inWizard = router.url.startsWith('/welcome');
         notifService.push({
           id: `mal-auth-${Date.now()}`,
           severity: 'error',
           titleKey: 'notifications.malAuth.title',
           messageKey: 'notifications.malAuth.message',
-          action: {
-            labelKey: 'notifications.malAuth.action',
-            route: ['/settings'],
-            fragment: 'section-mal',
-          },
+          ...(!inWizard && {
+            action: {
+              labelKey: 'notifications.malAuth.action',
+              route: ['/settings'],
+              fragment: 'section-mal',
+            },
+          }),
         });
       }
       return throwError(() => error);
