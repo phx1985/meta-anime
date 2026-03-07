@@ -102,6 +102,9 @@ if (app.Environment.IsDevelopment())
 
 app.MapDefaultEndpoints();
 
+// Health check endpoint — available in all environments for Docker HEALTHCHECK probe
+app.MapHealthChecks("/api/health");
+
 // Serve Angular static files from wwwroot (populated during Docker build)
 app.UseDefaultFiles();
 app.UseStaticFiles();
