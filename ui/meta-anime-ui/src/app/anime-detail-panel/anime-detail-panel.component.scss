@@ -624,7 +624,7 @@
 
 .panel__season-row {
   display: grid;
-  grid-template-columns: 80px 1fr auto;
+  grid-template-columns: 80px 1fr 3.5rem;
   align-items: center;
   gap: 0.6rem;
 }
@@ -633,6 +633,10 @@
   font-size: 0.72rem;
   color: var(--text-muted);
   white-space: nowrap;
+}
+
+.panel__season-row .panel__progress-label {
+  text-align: right;
 }
 
 // ── Sonarr meta ───────────────────────────────────────────────────────────────
