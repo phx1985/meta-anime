@@ -46,12 +46,12 @@ describe('PlexDeepLinkService', () => {
   describe('buildPlexUri', () => {
     beforeEach(() => setup(false));
 
-    it('converts a full Plex desktop URL to a plex://server/ mobile deep link', () => {
+    it('converts a full Plex desktop URL to a plex://preplay/ mobile deep link', () => {
       const webUrl =
         'https://app.plex.tv/desktop/#!/server/abc123/details?key=%2Flibrary%2Fmetadata%2F456';
       const result = service.buildPlexUri(webUrl);
       expect(result).toBe(
-        'plex://preplay/?metadataKey=%2Flibrary%2Fmetadata%2F456&metadataType=4&server=abc123',
+        'plex://preplay/?metadataKey=%2Flibrary%2Fmetadata%2F456&server=abc123',
       );
     });
 
@@ -59,30 +59,24 @@ describe('PlexDeepLinkService', () => {
       expect(service.buildPlexUri('https://app.plex.tv')).toBe('plex://');
     });
 
-    it('returns search fallback when no ratingKey but title is provided', () => {
-      expect(service.buildPlexUri('https://app.plex.tv', 'Attack on Titan')).toBe(
-        'plex://server/all/details?search=Attack%20on%20Titan',
-      );
+    it('returns plex:// when no ratingKey can be extracted (title ignored)', () => {
+      expect(service.buildPlexUri('https://app.plex.tv')).toBe('plex://');
     });
 
     it('returns plex:// for a malformed URL with no title', () => {
       expect(service.buildPlexUri('not-a-url')).toBe('plex://');
     });
 
-    it('returns search fallback for a malformed URL when title is provided', () => {
-      expect(service.buildPlexUri('not-a-url', 'Naruto')).toBe(
-        'plex://server/all/details?search=Naruto',
-      );
+    it('returns plex:// for a malformed URL (title ignored)', () => {
+      expect(service.buildPlexUri('not-a-url')).toBe('plex://');
     });
 
     it('returns plex:// when hash path does not match expected pattern', () => {
       expect(service.buildPlexUri('https://app.plex.tv/#!/other/path')).toBe('plex://');
     });
 
-    it('returns search fallback when hash does not match but title is provided', () => {
-      expect(service.buildPlexUri('https://app.plex.tv/#!/other/path', 'One Piece')).toBe(
-        'plex://server/all/details?search=One%20Piece',
-      );
+    it('returns plex:// when hash path does not match expected pattern (title ignored)', () => {
+      expect(service.buildPlexUri('https://app.plex.tv/#!/other/path')).toBe('plex://');
     });
   });
 
@@ -116,11 +110,11 @@ describe('PlexDeepLinkService', () => {
   describe('openLink on mobile', () => {
     beforeEach(() => setup(true));
 
-    it('sets document.location.href to the plex://server/ mobile deep link URI on mobile', () => {
+    it('sets document.location.href to the plex://preplay/ deep link URI on mobile', () => {
       const webUrl = 'https://app.plex.tv/desktop/#!/server/srv1/details?key=%2Flib%2F1';
       service.openLink(webUrl);
       expect(mockDocument.location!.href).toBe(
-        'plex://preplay/?metadataKey=%2Flib%2F1&metadataType=4&server=srv1',
+        'plex://preplay/?metadataKey=%2Flib%2F1&server=srv1',
       );
     });
 
