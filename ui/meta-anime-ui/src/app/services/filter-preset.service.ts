@@ -1,6 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal, inject, computed } from '@angular/core';
 import { FilterPreset, SeasonalFilterPreset } from '../models/anime.models';
 import { StorageKeys } from '../constants/storage-keys';
+import { PropertyBagService } from './property-bag.service';
+import { firstValueFrom } from 'rxjs';
 
 const PRESETS_KEY = StorageKeys.filterPresets;
 const SEASONAL_PRESETS_KEY = StorageKeys.seasonalFilterPresets;
@@ -35,48 +37,121 @@ export const BUILT_IN_PRESETS: FilterPreset[] = [
 
 @Injectable({ providedIn: 'root' })
 export class FilterPresetService {
+  private propertyBag = inject(PropertyBagService);
+
   readonly builtInPresets: FilterPreset[] = BUILT_IN_PRESETS;
 
-  getSavedPresets(): FilterPreset[] {
+  // Reactive signals for presets
+  private readonly _savedPresets = signal<FilterPreset[]>([]);
+  readonly savedPresets = this._savedPresets.asReadonly();
+
+  private readonly _seasonalPresets = signal<SeasonalFilterPreset[]>([]);
+  readonly seasonalPresets = this._seasonalPresets.asReadonly();
+
+  async load(): Promise<void> {
     try {
-      const raw = localStorage.getItem(PRESETS_KEY);
-      return raw ? (JSON.parse(raw) as FilterPreset[]) : [];
-    } catch {
-      return [];
+      const allProps = await firstValueFrom(this.propertyBag.getAll());
+      const map = new Map(allProps.map((p) => [p.key, p.value]));
+
+      // ── Load Regular Presets ───────────────────────────────────────────────
+      if (map.has(PRESETS_KEY)) {
+        try {
+          const loaded = JSON.parse(map.get(PRESETS_KEY)!) as FilterPreset[];
+          this._savedPresets.set(loaded);
+        } catch (e) {
+          console.error('Failed to parse filter presets from server', e);
+        }
+      } else {
+        // Migration
+        const local = localStorage.getItem(PRESETS_KEY);
+        if (local) {
+          try {
+            const loaded = JSON.parse(local) as FilterPreset[];
+            this._savedPresets.set(loaded);
+            // Upload
+            this.propertyBag.upsert(PRESETS_KEY, { value: local }).subscribe();
+            localStorage.removeItem(PRESETS_KEY);
+          } catch {}
+        }
+      }
+
+      // ── Load Seasonal Presets ──────────────────────────────────────────────
+      if (map.has(SEASONAL_PRESETS_KEY)) {
+        try {
+          const loaded = JSON.parse(map.get(SEASONAL_PRESETS_KEY)!) as SeasonalFilterPreset[];
+          this._seasonalPresets.set(loaded);
+        } catch (e) {
+          console.error('Failed to parse seasonal presets from server', e);
+        }
+      } else {
+        // Migration
+        const local = localStorage.getItem(SEASONAL_PRESETS_KEY);
+        if (local) {
+          try {
+            const loaded = JSON.parse(local) as SeasonalFilterPreset[];
+            this._seasonalPresets.set(loaded);
+            // Upload
+            this.propertyBag.upsert(SEASONAL_PRESETS_KEY, { value: local }).subscribe();
+            localStorage.removeItem(SEASONAL_PRESETS_KEY);
+          } catch {}
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load filter presets from server', err);
     }
   }
 
+  getSavedPresets(): FilterPreset[] {
+    return this._savedPresets();
+  }
+
   savePreset(preset: FilterPreset): void {
-    const presets = this.getSavedPresets();
-    presets.push(preset);
-    localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
+    const current = this._savedPresets();
+    const existingIndex = current.findIndex((p) => p.id === preset.id);
+    let updated: FilterPreset[];
+
+    if (existingIndex >= 0) {
+      updated = [...current];
+      updated[existingIndex] = preset;
+    } else {
+      updated = [...current, preset];
+    }
+    
+    this._savedPresets.set(updated);
+    this.propertyBag.upsert(PRESETS_KEY, { value: JSON.stringify(updated) }).subscribe();
   }
 
   deletePreset(id: string): void {
-    // Only user-saved presets can be deleted (built-in presets are never in localStorage)
-    const presets = this.getSavedPresets().filter((p) => p.id !== id && !p.isBuiltIn);
-    localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
+    const updated = this._savedPresets().filter((p) => p.id !== id && !p.isBuiltIn);
+    this._savedPresets.set(updated);
+    this.propertyBag.upsert(PRESETS_KEY, { value: JSON.stringify(updated) }).subscribe();
   }
 
   // ── Seasonal filter presets ────────────────────────────────────────────────
 
   getSeasonalPresets(): SeasonalFilterPreset[] {
-    try {
-      const raw = localStorage.getItem(SEASONAL_PRESETS_KEY);
-      return raw ? (JSON.parse(raw) as SeasonalFilterPreset[]) : [];
-    } catch {
-      return [];
-    }
+    return this._seasonalPresets();
   }
 
   saveSeasonalPreset(preset: SeasonalFilterPreset): void {
-    const presets = this.getSeasonalPresets().filter((p) => p.id !== preset.id);
-    presets.push(preset);
-    localStorage.setItem(SEASONAL_PRESETS_KEY, JSON.stringify(presets));
+    const current = this._seasonalPresets();
+    const existingIndex = current.findIndex((p) => p.id === preset.id);
+    let updated: SeasonalFilterPreset[];
+
+    if (existingIndex >= 0) {
+      updated = [...current];
+      updated[existingIndex] = preset;
+    } else {
+      updated = [...current, preset];
+    }
+
+    this._seasonalPresets.set(updated);
+    this.propertyBag.upsert(SEASONAL_PRESETS_KEY, { value: JSON.stringify(updated) }).subscribe();
   }
 
   deleteSeasonalPreset(id: string): void {
-    const presets = this.getSeasonalPresets().filter((p) => p.id !== id);
-    localStorage.setItem(SEASONAL_PRESETS_KEY, JSON.stringify(presets));
+    const updated = this._seasonalPresets().filter((p) => p.id !== id);
+    this._seasonalPresets.set(updated);
+    this.propertyBag.upsert(SEASONAL_PRESETS_KEY, { value: JSON.stringify(updated) }).subscribe();
   }
 }

@@ -982,3 +982,22 @@
     background: rgba(108, 99, 255, 0.1);
   }
 }
+
+// ── Step Transition ──────────────────────────────────────────────────────
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.wizard-body {
+  // Simple fade-in for the active step
+  // Since *ngIf removes/adds elements, the new element will trigger this animation on entry
+  animation: fadeInScale 220ms ease-out forwards;
+}
+

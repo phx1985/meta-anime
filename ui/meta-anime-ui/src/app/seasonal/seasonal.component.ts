@@ -3,7 +3,6 @@ import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, forkJoin, debounceTime, switchMap, of, catchError } from 'rxjs';
-import { trigger, state, style, animate, transition, query, stagger } from '@angular/animations';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
@@ -89,50 +88,6 @@ function getCurrentSeason(month: number): SeasonName {
   imports: [CommonModule, FormsModule, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, NgTemplateOutlet, AnimeImageGalleryComponent, AddSeriesWizardComponent],
   templateUrl: './seasonal.component.html',
   styleUrl: './seasonal.component.scss',
-  animations: [
-    trigger('filterCollapse', [
-      state('open', style({ height: '*', opacity: 1, overflow: 'visible' })),
-      state('closed', style({ height: '0px', opacity: 0, overflow: 'hidden' })),
-      // Force overflow:hidden during the transition so content doesn't bleed
-      // while animating; once fully open the state settles to overflow:visible
-      // so the genre dropdown panel can escape the card.
-      transition('open => closed', [
-        style({ overflow: 'hidden' }),
-        animate('320ms cubic-bezier(0.4, 0, 0.2, 1)'),
-      ]),
-      transition('closed => open', [
-        style({ overflow: 'hidden' }),
-        animate('320ms cubic-bezier(0.4, 0, 0.2, 1)'),
-      ]),
-    ]),
-    trigger('accordionExpand', [
-      transition(':enter', [
-        style({ height: '0', opacity: '0', overflow: 'hidden' }),
-        animate('280ms cubic-bezier(0.4, 0, 0.2, 1)', style({ height: '*', opacity: '1' })),
-      ]),
-      transition(':leave', [
-        style({ overflow: 'hidden' }),
-        animate('200ms cubic-bezier(0.4, 0, 1, 1)', style({ height: '0', opacity: '0' })),
-      ]),
-    ]),
-    trigger('gridAnimation', [
-      transition('* => *', [
-        query(
-          ':enter',
-          [
-            style({ opacity: 0, transform: 'translateY(-6px) scale(0.97)', filter: 'blur(8px)' }),
-            stagger(12, [
-              animate(
-                '360ms cubic-bezier(0.4, 0, 0.2, 1)',
-                style({ opacity: 1, transform: 'none', filter: 'blur(0px)' }),
-              ),
-            ]),
-          ],
-          { optional: true },
-        ),
-      ]),
-    ]),
-  ],
 })
 export class SeasonalComponent {
   private animeService = inject(AnimeService);
@@ -584,7 +539,7 @@ export class SeasonalComponent {
     // Notify app-root to retract the bottom nav bar while any mobile sheet is open.
     effect(() => {
       this.popupService.childOverlayOpen.set(this.filterOpen() || this.presetsSheetOpen());
-    }, { allowSignalWrites: true });
+    });
     this.destroyRef.onDestroy(() => this.popupService.childOverlayOpen.set(false));
 
     // Initial load

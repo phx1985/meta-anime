@@ -109,7 +109,7 @@ export class AddSeriesWizardComponent {
       if (this.showAddModal()) {
         this.currentStep.set(1);
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   // ── Computed helpers exposed to template ────────────────────────────────────

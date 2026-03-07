@@ -28,7 +28,7 @@
       </div>
 
       <!-- Steps (keyed by animStep to trigger the animation) -->
-      <div class="wizard-body" [@fadeStep]="animStep()">
+      <div class="wizard-body" [class.step-active]="true">
 
         <!-- Step 1: Welcome -->
         @if (step() === 1) {

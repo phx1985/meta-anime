@@ -13,7 +13,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, timer } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
-import { trigger, transition, style, animate } from '@angular/animations';
 import { SettingsService } from '../services/settings.service';
 import { AnimeService } from '../services/anime.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
@@ -55,18 +54,6 @@ function langToLocale(lang: string): string {
   imports: [TranslatePipe, ReactiveFormsModule, SyncStepComponent, HelpModalComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
-  animations: [
-    trigger('cardBodyExpand', [
-      transition(':enter', [
-        style({ height: '0', opacity: '0', overflow: 'hidden' }),
-        animate('300ms cubic-bezier(0.4, 0, 0.2, 1)', style({ height: '*', opacity: '1' })),
-      ]),
-      transition(':leave', [
-        style({ overflow: 'hidden' }),
-        animate('220ms cubic-bezier(0.4, 0, 1, 1)', style({ height: '0', opacity: '0' })),
-      ]),
-    ]),
-  ],
 })
 export class SettingsComponent {
   private settingsService = inject(SettingsService);
