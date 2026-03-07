@@ -5,9 +5,11 @@ import { firstValueFrom } from 'rxjs';
 
 const AUTO_APPLY_KEY = StorageKeys.autoApplyLastFilters;
 const LAST_FILTERS_KEY = StorageKeys.lastUsedFilters;
+const LAST_SEASONAL_FILTERS_KEY = StorageKeys.seasonalLastUsedFilters;
 const LUCKY_ONLY_FINISHED_KEY = StorageKeys.luckyOnlyFinished;
 const LUCKY_ONLY_PLAN_TO_WATCH_KEY = StorageKeys.luckyOnlyPlanToWatch;
 const LUCKY_ONLY_WITH_FILES_KEY = StorageKeys.luckyOnlyWithFiles;
+const WELCOME_SHOWN_KEY = StorageKeys.welcomeShown;
 
 @Injectable({ providedIn: 'root' })
 export class UserPreferencesService {
@@ -25,6 +27,8 @@ export class UserPreferencesService {
   readonly luckyOnlyWithFiles = signal<boolean>(true);
 
   private _lastFilters: string | null = null;
+  private _lastSeasonalFilters: string | null = null;
+  private _welcomeShown = false;
 
   constructor() {
     // We no longer use effects to auto-save to localStorage.
@@ -72,11 +76,34 @@ export class UserPreferencesService {
         }
       }
 
+      // Load last seasonal filters string
+      if (map.has(LAST_SEASONAL_FILTERS_KEY)) {
+        this._lastSeasonalFilters = map.get(LAST_SEASONAL_FILTERS_KEY)!;
+      } else {
+        const local = localStorage.getItem(LAST_SEASONAL_FILTERS_KEY);
+        if (local) {
+          this._lastSeasonalFilters = local;
+          this.propertyBag.upsert(LAST_SEASONAL_FILTERS_KEY, { value: local }).subscribe();
+          localStorage.removeItem(LAST_SEASONAL_FILTERS_KEY);
+        }
+      }
+
+      this._welcomeShown = map.has(WELCOME_SHOWN_KEY);
+
     } catch (err) {
       console.error('Failed to load user preferences from server', err);
       // Fallback to defaults or local storage if offline?
       // For now, we assume server is available or we fail gracefully.
     }
+  }
+
+  isWelcomeShown(): boolean {
+    return this._welcomeShown;
+  }
+
+  markWelcomeShown(): void {
+    this._welcomeShown = true;
+    this.propertyBag.upsert(WELCOME_SHOWN_KEY, { value: 'true' }).subscribe();
   }
 
   setAutoApplyLastFilters(value: boolean): void {
@@ -106,6 +133,15 @@ export class UserPreferencesService {
 
   loadLastFilters(): string | null {
     return this._lastFilters;
+  }
+
+  saveLastSeasonalFilters(filters: string): void {
+    this._lastSeasonalFilters = filters;
+    this.propertyBag.upsert(LAST_SEASONAL_FILTERS_KEY, { value: filters }).subscribe();
+  }
+
+  loadLastSeasonalFilters(): string | null {
+    return this._lastSeasonalFilters;
   }
 
   private saveBool(key: string, value: boolean): void {
