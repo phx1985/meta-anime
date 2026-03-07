@@ -41,9 +41,6 @@ export class PlexDeepLinkService {
    *
    * The URL is always validated and corrected to the Universal Link format
    * before use, using the machine identifier stored in settings.
-   *
-   * @param title  Optional anime title used as a search fallback when the
-   *               ratingKey cannot be extracted from `webUrl`.
    */
   openLink(webUrl: string | null | undefined, title?: string): void {
     if (!webUrl || !isPlatformBrowser(this.platformId)) return;
@@ -58,7 +55,7 @@ export class PlexDeepLinkService {
       return;
     }
 
-    const deepLinkUri = this.buildPlexUri(correctedUrl, title);
+    const deepLinkUri = this.buildPlexUri(correctedUrl);
     const win = this.document.defaultView;
     let fallbackTimer: ReturnType<typeof setTimeout>;
 
@@ -85,50 +82,38 @@ export class PlexDeepLinkService {
   }
 
   /**
-   * Converts a Plex web URL to a native `plex://` URI scheme URL that opens the
-   * **details page** for a specific library item directly inside the Plex app.
+   * Converts a Plex web URL to the native `plex://preplay/` URI scheme for
+   * opening a specific library item's detail page directly in the Plex app.
    *
-   * Example conversion:
-   * `https://app.plex.tv/desktop/#!/server/{machineId}/details?key=/library/metadata/123`
-   * → `plex://server/{machineId}/details?key=%2Flibrary%2Fmetadata%2F123`
+   * Format:
+   * `plex://preplay/?metadataKey=%2Flibrary%2Fmetadata%2F{ratingKey}&server={machineId}`
    *
-   * Uses the machine identifier stored in settings as a fallback when the URL
-   * has a missing or empty server ID (e.g. when machine ID was not yet persisted).
+   * The `metadataKey` is the full `/library/metadata/{id}` path, URL-encoded.
+   * The `server` is the 40-character hex machine identifier.
    *
-   * Search fallback (when ratingKey cannot be extracted but a title is provided):
-   * → `plex://server/all/details?search={encodedTitle}`
-   *
-   * Falls back to `plex://` (opens the Plex home screen) when neither the URL
-   * matches the expected deep-link pattern nor a title is provided.
+   * Falls back to `plex://` (Plex home screen) when the key or server ID
+   * cannot be resolved.
    */
-  buildPlexUri(webUrl: string, title?: string): string {
+  buildPlexUri(webUrl: string): string {
     const storedMachineId = this.providerState.plexMachineId();
     try {
       const url = new URL(webUrl);
-      // Hash is like #!/server/{machineId}/details?key=/library/metadata/123
+      // Hash format: #!/server/{machineId}/details?key=/library/metadata/123
       const hash = url.hash.replace(/^#!?/, '');
       const match = hash.match(/^\/server\/([^/?#]*?)\/details(.*)/);
       if (match) {
-        // Use the stored machine ID as fallback if the URL has an empty one
         const serverId = match[1] || storedMachineId || '';
         const query = match[2] ?? '';
-        const params = new URLSearchParams(query.replace(/^\?/, ''));
-        const key = params.get('key');
+        // URLSearchParams automatically decodes percent-encoded values (e.g. %2F → /)
+        const key = new URLSearchParams(query.replace(/^\?/, '')).get('key');
         if (key && serverId) {
-          // plex://server/{machineId}/details?key={ratingKey} is the native URI
-          // scheme recognised by both the iOS and Android Plex apps to navigate
-          // directly to a specific show's details page.
-          return `plex://server/${encodeURIComponent(serverId)}/details?key=${encodeURIComponent(key)}`;
+          // Re-encode the full path so slashes become %2F in the output
+          return `plex://preplay/?metadataKey=${encodeURIComponent(key)}&server=${serverId}`;
         }
       }
     } catch {
-      // Malformed URL — fall through to search fallback or default.
+      // Malformed URL — fall through to generic fallback.
     }
-    // Search fallback: navigate to the item via title search in the native app.
-    if (title) {
-      return `plex://server/all/details?search=${encodeURIComponent(title)}`;
-    }
-    // Generic Plex deep link: opens the Plex home screen in the native app.
     return 'plex://';
   }
 
