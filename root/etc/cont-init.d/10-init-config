@@ -5,13 +5,12 @@
 # Runs once on each container start; skips re-initialization if already done.
 # =============================================================================
 
-# Resolve the PostgreSQL binary directory dynamically (supports pg 15/16/17…)
-PG_VERSION=$(ls /usr/lib/postgresql 2>/dev/null | sort -V | tail -1)
-if [ -z "${PG_VERSION}" ]; then
-    echo "[init] ERROR: No PostgreSQL installation found in /usr/lib/postgresql" >&2
+# Resolve the PostgreSQL binary directory dynamically (Alpine: /usr/libexec/postgresql*)
+PG_BIN=$(find /usr/libexec -maxdepth 1 -name 'postgresql*' -type d 2>/dev/null | sort -V | tail -1)
+if [ -z "${PG_BIN}" ]; then
+    echo "[init] ERROR: No PostgreSQL installation found in /usr/libexec" >&2
     exit 1
 fi
-PG_BIN="/usr/lib/postgresql/${PG_VERSION}/bin"
 export PATH="${PG_BIN}:${PATH}"
 
 # Ensure /config is owned by the service account before any work

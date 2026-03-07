@@ -22,34 +22,22 @@ COPY api/ ./
 COPY MetaAnime.ServiceDefaults/ /MetaAnime.ServiceDefaults/
 RUN dotnet publish MetaAnime.Presentation/MetaAnime.Presentation.csproj \
     -c Release \
-    -r linux-x64 \
+    -r linux-musl-x64 \
     --self-contained true \
     -o /app/publish
 
 # =============================================================================
-# Stage 3: Final production image (linuxserver.io base)
+# Stage 3: Final production image (Alpine + linuxserver s6-overlay base)
 # =============================================================================
-FROM ghcr.io/linuxserver/baseimage-ubuntu:noble
+FROM ghcr.io/linuxserver/baseimage-alpine:3.21
 
-# Install PostgreSQL, openssl, and .NET 10 Runtime (host safety-net; ASP.NET Core is bundled in self-contained app)
-# hadolint ignore=DL3008,DL3009
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        postgresql \
-        postgresql-client \
+# Install PostgreSQL server + client, openssl (for key generation), and jq (for JSON parsing)
+RUN apk add --no-cache \
+        postgresql17 \
+        postgresql17-client \
         openssl \
-        wget \
-        ca-certificates \
         jq \
-    && wget -q https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb \
-        -O /tmp/packages-microsoft-prod.deb \
-    && dpkg -i /tmp/packages-microsoft-prod.deb \
-    && apt-get purge -y --auto-remove wget \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends \
-        dotnet-runtime-10.0 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+        icu-libs
 
 # Copy compiled .NET application
 COPY --from=api-builder /app/publish /app
@@ -69,6 +57,11 @@ RUN chmod +x /etc/cont-init.d/10-init-config \
 
 # Persistent data volume (PostgreSQL data + generated config)
 VOLUME ["/config"]
+
+# Health check — probes the .NET app via Alpine's built-in wget (no curl needed).
+# start-period accounts for first-boot PostgreSQL init + EF migrations.
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/health || exit 1
 
 # Expose only the unified HTTP port
 EXPOSE 8080
