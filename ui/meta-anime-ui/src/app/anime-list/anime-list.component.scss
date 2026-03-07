@@ -51,10 +51,11 @@
   cursor: pointer;
   user-select: none;
   border-bottom: 1px solid transparent;
-  border-radius: 1rem 1rem 0 0; // clip hover background to match card's top corners
+  border-radius: 1rem; // fully rounded when panel is closed
   transition:
     background 0.15s,
-    border-color 0.15s;
+    border-color 0.15s,
+    border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
     background: var(--bg-secondary);
@@ -63,6 +64,12 @@
     outline: 2px solid var(--accent-primary);
     outline-offset: -2px;
   }
+}
+
+// When panel is open: square the bottom corners so the header flows into the body
+.filter-card:has(.filter-card__body.open) .filter-card__header {
+  border-radius: 1rem 1rem 0 0;
+  border-bottom-color: var(--card-border);
 }
 
 .filter-card__header-left {

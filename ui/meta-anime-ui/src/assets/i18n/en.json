@@ -840,7 +840,7 @@
   "userPreferences": {
     "autoApplyLastFilters": {
       "name": "Auto-apply Last Search Filters",
-      "desc": "When enabled, your last used anime search filters will be automatically restored and applied when you open the Anime List page."
+      "desc": "When enabled, your last used anime search filters will be automatically restored and applied when you open the Anime List or Seasonal Anime page."
     },
     "luckyPick": {
       "groupTitle": "I'm Feeling Lucky!",

@@ -8,6 +8,7 @@ import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
 import { SonarrService } from '../services/sonarr.service';
 import { FilterPresetService } from '../services/filter-preset.service';
+import { UserPreferencesService } from '../services/user-preferences.service';
 import { ProviderStateService } from '../services/provider-state.service';
 import { PopupService } from '../services/popup.service';
 import {
@@ -93,6 +94,7 @@ export class SeasonalComponent {
   private animeService = inject(AnimeService);
   private settingsService = inject(SettingsService);
   private presetService = inject(FilterPresetService);
+  private userPrefs = inject(UserPreferencesService);
   private destroyRef = inject(DestroyRef);
   private translateService = inject(TranslateService);
   readonly providerState = inject(ProviderStateService);
@@ -542,6 +544,19 @@ export class SeasonalComponent {
     });
     this.destroyRef.onDestroy(() => this.popupService.childOverlayOpen.set(false));
 
+    // Restore and auto-apply the last used filters when the setting is enabled.
+    if (this.userPrefs.autoApplyLastFilters()) {
+      const raw = this.userPrefs.loadLastSeasonalFilters();
+      if (raw) {
+        try {
+          const restored = JSON.parse(raw) as SeasonalSavedFilterState;
+          this.applyFilterState(restored);
+        } catch {
+          // Corrupt storage entry — silently discard.
+        }
+      }
+    }
+
     // Initial load
     this._loadCurrent();
 
@@ -883,6 +898,19 @@ export class SeasonalComponent {
     };
   }
 
+  private applyFilterState(state: SeasonalSavedFilterState): void {
+    this.filterGenre.set(state.genre ?? []);
+    this.genreOperator.set(state.genreOperator ?? 'or');
+    this.filterTheme.set(state.theme ?? []);
+    this.themeOperator.set(state.themeOperator ?? 'or');
+    this.filterDemographic.set(state.demographic ?? []);
+    this.demographicOperator.set(state.demographicOperator ?? 'or');
+    this.filterMalStatus.set(state.malStatus ?? []);
+    this.filterMediaType.set(state.mediaType ?? []);
+    this.sortBy.set(state.sortBy ?? 'title');
+    this.sortOrder.set(state.sortOrder ?? 'asc');
+  }
+
   // ── Animation helper ─────────────────────────────────────────────────────
   /** Clear the grid instantly and repopulate it in the next event-loop tick.
    *  Because all items are removed from the DOM and re-added, Angular marks
@@ -890,6 +918,11 @@ export class SeasonalComponent {
    *  the blur-rise stagger, regardless of whether the items were there before.
    *  A clearTimeout guard prevents rapid changes from causing multiple flashes. */
   private _applyFilteredResults(): void {
+    // Save current filters if auto-apply is enabled
+    if (this.userPrefs.autoApplyLastFilters()) {
+      this.userPrefs.saveLastSeasonalFilters(JSON.stringify(this._snapshotFilterState()));
+    }
+
     if (this._filterAnimTimeout !== null) {
       clearTimeout(this._filterAnimTimeout);
     }

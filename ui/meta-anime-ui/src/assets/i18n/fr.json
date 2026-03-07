@@ -831,8 +831,8 @@
   },
   "userPreferences": {
     "autoApplyLastFilters": {
-      "name": "Réappliquer automatiquement les derniers filtres",
-      "desc": "Lorsqu'activé, vos derniers filtres de recherche anime seront automatiquement restaurés et appliqués à l'ouverture de la page Liste des Animes."
+      "name": "Appliquer automatiquement les derniers filtres de recherche",
+      "desc": "Quand activé, vos derniers filtres de recherche sont automatiquement restaurés à l'ouverture de la liste « Mes Animes » ou de la page « Saisonnier »."
     },
     "luckyPick": {
       "groupTitle": "J'ai de la chance!",

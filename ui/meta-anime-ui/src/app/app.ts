@@ -29,6 +29,7 @@ import { FranchiseConstellationService } from './services/franchise-constellatio
 import { MalQuickUpdateModalComponent } from './mal-quick-update/mal-quick-update-modal.component';
 import { AuthService } from './services/auth.service';
 import { StorageKeys } from './constants/storage-keys';
+import { UserPreferencesService } from './services/user-preferences.service';
 
 @Component({
   selector: 'app-root',
@@ -50,6 +51,7 @@ export class App implements OnInit, AfterViewInit {
   readonly franchiseConstellationSvc = inject(FranchiseConstellationService);
   private plexDeepLink = inject(PlexDeepLinkService);
   private authService = inject(AuthService);
+  private userPrefs = inject(UserPreferencesService);
 
   @ViewChild('navbarEl', { read: ElementRef }) private navbarEl?: ElementRef<HTMLElement>;
 
@@ -203,13 +205,17 @@ export class App implements OnInit, AfterViewInit {
         });
       });
 
-    // Push "Welcome" notification once ever (idempotent by fixed id)
-    this.notifService.push({
-      id: 'welcome-v2',
-      severity: 'info',
-      titleKey: 'notifications.welcome.title',
-      messageKey: 'notifications.welcome.message',
-    });
+    // Push "Welcome" notification once ever, persisted server-side so it
+    // doesn't re-appear when localStorage is cleared.
+    if (!this.userPrefs.isWelcomeShown()) {
+      this.notifService.push({
+        id: 'welcome-v2',
+        severity: 'info',
+        titleKey: 'notifications.welcome.title',
+        messageKey: 'notifications.welcome.message',
+      });
+      this.userPrefs.markWelcomeShown();
+    }
 
     // Push "no sync yet" warning if library has never been synced
     this.settingsService.getSyncStatus().subscribe({
