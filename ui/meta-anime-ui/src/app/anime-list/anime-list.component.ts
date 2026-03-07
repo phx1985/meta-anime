@@ -132,7 +132,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   sonarrBaseUrl = signal<string | null>(null);
 
   /** Whether the filter body is expanded */
-  filterOpen = signal(true);
+  filterOpen = signal(false);
 
   /** Whether the advanced filter sub-section is expanded */
   advancedOpen = signal(false);

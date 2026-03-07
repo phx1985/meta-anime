@@ -13,14 +13,14 @@ export class PropertyBagService {
   }
 
   get(key: string): Observable<PropertyBagResponse> {
-    return this.http.get<PropertyBagResponse>(`${this.base}/${key}`);
+    return this.http.get<PropertyBagResponse>(`${this.base}/${encodeURIComponent(key)}`);
   }
 
   upsert(key: string, request: UpsertPropertyBagRequest): Observable<PropertyBagResponse> {
-    return this.http.put<PropertyBagResponse>(`${this.base}/${key}`, request);
+    return this.http.put<PropertyBagResponse>(`${this.base}/${encodeURIComponent(key)}`, request);
   }
 
   delete(key: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/${key}`);
+    return this.http.delete<void>(`${this.base}/${encodeURIComponent(key)}`);
   }
 }

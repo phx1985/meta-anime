@@ -86,6 +86,9 @@
   cursor: zoom-in;
   flex-shrink: 0;
   min-width: 0; // prevent overflow in CSS grid cell
+  // Ensure the column never grows taller than the grid row allocates
+  align-self: stretch;
+  height: 100%;
 }
 
 .panel__cover {
@@ -94,7 +97,8 @@
   object-fit: cover;
   object-position: top center;
   display: block;
-  min-height: 220px;
+  // min-height removed — enforced at grid container level (.panel__top-grid)
+  // so the image cannot push beyond its grid cell and bleed into content below
   transition: transform 0.35s ease;
 
   .panel__cover-col:hover & {
