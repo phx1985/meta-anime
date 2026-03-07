@@ -346,7 +346,13 @@
             <div class="panel__seasons">
               @for (season of sonarr!.seasonInfo!; track season.seasonNumber) {
                 <div class="panel__season-row">
-                  <span class="panel__season-label">{{ 'animeDetailPanel.season' | translate }} {{ season.seasonNumber }}</span>
+                  <span class="panel__season-label">
+                    @if (season.seasonNumber === 0) {
+                      {{ 'animeDetailPanel.specials' | translate }}
+                    } @else {
+                      {{ 'animeDetailPanel.season' | translate }} {{ season.seasonNumber }}
+                    }
+                  </span>
                   <div class="panel__progress-bar">
                     <div
                       class="panel__progress-fill"
