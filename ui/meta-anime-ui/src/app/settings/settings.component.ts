@@ -13,7 +13,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, timer } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
-import { trigger, transition, style, animate } from '@angular/animations';
 import { SettingsService } from '../services/settings.service';
 import { AnimeService } from '../services/anime.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
@@ -55,18 +54,6 @@ function langToLocale(lang: string): string {
   imports: [TranslatePipe, ReactiveFormsModule, SyncStepComponent, HelpModalComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
-  animations: [
-    trigger('cardBodyExpand', [
-      transition(':enter', [
-        style({ height: '0', opacity: '0', overflow: 'hidden' }),
-        animate('300ms cubic-bezier(0.4, 0, 0.2, 1)', style({ height: '*', opacity: '1' })),
-      ]),
-      transition(':leave', [
-        style({ overflow: 'hidden' }),
-        animate('220ms cubic-bezier(0.4, 0, 1, 1)', style({ height: '0', opacity: '0' })),
-      ]),
-    ]),
-  ],
 })
 export class SettingsComponent {
   private settingsService = inject(SettingsService);
@@ -231,6 +218,12 @@ export class SettingsComponent {
   /** Controls the Sonarr tag picker modal */
   sonarrPickerOpen = signal(false);
 
+  /** Controls the provider-enable warning popup (holds 'plex' or 'sonarr'). */
+  providerEnableWarnFor = signal<string | null>(null);
+
+  /** True when the provider-enable warning dialog exit animation is playing. */
+  providerEnableWarnLeaving = signal(false);
+
   sonarrDefaultSettings = computed(() => {
     const order = [
       'Sonarr:DefaultRootFolder',
@@ -272,6 +265,15 @@ export class SettingsComponent {
     return host.trim().length > 0 && this.plexConnected();
   });
 
+  /** True when Host + stored OAuth Token are both present — required to fetch Plex libraries.
+   *  Uses plexConnected() (set from the status endpoint) rather than the raw token setting
+   *  value, which is masked/null for sensitive settings in the API response. */
+  plexFetchConfigured = computed(() => {
+    const list = this.settings();
+    const host = list.find((s) => s.key === SettingsComponent.PLEX_HOST_KEY)?.value ?? '';
+    return host.trim().length > 0 && this.plexConnected();
+  });
+
   malClientIdConfigured = computed(() => {
     const list = this.settings();
     const clientId = (list.find((s) => s.key === 'MAL:ClientId')?.value ?? '').trim();
@@ -290,6 +292,9 @@ export class SettingsComponent {
   /** Small delay (ms) after settings data arrives before calling scrollToSection —
    *  gives Angular one render cycle to stamp the section IDs into the DOM. */
   private static readonly DEEP_LINK_SCROLL_DELAY_MS = 120;
+  private static readonly PLEX_HOST_KEY = 'Plex:Host';
+  private static readonly PLEX_TOKEN_KEY = 'Plex:Token';
+  private static readonly PLEX_MACHINE_IDENTIFIER_KEY = 'Plex:MachineIdentifier';
   private static readonly SONARR_HOST_KEY = 'Sonarr:Host';
   private static readonly SONARR_API_KEY_KEY = 'Sonarr:ApiKey';
   private static readonly SONARR_DEFAULT_KEYS = new Set([
@@ -478,7 +483,13 @@ export class SettingsComponent {
     this.enrollmentService
       .getPlexStatus()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (s) => this.plexConnected.set(s.connected), error: () => {} });
+      .subscribe({
+        next: (s) => {
+          this.plexConnected.set(s.connected);
+          if (s.connected) this.loadPlexLibsForSettings();
+        },
+        error: () => {},
+      });
   }
 
   connectMal(): void {
@@ -553,6 +564,7 @@ export class SettingsComponent {
               this.stopPlexPolling();
               this.plexConnecting.set(false);
               this.plexConnected.set(true);
+              this.loadPlexLibsForSettings();
             } else if (pollCount >= SettingsComponent.PLEX_POLL_MAX) {
               this.stopPlexPolling();
               this.plexConnecting.set(false);
@@ -694,7 +706,7 @@ export class SettingsComponent {
       });
   }
 
-  save(setting: SettingDefinition): void {
+  async save(setting: SettingDefinition): Promise<void> {
     const form = this.forms[setting.key];
     if (!form) return;
 
@@ -707,7 +719,7 @@ export class SettingsComponent {
       .update(setting.key, { value })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
+        next: async () => {
           this.savingKey.set(null);
           this.savedKey.set(setting.key);
           this.editing.update((e) => ({ ...e, [setting.key]: false }));
@@ -717,6 +729,17 @@ export class SettingsComponent {
           setTimeout(() => {
             if (this.savedKey() === setting.key) this.savedKey.set(null);
           }, 3000);
+
+          // Handle Plex settings updates
+          if (
+            setting.key === SettingsComponent.PLEX_HOST_KEY ||
+            setting.key === SettingsComponent.PLEX_TOKEN_KEY ||
+            setting.key === SettingsComponent.PLEX_MACHINE_IDENTIFIER_KEY
+          ) {
+            await this.loadPlexLibsForSettings();
+          }
+
+          // Handle Sonarr settings updates
           if (
             setting.key === SettingsComponent.SONARR_HOST_KEY ||
             setting.key === SettingsComponent.SONARR_API_KEY_KEY
@@ -724,6 +747,7 @@ export class SettingsComponent {
             this.sonarrRootFolders.set([]);
             this.sonarrQualityProfiles.set([]);
             this.loadSonarrDefaults();
+            await this.loadSonarrTagsForSettings();
           }
         },
         error: () => {
@@ -924,7 +948,36 @@ export class SettingsComponent {
     if (enabling) {
       if (cat === 'plex' && !this.plexBasicConfigured()) return;
       if (cat === 'sonarr' && !this.sonarrBasicConfigured()) return;
+      // Warn if no library sections / tags selected yet
+      const hasSelections = cat === 'plex'
+        ? this.plexSelectedSectionKeys().length > 0
+        : this.sonarrSelectedTagLabels().length > 0;
+      if (!hasSelections) {
+        this.providerEnableWarnFor.set(cat);
+        return;
+      }
     }
+    this._doProviderToggle(cat, enabling);
+  }
+
+  dismissProviderEnableWarn(): void {
+    this.providerEnableWarnLeaving.set(true);
+    setTimeout(() => {
+      this.providerEnableWarnFor.set(null);
+      this.providerEnableWarnLeaving.set(false);
+    }, 260);
+  }
+
+  confirmEnableProvider(): void {
+    const cat = this.providerEnableWarnFor();
+    if (!cat) return;
+    this.providerEnableWarnFor.set(null);
+    this.providerEnableWarnLeaving.set(false);
+    this._doProviderToggle(cat, true);
+  }
+
+  private _doProviderToggle(cat: string, enabling: boolean): void {
+    const key = cat === 'plex' ? 'Plex:Enabled' : 'Sonarr:Enabled';
     const next = enabling ? 'true' : 'false';
     this.savingKey.set(key);
     this.settingsService
@@ -1025,6 +1078,7 @@ export class SettingsComponent {
   // ── Plex library picker ───────────────────────────────────────────────────
 
   loadPlexLibsForSettings(): void {
+    if (!this.plexFetchConfigured()) return;
     this.plexLibsLoading.set(true);
     this.plexLibsError.set('');
     this.enrollmentService.getPlexLibraries()
@@ -1062,6 +1116,7 @@ export class SettingsComponent {
   // ── Sonarr tag picker ─────────────────────────────────────────────────────
 
   loadSonarrTagsForSettings(): void {
+    if (!this.sonarrBasicConfigured()) return;
     this.sonarrTagsForSettingsLoading.set(true);
     this.sonarrTagsForSettingsError.set('');
     this.sonarrService.getTags()

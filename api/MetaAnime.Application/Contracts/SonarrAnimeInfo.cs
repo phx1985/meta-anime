@@ -35,7 +35,7 @@ public sealed record SonarrAnimeInfo(
             sonarrSeries?.Seasons?.Select(s => new SonarrSeasonInfo(
                 s.SeasonNumber,
                 s.Statistics?.EpisodeFileCount ?? 0,
-                s.Statistics?.EpisodeCount ?? 0
+                s.Statistics?.TotalEpisodeCount ?? 0
             )).ToArray(),
             codecDistribution,
             CalculateTotalSizeOnDisk(sonarrSeries?.Seasons)

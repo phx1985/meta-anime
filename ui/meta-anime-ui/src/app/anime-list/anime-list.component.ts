@@ -16,7 +16,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { NgTemplateOutlet } from '@angular/common';
-import { trigger, state, style, animate, transition, query, stagger } from '@angular/animations';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
@@ -100,40 +99,6 @@ export const MEDIA_TYPE_OPTIONS = [
   imports: [FormsModule, RouterLink, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, AnimeImageGalleryComponent, NgTemplateOutlet],
   templateUrl: './anime-list.component.html',
   styleUrl: './anime-list.component.scss',
-  animations: [
-    trigger('gridLayout', [
-      transition(':increment', [
-        query(
-          '.anime-card',
-          [
-            style({ opacity: 0.7, transform: 'translateY(6px) scale(0.97)' }),
-            stagger(5, [
-              animate(
-                '300ms cubic-bezier(0.34, 1.4, 0.64, 1)',
-                style({ opacity: 1, transform: 'none' }),
-              ),
-            ]),
-          ],
-          { optional: true },
-        ),
-      ]),
-    ]),
-    trigger('filterCollapse', [
-      state('open', style({ height: '*', opacity: 1, overflow: 'visible' })),
-      state('closed', style({ height: '0px', opacity: 0, overflow: 'hidden' })),
-      // Force overflow:hidden during the transition so content doesn't bleed
-      // while height animates; once fully open the state settles to overflow:visible
-      // so the genre dropdown panel can escape the card.
-      transition('open => closed', [
-        style({ overflow: 'hidden' }),
-        animate('320ms cubic-bezier(0.4, 0, 0.2, 1)'),
-      ]),
-      transition('closed => open', [
-        style({ overflow: 'hidden' }),
-        animate('320ms cubic-bezier(0.4, 0, 0.2, 1)'),
-      ]),
-    ]),
-  ],
 })
 export class AnimeListComponent implements AfterViewInit, OnDestroy {
   private animeService = inject(AnimeService);
@@ -187,7 +152,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   demographicSearch = '';
 
   // ── Preset state ──────────────────────────────────────────────────────────
-  savedPresets = signal<FilterPreset[]>([]);
+  readonly savedPresets = this.presetService.savedPresets;
   /** Whether the "save as preset" inline form is visible */
   showSavePreset = false;
   newPresetName = '';
@@ -409,10 +374,8 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     // Notify app-root to retract the bottom nav bar while any mobile sheet is open.
     effect(() => {
       this.popupService.childOverlayOpen.set(this.filterOpen() || this.presetsSheetOpen());
-    }, { allowSignalWrites: true });
+    });
     this.destroyRef.onDestroy(() => this.popupService.childOverlayOpen.set(false));
-
-    this.savedPresets.set(this.presetService.getSavedPresets());
 
     this.settingsService
       .getShowNsfw()
@@ -699,7 +662,6 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
       filters: this.snapshotFilters(),
     };
     this.presetService.savePreset(preset);
-    this.savedPresets.set(this.presetService.getSavedPresets());
     this.showSavePreset = false;
     this.newPresetName = '';
   }
@@ -712,7 +674,6 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   deletePreset(id: string, event: MouseEvent): void {
     event.stopPropagation();
     this.presetService.deletePreset(id);
-    this.savedPresets.set(this.presetService.getSavedPresets());
   }
 
   // ── Private ───────────────────────────────────────────────────────────────

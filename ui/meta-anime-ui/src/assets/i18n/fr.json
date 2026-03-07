@@ -264,8 +264,9 @@
     "popularity": "Popularité",
     "rank": "Classement",
     "aired": "Diffusion",
-    "episodes": "Épisodes",
+    "episodes": "Nb. Épisodes",
     "season": "Saison",
+    "specials": "Spéciaux",
     "diskSize": "Taille de la Série"
   },
   "animeCard": {
@@ -525,6 +526,14 @@
       "body": "Modifier l'URL du fichier de correspondance Kometa peut rompre la connexion entre votre suivi d'animés et votre serveur multimédia. Ne continuez que si vous savez exactement ce que vous faites.",
       "proceed": "Je comprends, Continuer"
     },
+    "providerEnableWarn": {
+      "plexTitle": "Aucune bibliothèque sélectionnée",
+      "plexBody": "Plex est configuré, mais aucune section de bibliothèque anime n'a été sélectionnée. Sans sélection, les synchronisations ne sauront pas quelles bibliothèques inclure. Vous pouvez configurer cela maintenant ou activer quand même.",
+      "sonarrTitle": "Aucun tag sélectionné",
+      "sonarrBody": "Sonarr est configuré, mais aucun tag anime n'a été sélectionné. Sans sélection, les synchronisations ne sauront pas quel contenu cibler. Vous pouvez configurer cela maintenant ou activer quand même.",
+      "enableAnyway": "Activer quand même",
+      "selectFirst": "Configurer d'abord"
+    },
     "enrollment": {
       "connected": "Connecté",
       "disconnect": "Déconnecter",
@@ -721,8 +730,7 @@
     },
     "welcome": {
       "title": "Bienvenue sur MetaAnime 👋",
-      "message": "MetaAnime centralise votre bibliothèque anime depuis Plex, Sonarr et MyAnimeList en un seul hub élégant. Commencez par lancer votre première synchronisation.",
-      "action": "Première sync"
+      "message": "La configuration est terminée. MetaAnime agrège désormais votre bibliothèque anime depuis Plex, Sonarr et MyAnimeList — tout en un seul endroit. Profitez-en !"
     },
     "noSync": {
       "title": "Synchronisation requise",
@@ -832,8 +840,8 @@
   },
   "userPreferences": {
     "autoApplyLastFilters": {
-      "name": "Réappliquer automatiquement les derniers filtres",
-      "desc": "Lorsqu'activé, vos derniers filtres de recherche anime seront automatiquement restaurés et appliqués à l'ouverture de la page Liste des Animes."
+      "name": "Appliquer automatiquement les derniers filtres de recherche",
+      "desc": "Quand activé, vos derniers filtres de recherche sont automatiquement restaurés à l'ouverture de la liste « Mes Animes » ou de la page « Saisonnier »."
     },
     "luckyPick": {
       "groupTitle": "J'ai de la chance!",
@@ -1158,7 +1166,12 @@
       "feature1": "Synchronisez automatiquement votre liste MyAnimeList",
       "feature2": "Suivez les animés dans Sonarr et Plex",
       "feature3": "Parcourez les sorties saisonnières et gérez votre bibliothèque",
-      "getStarted": "Commencer"
+      "getStarted": "Commencer",
+      "languageLabel": "Langue",
+      "themeLabel": "Thème",
+      "themeLight": "Clair",
+      "themeDark": "Sombre",
+      "themeSystem": "Système"
     },
     "step2": {
       "title": "Mot de passe administrateur (Optionnel)",
@@ -1182,8 +1195,10 @@
       "callbackUrlCopy": "Copier",
       "callbackUrlCopied": "Copié !",
       "connectBtn": "Connecter MyAnimeList",
-      "connectingBtn": "Redirection en cours...",
-      "connected": "MyAnimeList connecté"
+      "connectingBtn": "Redirection vers MyAnimeList...",
+      "connected": "MyAnimeList connecté",
+      "authErrorTitle": "Échec de la connexion",
+      "authErrorMessage": "L'authentification MyAnimeList a échoué. Veuillez vérifier votre Client ID et votre Client Secret et réessayer."
     },
     "step4": {
       "title": "Connecter Plex (Optionnel)",

@@ -98,7 +98,7 @@
       </div>
 
       <!-- Collapsible body (desktop accordion; hidden on mobile via CSS) -->
-      <div class="filter-card__body" [@filterCollapse]="filterOpen() ? 'open' : 'closed'">
+      <div class="filter-card__body" [class.open]="filterOpen()" [class.closed]="!filterOpen()">
         <ng-container *ngTemplateOutlet="filterBodyTpl"></ng-container>
       </div>
     </div>
@@ -830,14 +830,15 @@
         </div>
       </div>
 
-      <div class="anime-grid" [class]="'cols-' + displayMode()" [@gridLayout]="layoutState()">
-        @for (anime of animes(); track anime.aniDbId; let isFirst = $first) {
+      <div class="anime-grid" [class]="'cols-' + displayMode()">
+        @for (anime of animes(); track anime.aniDbId; let isFirst = $first; let i = $index) {
           <app-anime-card
             #animeCard
             [anime]="anime"
             [showOnboardingHint]="isFirst && cardHintActive()"
             (onboardingDismissed)="dismissCardHint()"
             (openDetails)="openAnimeDetails($event)"
+            [style.--i]="i"
           />
         }
       </div>

@@ -119,10 +119,28 @@
 
   <!-- ── Provider dots — small colored circles, top-right of card content ── -->
   @if (inMal || inSonarr || inPlex) {
-    <div class="provider-dots" aria-hidden="true">
-      @if (inSonarr) { <span class="dot dot--sonarr" title="Sonarr"></span> }
-      @if (inPlex)   { <span class="dot dot--plex"   title="Plex"></span>   }
-      @if (inMal)    { <span class="dot dot--mal"    title="MAL"></span>    }
+    <div class="provider-dots" (click)="$event.stopPropagation(); activeProviderTooltip.set(null)">
+      @if (inSonarr) {
+        <span class="dot dot--sonarr" [class.dot--active]="activeProviderTooltip() === 'sonarr'" (click)="toggleTooltip('sonarr', $event)" title="In Sonarr">
+          @if (activeProviderTooltip() === 'sonarr') {
+            <span class="dot-tooltip">In Sonarr</span>
+          }
+        </span>
+      }
+      @if (inPlex) {
+        <span class="dot dot--plex" [class.dot--active]="activeProviderTooltip() === 'plex'" (click)="toggleTooltip('plex', $event)" title="In Plex">
+          @if (activeProviderTooltip() === 'plex') {
+            <span class="dot-tooltip">In Plex</span>
+          }
+        </span>
+      }
+      @if (inMal) {
+        <span class="dot dot--mal" [class.dot--active]="activeProviderTooltip() === 'mal'" (click)="toggleTooltip('mal', $event)" title="In MAL">
+          @if (activeProviderTooltip() === 'mal') {
+            <span class="dot-tooltip">In MAL</span>
+          }
+        </span>
+      }
     </div>
   }
 

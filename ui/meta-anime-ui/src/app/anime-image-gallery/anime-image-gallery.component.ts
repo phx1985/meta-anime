@@ -6,7 +6,6 @@ import {
   signal,
   effect,
 } from '@angular/core';
-import { trigger, transition, style, animate } from '@angular/animations';
 import { AnimeImageGalleryService } from '../services/anime-image-gallery.service';
 
 @Component({
@@ -15,23 +14,6 @@ import { AnimeImageGalleryService } from '../services/anime-image-gallery.servic
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './anime-image-gallery.component.html',
   styleUrl: './anime-image-gallery.component.scss',
-  animations: [
-    trigger('galleryFade', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate('180ms ease-out', style({ opacity: 1 })),
-      ]),
-      transition(':leave', [
-        animate('140ms ease-in', style({ opacity: 0 })),
-      ]),
-    ]),
-    trigger('imgSlide', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'scale(0.94)' }),
-        animate('220ms cubic-bezier(0.34, 1.2, 0.64, 1)', style({ opacity: 1, transform: 'scale(1)' })),
-      ]),
-    ]),
-  ],
 })
 export class AnimeImageGalleryComponent {
   protected gallery = inject(AnimeImageGalleryService);

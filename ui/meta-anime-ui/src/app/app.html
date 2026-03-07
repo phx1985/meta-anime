@@ -482,6 +482,7 @@
 } <!-- /!hideNavRoute() bottom nav -->
 
 <!-- ── Toast stack (top-right, below navbar) ──────────────────────────────── -->
+@if (!notifService.wizardActive()) {
 <div class="toast-stack" [style.top.px]="toastTopPx()" aria-live="polite" aria-atomic="false">
   @for (toast of notifService.activeToasts(); track toast.id) {
   <div class="toast-item toast-item--{{ toast.severity }}"
@@ -536,6 +537,7 @@
   </div>
   }
 </div>
+}
 
 <!-- ── Lucky Pick overlay ────────────────────────────────────────────────── -->
 @if (luckyPickOpen()) {

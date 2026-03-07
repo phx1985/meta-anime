@@ -1722,6 +1722,41 @@
   </div>
 }
 
+<!-- ── Provider Enable Warning (no sections/tags selected) ─────────────────── -->
+@if (providerEnableWarnFor()) {
+  <div class="sync-prompt-backdrop"
+       [class.sync-prompt-backdrop--leaving]="providerEnableWarnLeaving()"
+       (click)="dismissProviderEnableWarn()"
+       role="dialog" aria-modal="true">
+    <div class="sync-prompt-modal"
+         [class.sync-prompt-modal--leaving]="providerEnableWarnLeaving()"
+         (click)="$event.stopPropagation()">
+      <div class="kometa-warn-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      @if (providerEnableWarnFor() === 'plex') {
+        <h3 class="sync-prompt-title">{{ 'settings.providerEnableWarn.plexTitle' | translate }}</h3>
+        <p class="sync-prompt-desc">{{ 'settings.providerEnableWarn.plexBody' | translate }}</p>
+      } @else {
+        <h3 class="sync-prompt-title">{{ 'settings.providerEnableWarn.sonarrTitle' | translate }}</h3>
+        <p class="sync-prompt-desc">{{ 'settings.providerEnableWarn.sonarrBody' | translate }}</p>
+      }
+      <div class="sync-prompt-actions">
+        <button type="button" class="sync-prompt-btn sync-prompt-btn--secondary" (click)="dismissProviderEnableWarn()">
+          {{ 'settings.providerEnableWarn.selectFirst' | translate }}
+        </button>
+        <button type="button" class="sync-prompt-btn kometa-warn-proceed-btn" (click)="confirmEnableProvider()">
+          {{ 'settings.providerEnableWarn.enableAnyway' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
 <!-- ── Help Modals ─────────────────────────────────────────────────────────── -->
 <app-help-modal
   type="mal"

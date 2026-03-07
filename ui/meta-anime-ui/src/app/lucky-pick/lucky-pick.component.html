@@ -41,7 +41,7 @@
     }
 
     @if (isResult()) {
-    <div class="lucky-result" role="region" [attr.aria-label]="'luckyPick.resultAriaLabel' | translate">
+    <div class="lucky-result lucky-card-wrapper" role="region" [attr.aria-label]="'luckyPick.resultAriaLabel' | translate">
 
       <div class="lucky-result__body">
         @if (coverImageUrl) {

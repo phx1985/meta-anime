@@ -3,12 +3,12 @@ import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, forkJoin, debounceTime, switchMap, of, catchError } from 'rxjs';
-import { trigger, state, style, animate, transition, query, stagger } from '@angular/animations';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
 import { SonarrService } from '../services/sonarr.service';
 import { FilterPresetService } from '../services/filter-preset.service';
+import { UserPreferencesService } from '../services/user-preferences.service';
 import { ProviderStateService } from '../services/provider-state.service';
 import { PopupService } from '../services/popup.service';
 import {
@@ -89,55 +89,12 @@ function getCurrentSeason(month: number): SeasonName {
   imports: [CommonModule, FormsModule, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, NgTemplateOutlet, AnimeImageGalleryComponent, AddSeriesWizardComponent],
   templateUrl: './seasonal.component.html',
   styleUrl: './seasonal.component.scss',
-  animations: [
-    trigger('filterCollapse', [
-      state('open', style({ height: '*', opacity: 1, overflow: 'visible' })),
-      state('closed', style({ height: '0px', opacity: 0, overflow: 'hidden' })),
-      // Force overflow:hidden during the transition so content doesn't bleed
-      // while animating; once fully open the state settles to overflow:visible
-      // so the genre dropdown panel can escape the card.
-      transition('open => closed', [
-        style({ overflow: 'hidden' }),
-        animate('320ms cubic-bezier(0.4, 0, 0.2, 1)'),
-      ]),
-      transition('closed => open', [
-        style({ overflow: 'hidden' }),
-        animate('320ms cubic-bezier(0.4, 0, 0.2, 1)'),
-      ]),
-    ]),
-    trigger('accordionExpand', [
-      transition(':enter', [
-        style({ height: '0', opacity: '0', overflow: 'hidden' }),
-        animate('280ms cubic-bezier(0.4, 0, 0.2, 1)', style({ height: '*', opacity: '1' })),
-      ]),
-      transition(':leave', [
-        style({ overflow: 'hidden' }),
-        animate('200ms cubic-bezier(0.4, 0, 1, 1)', style({ height: '0', opacity: '0' })),
-      ]),
-    ]),
-    trigger('gridAnimation', [
-      transition('* => *', [
-        query(
-          ':enter',
-          [
-            style({ opacity: 0, transform: 'translateY(-6px) scale(0.97)', filter: 'blur(8px)' }),
-            stagger(12, [
-              animate(
-                '360ms cubic-bezier(0.4, 0, 0.2, 1)',
-                style({ opacity: 1, transform: 'none', filter: 'blur(0px)' }),
-              ),
-            ]),
-          ],
-          { optional: true },
-        ),
-      ]),
-    ]),
-  ],
 })
 export class SeasonalComponent {
   private animeService = inject(AnimeService);
   private settingsService = inject(SettingsService);
   private presetService = inject(FilterPresetService);
+  private userPrefs = inject(UserPreferencesService);
   private destroyRef = inject(DestroyRef);
   private translateService = inject(TranslateService);
   readonly providerState = inject(ProviderStateService);
@@ -584,8 +541,21 @@ export class SeasonalComponent {
     // Notify app-root to retract the bottom nav bar while any mobile sheet is open.
     effect(() => {
       this.popupService.childOverlayOpen.set(this.filterOpen() || this.presetsSheetOpen());
-    }, { allowSignalWrites: true });
+    });
     this.destroyRef.onDestroy(() => this.popupService.childOverlayOpen.set(false));
+
+    // Restore and auto-apply the last used filters when the setting is enabled.
+    if (this.userPrefs.autoApplyLastFilters()) {
+      const raw = this.userPrefs.loadLastSeasonalFilters();
+      if (raw) {
+        try {
+          const restored = JSON.parse(raw) as SeasonalSavedFilterState;
+          this.applyFilterState(restored);
+        } catch {
+          // Corrupt storage entry — silently discard.
+        }
+      }
+    }
 
     // Initial load
     this._loadCurrent();
@@ -928,6 +898,19 @@ export class SeasonalComponent {
     };
   }
 
+  private applyFilterState(state: SeasonalSavedFilterState): void {
+    this.filterGenre.set(state.genre ?? []);
+    this.genreOperator.set(state.genreOperator ?? 'or');
+    this.filterTheme.set(state.theme ?? []);
+    this.themeOperator.set(state.themeOperator ?? 'or');
+    this.filterDemographic.set(state.demographic ?? []);
+    this.demographicOperator.set(state.demographicOperator ?? 'or');
+    this.filterMalStatus.set(state.malStatus ?? []);
+    this.filterMediaType.set(state.mediaType ?? []);
+    this.sortBy.set(state.sortBy ?? 'title');
+    this.sortOrder.set(state.sortOrder ?? 'asc');
+  }
+
   // ── Animation helper ─────────────────────────────────────────────────────
   /** Clear the grid instantly and repopulate it in the next event-loop tick.
    *  Because all items are removed from the DOM and re-added, Angular marks
@@ -935,6 +918,11 @@ export class SeasonalComponent {
    *  the blur-rise stagger, regardless of whether the items were there before.
    *  A clearTimeout guard prevents rapid changes from causing multiple flashes. */
   private _applyFilteredResults(): void {
+    // Save current filters if auto-apply is enabled
+    if (this.userPrefs.autoApplyLastFilters()) {
+      this.userPrefs.saveLastSeasonalFilters(JSON.stringify(this._snapshotFilterState()));
+    }
+
     if (this._filterAnimTimeout !== null) {
       clearTimeout(this._filterAnimTimeout);
     }

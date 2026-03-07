@@ -1,15 +1,22 @@
 @if (animeId() !== null || malId() !== null) {
   <!-- Backdrop -->
-  <div class="panel-backdrop" (click)="close()" aria-hidden="true" @fadeIn></div>
+  <div 
+    class="panel-backdrop" 
+    (click)="close()" 
+    aria-hidden="true" 
+    [class.visible]="true"
+    [class.closing]="closing()"
+  ></div>
 
   <!-- Side panel -->
   <aside
     class="panel"
     [class.panel--mal-updated]="neonGlow()"
+    [class.visible]="true"
+    [class.closing]="closing()"
     role="dialog"
     aria-modal="true"
     [attr.aria-label]="anime()?.title ?? ('animeDetailPanel.loading' | translate)"
-    @slideIn
   >
     <!-- Close button -->
     <button class="panel__close" type="button" (click)="close()" [title]="'animeDetailPanel.close' | translate" [attr.aria-label]="'animeDetailPanel.close' | translate">
@@ -339,7 +346,13 @@
             <div class="panel__seasons">
               @for (season of sonarr!.seasonInfo!; track season.seasonNumber) {
                 <div class="panel__season-row">
-                  <span class="panel__season-label">{{ 'animeDetailPanel.season' | translate }} {{ season.seasonNumber }}</span>
+                  <span class="panel__season-label">
+                    @if (season.seasonNumber === 0) {
+                      {{ 'animeDetailPanel.specials' | translate }}
+                    } @else {
+                      {{ 'animeDetailPanel.season' | translate }} {{ season.seasonNumber }}
+                    }
+                  </span>
                   <div class="panel__progress-bar">
                     <div
                       class="panel__progress-fill"

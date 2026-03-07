@@ -210,10 +210,11 @@
   cursor: pointer;
   user-select: none;
   border-bottom: 1px solid transparent;
-  border-radius: 1rem 1rem 0 0; // clip hover background to match card's top corners
+  border-radius: 1rem; // fully rounded when panel is closed
   transition:
     background 0.15s,
-    border-color 0.15s;
+    border-color 0.15s,
+    border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
     background: var(--bg-secondary);
@@ -222,6 +223,12 @@
     outline: 2px solid var(--accent-primary);
     outline-offset: -2px;
   }
+}
+
+// When panel is open: square the bottom corners so the header flows into the body
+.filter-card:has(.filter-card__body-wrapper.open) .filter-card__header {
+  border-radius: 1rem 1rem 0 0;
+  border-bottom-color: var(--card-border);
 }
 
 .filter-card__header-left {
@@ -2355,3 +2362,56 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+// ── Grid Layout Transitions ──────────────────────────────────────────────
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+app-anime-card {
+  opacity: 0; // Start hidden
+  animation: fadeSlideUp 300ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+  // Stagger items by index (max 20 items delay to avoid huge waits)
+  animation-delay: calc(min(var(--i), 20) * 30ms);
+}
+
+// ── CSS Animations for Grid ──────────────────────────────────────────────
+@keyframes fadeSlideUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+app-anime-card {
+  animation: fadeSlideUp 400ms ease-out both;
+  
+  @for $i from 1 through 20 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{($i * 30)}ms;
+    }
+  }
+}
+
+
+// ── CSS Animations for Filter Panel ─────────────────────────────────────
+.filter-card__body-wrapper {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+
+  &.open {
+    grid-template-rows: 1fr;
+  }
+
+  > div {
+    min-height: 0;
+  }
+}
+

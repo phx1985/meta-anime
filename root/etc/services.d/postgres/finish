@@ -5,11 +5,10 @@
 # Gracefully stops PostgreSQL when the service exits.
 # =============================================================================
 
-PG_VERSION=$(ls /usr/lib/postgresql 2>/dev/null | sort -V | tail -1)
-if [ -z "${PG_VERSION}" ]; then
+PG_BIN=$(find /usr/libexec -maxdepth 1 -name 'postgresql*' -type d 2>/dev/null | sort -V | tail -1)
+if [ -z "${PG_BIN}" ]; then
     echo "[postgres/finish] ERROR: No PostgreSQL installation found" >&2
     exit 1
 fi
-PG_BIN="/usr/lib/postgresql/${PG_VERSION}/bin"
 
 s6-setuidgid abc "${PG_BIN}/pg_ctl" -D /config/postgres -w stop

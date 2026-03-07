@@ -42,6 +42,22 @@ export class NotificationService {
   readonly leavingToastIds = signal<ReadonlySet<string>>(new Set<string>());
   readonly leavingNotifIds = signal<ReadonlySet<string>>(new Set<string>());
 
+  /** Wizard-active flag. Initialized from localStorage so it survives OAuth page reloads.
+   *  The setup wizard component calls setWizardActive(true/false) to toggle it. */
+  private readonly _wizardActive = signal<boolean>(
+    localStorage.getItem('wizard_active') === 'true',
+  );
+  readonly wizardActive = this._wizardActive.asReadonly();
+
+  setWizardActive(active: boolean): void {
+    this._wizardActive.set(active);
+    if (active) {
+      localStorage.setItem('wizard_active', 'true');
+    } else {
+      localStorage.removeItem('wizard_active');
+    }
+  }
+
   /** Returns true if a notification with this exact id already exists (prevents duplicates). */
   has(id: string): boolean {
     return this.notifications().some((n) => n.id === id);
@@ -52,8 +68,14 @@ export class NotificationService {
     const full: AppNotification = { ...notif, timestamp: Date.now(), acknowledged: false };
     this.notifications.update((list) => [full, ...list].slice(0, MAX_STORED));
     this._save();
-    this.activeToasts.update((t) => [...t, full]);
-    setTimeout(() => this.dismissToast(full.id), TOAST_TTL_MS);
+    // Suppress floating toasts while the setup wizard is active. Also check
+    // window.location.pathname as a fallback for notifications pushed before the
+    // wizard component has had a chance to call setWizardActive(true).
+    const inWizard = this._wizardActive() || window.location.pathname === '/welcome';
+    if (!inWizard) {
+      this.activeToasts.update((t) => [...t, full]);
+      setTimeout(() => this.dismissToast(full.id), TOAST_TTL_MS);
+    }
   }
 
   acknowledge(id: string): void {

@@ -13,7 +13,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  height: 100%;
+  height: 100%;     // fill the grid cell height (set by grid-auto-rows)
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 14px;
@@ -113,42 +113,134 @@
 
 .provider-dots {
   position: absolute;
-  top: 20px;
-  right: -12px;         // 12px protrusion beyond the card's right edge
+  top: 18px;
+  right: -6px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  z-index: -1;          // slot behind the card surface (card is z-index: 1)
+  // gap: 8px; // Removed in favor of margin-bottom on dots for better control
+  z-index: 5;
   pointer-events: auto;
+  // Clean, singular drop-shadow for the whole ribbon shape
+  filter: drop-shadow(-2px 2px 2px rgba(0,0,0,0.25)); 
 }
 
 .dot {
+  --dot-color: var(--text-muted); 
+  &--mal    { --dot-color: var(--provider-mal); }
+  &--plex   { --dot-color: var(--provider-plex); }
+  &--sonarr { --dot-color: var(--provider-sonarr); }
+
   position: relative;
-  width: 12px;
-  height: 28px;
-  border-radius: 0 6px 6px 0;  // right side rounded, left flat (hidden under card)
+  width: 20px; 
+  height: 18px;
+  margin-bottom: 4px; // Vertical separation between tabs
+  
+  // Volume: Horizontal Gradient from Light (Tip/Left) to Dark (Base/Right)
+  // Gives a sleek, metallic ribbon feel
+  background: linear-gradient(
+    to right, 
+    color-mix(in srgb, var(--dot-color), white 20%) 0%, 
+    var(--dot-color) 40%,
+    color-mix(in srgb, var(--dot-color), black 10%) 100%
+  );
+  opacity: 0.9;
+  
+  // Shape: Pointy Top-Left, slanting down-right
+  // 0 0: Top Left (Sharp Point)
+  // 100% 0: Top Right
+  // 100% 100%: Bottom Right
+  // 25% 100%: Bottom Left (Indented)
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 25% 100%);
+  
+  // Radius on the outer (right) edge only
+  border-radius: 0 4px 4px 0;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 20%; // Push content away from the slanted left edge
+  cursor: pointer;
+
   flex-shrink: 0;
-  // Lateral depth shadow + inset top highlight + inset bottom darkening
-  box-shadow:
-    4px 2px 10px rgba(0, 0, 0, 0.55),         // strong rightward shadow = 3D depth
-    inset 0  1px 0 rgba(255, 255, 255, 0.35),  // top-edge light catch
-    inset 0 -1px 0 rgba(0, 0, 0, 0.30);       // bottom-edge darkening
+  transition: transform 0.2s ease;
 
-  &--mal    { background: var(--provider-mal);    }
-  &--plex   { background: var(--provider-plex);   }
-  &--sonarr { background: var(--provider-sonarr); }
+  &:hover, &--active {
+    transform: translateX(-2px);
+  }
 
-  // Fold crease — gradient shadow below each tab, simulating the wrap-behind depth
-  &::after {
+  // Mobile scaling: sleek but smaller on restricted viewports
+  @media (max-width: 768px) {
+    width: 17px;
+    height: 15px;
+    margin-bottom: 3px;
+  }
+
+  // Custom tooltip that appears on click
+  .dot-tooltip {
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 8px;
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+    animation: fadeInTooltip 0.2s ease forwards;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: -4px;
+      transform: translateY(-50%);
+      border-width: 4px 0 4px 4px;
+      border-style: solid;
+      border-color: transparent transparent transparent rgba(0, 0, 0, 0.85);
+    }
+  }
+
+  // The "3D Anchor" - A tiny dark triangle at the top-left point
+  // Simulates the ribbon tucking into the card
+  &::before {
     content: '';
     position: absolute;
-    bottom: -6px;
-    left: 0;
-    right: 0;
-    height: 6px;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.45), transparent);
-    pointer-events: none;
+    top: 0;
+    left: 0; 
+    width: 5px;  
+    height: 6px; 
+    background: color-mix(in srgb, var(--dot-color), black 45%);
+    // Triangle at the very corner
+    clip-path: polygon(0 0, 100% 0, 0 100%);
+    z-index: 2; // Sit on top to accent the fold
+    opacity: 0.8;
+
+    @media (max-width: 768px) {
+      width: 4px;
+      height: 5px;
+    }
   }
+  
+  &::after { display: none; }
+
+  // Light Mode Refinements
+  :host-context([data-theme='light']) & {
+    filter: drop-shadow(-1px 2px 2px rgba(0,0,0,0.15)); 
+    
+    &::before {
+      opacity: 0.6;
+    }
+  }
+}
+
+@keyframes fadeInTooltip {
+  from { opacity: 0; transform: translateY(-50%) translateX(4px); }
+  to { opacity: 1; transform: translateY(-50%) translateX(0); }
 }
 
 // ─── Main content area ───────────────────────────────────────────────────────

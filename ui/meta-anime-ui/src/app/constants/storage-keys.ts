@@ -6,7 +6,10 @@ export const StorageKeys = {
   seasonalFilterPresets: 'meta-anime:seasonalFilterPresets',
   autoApplyLastFilters: 'meta-anime:autoApplyLastFilters',
   lastUsedFilters: 'meta-anime:lastUsedFilters',
+  seasonalLastUsedFilters: 'meta-anime:seasonalLastUsedFilters',
   luckyOnlyFinished: 'meta-anime:luckyOnlyFinished',
   luckyOnlyPlanToWatch: 'meta-anime:luckyOnlyPlanToWatch',
   luckyOnlyWithFiles: 'meta-anime:luckyOnlyWithFiles',
+  language: 'meta-anime:language',
+  welcomeShown: 'meta-anime:welcomeShown',
 } as const;

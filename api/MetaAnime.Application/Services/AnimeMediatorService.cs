@@ -779,9 +779,18 @@ public sealed class AnimeMediatorService(
                 return Result.Success<AnimeDetailsResponse?>(null);
             }
 
-            var plexAnimes = await FetchPlexAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex));
+            var plexEnabled = await IsPlexEnabledAsync();
+            var sonarrEnabled = await IsSonarrEnabledAsync();
+
+            var plexAnimes = plexEnabled
+                ? await FetchPlexAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex))
+                : [];
+
             var malAnimes = await FetchMalAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList));
-            var sonarrAnimes = await FetchSonarrAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr));
+
+            var sonarrAnimes = sonarrEnabled
+                ? await FetchSonarrAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr))
+                : [];
 
             var animeDto = new AnimeDetailsResponse(
                 aniDbId,
@@ -1486,5 +1495,33 @@ public sealed class AnimeMediatorService(
 
     public Task<Result<SonarrTagInfo>> CreateSonarrTagAsync(string label)
         => sonarrAnimeSource.CreateTagAsync(label);
+
+    private async Task<bool> IsPlexEnabledAsync()
+    {
+        try
+        {
+            var plexEnabledEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.PlexEnabled);
+            return plexEnabledEntry != null && bool.TryParse(plexEnabledEntry.Value, out var isEnabled) && isEnabled;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to check Plex enabled status");
+            return false;
+        }
+    }
+
+    private async Task<bool> IsSonarrEnabledAsync()
+    {
+        try
+        {
+            var sonarrEnabledEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrEnabled);
+            return sonarrEnabledEntry != null && bool.TryParse(sonarrEnabledEntry.Value, out var isEnabled) && isEnabled;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to check Sonarr enabled status");
+            return false;
+        }
+    }
 
 }

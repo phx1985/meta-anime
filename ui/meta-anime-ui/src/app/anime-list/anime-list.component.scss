@@ -51,10 +51,11 @@
   cursor: pointer;
   user-select: none;
   border-bottom: 1px solid transparent;
-  border-radius: 1rem 1rem 0 0; // clip hover background to match card's top corners
+  border-radius: 1rem; // fully rounded when panel is closed
   transition:
     background 0.15s,
-    border-color 0.15s;
+    border-color 0.15s,
+    border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
     background: var(--bg-secondary);
@@ -63,6 +64,12 @@
     outline: 2px solid var(--accent-primary);
     outline-offset: -2px;
   }
+}
+
+// When panel is open: square the bottom corners so the header flows into the body
+.filter-card:has(.filter-card__body.open) .filter-card__header {
+  border-radius: 1rem 1rem 0 0;
+  border-bottom-color: var(--card-border);
 }
 
 .filter-card__header-left {
@@ -1269,6 +1276,7 @@
   width: 100%;
   min-width: 0;
   transition: grid-template-columns 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  grid-auto-rows: 400px;  // enforce the same row height as the seasonal page
 
   // Default: auto-fill with compact card widths
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -1706,3 +1714,63 @@
     background: rgba(108, 99, 255, 0.12);
   }
 }
+
+// ── Grid Layout Transitions ──────────────────────────────────────────────
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+app-anime-card {
+  opacity: 0; // Start hidden
+  animation: fadeSlideUp 300ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+  // Stagger items by index (max 20 items delay to avoid huge waits)
+  animation-delay: calc(min(var(--i), 20) * 30ms);
+}
+
+// ── Filter Collapse Transition ────────────────────────────────────────────
+.filter-card__body {
+  // Base state (closed/animating)
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 320ms cubic-bezier(0.4, 0, 0.2, 1), opacity 320ms cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &.open {
+    max-height: 2000px; // Large enough to fit content
+    opacity: 1;
+    overflow: visible; // Allow dropdowns
+  }
+
+  &.closed {
+    max-height: 0 !important;
+    opacity: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+  }
+}
+
+
+// ── CSS Animations for Grid ──────────────────────────────────────────────
+@keyframes fadeSlideUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+app-anime-card {
+  animation: fadeSlideUp 400ms ease-out both;
+  
+  @for $i from 1 through 20 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{($i * 30)}ms;
+    }
+  }
+}
+

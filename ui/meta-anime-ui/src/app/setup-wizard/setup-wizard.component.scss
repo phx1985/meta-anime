@@ -236,12 +236,29 @@
   flex-shrink: 0;
 }
 
-// ── Language switcher (step 1) ─────────────────────────────────────────────
+// ── Language & Theme selectors (step 1) ───────────────────────────────────
+
+.wizard-selector-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+  width: 100%;
+}
+
+.wizard-selector-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
 .wizard-lang-switcher {
   display: flex;
   gap: 0.5rem;
   justify-content: center;
-  margin-top: 1.25rem;
 }
 
 .wizard-lang-btn {
@@ -256,6 +273,40 @@
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover { border-color: var(--accent-primary); color: var(--text-primary); }
+
+  &--active {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #fff;
+    font-weight: 600;
+  }
+}
+
+.wizard-theme-switcher {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.wizard-theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  flex: 1;
+  max-width: 110px;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--card-border);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
 
   &:hover { border-color: var(--accent-primary); color: var(--text-primary); }
 
@@ -330,6 +381,45 @@
 }
 
 // ── Callback URL info box (Step 2) ────────────────────────────────────────
+
+// ── MAL auth error banner (Step 3) ───────────────────────────────────────
+
+.wizard-auth-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  width: 100%;
+  max-width: 380px;
+  background: rgba(220, 53, 69, 0.08);
+  border: 1px solid rgba(220, 53, 69, 0.35);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+
+  &__icon {
+    flex-shrink: 0;
+    color: #dc3545;
+    margin-top: 0.1rem;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.83rem;
+
+    strong {
+      font-weight: 600;
+      color: #dc3545;
+    }
+
+    span {
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+  }
+}
 
 .wizard-callback-box {
   width: 100%;
@@ -796,7 +886,7 @@
 %wizard-btn-base {
   padding: 0.6rem 1.35rem;
   border-radius: 12px;
-  font-size: 0.88rem;
+  font-size: clamp(0.65rem, 1.6vw, 0.88rem);
   font-weight: 600;
   cursor: pointer;
   border: none;
@@ -806,6 +896,15 @@
   justify-content: center;
   gap: 0.35rem;
   white-space: nowrap;
+  overflow: hidden;
+
+  .btn-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1 1 0;
+  }
 
   &:disabled {
     opacity: 0.45;
@@ -815,7 +914,7 @@
 
   @media (max-width: 576px) {
     padding: 0.55rem 1.1rem;
-    font-size: 0.84rem;
+    font-size: clamp(0.6rem, 3.5vw, 0.84rem);
   }
 }
 
@@ -883,3 +982,22 @@
     background: rgba(108, 99, 255, 0.1);
   }
 }
+
+// ── Step Transition ──────────────────────────────────────────────────────
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.wizard-body {
+  // Simple fade-in for the active step
+  // Since *ngIf removes/adds elements, the new element will trigger this animation on entry
+  animation: fadeInScale 220ms ease-out forwards;
+}
+
