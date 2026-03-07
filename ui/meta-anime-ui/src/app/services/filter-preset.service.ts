@@ -110,6 +110,10 @@ export class FilterPresetService {
     return this._savedPresets();
   }
 
+  getSavedPresets(): FilterPreset[] {
+    return this._savedPresets();
+  }
+
   savePreset(preset: FilterPreset): void {
     if (!this._loaded) return;
     const current = this._savedPresets();
