@@ -165,8 +165,10 @@
         </div>
 
         <!-- Collapsible body (desktop accordion; hidden on mobile via CSS) -->
-        <div class="filter-card__body" [@filterCollapse]="filterOpen() ? 'open' : 'closed'">
-          <ng-container *ngTemplateOutlet="filterBodyTpl"></ng-container>
+        <div class="filter-card__body-wrapper" [class.open]="filterOpen()">
+          <div class="filter-card__body">
+            <ng-container *ngTemplateOutlet="filterBodyTpl"></ng-container>
+          </div>
         </div>
       </div>
     }
@@ -668,14 +670,15 @@
           </span>
         </div>
       </div>
-      <div class="seasonal-grid" [@gridAnimation]="displayedAnimes().length">
-        @for (anime of displayedAnimes(); track anime.malId) {
+      <div class="seasonal-grid">
+        @for (anime of displayedAnimes(); track anime.malId; let i = $index) {
           <app-anime-card
             [anime]="seasonalToAnimeDetails(anime)"
             [seasonalItem]="anime"
             [glowSuccess]="anime.malId === lastAddedMalId()"
             (openDetails)="openAnimeDetails($event)"
             (openDetailsByMalId)="openDetailsByMalId($event)"
+            [style.--i]="i"
           />
         }
       </div>

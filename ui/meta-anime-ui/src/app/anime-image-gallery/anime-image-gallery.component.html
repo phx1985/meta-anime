@@ -1,12 +1,11 @@
 @if (gallery.images() !== null) {
-  <div class="gallery-backdrop" (click)="onBackdropClick()" @galleryFade aria-hidden="true"></div>
+  <div class="gallery-backdrop" (click)="onBackdropClick()" aria-hidden="true"></div>
 
   <div
     class="gallery-shell"
     role="dialog"
     aria-modal="true"
     aria-label="Image Gallery"
-    @galleryFade
   >
     <!-- Close button -->
     <button
@@ -42,10 +41,9 @@
     <div class="gallery-img-wrap" (click)="$event.stopPropagation()">
       @for (img of [activeImage]; track img) {
         <img
-          class="gallery-img"
+          class="gallery-img gallery-img--enter"
           [src]="img"
           alt="Anime poster"
-          @imgSlide
           (load)="onImageLoad()"
           (error)="onImageError()"
         />

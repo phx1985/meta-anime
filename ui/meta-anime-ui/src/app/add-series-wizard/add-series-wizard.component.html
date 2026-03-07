@@ -77,7 +77,7 @@
 
         <!-- ── STEP 1: Where to add? ── -->
         @if (currentStep() === 1) {
-          <div class="choice-cards">
+          <div class="choice-cards wizard-step">
             <!-- Sonarr card -->
             @if (sonarrEnabled()) {
               <button
@@ -132,7 +132,7 @@
 
         <!-- ── STEP 2: Find the show on Sonarr ── -->
         @if (currentStep() === 2) {
-          <div class="step-section">
+          <div class="step-section wizard-step">
             <div class="field">
               <label class="field__label">{{ 'seasonal.sonarrSearch' | translate }}</label>
               <div class="search-wrap">
@@ -198,7 +198,7 @@
 
         <!-- ── STEP 3: Configure & Confirm ── -->
         @if (currentStep() === 3) {
-          <div class="step-section">
+          <div class="step-section wizard-step">
 
             <!-- Sonarr config -->
             @if (addSonarr() && !addModalInSonarr()) {

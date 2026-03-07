@@ -19,7 +19,6 @@ import { DatePipe, TitleCasePipe } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { trigger, transition, style, animate } from '@angular/animations';
 import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo, PlexAnimeInfo, SeasonalAnimeItem } from '../models/anime.models';
 import { AnimeService } from '../services/anime.service';
 import { SafePipe } from './safe.pipe';
@@ -38,21 +37,6 @@ import { ProviderStateService } from '../services/provider-state.service';
   imports: [TranslatePipe, DatePipe, TitleCasePipe, SafePipe, ScoreBadgeComponent],
   templateUrl: './anime-detail-panel.component.html',
   styleUrl: './anime-detail-panel.component.scss',
-  animations: [
-    trigger('fadeIn', [
-      transition(':enter', [style({ opacity: 0 }), animate('200ms ease-out', style({ opacity: 1 }))]),
-      transition(':leave', [animate('150ms ease-in', style({ opacity: 0 }))]),
-    ]),
-    trigger('slideIn', [
-      transition(':enter', [
-        style({ transform: 'translateX(100%)' }),
-        animate('260ms cubic-bezier(0.25, 0.46, 0.45, 0.94)', style({ transform: 'translateX(0)' })),
-      ]),
-      transition(':leave', [
-        animate('200ms ease-in', style({ transform: 'translateX(100%)' })),
-      ]),
-    ]),
-  ],
 })
 export class AnimeDetailPanelComponent {
   readonly animeId = input<string | null>(null);
@@ -352,9 +336,18 @@ export class AnimeDetailPanelComponent {
     if (deltaX >= 60) this.close();
   }
 
+  closing = signal(false);
+  
   close(): void {
-    this.gallery.close();
-    this.closed.emit();
+    if (this.closing()) return;
+    this.closing.set(true);
+    // Wait for exit animation (260ms matches CSS slide-out duration)
+    setTimeout(() => {
+      this.gallery.close();
+      this.anime.set(null); // Clear previous details to prevent flash on next open
+      this.closed.emit();
+      this.closing.set(false); // Reset for next open if component instance is reused
+    }, 260);
   }
 
   // ── Data accessors ────────────────────────────────────────────────────────

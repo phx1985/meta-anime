@@ -117,7 +117,7 @@
   right: -6px;
   display: flex;
   flex-direction: column;
-  gap: 8px;             
+  // gap: 8px; // Removed in favor of margin-bottom on dots for better control
   z-index: 5;
   pointer-events: auto;
   // Clean, singular drop-shadow for the whole ribbon shape
@@ -131,8 +131,9 @@
   &--sonarr { --dot-color: var(--provider-sonarr); }
 
   position: relative;
-  width: 24px;
-  height: 22px;
+  width: 20px; 
+  height: 18px;
+  margin-bottom: 4px; // Vertical separation between tabs
   
   // Volume: Horizontal Gradient from Light (Tip/Left) to Dark (Base/Right)
   // Gives a sleek, metallic ribbon feel
@@ -142,6 +143,7 @@
     var(--dot-color) 40%,
     color-mix(in srgb, var(--dot-color), black 10%) 100%
   );
+  opacity: 0.9;
   
   // Shape: Pointy Top-Left, slanting down-right
   // 0 0: Top Left (Sharp Point)
@@ -153,11 +155,54 @@
   // Radius on the outer (right) edge only
   border-radius: 0 4px 4px 0;
   
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 20%; // Push content away from the slanted left edge
+  cursor: pointer;
+
   flex-shrink: 0;
   transition: transform 0.2s ease;
 
-  &:hover {
+  &:hover, &--active {
     transform: translateX(-2px);
+  }
+
+  // Mobile scaling: sleek but smaller on restricted viewports
+  @media (max-width: 768px) {
+    width: 17px;
+    height: 15px;
+    margin-bottom: 3px;
+  }
+
+  // Custom tooltip that appears on click
+  .dot-tooltip {
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 8px;
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+    animation: fadeInTooltip 0.2s ease forwards;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: -4px;
+      transform: translateY(-50%);
+      border-width: 4px 0 4px 4px;
+      border-style: solid;
+      border-color: transparent transparent transparent rgba(0, 0, 0, 0.85);
+    }
   }
 
   // The "3D Anchor" - A tiny dark triangle at the top-left point
@@ -167,13 +212,18 @@
     position: absolute;
     top: 0;
     left: 0; 
-    width: 6px;
-    height: 8px;
+    width: 5px;  
+    height: 6px; 
     background: color-mix(in srgb, var(--dot-color), black 45%);
     // Triangle at the very corner
     clip-path: polygon(0 0, 100% 0, 0 100%);
     z-index: 2; // Sit on top to accent the fold
     opacity: 0.8;
+
+    @media (max-width: 768px) {
+      width: 4px;
+      height: 5px;
+    }
   }
   
   &::after { display: none; }
@@ -186,6 +236,11 @@
       opacity: 0.6;
     }
   }
+}
+
+@keyframes fadeInTooltip {
+  from { opacity: 0; transform: translateY(-50%) translateX(4px); }
+  to { opacity: 1; transform: translateY(-50%) translateX(0); }
 }
 
 // ─── Main content area ───────────────────────────────────────────────────────

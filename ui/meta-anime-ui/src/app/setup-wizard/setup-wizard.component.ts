@@ -14,7 +14,6 @@ import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators, A
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { trigger, transition, style, animate, query, group } from '@angular/animations';
 import confetti from 'canvas-confetti';
 import { EnrollmentService, PlexLibrary } from '../services/enrollment.service';
 import { SettingsService } from '../services/settings.service';
@@ -42,26 +41,6 @@ const PLEX_POLL_MAX = 40;
   imports: [TranslatePipe, ReactiveFormsModule, HelpModalComponent],
   templateUrl: './setup-wizard.component.html',
   styleUrl: './setup-wizard.component.scss',
-  animations: [
-    trigger('fadeStep', [
-      transition('* => *', [
-        // Kick :leave out of normal flow immediately so the container reflects :enter height.
-        query(':leave', [
-          style({ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 1, transform: 'scale(1)' }),
-        ], { optional: true }),
-        // Fade :leave out and :enter in simultaneously.
-        group([
-          query(':leave', [
-            animate('150ms ease-in', style({ opacity: 0, transform: 'scale(0.97)' })),
-          ], { optional: true }),
-          query(':enter', [
-            style({ opacity: 0, transform: 'scale(0.98)' }),
-            animate('220ms 50ms ease-out', style({ opacity: 1, transform: 'scale(1)' })),
-          ], { optional: true }),
-        ]),
-      ]),
-    ]),
-  ],
 })
 export class SetupWizardComponent implements OnInit, OnDestroy {
   private enrollmentService = inject(EnrollmentService);

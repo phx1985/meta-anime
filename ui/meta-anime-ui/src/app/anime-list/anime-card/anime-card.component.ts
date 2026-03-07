@@ -56,6 +56,7 @@ export class AnimeCardComponent {
 
   showAltTitles = signal(false);
   showLightbox = signal(false);
+  activeProviderTooltip = signal<string | null>(null);
 
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -200,6 +201,20 @@ export class AnimeCardComponent {
     return s !== null ? s.inPlex : !!(this.plex);
   }
 
+  // ── Provider URLs ─────────────────────────────────────────────────────────
+
+  get malUrl(): string | undefined {
+    return this.seasonalItem()?.malUrl ?? this.mal?.url;
+  }
+
+  get sonarrUrl(): string | undefined {
+    return this.seasonalItem()?.sonarrUrl ?? this.sonarr?.url;
+  }
+
+  get plexUrl(): string | undefined {
+    return this.seasonalItem()?.plexUrl ?? this.plex?.url;
+  }
+
   // ── Scores ────────────────────────────────────────────────────────────────
 
   get malScore(): number {
@@ -257,5 +272,10 @@ export class AnimeCardComponent {
 
   closeLightbox(): void {
     this.showLightbox.set(false);
+  }
+
+  toggleTooltip(provider: string, event: Event): void {
+    event.stopPropagation();
+    this.activeProviderTooltip.update((current) => (current === provider ? null : provider));
   }
 }
