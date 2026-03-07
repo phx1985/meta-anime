@@ -525,6 +525,14 @@
       "body": "Modifier l'URL du fichier de correspondance Kometa peut rompre la connexion entre votre suivi d'animés et votre serveur multimédia. Ne continuez que si vous savez exactement ce que vous faites.",
       "proceed": "Je comprends, Continuer"
     },
+    "providerEnableWarn": {
+      "plexTitle": "Aucune bibliothèque sélectionnée",
+      "plexBody": "Plex est configuré, mais aucune section de bibliothèque anime n'a été sélectionnée. Sans sélection, les synchronisations ne sauront pas quelles bibliothèques inclure. Vous pouvez configurer cela maintenant ou activer quand même.",
+      "sonarrTitle": "Aucun tag sélectionné",
+      "sonarrBody": "Sonarr est configuré, mais aucun tag anime n'a été sélectionné. Sans sélection, les synchronisations ne sauront pas quel contenu cibler. Vous pouvez configurer cela maintenant ou activer quand même.",
+      "enableAnyway": "Activer quand même",
+      "selectFirst": "Configurer d'abord"
+    },
     "enrollment": {
       "connected": "Connecté",
       "disconnect": "Déconnecter",

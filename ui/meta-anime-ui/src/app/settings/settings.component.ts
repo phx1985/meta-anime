@@ -218,6 +218,12 @@ export class SettingsComponent {
   /** Controls the Sonarr tag picker modal */
   sonarrPickerOpen = signal(false);
 
+  /** Controls the provider-enable warning popup (holds 'plex' or 'sonarr'). */
+  providerEnableWarnFor = signal<string | null>(null);
+
+  /** True when the provider-enable warning dialog exit animation is playing. */
+  providerEnableWarnLeaving = signal(false);
+
   sonarrDefaultSettings = computed(() => {
     const order = [
       'Sonarr:DefaultRootFolder',
@@ -256,6 +262,15 @@ export class SettingsComponent {
   plexBasicConfigured = computed(() => {
     const list = this.settings();
     const host = list.find((s) => s.key === 'Plex:Host')?.value ?? '';
+    return host.trim().length > 0 && this.plexConnected();
+  });
+
+  /** True when Host + stored OAuth Token are both present — required to fetch Plex libraries.
+   *  Uses plexConnected() (set from the status endpoint) rather than the raw token setting
+   *  value, which is masked/null for sensitive settings in the API response. */
+  plexFetchConfigured = computed(() => {
+    const list = this.settings();
+    const host = list.find((s) => s.key === SettingsComponent.PLEX_HOST_KEY)?.value ?? '';
     return host.trim().length > 0 && this.plexConnected();
   });
 
@@ -468,7 +483,13 @@ export class SettingsComponent {
     this.enrollmentService
       .getPlexStatus()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: (s) => this.plexConnected.set(s.connected), error: () => {} });
+      .subscribe({
+        next: (s) => {
+          this.plexConnected.set(s.connected);
+          if (s.connected) this.loadPlexLibsForSettings();
+        },
+        error: () => {},
+      });
   }
 
   connectMal(): void {
@@ -543,6 +564,7 @@ export class SettingsComponent {
               this.stopPlexPolling();
               this.plexConnecting.set(false);
               this.plexConnected.set(true);
+              this.loadPlexLibsForSettings();
             } else if (pollCount >= SettingsComponent.PLEX_POLL_MAX) {
               this.stopPlexPolling();
               this.plexConnecting.set(false);
@@ -926,7 +948,36 @@ export class SettingsComponent {
     if (enabling) {
       if (cat === 'plex' && !this.plexBasicConfigured()) return;
       if (cat === 'sonarr' && !this.sonarrBasicConfigured()) return;
+      // Warn if no library sections / tags selected yet
+      const hasSelections = cat === 'plex'
+        ? this.plexSelectedSectionKeys().length > 0
+        : this.sonarrSelectedTagLabels().length > 0;
+      if (!hasSelections) {
+        this.providerEnableWarnFor.set(cat);
+        return;
+      }
     }
+    this._doProviderToggle(cat, enabling);
+  }
+
+  dismissProviderEnableWarn(): void {
+    this.providerEnableWarnLeaving.set(true);
+    setTimeout(() => {
+      this.providerEnableWarnFor.set(null);
+      this.providerEnableWarnLeaving.set(false);
+    }, 260);
+  }
+
+  confirmEnableProvider(): void {
+    const cat = this.providerEnableWarnFor();
+    if (!cat) return;
+    this.providerEnableWarnFor.set(null);
+    this.providerEnableWarnLeaving.set(false);
+    this._doProviderToggle(cat, true);
+  }
+
+  private _doProviderToggle(cat: string, enabling: boolean): void {
+    const key = cat === 'plex' ? 'Plex:Enabled' : 'Sonarr:Enabled';
     const next = enabling ? 'true' : 'false';
     this.savingKey.set(key);
     this.settingsService
@@ -1027,6 +1078,7 @@ export class SettingsComponent {
   // ── Plex library picker ───────────────────────────────────────────────────
 
   loadPlexLibsForSettings(): void {
+    if (!this.plexFetchConfigured()) return;
     this.plexLibsLoading.set(true);
     this.plexLibsError.set('');
     this.enrollmentService.getPlexLibraries()
@@ -1064,6 +1116,7 @@ export class SettingsComponent {
   // ── Sonarr tag picker ─────────────────────────────────────────────────────
 
   loadSonarrTagsForSettings(): void {
+    if (!this.sonarrBasicConfigured()) return;
     this.sonarrTagsForSettingsLoading.set(true);
     this.sonarrTagsForSettingsError.set('');
     this.sonarrService.getTags()
