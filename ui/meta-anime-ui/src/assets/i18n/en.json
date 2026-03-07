@@ -264,8 +264,9 @@
     "popularity": "Popularity",
     "rank": "Rank",
     "aired": "Aired",
-    "episodes": "Episodes",
+    "episodes": "Ep. Count",
     "season": "Season",
+    "specials": "Specials",
     "diskSize": "Series Size"
   },
   "animeCard": {
