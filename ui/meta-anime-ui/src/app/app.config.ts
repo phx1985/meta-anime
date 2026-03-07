@@ -28,11 +28,16 @@ export const appConfig: ApplicationConfig = {
     ),
     provideTranslateService({ fallbackLang: 'en' }),
     provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' }),
-    provideAppInitializer(() => inject(RuntimeConfigService).load()),
-    provideAppInitializer(() => {
+    // Sequential init: all inject() calls MUST happen synchronously before any await
+    // so they run inside Angular's injection context. RuntimeConfig loads first to
+    // ensure the API key is set before any authenticated requests fire.
+    provideAppInitializer(async () => {
+      const runtime = inject(RuntimeConfigService);
       const prefs = inject(UserPreferencesService);
       const filters = inject(FilterPresetService);
-      return Promise.all([prefs.load(), filters.load()]);
+
+      await runtime.load();
+      await Promise.all([prefs.load(), filters.load()]);
     }),
   ],
 };

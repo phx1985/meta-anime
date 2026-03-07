@@ -48,6 +48,9 @@ export class FilterPresetService {
   private readonly _seasonalPresets = signal<SeasonalFilterPreset[]>([]);
   readonly seasonalPresets = this._seasonalPresets.asReadonly();
 
+  /** True only after load() completes successfully — guards writes against startup races. */
+  private _loaded = false;
+
   async load(): Promise<void> {
     try {
       const allProps = await firstValueFrom(this.propertyBag.getAll());
@@ -99,6 +102,8 @@ export class FilterPresetService {
     } catch (err) {
       console.error('Failed to load filter presets from server', err);
     }
+
+    this._loaded = true;
   }
 
   getSavedPresets(): FilterPreset[] {
@@ -106,6 +111,7 @@ export class FilterPresetService {
   }
 
   savePreset(preset: FilterPreset): void {
+    if (!this._loaded) return;
     const current = this._savedPresets();
     const existingIndex = current.findIndex((p) => p.id === preset.id);
     let updated: FilterPreset[];
@@ -118,13 +124,18 @@ export class FilterPresetService {
     }
     
     this._savedPresets.set(updated);
-    this.propertyBag.upsert(PRESETS_KEY, { value: JSON.stringify(updated) }).subscribe();
+    this.propertyBag.upsert(PRESETS_KEY, { value: JSON.stringify(updated) }).subscribe({
+      error: (e) => console.error('[FilterPresetService] Failed to save preset to server', e),
+    });
   }
 
   deletePreset(id: string): void {
+    if (!this._loaded) return;
     const updated = this._savedPresets().filter((p) => p.id !== id && !p.isBuiltIn);
     this._savedPresets.set(updated);
-    this.propertyBag.upsert(PRESETS_KEY, { value: JSON.stringify(updated) }).subscribe();
+    this.propertyBag.upsert(PRESETS_KEY, { value: JSON.stringify(updated) }).subscribe({
+      error: (e) => console.error('[FilterPresetService] Failed to delete preset on server', e),
+    });
   }
 
   // ── Seasonal filter presets ────────────────────────────────────────────────
@@ -134,6 +145,7 @@ export class FilterPresetService {
   }
 
   saveSeasonalPreset(preset: SeasonalFilterPreset): void {
+    if (!this._loaded) return;
     const current = this._seasonalPresets();
     const existingIndex = current.findIndex((p) => p.id === preset.id);
     let updated: SeasonalFilterPreset[];
@@ -146,12 +158,17 @@ export class FilterPresetService {
     }
 
     this._seasonalPresets.set(updated);
-    this.propertyBag.upsert(SEASONAL_PRESETS_KEY, { value: JSON.stringify(updated) }).subscribe();
+    this.propertyBag.upsert(SEASONAL_PRESETS_KEY, { value: JSON.stringify(updated) }).subscribe({
+      error: (e) => console.error('[FilterPresetService] Failed to save seasonal preset to server', e),
+    });
   }
 
   deleteSeasonalPreset(id: string): void {
+    if (!this._loaded) return;
     const updated = this._seasonalPresets().filter((p) => p.id !== id);
     this._seasonalPresets.set(updated);
-    this.propertyBag.upsert(SEASONAL_PRESETS_KEY, { value: JSON.stringify(updated) }).subscribe();
+    this.propertyBag.upsert(SEASONAL_PRESETS_KEY, { value: JSON.stringify(updated) }).subscribe({
+      error: (e) => console.error('[FilterPresetService] Failed to delete seasonal preset on server', e),
+    });
   }
 }

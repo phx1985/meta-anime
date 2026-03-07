@@ -1254,7 +1254,9 @@ html[data-theme='dark'] .navbar-toggler-icon {
 // ── Mobile Side Drawer ─────────────────────────────────────────────────────────
 
 .drawer-backdrop {
+  // Always in DOM — hidden by default, shown via class
   display: none;
+  pointer-events: none;
 
   @media (max-width: 991.98px) {
     display: block;
@@ -1264,16 +1266,23 @@ html[data-theme='dark'] .navbar-toggler-icon {
     background: rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
-    animation: drawerBdIn 0.22s ease;
+    opacity: 0;
+    transition: opacity 0.22s ease;
+
+    &.drawer-backdrop--visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    &.drawer-backdrop--closing {
+      opacity: 0;
+      pointer-events: none;
+    }
   }
 }
 
-@keyframes drawerBdIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
 .drawer {
+  // Always in DOM — off-screen by default on mobile; hidden on desktop
   display: none;
 
   @media (max-width: 991.98px) {
@@ -1288,38 +1297,18 @@ html[data-theme='dark'] .navbar-toggler-icon {
     background: var(--card-bg);
     border-left: 1px solid var(--card-border);
     box-shadow: -12px 0 48px rgba(0, 0, 0, 0.32);
-    animation: drawerSlideIn 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     padding-bottom: env(safe-area-inset-bottom, 0px);
+    // Default: fully off-screen to the right — no animation flash on page load
+    transform: translateX(100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &.drawer--open {
+      transform: translateX(0);
+    }
+
+    // .drawer--closing simply removes .drawer--open — the transition reverses automatically.
+    // No separate keyframe needed; the CSS transition handles the slide-out.
   }
-}
-
-@keyframes drawerSlideIn {
-  from { transform: translateX(100%); }
-  to   { transform: translateX(0); }
-}
-
-@keyframes drawerSlideOut {
-  from { transform: translateX(0); }
-  to   { transform: translateX(100%); }
-}
-
-// Applied during the close animation to play the slide-out
-.drawer--closing {
-  @media (max-width: 991.98px) {
-    animation: drawerSlideOut 0.24s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
-  }
-}
-
-// Fade out the backdrop in sync with the drawer slide
-.drawer-backdrop--closing {
-  @media (max-width: 991.98px) {
-    animation: drawerBdOut 0.22s ease forwards !important;
-  }
-}
-
-@keyframes drawerBdOut {
-  from { opacity: 1; }
-  to   { opacity: 0; }
 }
 
 .drawer-header {
