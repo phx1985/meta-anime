@@ -1,0 +1,9 @@
+# Enforce LF line endings for all shell scripts and Dockerfiles
+# so Windows checkouts never corrupt them with CRLF.
+
+root/etc/**        text eol=lf
+*.sh               text eol=lf
+Dockerfile*        text eol=lf
+
+# Default behaviour for everything else
+*                  text=auto

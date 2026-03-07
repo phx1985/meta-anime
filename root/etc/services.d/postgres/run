@@ -6,12 +6,11 @@
 # Uses /config/postgres as PGDATA so data persists in the mounted volume.
 # =============================================================================
 
-PG_VERSION=$(ls /usr/lib/postgresql 2>/dev/null | sort -V | tail -1)
-if [ -z "${PG_VERSION}" ]; then
-    echo "[postgres] ERROR: No PostgreSQL installation found in /usr/lib/postgresql" >&2
+PG_BIN=$(find /usr/libexec -maxdepth 1 -name 'postgresql*' -type d 2>/dev/null | sort -V | tail -1)
+if [ -z "${PG_BIN}" ]; then
+    echo "[postgres] ERROR: No PostgreSQL installation found in /usr/libexec" >&2
     exit 1
 fi
-PG_BIN="/usr/lib/postgresql/${PG_VERSION}/bin"
 
 mkdir -p /config/postgres/sockets
 chown -R abc:abc /config/postgres/sockets
