@@ -50,12 +50,23 @@
         <!-- Left: poster — fills the full height of the grid row -->
         <div class="panel__cover-col" (click)="openPosterGallery()">
           @if (mal?.coverImageUrl) {
-            <img
-              class="panel__cover"
-              [src]="mal!.coverImageUrl"
-              [alt]="displayTitle"
-              loading="lazy"
-            />
+            <div class="poster-wrapper">
+              <!-- Blurred ambient background — stretched and darkened to fill the box -->
+              <img
+                class="poster-bg"
+                [src]="mal!.coverImageUrl"
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+              />
+              <!-- Sharp foreground — object-fit: contain so nothing is cropped -->
+              <img
+                class="poster-fg"
+                [src]="mal!.coverImageUrl"
+                [alt]="displayTitle"
+                loading="lazy"
+              />
+            </div>
           } @else {
             <div class="panel__cover-placeholder">{{ displayTitle.charAt(0) }}</div>
           }
