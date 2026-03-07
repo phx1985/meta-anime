@@ -207,7 +207,9 @@ export class App implements OnInit, AfterViewInit {
 
     // Push "Welcome" notification once ever, persisted server-side so it
     // doesn't re-appear when localStorage is cleared.
-    if (!this.userPrefs.isWelcomeShown()) {
+    // isWelcomeShown() returns null if load() failed (auth issue) — skip the
+    // welcome in that case rather than incorrectly re-showing it.
+    if (this.userPrefs.isWelcomeShown() === false) {
       this.notifService.push({
         id: 'welcome-v2',
         severity: 'info',

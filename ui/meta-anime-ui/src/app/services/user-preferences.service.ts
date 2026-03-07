@@ -28,7 +28,13 @@ export class UserPreferencesService {
 
   private _lastFilters: string | null = null;
   private _lastSeasonalFilters: string | null = null;
-  private _welcomeShown = false;
+  /**
+   * Tri-state: null = load() not yet completed or failed (don't show welcome),
+   * false = loaded & key absent (show welcome), true = loaded & key present (don't show).
+   */
+  private _welcomeShown: boolean | null = null;
+  /** True only after load() completes successfully — guards writes against startup races. */
+  private _loaded = false;
 
   constructor() {
     // We no longer use effects to auto-save to localStorage.
@@ -89,6 +95,7 @@ export class UserPreferencesService {
       }
 
       this._welcomeShown = map.has(WELCOME_SHOWN_KEY);
+      this._loaded = true;
 
     } catch (err) {
       console.error('Failed to load user preferences from server', err);
@@ -97,13 +104,15 @@ export class UserPreferencesService {
     }
   }
 
-  isWelcomeShown(): boolean {
+  isWelcomeShown(): boolean | null {
     return this._welcomeShown;
   }
 
   markWelcomeShown(): void {
     this._welcomeShown = true;
-    this.propertyBag.upsert(WELCOME_SHOWN_KEY, { value: 'true' }).subscribe();
+    this.propertyBag.upsert(WELCOME_SHOWN_KEY, { value: 'true' }).subscribe({
+      error: (e) => console.error('[UserPreferencesService] Failed to mark welcome as shown', e),
+    });
   }
 
   setAutoApplyLastFilters(value: boolean): void {
@@ -127,8 +136,11 @@ export class UserPreferencesService {
   }
 
   saveLastFilters(filters: string): void {
+    if (!this._loaded) return;
     this._lastFilters = filters;
-    this.propertyBag.upsert(LAST_FILTERS_KEY, { value: filters }).subscribe();
+    this.propertyBag.upsert(LAST_FILTERS_KEY, { value: filters }).subscribe({
+      error: (e) => console.error('[UserPreferencesService] Failed to save last filters', e),
+    });
   }
 
   loadLastFilters(): string | null {
@@ -136,8 +148,11 @@ export class UserPreferencesService {
   }
 
   saveLastSeasonalFilters(filters: string): void {
+    if (!this._loaded) return;
     this._lastSeasonalFilters = filters;
-    this.propertyBag.upsert(LAST_SEASONAL_FILTERS_KEY, { value: filters }).subscribe();
+    this.propertyBag.upsert(LAST_SEASONAL_FILTERS_KEY, { value: filters }).subscribe({
+      error: (e) => console.error('[UserPreferencesService] Failed to save last seasonal filters', e),
+    });
   }
 
   loadLastSeasonalFilters(): string | null {
@@ -145,6 +160,9 @@ export class UserPreferencesService {
   }
 
   private saveBool(key: string, value: boolean): void {
-    this.propertyBag.upsert(key, { value: value ? 'true' : 'false' }).subscribe();
+    if (!this._loaded) return;
+    this.propertyBag.upsert(key, { value: value ? 'true' : 'false' }).subscribe({
+      error: (e) => console.error('[UserPreferencesService] Failed to save preference', key, e),
+    });
   }
 }

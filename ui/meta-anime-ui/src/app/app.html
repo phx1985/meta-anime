@@ -279,8 +279,12 @@
 } <!-- /!hideNavRoute() top nav -->
 
 <!-- ── Mobile Side Drawer ────────────────────────────────────────────────── -->
-@if (menuOpen() || drawerClosing()) {
-<div class="drawer-backdrop" [class.drawer-backdrop--closing]="drawerClosing()" (click)="closeMenu()" aria-hidden="true"></div>
+<!-- Drawer is always in the DOM — visibility is controlled entirely by CSS
+     transforms so the slide-in/out transition always plays smoothly. -->
+<div class="drawer-backdrop"
+  [class.drawer-backdrop--visible]="menuOpen() || drawerClosing()"
+  [class.drawer-backdrop--closing]="drawerClosing()"
+  (click)="closeMenu()" aria-hidden="true"></div>
 <aside class="drawer" [class.drawer--open]="menuOpen()" [class.drawer--closing]="drawerClosing()" role="dialog" aria-modal="true"
   [attr.aria-label]="'nav.menu' | translate">
   <!-- Drawer header -->
@@ -429,9 +433,8 @@
 
   </div>
 </aside>
-}
 
-<!-- Global animated bokeh background — fixed, z-index: -1, renders on every page -->
+<!-- Global animated bokeh background— fixed, z-index: -1, renders on every page -->
 <div class="bokeh" aria-hidden="true">
   @for (b of bokehBlobs; track b) { <div class="bokeh__blob"></div> }
 </div>
