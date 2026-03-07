@@ -217,28 +217,6 @@ export class App implements OnInit, AfterViewInit {
       this.userPrefs.markWelcomeShown();
     }
 
-    // Push "no sync yet" warning if library has never been synced
-    this.settingsService.getSyncStatus().subscribe({
-      next: (status) => {
-        if (!status.lastSyncDate) {
-          this.notifService.push({
-            id: 'no-sync-needed',
-            severity: 'warning',
-            titleKey: 'notifications.noSync.title',
-            messageKey: 'notifications.noSync.message',
-            action: {
-              labelKey: 'notifications.noSync.action',
-              route: ['/settings'],
-              fragment: 'sync-section',
-            },
-          });
-        }
-      },
-      error: () => {
-        /* non-critical */
-      },
-    });
-
     // Load provider URLs for navbar quick-links
     this.loadProviderUrls();
   }

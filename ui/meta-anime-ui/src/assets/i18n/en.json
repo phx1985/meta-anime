@@ -528,6 +528,14 @@
       "body": "Modifying the Kometa mapping file URL can break the connection between your anime tracking and your media server. Only proceed if you know exactly what you are doing.",
       "proceed": "I Understand, Proceed"
     },
+    "providerEnableWarn": {
+      "plexTitle": "No Libraries Selected",
+      "plexBody": "Plex is configured but no anime library sections have been selected. Without a selection, syncs won't know which libraries to include. You can configure them now or enable anyway.",
+      "sonarrTitle": "No Tags Selected",
+      "sonarrBody": "Sonarr is configured but no anime tags have been selected. Without a selection, syncs won't know which content to target. You can configure them now or enable anyway.",
+      "enableAnyway": "Enable Anyway",
+      "selectFirst": "Configure First"
+    },
     "enrollment": {
       "connected": "Connected",
       "disconnect": "Disconnect",

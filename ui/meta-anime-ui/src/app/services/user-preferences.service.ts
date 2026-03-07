@@ -59,7 +59,7 @@ export class UserPreferencesService {
         }
       };
 
-      loadBool(AUTO_APPLY_KEY, false, this.autoApplyLastFilters);
+      loadBool(AUTO_APPLY_KEY, true, this.autoApplyLastFilters);
       loadBool(LUCKY_ONLY_FINISHED_KEY, false, this.luckyOnlyFinished);
       loadBool(LUCKY_ONLY_PLAN_TO_WATCH_KEY, true, this.luckyOnlyPlanToWatch);
       loadBool(LUCKY_ONLY_WITH_FILES_KEY, true, this.luckyOnlyWithFiles);
