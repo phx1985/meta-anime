@@ -143,19 +143,19 @@ export class AnimeCardComponent {
   }
 
   mediaTypeLabel(type: string): string {
-    const key = `animeCard.mediaType.${type}`;
+    const key = `animeDetailPanel.mediaType.${type.toLowerCase()}`;
     const t = this.translate.instant(key);
     return t !== key ? t : type.toUpperCase();
   }
 
   viewStateLabel(state: string): string {
-    const key = `animeCard.malStatus.${state}`;
+    const key = `animeDetailPanel.malStatus.${state.toLowerCase()}`;
     const t = this.translate.instant(key);
     return t !== key ? t : state;
   }
 
   seriesStatusLabel(status: string): string {
-    const key = `animeCard.seriesStatus.${status}`;
+    const key = `animeDetailPanel.seriesStatus.${status.toLowerCase()}`;
     const t = this.translate.instant(key);
     return t !== key ? t : status.replace(/_/g, ' ');
   }

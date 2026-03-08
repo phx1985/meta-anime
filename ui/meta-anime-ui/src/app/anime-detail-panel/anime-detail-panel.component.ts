@@ -15,7 +15,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { DatePipe, TitleCasePipe } from '@angular/common';
+import { DatePipe, LowerCasePipe, TitleCasePipe } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -34,7 +34,7 @@ import { ProviderStateService } from '../services/provider-state.service';
   selector: 'app-anime-detail-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, DatePipe, TitleCasePipe, SafePipe, ScoreBadgeComponent],
+  imports: [TranslatePipe, DatePipe, LowerCasePipe, TitleCasePipe, SafePipe, ScoreBadgeComponent],
   templateUrl: './anime-detail-panel.component.html',
   styleUrl: './anime-detail-panel.component.scss',
 })
@@ -402,6 +402,12 @@ export class AnimeDetailPanelComponent {
 
   get sonarrUrl(): string | null {
     return this.sonarr?.url ?? this.sonarrBaseUrl() ?? null;
+  }
+
+  get addedDate(): string | null {
+    const date = this.sonarr?.addedDate ?? null;
+    if (!date) return null;
+    return new Date(date).getFullYear() > 1 ? date : null;
   }
 
   get plexUrl(): string | null {

@@ -15,6 +15,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MetaAnime.Application.Services;
 
@@ -36,7 +37,8 @@ public sealed class AnimeMediatorService(
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.Never
     };
 
     /// <summary>Genre names that are always treated as NSFW regardless of the MAL <c>nsfw</c> field value.</summary>
@@ -505,12 +507,37 @@ public sealed class AnimeMediatorService(
                                  : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.StartDate),
             "enddate" => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.EndDate)
                                : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.EndDate),
-            "addeddate" => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.AddedDate)
-                                 : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.AddedDate),
+            "addeddate" or "sonarradded" => desc
+                ? data.OrderByDescending(a => a.SonarrAnimes?.FirstOrDefault()?.AddedDate)
+                : data.OrderBy(a => a.SonarrAnimes?.FirstOrDefault()?.AddedDate),
             "sizeondisk" => desc ? data.OrderByDescending(a => a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0)
                                   : data.OrderBy(a => a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0),
             "totalsizedisk" => desc ? data.OrderByDescending(a => a.SonarrAnimes?.Sum(s => s.SizeOnDisk ?? 0) ?? 0)
                                      : data.OrderBy(a => a.SonarrAnimes?.Sum(s => s.SizeOnDisk ?? 0) ?? 0),
+            "episodes" => desc
+                ? data.OrderByDescending(a =>
+                    (a.SonarrAnimes?.FirstOrDefault()?.SeasonInfo ?? Array.Empty<SonarrSeasonInfo>())
+                    .Where(s => s.SeasonNumber > 0)
+                    .Sum(s => s.AvailableEpisodes))
+                : data.OrderBy(a =>
+                    (a.SonarrAnimes?.FirstOrDefault()?.SeasonInfo ?? Array.Empty<SonarrSeasonInfo>())
+                    .Where(s => s.SeasonNumber > 0)
+                    .Sum(s => s.AvailableEpisodes)),
+            "avgepsize" => desc
+                ? data.OrderByDescending(a =>
+                {
+                    var eps = (a.SonarrAnimes?.FirstOrDefault()?.SeasonInfo ?? Array.Empty<SonarrSeasonInfo>())
+                        .Where(s => s.SeasonNumber > 0)
+                        .Sum(s => s.AvailableEpisodes);
+                    return (a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0) / (long)(eps > 0 ? eps : 1);
+                })
+                : data.OrderBy(a =>
+                {
+                    var eps = (a.SonarrAnimes?.FirstOrDefault()?.SeasonInfo ?? Array.Empty<SonarrSeasonInfo>())
+                        .Where(s => s.SeasonNumber > 0)
+                        .Sum(s => s.AvailableEpisodes);
+                    return (a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0) / (long)(eps > 0 ? eps : 1);
+                }),
             _ => data.OrderBy(a => a.Title)
         };
     }

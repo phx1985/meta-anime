@@ -176,11 +176,29 @@
     "empty": "No anime found.",
     "totalCount": "{{count}} anime found",
     "loadingMore": "Loading more…",
+    "loadMore": "Load more",
     "endOfResults": "You've reached the end of the list",
     "displayMode": "Display mode",
-    "cols1": "1 column",
-    "cols2": "2 columns",
-    "cols3": "3 columns",
+    "cols1": "List view",
+    "cols2": "2-column grid",
+    "cols3": "3-column grid",
+    "cols4": "Table view",
+    "table": {
+      "resultsPerPage": "Per page",
+      "openMal": "Open in MAL",
+      "openPlex": "Open in Plex",
+      "openSonarr": "Open in Sonarr",
+      "col": {
+        "title": "Title",
+        "tags": "Genres & Themes",
+        "codecs": "Codecs",
+        "episodes": "Ep.",
+        "size": "Size",
+        "avgEpSize": "Avg. Ep Size",
+        "added": "Sonarr Added",
+        "actions": "Actions"
+      }
+    },
     "filter": {
       "title": "Filters",
       "titleSearch": "Title",
@@ -247,7 +265,7 @@
       "myScore": "My score",
       "startDate": "Air date",
       "endDate": "End date",
-      "addedDate": "Date added",
+      "addedDate": "Sonarr Added",
       "sizeOnDisk": "Size on disk",
       "totalSizeDisk": "Total size"
     }
@@ -267,10 +285,8 @@
     "episodes": "Ep. Count",
     "season": "Season",
     "specials": "Specials",
-    "diskSize": "Series Size"
-  },
-  "animeCard": {
-    "altTitles": "Alternative titles",
+    "diskSize": "Series Size",
+    "added": "Sonarr Added",
     "onboarding": {
       "posterHint": "Click for Art",
       "bodyHint": "Click for Details"

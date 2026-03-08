@@ -3,11 +3,26 @@ using MetaAnime.Core.Interfaces.Caching;
 using MetaAnime.Core.Interfaces.Mappers;
 using MetaAnime.Domain.Entities;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
 
 public partial class SonarrSeries : IAnimeConvertible, ICacheable
 {
+    /// <summary>
+    /// Serializer options used for both <see cref="ToCacheEntry"/> (write) and the
+    /// matching <see cref="AnimeMediatorService"/> (read).  A static instance avoids
+    /// allocating a fresh options object – and its internal reflection cache – on
+    /// every sync cycle.
+    /// </summary>
+    private static readonly JsonSerializerOptions CacheSerializerOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        // Serialize all fields; do NOT skip defaults/nulls so that every
+        // Sonarr property (including "added") is preserved in the blob.
+        DefaultIgnoreCondition = JsonIgnoreCondition.Never
+    };
+
     public Anime ToAnime()
     {
         return new Anime
@@ -65,17 +80,10 @@ public partial class SonarrSeries : IAnimeConvertible, ICacheable
 
     public CacheEntry ToCacheEntry()
     {
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-            // Don't use DefaultIgnoreCondition to ensure all fields are serialized, even if null
-            // This prevents missing data when deserializing from cache
-        };
-
         return new CacheEntry
         {
             SourceId = Id.ToString(),
-            RawData = JsonSerializer.Serialize(this, options),
+            RawData = JsonSerializer.Serialize(this, CacheSerializerOptions),
             AnimeSource = AnimeSource.Sonarr
         };
     }
