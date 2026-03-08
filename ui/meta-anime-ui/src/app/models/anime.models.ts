@@ -65,6 +65,7 @@ export interface SonarrAnimeInfo {
   id?: string;
   url?: string;
   exists: boolean;
+  addedDate?: string;
   seasonInfo?: SonarrSeasonInfo[];
   codecDistribution?: { [key: string]: number };
   sizeOnDisk?: number;

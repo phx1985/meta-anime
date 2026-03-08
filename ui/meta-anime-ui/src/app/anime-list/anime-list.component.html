@@ -541,8 +541,8 @@
               </div>
             </div>
 
-            <!-- Codec (Sonarr-only filter) -->
-            @if (providerState.sonarrEnabled()) {
+            <!-- Codec (Sonarr-only filter, Table view only) -->
+            @if (providerState.sonarrEnabled() && displayMode() === 4) {
               <div class="filter-field filter-field--pills">
                 <span class="filter-label">{{ 'animeList.filter.codec' | translate }}</span>
                 <div class="filter-pills">
@@ -652,6 +652,7 @@
                     [class.mode-btn--active]="displayMode() === 1"
                     (click)="setDisplayMode(1)"
                     [attr.aria-pressed]="displayMode() === 1"
+                    [title]="'animeList.cols1' | translate"
                   >
                     <svg
                       width="16"
@@ -671,6 +672,7 @@
                     [class.mode-btn--active]="displayMode() === 2"
                     (click)="setDisplayMode(2)"
                     [attr.aria-pressed]="displayMode() === 2"
+                    [title]="'animeList.cols2' | translate"
                   >
                     <svg
                       width="16"
@@ -691,6 +693,7 @@
                     [class.mode-btn--active]="displayMode() === 3"
                     (click)="setDisplayMode(3)"
                     [attr.aria-pressed]="displayMode() === 3"
+                    [title]="'animeList.cols3' | translate"
                   >
                     <svg
                       width="16"
@@ -705,6 +708,22 @@
                       <rect x="1" y="9" width="4" height="5" rx="1" />
                       <rect x="6" y="9" width="4" height="5" rx="1" />
                       <rect x="11" y="9" width="4" height="5" rx="1" />
+                    </svg>
+                  </button>
+                  <!-- Mode 4: Table — desktop only, hidden via CSS on ≤768px -->
+                  <button
+                    type="button"
+                    class="mode-btn mode-btn--desktop-only"
+                    [class.mode-btn--active]="displayMode() === 4"
+                    (click)="setDisplayMode(4)"
+                    [attr.aria-pressed]="displayMode() === 4"
+                    [title]="'animeList.cols4' | translate"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                      <rect x="1" y="2" width="14" height="2" rx="0.5" />
+                      <rect x="1" y="6" width="14" height="2" rx="0.5" />
+                      <rect x="1" y="10" width="14" height="2" rx="0.5" />
+                      <rect x="1" y="14" width="14" height="1.5" rx="0.5" />
                     </svg>
                   </button>
                 </div>
@@ -830,20 +849,221 @@
         </div>
       </div>
 
-      <div class="anime-grid" [class]="'cols-' + displayMode()">
-        @for (anime of animes(); track anime.aniDbId; let isFirst = $first; let i = $index) {
-          <app-anime-card
-            #animeCard
-            [anime]="anime"
-            [showOnboardingHint]="isFirst && cardHintActive()"
-            (onboardingDismissed)="dismissCardHint()"
-            (openDetails)="openAnimeDetails($event)"
-            [style.--i]="i"
-          />
-        }
-      </div>
+      @if (displayMode() !== 4) {
+        <div class="anime-grid" [class]="'cols-' + displayMode()">
+          @for (anime of animes(); track anime.aniDbId; let isFirst = $first; let i = $index) {
+            <app-anime-card
+              #animeCard
+              [anime]="anime"
+              [showOnboardingHint]="isFirst && cardHintActive()"
+              (onboardingDismissed)="dismissCardHint()"
+              (openDetails)="openAnimeDetails($event)"
+              [style.--i]="i"
+            />
+          }
+        </div>
+      }
 
-      @if (loadingMore()) {
+      @if (displayMode() === 4) {
+        <!-- ── Table toolbar ──────────────────────────────────────────────── -->
+        <div class="table-toolbar">
+          <span class="table-toolbar__count">
+            {{ 'animeList.totalCount' | translate: { count: totalCount() } }}
+          </span>
+          <div class="table-toolbar__controls">
+            @if (searched() && animes().length > 0 && totalPages() > 1) {
+              <nav class="tbl-pagination tbl-pagination--compact" aria-label="Table pagination top">
+                <button
+                  class="tbl-page-btn"
+                  [disabled]="tablePage() <= 1 || loading()"
+                  (click)="goToTablePage(tablePage() - 1)"
+                  aria-label="Previous page"
+                >‹</button>
+                @for (p of tablePageRange(); track $index) {
+                  @if (p === null) {
+                    <span class="tbl-page-ellipsis">…</span>
+                  } @else {
+                    <button
+                      class="tbl-page-btn"
+                      [class.tbl-page-btn--active]="p === tablePage()"
+                      [disabled]="loading()"
+                      (click)="goToTablePage(p)"
+                    >{{ p }}</button>
+                  }
+                }
+                <button
+                  class="tbl-page-btn"
+                  [disabled]="tablePage() >= totalPages() || loading()"
+                  (click)="goToTablePage(tablePage() + 1)"
+                  aria-label="Next page"
+                >›</button>
+              </nav>
+            }
+            <div class="table-toolbar__rpp">
+              <label class="rpp-label" for="rpp-select">{{ 'animeList.table.resultsPerPage' | translate }}</label>
+              <select id="rpp-select" class="rpp-select" [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)">
+                @for (opt of pageSizeOptions; track opt) {
+                  <option [value]="opt">{{ opt }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="anime-table-wrap">
+          <table class="anime-table">
+            <thead>
+              <tr>
+                <th class="tbl-th--sortable" (click)="sortTable('title')">
+                  {{ 'animeList.table.col.title' | translate }}
+                  @if (tableSortCol() === 'title') {
+                    <span class="tbl-sort-arrow">{{ tableSortDir() === 'asc' ? '↑' : '↓' }}</span>
+                  }
+                </th>
+                <th>{{ 'animeList.table.col.tags' | translate }}</th>
+                <th>{{ 'animeList.table.col.codecs' | translate }}</th>
+                <th class="tbl-th--sortable tbl-th--num" (click)="sortTable('episodes')">
+                  {{ 'animeList.table.col.episodes' | translate }}
+                  @if (tableSortCol() === 'episodes') {
+                    <span class="tbl-sort-arrow">{{ tableSortDir() === 'asc' ? '↑' : '↓' }}</span>
+                  }
+                </th>
+                <th class="tbl-th--sortable tbl-th--num" (click)="sortTable('size')">
+                  {{ 'animeList.table.col.size' | translate }}
+                  @if (tableSortCol() === 'size') {
+                    <span class="tbl-sort-arrow">{{ tableSortDir() === 'asc' ? '↑' : '↓' }}</span>
+                  }
+                </th>
+                <th class="tbl-th--sortable tbl-th--num" (click)="sortTable('avgsize')">
+                  {{ 'animeList.table.col.avgEpSize' | translate }}
+                  @if (tableSortCol() === 'avgsize') {
+                    <span class="tbl-sort-arrow">{{ tableSortDir() === 'asc' ? '↑' : '↓' }}</span>
+                  }
+                </th>
+                @if (providerState.sonarrEnabled()) {
+                <th class="tbl-th--sortable" (click)="sortTable('added')">
+                  {{ 'animeList.table.col.added' | translate }}
+                  @if (tableSortCol() === 'added') {
+                    <span class="tbl-sort-arrow">{{ tableSortDir() === 'asc' ? '↑' : '↓' }}</span>
+                  }
+                </th>
+                }
+                <th class="tbl-th--actions">{{ 'animeList.table.col.actions' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (anime of animes(); track anime.aniDbId) {
+                <tr (click)="openAnimeDetails(anime.aniDbId)">
+
+                  <!-- Title -->
+                  <td class="tbl-td--title" [title]="anime.malAnimes?.[0]?.title ?? anime.title">{{ anime.malAnimes?.[0]?.title ?? anime.title }}</td>
+
+                  <!-- Genres & Themes — colour-coded by type -->
+                  <td class="tbl-td--genres">
+                    @for (tag of getAnimeTags(anime); track tag.key) {
+                      <span [class]="'tbl-pill tbl-pill--' + tag.type">{{ 'genres.' + tag.key | translate }}</span>
+                    }
+                    @if (!anime.malAnimes?.[0]?.genres?.length) {
+                      <span class="tbl-empty">—</span>
+                    }
+                  </td>
+
+                  <!-- Codecs with percentage -->
+                  <td class="tbl-td--codecs">
+                    @for (pill of getCodecPills(anime.sonarrAnimes?.[0]?.codecDistribution); track pill.label) {
+                      <span class="tbl-pill tbl-pill--codec">{{ pill.label }} ({{ pill.pct }}%)</span>
+                    }
+                    @if (!getCodecPills(anime.sonarrAnimes?.[0]?.codecDistribution).length) {
+                      <span class="tbl-empty">—</span>
+                    }
+                  </td>
+
+                  <!-- Episode count (on-disk from Sonarr) -->
+                  <td class="tbl-td--num">
+                    {{ getTableEpCount(anime) || '—' }}
+                  </td>
+
+                  <!-- Size on disk -->
+                  <td class="tbl-td--num">{{ formatTableSize(anime.sonarrAnimes?.[0]?.sizeOnDisk) }}</td>
+
+                  <!-- Average episode size -->
+                  <td class="tbl-td--num">{{ formatAvgEpSize(anime) }}</td>
+
+                  <!-- Added date -->
+                  @if (providerState.sonarrEnabled()) {
+                  <td class="tbl-td--num">{{ getAddedDate(anime) | date:'yyyy/MM/dd' }}</td>
+                  }
+
+                  <!-- Actions — stopPropagation so clicks don't open the detail panel -->
+                  <td class="tbl-td--actions" (click)="$event.stopPropagation()">
+                    <div class="actions-cell-container">
+                      @if (anime.malAnimes?.[0]?.url) {
+                        <a class="tbl-action-btn btn-mal"
+                           [href]="anime.malAnimes![0].url!"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           [title]="'animeList.table.openMal' | translate">
+                          <img src="assets/images/mal.svg" alt="MAL" width="16" height="16" />
+                        </a>
+                      }
+                      @if (providerState.plexEnabled() && anime.plexAnimes?.[0]) {
+                        <a class="tbl-action-btn btn-plex"
+                           [href]="anime.plexAnimes![0].url ?? '#'"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           [title]="'animeList.table.openPlex' | translate">
+                          <img src="assets/images/plex.svg" alt="Plex" width="16" height="16" />
+                        </a>
+                      }
+                      @if (providerState.sonarrEnabled() && anime.sonarrAnimes?.[0]?.url) {
+                        <a class="tbl-action-btn btn-sonarr"
+                           [href]="anime.sonarrAnimes![0].url!"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           [title]="'animeList.table.openSonarr' | translate">
+                          <img src="assets/images/sonarr.svg" alt="Sonarr" width="16" height="16" />
+                        </a>
+                      }
+                    </div>
+                  </td>
+
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (searched() && animes().length > 0 && totalPages() > 1) {
+          <nav class="tbl-pagination" aria-label="Table pagination">
+            <button
+              class="tbl-page-btn"
+              [disabled]="tablePage() <= 1 || loading()"
+              (click)="goToTablePage(tablePage() - 1)"
+              aria-label="Previous page"
+            >‹</button>
+            @for (p of tablePageRange(); track $index) {
+              @if (p === null) {
+                <span class="tbl-page-ellipsis">…</span>
+              } @else {
+                <button
+                  class="tbl-page-btn"
+                  [class.tbl-page-btn--active]="p === tablePage()"
+                  [disabled]="loading()"
+                  (click)="goToTablePage(p)"
+                >{{ p }}</button>
+              }
+            }
+            <button
+              class="tbl-page-btn"
+              [disabled]="tablePage() >= totalPages() || loading()"
+              (click)="goToTablePage(tablePage() + 1)"
+              aria-label="Next page"
+            >›</button>
+          </nav>
+        }
+      }
+
+      @if (displayMode() !== 4 && loadingMore()) {
         <div class="d-flex justify-content-center py-4">
           <div class="spinner-border spinner-border-sm" role="status">
             <span class="visually-hidden">{{ 'animeList.loadingMore' | translate }}</span>
@@ -851,7 +1071,7 @@
         </div>
       }
 
-      @if (allLoaded() && animes().length > 0) {
+      @if (displayMode() !== 4 && allLoaded() && animes().length > 0) {
         <p class="anime-end-message text-center text-muted py-4">
           {{ 'animeList.endOfResults' | translate }}
         </p>

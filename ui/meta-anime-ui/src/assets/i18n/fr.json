@@ -176,11 +176,29 @@
     "empty": "Aucun anime trouvé.",
     "totalCount": "{{count}} anime(s) trouvé(s)",
     "loadingMore": "Chargement…",
+    "loadMore": "Charger plus",
     "endOfResults": "Vous avez atteint la fin de la liste",
     "displayMode": "Mode d'affichage",
-    "cols1": "1 colonne",
-    "cols2": "2 colonnes",
-    "cols3": "3 colonnes",
+    "cols1": "Vue liste",
+    "cols2": "Grille 2 colonnes",
+    "cols3": "Grille 3 colonnes",
+    "cols4": "Vue tableau",
+    "table": {
+      "resultsPerPage": "Par page",
+      "openMal": "Ouvrir dans MAL",
+      "openPlex": "Ouvrir dans Plex",
+      "openSonarr": "Ouvrir dans Sonarr",
+      "col": {
+        "title": "Titre",
+        "tags": "Genres & Thèmes",
+        "codecs": "Codecs",
+        "episodes": "Ép.",
+        "size": "Taille",
+        "avgEpSize": "Taille moy./ép.",
+        "added": "Ajouté à Sonarr",
+        "actions": "Actions"
+      }
+    },
     "filter": {
       "title": "Filtres",
       "titleSearch": "Titre",
@@ -247,7 +265,7 @@
       "myScore": "Mon score",
       "startDate": "Date de diffusion",
       "endDate": "Date de fin",
-      "addedDate": "Date d'ajout",
+      "addedDate": "Ajouté sur Sonarr",
       "sizeOnDisk": "Taille sur disque",
       "totalSizeDisk": "Taille totale"
     }
@@ -267,10 +285,8 @@
     "episodes": "Nb. Épisodes",
     "season": "Saison",
     "specials": "Spéciaux",
-    "diskSize": "Taille de la Série"
-  },
-  "animeCard": {
-    "altTitles": "Titres alternatifs",
+    "diskSize": "Taille de la Série",
+    "added": "Ajouté à Sonarr",
     "onboarding": {
       "posterHint": "Voir l'Artwork",
       "bodyHint": "Voir les Détails"
@@ -777,7 +793,13 @@
     "confirm": "Confirmer",
     "close": "Fermer",
     "back": "Retour",
-    "next": "Suivant"
+    "next": "Suivant",
+    "units": {
+      "kb": "Ko",
+      "mb": "Mo",
+      "gb": "Go",
+      "tb": "To"
+    }
   },
   "notFound": {
     "ariaLabel": "404 – Page introuvable",

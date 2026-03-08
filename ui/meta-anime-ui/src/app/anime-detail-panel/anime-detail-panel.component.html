@@ -50,12 +50,23 @@
         <!-- Left: poster — fills the full height of the grid row -->
         <div class="panel__cover-col" (click)="openPosterGallery()">
           @if (mal?.coverImageUrl) {
-            <img
-              class="panel__cover"
-              [src]="mal!.coverImageUrl"
-              [alt]="displayTitle"
-              loading="lazy"
-            />
+            <div class="poster-wrapper">
+              <!-- Blurred ambient background — stretched and darkened to fill the box -->
+              <img
+                class="poster-bg"
+                [src]="mal!.coverImageUrl"
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+              />
+              <!-- Sharp foreground — object-fit: contain so nothing is cropped -->
+              <img
+                class="poster-fg"
+                [src]="mal!.coverImageUrl"
+                [alt]="displayTitle"
+                loading="lazy"
+              />
+            </div>
           } @else {
             <div class="panel__cover-placeholder">{{ displayTitle.charAt(0) }}</div>
           }
@@ -101,13 +112,13 @@
             <!-- Status pills -->
             <div class="panel__pills">
               @if (mal?.mediaType) {
-                <span class="panel__pill panel__pill--media-type">{{ mal!.mediaType | titlecase }}</span>
+                <span class="panel__pill panel__pill--media-type">{{ ('animeDetailPanel.mediaType.' + (mal!.mediaType | lowercase)) | translate }}</span>
               }
               @if (malViewState) {
-                <span class="panel__pill panel__pill--{{ malViewState }}">{{ ('animeCard.malStatus.' + malViewState) | translate }}</span>
+                <span class="panel__pill panel__pill--{{ malViewState | lowercase }}">{{ ('animeDetailPanel.malStatus.' + (malViewState | lowercase)) | translate }}</span>
               }
               @if (mal?.status) {
-                <span class="panel__pill panel__pill--status">{{ ('animeCard.seriesStatus.' + mal!.status) | translate }}</span>
+                <span class="panel__pill panel__pill--status">{{ ('animeDetailPanel.seriesStatus.' + (mal!.status | lowercase)) | translate }}</span>
               }
 
             </div>
@@ -274,6 +285,12 @@
           <span class="panel__meta-item">
             <span class="panel__meta-label">{{ 'animeDetailPanel.rank' | translate }}</span>
             <span class="panel__meta-value">#{{ mal!.rank }}</span>
+          </span>
+        }
+        @if (sonarrEnabled() && addedDate) {
+          <span class="panel__meta-item">
+            <span class="panel__meta-label">{{ 'animeDetailPanel.added' | translate }}</span>
+            <span class="panel__meta-value">{{ addedDate | date:'yyyy/MM/dd' }}</span>
           </span>
         }
       </div>
