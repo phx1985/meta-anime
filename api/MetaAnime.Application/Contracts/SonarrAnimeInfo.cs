@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using MetaAnime.Domain.Entities;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
 
@@ -11,7 +12,9 @@ public sealed record SonarrAnimeInfo(
     bool Exists,
     SonarrSeasonInfo[]? SeasonInfo,
     Dictionary<string, int>? CodecDistribution,
-    long? SizeOnDisk
+    long? SizeOnDisk,
+    [property: JsonPropertyName("addedDate")]
+    DateTime? AddedDate
 )
 {
     public SonarrAnimeInfo(Anime? anime, string sonarrBaseUrl)
@@ -22,7 +25,8 @@ public sealed record SonarrAnimeInfo(
             Exists: false,
             SeasonInfo: null,
             CodecDistribution: null,
-            SizeOnDisk: null
+            SizeOnDisk: null,
+            AddedDate: null
         )
     { }
 
@@ -38,7 +42,8 @@ public sealed record SonarrAnimeInfo(
                 s.Statistics?.TotalEpisodeCount ?? 0
             )).ToArray(),
             codecDistribution,
-            CalculateTotalSizeOnDisk(sonarrSeries?.Seasons)
+            CalculateTotalSizeOnDisk(sonarrSeries?.Seasons),
+            sonarrSeries?.Added.Year > 1 ? sonarrSeries.Added : (DateTime?)null
         )
     { }
 

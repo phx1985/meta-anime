@@ -15,7 +15,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet, DatePipe } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
 import { SettingsService } from '../services/settings.service';
@@ -35,10 +35,10 @@ import { AnimeDetailPanelComponent } from '../anime-detail-panel/anime-detail-pa
 import { AnimeImageGalleryComponent } from '../anime-image-gallery/anime-image-gallery.component';
 import { StorageKeys } from '../constants/storage-keys';
 
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
 const DISPLAY_MODE_KEY = StorageKeys.displayMode;
 
-export type DisplayMode = 1 | 2 | 3;
+export type DisplayMode = 1 | 2 | 3 | 4;
 
 export { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../constants/genre-lists';
 import {
@@ -52,17 +52,17 @@ import {
 } from '../constants/genre-lists';
 
 export const WATCHING_STATES = [
-  { value: 'watching', labelKey: 'animeCard.malStatus.watching' },
-  { value: 'completed', labelKey: 'animeCard.malStatus.completed' },
-  { value: 'on_hold', labelKey: 'animeCard.malStatus.on_hold' },
-  { value: 'dropped', labelKey: 'animeCard.malStatus.dropped' },
-  { value: 'plan_to_watch', labelKey: 'animeCard.malStatus.plan_to_watch' },
+  { value: 'watching', labelKey: 'animeDetailPanel.malStatus.watching' },
+  { value: 'completed', labelKey: 'animeDetailPanel.malStatus.completed' },
+  { value: 'on_hold', labelKey: 'animeDetailPanel.malStatus.on_hold' },
+  { value: 'dropped', labelKey: 'animeDetailPanel.malStatus.dropped' },
+  { value: 'plan_to_watch', labelKey: 'animeDetailPanel.malStatus.plan_to_watch' },
 ];
 
 export const AIRING_STATES = [
-  { value: 'finished_airing', labelKey: 'animeCard.seriesStatus.finished_airing' },
-  { value: 'currently_airing', labelKey: 'animeCard.seriesStatus.currently_airing' },
-  { value: 'not_yet_aired', labelKey: 'animeCard.seriesStatus.not_yet_aired' },
+  { value: 'finished_airing', labelKey: 'animeDetailPanel.seriesStatus.finished_airing' },
+  { value: 'currently_airing', labelKey: 'animeDetailPanel.seriesStatus.currently_airing' },
+  { value: 'not_yet_aired', labelKey: 'animeDetailPanel.seriesStatus.not_yet_aired' },
 ];
 
 export const SORT_OPTIONS = [
@@ -84,19 +84,19 @@ export const CODEC_OPTIONS = [
 ];
 
 export const MEDIA_TYPE_OPTIONS = [
-  { value: 'tv', labelKey: 'animeCard.mediaType.tv' },
-  { value: 'movie', labelKey: 'animeCard.mediaType.movie' },
-  { value: 'ova', labelKey: 'animeCard.mediaType.ova' },
-  { value: 'ona', labelKey: 'animeCard.mediaType.ona' },
-  { value: 'special', labelKey: 'animeCard.mediaType.special' },
-  { value: 'music', labelKey: 'animeCard.mediaType.music' },
+  { value: 'tv', labelKey: 'animeDetailPanel.mediaType.tv' },
+  { value: 'movie', labelKey: 'animeDetailPanel.mediaType.movie' },
+  { value: 'ova', labelKey: 'animeDetailPanel.mediaType.ova' },
+  { value: 'ona', labelKey: 'animeDetailPanel.mediaType.ona' },
+  { value: 'special', labelKey: 'animeDetailPanel.mediaType.special' },
+  { value: 'music', labelKey: 'animeDetailPanel.mediaType.music' },
 ];
 
 @Component({
   selector: 'app-anime-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, AnimeImageGalleryComponent, NgTemplateOutlet],
+  imports: [FormsModule, RouterLink, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, AnimeImageGalleryComponent, NgTemplateOutlet, DatePipe],
   templateUrl: './anime-list.component.html',
   styleUrl: './anime-list.component.scss',
 })
@@ -121,6 +121,36 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   allLoaded = signal(false);
   displayMode = signal<DisplayMode>(2);
   layoutState = signal(0);
+
+  // ── Table-view state ──────────────────────────────────────────────────────
+
+  /** Results fetched per "page" (infinite-scroll batch). Configurable by the user in table view. */
+  readonly pageSizeOptions = [20, 50, 100] as const;
+  pageSize = signal<number>(DEFAULT_PAGE_SIZE);
+
+  /** Current page number for table-view pagination (1-based). */
+  tablePage = signal(1);
+  /** Total number of pages, derived from server totalCount. */
+  readonly totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize())));
+  /** Page number buttons to render in the table pagination bar (null = ellipsis). */
+  readonly tablePageRange = computed<(number | null)[]>(() => {
+    const total = this.totalPages();
+    const current = this.tablePage();
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: (number | null)[] = [1];
+    if (current > 3) pages.push(null);
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (current < total - 2) pages.push(null);
+    pages.push(total);
+    return pages;
+  });
+
+  /** Active sort column for the client-side table sort. */
+  tableSortCol = signal<'title' | 'episodes' | 'size' | 'avgsize' | 'added'>('title');
+  tableSortDir = signal<'asc' | 'desc'>('asc');
+
   searched = signal(false);
   selectedAnimeId = signal<string | null>(null);
   /** Controls the first-time onboarding animation on the first card. */
@@ -369,7 +399,11 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   constructor() {
     const saved = localStorage.getItem(DISPLAY_MODE_KEY);
     const n = Number(saved);
-    if (saved && (n === 1 || n === 2 || n === 3)) this.displayMode.set(n as DisplayMode);
+    if (saved && n >= 1 && n <= 4) {
+      // Mode 4 (table) is desktop-only — fall back to grid on mobile
+      const resolved = (n === 4 && window.innerWidth <= 768) ? 2 : n;
+      this.displayMode.set(resolved as DisplayMode);
+    }
 
     // Notify app-root to retract the bottom nav bar while any mobile sheet is open.
     effect(() => {
@@ -435,13 +469,133 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   // Popup close-on-backdrop handled inline in template; nothing to close via document:click.
 
+  // ── Table view helpers ────────────────────────────────────────────────────
+
+  /** Click a table column header to sort client-side; second click reverses direction. */
+  sortTable(col: 'title' | 'episodes' | 'size' | 'avgsize' | 'added'): void {
+    const dir = this.tableSortCol() === col && this.tableSortDir() === 'asc' ? 'desc' : 'asc';
+    this.tableSortCol.set(col);
+    this.tableSortDir.set(dir);
+    this.sortOrder = dir;
+
+    const serverFieldMap: Record<'title' | 'episodes' | 'size' | 'avgsize' | 'added', string> = {
+      title: 'title',
+      episodes: 'episodes',
+      size: 'sizeondisk',
+      avgsize: 'avgEpSize',
+      added: 'sonarrAdded',
+    };
+    this.sortBy = serverFieldMap[col];
+    this.invalidatePreset();
+    if (this.searched()) this.loadAnimes(true);
+  }
+
+  getAddedDate(anime: AnimeDetailsResponse): string | null {
+    const date = anime.sonarrAnimes?.[0]?.addedDate ?? null;
+    if (!date) return null;
+    return new Date(date).getFullYear() > 1 ? date : null;
+  }
+
+  loadMore(): void {
+    if (this.loadingMore() || this.allLoaded()) return;
+    this.currentPage++;
+    this.loadAnimes(false);
+  }
+
+  /** Change the results-per-page batch size and reload. */
+  changePageSize(value: number | string): void {
+    const n = Number(value);
+    if (n > 0) {
+      this.pageSize.set(n);
+      if (this.searched()) this.loadAnimes(true);
+    }
+  }
+
+  /** Navigate to a specific page in the table view. */
+  goToTablePage(page: number): void {
+    const total = this.totalPages();
+    if (page < 1 || page > total || page === this.tablePage()) return;
+    this.loadAnimes(true, page);
+  }
+
+  /** Format raw bytes to a human-readable size string using Base-2 (1024) math. */
+  formatTableSize(bytes?: number): string {
+    if (!bytes || bytes <= 0) return '—';
+    const GiB = 1024 ** 3;
+    const MiB = 1024 ** 2;
+    const KiB = 1024;
+    if (bytes >= GiB) return (bytes / GiB).toFixed(1) + ' ' + this.translateService.instant('common.units.gb');
+    if (bytes >= MiB) return (bytes / MiB).toFixed(1) + ' ' + this.translateService.instant('common.units.mb');
+    return (bytes / KiB).toFixed(0) + ' ' + this.translateService.instant('common.units.kb');
+  }
+
+  /** Average file size per episode for the anime. */
+  formatAvgEpSize(anime: AnimeDetailsResponse): string {
+    const bytes = anime.sonarrAnimes?.[0]?.sizeOnDisk;
+    const eps = this.getTableEpCount(anime);
+    if (!bytes || bytes <= 0 || eps <= 0) return '—';
+    return this.formatTableSize(bytes / eps);
+  }
+
+  /** Total available (on-disk) episodes across all non-specials seasons. */
+  getTableEpCount(anime: AnimeDetailsResponse): number {
+    return (
+      anime.sonarrAnimes?.[0]?.seasonInfo
+        ?.filter((s) => s.seasonNumber > 0)
+        ?.reduce((sum, s) => sum + s.availableEpisodes, 0) ?? 0
+    );
+  }
+
+  /** Returns flat list of genre/theme/demographic tags with their type for colour-coding. */
+  getAnimeTags(
+    anime: AnimeDetailsResponse,
+  ): { key: string; type: 'genre' | 'theme' | 'demographic' }[] {
+    return (anime.malAnimes?.[0]?.genres ?? []).map((g) => ({
+      key: g,
+      type: (GENRE_LIST.includes(g)
+        ? 'genre'
+        : THEME_LIST.includes(g)
+          ? 'theme'
+          : 'demographic') as 'genre' | 'theme' | 'demographic',
+    }));
+  }
+
+  /** Convert a codec distribution map into a sorted array of { label, pct } pills.
+   *  Filters out empty/null keys and entries with 0 count. */
+  getCodecPills(dist?: { [key: string]: number }): { label: string; pct: number }[] {
+    if (!dist) return [];
+    const entries = Object.entries(dist).filter(([key, count]) => key?.trim() && count > 0);
+    const total = entries.reduce((s, [, v]) => s + v, 0);
+    if (total === 0) return [];
+    return entries
+      .map(([label, count]) => ({
+        label: label.toUpperCase(),
+        pct: Math.round((count / total) * 100),
+      }))
+      .sort((a, b) => b.pct - a.pct);
+  }
+
+  /** Average bytes per episode (raw, used for client-side sort). */
+  private calcAvgEpBytes(anime: AnimeDetailsResponse): number {
+    const bytes = anime.sonarrAnimes?.[0]?.sizeOnDisk ?? 0;
+    const eps = this.getTableEpCount(anime);
+    return eps > 0 ? bytes / eps : 0;
+  }
+
   // ── Display mode ──────────────────────────────────────────────────────────
 
   setDisplayMode(mode: DisplayMode): void {
     if (this.displayMode() === mode) return;
+    const wasTable = this.displayMode() === 4;
     this.displayMode.set(mode);
     this.layoutState.update((v) => v + 1);
     localStorage.setItem(DISPLAY_MODE_KEY, String(mode));
+    if (wasTable && mode !== 4) {
+      this.filterCodec = [];
+      this.filterHasFile = 'any';
+      this.invalidatePreset();
+      if (this.searched()) this.loadAnimes(true);
+    }
   }
 
   // ── Filter panel collapse ─────────────────────────────────────────────────
@@ -466,12 +620,10 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   toggleSortOrder(): void {
     this.invalidatePreset();
     this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
-    if (this.searched()) this.loadAnimes(true);
   }
 
   onSortByChange(): void {
     this.invalidatePreset();
-    if (this.searched()) this.loadAnimes(true);
   }
 
   // ── Pill multi-select toggle ──────────────────────────────────────────────
@@ -556,6 +708,17 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   // ── Search / Reset ────────────────────────────────────────────────────────
 
   search(): void {
+    // Sync table sort indicators with filter sort state
+    const reverseFieldMap: Record<string, 'title' | 'episodes' | 'size' | 'avgsize' | 'added'> = {
+      title: 'title',
+      sizeondisk: 'size',
+      totalsizedisk: 'size',
+      totalepisodes: 'episodes',
+      addeddate: 'added',
+    };
+    this.tableSortCol.set(reverseFieldMap[this.sortBy] ?? 'title');
+    this.tableSortDir.set(this.sortOrder as 'asc' | 'desc');
+
     this.userPrefs.saveLastFilters(JSON.stringify(this.snapshotFilters()));
     this.searched.set(true);
     this.filterOpen.set(false); // collapse filter panel on search
@@ -726,9 +889,10 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     };
   }
 
-  private loadAnimes(reset: boolean): void {
+  private loadAnimes(reset: boolean, targetPage = 1): void {
     if (reset) {
-      this.currentPage = 1;
+      this.currentPage = targetPage;
+      this.tablePage.set(targetPage);
       this.animes.set([]);
       this.allLoaded.set(false);
       this.loading.set(true);
@@ -740,12 +904,16 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.error.set(false);
 
     this.animeService
-      .getAnimes(this.currentPage, PAGE_SIZE, this.buildFilters())
+      .getAnimes(this.currentPage, this.pageSize(), this.buildFilters())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => {
           this.totalCount.set(data.totalCount);
-          this.animes.update((existing) => [...existing, ...data.data]);
+          if (this.displayMode() === 4) {
+            this.animes.set(data.data);
+          } else {
+            this.animes.update((existing) => [...existing, ...data.data]);
+          }
           this.allLoaded.set(!data.hasNextPage);
           this.loading.set(false);
           this.loadingMore.set(false);
@@ -776,7 +944,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
     const sentinelIdx = Math.min(
       elements.length - 1,
-      Math.max(0, elements.length - Math.floor(PAGE_SIZE / 2)),
+      Math.max(0, elements.length - Math.floor(this.pageSize() / 2)),
     );
     const hostEl = elements[sentinelIdx].nativeElement;
     const targetEl = hostEl.firstElementChild;
