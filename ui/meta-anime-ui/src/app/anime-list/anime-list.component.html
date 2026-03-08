@@ -541,8 +541,8 @@
               </div>
             </div>
 
-            <!-- Codec (Sonarr-only filter) -->
-            @if (providerState.sonarrEnabled()) {
+            <!-- Codec (Sonarr-only filter, Table view only) -->
+            @if (providerState.sonarrEnabled() && displayMode() === 4) {
               <div class="filter-field filter-field--pills">
                 <span class="filter-label">{{ 'animeList.filter.codec' | translate }}</span>
                 <div class="filter-pills">

@@ -583,9 +583,16 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   setDisplayMode(mode: DisplayMode): void {
     if (this.displayMode() === mode) return;
+    const wasTable = this.displayMode() === 4;
     this.displayMode.set(mode);
     this.layoutState.update((v) => v + 1);
     localStorage.setItem(DISPLAY_MODE_KEY, String(mode));
+    if (wasTable && mode !== 4) {
+      this.filterCodec = [];
+      this.filterHasFile = 'any';
+      this.invalidatePreset();
+      if (this.searched()) this.loadAnimes(true);
+    }
   }
 
   // ── Filter panel collapse ─────────────────────────────────────────────────
