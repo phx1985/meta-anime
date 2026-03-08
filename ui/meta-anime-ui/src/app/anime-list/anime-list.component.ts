@@ -518,12 +518,15 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.loadAnimes(true, page);
   }
 
-  /** Format raw bytes to a human-readable "X.X GB" / "X.X MB" string. */
+  /** Format raw bytes to a human-readable size string using Base-2 (1024) math. */
   formatTableSize(bytes?: number): string {
     if (!bytes || bytes <= 0) return '—';
-    if (bytes >= 1e9) return (bytes / 1e9).toFixed(1) + ' GB';
-    if (bytes >= 1e6) return (bytes / 1e6).toFixed(1) + ' MB';
-    return (bytes / 1e3).toFixed(0) + ' KB';
+    const GiB = 1024 ** 3;
+    const MiB = 1024 ** 2;
+    const KiB = 1024;
+    if (bytes >= GiB) return (bytes / GiB).toFixed(1) + ' ' + this.translateService.instant('common.units.gb');
+    if (bytes >= MiB) return (bytes / MiB).toFixed(1) + ' ' + this.translateService.instant('common.units.mb');
+    return (bytes / KiB).toFixed(0) + ' ' + this.translateService.instant('common.units.kb');
   }
 
   /** Average file size per episode for the anime. */

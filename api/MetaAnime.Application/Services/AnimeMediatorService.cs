@@ -526,17 +526,21 @@ public sealed class AnimeMediatorService(
             "avgepsize" => desc
                 ? data.OrderByDescending(a =>
                 {
-                    var eps = (a.SonarrAnimes?.FirstOrDefault()?.SeasonInfo ?? Array.Empty<SonarrSeasonInfo>())
+                    var sonarr = a.SonarrAnimes?.FirstOrDefault();
+                    var eps = (sonarr?.SeasonInfo ?? Array.Empty<SonarrSeasonInfo>())
                         .Where(s => s.SeasonNumber > 0)
                         .Sum(s => s.AvailableEpisodes);
-                    return (a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0) / (long)(eps > 0 ? eps : 1);
+                    var size = sonarr?.SizeOnDisk ?? 0;
+                    return eps > 0 && size > 0 ? size / (long)eps : 0L;
                 })
                 : data.OrderBy(a =>
                 {
-                    var eps = (a.SonarrAnimes?.FirstOrDefault()?.SeasonInfo ?? Array.Empty<SonarrSeasonInfo>())
+                    var sonarr = a.SonarrAnimes?.FirstOrDefault();
+                    var eps = (sonarr?.SeasonInfo ?? Array.Empty<SonarrSeasonInfo>())
                         .Where(s => s.SeasonNumber > 0)
                         .Sum(s => s.AvailableEpisodes);
-                    return (a.SonarrAnimes?.FirstOrDefault()?.SizeOnDisk ?? 0) / (long)(eps > 0 ? eps : 1);
+                    var size = sonarr?.SizeOnDisk ?? 0;
+                    return eps > 0 && size > 0 ? size / (long)eps : 0L;
                 }),
             _ => data.OrderBy(a => a.Title)
         };

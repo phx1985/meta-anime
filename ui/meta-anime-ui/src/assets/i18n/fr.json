@@ -793,7 +793,13 @@
     "confirm": "Confirmer",
     "close": "Fermer",
     "back": "Retour",
-    "next": "Suivant"
+    "next": "Suivant",
+    "units": {
+      "kb": "Ko",
+      "mb": "Mo",
+      "gb": "Go",
+      "tb": "To"
+    }
   },
   "notFound": {
     "ariaLabel": "404 – Page introuvable",

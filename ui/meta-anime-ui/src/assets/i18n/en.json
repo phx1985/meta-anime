@@ -801,7 +801,13 @@
     "confirm": "Confirm",
     "close": "Close",
     "back": "Back",
-    "next": "Next"
+    "next": "Next",
+    "units": {
+      "kb": "KB",
+      "mb": "MB",
+      "gb": "GB",
+      "tb": "TB"
+    }
   },
   "notFound": {
     "ariaLabel": "404 – Page not found",
