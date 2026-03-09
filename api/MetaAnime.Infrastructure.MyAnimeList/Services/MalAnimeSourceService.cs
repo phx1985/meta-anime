@@ -253,7 +253,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
         return Result.Failure(new Error(error?.Message ?? "Failed to update MAL list status"));
     }
 
-    public async Task<Result<IList<MalSearchResultItem>>> SearchByTitleAsync(string query, int limit = 10)
+    public async Task<Result<IList<MalSearchResultItem>>> SearchByTitleAsync(string query)
     {
         var baseUrl = await GetBaseUrlAsync();
         if (string.IsNullOrWhiteSpace(baseUrl))
@@ -266,7 +266,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
         var encodedQuery = Uri.EscapeDataString(query);
         var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
         {
-            var uri = new Uri($"{baseUrl}/anime?q={encodedQuery}&limit={limit}&fields=id,title,main_picture,start_date,media_type");
+            var uri = new Uri($"{baseUrl}/anime?q={encodedQuery}&limit=10&fields=id,title,main_picture,start_date,media_type");
             var restClient = new RestClient(uri);
             var restRequest = new RestRequest { Method = Method.Get };
             restRequest.AddHeader("Authorization", $"Bearer {t}");
