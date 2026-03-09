@@ -656,7 +656,8 @@
       "colPlexTitle": "Plex Title",
       "deleteBtn": "Delete",
       "colAniDbId": "AniDB ID",
-      "deleteConfirm": "Remove this mapping?"
+      "deleteConfirm": "Remove this mapping?",
+      "loading": "Loading manual mappings…"
     }
   },
   "theme": {

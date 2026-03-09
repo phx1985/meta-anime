@@ -164,11 +164,52 @@ export class GapDetailModalComponent implements OnInit {
     }, 400);
   }
 
-  /** Extract Plex SourceId from a Plex URL (last path segment) */
+  /** Extract Plex SourceId (ratingKey) from a Plex URL query parameter. */
   private extractPlexSourceId(plexUrl?: string): string | null {
-    if (!plexUrl) return null;
-    const parts = plexUrl.split('/');
-    return parts[parts.length - 1] || null;
+    if (!plexUrl) {
+      return null;
+    }
+
+    // Plex URLs look like:
+    // https://app.plex.tv/desktop/#!/server/{machineId}/details?key=%2Flibrary%2Fmetadata%2F{ratingKey}
+    // The '#' hash fragment appears before the '?', so URL.search is empty.
+    // We locate '?' directly in the raw string, then look for any '#' that appears
+    // AFTER the '?' (there typically isn't one), to extract the query portion.
+    const queryStart = plexUrl.indexOf('?');
+    if (queryStart === -1) {
+      return null;
+    }
+
+    // Extract substring after '?' up to any '#' that follows (edge case guard).
+    const hashIndex = plexUrl.indexOf('#', queryStart);
+    const queryString =
+      hashIndex === -1
+        ? plexUrl.substring(queryStart + 1)
+        : plexUrl.substring(queryStart + 1, hashIndex);
+
+    const params = new URLSearchParams(queryString);
+    const keyParam = params.get('key');
+    if (!keyParam) {
+      return null;
+    }
+
+    // URLSearchParams already percent-decodes the value (e.g. "%2F" → "/").
+    // Apply decodeURIComponent as a safety net in case of double-encoding.
+    const decodedKey = decodeURIComponent(keyParam);
+
+    const prefix = '/library/metadata/';
+    if (!decodedKey.startsWith(prefix)) {
+      // Unexpected format; return the decoded value as-is.
+      return decodedKey || null;
+    }
+
+    let ratingKey = decodedKey.substring(prefix.length);
+    // Strip any trailing slash, if present.
+    if (ratingKey.endsWith('/')) {
+      ratingKey = ratingKey.slice(0, -1);
+    }
+
+    return ratingKey || null;
   }
 
   /** Progress percentage (0-100) for display */

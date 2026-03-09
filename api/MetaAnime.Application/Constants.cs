@@ -27,8 +27,13 @@ public static class Constants
         public const string GetPagedAniDbIdsAsync = "Error.GetPagedAniDbIdsAsync";
         public const string GetPropertyBagByKey = "Error.GetPropertyBagByKey";
         public const string GetSonarrSeriesByCodecAsync = "Error.GetSonarrSeriesByCodecAsync";
+        public const string GetCoverageGapAsync = "Error.GetCoverageGapAsync";
         public const string GetStatisticsAsync = "Error.GetStatisticsAsync";
         public const string GetSyncStatus = "Error.GetSyncStatus";
+        public const string CreateManualMappingAsync = "Error.CreateManualMappingAsync";
+        public const string GetAllManualMappingsAsync = "Error.GetAllManualMappingsAsync";
+        public const string DeleteManualMappingAsync = "Error.DeleteManualMappingAsync";
+        public const string SearchMalAnimeAsync = "Error.SearchMalAnimeAsync";
         public const string NotFound = "Error.NotFound";
         public const string RefreshData = "Error.RefreshData";
         public const string RemoveAsync = "Error.RemoveAsync";

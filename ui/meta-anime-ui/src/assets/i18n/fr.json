@@ -648,7 +648,8 @@
       "colAniDbId": "ID AniDB",
       "colCreatedAt": "Créé le",
       "colPlexTitle": "Titre Plex",
-      "deleteConfirm": "Supprimer cette correspondance ?"
+      "deleteConfirm": "Supprimer cette correspondance ?",
+      "loading": "Chargement des correspondances manuelles…"
     }
   },
   "theme": {

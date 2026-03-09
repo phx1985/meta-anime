@@ -106,7 +106,7 @@ public sealed class MalController(
 
         try
         {
-            var result = await animeMediatorService.SearchMalAnimeAsync(q);
+            var result = await animeMediatorService.SearchMalAnimeAsync(q, limit);
             if (result.IsFailure)
             {
                 logger.LogError("MAL anime search failed for query '{Query}': {Error}", q, result.Error.Message);

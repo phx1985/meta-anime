@@ -42,7 +42,7 @@ public sealed class ManualMappingController(
                 request.PlexSourceId, result.Error.Message);
             return StatusCode(500, result.Error.Message);
         }
-        return CreatedAtAction(nameof(GetAll), result.Value);
+        return CreatedAtAction(nameof(GetAll), null, result.Value);
     }
 
     /// <summary>Deletes a manual mapping by ID.</summary>

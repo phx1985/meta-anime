@@ -872,7 +872,7 @@ public sealed class AnimeMediatorService(
         }
         catch (Exception ex)
         {
-            return Result.Failure<IEnumerable<CoverageGapItemResponse>>(new(Constants.Errors.GetStatisticsAsync, ex.Message));
+            return Result.Failure<IEnumerable<CoverageGapItemResponse>>(new(Constants.Errors.GetCoverageGapAsync, ex.Message));
         }
     }
 
@@ -1674,9 +1674,9 @@ public sealed class AnimeMediatorService(
     public Task<Result<SonarrTagInfo>> CreateSonarrTagAsync(string label)
         => sonarrAnimeSource.CreateTagAsync(label);
 
-    public async Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query)
+    public async Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query, int limit = 10)
     {
-        var searchResult = await malAnimeSource.SearchByTitleAsync(query);
+        var searchResult = await malAnimeSource.SearchByTitleAsync(query, limit);
         if (searchResult.IsFailure)
             return searchResult;
 
@@ -1727,7 +1727,7 @@ public sealed class AnimeMediatorService(
         }
         catch (Exception ex)
         {
-            return Result.Failure<ManualMappingResponse>(new(Constants.Errors.GetStatisticsAsync, ex.Message));
+            return Result.Failure<ManualMappingResponse>(new(Constants.Errors.CreateManualMappingAsync, ex.Message));
         }
     }
 
@@ -1802,7 +1802,7 @@ public sealed class AnimeMediatorService(
         }
         catch (Exception ex)
         {
-            return Result.Failure<IList<ManualMappingResponse>>(new(Constants.Errors.GetStatisticsAsync, ex.Message));
+            return Result.Failure<IList<ManualMappingResponse>>(new(Constants.Errors.GetAllManualMappingsAsync, ex.Message));
         }
     }
 
@@ -1815,7 +1815,7 @@ public sealed class AnimeMediatorService(
         }
         catch (Exception ex)
         {
-            return Result.Failure(new(Constants.Errors.GetStatisticsAsync, ex.Message));
+            return Result.Failure(new(Constants.Errors.DeleteManualMappingAsync, ex.Message));
         }
     }
 

@@ -42,6 +42,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
                                            "mean, " +
                                            "num_episodes";
     private const string FRANCHISE_FIELDS = "id,title,main_picture,synopsis,start_date,end_date,media_type,related_anime{node{id,title,main_picture,media_type},relation_type,relation_type_formatted}";
+    private static readonly JsonSerializerOptions CaseInsensitiveOptions = new() { PropertyNameCaseInsensitive = true };
     #endregion
 
     #region IMalAnimeSourceService Implementation
@@ -248,7 +249,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
         if (response.IsSuccessful)
             return Result.Success();
 
-        var error = JsonSerializer.Deserialize<MalError>(response.Content!, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        var error = JsonSerializer.Deserialize<MalError>(response.Content!, CaseInsensitiveOptions);
         return Result.Failure(new Error(error?.Message ?? "Failed to update MAL list status"));
     }
 
@@ -300,8 +301,14 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
             return Result.Success<IList<MalSearchResultItem>>(items);
         }
 
-        var malError = JsonSerializer.Deserialize<MalError>(response.Content!)!;
-        return Result.Failure<IList<MalSearchResultItem>>(new Error(malError.Message));
+        MalError? malError = null;
+        if (!string.IsNullOrEmpty(response.Content))
+        {
+            malError = JsonSerializer.Deserialize<MalError>(response.Content, CaseInsensitiveOptions);
+        }
+
+        var errorMessage = malError?.Message ?? "Failed to search MyAnimeList by title";
+        return Result.Failure<IList<MalSearchResultItem>>(new Error(errorMessage));
     }
     #endregion
 

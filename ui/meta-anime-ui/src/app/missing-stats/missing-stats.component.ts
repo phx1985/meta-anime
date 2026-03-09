@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeStatisticsResponse } from '../models/anime.models';
 import { CountUpDirective } from '../directives/count-up.directive';
@@ -15,7 +15,6 @@ import { ProviderStateService } from '../services/provider-state.service';
 })
 export class MissingStatsComponent {
   readonly providerState = inject(ProviderStateService);
-  private readonly destroyRef = inject(DestroyRef);
 
   stats = input.required<AnimeStatisticsResponse>();
 

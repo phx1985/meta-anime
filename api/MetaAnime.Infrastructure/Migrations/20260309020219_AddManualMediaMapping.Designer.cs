@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MetaAnime.Infrastructure.Migrations
 {
     [DbContext(typeof(MetaAnimeDbContext))]
-    [Migration("20260309020219_20250701120000_AddManualMediaMapping")]
-    partial class _20250701120000_AddManualMediaMapping
+    [Migration("20260309020219_AddManualMediaMapping")]
+    partial class _20260309020219_AddManualMediaMapping
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

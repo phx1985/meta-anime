@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MetaAnime.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class _20250701120000_AddManualMediaMapping : Migration
+    public partial class _20260309020219_AddManualMediaMapping : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
