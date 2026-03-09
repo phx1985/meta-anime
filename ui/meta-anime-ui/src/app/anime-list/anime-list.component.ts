@@ -74,6 +74,8 @@ export const SORT_OPTIONS = [
   { value: 'addeddate', labelKey: 'animeList.sort.addedDate' },
   { value: 'sizeondisk', labelKey: 'animeList.sort.sizeOnDisk' },
   { value: 'totalsizedisk', labelKey: 'animeList.sort.totalSizeDisk' },
+  { value: 'episodes', labelKey: 'animeList.sort.episodes' },
+  { value: 'avgepsize', labelKey: 'animeList.sort.avgEpSize' },
 ];
 
 export const CODEC_OPTIONS = [
@@ -147,8 +149,8 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     return pages;
   });
 
-  /** Active sort column for the client-side table sort. */
-  tableSortCol = signal<'title' | 'episodes' | 'size' | 'avgsize' | 'added'>('title');
+  /** Active sort column for the table header indicators. Null when the active sort has no table column (e.g. malscore). */
+  tableSortCol = signal<'title' | 'episodes' | 'size' | 'avgsize' | 'added' | null>('title');
   tableSortDir = signal<'asc' | 'desc'>('asc');
 
   searched = signal(false);
@@ -348,14 +350,14 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     if (this.filterWatchState.length) {
       parts.push(
         this.filterWatchState
-          .map((v) => this.translateService.instant(`animeCard.malStatus.${v}`))
+          .map((v) => this.translateService.instant(`animeDetailPanel.malStatus.${v}`))
           .join(', '),
       );
     }
     if (this.filterAiringStatus.length) {
       parts.push(
         this.filterAiringStatus
-          .map((v) => this.translateService.instant(`animeCard.seriesStatus.${v}`))
+          .map((v) => this.translateService.instant(`animeDetailPanel.seriesStatus.${v}`))
           .join(', '),
       );
     }
@@ -381,7 +383,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     if (this.filterMediaType.length) {
       parts.push(
         this.filterMediaType
-          .map((v) => this.translateService.instant(`animeCard.mediaType.${v}`))
+          .map((v) => this.translateService.instant(`animeDetailPanel.mediaType.${v}`))
           .join(', '),
       );
     }
@@ -471,19 +473,20 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   // ── Table view helpers ────────────────────────────────────────────────────
 
-  /** Click a table column header to sort client-side; second click reverses direction. */
+  /** Click a table column header to sort server-side; second click reverses direction. */
   sortTable(col: 'title' | 'episodes' | 'size' | 'avgsize' | 'added'): void {
     const dir = this.tableSortCol() === col && this.tableSortDir() === 'asc' ? 'desc' : 'asc';
     this.tableSortCol.set(col);
     this.tableSortDir.set(dir);
     this.sortOrder = dir;
 
+    // Keys must match SORT_OPTIONS values so the dropdown stays in sync.
     const serverFieldMap: Record<'title' | 'episodes' | 'size' | 'avgsize' | 'added', string> = {
       title: 'title',
       episodes: 'episodes',
       size: 'sizeondisk',
-      avgsize: 'avgEpSize',
-      added: 'sonarrAdded',
+      avgsize: 'avgepsize',
+      added: 'addeddate',
     };
     this.sortBy = serverFieldMap[col];
     this.invalidatePreset();
@@ -708,15 +711,21 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   // ── Search / Reset ────────────────────────────────────────────────────────
 
   search(): void {
-    // Sync table sort indicators with filter sort state
-    const reverseFieldMap: Record<string, 'title' | 'episodes' | 'size' | 'avgsize' | 'added'> = {
+    // Sync table sort indicators with filter sort state.
+    // Maps SORT_OPTIONS values → table column ids. null = no column highlighted.
+    const reverseFieldMap: Record<string, 'title' | 'episodes' | 'size' | 'avgsize' | 'added' | null> = {
       title: 'title',
+      episodes: 'episodes',
       sizeondisk: 'size',
       totalsizedisk: 'size',
-      totalepisodes: 'episodes',
+      avgepsize: 'avgsize',
       addeddate: 'added',
+      malscore: null,
+      myscore: null,
+      startdate: null,
+      enddate: null,
     };
-    this.tableSortCol.set(reverseFieldMap[this.sortBy] ?? 'title');
+    this.tableSortCol.set(reverseFieldMap[this.sortBy] ?? null);
     this.tableSortDir.set(this.sortOrder as 'asc' | 'desc');
 
     this.userPrefs.saveLastFilters(JSON.stringify(this.snapshotFilters()));

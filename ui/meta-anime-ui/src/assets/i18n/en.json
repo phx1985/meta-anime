@@ -267,7 +267,9 @@
       "endDate": "End date",
       "addedDate": "Sonarr Added",
       "sizeOnDisk": "Size on disk",
-      "totalSizeDisk": "Total size"
+      "totalSizeDisk": "Total size",
+      "episodes": "Episodes",
+      "avgEpSize": "Avg. Ep. Size"
     }
   },
   "animeDetailPanel": {
@@ -331,6 +333,26 @@
     },
     "sizeUnit": "GB",
     "seeMore": "See more"
+  },
+  "animeCard": {
+    "malScore": "MAL Score",
+    "myScore": "My Score",
+    "addedOn": "Added",
+    "openPlex": "Open in Plex",
+    "openSonarr": "Open in Sonarr",
+    "onboarding": {
+      "bodyHint": "Click for Details"
+    },
+    "mediaType": {
+      "tv": "TV Series",
+      "movie": "Movie",
+      "ova": "OVA",
+      "ona": "ONA",
+      "special": "Special",
+      "tv_special": "TV Special",
+      "music": "Music",
+      "unknown": "Unknown"
+    }
   },
   "settings": {
     "title": "Settings",
