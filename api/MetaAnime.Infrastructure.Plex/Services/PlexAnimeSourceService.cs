@@ -212,9 +212,11 @@ public sealed class PlexAnimeSourceService(
             Description = metadata.Summary ?? string.Empty,
             Id = metadata.RatingKey ?? string.Empty,
             Title = metadata.Title ?? string.Empty,
+            OriginalTitle = string.IsNullOrWhiteSpace(metadata.OriginalTitle) ? null : metadata.OriginalTitle,
             ExternalGuilds = metadata.ExternalGuids?.Select(g => g.Id ?? string.Empty).ToArray() ?? [],
             ViewedLeafCount = metadata.ViewedLeafCount ?? 0,
-            LeafCount = metadata.LeafCount ?? 0
+            LeafCount = metadata.LeafCount ?? 0,
+            Year = metadata.Year ?? 0
         };
 
     private static PlexMedia MapToPlexMedia(Components.Metadata metadata)
@@ -223,9 +225,11 @@ public sealed class PlexAnimeSourceService(
             Description = metadata.Summary ?? string.Empty,
             Id = metadata.RatingKey ?? string.Empty,
             Title = metadata.Title ?? string.Empty,
+            OriginalTitle = null, // Plex SDK (LukeHagar) does not expose originalTitle
             ExternalGuilds = metadata?.Guids?.Select(g => g.Id).ToArray() ?? [],
             ViewedLeafCount = metadata?.ViewedLeafCount ?? 0,
-            LeafCount = metadata?.LeafCount ?? 0
+            LeafCount = metadata?.LeafCount ?? 0,
+            Year = (int?)metadata?.Year ?? 0
         };
     #endregion
 
@@ -244,11 +248,13 @@ public sealed class PlexAnimeSourceService(
     private sealed record PlexMetadataItem(
         [property: JsonPropertyName("ratingKey")]       string? RatingKey,
         [property: JsonPropertyName("title")]           string? Title,
+        [property: JsonPropertyName("originalTitle")]   string? OriginalTitle,
         [property: JsonPropertyName("summary")]         string? Summary,
         [property: JsonPropertyName("guid")]            string? PlexInternalGuid,
         [property: JsonPropertyName("Guid")]            List<PlexGuid>? ExternalGuids,
         [property: JsonPropertyName("viewedLeafCount")] int? ViewedLeafCount,
-        [property: JsonPropertyName("leafCount")]       int? LeafCount);
+        [property: JsonPropertyName("leafCount")]       int? LeafCount,
+        [property: JsonPropertyName("year")]            int? Year);
 
     private sealed record PlexGuid(
         [property: JsonPropertyName("id")] string? Id);

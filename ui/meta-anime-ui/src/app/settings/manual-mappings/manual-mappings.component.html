@@ -1,0 +1,52 @@
+@if (loading()) {
+  <div class="mm-spinner">
+    <div class="spinner-border spinner-border-sm" role="status">
+      <span class="visually-hidden">{{ 'settings.manualMappings.title' | translate }}</span>
+    </div>
+  </div>
+} @else if (error()) {
+  <p class="mm-empty">{{ 'settings.error' | translate }}</p>
+} @else if (mappings().length === 0) {
+  <p class="mm-empty">{{ 'settings.manualMappings.empty' | translate }}</p>
+} @else {
+  <div class="mm-table-wrap">
+    <table class="mm-table">
+      <thead>
+        <tr>
+          <th>{{ 'settings.manualMappings.colPlexTitle' | translate }}</th>
+          <th>{{ 'settings.manualMappings.colMalTitle' | translate }}</th>
+          <th class="mm-th--anidb">{{ 'settings.manualMappings.colAniDbId' | translate }}</th>
+          <th class="mm-th--date">{{ 'settings.manualMappings.colCreatedAt' | translate }}</th>
+          <th class="mm-th--actions"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (mapping of mappings(); track mapping.id) {
+          <tr>
+            <td class="mm-td--title" [title]="mapping.plexTitle">{{ mapping.plexTitle }}</td>
+            <td class="mm-td--title" [title]="mapping.malTitle">{{ mapping.malTitle }}</td>
+            <td class="mm-td--anidb">{{ mapping.aniDbId }}</td>
+            <td class="mm-td--date">{{ formatDate(mapping.createdAt) }}</td>
+            <td class="mm-td--actions">
+              <button
+                type="button"
+                class="mm-delete-btn"
+                [disabled]="deletingId() === mapping.id"
+                (click)="deleteMapping(mapping.id)"
+                [title]="'settings.manualMappings.deleteBtn' | translate"
+              >
+                @if (deletingId() === mapping.id) {
+                  <div class="spinner-border spinner-border-sm" role="status" style="width:12px;height:12px;border-width:1.5px"></div>
+                } @else {
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path d="M2 3.5h10M5.5 3.5V2.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v1M3 3.5l.7 7.7a.5.5 0 0 0 .5.45h5.6a.5.5 0 0 0 .5-.45L11 3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                }
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

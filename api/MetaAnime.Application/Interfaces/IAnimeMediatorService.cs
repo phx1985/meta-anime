@@ -1,5 +1,6 @@
 ﻿using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Queries;
+using MetaAnime.Core.Models;
 using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Shared.Results;
 using MetaAnime.Core.Interfaces.Services;
@@ -9,6 +10,7 @@ namespace MetaAnime.Application.Interfaces;
 public interface IAnimeMediatorService
 {
     Task<Result<AnimeStatisticsResponse>> GetStatisticsAsync();
+    Task<Result<IEnumerable<CoverageGapItemResponse>>> GetCoverageGapAsync(string gapType);
     Task<Result<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAllAsync(int page = 1, int pageSize = 100, AnimeFilters? filters = null, bool enriched = false);
     Task<Result<AnimeDetailsResponse?>> GetByIdAsync(string aniDbId);
     Task<Result<AnimeDetailsResponse?>> GetByMalIdAsync(string malId);
@@ -26,4 +28,10 @@ public interface IAnimeMediatorService
     Task<Result<FranchiseConstellationResponse>> GetFranchiseConstellationAsync(string malId);
     Task<Result<IList<SonarrTagInfo>>> GetAllSonarrTagsAsync();
     Task<Result<SonarrTagInfo>> CreateSonarrTagAsync(string label);
+    // Manual mapping management
+    Task<Result<ManualMappingResponse>> CreateManualMappingAsync(CreateManualMappingRequest request);
+    Task<Result<IList<ManualMappingResponse>>> GetAllManualMappingsAsync();
+    Task<Result> DeleteManualMappingAsync(Guid id);
+    // MAL search
+    Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query);
 }

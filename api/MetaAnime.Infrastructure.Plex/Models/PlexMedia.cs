@@ -21,6 +21,8 @@ public sealed class PlexMedia : IAnimeConvertible, ICacheable
     public required string[] ExternalGuilds { get; set; } = [];
     public int ViewedLeafCount { get; set; }
     public int LeafCount { get; set; }
+    public int Year { get; set; }
+    public string? OriginalTitle { get; set; }
     #endregion
 
     #region IAnimeConvertible Implementation

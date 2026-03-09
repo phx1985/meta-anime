@@ -42,14 +42,36 @@
     "missing": {
       "title": "Coverage Gaps",
       "subtitle": "Series present in one source but absent from another.",
-      "sonarrNotInMal": "Sonarr not in MAL",
       "sonarrNotInMalDesc": "Series tracked by Sonarr with no matching entry in MyAnimeList.",
-      "malNotInPlex": "MAL not in Plex",
       "malNotInPlexDesc": "Series on your MAL watch-list that are missing from your Plex library.",
-      "plexNotInMal": "Plex not in MAL",
       "plexNotInMalDesc": "Series in your Plex library that have no matching entry in MyAnimeList.",
       "plexNotInSonarr": "Plex not in Sonarr",
-      "plexNotInSonarrDesc": "Series in your Plex library that are not tracked by Sonarr."
+      "plexNotInSonarrDesc": "Series in your Plex library that are not tracked by Sonarr.",
+      "sonarrNotInMal": "Sonarr not in MAL",
+      "malNotInPlex": "MAL not in Plex",
+      "plexNotInMal": "Plex not in MAL",
+      "modal": {
+        "close": "Close",
+        "loading": "Loading anime list…",
+        "error": "Failed to load the list. Please try again.",
+        "empty": "No anime found for this gap.",
+        "allClearTitle": "All clear! Your library is perfectly in sync.",
+        "allClearSub": "Nothing is missing here. Your containers are talking to each other. 🚀",
+        "colTitle": "Title",
+        "colActions": "Actions",
+        "colProgress": "Progress",
+        "addToMal": "Add to MAL",
+        "searchPlaceholder": "Search MyAnimeList...",
+        "searchButton": "Search",
+        "searchError": "Search failed. Please try again.",
+        "matchSuccess": "Matched! Removing from gap list...",
+        "alreadyMapped": "Already Mapped",
+        "moreInfo": "More Info"
+      },
+      "noProviders": {
+        "title": "No providers configured yet.",
+        "sub": "Enable Plex or Sonarr in Settings to see your coverage gaps here."
+      }
     },
     "welcome": "Welcome to Meta Anime"
   },
@@ -623,6 +645,18 @@
       "successChanged": "Password updated successfully.",
       "errorWrong": "Current password is incorrect.",
       "errorGeneric": "An error occurred. Please try again."
+    },
+    "manualMappings": {
+      "empty": "No manual mappings yet. Use the Coverage Gap modal to create one.",
+      "deleteSuccess": "Mapping deleted.",
+      "colMalTitle": "MAL Title",
+      "colCreatedAt": "Created",
+      "subtitle": "These are permanent Plex → MAL overrides you created manually.",
+      "title": "Manual MAL Mappings",
+      "colPlexTitle": "Plex Title",
+      "deleteBtn": "Delete",
+      "colAniDbId": "AniDB ID",
+      "deleteConfirm": "Remove this mapping?"
     }
   },
   "theme": {

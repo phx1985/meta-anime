@@ -42,14 +42,36 @@
     "missing": {
       "title": "Lacunes de couverture",
       "subtitle": "Séries présentes dans une source mais absentes d'une autre.",
-      "sonarrNotInMal": "Sonarr absent de MAL",
       "sonarrNotInMalDesc": "Séries suivies par Sonarr sans entrée correspondante dans MyAnimeList.",
-      "malNotInPlex": "MAL absent de Plex",
       "malNotInPlexDesc": "Séries de votre liste MAL absentes de votre bibliothèque Plex.",
-      "plexNotInMal": "Plex absent de MAL",
       "plexNotInMalDesc": "Séries dans votre bibliothèque Plex sans entrée correspondante dans MyAnimeList.",
       "plexNotInSonarr": "Plex absent de Sonarr",
-      "plexNotInSonarrDesc": "Séries présentes dans votre bibliothèque Plex mais non suivies par Sonarr."
+      "plexNotInSonarrDesc": "Séries présentes dans votre bibliothèque Plex mais non suivies par Sonarr.",
+      "sonarrNotInMal": "Sonarr absent de MAL",
+      "malNotInPlex": "MAL absent de Plex",
+      "plexNotInMal": "Plex absent de MAL",
+      "modal": {
+        "close": "Fermer",
+        "loading": "Chargement de la liste…",
+        "error": "Échec du chargement. Veuillez réessayer.",
+        "empty": "Aucun anime trouvé pour cette lacune.",
+        "allClearTitle": "Impeccable ! Votre bibliothèque est parfaitement synchronisée.",
+        "allClearSub": "Il ne manque rien ici. Vos conteneurs se parlent. 🚀",
+        "colTitle": "Titre",
+        "colActions": "Actions",
+        "colProgress": "Progression",
+        "addToMal": "Ajouter à MAL",
+        "searchPlaceholder": "Rechercher sur MyAnimeList...",
+        "searchButton": "Rechercher",
+        "searchError": "La recherche a échoué. Veuillez réessayer.",
+        "matchSuccess": "Associé ! Suppression de la liste...",
+        "alreadyMapped": "Déjà associé",
+        "moreInfo": "Plus d'infos"
+      },
+      "noProviders": {
+        "title": "Aucun fournisseur configuré pour l'instant.",
+        "sub": "Activez Plex ou Sonarr dans les Paramètres pour voir vos lacunes de couverture ici."
+      }
     },
     "welcome": "Bienvenue sur Meta Anime"
   },
@@ -615,6 +637,18 @@
       "successChanged": "Mot de passe mis à jour avec succès.",
       "errorWrong": "Le mot de passe actuel est incorrect.",
       "errorGeneric": "Une erreur est survenue. Veuillez réessayer."
+    },
+    "manualMappings": {
+      "deleteBtn": "Supprimer",
+      "empty": "Aucune correspondance manuelle. Utilisez le modal de lacunes pour en créer une.",
+      "title": "Correspondances MAL manuelles",
+      "deleteSuccess": "Correspondance supprimée.",
+      "subtitle": "Ce sont des correspondances permanentes Plex → MAL que vous avez créées manuellement.",
+      "colMalTitle": "Titre MAL",
+      "colAniDbId": "ID AniDB",
+      "colCreatedAt": "Créé le",
+      "colPlexTitle": "Titre Plex",
+      "deleteConfirm": "Supprimer cette correspondance ?"
     }
   },
   "theme": {

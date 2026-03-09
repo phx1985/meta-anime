@@ -95,6 +95,49 @@ export interface ViewingProgressStats {
   plexTotalEpisodes: number;
 }
 
+export interface PlexProgressionInfo {
+  viewedEpisodes: number;
+  totalEpisodes: number;
+}
+
+export interface CoverageGapItem {
+  aniDbId: string;
+  title: string;
+  originalTitle?: string;
+  malUrl?: string;
+  plexUrl?: string;
+  sonarrUrl?: string;
+  plexProgress?: PlexProgressionInfo;
+  plexYear?: number;
+}
+
+export interface MalSearchResult {
+  id: string;
+  title: string;
+  thumbnailUrl?: string;
+  year?: number;
+  mediaType?: string;
+  isAlreadyInLibrary?: boolean;
+}
+
+export interface ManualMapping {
+  id: string;
+  plexSourceId: string;
+  plexTitle: string;
+  malId: string;
+  malTitle: string;
+  aniDbId: string;
+  createdAt: string;
+}
+
+export interface CreateManualMappingRequest {
+  aniDbId: string;
+  plexSourceId: string;
+  plexTitle: string;
+  malId: string;
+  malTitle: string;
+}
+
 export interface AnimeStatisticsResponse {
   plexAnime: number;
   myAnimeListAnime: number;

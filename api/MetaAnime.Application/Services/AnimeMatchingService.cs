@@ -17,7 +17,8 @@ public sealed class AnimeMatchingService(
     IKometaAnimeMappingService kometaAnimeMappingService,
     IAnimeMappingService mappingService,
     IAnimeService animeService,
-    IPropertyBagRepository propertyBagRepository)
+    IPropertyBagRepository propertyBagRepository,
+    IManualMediaMappingRepository manualMediaMappingRepository)
     : IAnimeMatchingService
 {
     public async Task<Result> MatchAsync(bool forceRefreshKometaMapping = false, ISyncProgressNotifier? progressNotifier = null)
@@ -106,12 +107,25 @@ public sealed class AnimeMatchingService(
             [MediaPlatform.Tmdb] = KometaAnimePlatform.TmdbShow
         };
 
+        // Pre-load manual overrides once for O(1) lookup per Plex anime.
+        var manualOverrides = await manualMediaMappingRepository.GetAllAsync();
+        var manualMappingsByPlexId = manualOverrides
+            .GroupBy(m => m.PlexSourceId)
+            .ToDictionary(g => g.Key, g => g.First().AniDbId);
+
         foreach (var anime in allAnimes)
         {
             if (anime.AnimeSource == AnimeSource.MyAnimeList)
             {
                 var malKometaMapping = kometaMappings.Where(km => km.GetPlatformEnum() == KometaAnimePlatform.Mal && km.PlatformId == anime.SourceId).ToList();
                 malKometaMapping.ForEach(km => animeMappings.Add(new AnimeMapping { AnimeId = anime.Id, AniDbId = km.AniDbId }));
+                continue;
+            }
+
+            // Check for a manual override before falling through to Kometa lookup.
+            if (anime.AnimeSource == AnimeSource.Plex && manualMappingsByPlexId.TryGetValue(anime.SourceId, out var manualAniDbId))
+            {
+                animeMappings.Add(new AnimeMapping { AnimeId = anime.Id, AniDbId = manualAniDbId });
                 continue;
             }
 

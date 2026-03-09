@@ -838,14 +838,18 @@
             <span class="legend-dot legend-dot--mal"></span>
             <span class="legend-label">MAL</span>
           </span>
-          <span class="legend-item">
-            <span class="legend-dot legend-dot--plex"></span>
-            <span class="legend-label">Plex</span>
-          </span>
-          <span class="legend-item">
-            <span class="legend-dot legend-dot--sonarr"></span>
-            <span class="legend-label">Sonarr</span>
-          </span>
+          @if (providerState.plexEnabled()) {
+            <span class="legend-item">
+              <span class="legend-dot legend-dot--plex"></span>
+              <span class="legend-label">Plex</span>
+            </span>
+          }
+          @if (providerState.sonarrEnabled()) {
+            <span class="legend-item">
+              <span class="legend-dot legend-dot--sonarr"></span>
+              <span class="legend-label">Sonarr</span>
+            </span>
+          }
         </div>
       </div>
 

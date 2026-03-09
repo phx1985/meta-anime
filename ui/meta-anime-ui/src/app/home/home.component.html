@@ -27,25 +27,29 @@
   @if (stats()) {
     <!-- Source counters -->
     <div class="row g-4 mb-3 justify-content-center">
-      <div class="col-6 col-md-4 col-lg-4">
-        <div
-          class="stat-card stat-card--plex"
-          [attr.data-tooltip]="'home.stats.tooltip.plex' | translate"
-        >
-          <div class="stat-value" [countUp]="stats()!.plexAnime"></div>
-          <img class="stat-icon" src="assets/images/plex.svg" alt="Plex" aria-hidden="true" />
+      @if (providerState.plexEnabled()) {
+        <div [class]="colClass()">
+          <div
+            class="stat-card stat-card--plex"
+            [attr.data-tooltip]="'home.stats.tooltip.plex' | translate"
+          >
+            <div class="stat-value" [countUp]="stats()!.plexAnime"></div>
+            <img class="stat-icon" src="assets/images/plex.svg" alt="Plex" aria-hidden="true" />
+          </div>
         </div>
-      </div>
-      <div class="col-6 col-md-4 col-lg-4">
-        <div
-          class="stat-card stat-card--sonarr"
-          [attr.data-tooltip]="'home.stats.tooltip.sonarr' | translate"
-        >
-          <div class="stat-value" [countUp]="stats()!.sonarrAnime"></div>
-          <img class="stat-icon" src="assets/images/sonarr.svg" alt="Sonarr" aria-hidden="true" />
+      }
+      @if (providerState.sonarrEnabled()) {
+        <div [class]="colClass()">
+          <div
+            class="stat-card stat-card--sonarr"
+            [attr.data-tooltip]="'home.stats.tooltip.sonarr' | translate"
+          >
+            <div class="stat-value" [countUp]="stats()!.sonarrAnime"></div>
+            <img class="stat-icon" src="assets/images/sonarr.svg" alt="Sonarr" aria-hidden="true" />
+          </div>
         </div>
-      </div>
-      <div class="col-6 col-md-4 col-lg-4">
+      }
+      <div [class]="colClass()">
         <div
           class="stat-card stat-card--mal"
           [attr.data-tooltip]="'home.stats.tooltip.mal' | translate"

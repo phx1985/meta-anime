@@ -150,6 +150,47 @@ namespace MetaAnime.Infrastructure.Migrations
                     b.ToTable("KometaAnimeMapping", (string)null);
                 });
 
+            modelBuilder.Entity("MetaAnime.Domain.Entities.ManualMediaMapping", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AniDbId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("MalId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("MalTitle")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PlexSourceId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PlexTitle")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlexSourceId")
+                        .HasDatabaseName("IX_ManualMediaMapping_PlexSourceId");
+
+                    b.HasIndex("PlexSourceId", "MalId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_ManualMediaMapping_PlexSourceId_MalId");
+
+                    b.ToTable("ManualMediaMapping", (string)null);
+                });
+
             modelBuilder.Entity("MetaAnime.Domain.Entities.PropertyBag", b =>
                 {
                     b.Property<string>("Key")

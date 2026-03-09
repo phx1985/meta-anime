@@ -1,0 +1,328 @@
+<div class="gap-modal-backdrop" (click)="onBackdropClick()" role="dialog" aria-modal="true" [attr.aria-label]="gapLabel() | translate">
+  <div class="gap-modal-panel" (click)="onPanelClick($event)">
+
+    <!-- Header -->
+    <div class="gap-modal-header">
+      <h2 class="gap-modal-title">{{ gapLabel() | translate }}</h2>
+      <button
+        type="button"
+        class="gap-modal-close"
+        (click)="closeModal.emit()"
+        [attr.aria-label]="'home.missing.modal.close' | translate"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="gap-modal-body">
+
+      @if (loading()) {
+        <div class="gap-modal-spinner">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">{{ 'home.missing.modal.loading' | translate }}</span>
+          </div>
+          <span class="gap-modal-spinner__text">{{ 'home.missing.modal.loading' | translate }}</span>
+        </div>
+      } @else if (error()) {
+        <p class="gap-modal-empty">{{ 'home.missing.modal.error' | translate }}</p>
+      } @else if (items().length === 0) {
+        <div class="gap-modal-all-clear">
+          <div class="gap-modal-all-clear__icon" aria-hidden="true">🎉</div>
+          <p class="gap-modal-all-clear__title">{{ 'home.missing.modal.allClearTitle' | translate }}</p>
+          <p class="gap-modal-all-clear__sub">{{ 'home.missing.modal.allClearSub' | translate }}</p>
+        </div>
+      } @else {
+        <p class="gap-modal-count">{{ items().length }}</p>
+
+        <!-- ── Desktop table ──────────────────────────────────────────── -->
+        <div class="gap-modal-table-wrap">
+          <table class="gap-modal-table">
+            <thead>
+              <tr>
+                <th class="gmt-th--title">{{ 'home.missing.modal.colTitle' | translate }}</th>
+                @if (showAddToMal()) {
+                  <th class="gmt-th--progress">{{ 'home.missing.modal.colProgress' | translate }}</th>
+                }
+                <th class="gmt-th--actions">{{ 'home.missing.modal.colActions' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of items(); track item.aniDbId) {
+                <tr [class]="rowClass(item)">
+                  <td class="gmt-td--title" [title]="item.title">
+                    {{ item.title }}
+                    @if (item.plexYear) {
+                      <span class="gmt-year-badge">({{ item.plexYear }})</span>
+                    }
+                  </td>
+                  @if (showAddToMal()) {
+                    <td class="gmt-td--progress">
+                      @if (item.plexProgress) {
+                        <div class="gap-progress-bar">
+                          <div
+                            class="gap-progress-fill gap-progress-fill--plex"
+                            [style.width.%]="progressPercent(item)"
+                          ></div>
+                        </div>
+                        <span class="gap-progress-label">
+                          {{ item.plexProgress.viewedEpisodes }}/{{ item.plexProgress.totalEpisodes }}
+                        </span>
+                      } @else {
+                        <span class="gap-progress-none">—</span>
+                      }
+                    </td>
+                  }
+                  <td class="gmt-td--actions">
+                    <div class="gmt-actions-cell">
+                      @if (item.malUrl) {
+                        <a class="tbl-action-btn btn-mal" [href]="item.malUrl" target="_blank" rel="noopener noreferrer" title="MyAnimeList">
+                          <img src="assets/images/mal.svg" alt="MAL" width="16" height="16" />
+                        </a>
+                      }
+                      @if (item.plexUrl) {
+                        <a class="tbl-action-btn btn-plex" [href]="item.plexUrl" target="_blank" rel="noopener noreferrer" title="Plex">
+                          <img src="assets/images/plex.svg" alt="Plex" width="16" height="16" />
+                        </a>
+                      }
+                      @if (item.sonarrUrl) {
+                        <a class="tbl-action-btn btn-sonarr" [href]="item.sonarrUrl" target="_blank" rel="noopener noreferrer" title="Sonarr">
+                          <img src="assets/images/sonarr.svg" alt="Sonarr" width="16" height="16" />
+                        </a>
+                      }
+                      @if (showAddToMal()) {
+                        <button
+                          type="button"
+                          class="tbl-action-btn btn-add-mal"
+                          [class.btn-add-mal--active]="activeSearchRowId() === item.aniDbId"
+                          (click)="toggleSearch(item)"
+                          title="{{ 'home.missing.modal.addToMal' | translate }}"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                            <line x1="7" y1="1" x2="7" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                          </svg>
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- Inline search panel (expands below the row) -->
+                @if (activeSearchRowId() === item.aniDbId) {
+                  <tr class="gap-search-row">
+                    <td [attr.colspan]="showAddToMal() ? 3 : 2" class="gap-search-cell">
+                      <div class="gap-search-panel">
+                        <div class="gap-search-input-row">
+                          <input
+                            type="search"
+                            class="gap-search-input"
+                            [ngModel]="searchQuery()"
+                            (ngModelChange)="searchQuery.set($event)"
+                            (keydown.enter)="doSearch()"
+                            [placeholder]="'home.missing.modal.searchPlaceholder' | translate"
+                            autofocus
+                          />
+                          <button
+                            type="button"
+                            class="gap-search-btn"
+                            (click)="doSearch()"
+                            [disabled]="searchLoading()"
+                          >
+                            @if (searchLoading()) {
+                              <div class="spinner-border spinner-border-sm" role="status" style="width:12px;height:12px;border-width:1.5px"></div>
+                            } @else {
+                              {{ 'home.missing.modal.searchButton' | translate }}
+                            }
+                          </button>
+                        </div>
+                        @if (searchError()) {
+                          <p class="gap-search-error">{{ 'home.missing.modal.searchError' | translate }}</p>
+                        }
+                        @if (searchResults().length > 0) {
+                          <ul class="gap-search-results">
+                            @for (result of searchResults(); track result.id) {
+                              <li
+                                class="gap-search-result-item"
+                                [class.gap-search-result-item--mapped]="result.isAlreadyInLibrary"
+                                (click)="!result.isAlreadyInLibrary && selectMalResult(item, result)"
+                              >
+                                @if (result.thumbnailUrl) {
+                                  <img class="gap-search-thumb" [src]="result.thumbnailUrl" alt="" width="32" height="46" />
+                                }
+                                <span class="gap-search-result-info">
+                                  <span class="gap-search-result-title">{{ result.title }}</span>
+                                  <span class="gap-search-result-meta">
+                                    @if (result.mediaType) {
+                                      <span class="gap-search-badge gap-search-badge--type">{{ result.mediaType }}</span>
+                                    }
+                                    @if (result.year) {
+                                      <span class="gap-search-badge gap-search-badge--year">{{ result.year }}</span>
+                                    }
+                                    @if (result.isAlreadyInLibrary) {
+                                      <span class="gap-search-badge gap-search-badge--mapped">{{ 'home.missing.modal.alreadyMapped' | translate }}</span>
+                                    }
+                                  </span>
+                                </span>
+                                <button
+                                  type="button"
+                                  class="gap-search-preview-btn"
+                                  (click)="$event.stopPropagation(); openPreview(result.id)"
+                                  title="{{ 'home.missing.modal.moreInfo' | translate }}"
+                                  aria-label="More info"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                    <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.4"/>
+                                    <line x1="7" y1="6" x2="7" y2="10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    <circle cx="7" cy="3.8" r="0.75" fill="currentColor"/>
+                                  </svg>
+                                </button>
+                              </li>
+                            }
+                          </ul>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ── Mobile cards ───────────────────────────────────────────── -->
+        <div class="gap-mobile-cards">
+          @for (item of items(); track item.aniDbId) {
+            <div class="gap-card" [class]="rowClass(item)">
+              <p class="gap-card__title">
+                {{ item.title }}
+                @if (item.plexYear) {
+                  <span class="gmt-year-badge">({{ item.plexYear }})</span>
+                }
+              </p>
+              @if (item.plexProgress && showAddToMal()) {
+                <div class="gap-card__progress">
+                  <div class="gap-progress-bar">
+                    <div
+                      class="gap-progress-fill gap-progress-fill--plex"
+                      [style.width.%]="progressPercent(item)"
+                    ></div>
+                  </div>
+                  <span class="gap-progress-label">
+                    {{ item.plexProgress.viewedEpisodes }}/{{ item.plexProgress.totalEpisodes }}
+                  </span>
+                </div>
+              }
+              <div class="gap-card__actions">
+                @if (item.malUrl) {
+                  <a class="tbl-action-btn btn-mal" [href]="item.malUrl" target="_blank" rel="noopener noreferrer" title="MyAnimeList">
+                    <img src="assets/images/mal.svg" alt="MAL" width="16" height="16" />
+                  </a>
+                }
+                @if (item.plexUrl) {
+                  <a class="tbl-action-btn btn-plex" [href]="item.plexUrl" target="_blank" rel="noopener noreferrer" title="Plex">
+                    <img src="assets/images/plex.svg" alt="Plex" width="16" height="16" />
+                  </a>
+                }
+                @if (item.sonarrUrl) {
+                  <a class="tbl-action-btn btn-sonarr" [href]="item.sonarrUrl" target="_blank" rel="noopener noreferrer" title="Sonarr">
+                    <img src="assets/images/sonarr.svg" alt="Sonarr" width="16" height="16" />
+                  </a>
+                }
+                @if (showAddToMal()) {
+                  <button
+                    type="button"
+                    class="tbl-action-btn btn-add-mal"
+                    [class.btn-add-mal--active]="activeSearchRowId() === item.aniDbId"
+                    (click)="toggleSearch(item)"
+                    title="{{ 'home.missing.modal.addToMal' | translate }}"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                      <line x1="7" y1="1" x2="7" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <line x1="1" y1="7" x2="13" y2="7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </button>
+                }
+              </div>
+              <!-- Mobile search panel -->
+              @if (activeSearchRowId() === item.aniDbId) {
+                <div class="gap-search-panel gap-search-panel--mobile">
+                  <div class="gap-search-input-row">
+                    <input
+                      type="search"
+                      class="gap-search-input"
+                      [ngModel]="searchQuery()"
+                      (ngModelChange)="searchQuery.set($event)"
+                      (keydown.enter)="doSearch()"
+                      [placeholder]="'home.missing.modal.searchPlaceholder' | translate"
+                    />
+                    <button type="button" class="gap-search-btn" (click)="doSearch()" [disabled]="searchLoading()">
+                      @if (searchLoading()) {
+                        <div class="spinner-border spinner-border-sm" role="status" style="width:12px;height:12px;border-width:1.5px"></div>
+                      } @else {
+                        {{ 'home.missing.modal.searchButton' | translate }}
+                      }
+                    </button>
+                  </div>
+                  @if (searchResults().length > 0) {
+                    <ul class="gap-search-results">
+                      @for (result of searchResults(); track result.id) {
+                        <li
+                          class="gap-search-result-item"
+                          [class.gap-search-result-item--mapped]="result.isAlreadyInLibrary"
+                          (click)="!result.isAlreadyInLibrary && selectMalResult(item, result)"
+                        >
+                          @if (result.thumbnailUrl) {
+                            <img class="gap-search-thumb" [src]="result.thumbnailUrl" alt="" width="32" height="46" />
+                          }
+                          <span class="gap-search-result-info">
+                            <span class="gap-search-result-title">{{ result.title }}</span>
+                            <span class="gap-search-result-meta">
+                              @if (result.mediaType) {
+                                <span class="gap-search-badge gap-search-badge--type">{{ result.mediaType }}</span>
+                              }
+                              @if (result.year) {
+                                <span class="gap-search-badge gap-search-badge--year">{{ result.year }}</span>
+                              }
+                              @if (result.isAlreadyInLibrary) {
+                                <span class="gap-search-badge gap-search-badge--mapped">{{ 'home.missing.modal.alreadyMapped' | translate }}</span>
+                              }
+                            </span>
+                          </span>
+                          <button
+                            type="button"
+                            class="gap-search-preview-btn"
+                            (click)="$event.stopPropagation(); openPreview(result.id)"
+                            title="{{ 'home.missing.modal.moreInfo' | translate }}"
+                            aria-label="More info"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                              <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.4"/>
+                              <line x1="7" y1="6" x2="7" y2="10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                              <circle cx="7" cy="3.8" r="0.75" fill="currentColor"/>
+                            </svg>
+                          </button>
+                        </li>
+                      }
+                    </ul>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+    </div>
+  </div>
+</div>
+
+<!-- Anime Detail Panel — overlays modal for MAL result preview -->
+@if (previewMalId()) {
+  <app-anime-detail-panel
+    [malId]="previewMalId()"
+    (closed)="closePreview()"
+  />
+}
