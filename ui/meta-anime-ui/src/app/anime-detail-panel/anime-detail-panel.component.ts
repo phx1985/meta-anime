@@ -457,9 +457,9 @@ export class AnimeDetailPanelComponent {
     const pctH264 = Math.round((h264 / total) * 100);
     const pctOther = 100 - pctH265 - pctH264;
     return [
-      { label: this.translate.instant('animeCard.codec.h265'), pct: pctH265 },
-      { label: this.translate.instant('animeCard.codec.h264'), pct: pctH264 },
-      { label: this.translate.instant('animeCard.codec.other'), pct: pctOther },
+      { label: this.translate.instant('animeDetailPanel.codec.h265'), pct: pctH265 },
+      { label: this.translate.instant('animeDetailPanel.codec.h264'), pct: pctH264 },
+      { label: this.translate.instant('animeDetailPanel.codec.other'), pct: pctOther },
     ].filter((s) => s.pct > 0);
   }
 

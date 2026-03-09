@@ -105,9 +105,14 @@ public sealed class AnimeMediatorService(
                 _ => null
             };
             bool sortDescending = filters?.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) == true;
+            // The DB repository only supports title/anidbid sorting. Any other sort field (malscore,
+            // sizeondisk, avgepsize, etc.) requires in-memory ApplySorting() on the full result set.
+            bool sortRequiresInMemory = !string.IsNullOrWhiteSpace(filters?.SortBy) &&
+                filters.SortBy.ToLower() is not ("title" or "anidbid");
             // Title is always handled in-memory (word-level Levenshtein fuzzy match).
             // The DB-level ILike pre-filter cannot handle typos, so we bypass it for title searches.
-            bool needsInMemoryPostFilter = !string.IsNullOrWhiteSpace(filters?.Title)
+            bool needsInMemoryPostFilter = sortRequiresInMemory
+                                         || !string.IsNullOrWhiteSpace(filters?.Title)
                                          || filters?.Genre?.Length > 0
                                          || filters?.Theme?.Length > 0
                                          || filters?.Demographic?.Length > 0

@@ -131,7 +131,7 @@
               }
               @if (myScore > 0) {
                 <div class="panel__score-item">
-                  <app-score-badge [score]="myScore" [mine]="true" [titleKey]="'animeCard.myScore'" />
+                  <app-score-badge [score]="myScore" [mine]="true" [label]="'animeCard.myScore' | translate" [titleKey]="'animeCard.myScore'" />
                 </div>
               }
               @if (mal?.id && malViewState) {
