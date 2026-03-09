@@ -99,14 +99,14 @@ public sealed class MalController(
     /// <summary>Searches MAL for anime matching the given query (used for manual gap mapping).</summary>
     [HttpGet("search")]
     [Authorize]
-    public async Task<ActionResult> SearchAnime([FromQuery] string q, [FromQuery] int limit = 10)
+    public async Task<ActionResult> SearchAnime([FromQuery] string q)
     {
         if (string.IsNullOrWhiteSpace(q))
             return BadRequest("Query parameter 'q' is required.");
 
         try
         {
-            var result = await animeMediatorService.SearchMalAnimeAsync(q, limit);
+            var result = await animeMediatorService.SearchMalAnimeAsync(q);
             if (result.IsFailure)
             {
                 logger.LogError("MAL anime search failed for query '{Query}': {Error}", q, result.Error.Message);

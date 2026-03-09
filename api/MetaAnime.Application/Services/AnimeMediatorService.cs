@@ -1674,9 +1674,9 @@ public sealed class AnimeMediatorService(
     public Task<Result<SonarrTagInfo>> CreateSonarrTagAsync(string label)
         => sonarrAnimeSource.CreateTagAsync(label);
 
-    public async Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query, int limit = 10)
+    public async Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query)
     {
-        var searchResult = await malAnimeSource.SearchByTitleAsync(query, limit);
+        var searchResult = await malAnimeSource.SearchByTitleAsync(query);
         if (searchResult.IsFailure)
             return searchResult;
 

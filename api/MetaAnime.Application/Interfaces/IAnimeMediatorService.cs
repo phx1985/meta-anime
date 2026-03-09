@@ -33,5 +33,5 @@ public interface IAnimeMediatorService
     Task<Result<IList<ManualMappingResponse>>> GetAllManualMappingsAsync();
     Task<Result> DeleteManualMappingAsync(Guid id);
     // MAL search
-    Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query, int limit = 10);
+    Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query);
 }
