@@ -13,8 +13,6 @@ import {
   FranchiseConstellationData,
   CoverageGapItem,
   MalSearchResult,
-  ManualMapping,
-  CreateManualMappingRequest,
 } from '../models/anime.models';
 import { MalListStatusRequest } from '../models/sonarr.models';
 
@@ -24,7 +22,7 @@ export class AnimeService {
   private base = '/api/v1/animes';
   private seasonalBase = '/api/v1/seasonal';
   private malBase = '/api/v1/mal';
-  private manualMappingsBase = '/api/v1/manual-mappings';
+  private sonarrBase = '/api/v1/sonarr';
 
   getStatistics(): Observable<AnimeStatisticsResponse> {
     return this.http.get<AnimeStatisticsResponse>(`${this.base}/statistics`);
@@ -114,17 +112,5 @@ export class AnimeService {
   searchMalAnime(query: string): Observable<MalSearchResult[]> {
     const params = new HttpParams().set('q', query);
     return this.http.get<MalSearchResult[]>(`${this.malBase}/search`, { params });
-  }
-
-  createManualMapping(request: CreateManualMappingRequest): Observable<ManualMapping> {
-    return this.http.post<ManualMapping>(this.manualMappingsBase, request);
-  }
-
-  getAllManualMappings(): Observable<ManualMapping[]> {
-    return this.http.get<ManualMapping[]>(this.manualMappingsBase);
-  }
-
-  deleteManualMapping(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.manualMappingsBase}/${id}`);
   }
 }

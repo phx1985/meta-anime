@@ -8,5 +8,6 @@ public sealed record CoverageGapItemResponse(
     string? SonarrUrl,
     PlexProgressionInfo? PlexProgress,
     int? PlexYear,
-    string? OriginalTitle
+    string? OriginalTitle,
+    string? ThumbnailUrl
 );

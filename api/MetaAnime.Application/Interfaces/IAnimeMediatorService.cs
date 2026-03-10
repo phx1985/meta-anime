@@ -28,10 +28,6 @@ public interface IAnimeMediatorService
     Task<Result<FranchiseConstellationResponse>> GetFranchiseConstellationAsync(string malId);
     Task<Result<IList<SonarrTagInfo>>> GetAllSonarrTagsAsync();
     Task<Result<SonarrTagInfo>> CreateSonarrTagAsync(string label);
-    // Manual mapping management
-    Task<Result<ManualMappingResponse>> CreateManualMappingAsync(CreateManualMappingRequest request);
-    Task<Result<IList<ManualMappingResponse>>> GetAllManualMappingsAsync();
-    Task<Result> DeleteManualMappingAsync(Guid id);
     // MAL search
     Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query);
 }

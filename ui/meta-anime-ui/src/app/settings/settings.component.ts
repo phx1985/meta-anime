@@ -28,7 +28,6 @@ import { SettingDefinition, SettingsByCategory } from '../models/settings.models
 import { SyncStep } from '../models/sync-progress.models';
 import { SyncStepComponent } from './sync-step/sync-step.component';
 import { HelpModalComponent } from '../help-modal/help-modal.component';
-import { ManualMappingsComponent } from './manual-mappings/manual-mappings.component';
 import { fmtElapsed } from '../utils/format.utils';
 
 /** "Plex:Host" → "Plex_Host" for i18n key lookups */
@@ -52,7 +51,7 @@ function langToLocale(lang: string): string {
   selector: 'app-settings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, ReactiveFormsModule, SyncStepComponent, HelpModalComponent, ManualMappingsComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, SyncStepComponent, HelpModalComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
@@ -250,7 +249,7 @@ export class SettingsComponent {
     );
   });
 
-  navItems = computed<string[]>(() => [...this.categories(), 'sync', 'security', 'manual-mappings']);
+  navItems = computed<string[]>(() => [...this.categories(), 'sync', 'security']);
 
   plexEnabled = computed(
     () => this.settings().find((s) => s.key === 'Plex:Enabled')?.value === 'true',

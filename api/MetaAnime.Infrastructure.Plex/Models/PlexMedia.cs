@@ -23,6 +23,8 @@ public sealed class PlexMedia : IAnimeConvertible, ICacheable
     public int LeafCount { get; set; }
     public int Year { get; set; }
     public string? OriginalTitle { get; set; }
+    /// <summary>Relative path to the thumbnail image on the Plex server (e.g. /library/metadata/123/thumb).</summary>
+    public string? Thumb { get; set; }
     #endregion
 
     #region IAnimeConvertible Implementation

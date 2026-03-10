@@ -109,6 +109,7 @@ export interface CoverageGapItem {
   sonarrUrl?: string;
   plexProgress?: PlexProgressionInfo;
   plexYear?: number;
+  thumbnailUrl?: string;
 }
 
 export interface MalSearchResult {
@@ -120,22 +121,13 @@ export interface MalSearchResult {
   isAlreadyInLibrary?: boolean;
 }
 
-export interface ManualMapping {
+/** Target MAL item used by GapConfirmModal for the read-only comparison view. */
+export interface ConfirmTarget {
   id: string;
-  plexSourceId: string;
-  plexTitle: string;
-  malId: string;
-  malTitle: string;
-  aniDbId: string;
-  createdAt: string;
-}
-
-export interface CreateManualMappingRequest {
-  aniDbId: string;
-  plexSourceId: string;
-  plexTitle: string;
-  malId: string;
-  malTitle: string;
+  title: string;
+  year?: number;
+  thumbnailUrl?: string;
+  mediaType?: string;
 }
 
 export interface AnimeStatisticsResponse {
@@ -144,9 +136,7 @@ export interface AnimeStatisticsResponse {
   sonarrAnime: number;
   matchedAnime: number;
   sonarrNotInMal: number;
-  malNotInPlex: number;
   plexNotInMal: number;
-  plexNotInSonarr: number;
   genreStats: { [key: string]: number };
   viewingProgress: ViewingProgressStats;
 }

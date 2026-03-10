@@ -1,0 +1,98 @@
+<div
+  class="gsm-backdrop"
+  (click)="onBackdropClick()"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-label]="'home.missing.modal.addToMal' | translate"
+>
+  <div class="gsm-panel" (click)="onPanelClick($event)">
+
+    <!-- Header -->
+    <div class="gsm-header">
+      <div class="gsm-header__title-group">
+        <h3 class="gsm-title">{{ 'home.missing.modal.addToMal' | translate }}</h3>
+        <p class="gsm-subtitle">{{ sourceItem().title }}</p>
+      </div>
+      <button
+        type="button"
+        class="gsm-close"
+        (click)="closed.emit()"
+        [attr.aria-label]="'home.missing.modal.close' | translate"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Search input -->
+    <div class="gsm-body">
+      <div class="gsm-input-row">
+        <input
+          type="search"
+          class="gsm-input"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          (keydown.enter)="doSearch()"
+          [placeholder]="'home.missing.modal.searchPlaceholder' | translate"
+          autofocus
+        />
+        <button
+          type="button"
+          class="gsm-search-btn"
+          (click)="doSearch()"
+          [disabled]="searchLoading()"
+        >
+          @if (searchLoading()) {
+            <div class="spinner-border spinner-border-sm" role="status" style="width:12px;height:12px;border-width:1.5px"></div>
+          } @else {
+            {{ 'home.missing.modal.searchButton' | translate }}
+          }
+        </button>
+      </div>
+
+      @if (searchError()) {
+        <p class="gsm-error">{{ 'home.missing.modal.searchError' | translate }}</p>
+      }
+
+      @if (!searchLoading() && searchResults().length === 0 && !searchError()) {
+        <p class="gsm-empty">{{ 'home.missing.modal.searchPlaceholder' | translate }}</p>
+      }
+
+      @if (searchResults().length > 0) {
+        <ul class="gsm-results">
+          @for (result of searchResults(); track result.id) {
+            <li
+              class="gsm-result-item"
+              (click)="selectResult(result)"
+            >
+              @if (result.thumbnailUrl) {
+                <img
+                  class="gsm-thumb"
+                  [src]="result.thumbnailUrl"
+                  alt=""
+                  width="36"
+                  height="52"
+                />
+              } @else {
+                <div class="gsm-thumb gsm-thumb--placeholder" aria-hidden="true"></div>
+              }
+              <span class="gsm-result-info">
+                <span class="gsm-result-title">{{ result.title }}</span>
+                <span class="gsm-result-meta">
+                  @if (result.mediaType) {
+                    <span class="gsm-badge gsm-badge--type">{{ result.mediaType }}</span>
+                  }
+                  @if (result.year) {
+                    <span class="gsm-badge gsm-badge--year">{{ result.year }}</span>
+                  }
+                </span>
+              </span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+  </div>
+</div>

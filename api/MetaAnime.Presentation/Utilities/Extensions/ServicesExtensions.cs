@@ -92,7 +92,6 @@ public static class ServicesExtensions
         services.AddScoped<IAnimeRepository, AnimeRepository>();
         services.AddScoped<IAnimeMappingRepository, AnimeMappingRepository>();
         services.AddScoped<IPropertyBagRepository, PropertyBagRepository>();
-        services.AddScoped<IManualMediaMappingRepository, ManualMediaMappingRepository>();
 
         services.AddScoped<ISyncProgressNotifier, SyncProgressNotifier>();
         services.AddScoped<AnimeSyncJob>();

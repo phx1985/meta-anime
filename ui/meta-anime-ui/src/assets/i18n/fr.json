@@ -67,7 +67,14 @@
         "matchSuccess": "Associé ! Suppression de la liste...",
         "alreadyMapped": "Déjà lié",
         "moreInfo": "Plus d'infos",
-        "linkPanelHeading": "Liez cet élément à son entrée MAL pour résoudre l'écart"
+        "linkPanelHeading": "Liez cet élément à son entrée MAL pour résoudre l'écart",
+        "confirmTitle": "Confirmer l'association",
+        "confirmSubtitle": "Est-ce correct ?",
+        "confirmCancel": "Annuler",
+        "confirmButton": "Confirmer",
+        "confirmSeeDetails": "Voir les détails",
+        "confirmLocalLabel": "Élément local",
+        "confirmMalLabel": "Entrée MAL"
       },
       "noProviders": {
         "title": "Aucun fournisseur configuré pour l'instant.",

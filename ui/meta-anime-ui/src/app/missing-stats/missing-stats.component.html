@@ -32,34 +32,6 @@
       </div>
     }
 
-    <!-- MAL not in Plex — only show when Plex is enabled -->
-    @if (providerState.plexEnabled()) {
-      <div
-        class="gap-row gap-row--mal-plex gap-row--clickable"
-        role="button"
-        tabindex="0"
-        (click)="openGap('malNotInPlex', 'home.missing.malNotInPlex')"
-        (keydown.enter)="openGap('malNotInPlex', 'home.missing.malNotInPlex')"
-        (keydown.space)="$event.preventDefault(); openGap('malNotInPlex', 'home.missing.malNotInPlex')"
-      >
-        <div class="gap-icon-pair" aria-hidden="true">
-          <img src="assets/images/mal.svg" class="gap-src-img" alt="" />
-          <div class="gap-tgt-wrap">
-            <img src="assets/images/plex.svg" class="gap-tgt-img" alt="" />
-          </div>
-        </div>
-        <div class="gap-info">
-          <span class="gap-desc">{{ 'home.missing.malNotInPlexDesc' | translate }}</span>
-        </div>
-        <div
-          class="gap-count"
-          [class.gap-count--zero]="stats().malNotInPlex === 0"
-          [countUp]="stats().malNotInPlex"
-        ></div>
-        <span class="gap-drill-icon" aria-hidden="true">›</span>
-      </div>
-    }
-
     <!-- Plex not in MAL — only show when Plex is enabled -->
     @if (providerState.plexEnabled()) {
       <div
@@ -83,34 +55,6 @@
           class="gap-count"
           [class.gap-count--zero]="stats().plexNotInMal === 0"
           [countUp]="stats().plexNotInMal"
-        ></div>
-        <span class="gap-drill-icon" aria-hidden="true">›</span>
-      </div>
-    }
-
-    <!-- Plex not in Sonarr — only show when both providers are enabled -->
-    @if (providerState.plexEnabled() && providerState.sonarrEnabled()) {
-      <div
-        class="gap-row gap-row--plex-sonarr gap-row--clickable"
-        role="button"
-        tabindex="0"
-        (click)="openGap('plexNotInSonarr', 'home.missing.plexNotInSonarr')"
-        (keydown.enter)="openGap('plexNotInSonarr', 'home.missing.plexNotInSonarr')"
-        (keydown.space)="$event.preventDefault(); openGap('plexNotInSonarr', 'home.missing.plexNotInSonarr')"
-      >
-        <div class="gap-icon-pair" aria-hidden="true">
-          <img src="assets/images/plex.svg" class="gap-src-img" alt="" />
-          <div class="gap-tgt-wrap">
-            <img src="assets/images/sonarr.svg" class="gap-tgt-img" alt="" />
-          </div>
-        </div>
-        <div class="gap-info">
-          <span class="gap-desc">{{ 'home.missing.plexNotInSonarrDesc' | translate }}</span>
-        </div>
-        <div
-          class="gap-count"
-          [class.gap-count--zero]="stats().plexNotInSonarr === 0"
-          [countUp]="stats().plexNotInSonarr"
         ></div>
         <span class="gap-drill-icon" aria-hidden="true">›</span>
       </div>

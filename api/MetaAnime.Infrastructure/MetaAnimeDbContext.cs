@@ -11,8 +11,6 @@ public class MetaAnimeDbContext(DbContextOptions<MetaAnimeDbContext> options) : 
     public DbSet<CacheEntry> CacheEntries { get; set; }
     public DbSet<AnimeMapping> AnimeMappings { get; set; }
     public DbSet<PropertyBag> PropertyBag { get; set; }
-    public DbSet<ManualMediaMapping> ManualMediaMappings { get; set; }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new AnimeConfiguration());
@@ -21,7 +19,6 @@ public class MetaAnimeDbContext(DbContextOptions<MetaAnimeDbContext> options) : 
         modelBuilder.ApplyConfiguration(new CacheEntryConfiguration());
         modelBuilder.ApplyConfiguration(new AnimeMappingConfiguration());
         modelBuilder.ApplyConfiguration(new PropertyBagConfiguration());
-        modelBuilder.ApplyConfiguration(new ManualMediaMappingConfiguration());
 
         base.OnModelCreating(modelBuilder);
     }

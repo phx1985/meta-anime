@@ -1,0 +1,144 @@
+<div
+  class="gcm-backdrop"
+  (click)="onBackdropClick()"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-label]="'home.missing.modal.confirmTitle' | translate"
+>
+  <div class="gcm-panel" (click)="onPanelClick($event)">
+
+    <!-- Header -->
+    <div class="gcm-header">
+      <div>
+        <h3 class="gcm-title">{{ 'home.missing.modal.confirmTitle' | translate }}</h3>
+        <p class="gcm-subtitle">{{ 'home.missing.modal.confirmSubtitle' | translate }}</p>
+      </div>
+      <button
+        type="button"
+        class="gcm-close"
+        (click)="cancelled.emit()"
+        [attr.aria-label]="'home.missing.modal.close' | translate"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Comparison area -->
+    <div class="gcm-body">
+      <div class="gcm-comparison">
+
+        <!-- Left: local source item -->
+        <div class="gcm-card gcm-card--source">
+          <div class="gcm-card__label">{{ sourceLabel() }}</div>
+          <div class="gcm-poster-wrap gcm-poster-wrap--source">
+            @if (sourceItem().thumbnailUrl) {
+              <img
+                class="gcm-poster"
+                [src]="sourceItem().thumbnailUrl"
+                [alt]="sourceItem().title"
+                width="90"
+                height="130"
+              />
+            } @else {
+              <div class="gcm-poster gcm-poster--placeholder gcm-poster--source-placeholder">
+                @if (sourceItem().plexUrl) {
+                  <img src="assets/images/plex.svg" class="gcm-source-icon" alt="Plex" width="28" height="28" />
+                } @else if (sourceItem().sonarrUrl) {
+                  <img src="assets/images/sonarr.svg" class="gcm-source-icon" alt="Sonarr" width="28" height="28" />
+                }
+              </div>
+            }
+          </div>
+          <p class="gcm-card__title">{{ sourceItem().title }}</p>
+          @if (sourceItem().plexYear) {
+            <span class="gcm-card__year">{{ sourceItem().plexYear }}</span>
+          }
+        </div>
+
+        <!-- Centre: link icon -->
+        <div class="gcm-link-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
+        <!-- Right: MAL target — entire card is clickable to preview details -->
+        <div
+          class="gcm-card gcm-card--mal gcm-card--clickable"
+          (click)="openPreview()"
+        >
+          <div class="gcm-card__label">MAL ITEM</div>
+          <div class="gcm-poster-wrap">
+            @if (targetItem().thumbnailUrl) {
+              <img
+                class="gcm-poster"
+                [src]="targetItem().thumbnailUrl"
+                [alt]="targetItem().title"
+                width="90"
+                height="130"
+              />
+            } @else {
+              <div class="gcm-poster gcm-poster--placeholder" aria-hidden="true"></div>
+            }
+            <!-- (i) info overlay -->
+            <button
+              type="button"
+              class="gcm-info-btn"
+              (click)="$event.stopPropagation(); openPreview()"
+              title="See details"
+              aria-label="See details"
+            >
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.4"/>
+                <line x1="7" y1="6" x2="7" y2="10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="7" cy="3.8" r="0.75" fill="currentColor"/>
+              </svg>
+            </button>
+          </div>
+          <p class="gcm-card__title">{{ targetItem().title }}</p>
+          <div class="gcm-card__meta">
+            @if (targetItem().mediaType) {
+              <span class="gcm-badge gcm-badge--type">{{ targetItem().mediaType }}</span>
+            }
+            @if (targetItem().year) {
+              <span class="gcm-card__year">{{ targetItem().year }}</span>
+            }
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer actions -->
+    <div class="gcm-footer">
+      <button
+        type="button"
+        class="gcm-btn gcm-btn--cancel"
+        (click)="cancelled.emit()"
+      >
+        {{ 'home.missing.modal.confirmCancel' | translate }}
+      </button>
+      <a
+        class="gcm-btn gcm-btn--confirm"
+        [href]="malUrl()"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Open in MAL →
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<!-- Anime Detail Panel overlay — for previewing the MAL result -->
+@if (previewMalId()) {
+  <app-anime-detail-panel
+    [malId]="previewMalId()"
+    (closed)="closePreview()"
+  />
+}
+
