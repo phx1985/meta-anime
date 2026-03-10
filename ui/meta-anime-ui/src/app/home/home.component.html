@@ -67,7 +67,7 @@
         <app-genre-chart [genreStats]="stats()!.genreStats" />
       </div>
       <div class="col-12 col-lg-5">
-        <app-missing-stats [stats]="stats()!" />
+        <app-missing-stats [stats]="stats()!" (gapCountDecremented)="onGapCountDecremented($event)" />
       </div>
     </div>
   } @else {

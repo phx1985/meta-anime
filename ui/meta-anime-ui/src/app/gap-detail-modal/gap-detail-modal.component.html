@@ -57,8 +57,8 @@
                 >
                   <td class="gmt-td--title" [title]="item.title">
                     {{ item.title }}
-                    @if (item.plexYear) {
-                      <span class="gmt-year-badge">({{ item.plexYear }})</span>
+                    @if (item.year) {
+                      <span class="gmt-year-badge">({{ item.year }})</span>
                     }
                   </td>
                   @if (isMappable()) {
@@ -113,8 +113,8 @@
             >
               <p class="gap-card__title">
                 {{ item.title }}
-                @if (item.plexYear) {
-                  <span class="gmt-year-badge">({{ item.plexYear }})</span>
+                @if (item.year) {
+                  <span class="gmt-year-badge">({{ item.year }})</span>
                 }
               </p>
               @if (item.plexProgress && isMappable()) {
@@ -160,6 +160,7 @@
 @if (searchModalItem()) {
   <app-gap-search-modal
     [sourceItem]="searchModalItem()!"
+    [gapType]="gapType()"
     (resultSelected)="onResultSelected(searchModalItem()!, $event)"
     (closed)="onSearchModalClosed()"
   />
@@ -170,6 +171,8 @@
   <app-gap-confirm-modal
     [sourceItem]="confirmItem()!"
     [targetItem]="confirmTarget()!"
+    [gapType]="gapType()"
     (cancelled)="onCancelled()"
+    (malAdded)="onMalAdded()"
   />
 }

@@ -29,7 +29,7 @@ import { StorageKeys } from '../constants/storage-keys';
 import { SyncStep } from '../models/sync-progress.models';
 import { fmtElapsed } from '../utils/format.utils';
 import { filter } from 'rxjs/operators';
-import { forkJoin } from 'rxjs';
+import { combineLatest, forkJoin } from 'rxjs';
 
 const PLEX_POLL_INTERVAL_MS = 3000;
 const PLEX_POLL_MAX = 40;
@@ -156,6 +156,9 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   syncSteps = toSignal(this.signalR.steps$, { initialValue: [] as SyncStep[] });
   syncDone = toSignal(this.signalR.syncDone$, { initialValue: false });
   syncError = toSignal(this.signalR.syncError$, { initialValue: false });
+  /** True when SignalR reports at least one step is still running (cross-tab/page-reload safe). */
+  readonly syncActive = toSignal(this.signalR.syncActive$, { initialValue: false });
+  readonly hubConnected = toSignal(this.signalR.connected$, { initialValue: false });
 
   // Help modals
   malHelpOpen = signal(false);
@@ -186,9 +189,22 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
     this.signalR.connect();
     this.loadInitialState();
 
-    this.signalR.syncDone$
-      .pipe(filter((v) => v), takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => { this.syncing.set(false); });
+    // Only clear syncing once all visible steps have left the 'running' state.
+    // This prevents premature spinner dismissal during the Sonarr enrichment
+    // and database-saving phases that occur after the last step emits 'Done'.
+    combineLatest([this.signalR.syncDone$, this.signalR.steps$])
+      .pipe(
+        filter(([done]) => done),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe(([, steps]) => {
+        const anyRunning = steps
+          .filter((s) => this.shouldShowStep(s.stepKey))
+          .some((s) => s.state === 'running');
+        if (!anyRunning) {
+          this.syncing.set(false);
+        }
+      });
 
     this.signalR.syncError$
       .pipe(filter((v) => v), takeUntilDestroyed(this.destroyRef))
@@ -516,15 +532,9 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
 
   // Sync
   runSync(): void {
-    if (this.syncing()) return;
+    if (this.syncing() || this.syncActive()) return;
     this.syncing.set(true);
     this.syncHttpError.set(null);
-    // Tell SignalR which provider steps to exclude from the done check.
-    // Kometa is never configured in the wizard; Plex and Sonarr are optional.
-    const disabled = new Set<string>(['kometa']);
-    if (!this.plexConnected()) disabled.add('plex');
-    if (!this.sonarrSaved()) disabled.add('sonarr');
-    this.signalR.setDisabledStepKeys(disabled);
     this.signalR.resetSteps();
     this.animeService.syncAnimes()
       .pipe(takeUntilDestroyed(this.destroyRef))

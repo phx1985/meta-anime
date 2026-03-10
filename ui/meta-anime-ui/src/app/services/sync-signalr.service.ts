@@ -1,6 +1,7 @@
 import { Injectable, OnDestroy, inject } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { SyncStep, SyncStepState, SyncProgressMessage } from '../models/sync-progress.models';
 import { ApiConstants } from '../constants/api.constants';
 import { RuntimeConfigService } from './runtime-config.service';
@@ -29,15 +30,16 @@ export class SyncSignalRService implements OnDestroy {
   /** Emits void once each time a sync run fully completes. No replay — safe to subscribe on mount. */
   private readonly _syncCompleted$ = new Subject<void>();
 
-  /** Step keys that are disabled (excluded from the done check) */
-  private _disabledStepKeys = new Set<string>();
-
   readonly steps$: Observable<SyncStep[]> = this._steps$.asObservable();
   readonly connected$: Observable<boolean> = this._connected$.asObservable();
   readonly syncDone$: Observable<boolean> = this._syncDone$.asObservable();
   readonly syncError$: Observable<boolean> = this._syncError$.asObservable();
   readonly overallElapsedMs$: Observable<number> = this._overallElapsedMs$.asObservable();
   readonly syncCompleted$: Observable<void> = this._syncCompleted$.asObservable();
+  /** True while at least one step is in the 'running' state — driven purely by SignalR messages. */
+  readonly syncActive$: Observable<boolean> = this._steps$.pipe(
+    map((steps) => steps.some((s) => s.state === 'running')),
+  );
 
   /** Elapsed-time ticker: interval handle + last-tick timestamp for delta calculation */
   private tickerHandle: ReturnType<typeof setInterval> | null = null;
@@ -85,11 +87,6 @@ export class SyncSignalRService implements OnDestroy {
     this._connected$.next(false);
   }
 
-  /** Set the step keys for disabled providers (they are excluded from the done/active checks) */
-  setDisabledStepKeys(keys: Set<string>): void {
-    this._disabledStepKeys = keys;
-  }
-
   /** Reset steps to pending for a new sync run */
   resetSteps(): void {
     this._steps$.next(makeInitialSteps());
@@ -131,12 +128,13 @@ export class SyncSignalRService implements OnDestroy {
       }),
     );
 
-    const allDone = this._steps$.value
-      .filter((s) => !this._disabledStepKeys.has(s.stepKey))
-      .every((s) => s.state === 'done');
+    // 'matching' is always the final pipeline step — use it as the definitive terminal signal.
+    // This avoids any dependency on _disabledStepKeys (which is empty on page refresh) and
+    // correctly handles disabled providers that never emit Done.
+    const matchingDone = this._steps$.value.find((s) => s.stepKey === 'matching')?.state === 'done';
     const anyError = this._steps$.value.some((s) => s.state === 'error');
 
-    if (allDone) {
+    if (matchingDone) {
       this._syncDone$.next(true);
       this._syncCompleted$.next();
       this.stopTicker();

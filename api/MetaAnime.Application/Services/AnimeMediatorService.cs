@@ -871,7 +871,7 @@ public sealed class AnimeMediatorService(
 
                     // Plex progress and year enrichment.
                     PlexProgressionInfo? plexProgress = null;
-                    int? plexYear = null;
+                    int? year = null;
                     string? originalTitle = null;
                     string? thumbnailUrl = null;
                     if (isPlexNeedle && plexProgressCache.TryGetValue(anime.SourceId, out var rawData))
@@ -882,7 +882,7 @@ public sealed class AnimeMediatorService(
                             if (plexMedia != null)
                             {
                                 plexProgress = new PlexProgressionInfo(plexMedia.ViewedLeafCount, plexMedia.LeafCount);
-                                plexYear = plexMedia.Year > 0 ? plexMedia.Year : null;
+                                year = plexMedia.Year > 0 ? plexMedia.Year : null;
                                 originalTitle = string.IsNullOrWhiteSpace(plexMedia.OriginalTitle) ? null : plexMedia.OriginalTitle;
                                 if (!string.IsNullOrWhiteSpace(plexMedia.Thumb))
                                     thumbnailUrl = $"/api/v1/animes/plex-thumb/{Uri.EscapeDataString(anime.SourceId)}";
@@ -899,11 +899,13 @@ public sealed class AnimeMediatorService(
                             thumbnailUrl = sonarrSeries?.Images?
                                 .FirstOrDefault(i => string.Equals(i.CoverType, "poster", StringComparison.OrdinalIgnoreCase))
                                 ?.RemoteUrl;
+                            if (sonarrSeries?.Year > 0)
+                                year = sonarrSeries.Year;
                         }
                         catch (JsonException) { /* skip */ }
                     }
 
-                    return new CoverageGapItemResponse(canonicalAniDbId, title, malUrl, plexUrl, sonarrUrl, plexProgress, plexYear, originalTitle, thumbnailUrl);
+                    return new CoverageGapItemResponse(canonicalAniDbId, title, malUrl, plexUrl, sonarrUrl, plexProgress, year, originalTitle, thumbnailUrl);
                 })
                 .OrderBy(r => r.Title, StringComparer.OrdinalIgnoreCase)
                 .ToList();
