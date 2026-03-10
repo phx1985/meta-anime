@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeStatisticsResponse } from '../models/anime.models';
 import { CountUpDirective } from '../directives/count-up.directive';
@@ -21,6 +21,9 @@ export class MissingStatsComponent {
   readonly activeGapType = signal<string | null>(null);
   readonly activeGapLabel = signal<string>('');
 
+  /** Emitted when an item is successfully added to MAL; carries the gapType for the parent to decrement its counter */
+  readonly gapCountDecremented = output<string>();
+
   /** True when at least one gap row is visible (i.e. at least one optional provider is on). */
   readonly hasAnyRow = computed(
     () => this.providerState.plexEnabled() || this.providerState.sonarrEnabled(),
@@ -33,5 +36,9 @@ export class MissingStatsComponent {
 
   closeGap(): void {
     this.activeGapType.set(null);
+  }
+
+  onGapItemResolved(gapType: string): void {
+    this.gapCountDecremented.emit(gapType);
   }
 }

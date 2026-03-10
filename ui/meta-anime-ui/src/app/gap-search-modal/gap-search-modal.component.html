@@ -9,6 +9,16 @@
 
     <!-- Header -->
     <div class="gsm-header">
+      @if (gapType() === 'sonarrNotInMal' || gapType() === 'plexNotInMal') {
+        <div class="gsm-breadcrumb" aria-hidden="true">
+          <img
+            [src]="gapType() === 'sonarrNotInMal' ? 'assets/images/sonarr.svg' : 'assets/images/plex.svg'"
+            class="gsm-bc-src"
+            alt=""
+          />
+          <img src="assets/images/mal.svg" class="gsm-bc-tgt" alt="" />
+        </div>
+      }
       <div class="gsm-header__title-group">
         <h3 class="gsm-title">{{ 'home.missing.modal.addToMal' | translate }}</h3>
         <p class="gsm-subtitle">{{ sourceItem().title }}</p>

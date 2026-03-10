@@ -10,7 +10,7 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin, timer } from 'rxjs';
+import { combineLatest, forkJoin, timer } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import { SettingsService } from '../services/settings.service';
@@ -145,6 +145,8 @@ export class SettingsComponent {
   syncError = toSignal(this.signalR.syncError$, { initialValue: false });
   hubConnected = toSignal(this.signalR.connected$, { initialValue: false });
   overallElapsed = toSignal(this.signalR.overallElapsedMs$, { initialValue: 0 });
+  /** True when SignalR reports at least one step is still running (cross-tab/page-reload safe). */
+  readonly syncActive = toSignal(this.signalR.syncActive$, { initialValue: false });
 
   activeCategory = signal<string>('');
   highlighted = signal<string | null>(null);
@@ -448,15 +450,25 @@ export class SettingsComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((evt) => this.currentLang.set(evt.lang));
 
-    this.signalR.syncDone$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((done) => {
-      if (done) {
-        this.syncing.set(false);
-        // Update immediately so the UI reflects completion without a round-trip delay,
-        // then reload from the backend to get the authoritative persisted value.
-        this.lastSyncDate.set(new Date().toISOString());
-        this.loadSyncStatus();
-      }
-    });
+    // Only clear syncing once all visible steps have left the 'running' state.
+    // This prevents premature spinner dismissal during the Sonarr enrichment
+    // and database-saving phases that occur after the last step emits 'Done'.
+    combineLatest([this.signalR.syncDone$, this.signalR.steps$])
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(([done, steps]) => {
+        if (done) {
+          const anyRunning = steps
+            .filter((s) => this.shouldShowSyncStep(s))
+            .some((s) => s.state === 'running');
+          if (!anyRunning) {
+            this.syncing.set(false);
+            // Update immediately so the UI reflects completion without a round-trip delay,
+            // then reload from the backend to get the authoritative persisted value.
+            this.lastSyncDate.set(new Date().toISOString());
+            this.loadSyncStatus();
+          }
+        }
+      });
     this.signalR.syncError$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((err) => {
       if (err) this.syncing.set(false);
     });
@@ -1022,16 +1034,10 @@ export class SettingsComponent {
   }
 
   triggerSync(): void {
-    if (this.syncing()) return;
+    if (this.syncing() || this.syncActive()) return;
 
     this.syncing.set(true);
     this.syncHttpError.set(null);
-
-    // Inform SignalR service which steps are disabled so completion is detected correctly
-    const disabledSteps = new Set<string>();
-    if (!this.plexEnabled()) disabledSteps.add('plex');
-    if (!this.sonarrEnabled()) disabledSteps.add('sonarr');
-    this.signalR.setDisabledStepKeys(disabledSteps);
     this.signalR.resetSteps();
 
     this.notifService.push({

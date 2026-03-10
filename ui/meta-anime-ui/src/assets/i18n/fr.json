@@ -74,7 +74,9 @@
         "confirmButton": "Confirmer",
         "confirmSeeDetails": "Voir les détails",
         "confirmLocalLabel": "Élément local",
-        "confirmMalLabel": "Entrée MAL"
+        "confirmMalLabel": "Entrée MAL",
+        "addToMal": "Ajouter à MAL",
+        "addMalError": "Échec de l'ajout à MAL. Veuillez réessayer."
       },
       "noProviders": {
         "title": "Aucun fournisseur configuré pour l'instant.",

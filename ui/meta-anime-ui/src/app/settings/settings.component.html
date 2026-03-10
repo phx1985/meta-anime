@@ -1230,8 +1230,8 @@
                 </div>
                 <button
                   class="btn-sync"
-                  [class.btn-sync--active]="syncing()"
-                  [disabled]="syncing()"
+                  [class.btn-sync--active]="syncing() || syncActive()"
+                  [disabled]="syncing() || syncActive() || !hubConnected()"
                   (click)="triggerSync()"
                   [attr.aria-label]="'settings.sync.button' | translate"
                 >
@@ -1324,6 +1324,7 @@
                 <button
                   type="button"
                   class="sync-log-clear"
+                  [disabled]="syncing() || syncActive() || !hubConnected()"
                   (click)="clearSyncLog()"
                   [attr.aria-label]="'settings.sync.hub.clearLog' | translate"
                 >

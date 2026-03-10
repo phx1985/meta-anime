@@ -108,7 +108,7 @@ export interface CoverageGapItem {
   plexUrl?: string;
   sonarrUrl?: string;
   plexProgress?: PlexProgressionInfo;
-  plexYear?: number;
+  year?: number;
   thumbnailUrl?: string;
 }
 

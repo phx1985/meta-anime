@@ -34,6 +34,9 @@ export class GapSearchModalComponent implements OnInit {
   /** The gap item being mapped — drives initial search query */
   sourceItem = input.required<CoverageGapItem>();
 
+  /** Gap type from parent — drives the breadcrumb icon in the header */
+  gapType = input<string>('');
+
   /** Emitted when user selects a MAL result */
   readonly resultSelected = output<ConfirmTarget>();
 
