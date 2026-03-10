@@ -838,14 +838,18 @@
             <span class="legend-dot legend-dot--mal"></span>
             <span class="legend-label">MAL</span>
           </span>
-          <span class="legend-item">
-            <span class="legend-dot legend-dot--plex"></span>
-            <span class="legend-label">Plex</span>
-          </span>
-          <span class="legend-item">
-            <span class="legend-dot legend-dot--sonarr"></span>
-            <span class="legend-label">Sonarr</span>
-          </span>
+          @if (providerState.plexEnabled()) {
+            <span class="legend-item">
+              <span class="legend-dot legend-dot--plex"></span>
+              <span class="legend-label">Plex</span>
+            </span>
+          }
+          @if (providerState.sonarrEnabled()) {
+            <span class="legend-item">
+              <span class="legend-dot legend-dot--sonarr"></span>
+              <span class="legend-label">Sonarr</span>
+            </span>
+          }
         </div>
       </div>
 
@@ -914,34 +918,34 @@
           <table class="anime-table">
             <thead>
               <tr>
-                <th class="tbl-th--sortable" (click)="sortTable('title')">
+                <th class="tbl-th--title tbl-th--sortable" (click)="sortTable('title')">
                   {{ 'animeList.table.col.title' | translate }}
                   @if (tableSortCol() === 'title') {
                     <span class="tbl-sort-arrow">{{ tableSortDir() === 'asc' ? '↑' : '↓' }}</span>
                   }
                 </th>
-                <th>{{ 'animeList.table.col.tags' | translate }}</th>
-                <th>{{ 'animeList.table.col.codecs' | translate }}</th>
-                <th class="tbl-th--sortable tbl-th--num" (click)="sortTable('episodes')">
+                <th class="tbl-th--tags">{{ 'animeList.table.col.tags' | translate }}</th>
+                <th class="tbl-th--codecs">{{ 'animeList.table.col.codecs' | translate }}</th>
+                <th class="tbl-th--episodes tbl-th--sortable tbl-th--num" (click)="sortTable('episodes')">
                   {{ 'animeList.table.col.episodes' | translate }}
                   @if (tableSortCol() === 'episodes') {
                     <span class="tbl-sort-arrow">{{ tableSortDir() === 'asc' ? '↑' : '↓' }}</span>
                   }
                 </th>
-                <th class="tbl-th--sortable tbl-th--num" (click)="sortTable('size')">
+                <th class="tbl-th--size tbl-th--sortable tbl-th--num" (click)="sortTable('size')">
                   {{ 'animeList.table.col.size' | translate }}
                   @if (tableSortCol() === 'size') {
                     <span class="tbl-sort-arrow">{{ tableSortDir() === 'asc' ? '↑' : '↓' }}</span>
                   }
                 </th>
-                <th class="tbl-th--sortable tbl-th--num" (click)="sortTable('avgsize')">
+                <th class="tbl-th--avgsize tbl-th--sortable tbl-th--num" (click)="sortTable('avgsize')">
                   {{ 'animeList.table.col.avgEpSize' | translate }}
                   @if (tableSortCol() === 'avgsize') {
                     <span class="tbl-sort-arrow">{{ tableSortDir() === 'asc' ? '↑' : '↓' }}</span>
                   }
                 </th>
                 @if (providerState.sonarrEnabled()) {
-                <th class="tbl-th--sortable" (click)="sortTable('added')">
+                <th class="tbl-th--added tbl-th--sortable" (click)="sortTable('added')">
                   {{ 'animeList.table.col.added' | translate }}
                   @if (tableSortCol() === 'added') {
                     <span class="tbl-sort-arrow">{{ tableSortDir() === 'asc' ? '↑' : '↓' }}</span>
@@ -970,12 +974,14 @@
 
                   <!-- Codecs with percentage -->
                   <td class="tbl-td--codecs">
-                    @for (pill of getCodecPills(anime.sonarrAnimes?.[0]?.codecDistribution); track pill.label) {
-                      <span class="tbl-pill tbl-pill--codec">{{ pill.label }} ({{ pill.pct }}%)</span>
-                    }
-                    @if (!getCodecPills(anime.sonarrAnimes?.[0]?.codecDistribution).length) {
-                      <span class="tbl-empty">—</span>
-                    }
+                    <div class="tbl-codecs-wrap">
+                      @for (pill of getCodecPills(anime.sonarrAnimes?.[0]?.codecDistribution); track pill.label) {
+                        <span class="tbl-pill tbl-pill--codec">{{ pill.label }} ({{ pill.pct }}%)</span>
+                      }
+                      @if (!getCodecPills(anime.sonarrAnimes?.[0]?.codecDistribution).length) {
+                        <span class="tbl-empty">—</span>
+                      }
+                    </div>
                   </td>
 
                   <!-- Episode count (on-disk from Sonarr) -->

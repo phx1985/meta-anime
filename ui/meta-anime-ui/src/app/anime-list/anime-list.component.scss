@@ -1796,6 +1796,7 @@ app-anime-card {
 .anime-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
   text-align: left;
   font-size: 0.82rem;
 
@@ -1816,6 +1817,18 @@ app-anime-card {
     color: var(--text-muted);
     white-space: nowrap;
     border-bottom: 1px solid rgba(108, 99, 255, 0.2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    // Column width assignments — controls the fixed layout
+    &.tbl-th--title    { width: 27%; }
+    &.tbl-th--tags     { width: 20%; }
+    &.tbl-th--codecs   { width: 11%; }
+    &.tbl-th--episodes { width: 7%; }
+    &.tbl-th--size     { width: 9%; }
+    &.tbl-th--avgsize  { width: 10%; }
+    &.tbl-th--added    { width: 10%; }
+    &.tbl-th--actions  { width: 6%; }
 
     &.tbl-th--sortable {
       cursor: pointer;
@@ -1845,18 +1858,17 @@ app-anime-card {
     padding: 0.5rem 0.75rem;
     vertical-align: middle;
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 
     &.tbl-td--title {
       font-weight: 500;
       color: var(--text-primary);
-      max-width: 240px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
 
     &.tbl-td--genres {
-      max-width: 200px;
+      white-space: normal;
     }
 
     &.tbl-td--num {
@@ -1866,7 +1878,10 @@ app-anime-card {
     }
 
     &.tbl-td--codecs {
-      white-space: nowrap;
+      // Reset td-level overflow so the inner wrapper can breathe
+      overflow: visible;
+      white-space: normal;
+      text-overflow: clip;
     }
 
     &.tbl-td--actions {
@@ -1891,6 +1906,14 @@ app-anime-card {
 
   .tbl-empty {
     color: var(--text-muted);
+  }
+
+  .tbl-codecs-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    justify-items: start;
+    align-items: start;
+    gap: 3px;
   }
 }
 
@@ -1932,6 +1955,9 @@ app-anime-card {
     border: 1px solid rgba(0, 200, 150, 0.2);
     text-transform: uppercase;
     font-weight: 500;
+    margin: 0;
+    text-align: center;
+    min-width: 0;
   }
 }
 

@@ -2,6 +2,7 @@
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
+using MetaAnime.Core.Models;
 using MetaAnime.Infrastructure.MyAnimeList.Models;
 using Microsoft.Extensions.Logging;
 using RestSharp;
@@ -249,6 +250,58 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
 
         var error = JsonSerializer.Deserialize<MalError>(response.Content!, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         return Result.Failure(new Error(error?.Message ?? "Failed to update MAL list status"));
+    }
+
+    public async Task<Result<IList<MalSearchResultItem>>> SearchByTitleAsync(string query, int limit = 10)
+    {
+        var baseUrl = await GetBaseUrlAsync();
+        if (string.IsNullOrWhiteSpace(baseUrl))
+            return Result.Failure<IList<MalSearchResultItem>>(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."));
+
+        var token = await malTokenService.GetAccessTokenAsync();
+        if (string.IsNullOrWhiteSpace(token))
+            return Result.Failure<IList<MalSearchResultItem>>(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
+
+        var encodedQuery = Uri.EscapeDataString(query);
+        var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
+        {
+            var uri = new Uri($"{baseUrl}/anime?q={encodedQuery}&limit={limit}&fields=id,title,main_picture,start_date,media_type");
+            var restClient = new RestClient(uri);
+            var restRequest = new RestRequest { Method = Method.Get };
+            restRequest.AddHeader("Authorization", $"Bearer {t}");
+            return ExecuteRequestAsync(restClient, restRequest);
+        });
+
+        if (response.IsSuccessful)
+        {
+            var result = JsonSerializer.Deserialize<MalResult>(response.Content!)!;
+            var items = result.Data
+                .Select(d =>
+                {
+                    // Parse year from "YYYY-MM-DD" start_date — null/empty → null year
+                    int? year = null;
+                    if (!string.IsNullOrWhiteSpace(d.Node.StartDate)
+                        && d.Node.StartDate.Length >= 4
+                        && int.TryParse(d.Node.StartDate[..4], out var parsedYear))
+                    {
+                        year = parsedYear;
+                    }
+
+                    return new MalSearchResultItem(
+                        d.Node.Id.ToString(),
+                        d.Node.Title ?? string.Empty,
+                        d.Node.MainPicture?.Medium,
+                        year,
+                        d.Node.MediaType,
+                        false // IsAlreadyInLibrary enriched by the mediator layer
+                    );
+                })
+                .ToList();
+            return Result.Success<IList<MalSearchResultItem>>(items);
+        }
+
+        var malError = JsonSerializer.Deserialize<MalError>(response.Content!)!;
+        return Result.Failure<IList<MalSearchResultItem>>(new Error(malError.Message));
     }
     #endregion
 

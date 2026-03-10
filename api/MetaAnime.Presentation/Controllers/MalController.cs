@@ -95,6 +95,31 @@ public sealed class MalController(
 
         return NoContent();
     }
+
+    /// <summary>Searches MAL for anime matching the given query (used for manual gap mapping).</summary>
+    [HttpGet("search")]
+    [Authorize]
+    public async Task<ActionResult> SearchAnime([FromQuery] string q, [FromQuery] int limit = 10)
+    {
+        if (string.IsNullOrWhiteSpace(q))
+            return BadRequest("Query parameter 'q' is required.");
+
+        try
+        {
+            var result = await animeMediatorService.SearchMalAnimeAsync(q);
+            if (result.IsFailure)
+            {
+                logger.LogError("MAL anime search failed for query '{Query}': {Error}", q, result.Error.Message);
+                return StatusCode(500, result.Error.Message);
+            }
+            return Ok(result.Value);
+        }
+        catch (MalAuthenticationException ex)
+        {
+            logger.LogWarning("MAL authentication failure when searching for '{Query}': {Message}", q, ex.Message);
+            return Unauthorized(new { code = "MAL.AuthenticationFailed", message = ex.Message });
+        }
+    }
 }
 
 public sealed record MalListStatusRequest(string Status, int NumWatchedEpisodes, int Score);

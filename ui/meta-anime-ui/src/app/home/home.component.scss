@@ -212,7 +212,9 @@ $timing-fns: (
 
 .stats-section {
   position: relative;
-  z-index: 10;
+  // Note: no z-index here — adding z-index would create a stacking context that
+  // traps all child modals (gap-detail, gap-confirm, anime-detail-panel) below the
+  // sticky navbar (z-index 1020). Modals need to paint at root level with their own z-index.
 
   // Allow tooltip pseudo-elements to overflow the row/col boundaries
   .row {

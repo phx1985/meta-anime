@@ -95,15 +95,48 @@ export interface ViewingProgressStats {
   plexTotalEpisodes: number;
 }
 
+export interface PlexProgressionInfo {
+  viewedEpisodes: number;
+  totalEpisodes: number;
+}
+
+export interface CoverageGapItem {
+  aniDbId: string;
+  title: string;
+  originalTitle?: string;
+  malUrl?: string;
+  plexUrl?: string;
+  sonarrUrl?: string;
+  plexProgress?: PlexProgressionInfo;
+  plexYear?: number;
+  thumbnailUrl?: string;
+}
+
+export interface MalSearchResult {
+  id: string;
+  title: string;
+  thumbnailUrl?: string;
+  year?: number;
+  mediaType?: string;
+  isAlreadyInLibrary?: boolean;
+}
+
+/** Target MAL item used by GapConfirmModal for the read-only comparison view. */
+export interface ConfirmTarget {
+  id: string;
+  title: string;
+  year?: number;
+  thumbnailUrl?: string;
+  mediaType?: string;
+}
+
 export interface AnimeStatisticsResponse {
   plexAnime: number;
   myAnimeListAnime: number;
   sonarrAnime: number;
   matchedAnime: number;
   sonarrNotInMal: number;
-  malNotInPlex: number;
   plexNotInMal: number;
-  plexNotInSonarr: number;
   genreStats: { [key: string]: number };
   viewingProgress: ViewingProgressStats;
 }

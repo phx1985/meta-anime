@@ -318,7 +318,8 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
             s.Images?.FirstOrDefault(i => i.CoverType == "poster")?.RemoteUrl
                 ?? s.Images?.FirstOrDefault()?.RemoteUrl,
             s.Overview,
-            AlreadyInLibrary: s.Id > 0
+            AlreadyInLibrary: s.Id > 0,
+            SonarrSeriesId: s.Id
         )).ToList();
 
         return Result.Success(items);
