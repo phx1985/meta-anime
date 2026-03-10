@@ -36,6 +36,8 @@ export class GapDetailModalComponent implements OnInit {
   gapLabel = input.required<string>();
 
   readonly closeModal = output<void>();
+  /** Emitted when a gap item was successfully added to MAL; carries the gapType for counter decrement */
+  readonly gapItemResolved = output<string>();
 
   readonly loading = signal(true);
   readonly items = signal<CoverageGapItem[]>([]);
@@ -89,6 +91,16 @@ export class GapDetailModalComponent implements OnInit {
   onCancelled(): void {
     this.confirmItem.set(null);
     this.confirmTarget.set(null);
+  }
+
+  onMalAdded(): void {
+    const resolved = this.confirmItem();
+    if (resolved) {
+      this.items.update((list) => list.filter((i) => i.aniDbId !== resolved.aniDbId));
+    }
+    this.onCancelled();
+    this.searchModalItem.set(null);
+    this.gapItemResolved.emit(this.gapType());
   }
 
   @HostListener('document:keydown.escape')

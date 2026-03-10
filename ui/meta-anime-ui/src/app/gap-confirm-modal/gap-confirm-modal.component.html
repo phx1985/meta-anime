@@ -9,6 +9,16 @@
 
     <!-- Header -->
     <div class="gcm-header">
+      @if (gapType() === 'sonarrNotInMal' || gapType() === 'plexNotInMal') {
+        <div class="gcm-breadcrumb" aria-hidden="true">
+          <img
+            [src]="gapType() === 'sonarrNotInMal' ? 'assets/images/sonarr.svg' : 'assets/images/plex.svg'"
+            class="gcm-bc-src"
+            alt=""
+          />
+          <img src="assets/images/mal.svg" class="gcm-bc-tgt" alt="" />
+        </div>
+      }
       <div>
         <h3 class="gcm-title">{{ 'home.missing.modal.confirmTitle' | translate }}</h3>
         <p class="gcm-subtitle">{{ 'home.missing.modal.confirmSubtitle' | translate }}</p>
@@ -52,8 +62,8 @@
             }
           </div>
           <p class="gcm-card__title">{{ sourceItem().title }}</p>
-          @if (sourceItem().plexYear) {
-            <span class="gcm-card__year">{{ sourceItem().plexYear }}</span>
+          @if (sourceItem().year) {
+            <span class="gcm-card__year">{{ sourceItem().year }}</span>
           }
         </div>
 
@@ -114,21 +124,28 @@
 
     <!-- Footer actions -->
     <div class="gcm-footer">
+      @if (addError()) {
+        <p class="gcm-add-error" role="alert">{{ addError()! | translate }}</p>
+      }
       <button
         type="button"
         class="gcm-btn gcm-btn--cancel"
         (click)="cancelled.emit()"
+        [disabled]="adding()"
       >
         {{ 'home.missing.modal.confirmCancel' | translate }}
       </button>
-      <a
+      <button
+        type="button"
         class="gcm-btn gcm-btn--confirm"
-        [href]="malUrl()"
-        target="_blank"
-        rel="noopener noreferrer"
+        (click)="addToMal()"
+        [disabled]="adding()"
       >
-        Open in MAL →
-      </a>
+        @if (adding()) {
+          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        }
+        {{ 'home.missing.modal.addToMal' | translate }}
+      </button>
     </div>
 
   </div>

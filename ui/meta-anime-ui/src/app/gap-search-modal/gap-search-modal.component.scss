@@ -48,7 +48,7 @@
 
 .gsm-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   padding: 1rem 1.25rem 0.875rem;
@@ -56,11 +56,39 @@
   flex-shrink: 0;
 }
 
+// Provider breadcrumb — source → MAL icon pair shown in header
+.gsm-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.gsm-bc-src {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  object-fit: contain;
+  display: block;
+}
+
+.gsm-bc-tgt {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  object-fit: contain;
+  display: block;
+  filter: grayscale(0.8) opacity(0.4);
+  mask-image: linear-gradient(to right, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.3) 70%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.3) 70%, transparent 100%);
+}
+
 .gsm-header__title-group {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .gsm-title {

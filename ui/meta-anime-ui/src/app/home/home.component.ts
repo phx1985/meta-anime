@@ -65,4 +65,14 @@ export class HomeComponent {
         error: () => this.stats.set(null),
       });
   }
+
+  onGapCountDecremented(gapType: string): void {
+    const current = this.stats();
+    if (!current) return;
+    if (gapType === 'sonarrNotInMal') {
+      this.stats.set({ ...current, sonarrNotInMal: Math.max(0, current.sonarrNotInMal - 1) });
+    } else if (gapType === 'plexNotInMal') {
+      this.stats.set({ ...current, plexNotInMal: Math.max(0, current.plexNotInMal - 1) });
+    }
+  }
 }

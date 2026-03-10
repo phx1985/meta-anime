@@ -76,6 +76,7 @@
     [gapType]="activeGapType()!"
     [gapLabel]="activeGapLabel()"
     (closeModal)="closeGap()"
+    (gapItemResolved)="onGapItemResolved($event)"
   />
 }
 

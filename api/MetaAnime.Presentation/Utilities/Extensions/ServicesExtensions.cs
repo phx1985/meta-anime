@@ -94,6 +94,7 @@ public static class ServicesExtensions
         services.AddScoped<IPropertyBagRepository, PropertyBagRepository>();
 
         services.AddScoped<ISyncProgressNotifier, SyncProgressNotifier>();
+        services.AddSingleton<ISyncStateTracker, InMemorySyncStateTracker>();
         services.AddScoped<AnimeSyncJob>();
         services.AddHostedService<SettingsSeedService>();
     }

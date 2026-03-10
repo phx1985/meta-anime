@@ -10,6 +10,7 @@ namespace MetaAnime.Application.BackgroundJobs;
 public sealed class AnimeSyncJob(
     IAnimeMatchingService animeMatchingService,
     ISyncProgressNotifier progressNotifier,
+    ISyncStateTracker stateTracker,
     ILogger<AnimeSyncJob> logger)
 {
     /// <summary>
@@ -17,6 +18,7 @@ public sealed class AnimeSyncJob(
     /// </summary>
     public async Task SyncAnimeMetadata(bool forceRefreshKometaMapping = false)
     {
+        stateTracker.BeginSync();
         logger.LogInformation(Constants.LogMessages.AnimeSyncJob.Starting, DateTime.UtcNow);
 
         try
@@ -36,6 +38,10 @@ public sealed class AnimeSyncJob(
         {
             logger.LogError(ex, Constants.LogMessages.AnimeSyncJob.Error);
             throw; // re-throw to mark the Hangfire job as failed
+        }
+        finally
+        {
+            stateTracker.EndSync();
         }
     }
 

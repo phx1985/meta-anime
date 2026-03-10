@@ -724,10 +724,10 @@
               <button
                 type="button"
                 class="wizard-primary-btn"
-                [disabled]="syncing()"
+                [disabled]="syncing() || syncActive() || !hubConnected()"
                 (click)="runSync()"
               >
-                @if (syncing()) {
+                @if (syncing() || syncActive()) {
                   <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                 }
                 <span class="btn-label">{{ 'wizard.step6.runSync' | translate }}</span>

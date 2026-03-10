@@ -74,7 +74,9 @@
         "confirmButton": "Confirm",
         "confirmSeeDetails": "See details",
         "confirmLocalLabel": "Local item",
-        "confirmMalLabel": "MAL entry"
+        "confirmMalLabel": "MAL entry",
+        "addToMal": "Add to MAL",
+        "addMalError": "Failed to add to MAL. Please try again."
       },
       "noProviders": {
         "title": "No providers configured yet.",

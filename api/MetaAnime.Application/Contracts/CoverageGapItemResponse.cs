@@ -7,7 +7,7 @@ public sealed record CoverageGapItemResponse(
     string? PlexUrl,
     string? SonarrUrl,
     PlexProgressionInfo? PlexProgress,
-    int? PlexYear,
+    int? Year,
     string? OriginalTitle,
     string? ThumbnailUrl
 );
