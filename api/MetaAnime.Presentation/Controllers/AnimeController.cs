@@ -31,6 +31,34 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
         return Ok(result.Value);
     }
 
+    [HttpGet("plex-thumb/{ratingKey}")]
+    [Authorize]
+    public async Task<IActionResult> GetPlexThumb(string ratingKey)
+    {
+        var result = await mediator.Send(new GetPlexThumbQuery(ratingKey));
+
+        if (result.IsFailure)
+            return NotFound();
+
+        return File(result.Value, "image/jpeg");
+    }
+
+    [HttpGet("coverage-gap/{gapType}")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<CoverageGapItemResponse>>> GetCoverageGap(string gapType)
+    {
+        var validTypes = new[] { "sonarrnotinmal", "plexnotinmal" };
+        if (!validTypes.Contains(gapType.ToLowerInvariant()))
+            return BadRequest($"Unknown gapType '{gapType}'. Valid values: {string.Join(", ", validTypes)}");
+
+        var result = await mediator.Send(new GetCoverageGapQuery(gapType));
+
+        if (result.IsFailure)
+            return StatusCode(500, result.Error.Message);
+
+        return Ok(result.Value);
+    }
+
     [HttpGet]
     [Authorize]
     public async Task<ActionResult<PagedResponse<IEnumerable<AnimeDetailsResponse>>>> GetAll(

@@ -1,0 +1,175 @@
+<div class="gap-modal-backdrop" (click)="onBackdropClick()" role="dialog" aria-modal="true" [attr.aria-label]="gapLabel() | translate">
+  <div class="gap-modal-panel" (click)="onPanelClick($event)">
+
+    <!-- Header -->
+    <div class="gap-modal-header">
+      <h2 class="gap-modal-title">{{ gapLabel() | translate }}</h2>
+      <button
+        type="button"
+        class="gap-modal-close"
+        (click)="closeModal.emit()"
+        [attr.aria-label]="'home.missing.modal.close' | translate"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="gap-modal-body">
+
+      @if (loading()) {
+        <div class="gap-modal-spinner">
+          <div class="spinner-border spinner-border-sm" role="status">
+            <span class="visually-hidden">{{ 'home.missing.modal.loading' | translate }}</span>
+          </div>
+          <span class="gap-modal-spinner__text">{{ 'home.missing.modal.loading' | translate }}</span>
+        </div>
+      } @else if (error()) {
+        <p class="gap-modal-empty">{{ 'home.missing.modal.error' | translate }}</p>
+      } @else if (items().length === 0) {
+        <div class="gap-modal-all-clear">
+          <div class="gap-modal-all-clear__icon" aria-hidden="true">🎉</div>
+          <p class="gap-modal-all-clear__title">{{ 'home.missing.modal.allClearTitle' | translate }}</p>
+          <p class="gap-modal-all-clear__sub">{{ 'home.missing.modal.allClearSub' | translate }}</p>
+        </div>
+      } @else {
+        <p class="gap-modal-count">{{ items().length }}</p>
+
+        <!-- ── Desktop table ──────────────────────────────────────────── -->
+        <div class="gap-modal-table-wrap">
+          <table class="gap-modal-table">
+            <thead>
+              <tr>
+                <th class="gmt-th--title">{{ 'home.missing.modal.colTitle' | translate }}</th>
+                @if (isMappable()) {
+                  <th class="gmt-th--progress">{{ 'home.missing.modal.colProgress' | translate }}</th>
+                }
+                <th class="gmt-th--actions">{{ 'home.missing.modal.colActions' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of items(); track item.aniDbId) {
+                <tr
+                  [class.gap-row--clickable]="isMappable()"
+                  (click)="isMappable() && openSearchModal(item)"
+                >
+                  <td class="gmt-td--title" [title]="item.title">
+                    {{ item.title }}
+                    @if (item.plexYear) {
+                      <span class="gmt-year-badge">({{ item.plexYear }})</span>
+                    }
+                  </td>
+                  @if (isMappable()) {
+                    <td class="gmt-td--progress">
+                      @if (item.plexProgress) {
+                        <div class="gap-progress-bar">
+                          <div
+                            class="gap-progress-fill gap-progress-fill--plex"
+                            [style.width.%]="progressPercent(item)"
+                          ></div>
+                        </div>
+                        <span class="gap-progress-label">
+                          {{ item.plexProgress.viewedEpisodes }}/{{ item.plexProgress.totalEpisodes }}
+                        </span>
+                      } @else {
+                        <span class="gap-progress-none">—</span>
+                      }
+                    </td>
+                  }
+                  <td class="gmt-td--actions">
+                    <div class="gmt-actions-cell">
+                      @if (item.malUrl) {
+                        <a class="tbl-action-btn btn-mal" [href]="item.malUrl" target="_blank" rel="noopener noreferrer" title="MyAnimeList" (click)="$event.stopPropagation()">
+                          <img src="assets/images/mal.svg" alt="MAL" width="18" height="18" />
+                        </a>
+                      }
+                      @if (item.plexUrl) {
+                        <a class="tbl-action-btn btn-plex" [href]="item.plexUrl" target="_blank" rel="noopener noreferrer" title="Plex" (click)="$event.stopPropagation()">
+                          <img src="assets/images/plex.svg" alt="Plex" width="18" height="18" />
+                        </a>
+                      }
+                      @if (item.sonarrUrl) {
+                        <a class="tbl-action-btn btn-sonarr" [href]="item.sonarrUrl" target="_blank" rel="noopener noreferrer" title="Sonarr" (click)="$event.stopPropagation()">
+                          <img src="assets/images/sonarr.svg" alt="Sonarr" width="18" height="18" />
+                        </a>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ── Mobile cards ───────────────────────────────────────────── -->
+        <div class="gap-mobile-cards">
+          @for (item of items(); track item.aniDbId) {
+            <div
+              class="gap-card"
+              [class.gap-row--clickable]="isMappable()"
+              (click)="isMappable() && openSearchModal(item)"
+            >
+              <p class="gap-card__title">
+                {{ item.title }}
+                @if (item.plexYear) {
+                  <span class="gmt-year-badge">({{ item.plexYear }})</span>
+                }
+              </p>
+              @if (item.plexProgress && isMappable()) {
+                <div class="gap-card__progress">
+                  <div class="gap-progress-bar">
+                    <div
+                      class="gap-progress-fill gap-progress-fill--plex"
+                      [style.width.%]="progressPercent(item)"
+                    ></div>
+                  </div>
+                  <span class="gap-progress-label">
+                    {{ item.plexProgress.viewedEpisodes }}/{{ item.plexProgress.totalEpisodes }}
+                  </span>
+                </div>
+              }
+              <div class="gap-card__actions">
+                @if (item.malUrl) {
+                  <a class="tbl-action-btn btn-mal" [href]="item.malUrl" target="_blank" rel="noopener noreferrer" title="MyAnimeList" (click)="$event.stopPropagation()">
+                    <img src="assets/images/mal.svg" alt="MAL" width="18" height="18" />
+                  </a>
+                }
+                @if (item.plexUrl) {
+                  <a class="tbl-action-btn btn-plex" [href]="item.plexUrl" target="_blank" rel="noopener noreferrer" title="Plex" (click)="$event.stopPropagation()">
+                    <img src="assets/images/plex.svg" alt="Plex" width="18" height="18" />
+                  </a>
+                }
+                @if (item.sonarrUrl) {
+                  <a class="tbl-action-btn btn-sonarr" [href]="item.sonarrUrl" target="_blank" rel="noopener noreferrer" title="Sonarr" (click)="$event.stopPropagation()">
+                    <img src="assets/images/sonarr.svg" alt="Sonarr" width="18" height="18" />
+                  </a>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+    </div>
+  </div>
+</div>
+
+<!-- Search modal — opens when user clicks a mappable row -->
+@if (searchModalItem()) {
+  <app-gap-search-modal
+    [sourceItem]="searchModalItem()!"
+    (resultSelected)="onResultSelected(searchModalItem()!, $event)"
+    (closed)="onSearchModalClosed()"
+  />
+}
+
+<!-- Confirm modal — opens after a result is chosen in the search modal -->
+@if (confirmItem() && confirmTarget()) {
+  <app-gap-confirm-modal
+    [sourceItem]="confirmItem()!"
+    [targetItem]="confirmTarget()!"
+    (cancelled)="onCancelled()"
+  />
+}

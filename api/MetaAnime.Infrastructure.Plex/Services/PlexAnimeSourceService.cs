@@ -205,6 +205,29 @@ public sealed class PlexAnimeSourceService(
         return Result.Success<IList<PlexLibraryInfo>>(libraries);
     }
 
+    public async Task<Result<byte[]>> GetThumbBytesAsync(string ratingKey)
+    {
+        var (_, host, token, _, isConfigured) = await GetSettingsAsync();
+
+        if (!isConfigured)
+            return Result.Failure<byte[]>(new(Constants.Errors.NotConfigured, "Plex is not configured"));
+
+        using var handler = new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) };
+        using var httpClient = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(30) };
+        httpClient.DefaultRequestHeaders.Add("X-Plex-Token", token);
+
+        var url = $"{host.TrimEnd('/')}/library/metadata/{ratingKey}/thumb";
+        try
+        {
+            var bytes = await httpClient.GetByteArrayAsync(url);
+            return Result.Success(bytes);
+        }
+        catch
+        {
+            return Result.Failure<byte[]>(new(Constants.Errors.ThumbNotFound, "Thumb not found"));
+        }
+    }
+
     #region Private Methods
     private static PlexMedia MapToPlexMedia(PlexMetadataItem metadata)
         => new()
@@ -212,9 +235,12 @@ public sealed class PlexAnimeSourceService(
             Description = metadata.Summary ?? string.Empty,
             Id = metadata.RatingKey ?? string.Empty,
             Title = metadata.Title ?? string.Empty,
+            OriginalTitle = string.IsNullOrWhiteSpace(metadata.OriginalTitle) ? null : metadata.OriginalTitle,
             ExternalGuilds = metadata.ExternalGuids?.Select(g => g.Id ?? string.Empty).ToArray() ?? [],
             ViewedLeafCount = metadata.ViewedLeafCount ?? 0,
-            LeafCount = metadata.LeafCount ?? 0
+            LeafCount = metadata.LeafCount ?? 0,
+            Year = metadata.Year ?? 0,
+            Thumb = string.IsNullOrWhiteSpace(metadata.Thumb) ? null : metadata.Thumb
         };
 
     private static PlexMedia MapToPlexMedia(Components.Metadata metadata)
@@ -223,9 +249,11 @@ public sealed class PlexAnimeSourceService(
             Description = metadata.Summary ?? string.Empty,
             Id = metadata.RatingKey ?? string.Empty,
             Title = metadata.Title ?? string.Empty,
+            OriginalTitle = null, // Plex SDK (LukeHagar) does not expose originalTitle
             ExternalGuilds = metadata?.Guids?.Select(g => g.Id).ToArray() ?? [],
             ViewedLeafCount = metadata?.ViewedLeafCount ?? 0,
-            LeafCount = metadata?.LeafCount ?? 0
+            LeafCount = metadata?.LeafCount ?? 0,
+            Year = (int?)metadata?.Year ?? 0
         };
     #endregion
 
@@ -244,11 +272,14 @@ public sealed class PlexAnimeSourceService(
     private sealed record PlexMetadataItem(
         [property: JsonPropertyName("ratingKey")]       string? RatingKey,
         [property: JsonPropertyName("title")]           string? Title,
+        [property: JsonPropertyName("originalTitle")]   string? OriginalTitle,
         [property: JsonPropertyName("summary")]         string? Summary,
         [property: JsonPropertyName("guid")]            string? PlexInternalGuid,
         [property: JsonPropertyName("Guid")]            List<PlexGuid>? ExternalGuids,
         [property: JsonPropertyName("viewedLeafCount")] int? ViewedLeafCount,
-        [property: JsonPropertyName("leafCount")]       int? LeafCount);
+        [property: JsonPropertyName("leafCount")]       int? LeafCount,
+        [property: JsonPropertyName("year")]            int? Year,
+        [property: JsonPropertyName("thumb")]           string? Thumb);
 
     private sealed record PlexGuid(
         [property: JsonPropertyName("id")] string? Id);

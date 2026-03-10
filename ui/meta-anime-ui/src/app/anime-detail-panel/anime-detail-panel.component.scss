@@ -8,7 +8,7 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
   backdrop-filter: blur(3px);
-  z-index: 1050;
+  z-index: 1080;
   cursor: pointer;
 }
 
@@ -23,7 +23,7 @@
   background: var(--bg-secondary);
   border-left: 1px solid rgba(108, 99, 255, 0.2);
   box-shadow: -8px 0 40px rgba(0, 0, 0, 0.45), -2px 0 12px rgba(108, 99, 255, 0.15);
-  z-index: 1051;
+  z-index: 1081;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;

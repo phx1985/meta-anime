@@ -63,7 +63,10 @@ public sealed record SonarrAddedSeries(int Id, string Title, string TitleSlug);
 
 /// <summary>Single result from the Sonarr series lookup API.</summary>
 /// <param name="AlreadyInLibrary">True when Sonarr already tracks this series (Id > 0).</param>
-public sealed record SonarrLookupItem(int TvdbId, string Title, int? Year, string? TitleSlug, string? RemotePoster, string? Overview, bool AlreadyInLibrary = false);
+/// <param name="SonarrSeriesId">The Sonarr internal series Id (> 0 when already in library).</param>
+/// <param name="AnimeDbId">The MetaAnime DB GUID of the matching Anime entity; null when not yet persisted.</param>
+/// <param name="MalId">The MyAnimeList anime ID resolved via Kometa (TvdbId → AniDbId → MalId); null when not found.</param>
+public sealed record SonarrLookupItem(int TvdbId, string Title, int? Year, string? TitleSlug, string? RemotePoster, string? Overview, bool AlreadyInLibrary = false, int SonarrSeriesId = 0, Guid? AnimeDbId = null, string? MalId = null);
 
 /// <summary>A tag defined in the Sonarr instance.</summary>
 public sealed record SonarrTagInfo(int Id, string Label);

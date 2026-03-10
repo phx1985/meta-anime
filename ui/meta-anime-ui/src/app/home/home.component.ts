@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal, DestroyRef } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
@@ -7,12 +7,14 @@ import { AnimeStatisticsResponse } from '../models/anime.models';
 import { GenreChartComponent } from '../genre-chart/genre-chart.component';
 import { MissingStatsComponent } from '../missing-stats/missing-stats.component';
 import { CountUpDirective } from '../directives/count-up.directive';
+import { ProviderStateService } from '../services/provider-state.service';
+import { AnimeImageGalleryComponent } from '../anime-image-gallery/anime-image-gallery.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, GenreChartComponent, MissingStatsComponent, CountUpDirective],
+  imports: [TranslatePipe, GenreChartComponent, MissingStatsComponent, CountUpDirective, AnimeImageGalleryComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
@@ -20,11 +22,26 @@ export class HomeComponent {
   private animeService = inject(AnimeService);
   private syncSignalR = inject(SyncSignalRService);
   private destroyRef = inject(DestroyRef);
+  readonly providerState = inject(ProviderStateService);
 
   stats = signal<AnimeStatisticsResponse | null>(null);
 
   /** Array used to render floating particles via @for in the template */
   readonly particles = Array.from({ length: 14 });
+
+  /** Number of provider counter cards currently visible (MAL is always shown). */
+  readonly visibleProviderCount = computed(() =>
+    1 + (this.providerState.plexEnabled() ? 1 : 0) + (this.providerState.sonarrEnabled() ? 1 : 0),
+  );
+
+  /** Bootstrap column class for the provider counter cards row. */
+  readonly colClass = computed(() => {
+    switch (this.visibleProviderCount()) {
+      case 1: return 'col-12';
+      case 2: return 'col-sm-6';
+      default: return 'col-6 col-md-4';
+    }
+  });
 
   constructor() {
     this.loadStats();

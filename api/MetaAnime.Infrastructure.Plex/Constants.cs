@@ -10,5 +10,6 @@ public static class Constants
         public const string NotConfigured = "Plex.NotConfigured";
         public const string MachineIdentifierNotFound = "Plex.MachineIdentifierNotFound";
         public const string PlexPinFailed = "Plex.PinFailed";
+        public const string ThumbNotFound = "Plex.ThumbNotFound";
     }
 }

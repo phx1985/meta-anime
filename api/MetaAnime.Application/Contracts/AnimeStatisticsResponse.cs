@@ -6,9 +6,7 @@ public sealed record AnimeStatisticsResponse(
     int SonarrAnime,
     int MatchedAnime,
     int SonarrNotInMal,
-    int MalNotInPlex,
     int PlexNotInMal,
-    int PlexNotInSonarr,
     Dictionary<string, int> GenreStats,
     ViewingProgressStats ViewingProgress
 );

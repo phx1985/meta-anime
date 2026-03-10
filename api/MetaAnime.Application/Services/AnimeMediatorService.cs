@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using MalSearchResultItem = MetaAnime.Core.Models.MalSearchResultItem;
 
 namespace MetaAnime.Application.Services;
 
@@ -657,37 +658,17 @@ public sealed class AnimeMediatorService(
             var malCount = animes.Count(a => a.AnimeSource == AnimeSource.MyAnimeList);
             var sonarrCount = animes.Count(a => a.AnimeSource == AnimeSource.Sonarr);
 
-            var allAniDbIdsResult = await animeMappingService.GetAllFilteredAniDbIdsAsync();
-            if (allAniDbIdsResult.IsFailure)
-                return Result.Failure<AnimeStatisticsResponse>(allAniDbIdsResult.Error);
+            // Build entity-level coverage groups — uses the corrected logic that respects
+            // the fact that one anime entity can map to multiple AniDbIds.
+            var entityGroups = await LoadEntityCoverageAsync();
 
-            var mappingsResult = await animeMappingService.GetByAniDbIdsAsync(allAniDbIdsResult.Value);
-            if (mappingsResult.IsFailure)
-                return Result.Failure<AnimeStatisticsResponse>(mappingsResult.Error);
+            // matchedCount = distinct AniDbIds that host more than one source type.
+            var matchedCount = entityGroups.AniDbIdSources.Count(kv => kv.Value.Count > 1);
 
-            var mappingGroups = mappingsResult.Value
-                .GroupBy(m => m.AniDbId)
-                .Select(g =>
-                {
-                    var sources = g.Where(m => m.Anime != null)
-                                   .Select(m => m.Anime!.AnimeSource)
-                                   .Distinct()
-                                   .ToHashSet();
-                    return new
-                    {
-                        HasSonarr = sources.Contains(AnimeSource.Sonarr),
-                        HasMal = sources.Contains(AnimeSource.MyAnimeList),
-                        HasPlex = sources.Contains(AnimeSource.Plex),
-                        Count = sources.Count
-                    };
-                })
-                .ToList();
-
-            var matchedCount = mappingGroups.Count(g => g.Count > 1);
-            var sonarrNotInMal = mappingGroups.Count(g => g.HasSonarr && !g.HasMal);
-            var malNotInPlex = mappingGroups.Count(g => g.HasMal && !g.HasPlex);
-            var plexNotInMal = mappingGroups.Count(g => g.HasPlex && !g.HasMal);
-            var plexNotInSonarr = mappingGroups.Count(g => g.HasPlex && !g.HasSonarr);
+            // Gap counts operate at the SOURCE ENTITY level, not the AniDbId level.
+            // An entity is a gap only when NONE of its AniDbIds overlaps with the target source's AniDbIds.
+            var sonarrNotInMal  = entityGroups.AnimeEntityGroups.Count(g => g.Anime.AnimeSource == AnimeSource.Sonarr       && !g.IsLinkedToMal);
+            var plexNotInMal    = entityGroups.AnimeEntityGroups.Count(g => g.Anime.AnimeSource == AnimeSource.Plex          && !g.IsLinkedToMal);
 
             var genreStats = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var malEpisodesWatched = 0;
@@ -766,9 +747,7 @@ public sealed class AnimeMediatorService(
                 sonarrCount,
                 matchedCount,
                 sonarrNotInMal,
-                malNotInPlex,
                 plexNotInMal,
-                plexNotInSonarr,
                 genreStats,
                 new ViewingProgressStats(malEpisodesWatched, malTotalEpisodes, plexEpisodesWatched, plexTotalEpisodes)
             ));
@@ -779,15 +758,217 @@ public sealed class AnimeMediatorService(
         }
     }
 
+    public async Task<Result<IEnumerable<CoverageGapItemResponse>>> GetCoverageGapAsync(string gapType)
+    {
+        try
+        {
+            var entityGroups = await LoadEntityCoverageAsync();
+
+            var normalised = gapType.ToLowerInvariant();
+
+            // Determine which entities are true gaps.
+            // An entity is a gap only when NONE of its AniDbIds is shared with an entity in the target source.
+            // This means: if the Plex series maps to {AniDbId_7622, AniDbId_7623} and the MAL series maps to
+            // {AniDbId_7622}, the Plex entity is correctly identified as NOT a gap — even though AniDbId_7623
+            // has no MAL entry at all.
+            IEnumerable<AnimeEntityCoverage> gapEntities = normalised switch
+            {
+                "plexnotinmal"    => entityGroups.AnimeEntityGroups.Where(g => g.Anime.AnimeSource == AnimeSource.Plex          && !g.IsLinkedToMal),
+                "sonarrnotinmal"  => entityGroups.AnimeEntityGroups.Where(g => g.Anime.AnimeSource == AnimeSource.Sonarr         && !g.IsLinkedToMal),
+                _                 => []
+            };
+
+            // Resolve provider base URLs once.
+            var plexBaseUrl   = await GetPlexBaseUrlAsync();
+            var sonarrBaseUrl = await GetSonarrSeriesBaseUrlAsync();
+
+            // Pre-load Plex cache for progress enrichment (only for plexnotinmal).
+            var isPlexNeedle = normalised is "plexnotinmal";
+            Dictionary<string, string> plexProgressCache = [];
+            if (isPlexNeedle)
+            {
+                var plexCacheResult = await cacheEntryService.GetAsync(AnimeSource.Plex);
+                if (plexCacheResult.IsSuccess)
+                {
+                    plexProgressCache = plexCacheResult.Value
+                        .GroupBy(c => c.SourceId)
+                        .ToDictionary(g => g.Key, g => g.Last().RawData);
+                }
+            }
+
+            // Pre-load Sonarr cache for poster enrichment (sonarrnotinmal) and slug-based URL construction (all gap types).
+            var isSonarrNeedle = normalised is "sonarrnotinmal";            Dictionary<string, string> sonarrImageCache = [];
+            Dictionary<string, string?> sonarrSlugCache = [];
+            {
+                var sonarrCacheResult = await cacheEntryService.GetAsync(AnimeSource.Sonarr);
+                if (sonarrCacheResult.IsSuccess)
+                {
+                    // Deduplicate by SourceId — use last entry if duplicates exist.
+                    var sonarrEntries = sonarrCacheResult.Value
+                        .GroupBy(c => c.SourceId)
+                        .Select(g => g.Last())
+                        .ToList();
+
+                    if (isSonarrNeedle)
+                        sonarrImageCache = sonarrEntries.ToDictionary(e => e.SourceId, e => e.RawData);
+
+                    // Build SourceId → TitleSlug dictionary for correct Sonarr web-UI URLs.
+                    foreach (var entry in sonarrEntries)
+                    {
+                        try
+                        {
+                            var s = JsonSerializer.Deserialize<SonarrSeries>(entry.RawData, JsonOptions);
+                            sonarrSlugCache[entry.SourceId] = s?.TitleSlug;
+                        }
+                        catch (JsonException) { sonarrSlugCache[entry.SourceId] = null; }
+                    }
+                }
+            }
+
+            var results = gapEntities
+                .Select(gap =>
+                {
+                    var anime = gap.Anime;
+
+                    // Use the lexicographically smallest AniDbId as the canonical identifier.
+                    var canonicalAniDbId = gap.AniDbIds.Min() ?? gap.AniDbIds.First();
+
+                    var title = anime.Title ?? "NO_TITLE";
+
+                    // The gap item IS present in its own source — build that URL.
+                    string? malUrl = anime.AnimeSource == AnimeSource.MyAnimeList
+                        ? $"{myAnimeListHost}/anime/{anime.SourceId}"
+                        : null;
+
+                    string? plexUrl = anime.AnimeSource == AnimeSource.Plex && !string.IsNullOrWhiteSpace(plexBaseUrl)
+                        ? $"{plexBaseUrl}{anime.SourceId}"
+                        : null;
+
+                    string? sonarrUrl = anime.AnimeSource == AnimeSource.Sonarr && !string.IsNullOrWhiteSpace(sonarrBaseUrl)
+                        ? $"{sonarrBaseUrl.TrimEnd('/')}/series/{(sonarrSlugCache.TryGetValue(anime.SourceId, out var sl) && sl != null ? sl : anime.SourceId)}"
+                        : null;
+
+                    // Cross-source enrichment: for Plex/MAL gaps also show if the item IS in Sonarr (via shared AniDbId).
+                    if (anime.AnimeSource is AnimeSource.Plex or AnimeSource.MyAnimeList && gap.IsLinkedToSonarr && !string.IsNullOrWhiteSpace(sonarrBaseUrl))
+                    {
+                        var linkedSonarr = entityGroups.AnimeEntityGroups
+                            .FirstOrDefault(g => g.Anime.AnimeSource == AnimeSource.Sonarr && g.AniDbIds.Overlaps(gap.AniDbIds));
+                        if (linkedSonarr != null)
+                        {
+                            var linkedSlug = sonarrSlugCache.TryGetValue(linkedSonarr.Anime.SourceId, out var ls) && ls != null ? ls : linkedSonarr.Anime.SourceId;
+                            sonarrUrl = $"{sonarrBaseUrl.TrimEnd('/')}/series/{linkedSlug}";
+                        }
+                    }
+
+                    // For Sonarr gaps: also surface a linked Plex URL when available.
+                    if (anime.AnimeSource == AnimeSource.Sonarr && gap.IsLinkedToPlex && !string.IsNullOrWhiteSpace(plexBaseUrl))
+                    {
+                        var linkedPlex = entityGroups.AnimeEntityGroups
+                            .FirstOrDefault(g => g.Anime.AnimeSource == AnimeSource.Plex && g.AniDbIds.Overlaps(gap.AniDbIds));
+                        if (linkedPlex != null)
+                            plexUrl = $"{plexBaseUrl}{linkedPlex.Anime.SourceId}";
+                    }
+
+                    // Plex progress and year enrichment.
+                    PlexProgressionInfo? plexProgress = null;
+                    int? plexYear = null;
+                    string? originalTitle = null;
+                    string? thumbnailUrl = null;
+                    if (isPlexNeedle && plexProgressCache.TryGetValue(anime.SourceId, out var rawData))
+                    {
+                        try
+                        {
+                            var plexMedia = JsonSerializer.Deserialize<PlexMedia>(rawData, JsonOptions);
+                            if (plexMedia != null)
+                            {
+                                plexProgress = new PlexProgressionInfo(plexMedia.ViewedLeafCount, plexMedia.LeafCount);
+                                plexYear = plexMedia.Year > 0 ? plexMedia.Year : null;
+                                originalTitle = string.IsNullOrWhiteSpace(plexMedia.OriginalTitle) ? null : plexMedia.OriginalTitle;
+                                if (!string.IsNullOrWhiteSpace(plexMedia.Thumb))
+                                    thumbnailUrl = $"/api/v1/animes/plex-thumb/{Uri.EscapeDataString(anime.SourceId)}";
+                            }
+                        }
+                        catch (JsonException) { /* skip if deserialization fails */ }
+                    }
+
+                    if (isSonarrNeedle && sonarrImageCache.TryGetValue(anime.SourceId, out var sonarrRawData))
+                    {
+                        try
+                        {
+                            var sonarrSeries = JsonSerializer.Deserialize<SonarrSeries>(sonarrRawData, JsonOptions);
+                            thumbnailUrl = sonarrSeries?.Images?
+                                .FirstOrDefault(i => string.Equals(i.CoverType, "poster", StringComparison.OrdinalIgnoreCase))
+                                ?.RemoteUrl;
+                        }
+                        catch (JsonException) { /* skip */ }
+                    }
+
+                    return new CoverageGapItemResponse(canonicalAniDbId, title, malUrl, plexUrl, sonarrUrl, plexProgress, plexYear, originalTitle, thumbnailUrl);
+                })
+                .OrderBy(r => r.Title, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            return Result.Success<IEnumerable<CoverageGapItemResponse>>(results);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<IEnumerable<CoverageGapItemResponse>>(new(Constants.Errors.GetStatisticsAsync, ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Loads all AnimeMapping rows and builds entity-level coverage groups in one pass.
+    /// The result exposes per-AniDbId source sets AND per-anime-entity cross-source link flags.
+    /// This is the correct architectural source of truth for gap calculations: it respects the
+    /// fact that a single anime entity (e.g., a Plex series) can map to multiple AniDbIds in
+    /// Kometa, and a gap only exists when NONE of those AniDbIds are shared with the target source.
+    /// </summary>
+    private async Task<EntityCoverageResult> LoadEntityCoverageAsync()
+    {
+        var allMappingsResult = await animeMappingService.GetAllAsync(includeAnime: true);
+        var validMappings = allMappingsResult.IsSuccess
+            ? allMappingsResult.Value.Where(m => m.Anime != null).ToList()
+            : [];
+
+        // Step 1: For each AniDbId, collect which source types are present.
+        var aniDbIdSources = validMappings
+            .GroupBy(m => m.AniDbId)
+            .ToDictionary(g => g.Key, g => g.Select(m => m.Anime!.AnimeSource).ToHashSet());
+
+        // Step 2: Build sets of AniDbIds that have at least one entry for each source.
+        var malLinkedAniDbIds    = aniDbIdSources.Where(kv => kv.Value.Contains(AnimeSource.MyAnimeList)).Select(kv => kv.Key).ToHashSet();
+        var plexLinkedAniDbIds   = aniDbIdSources.Where(kv => kv.Value.Contains(AnimeSource.Plex)).Select(kv => kv.Key).ToHashSet();
+        var sonarrLinkedAniDbIds = aniDbIdSources.Where(kv => kv.Value.Contains(AnimeSource.Sonarr)).Select(kv => kv.Key).ToHashSet();
+
+        // Step 3: Group by anime entity and compute cross-source link status.
+        var entityGroups = validMappings
+            .GroupBy(m => m.AnimeId)
+            .Select(g =>
+            {
+                var anime = g.First().Anime!;
+                var myAniDbIds = g.Select(m => m.AniDbId).ToHashSet();
+                return new AnimeEntityCoverage(
+                    Anime:            anime,
+                    AniDbIds:         myAniDbIds,
+                    // An entity is "linked" to a source if ANY of its AniDbIds appears in that source's set.
+                    IsLinkedToMal:    myAniDbIds.Overlaps(malLinkedAniDbIds),
+                    IsLinkedToPlex:   myAniDbIds.Overlaps(plexLinkedAniDbIds),
+                    IsLinkedToSonarr: myAniDbIds.Overlaps(sonarrLinkedAniDbIds)
+                );
+            })
+            .ToList();
+
+        return new EntityCoverageResult(aniDbIdSources, entityGroups);
+    }
+
     public async Task<Result> SyncAllAsync(bool forceRefreshKometaMapping = false)
     {
         try
         {
             var matchResult = await animeMatchingService.MatchAsync(forceRefreshKometaMapping);
             if (matchResult.IsFailure)
-            {
                 return Result.Failure(matchResult.Error);
-            }
+
             return Result.Success();
         }
         catch (Exception ex)
@@ -1176,7 +1357,75 @@ public sealed class AnimeMediatorService(
     {
         try
         {
-            return await sonarrAnimeSource.SearchLookupAsync(term);
+            var result = await sonarrAnimeSource.SearchLookupAsync(term);
+            if (result.IsFailure)
+                return result;
+
+            var items = result.Value;
+            if (items.Count == 0)
+                return Result.Success(items);
+
+            // ── Enrich with AnimeDbId (DB GUID) for library items ──────────────────────────
+            var sourceIdToGuid = new Dictionary<string, Guid>(StringComparer.OrdinalIgnoreCase);
+            var libraryItems = items.Where(i => i.SonarrSeriesId > 0).ToList();
+            if (libraryItems.Count > 0)
+            {
+                var sonarrAnimes = await animeRepository.GetAllBySourceAsync(AnimeSource.Sonarr);
+                foreach (var a in sonarrAnimes)
+                    sourceIdToGuid[a.SourceId] = a.Id;
+            }
+
+            // ── Enrich with MalId via Kometa: TvdbId → AniDbId → MalId ────────────────────
+            // Batch query 1: all unique TvdbIds → Kometa TVDB mappings
+            var tvdbIds = items
+                .Where(i => i.TvdbId > 0)
+                .Select(i => i.TvdbId.ToString())
+                .Distinct()
+                .ToList();
+
+            var tvdbToMalId = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (tvdbIds.Count > 0)
+            {
+                var tvdbKometa = await kometaAnimeMappingRepository.GetByPlatformIdsAsync(KometaAnimePlatform.Tvdb, tvdbIds);
+                var aniDbIds = tvdbKometa.Select(k => k.AniDbId).Distinct().ToList();
+
+                if (aniDbIds.Count > 0)
+                {
+                    // Batch query 2: AniDbIds → MAL platform mappings
+                    var malKometa = await kometaAnimeMappingRepository.GetByAniDbIdsAndPlatformAsync(KometaAnimePlatform.Mal, aniDbIds);
+
+                    // Map AniDbId → MalId (first found wins per AniDbId)
+                    var aniDbToMalId = malKometa
+                        .GroupBy(k => k.AniDbId, StringComparer.OrdinalIgnoreCase)
+                        .ToDictionary(g => g.Key, g => g.First().PlatformId, StringComparer.OrdinalIgnoreCase);
+
+                    // Map TvdbId → MalId via AniDbId
+                    foreach (var kometaEntry in tvdbKometa)
+                    {
+                        if (aniDbToMalId.TryGetValue(kometaEntry.AniDbId, out var malId)
+                            && !tvdbToMalId.ContainsKey(kometaEntry.PlatformId))
+                        {
+                            tvdbToMalId[kometaEntry.PlatformId] = malId;
+                        }
+                    }
+                }
+            }
+
+            // ── Apply enrichments ──────────────────────────────────────────────────────────
+            items = items.Select(i =>
+            {
+                Guid? animeDbId = i.SonarrSeriesId > 0
+                    && sourceIdToGuid.TryGetValue(i.SonarrSeriesId.ToString(), out var dbId)
+                    ? dbId : null;
+
+                string? malId = tvdbToMalId.TryGetValue(i.TvdbId.ToString(), out var mid) ? mid : null;
+
+                return (animeDbId == null && malId == null)
+                    ? i
+                    : i with { AnimeDbId = animeDbId, MalId = malId };
+            }).ToList();
+
+            return Result.Success(items);
         }
         catch (Exception ex)
         {
@@ -1532,6 +1781,26 @@ public sealed class AnimeMediatorService(
     public Task<Result<SonarrTagInfo>> CreateSonarrTagAsync(string label)
         => sonarrAnimeSource.CreateTagAsync(label);
 
+    public async Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query)
+    {
+        var searchResult = await malAnimeSource.SearchByTitleAsync(query);
+        if (searchResult.IsFailure)
+            return searchResult;
+
+        // Enrich each result with IsAlreadyInLibrary — true when that MAL ID is already
+        // linked to a unified Anime entity in our DB (so the user knows it's already mapped).
+        var existingMalAnimesResult = await animeService.GetAllBySourceAsync(AnimeSource.MyAnimeList);
+        var existingMalIds = existingMalAnimesResult.IsSuccess
+            ? existingMalAnimesResult.Value.Select(a => a.SourceId).ToHashSet(StringComparer.OrdinalIgnoreCase)
+            : [];
+
+        var enriched = searchResult.Value
+            .Select(r => r with { IsAlreadyInLibrary = existingMalIds.Contains(r.Id) })
+            .ToList();
+
+        return Result.Success<IList<MalSearchResultItem>>(enriched);
+    }
+
     private async Task<bool> IsPlexEnabledAsync()
     {
         try
@@ -1560,4 +1829,24 @@ public sealed class AnimeMediatorService(
         }
     }
 
+    // -----------------------------------------------------------------------
+    // Private types — used only by entity-level gap logic
+    // -----------------------------------------------------------------------
+
+    /// <summary>Coverage data for a single anime entity (one Plex/MAL/Sonarr record).</summary>
+    private sealed record AnimeEntityCoverage(
+        Anime            Anime,
+        HashSet<string>  AniDbIds,
+        bool             IsLinkedToMal,
+        bool             IsLinkedToPlex,
+        bool             IsLinkedToSonarr
+    );
+
+    /// <summary>Aggregated coverage result shared by GetStatisticsAsync and GetCoverageGapAsync.</summary>
+    private sealed record EntityCoverageResult(
+        Dictionary<string, HashSet<AnimeSource>> AniDbIdSources,
+        List<AnimeEntityCoverage>                AnimeEntityGroups
+    );
+
 }
+

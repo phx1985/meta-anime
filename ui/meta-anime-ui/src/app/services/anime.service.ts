@@ -11,6 +11,8 @@ import {
   UpdateAnimeRequest,
   SeasonalAnimeItem,
   FranchiseConstellationData,
+  CoverageGapItem,
+  MalSearchResult,
 } from '../models/anime.models';
 import { MalListStatusRequest } from '../models/sonarr.models';
 
@@ -20,6 +22,7 @@ export class AnimeService {
   private base = '/api/v1/animes';
   private seasonalBase = '/api/v1/seasonal';
   private malBase = '/api/v1/mal';
+  private sonarrBase = '/api/v1/sonarr';
 
   getStatistics(): Observable<AnimeStatisticsResponse> {
     return this.http.get<AnimeStatisticsResponse>(`${this.base}/statistics`);
@@ -85,6 +88,10 @@ export class AnimeService {
     return this.http.post<void>(`${this.base}/sync`, null);
   }
 
+  getCoverageGap(gapType: string): Observable<CoverageGapItem[]> {
+    return this.http.get<CoverageGapItem[]>(`${this.base}/coverage-gap/${gapType}`);
+  }
+
   getSeasonalAnimes(year: number, season: string): Observable<SeasonalAnimeItem[]> {
     const params = new HttpParams().set('year', year).set('season', season);
     return this.http.get<SeasonalAnimeItem[]>(this.seasonalBase, { params });
@@ -100,5 +107,10 @@ export class AnimeService {
 
   getFranchiseConstellation(malId: string): Observable<FranchiseConstellationData> {
     return this.http.get<FranchiseConstellationData>(`${this.malBase}/franchise/${malId}`);
+  }
+
+  searchMalAnime(query: string): Observable<MalSearchResult[]> {
+    const params = new HttpParams().set('q', query);
+    return this.http.get<MalSearchResult[]>(`${this.malBase}/search`, { params });
   }
 }
