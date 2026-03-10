@@ -60,13 +60,14 @@
         "colTitle": "Titre",
         "colActions": "Actions",
         "colProgress": "Progression",
-        "addToMal": "Ajouter à MAL",
+        "addToMal": "Lier à une entrée MAL",
         "searchPlaceholder": "Rechercher sur MyAnimeList...",
         "searchButton": "Rechercher",
         "searchError": "La recherche a échoué. Veuillez réessayer.",
         "matchSuccess": "Associé ! Suppression de la liste...",
-        "alreadyMapped": "Déjà associé",
-        "moreInfo": "Plus d'infos"
+        "alreadyMapped": "Déjà lié",
+        "moreInfo": "Plus d'infos",
+        "linkPanelHeading": "Liez cet élément à son entrée MAL pour résoudre l'écart"
       },
       "noProviders": {
         "title": "Aucun fournisseur configuré pour l'instant.",

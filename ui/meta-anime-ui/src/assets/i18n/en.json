@@ -60,13 +60,14 @@
         "colTitle": "Title",
         "colActions": "Actions",
         "colProgress": "Progress",
-        "addToMal": "Add to MAL",
+        "addToMal": "Link to MAL entry",
         "searchPlaceholder": "Search MyAnimeList...",
         "searchButton": "Search",
         "searchError": "Search failed. Please try again.",
         "matchSuccess": "Matched! Removing from gap list...",
-        "alreadyMapped": "Already Mapped",
-        "moreInfo": "More Info"
+        "alreadyMapped": "Already Linked",
+        "moreInfo": "More Info",
+        "linkPanelHeading": "Link this item to its MAL entry to resolve the gap"
       },
       "noProviders": {
         "title": "No providers configured yet.",

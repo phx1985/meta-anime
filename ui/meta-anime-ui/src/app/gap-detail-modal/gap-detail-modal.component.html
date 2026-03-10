@@ -115,6 +115,7 @@
                   <tr class="gap-search-row">
                     <td [attr.colspan]="showAddToMal() ? 3 : 2" class="gap-search-cell">
                       <div class="gap-search-panel">
+                        <p class="gap-search-heading">{{ 'home.missing.modal.linkPanelHeading' | translate }}</p>
                         <div class="gap-search-input-row">
                           <input
                             type="search"
@@ -249,6 +250,7 @@
               <!-- Mobile search panel -->
               @if (activeSearchRowId() === item.aniDbId) {
                 <div class="gap-search-panel gap-search-panel--mobile">
+                  <p class="gap-search-heading">{{ 'home.missing.modal.linkPanelHeading' | translate }}</p>
                   <div class="gap-search-input-row">
                     <input
                       type="search"

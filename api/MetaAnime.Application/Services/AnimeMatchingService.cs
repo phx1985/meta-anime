@@ -134,14 +134,24 @@ public sealed class AnimeMatchingService(
 
             foreach (var platformMapping in platformMappings)
             {
-                if (anime.ExternalAnimeIdentifiers.Any(ea => ea.MediaPlatform == platformMapping.Key))
-                {
-                    var platformId = anime.ExternalAnimeIdentifiers.First(ea => ea.MediaPlatform == platformMapping.Key).MediaPlatformId;
-                    var kometaMapping = kometaMappings.Where(km => km.GetPlatformEnum() == platformMapping.Value && km.PlatformId == platformId).ToList();
-                    var aniDbIds = kometaMapping.Select(km => km.AniDbId).Distinct().ToList();
-                    aniDbIds.ForEach(aniDbId => animeMappings.Add(new AnimeMapping { AnimeId = anime.Id, AniDbId = aniDbId }));
-                    break;
-                }
+                if (!anime.ExternalAnimeIdentifiers.Any(ea => ea.MediaPlatform == platformMapping.Key))
+                    continue;
+
+                var platformId = anime.ExternalAnimeIdentifiers
+                    .First(ea => ea.MediaPlatform == platformMapping.Key).MediaPlatformId;
+                var kometaMapping = kometaMappings
+                    .Where(km => km.GetPlatformEnum() == platformMapping.Value && km.PlatformId == platformId)
+                    .ToList();
+                var aniDbIds = kometaMapping.Select(km => km.AniDbId).Distinct().ToList();
+
+                // Only stop if this platform produced actual Kometa entries.
+                // If the platform ID exists but has no Kometa mapping, fall through to
+                // the next lower-priority platform (e.g. TVDB miss → try IMDB).
+                if (aniDbIds.Count == 0)
+                    continue;
+
+                aniDbIds.ForEach(aniDbId => animeMappings.Add(new AnimeMapping { AnimeId = anime.Id, AniDbId = aniDbId }));
+                break;
             }
         }
 

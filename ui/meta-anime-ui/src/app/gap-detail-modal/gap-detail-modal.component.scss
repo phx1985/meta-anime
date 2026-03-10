@@ -186,7 +186,7 @@
     text-overflow: ellipsis;
 
     &.gmt-th--title   { width: 80%; }
-    &.gmt-th--actions { width: 20%; text-align: center; }
+    &.gmt-th--actions { width: 20%; text-align: right; }
   }
 
   td {
@@ -203,7 +203,7 @@
     }
 
     &.gmt-td--actions {
-      text-align: center;
+      text-align: right;
       white-space: nowrap;
     }
   }
@@ -226,7 +226,7 @@
 .gmt-actions-cell {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 2px;
 }
 
@@ -328,6 +328,13 @@
 .gap-search-panel {
   padding: 0.625rem 0.875rem;
   animation: searchPanelExpand 0.18s ease both;
+}
+
+.gap-search-heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 @keyframes searchPanelExpand {
