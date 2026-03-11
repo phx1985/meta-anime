@@ -32,41 +32,7 @@
 
     <div class="navbar-actions">
       <!-- Provider quick links -->
-      <div class="provider-links" aria-label="Provider links">
-        <a class="provider-link" [href]="malHomeUrl" target="_blank" rel="noopener noreferrer" title="MyAnimeList">
-          <img src="assets/images/mal.svg" alt="MAL" width="18" height="18" />
-        </a>
-        @if (sonarrHomeUrl()) {
-          @if (providerState.sonarrEnabled()) {
-            <a class="provider-link" [href]="sonarrHomeUrl()" target="_blank" rel="noopener noreferrer"
-               [title]="'nav.openSonarr' | translate">
-              <img src="assets/images/sonarr.svg" alt="Sonarr" width="18" height="18" />
-            </a>
-          } @else {
-            <button type="button" class="provider-link provider-link--disabled"
-               [title]="'nav.providerDisabled' | translate"
-               (click)="openDisabledProviderModal('sonarr', $event)"
-               [attr.aria-label]="'nav.providerDisabled' | translate">
-              <img src="assets/images/sonarr.svg" alt="Sonarr" width="18" height="18" />
-            </button>
-          }
-        }
-        @if (plexHomeUrl()) {
-          @if (providerState.plexEnabled()) {
-            <a class="provider-link" href="javascript:void(0)" (click)="openPlexHomeLink($event)"
-               [title]="'nav.openPlex' | translate">
-              <img src="assets/images/plex.svg" alt="Plex" width="18" height="18" />
-            </a>
-          } @else {
-            <button type="button" class="provider-link provider-link--disabled"
-               [title]="'nav.providerDisabled' | translate"
-               (click)="openDisabledProviderModal('plex', $event)"
-               [attr.aria-label]="'nav.providerDisabled' | translate">
-              <img src="assets/images/plex.svg" alt="Plex" width="18" height="18" />
-            </button>
-          }
-        }
-      </div>
+      <app-provider-health />
 
       <span class="navbar-divider" aria-hidden="true"></span>
 
@@ -307,20 +273,29 @@
     <div class="drawer-providers">
       <a class="drawer-provider" [href]="malHomeUrl" target="_blank" rel="noopener noreferrer"
         (click)="closeMenu()">
-        <img src="assets/images/mal.svg" alt="MAL" width="28" height="28" />
+        <span class="ph-item">
+          <img src="assets/images/mal.svg" alt="MAL" width="28" height="28" />
+          <span [class]="drawerDotClass(drawerMalHealth())"></span>
+        </span>
         <span>MyAnimeList</span>
       </a>
       @if (sonarrHomeUrl()) {
         @if (providerState.sonarrEnabled()) {
           <a class="drawer-provider" [href]="sonarrHomeUrl()" target="_blank" rel="noopener noreferrer"
             (click)="closeMenu()">
-            <img src="assets/images/sonarr.svg" alt="Sonarr" width="28" height="28" />
+            <span class="ph-item">
+              <img src="assets/images/sonarr.svg" alt="Sonarr" width="28" height="28" />
+              <span [class]="drawerDotClass(drawerSonarrHealth())"></span>
+            </span>
             <span>Sonarr</span>
           </a>
         } @else {
           <button type="button" class="drawer-provider drawer-provider--disabled"
             (click)="openDisabledProviderModal('sonarr', $event)">
-            <img src="assets/images/sonarr.svg" alt="Sonarr" width="28" height="28" />
+            <span class="ph-item">
+              <img src="assets/images/sonarr.svg" alt="Sonarr" width="28" height="28" />
+              <span [class]="drawerDotClass(drawerSonarrHealth())"></span>
+            </span>
             <span>Sonarr</span>
           </button>
         }
@@ -328,13 +303,19 @@
       @if (plexHomeUrl()) {
         @if (providerState.plexEnabled()) {
           <a class="drawer-provider" href="javascript:void(0)" (click)="openPlexHomeLink($event); closeMenu()">
-            <img src="assets/images/plex.svg" alt="Plex" width="28" height="28" />
+            <span class="ph-item">
+              <img src="assets/images/plex.svg" alt="Plex" width="28" height="28" />
+              <span [class]="drawerDotClass(drawerPlexHealth())"></span>
+            </span>
             <span>Plex</span>
           </a>
         } @else {
           <button type="button" class="drawer-provider drawer-provider--disabled"
             (click)="openDisabledProviderModal('plex', $event)">
-            <img src="assets/images/plex.svg" alt="Plex" width="28" height="28" />
+            <span class="ph-item">
+              <img src="assets/images/plex.svg" alt="Plex" width="28" height="28" />
+              <span [class]="drawerDotClass(drawerPlexHealth())"></span>
+            </span>
             <span>Plex</span>
           </button>
         }

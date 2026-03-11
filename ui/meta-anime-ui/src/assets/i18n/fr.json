@@ -840,6 +840,26 @@
       "successMessage": "MyAnimeList a été connecté avec succès.",
       "errorTitle": "Échec de la connexion MyAnimeList",
       "errorMessage": "L'autorisation a échoué. Veuillez réessayer."
+    },
+    "health": {
+      "plex": {
+        "downTitle": "Plex hors ligne",
+        "downMessage": "Plex Media Server est actuellement inaccessible. Cela peut être dû à un problème réseau ou à une indisponibilité du serveur.",
+        "upTitle": "Plex rétabli ✓",
+        "upMessage": "La connexion à Plex Media Server a été rétablie."
+      },
+      "sonarr": {
+        "downTitle": "Sonarr hors ligne",
+        "downMessage": "Sonarr est actuellement inaccessible. Cela peut être dû à un problème réseau ou à une indisponibilité du serveur.",
+        "upTitle": "Sonarr rétabli ✓",
+        "upMessage": "La connexion à Sonarr a été rétablie."
+      },
+      "mal": {
+        "downTitle": "API MAL hors ligne",
+        "downMessage": "L'API MyAnimeList est actuellement inaccessible. Certaines fonctions MAL peuvent être indisponibles.",
+        "upTitle": "API MAL rétablie ✓",
+        "upMessage": "La connexion à l'API MyAnimeList a été rétablie."
+      }
     }
   },
   "malCallback": {

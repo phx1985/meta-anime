@@ -1,0 +1,60 @@
+<div class="provider-links" aria-label="Provider links">
+
+  <!-- MAL — always shown if client ID is configured -->
+  @if (malConfigured()) {
+    <div class="ph-item">
+      <a class="provider-link" [href]="malHomeUrl" target="_blank" rel="noopener noreferrer" title="MyAnimeList">
+        <img src="assets/images/mal.svg" alt="MAL" width="22" height="22" />
+      </a>
+      @if (malHealth()) {
+        <span [class]="dotClass(malHealth())"></span>
+        <span class="ph-tooltip">{{ tooltipText('MAL', malHealth()) }}</span>
+      }
+    </div>
+  }
+
+  <!-- Sonarr — only if configured -->
+  @if (sonarrConfigured()) {
+    <div class="ph-item">
+      @if (sonarrEnabled()) {
+        <a class="provider-link" [href]="sonarrHomeUrl()" target="_blank" rel="noopener noreferrer" title="Sonarr">
+          <img src="assets/images/sonarr.svg" alt="Sonarr" width="22" height="22" />
+        </a>
+      } @else {
+        <button type="button" class="provider-link provider-link--disabled"
+          title="Provider disabled"
+          (click)="openDisabledProviderModal('sonarr', $event)"
+          aria-label="Provider disabled">
+          <img src="assets/images/sonarr.svg" alt="Sonarr" width="22" height="22" />
+        </button>
+      }
+      @if (sonarrHealth()) {
+        <span [class]="dotClass(sonarrHealth())"></span>
+        <span class="ph-tooltip">{{ tooltipText('Sonarr', sonarrHealth()) }}</span>
+      }
+    </div>
+  }
+
+  <!-- Plex — only if configured -->
+  @if (plexConfigured()) {
+    <div class="ph-item">
+      @if (plexEnabled()) {
+        <a class="provider-link" href="javascript:void(0)" (click)="openPlexHomeLink($event)" title="Plex">
+          <img src="assets/images/plex.svg" alt="Plex" width="22" height="22" />
+        </a>
+      } @else {
+        <button type="button" class="provider-link provider-link--disabled"
+          title="Provider disabled"
+          (click)="openDisabledProviderModal('plex', $event)"
+          aria-label="Provider disabled">
+          <img src="assets/images/plex.svg" alt="Plex" width="22" height="22" />
+        </button>
+      }
+      @if (plexHealth()) {
+        <span [class]="dotClass(plexHealth())"></span>
+        <span class="ph-tooltip">{{ tooltipText('Plex', plexHealth()) }}</span>
+      }
+    </div>
+  }
+
+</div>
