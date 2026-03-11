@@ -27,14 +27,17 @@ import { LuckyPickComponent } from './lucky-pick/lucky-pick.component';
 import { FranchiseConstellationComponent } from './franchise-constellation/franchise-constellation.component';
 import { FranchiseConstellationService } from './services/franchise-constellation.service';
 import { MalQuickUpdateModalComponent } from './mal-quick-update/mal-quick-update-modal.component';
+import { ProviderHealthComponent } from './provider-health/provider-health.component';
 import { AuthService } from './services/auth.service';
 import { StorageKeys } from './constants/storage-keys';
 import { UserPreferencesService } from './services/user-preferences.service';
+import { HealthService } from './services/health.service';
+import { ProviderHealthResult } from './models/health.models';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent, UpperCasePipe, FranchiseConstellationComponent, MalQuickUpdateModalComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent, UpperCasePipe, FranchiseConstellationComponent, MalQuickUpdateModalComponent, ProviderHealthComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -52,6 +55,22 @@ export class App implements OnInit, AfterViewInit {
   private plexDeepLink = inject(PlexDeepLinkService);
   private authService = inject(AuthService);
   private userPrefs = inject(UserPreferencesService);
+  private readonly healthService = inject(HealthService);
+
+  /** Health signals for the mobile burger-menu drawer dots */
+  protected readonly drawerPlexHealth = computed(() => this.healthService.snapshot()?.plex ?? null);
+  protected readonly drawerSonarrHealth = computed(() => this.healthService.snapshot()?.sonarr ?? null);
+  protected readonly drawerMalHealth = computed(() => this.healthService.snapshot()?.mal ?? null);
+
+  protected drawerDotClass(result: ProviderHealthResult | null): string {
+    if (!result || result.status === 'Unknown') return 'ph-dot dot--unknown';
+    switch (result.status) {
+      case 'Online':   return 'ph-dot dot--online';
+      case 'Degraded': return 'ph-dot dot--degraded';
+      case 'Offline':  return 'ph-dot dot--offline';
+      default:         return 'ph-dot dot--unknown';
+    }
+  }
 
   @ViewChild('navbarEl', { read: ElementRef }) private navbarEl?: ElementRef<HTMLElement>;
 

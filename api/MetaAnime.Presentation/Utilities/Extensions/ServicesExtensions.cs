@@ -95,8 +95,10 @@ public static class ServicesExtensions
 
         services.AddScoped<ISyncProgressNotifier, SyncProgressNotifier>();
         services.AddSingleton<ISyncStateTracker, InMemorySyncStateTracker>();
+        services.AddSingleton<IProviderHealthCache, InMemoryProviderHealthCache>();
         services.AddScoped<AnimeSyncJob>();
         services.AddHostedService<SettingsSeedService>();
+        services.AddHostedService<ProviderHealthMonitor>();
     }
 
     /// <summary>

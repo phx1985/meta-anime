@@ -848,6 +848,26 @@
       "successMessage": "MyAnimeList connected successfully.",
       "errorTitle": "MyAnimeList connection failed",
       "errorMessage": "Authorization failed. Please try connecting again."
+    },
+    "health": {
+      "plex": {
+        "downTitle": "Plex Offline",
+        "downMessage": "Plex Media Server is currently unreachable. It may be a network issue or the server may be down.",
+        "upTitle": "Plex Restored ✓",
+        "upMessage": "Plex Media Server connection has been restored."
+      },
+      "sonarr": {
+        "downTitle": "Sonarr Offline",
+        "downMessage": "Sonarr is currently unreachable. It may be a network issue or the server may be down.",
+        "upTitle": "Sonarr Restored ✓",
+        "upMessage": "Sonarr connection has been restored."
+      },
+      "mal": {
+        "downTitle": "MAL API Offline",
+        "downMessage": "MyAnimeList API is currently unreachable. MAL features may be unavailable.",
+        "upTitle": "MAL API Restored ✓",
+        "upMessage": "MyAnimeList API connection has been restored."
+      }
     }
   },
   "malCallback": {
