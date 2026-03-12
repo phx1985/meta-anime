@@ -594,6 +594,13 @@
       "createTagPlaceholder": "Nom du nouveau tag...",
       "createTagBtn": "Créer"
     },
+    "botsan": {
+      "fetchModels": "Récupérer les modèles",
+      "fetchModelsLoading": "Récupération...",
+      "fetchModelsError": "Impossible de récupérer les modèles. Vérifiez l'URL de base et la clé API.",
+      "fetchModelsNoUrl": "Veuillez d'abord configurer une URL de base.",
+      "selectModel": "— Sélectionner un modèle —"
+    },
     "provider": {
       "enabled": "Activé",
       "disabled": "Désactivé",

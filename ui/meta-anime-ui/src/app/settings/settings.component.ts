@@ -23,6 +23,7 @@ import { PopupService } from '../services/popup.service';
 import { SonarrService, SonarrTag } from '../services/sonarr.service';
 import { AuthService } from '../services/auth.service';
 import { EnrollmentService, PlexLibrary } from '../services/enrollment.service';
+import { BotSanService } from '../services/bot-san.service';
 import { SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
 import { SyncStep } from '../models/sync-progress.models';
@@ -71,6 +72,7 @@ export class SettingsComponent {
   private providerState = inject(ProviderStateService);
   readonly popupService = inject(PopupService);
   private enrollmentService = inject(EnrollmentService);
+  private botSanService = inject(BotSanService);
 
   loading = signal(true);
   error = signal(false);
@@ -226,6 +228,11 @@ export class SettingsComponent {
 
   /** True when the provider-enable warning dialog exit animation is playing. */
   providerEnableWarnLeaving = signal(false);
+
+  // ── Bot-san model fetching ─────────────────────────────────────────────────
+  botsanModels = signal<string[]>([]);
+  botsanModelsFetching = signal(false);
+  botsanModelsFetchError = signal('');
 
   sonarrDefaultSettings = computed(() => {
     const order = [
@@ -1172,6 +1179,32 @@ export class SettingsComponent {
           this.sonarrCreatingTagSettings.set(false);
         },
         error: () => { this.sonarrCreatingTagSettings.set(false); },
+      });
+  }
+
+  // ── Bot-san model fetching ─────────────────────────────────────────────────
+
+  fetchBotsanModels(): void {
+    const list = this.settings();
+    const baseUrl = list.find((s) => s.key === 'BotSan:BaseUrl')?.value ?? '';
+    const apiKey  = list.find((s) => s.key === 'BotSan:ApiKey')?.value ?? '';
+
+    if (!baseUrl.trim()) {
+      this.botsanModelsFetchError.set(this.translate.instant('settings.botsan.fetchModelsNoUrl'));
+      return;
+    }
+
+    this.botsanModelsFetching.set(true);
+    this.botsanModelsFetchError.set('');
+
+    this.botSanService.fetchModels(baseUrl, apiKey)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.botsanModelsFetching.set(false)),
+      )
+      .subscribe({
+        next: (models) => this.botsanModels.set(models),
+        error: () => this.botsanModelsFetchError.set(this.translate.instant('settings.botsan.fetchModelsError')),
       });
   }
 

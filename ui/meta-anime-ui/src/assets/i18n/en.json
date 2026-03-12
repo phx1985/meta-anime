@@ -597,6 +597,13 @@
       "noTagsSelected": "No tags selected",
       "noTagsLoaded": "No tags loaded. Check your Sonarr connection."
     },
+    "botsan": {
+      "fetchModels": "Fetch Models",
+      "fetchModelsLoading": "Fetching...",
+      "fetchModelsError": "Could not fetch models. Check your Base URL and API Key.",
+      "fetchModelsNoUrl": "Please configure a Base URL first.",
+      "selectModel": "— Select a model —"
+    },
     "provider": {
       "enabled": "Enabled",
       "disabled": "Disabled",

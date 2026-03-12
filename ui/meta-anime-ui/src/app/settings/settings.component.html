@@ -613,70 +613,111 @@
                           (ngSubmit)="save(setting)"
                           class="edit-form"
                         >
-                          <div class="input-with-eye">
-                            <input
-                              [type]="
-                                setting.isSensitive && !revealed()[setting.key]
-                                  ? 'password'
-                                  : 'text'
-                              "
-                              formControlName="value"
-                              class="form-control form-control-sm setting-input"
-                              [placeholder]="
-                                setting.isSensitive
-                                  ? ('settings.sensitiveHint' | translate)
-                                  : ('settings.fields.' + slug(setting.key) + '.name' | translate)
-                              "
-                              [attr.aria-label]="
-                                'settings.fields.' + slug(setting.key) + '.name' | translate
-                              "
-                            />
-                            @if (setting.isSensitive) {
+                          @if (setting.key === 'BotSan:Model') {
+                            <div class="input-with-eye">
+                              @if (botsanModels().length > 0) {
+                                <select
+                                  formControlName="value"
+                                  class="form-control form-control-sm setting-select"
+                                  [attr.aria-label]="'settings.fields.BotSan_Model.name' | translate"
+                                >
+                                  <option value="">{{ 'settings.botsan.selectModel' | translate }}</option>
+                                  @for (m of botsanModels(); track m) {
+                                    <option [value]="m">{{ m }}</option>
+                                  }
+                                </select>
+                              } @else {
+                                <input
+                                  type="text"
+                                  formControlName="value"
+                                  class="form-control form-control-sm setting-input"
+                                  [placeholder]="'settings.fields.BotSan_Model.name' | translate"
+                                  [attr.aria-label]="'settings.fields.BotSan_Model.name' | translate"
+                                />
+                              }
                               <button
                                 type="button"
-                                class="btn-icon eye-btn"
-                                (click)="toggleReveal(setting.key)"
-                                [attr.aria-label]="
-                                  (revealed()[setting.key] ? 'settings.hide' : 'settings.reveal')
-                                    | translate
-                                "
+                                class="btn btn-sm btn-outline-secondary ms-1"
+                                (click)="fetchBotsanModels()"
+                                [disabled]="botsanModelsFetching()"
+                                [attr.aria-label]="'settings.botsan.fetchModels' | translate"
                               >
-                                @if (revealed()[setting.key]) {
-                                  <svg
-                                    width="15"
-                                    height="15"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    aria-hidden="true"
-                                  >
-                                    <path
-                                      d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"
-                                    />
-                                    <path
-                                      d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"
-                                    />
-                                    <path d="M14.12 14.12a3 3 0 11-4.24-4.24" />
-                                    <line x1="1" y1="1" x2="23" y2="23" />
-                                  </svg>
+                                @if (botsanModelsFetching()) {
+                                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                 } @else {
-                                  <svg
-                                    width="15"
-                                    height="15"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    aria-hidden="true"
-                                  >
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                    <circle cx="12" cy="12" r="3" />
-                                  </svg>
+                                  {{ 'settings.botsan.fetchModels' | translate }}
                                 }
                               </button>
+                            </div>
+                            @if (botsanModelsFetchError()) {
+                              <div class="text-danger small mt-1">{{ botsanModelsFetchError() }}</div>
                             }
-                          </div>
+                          } @else {
+                            <div class="input-with-eye">
+                              <input
+                                [type]="
+                                  setting.isSensitive && !revealed()[setting.key]
+                                    ? 'password'
+                                    : 'text'
+                                "
+                                formControlName="value"
+                                class="form-control form-control-sm setting-input"
+                                [placeholder]="
+                                  setting.isSensitive
+                                    ? ('settings.sensitiveHint' | translate)
+                                    : ('settings.fields.' + slug(setting.key) + '.name' | translate)
+                                "
+                                [attr.aria-label]="
+                                  'settings.fields.' + slug(setting.key) + '.name' | translate
+                                "
+                              />
+                              @if (setting.isSensitive) {
+                                <button
+                                  type="button"
+                                  class="btn-icon eye-btn"
+                                  (click)="toggleReveal(setting.key)"
+                                  [attr.aria-label]="
+                                    (revealed()[setting.key] ? 'settings.hide' : 'settings.reveal')
+                                      | translate
+                                  "
+                                >
+                                  @if (revealed()[setting.key]) {
+                                    <svg
+                                      width="15"
+                                      height="15"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      stroke-width="2"
+                                      aria-hidden="true"
+                                    >
+                                      <path
+                                        d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"
+                                      />
+                                      <path
+                                        d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"
+                                      />
+                                      <path d="M14.12 14.12a3 3 0 11-4.24-4.24" />
+                                      <line x1="1" y1="1" x2="23" y2="23" />
+                                    </svg>
+                                  } @else {
+                                    <svg
+                                      width="15"
+                                      height="15"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      stroke-width="2"
+                                      aria-hidden="true"
+                                    >
+                                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                      <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                  }
+                                </button>
+                              }
+                            </div>
+                          }
                           <div class="edit-actions">
                             <button
                               type="submit"

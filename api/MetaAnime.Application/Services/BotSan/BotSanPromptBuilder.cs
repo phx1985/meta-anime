@@ -19,7 +19,7 @@ public static class BotSanPromptBuilder
 
         === OUTPUT FORMAT ===
         Output ONLY this JSON (replace values or use null if not mentioned):
-        {"type":"...","title":null,"genres":null,"airingStatus":null,"watchStatus":null,"mediaType":null,"demographic":null,"themes":null,"minYear":null,"maxYear":null}
+        {"type":"...","title":null,"genres":null,"airingStatus":null,"watchStatus":null,"mediaType":null,"demographic":null,"themes":null,"minYear":null,"maxYear":null,"page":1}
 
         === CRITICAL — QUANTITY WORDS ARE NOT TITLES ===
         Words like "one", "a", "an", "some", "few", "any", "couple", "several" are QUANTITIES — NOT anime titles.
@@ -85,25 +85,36 @@ public static class BotSanPromptBuilder
         maxYear: integer or null — maximum start year (inclusive).
           "before 2015" → 2014 | "older than 2010" → 2009 | "pre-2000" → 1999 | "< 2015" → 2014
 
+        page: integer (default 1) — the page of results to return.
+          PAGINATION RULES — read chat history carefully:
+          - Default to 1 for all new searches.
+          - If the user says "more", "next", "others", "give me more", "show me more", "next page", "another batch" →
+            look at the most recent assistant message. If it contained results for page N, output page N+1.
+            If no previous page context, output 2.
+          - If the user asks a brand-new question (new genre/type/filters), reset to page 1.
+
         === WORKED EXAMPLES ===
 
         Query: "hey bud, I wanna some fantasy anime that I not saw yet, I wanna binge watch so only finished ones and some romance should be cool"
-        Output: {"type":"recommendation","title":null,"genres":["Fantasy","Romance"],"airingStatus":"finished_airing","watchStatus":"plan_to_watch","mediaType":null,"demographic":null,"themes":null,"minYear":null,"maxYear":null}
+        Output: {"type":"recommendation","title":null,"genres":["Fantasy","Romance"],"airingStatus":"finished_airing","watchStatus":"plan_to_watch","mediaType":null,"demographic":null,"themes":null,"minYear":null,"maxYear":null,"page":1}
 
         Query: "one finished, airing date > 2020 not watched yet"
-        Output: {"type":"recommendation","title":null,"genres":null,"airingStatus":"finished_airing","watchStatus":"plan_to_watch","mediaType":null,"demographic":null,"themes":null,"minYear":2021,"maxYear":null}
+        Output: {"type":"recommendation","title":null,"genres":null,"airingStatus":"finished_airing","watchStatus":"plan_to_watch","mediaType":null,"demographic":null,"themes":null,"minYear":2021,"maxYear":null,"page":1}
 
         Query: "show me action shounen I'm currently watching"
-        Output: {"type":"search","title":null,"genres":["Action"],"airingStatus":null,"watchStatus":"watching","mediaType":null,"demographic":"Shounen","themes":null,"minYear":null,"maxYear":null}
+        Output: {"type":"search","title":null,"genres":["Action"],"airingStatus":null,"watchStatus":"watching","mediaType":null,"demographic":"Shounen","themes":null,"minYear":null,"maxYear":null,"page":1}
 
         Query: "any good mecha movies I haven't seen?"
-        Output: {"type":"recommendation","title":null,"genres":null,"airingStatus":null,"watchStatus":"plan_to_watch","mediaType":"Movie","demographic":null,"themes":["Mecha"],"minYear":null,"maxYear":null}
+        Output: {"type":"recommendation","title":null,"genres":null,"airingStatus":null,"watchStatus":"plan_to_watch","mediaType":"Movie","demographic":null,"themes":["Mecha"],"minYear":null,"maxYear":null,"page":1}
 
         Query: "what year did Attack on Titan air?"
-        Output: {"type":"question","title":"Attack on Titan","genres":null,"airingStatus":null,"watchStatus":null,"mediaType":null,"demographic":null,"themes":null,"minYear":null,"maxYear":null}
+        Output: {"type":"question","title":"Attack on Titan","genres":null,"airingStatus":null,"watchStatus":null,"mediaType":null,"demographic":null,"themes":null,"minYear":null,"maxYear":null,"page":1}
 
         Query: "a couple of sci-fi anime from after 2018 I haven't started"
-        Output: {"type":"recommendation","title":null,"genres":["Sci-Fi"],"airingStatus":null,"watchStatus":"plan_to_watch","mediaType":null,"demographic":null,"themes":null,"minYear":2019,"maxYear":null}
+        Output: {"type":"recommendation","title":null,"genres":["Sci-Fi"],"airingStatus":null,"watchStatus":"plan_to_watch","mediaType":null,"demographic":null,"themes":null,"minYear":2019,"maxYear":null,"page":1}
+
+        Query: "give me more" (with previous results on page 1)
+        Output: (same filters as previous query, but) {"page":2}
 
         === STRICT RULES ===
         - Output ONLY the JSON object. No explanation, no markdown code blocks, no other text.
@@ -134,8 +145,11 @@ public static class BotSanPromptBuilder
           [anime:MAL_ID:Title]
         Use the exact MAL_ID and Title from the DATABASE RESULTS. Never use any other format.
 
-        DATABASE RESULTS — each entry has MAL_ID, Title, Type, and Score. Present ONLY these, no exceptions:
+        DATABASE RESULTS (Page {PAGE}):
+        Each entry has MAL_ID, Title, Type, and Score. Present ONLY these, no exceptions.
         {ANIME_CONTEXT}
+
+        {PAGINATION_HINT}
 
         Craft a fun, engaging response using ONLY the data above. 🎌
         """;
@@ -176,7 +190,7 @@ public static class BotSanPromptBuilder
         Output ONLY the greeting text. No explanation. No markdown.
         """;
 
-    public static string Build(bool isNsfwAllowed, string animeContext, bool isDbQuery = false)
+    public static string Build(bool isNsfwAllowed, string animeContext, bool isDbQuery = false, int page = 1, bool hasNextPage = false)
     {
         var directive = isNsfwAllowed ? NsfwDirective : SfwDirective;
         var context = string.IsNullOrWhiteSpace(animeContext)
@@ -185,9 +199,15 @@ public static class BotSanPromptBuilder
 
         var template = isDbQuery ? DbQueryTemplate : RagTemplate;
 
+        var paginationHint = hasNextPage
+            ? "PAGINATION: HasNextPage is TRUE. You MUST casually tell the user at the end of your response that there are more results available and they can ask for 'more' to see the next batch."
+            : "PAGINATION: HasNextPage is FALSE. This is the last page of results.";
+
         return template
             .Replace("{NSFW_DIRECTIVE}", directive, StringComparison.Ordinal)
-            .Replace("{ANIME_CONTEXT}", context, StringComparison.Ordinal);
+            .Replace("{ANIME_CONTEXT}", context, StringComparison.Ordinal)
+            .Replace("{PAGE}", page.ToString(), StringComparison.Ordinal)
+            .Replace("{PAGINATION_HINT}", isDbQuery ? paginationHint : string.Empty, StringComparison.Ordinal);
     }
 }
 

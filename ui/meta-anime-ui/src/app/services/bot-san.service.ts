@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 
@@ -12,6 +13,7 @@ export interface BotSanHistoryMessage {
 @Injectable({ providedIn: 'root' })
 export class BotSanService {
   private readonly authService = inject(AuthService);
+  private readonly http = inject(HttpClient);
   private abortController: AbortController | null = null;
   private greetingAbortController: AbortController | null = null;
 
@@ -91,6 +93,10 @@ export class BotSanService {
   cancelGreeting(): void {
     this.greetingAbortController?.abort();
     this.greetingAbortController = null;
+  }
+
+  fetchModels(baseUrl: string, apiKey: string): Observable<string[]> {
+    return this.http.post<string[]>('/api/v1/bot-san/models', { baseUrl, apiKey });
   }
 
   private async consumeSseStream(

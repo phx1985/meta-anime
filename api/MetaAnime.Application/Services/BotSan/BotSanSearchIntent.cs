@@ -16,4 +16,5 @@ internal sealed record BotSanSearchIntent(
     [property: JsonPropertyName("demographic")]   string?        Demographic,
     [property: JsonPropertyName("themes")]        string[]?      Themes,
     [property: JsonPropertyName("minYear")]       int?           MinYear,
-    [property: JsonPropertyName("maxYear")]       int?           MaxYear);
+    [property: JsonPropertyName("maxYear")]       int?           MaxYear,
+    [property: JsonPropertyName("page")]          int            Page = 1);

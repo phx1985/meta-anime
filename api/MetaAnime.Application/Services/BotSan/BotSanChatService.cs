@@ -55,6 +55,10 @@ public sealed class BotSanChatService(
     private sealed record OpenAiStreamChoice(OpenAiDelta? Delta);
     private sealed record OpenAiStreamChunk(OpenAiStreamChoice[]? Choices);
 
+    // OpenAI /models response shape
+    private sealed record ModelsResponseEntry([property: JsonPropertyName("id")] string? Id);
+    private sealed record ModelsResponse([property: JsonPropertyName("data")] ModelsResponseEntry[]? Data);
+
     // ── Public streaming entry points ──────────────────────────────────────────
 
     public async IAsyncEnumerable<string> StreamChatAsync(
@@ -76,13 +80,14 @@ public sealed class BotSanChatService(
         BotSanSearchIntent? intent = null;
         try
         {
-            intent = await ExtractSearchIntentAsync(request.UserMessage, baseUrl, model, apiKey, cancellationToken);
+            intent = await ExtractSearchIntentAsync(request.UserMessage, request.History, baseUrl, model, apiKey, cancellationToken);
             logger.LogInformation(
-                "Bot-san intent: type={Type} genres=[{Genres}] airingStatus={AiringStatus} watchStatus={WatchStatus}",
+                "Bot-san intent: type={Type} genres=[{Genres}] airingStatus={AiringStatus} watchStatus={WatchStatus} page={Page}",
                 intent?.Type,
                 string.Join(",", intent?.Genres ?? []),
                 intent?.AiringStatus,
-                intent?.WatchStatus);
+                intent?.WatchStatus,
+                intent?.Page);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -92,17 +97,19 @@ public sealed class BotSanChatService(
         // ── Pass 2: Query database or fall back to MAL RAG ────────────────
         var isDbQuery = intent?.Type is "search" or "recommendation";
         string animeContext;
+        bool hasNextPage = false;
 
         if (isDbQuery)
         {
             var filters = BuildFiltersFromIntent(intent!);
-            var results = await QueryAnimeAsync(filters, cancellationToken);
+            var (results, nextPage) = await QueryAnimeAsync(filters, intent!.Page, cancellationToken);
+            hasNextPage = nextPage;
 
-            results = ApplyYearFilter(results, intent!.MinYear, intent!.MaxYear);
+            var filteredResults = ApplyYearFilter(results, intent!.MinYear, intent!.MaxYear);
 
-            logger.LogInformation("Bot-san DB query returned {Count} result(s) (after year filter).", results.Count);
+            logger.LogInformation("Bot-san DB query returned {Count} result(s) (after year filter).", filteredResults.Count);
 
-            if (results.Count == 0)
+            if (filteredResults.Count == 0)
             {
                 yield return "Ara ara~ 🎌 I searched your library but found **nothing** matching those filters! " +
                     "Try adjusting the genres, watch status, or airing status. I can only recommend from your " +
@@ -110,7 +117,7 @@ public sealed class BotSanChatService(
                 yield break;
             }
 
-            animeContext = BuildDbAnimeContext(results, isNsfw);
+            animeContext = BuildDbAnimeContext(filteredResults, isNsfw);
         }
         else
         {
@@ -118,7 +125,7 @@ public sealed class BotSanChatService(
         }
 
         // ── Pass 3: Stream final response ─────────────────────────────────
-        var systemPrompt = BotSanPromptBuilder.Build(isNsfw, animeContext, isDbQuery);
+        var systemPrompt = BotSanPromptBuilder.Build(isNsfw, animeContext, isDbQuery, intent?.Page ?? 1, hasNextPage);
         List<OpenAiMessage> messages = [new("system", systemPrompt)];
         foreach (var h in request.History)
             messages.Add(new(h.Role, h.Content));
@@ -154,6 +161,39 @@ public sealed class BotSanChatService(
 
         await foreach (var token in ExecuteStreamAsync(baseUrl, apiKey, payload, cancellationToken))
             yield return token;
+    }
+
+    // ── Model listing ──────────────────────────────────────────────────────────
+
+    public async Task<string[]> GetAvailableModelsAsync(
+        string baseUrl, string apiKey, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(baseUrl)) return [];
+
+        var url = baseUrl.TrimEnd('/') + "/models";
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        if (!string.IsNullOrWhiteSpace(apiKey))
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+        try
+        {
+            using var response = await httpClient.SendAsync(req, cancellationToken);
+            if (!response.IsSuccessStatusCode) return [];
+
+            var json = await response.Content.ReadAsStringAsync(cancellationToken);
+            var modelsResponse = JsonSerializer.Deserialize<ModelsResponse>(json, DeserializeOptions);
+            return modelsResponse?.Data?
+                .Select(m => m.Id)
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Select(id => id!)
+                .Order()
+                .ToArray() ?? [];
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogWarning("Failed to fetch models from {Url}: {Error}", url, ex.Message);
+            return [];
+        }
     }
 
     // ── Core streaming executor ────────────────────────────────────────────────
@@ -220,13 +260,15 @@ public sealed class BotSanChatService(
     // ── Pass 1: Intent extraction (non-streaming) ──────────────────────────────
 
     private async Task<BotSanSearchIntent?> ExtractSearchIntentAsync(
-        string userMessage, string endpoint, string model, string apiKey, CancellationToken ct)
+        string userMessage, IList<ChatMessage> history, string endpoint, string model, string apiKey, CancellationToken ct)
     {
-        List<OpenAiMessage> messages =
-        [
-            new("system", BotSanPromptBuilder.IntentExtractionSystemPrompt),
-            new("user", userMessage),
-        ];
+        List<OpenAiMessage> messages = [new("system", BotSanPromptBuilder.IntentExtractionSystemPrompt)];
+
+        // Include recent history so AI can detect "more/next" pagination intent
+        foreach (var h in history.TakeLast(4))
+            messages.Add(new(h.Role, h.Content));
+
+        messages.Add(new("user", userMessage));
 
         var payload = new OpenAiChatRequest(model, messages, Stream: false, MaxTokens: 300);
 
@@ -291,13 +333,15 @@ public sealed class BotSanChatService(
         _ => raw,
     };
 
-    private async Task<IReadOnlyList<AnimeDetailsResponse>> QueryAnimeAsync(
-        AnimeFilters filters, CancellationToken ct)
+    private async Task<(IReadOnlyList<AnimeDetailsResponse> Results, bool HasNextPage)> QueryAnimeAsync(
+        AnimeFilters filters, int page, CancellationToken ct)
     {
+        const int PageSize = 4;
         var result = await animeMediatorService.GetAllAsync(
-            page: 1, pageSize: 30, filters: filters, enriched: false);
+            page: page, pageSize: PageSize, filters: filters, enriched: false);
 
-        return result.IsFailure ? [] : (result.Value.Data?.ToList() ?? []);
+        if (result.IsFailure) return ([], false);
+        return (result.Value.Data?.ToList() ?? [], result.Value.HasNextPage);
     }
 
     private static IReadOnlyList<AnimeDetailsResponse> ApplyYearFilter(
@@ -383,7 +427,7 @@ public sealed class BotSanChatService(
         if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
 
         var trimmed = raw.TrimEnd('/');
-        const string suffix = "/v1/chat/completions";
+        const string suffix = "/chat/completions";
         return trimmed.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
             ? trimmed
             : trimmed + suffix;

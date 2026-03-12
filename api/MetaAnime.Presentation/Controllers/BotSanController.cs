@@ -4,7 +4,6 @@ using MetaAnime.Core.Models.BotSan;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
-
 namespace MetaAnime.Controllers;
 
 [ApiController]
@@ -75,5 +74,19 @@ public sealed class BotSanController(IBotSanChatService botSanChatService) : Con
         {
             // Client disconnected
         }
+    }
+
+    /// <summary>
+    /// Fetches the list of available model IDs from the configured AI provider.
+    /// </summary>
+    [HttpPost("models")]
+    [Authorize]
+    public async Task<ActionResult<string[]>> GetModels(
+        [FromBody] BotSanModelsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var models = await botSanChatService.GetAvailableModelsAsync(
+            request.BaseUrl, request.ApiKey, cancellationToken);
+        return Ok(models);
     }
 }
