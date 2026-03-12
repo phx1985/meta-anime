@@ -111,9 +111,16 @@ public sealed class BotSanChatService(
 
             if (filteredResults.Count == 0)
             {
-                yield return "Ara ara~ 🎌 I searched your library but found **nothing** matching those filters! " +
-                    "Try adjusting the genres, watch status, or airing status. I can only recommend from your " +
-                    "actual library — no guessing from memory, Dattebayo!";
+                // Stream an AI-generated "nothing found" response instead of a hardcoded string
+                // so the Bot-san persona stays consistent and natural.
+                var zeroResultsPayload = new OpenAiChatRequest(
+                    model,
+                    [new("system", BotSanPromptBuilder.BuildZeroResults()), new("user", request.UserMessage)],
+                    Stream: true,
+                    MaxTokens: 100);
+
+                await foreach (var token in ExecuteStreamAsync(baseUrl, apiKey, zeroResultsPayload, cancellationToken))
+                    yield return token;
                 yield break;
             }
 

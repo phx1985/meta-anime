@@ -100,7 +100,7 @@
         } @else if (msg.role === 'assistant') {
         <!-- Segment-based rendering: text runs as markdown HTML, anime tags as real cards -->
         <div class="bot-san__md">
-          @for (seg of parseSegments(msg.content, !!msg.streaming); track $index) {
+          @for (seg of parseSegments(msg.content, !!msg.streaming); track segmentTrackKey($index, seg)) {
             @if (seg.type === 'text') {
               <span [innerHTML]="seg.html"></span>
             } @else {

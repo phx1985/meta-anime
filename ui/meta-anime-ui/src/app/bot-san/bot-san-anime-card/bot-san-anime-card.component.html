@@ -2,34 +2,89 @@
      (keydown.enter)="onClick()" (keydown.space)="onClick()"
      [title]="title()">
 
-  <!-- Poster area -->
+  <!-- Poster (left column, fixed width) -->
   <div class="bot-san-card__poster">
     @if (loadState() === 'loaded' && coverUrl()) {
       <img class="bot-san-card__img" [src]="coverUrl()!" [alt]="title()" loading="lazy" />
     } @else if (loadState() === 'loading') {
       <div class="bot-san-card__skeleton" aria-hidden="true"></div>
     } @else {
-      <!-- Error / no-cover fallback -->
       <div class="bot-san-card__fallback" aria-hidden="true">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
           stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="18" height="12" rx="2" ry="2" />
           <circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none" />
           <circle cx="16" cy="8" r="1.2" fill="currentColor" stroke="none" />
-          <path d="M12 3V1" />
-          <path d="M5 19h14" /><path d="M8 19l-2 3" /><path d="M16 19l2 3" />
+          <path d="M12 3V1" /><path d="M5 19h14" /><path d="M8 19l-2 3" /><path d="M16 19l2 3" />
         </svg>
       </div>
     }
-
-    <!-- Play overlay on hover -->
     <div class="bot-san-card__overlay" aria-hidden="true">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
         <polygon points="5 3 19 12 5 21 5 3" />
       </svg>
     </div>
   </div>
 
-  <!-- Title -->
-  <p class="bot-san-card__title">{{ title() }}</p>
+  <!-- Details (right column) -->
+  <div class="bot-san-card__info">
+    <!-- Title -->
+    <p class="bot-san-card__title">{{ title() }}</p>
+
+    <!-- Meta: type · year · status -->
+    <div class="bot-san-card__meta">
+      @if (mediaType()) {
+        <span class="bot-san-card__type">{{ mediaType() }}</span>
+      }
+      @if (year()) {
+        <span class="bot-san-card__dot" aria-hidden="true">·</span>
+        <span class="bot-san-card__year">{{ year() }}</span>
+      }
+      @if (airingStatus()) {
+        <span class="bot-san-card__dot" aria-hidden="true">·</span>
+        <span class="bot-san-card__status">{{ airingStatus() }}</span>
+      }
+    </div>
+
+    <!-- Genre chips (max 3) -->
+    @if (genres().length > 0) {
+      <div class="bot-san-card__genres">
+        @for (genre of genres().slice(0, 3); track genre) {
+          <span class="bot-san-card__chip">{{ genre }}</span>
+        }
+        @if (genres().length > 3) {
+          <span class="bot-san-card__chip bot-san-card__chip--more">+{{ genres().length - 3 }}</span>
+        }
+      </div>
+    }
+
+    <!-- Star rating (5 SVG stars) -->
+    @if (score() !== null) {
+      <div class="bot-san-card__stars" [attr.aria-label]="'Score: ' + score()">
+        @for (i of [0, 1, 2, 3, 4]; track i) {
+          <svg class="bot-san-card__star bot-san-card__star--{{ starFill(i) }}"
+               width="11" height="11" viewBox="0 0 24 24" aria-hidden="true">
+            @if (starFill(i) === 'half') {
+              <defs>
+                <linearGradient [id]="'half-' + malId() + '-' + i" x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="50%" stop-color="currentColor" />
+                  <stop offset="50%" stop-color="transparent" />
+                </linearGradient>
+              </defs>
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                       [attr.fill]="'url(#half-' + malId() + '-' + i + ')'"
+                       stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+            } @else if (starFill(i) === 'full') {
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                       fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+            } @else {
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+                       fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+            }
+          </svg>
+        }
+        <span class="bot-san-card__score-val">{{ score()!.toFixed(1) }}</span>
+      </div>
+    }
+  </div>
 </div>

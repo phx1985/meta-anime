@@ -33,9 +33,6 @@ export type MessageSegment =
   | { type: 'text'; html: string }
   | { type: 'card'; malId: string; title: string };
 
-/** Regex for [anime:MAL_ID:Title] — group 1 = ID (no colons), group 2 = title (may contain colons) */
-const ANIME_TAG_RE = /\[anime:([^:\]]+):([^\]]+)\]/g;
-
 @Component({
   selector: 'app-bot-san',
   standalone: true,
@@ -183,6 +180,8 @@ export class BotSanComponent implements OnDestroy {
   /**
    * Parse a finished bot message into display segments.
    * While still streaming, returns a single text segment so cards don't flash/reload on each chunk.
+   * Deduplicates by malId — if the AI emits the same [anime:ID:Title] tag more than once,
+   * only the first occurrence is rendered as a card.
    */
   parseSegments(content: string, streaming: boolean): MessageSegment[] {
     if (streaming) {
@@ -190,25 +189,35 @@ export class BotSanComponent implements OnDestroy {
     }
 
     const segments: MessageSegment[] = [];
+    const seenMalIds = new Set<string>();
     let lastIndex = 0;
-    ANIME_TAG_RE.lastIndex = 0;
 
-    let match: RegExpExecArray | null;
-    while ((match = ANIME_TAG_RE.exec(content)) !== null) {
-      // Text before this tag
-      if (match.index > lastIndex) {
-        segments.push({ type: 'text', html: this.toSafeHtml(content.slice(lastIndex, match.index)) });
+    for (const match of content.matchAll(/\[anime:([^:\]]+):([^\]]+)\]/g)) {
+      const matchIndex = match.index ?? 0;
+
+      if (matchIndex > lastIndex) {
+        segments.push({ type: 'text', html: this.toSafeHtml(content.slice(lastIndex, matchIndex)) });
       }
-      segments.push({ type: 'card', malId: match[1].trim(), title: match[2].trim() });
-      lastIndex = match.index + match[0].length;
+
+      const malId = match[1].trim();
+      if (!seenMalIds.has(malId)) {
+        seenMalIds.add(malId);
+        segments.push({ type: 'card', malId, title: match[2].trim() });
+      }
+
+      lastIndex = matchIndex + match[0].length;
     }
 
-    // Remaining text after the last tag
     if (lastIndex < content.length) {
       segments.push({ type: 'text', html: this.toSafeHtml(content.slice(lastIndex)) });
     }
 
     return segments.length > 0 ? segments : [{ type: 'text', html: this.toSafeHtml(content) }];
+  }
+
+  /** Stable track key for `@for` over MessageSegment arrays — cards track by malId, text by position. */
+  segmentTrackKey(index: number, seg: MessageSegment): string {
+    return seg.type === 'card' ? `card-${seg.malId}` : `text-${index}`;
   }
 
   clearHistory(): void {

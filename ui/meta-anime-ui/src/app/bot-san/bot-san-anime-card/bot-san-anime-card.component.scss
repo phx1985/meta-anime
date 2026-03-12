@@ -1,21 +1,22 @@
 :host {
-  display: inline-block;
-  vertical-align: top;
+  display: block;
+  width: 100%;
 }
 
 .bot-san-card {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  width: 96px;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  max-width: 340px;
+  min-height: 100px;
   cursor: pointer;
   border-radius: 10px;
-  padding: 6px 6px 8px;
+  overflow: hidden;
   background: rgba(108, 99, 255, 0.08);
   border: 1px solid rgba(157, 148, 255, 0.22);
   transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-  text-align: center;
   outline: none;
 
   &:hover,
@@ -31,14 +32,11 @@
   }
 }
 
-// ── Poster ────────────────────────────────────────────────────────────────────
+// ── Poster (left, fixed width) ─────────────────────────────────────────────────
 
 .bot-san-card__poster {
   position: relative;
-  width: 80px;
-  height: 112px;
-  border-radius: 6px;
-  overflow: hidden;
+  width: 72px;
   flex-shrink: 0;
   background: rgba(255, 255, 255, 0.04);
 }
@@ -48,13 +46,11 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: 6px;
 }
 
 .bot-san-card__skeleton {
   width: 100%;
   height: 100%;
-  border-radius: 6px;
   background: linear-gradient(
     90deg,
     rgba(157, 148, 255, 0.08) 25%,
@@ -73,7 +69,6 @@
 .bot-san-card__fallback {
   width: 100%;
   height: 100%;
-  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,11 +76,9 @@
   color: rgba(157, 148, 255, 0.5);
 }
 
-// Hover play overlay
 .bot-san-card__overlay {
   position: absolute;
   inset: 0;
-  border-radius: 6px;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
@@ -99,18 +92,110 @@
   }
 }
 
+// ── Info column (right, flex-grow) ─────────────────────────────────────────────
+
+.bot-san-card__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  justify-content: center;
+}
+
 // ── Title ─────────────────────────────────────────────────────────────────────
 
 .bot-san-card__title {
   margin: 0;
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 700;
   color: var(--text-primary, #e8e8f0);
   line-height: 1.3;
-  max-width: 84px;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   word-break: break-word;
+}
+
+// ── Meta row (type · year · status) ───────────────────────────────────────────
+
+.bot-san-card__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px;
+  font-size: 0.68rem;
+  color: var(--text-secondary, #a8a8c0);
+  line-height: 1;
+}
+
+.bot-san-card__dot {
+  opacity: 0.45;
+  font-size: 0.6rem;
+}
+
+.bot-san-card__type {
+  font-weight: 600;
+  color: var(--accent-primary, #9d94ff);
+}
+
+.bot-san-card__year,
+.bot-san-card__status {
+  opacity: 0.75;
+}
+
+// ── Genre chips ───────────────────────────────────────────────────────────────
+
+.bot-san-card__genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.bot-san-card__chip {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(157, 148, 255, 0.15);
+  color: rgba(157, 148, 255, 0.9);
+  white-space: nowrap;
+
+  &--more {
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text-secondary, #a8a8c0);
+  }
+}
+
+// ── Star rating ───────────────────────────────────────────────────────────────
+
+.bot-san-card__stars {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.bot-san-card__star {
+  flex-shrink: 0;
+
+  &--full,
+  &--half {
+    color: #f5c518; // IMDb-style amber
+  }
+
+  &--empty {
+    color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.bot-san-card__score-val {
+  margin-left: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #f5c518;
+  line-height: 1;
 }
