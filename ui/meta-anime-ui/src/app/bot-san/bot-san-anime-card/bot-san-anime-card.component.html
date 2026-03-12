@@ -1,0 +1,35 @@
+<div class="bot-san-card" (click)="onClick()" role="button" tabindex="0"
+     (keydown.enter)="onClick()" (keydown.space)="onClick()"
+     [title]="title()">
+
+  <!-- Poster area -->
+  <div class="bot-san-card__poster">
+    @if (loadState() === 'loaded' && coverUrl()) {
+      <img class="bot-san-card__img" [src]="coverUrl()!" [alt]="title()" loading="lazy" />
+    } @else if (loadState() === 'loading') {
+      <div class="bot-san-card__skeleton" aria-hidden="true"></div>
+    } @else {
+      <!-- Error / no-cover fallback -->
+      <div class="bot-san-card__fallback" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="12" rx="2" ry="2" />
+          <circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none" />
+          <circle cx="16" cy="8" r="1.2" fill="currentColor" stroke="none" />
+          <path d="M12 3V1" />
+          <path d="M5 19h14" /><path d="M8 19l-2 3" /><path d="M16 19l2 3" />
+        </svg>
+      </div>
+    }
+
+    <!-- Play overlay on hover -->
+    <div class="bot-san-card__overlay" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+        <polygon points="5 3 19 12 5 21 5 3" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- Title -->
+  <p class="bot-san-card__title">{{ title() }}</p>
+</div>

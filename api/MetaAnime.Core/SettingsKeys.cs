@@ -51,6 +51,11 @@ public static class SettingsKeys
     public const string LastSyncDate = "System:LastSyncDate";
     public const string MalTokenRefreshedAt = "System:MalTokenRefreshedAt";
 
+    // Bot-san AI (OpenAI-compatible provider)
+    public const string BotSanBaseUrl = "BotSan:BaseUrl";
+    public const string BotSanApiKey  = "BotSan:ApiKey";
+    public const string BotSanModel   = "BotSan:Model";
+
     // Admin authentication (stored as hashed value; absent = public mode)
     public const string AdminPasswordHash = "System:AdminPasswordHash";
     public const string JwtSecret = "System:JwtSecret";

@@ -599,6 +599,21 @@
   <app-franchise-constellation />
 }
 
+<!-- ── Bot-san Chat Drawer ───────────────────────────────────────────────── -->
+<app-bot-san
+  (animeSelected)="onBotSanAnimeSelected($event)"
+  [detailPanelOpen]="!!botSanSelectedMalId()"
+/>
+
+<!-- ── Bot-san → Anime Detail Panel (side-by-side on desktop, no backdrop) ── -->
+@if (botSanSelectedMalId()) {
+  <app-anime-detail-panel
+    [malId]="botSanSelectedMalId()"
+    [noBackdrop]="true"
+    (closed)="closeBotSanDetailPanel()"
+  />
+}
+
 <!-- ── Synopsis Modal ───────────────────────────────────────────────────── -->
 @if (synopsisModal()) {
 <div class="synopsis-backdrop"

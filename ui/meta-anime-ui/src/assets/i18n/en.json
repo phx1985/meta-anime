@@ -456,6 +456,10 @@
       "app": {
         "name": "App Preferences",
         "desc": "General application preferences and content filtering options."
+      },
+      "botsan": {
+        "name": "Bot-san AI",
+        "desc": "Configure your AI provider using the OpenAI-compatible chat completions API. Works with Groq, OpenAI, LM Studio, or local Ollama."
       }
     },
     "fields": {
@@ -564,6 +568,18 @@
       "Sonarr_Enabled": {
         "name": "Enable Sonarr",
         "desc": "Enable or disable Sonarr as a data source for sync."
+      },
+      "BotSan_BaseUrl": {
+        "name": "API Base URL",
+        "desc": "Base URL of your OpenAI-compatible AI provider (e.g. https://api.groq.com/openai/v1, https://api.openai.com/v1, http://localhost:11434/v1)."
+      },
+      "BotSan_ApiKey": {
+        "name": "API Key",
+        "desc": "Bearer token for your AI provider. Leave blank if no authentication is required (e.g. local LM Studio or Ollama without auth)."
+      },
+      "BotSan_Model": {
+        "name": "Model",
+        "desc": "Model identifier to use for chat (e.g. llama-3.3-70b-versatile, gpt-4o-mini, qwen2.5:1.5b, mistral)."
       }
     },
     "toggle": {

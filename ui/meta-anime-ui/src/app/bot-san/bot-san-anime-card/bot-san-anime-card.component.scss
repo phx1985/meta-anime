@@ -1,0 +1,116 @@
+:host {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.bot-san-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 96px;
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 6px 6px 8px;
+  background: rgba(108, 99, 255, 0.08);
+  border: 1px solid rgba(157, 148, 255, 0.22);
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  text-align: center;
+  outline: none;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(108, 99, 255, 0.22);
+    border-color: rgba(157, 148, 255, 0.65);
+    box-shadow: 0 4px 18px rgba(108, 99, 255, 0.35);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+// ── Poster ────────────────────────────────────────────────────────────────────
+
+.bot-san-card__poster {
+  position: relative;
+  width: 80px;
+  height: 112px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.bot-san-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 6px;
+}
+
+.bot-san-card__skeleton {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(157, 148, 255, 0.08) 25%,
+    rgba(157, 148, 255, 0.18) 50%,
+    rgba(157, 148, 255, 0.08) 75%
+  );
+  background-size: 200% 100%;
+  animation: botSanCardShimmer 1.4s ease infinite;
+}
+
+@keyframes botSanCardShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.bot-san-card__fallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(108, 99, 255, 0.15), rgba(157, 148, 255, 0.08));
+  color: rgba(157, 148, 255, 0.5);
+}
+
+// Hover play overlay
+.bot-san-card__overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+
+  .bot-san-card:hover & {
+    opacity: 1;
+  }
+}
+
+// ── Title ─────────────────────────────────────────────────────────────────────
+
+.bot-san-card__title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-primary, #e8e8f0);
+  line-height: 1.3;
+  max-width: 84px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}

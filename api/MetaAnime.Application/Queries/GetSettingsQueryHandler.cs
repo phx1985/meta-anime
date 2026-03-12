@@ -78,6 +78,11 @@ public sealed class GetSettingsQueryHandler(
             new(SettingsKeys.AppSyncInterval, "app", false, false, Get(SettingsKeys.AppSyncInterval), "select",
                 SelectOptions: ["hourly", "every6h", "every12h", "daily", "weekly"]),
             new(SettingsKeys.AppTitleSimilarityThreshold, "app", false, false, Get(SettingsKeys.AppTitleSimilarityThreshold), "number"),
+
+            // ── Bot-san AI (OpenAI-compatible provider) ───────────────────────
+            new(SettingsKeys.BotSanBaseUrl, "botsan", false, false, Get(SettingsKeys.BotSanBaseUrl)),
+            new(SettingsKeys.BotSanApiKey,  "botsan", true,  false, Get(SettingsKeys.BotSanApiKey)),
+            new(SettingsKeys.BotSanModel,   "botsan", false, false, Get(SettingsKeys.BotSanModel)),
         ];
     }
 }

@@ -1,12 +1,14 @@
 @if (animeId() !== null || malId() !== null) {
-  <!-- Backdrop -->
-  <div 
-    class="panel-backdrop" 
-    (click)="close()" 
-    aria-hidden="true" 
+  <!-- Backdrop — hidden in side-by-side Bot-san mode to keep chat visible -->
+  @if (!noBackdrop()) {
+  <div
+    class="panel-backdrop"
+    (click)="close()"
+    aria-hidden="true"
     [class.visible]="true"
     [class.closing]="closing()"
   ></div>
+  }
 
   <!-- Side panel -->
   <aside

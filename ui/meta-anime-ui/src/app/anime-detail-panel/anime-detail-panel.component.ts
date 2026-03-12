@@ -49,6 +49,8 @@ export class AnimeDetailPanelComponent {
   readonly seasonalItem = input<SeasonalAnimeItem | null>(null);
   /** Emitted when the user clicks the "Add to Library" button in seasonal mode. */
   readonly addRequested = output<void>();
+  /** When true, the dimming backdrop behind the panel is not rendered (e.g. Bot-san side-by-side mode). */
+  readonly noBackdrop = input<boolean>(false);
 
   get showAddButton(): boolean {
     const s = this.seasonalItem();

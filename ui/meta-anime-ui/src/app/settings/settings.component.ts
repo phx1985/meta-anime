@@ -158,6 +158,7 @@ export class SettingsComponent {
     kometa: 'assets/images/kometa.png',
     app: 'assets/images/app.svg',
     matching: 'assets/images/app.svg',
+    botsan: 'assets/images/app.svg',
   };
 
   grouped = computed<SettingsByCategory>(() =>
@@ -318,7 +319,7 @@ export class SettingsComponent {
   /** Max number of polls before giving up (3 s × 40 = 2 minutes). */
   private static readonly PLEX_POLL_MAX = 40;
 
-  private static readonly CATEGORY_ORDER = ['kometa', 'mal', 'plex', 'sonarr', 'app'];
+  private static readonly CATEGORY_ORDER = ['kometa', 'mal', 'plex', 'sonarr', 'app', 'botsan'];
   /** Categories that always appear even when they have no regular settings (they have integration cards). */
   private static readonly INTEGRATION_CARD_CATS = new Set(['mal', 'plex']);
   /** Keys that must be treated as sensitive on the frontend regardless of the backend flag. */

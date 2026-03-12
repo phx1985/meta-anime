@@ -33,11 +33,13 @@ import { StorageKeys } from './constants/storage-keys';
 import { UserPreferencesService } from './services/user-preferences.service';
 import { HealthService } from './services/health.service';
 import { ProviderHealthResult } from './models/health.models';
+import { BotSanComponent } from './bot-san/bot-san.component';
+import { AnimeDetailPanelComponent } from './anime-detail-panel/anime-detail-panel.component';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent, UpperCasePipe, FranchiseConstellationComponent, MalQuickUpdateModalComponent, ProviderHealthComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent, UpperCasePipe, FranchiseConstellationComponent, MalQuickUpdateModalComponent, ProviderHealthComponent, BotSanComponent, AnimeDetailPanelComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -86,6 +88,18 @@ export class App implements OnInit, AfterViewInit {
   protected luckyPickOpen = signal<boolean>(false);
   /** Prevent rapid-fire clicks from re-opening while already open */
   private luckyPickBusy = false;
+
+  /** Bot-san: MAL ID of the anime to open in the detail panel (set when an anime link is clicked) */
+  protected botSanSelectedMalId = signal<string | null>(null);
+
+  /** Opens the AnimeDetailPanel for the MAL ID emitted by Bot-san */
+  onBotSanAnimeSelected(malId: string): void {
+    this.botSanSelectedMalId.set(malId);
+  }
+
+  closeBotSanDetailPanel(): void {
+    this.botSanSelectedMalId.set(null);
+  }
 
   /** True when a JWT token is stored — controls logout button visibility. */
   protected isAuthenticated = computed(() => this.authService.isAuthenticated());

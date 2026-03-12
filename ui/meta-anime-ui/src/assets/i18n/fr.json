@@ -456,6 +456,10 @@
       "app": {
         "name": "Préférences",
         "desc": "Préférences générales de l'application et options de filtrage du contenu."
+      },
+      "botsan": {
+        "name": "Bot-san IA",
+        "desc": "Configurez votre fournisseur d'IA via l'API compatible OpenAI. Fonctionne avec Groq, OpenAI, LM Studio ou Ollama local."
       }
     },
     "fields": {
@@ -564,6 +568,18 @@
       "Sonarr_Enabled": {
         "name": "Activer Sonarr",
         "desc": "Activer ou désactiver Sonarr comme source de données pour la synchronisation."
+      },
+      "BotSan_BaseUrl": {
+        "name": "URL de base de l'API",
+        "desc": "URL de base de votre fournisseur d'IA compatible OpenAI (ex. https://api.groq.com/openai/v1, https://api.openai.com/v1, http://localhost:11434/v1)."
+      },
+      "BotSan_ApiKey": {
+        "name": "Clé API",
+        "desc": "Jeton Bearer pour votre fournisseur d'IA. Laissez vide si aucune authentification n'est requise (ex. LM Studio ou Ollama local sans authentification)."
+      },
+      "BotSan_Model": {
+        "name": "Modèle",
+        "desc": "Identifiant du modèle à utiliser (ex. llama-3.3-70b-versatile, gpt-4o-mini, qwen2.5:1.5b, mistral)."
       }
     },
     "toggle": {

@@ -106,5 +106,8 @@ public sealed class SettingsSeedService(
         [SettingsKeys.AppShowNsfw] = "false",
         [SettingsKeys.AppSyncInterval] = "daily",
         [SettingsKeys.AppTitleSimilarityThreshold] = "80",
+        [SettingsKeys.BotSanBaseUrl] = string.Empty,
+        [SettingsKeys.BotSanApiKey]  = string.Empty,
+        [SettingsKeys.BotSanModel]   = string.Empty,
     };
 }
