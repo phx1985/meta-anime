@@ -275,6 +275,26 @@
   flex-shrink: 0;
 }
 
+// Three jumping dots shown inside the avatar while the typewriter is running
+.bot-san__avatar-dots {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  span {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #fff;
+    opacity: 0.85;
+    animation: botSanBounce 1.1s ease-in-out infinite;
+
+    &:nth-child(1) { animation-delay: 0s; }
+    &:nth-child(2) { animation-delay: 0.18s; }
+    &:nth-child(3) { animation-delay: 0.36s; }
+  }
+}
+
 .bot-san__bubble {
   padding: 10px 13px;
   border-radius: 14px;

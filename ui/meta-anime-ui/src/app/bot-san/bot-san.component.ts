@@ -24,8 +24,12 @@ marked.use({ breaks: true });
 export type BotSanMessage = {
   role: 'user' | 'assistant';
   content: string;
-  /** True while this bot message is still being streamed in */
+  /** The portion of content that has been "typed out" and is currently visible */
+  typedContent: string;
+  /** True while the API SSE stream is open */
   streaming?: boolean;
+  /** True while the typewriter engine still has chars to display */
+  typing?: boolean;
 };
 
 /** A parsed segment of a bot message — either plain HTML or an anime mini-card */
@@ -59,17 +63,20 @@ export class BotSanComponent implements OnDestroy {
   readonly hasUnread = signal(false);
 
   readonly hasMessages = computed(() => this.messages().length > 0);
+  readonly hasTypingMessage = computed(() => this.messages().some(m => m.typing));
+  private readonly _msgCount = computed(() => this.messages().length);
+  private typewriterVersion = 0;
 
   private readonly messagesEnd = viewChild<ElementRef<HTMLElement>>('messagesEnd');
   private streamSub: Subscription | null = null;
   private greetingSub: Subscription | null = null;
 
   constructor() {
-    // Auto-scroll to bottom when new messages arrive
+    // Smooth-scroll only when a new message is added (length changes), not on every typed char
     effect(() => {
-      const msgs = this.messages();
-      if (msgs.length > 0) {
-        setTimeout(() => this.scrollToBottom(), 0);
+      const count = this._msgCount();
+      if (count > 0) {
+        setTimeout(() => this.scrollToBottom('smooth'), 30);
       }
     });
   }
@@ -118,19 +125,23 @@ export class BotSanComponent implements OnDestroy {
 
   send(): void {
     const text = this.inputText().trim();
-    if (!text || this.isStreaming()) return;
+    if (!text || this.isStreaming() || this.hasTypingMessage()) return;
 
     this.inputText.set('');
-    this.appendMessage({ role: 'user', content: text });
+    this.appendMessage({ role: 'user', content: text, typedContent: text });
 
     const history: BotSanHistoryMessage[] = this.messages()
       .filter(m => !m.streaming)
       .map(m => ({ role: m.role, content: m.content }));
 
     // Add the streaming placeholder
-    const botMsg: BotSanMessage = { role: 'assistant', content: '', streaming: true };
+    const botMsg: BotSanMessage = { role: 'assistant', content: '', typedContent: '', streaming: true, typing: true };
     this.appendMessage(botMsg);
     this.isStreaming.set(true);
+
+    const msgIndex = this.messages().length - 1;
+    const version = ++this.typewriterVersion;
+    this.startTypewriter(msgIndex, version);
 
     this.streamSub?.unsubscribe();
     this.streamSub = this.botSanService.sendMessage(text, history.slice(0, -1)).subscribe({
@@ -221,6 +232,7 @@ export class BotSanComponent implements OnDestroy {
   }
 
   clearHistory(): void {
+    this.typewriterVersion++; // cancel any running typewriter
     this.messages.set([]);
     this.botSanService.cancel();
     this.botSanService.cancelGreeting();
@@ -229,8 +241,12 @@ export class BotSanComponent implements OnDestroy {
   }
 
   private streamGreeting(): void {
-    const botMsg: BotSanMessage = { role: 'assistant', content: '', streaming: true };
+    const botMsg: BotSanMessage = { role: 'assistant', content: '', typedContent: '', streaming: true, typing: true };
     this.appendMessage(botMsg);
+
+    const msgIndex = this.messages().length - 1;
+    const version = ++this.typewriterVersion;
+    this.startTypewriter(msgIndex, version);
 
     this.greetingSub?.unsubscribe();
     this.greetingSub = this.botSanService.streamGreeting().subscribe({
@@ -275,8 +291,69 @@ export class BotSanComponent implements OnDestroy {
     this.messages.update(msgs => [...msgs, msg]);
   }
 
-  private scrollToBottom(): void {
-    this.messagesEnd()?.nativeElement?.scrollIntoView({ behavior: 'smooth' });
+  /**
+   * Typewriter engine — advances `typedContent` one character (or one complete anime tag) at a time.
+   * Self-schedules via setTimeout; stops when the `version` is superseded (clearHistory / new send).
+   */
+  private startTypewriter(msgIndex: number, version: number): void {
+    const COMPLETE_TAG_RE = /^\[anime:[^:\]]+:[^\]]+\]/;
+    const MIN_DELAY = 5;
+    const VAR_DELAY = 5;
+
+    const tick = () => {
+      if (this.typewriterVersion !== version) return; // superseded — stop
+
+      const msgs = this.messages();
+      const msg = msgs[msgIndex];
+      if (!msg || msg.role !== 'assistant') return;
+
+      const buffer = msg.content;
+      const displayed = msg.typedContent;
+
+      if (displayed.length >= buffer.length) {
+        if (!msg.streaming) {
+          // Stream closed and every char is typed — finalise
+          this.messages.update(m => m.map((x, i) =>
+            i === msgIndex ? { ...x, typing: false, typedContent: x.content } : x
+          ));
+          return;
+        }
+        // Caught up to buffer while stream is still open — poll for more chunks
+        setTimeout(tick, 16);
+        return;
+      }
+
+      const remaining = buffer.slice(displayed.length);
+      let step: number;
+      let nextDelay: number;
+
+      const tagMatch = COMPLETE_TAG_RE.exec(remaining);
+      if (tagMatch) {
+        // Fully-formed anime tag — pop the whole tag in one frame, no delay
+        step = tagMatch[0].length;
+        nextDelay = 0;
+      } else if (remaining.startsWith('[anime:') && msg.streaming) {
+        // Incomplete tag while stream is still open — wait for the rest of the tag
+        setTimeout(tick, 30);
+        return;
+      } else {
+        step = 1;
+        nextDelay = MIN_DELAY + Math.floor(Math.random() * VAR_DELAY);
+      }
+
+      this.messages.update(m => m.map((x, i) =>
+        i === msgIndex ? { ...x, typedContent: buffer.slice(0, displayed.length + step) } : x
+      ));
+
+      this.scrollToBottom('instant');
+      setTimeout(tick, nextDelay);
+    };
+
+    setTimeout(tick, 10);
+  }
+
+  private scrollToBottom(behavior: ScrollBehavior = 'smooth'): void {
+    this.messagesEnd()?.nativeElement?.scrollIntoView({ behavior });
   }
 
   /** Parse markdown → sanitize HTML (no anime card tags — those are handled by parseSegments) */

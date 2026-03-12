@@ -83,16 +83,22 @@
       [class.bot-san__msg--bot]="msg.role === 'assistant'">
       @if (msg.role === 'assistant') {
       <div class="bot-san__msg-avatar" aria-hidden="true">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="18" height="12" rx="2" ry="2" />
-          <circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none" />
-          <circle cx="16" cy="8" r="1.2" fill="currentColor" stroke="none" />
-        </svg>
+        @if (msg.typing) {
+          <div class="bot-san__avatar-dots">
+            <span></span><span></span><span></span>
+          </div>
+        } @else {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="12" rx="2" ry="2" />
+            <circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none" />
+            <circle cx="16" cy="8" r="1.2" fill="currentColor" stroke="none" />
+          </svg>
+        }
       </div>
       }
       <div class="bot-san__bubble">
-        @if (msg.role === 'assistant' && msg.streaming && msg.content === '') {
+        @if (msg.role === 'assistant' && msg.typing && msg.typedContent === '') {
         <!-- Typing animation -->
         <div class="bot-san__typing" aria-label="Bot-san is typing">
           <span></span><span></span><span></span>
@@ -100,7 +106,7 @@
         } @else if (msg.role === 'assistant') {
         <!-- Segment-based rendering: text runs as markdown HTML, anime tags as real cards -->
         <div class="bot-san__md">
-          @for (seg of parseSegments(msg.content, !!msg.streaming); track segmentTrackKey($index, seg)) {
+          @for (seg of parseSegments(msg.typedContent, false); track segmentTrackKey($index, seg)) {
             @if (seg.type === 'text') {
               <span [innerHTML]="seg.html"></span>
             } @else {
@@ -130,13 +136,13 @@
       (keydown)="onKeyDown($event)"
       placeholder="Ask me about anime…"
       rows="1"
-      [disabled]="isStreaming()"
+      [disabled]="isStreaming() || hasTypingMessage()"
       aria-label="Message Bot-san"
     ></textarea>
     <button class="bot-san__send" type="button" (click)="send()"
-      [disabled]="isStreaming() || !inputText().trim()"
+      [disabled]="isStreaming() || hasTypingMessage() || !inputText().trim()"
       aria-label="Send message">
-      @if (isStreaming()) {
+      @if (isStreaming() || hasTypingMessage()) {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="bot-san__spin">
         <circle cx="12" cy="12" r="10" stroke-dasharray="40 20" />
