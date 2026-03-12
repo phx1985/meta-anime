@@ -61,11 +61,11 @@ const SEASON_ORDER: SeasonName[] = ['winter', 'spring', 'summer', 'fall'];
 
 export const SEASONAL_MAL_STATES = [
   { value: 'not_in', labelKey: 'seasonal.filter.malStatus.not_in' },
-  { value: 'watching', labelKey: 'animeCard.malStatus.watching' },
-  { value: 'completed', labelKey: 'animeCard.malStatus.completed' },
-  { value: 'on_hold', labelKey: 'animeCard.malStatus.on_hold' },
-  { value: 'plan_to_watch', labelKey: 'animeCard.malStatus.plan_to_watch' },
-  { value: 'dropped', labelKey: 'animeCard.malStatus.dropped' },
+  { value: 'watching', labelKey: 'seasonal.malStatus.watching' },
+  { value: 'completed', labelKey: 'seasonal.malStatus.completed' },
+  { value: 'on_hold', labelKey: 'seasonal.malStatus.on_hold' },
+  { value: 'plan_to_watch', labelKey: 'seasonal.malStatus.plan_to_watch' },
+  { value: 'dropped', labelKey: 'seasonal.malStatus.dropped' },
 ];
 
 export const SEASONAL_SORT_OPTIONS = [
