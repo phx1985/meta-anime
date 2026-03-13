@@ -19,5 +19,6 @@ public sealed record SeasonalAnimeResponse(
     string? TvdbId,
     string? EnglishTitle,
     string? MalViewState,
-    string? AniDbId = null
+    string? AniDbId = null,
+    string? AgeRating = null
 );

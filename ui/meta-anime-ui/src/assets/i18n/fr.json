@@ -248,6 +248,15 @@
       "hasFileNo": "Sans fichiers",
       "codec": "Codec",
       "mediaType": "Type de média",
+      "ageRating": "Classification",
+      "ratings": {
+        "g": "G – Tout public",
+        "pg": "PG – Enfants",
+        "pg_13": "PG-13 – Ados 13+",
+        "r": "R-17 – 17+",
+        "r+": "R+ – Nudité légère",
+        "rx": "Rx – Adultes seulement"
+      },
       "any": "Tous",
       "clear": "Effacer la sélection",
       "search": "Rechercher",
@@ -363,6 +372,14 @@
       "h264": "H.264",
       "other": "Autre"
     },
+    "ageRating": {
+      "g": "G",
+      "pg": "PG",
+      "pg_13": "PG-13",
+      "r": "R-17",
+      "r+": "R+",
+      "rx": "Rx"
+    },
     "sizeUnit": "Go",
     "seeMore": "Voir plus"
   },
@@ -456,6 +473,10 @@
       "app": {
         "name": "Préférences",
         "desc": "Préférences générales de l'application et options de filtrage du contenu."
+      },
+      "botkun": {
+        "name": "Bot-kun IA",
+        "desc": "Configurez votre fournisseur d'IA via l'API compatible OpenAI. Fonctionne avec Groq, OpenAI, LM Studio ou Ollama local."
       }
     },
     "fields": {
@@ -564,6 +585,18 @@
       "Sonarr_Enabled": {
         "name": "Activer Sonarr",
         "desc": "Activer ou désactiver Sonarr comme source de données pour la synchronisation."
+      },
+      "BotKun_BaseUrl": {
+        "name": "URL de base de l'API",
+        "desc": "URL de base de votre fournisseur d'IA compatible OpenAI (ex. https://api.groq.com/openai/v1, https://api.openai.com/v1, http://localhost:11434/v1)."
+      },
+      "BotKun_ApiKey": {
+        "name": "Clé API",
+        "desc": "Jeton Bearer pour votre fournisseur d'IA. Laissez vide si aucune authentification n'est requise (ex. LM Studio ou Ollama local sans authentification)."
+      },
+      "BotKun_Model": {
+        "name": "Modèle",
+        "desc": "Identifiant du modèle à utiliser (ex. llama-3.3-70b-versatile, gpt-4o-mini, qwen2.5:1.5b, mistral)."
       }
     },
     "toggle": {
@@ -577,6 +610,13 @@
       "loadingOptions": "Chargement des options Sonarr…",
       "createTagPlaceholder": "Nom du nouveau tag...",
       "createTagBtn": "Créer"
+    },
+    "botkun": {
+      "fetchModels": "Récupérer les modèles",
+      "fetchModelsLoading": "Récupération...",
+      "fetchModelsError": "Impossible de récupérer les modèles. Vérifiez l'URL de base et la clé API.",
+      "fetchModelsNoUrl": "Veuillez d'abord configurer une URL de base.",
+      "selectModel": "— Sélectionner un modèle —"
     },
     "provider": {
       "enabled": "Activé",
@@ -860,6 +900,11 @@
         "upTitle": "API MAL rétablie ✓",
         "upMessage": "La connexion à l'API MyAnimeList a été rétablie."
       }
+    },
+    "botKun": {
+      "discoverTitle": "Découvrez Bot-kun, votre concierge IA 🤖",
+      "discoverMessage": "Bot-kun est un assistant IA qui vous aide à découvrir, gérer et discuter de votre bibliothèque d'animés. Activez-le dans les paramètres Bot-kun pour commencer.",
+      "configure": "Configurer Bot-kun"
     }
   },
   "malCallback": {

@@ -248,6 +248,15 @@
       "hasFileNo": "No files",
       "codec": "Codec",
       "mediaType": "Media type",
+      "ageRating": "Age Rating",
+      "ratings": {
+        "g": "G – All Ages",
+        "pg": "PG – Children",
+        "pg_13": "PG-13 – Teens 13+",
+        "r": "R-17 – 17+",
+        "r+": "R+ – Mild Nudity",
+        "rx": "Rx – Adults Only"
+      },
       "any": "Any",
       "clear": "Clear selection",
       "search": "Search",
@@ -363,6 +372,14 @@
       "h264": "H.264",
       "other": "Other"
     },
+    "ageRating": {
+      "g": "G",
+      "pg": "PG",
+      "pg_13": "PG-13",
+      "r": "R-17",
+      "r+": "R+",
+      "rx": "Rx"
+    },
     "sizeUnit": "GB",
     "seeMore": "See more"
   },
@@ -456,6 +473,10 @@
       "app": {
         "name": "App Preferences",
         "desc": "General application preferences and content filtering options."
+      },
+      "botkun": {
+        "name": "Bot-kun AI",
+        "desc": "Configure your AI provider using the OpenAI-compatible chat completions API. Works with Groq, OpenAI, LM Studio, or local Ollama."
       }
     },
     "fields": {
@@ -564,6 +585,18 @@
       "Sonarr_Enabled": {
         "name": "Enable Sonarr",
         "desc": "Enable or disable Sonarr as a data source for sync."
+      },
+      "BotKun_BaseUrl": {
+        "name": "API Base URL",
+        "desc": "Base URL of your OpenAI-compatible AI provider (e.g. https://api.groq.com/openai/v1, https://api.openai.com/v1, http://localhost:11434/v1)."
+      },
+      "BotKun_ApiKey": {
+        "name": "API Key",
+        "desc": "Bearer token for your AI provider. Leave blank if no authentication is required (e.g. local LM Studio or Ollama without auth)."
+      },
+      "BotKun_Model": {
+        "name": "Model",
+        "desc": "Model identifier to use for chat (e.g. llama-3.3-70b-versatile, gpt-4o-mini, qwen2.5:1.5b, mistral)."
       }
     },
     "toggle": {
@@ -580,6 +613,13 @@
       "manageTags": "Add/Manage Tags",
       "noTagsSelected": "No tags selected",
       "noTagsLoaded": "No tags loaded. Check your Sonarr connection."
+    },
+    "botkun": {
+      "fetchModels": "Fetch Models",
+      "fetchModelsLoading": "Fetching...",
+      "fetchModelsError": "Could not fetch models. Check your Base URL and API Key.",
+      "fetchModelsNoUrl": "Please configure a Base URL first.",
+      "selectModel": "— Select a model —"
     },
     "provider": {
       "enabled": "Enabled",
@@ -868,6 +908,11 @@
         "upTitle": "MAL API Restored ✓",
         "upMessage": "MyAnimeList API connection has been restored."
       }
+    },
+    "botKun": {
+      "discoverTitle": "Meet Bot-kun AI Concierge 🤖",
+      "discoverMessage": "Bot-kun is an AI assistant that can help you discover, manage, and talk about your anime library. Enable it in Bot-kun settings to get started.",
+      "configure": "Configure Bot-kun"
     }
   },
   "malCallback": {
