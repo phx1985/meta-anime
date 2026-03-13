@@ -8,17 +8,19 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { UpperCasePipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AnimeService } from '../../services/anime.service';
 
 @Component({
-  selector: 'app-bot-san-anime-card',
+  selector: 'app-bot-kun-anime-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './bot-san-anime-card.component.html',
-  styleUrl: './bot-san-anime-card.component.scss',
+  imports: [UpperCasePipe],
+  templateUrl: './bot-kun-anime-card.component.html',
+  styleUrl: './bot-kun-anime-card.component.scss',
 })
-export class BotSanAnimeCardComponent implements OnInit {
+export class BotKunAnimeCardComponent implements OnInit {
   readonly malId = input.required<string>();
   readonly title = input.required<string>();
 
@@ -31,6 +33,7 @@ export class BotSanAnimeCardComponent implements OnInit {
   protected readonly genres      = signal<string[]>([]);
   protected readonly score       = signal<number | null>(null);
   protected readonly mediaType   = signal<string | null>(null);
+  protected readonly ageRating   = signal<string | null>(null);
 
   private readonly animeService = inject(AnimeService);
   private readonly destroyRef   = inject(DestroyRef);
@@ -51,6 +54,7 @@ export class BotSanAnimeCardComponent implements OnInit {
           this.genres.set(mal?.genres ?? []);
           this.score.set(mal?.rating?.malMean ?? null);
           this.mediaType.set(mal?.mediaType ?? null);
+          this.ageRating.set(mal?.ageRating ?? null);
         },
         error: () => this.loadState.set('error'),
       });

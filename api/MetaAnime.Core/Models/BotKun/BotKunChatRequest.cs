@@ -1,6 +1,6 @@
-namespace MetaAnime.Core.Models.BotSan;
+namespace MetaAnime.Core.Models.BotKun;
 
-public sealed class BotSanChatRequest
+public sealed class BotKunChatRequest
 {
     public required string UserMessage { get; init; }
     public IList<ChatMessage> History { get; init; } = [];

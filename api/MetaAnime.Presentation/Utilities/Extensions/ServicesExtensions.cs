@@ -2,7 +2,7 @@ using MetaAnime.Application;
 using MetaAnime.Application.BackgroundJobs;
 using MetaAnime.Application.Interfaces;
 using MetaAnime.Application.Services;
-using MetaAnime.Application.Services.BotSan;
+using MetaAnime.Application.Services.BotKun;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Infrastructure;
@@ -92,7 +92,7 @@ public static class ServicesExtensions
         // AttemptTimeout) and use an infinite HttpClient timeout instead, relying solely on the
         // per-request CancellationToken for cancellation control.
 #pragma warning disable EXTEXP0001 // RemoveAllResilienceHandlers is experimental but stable for our use
-        services.AddHttpClient<IBotSanChatService, BotSanChatService>()
+        services.AddHttpClient<IBotKunChatService, BotKunChatService>()
             .RemoveAllResilienceHandlers()
             .ConfigureHttpClient(client => client.Timeout = Timeout.InfiniteTimeSpan);
 #pragma warning restore EXTEXP0001

@@ -33,13 +33,13 @@ import { StorageKeys } from './constants/storage-keys';
 import { UserPreferencesService } from './services/user-preferences.service';
 import { HealthService } from './services/health.service';
 import { ProviderHealthResult } from './models/health.models';
-import { BotSanComponent } from './bot-san/bot-san.component';
+import { BotKunComponent } from './bot-kun/bot-kun.component';
 import { AnimeDetailPanelComponent } from './anime-detail-panel/anime-detail-panel.component';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent, UpperCasePipe, FranchiseConstellationComponent, MalQuickUpdateModalComponent, ProviderHealthComponent, BotSanComponent, AnimeDetailPanelComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent, UpperCasePipe, FranchiseConstellationComponent, MalQuickUpdateModalComponent, ProviderHealthComponent, BotKunComponent, AnimeDetailPanelComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -89,16 +89,16 @@ export class App implements OnInit, AfterViewInit {
   /** Prevent rapid-fire clicks from re-opening while already open */
   private luckyPickBusy = false;
 
-  /** Bot-san: MAL ID of the anime to open in the detail panel (set when an anime link is clicked) */
-  protected botSanSelectedMalId = signal<string | null>(null);
+  /** Bot-kun: MAL ID of the anime to open in the detail panel (set when an anime link is clicked) */
+  protected botKunSelectedMalId = signal<string | null>(null);
 
-  /** Opens the AnimeDetailPanel for the MAL ID emitted by Bot-san */
-  onBotSanAnimeSelected(malId: string): void {
-    this.botSanSelectedMalId.set(malId);
+  /** Opens the AnimeDetailPanel for the MAL ID emitted by Bot-kun */
+  onBotKunAnimeSelected(malId: string): void {
+    this.botKunSelectedMalId.set(malId);
   }
 
-  closeBotSanDetailPanel(): void {
-    this.botSanSelectedMalId.set(null);
+  closeBotKunDetailPanel(): void {
+    this.botKunSelectedMalId.set(null);
   }
 
   /** True when a JWT token is stored — controls logout button visibility. */
@@ -267,6 +267,22 @@ export class App implements OnInit, AfterViewInit {
           null;
         if (plexHost) this.plexHomeUrl.set('https://app.plex.tv');
         if (sonarrUrl) this.sonarrHomeUrl.set(sonarrUrl);
+
+        // Push the Bot-kun discovery notification once if it has never been shown
+        const botkunEnabled = settings.find((s) => s.key === 'BotKun:Enabled')?.value === 'true';
+        if (!botkunEnabled && !this.notifService.has('botkun-discover')) {
+          this.notifService.push({
+            id: 'botkun-discover',
+            severity: 'info',
+            titleKey: 'notifications.botKun.discoverTitle',
+            messageKey: 'notifications.botKun.discoverMessage',
+            action: {
+              labelKey: 'notifications.botKun.configure',
+              route: ['/settings'],
+              fragment: 'section-botkun',
+            },
+          });
+        }
       },
       error: () => {
         /* non-critical */

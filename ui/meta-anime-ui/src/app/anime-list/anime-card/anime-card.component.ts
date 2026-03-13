@@ -142,10 +142,20 @@ export class AnimeCardComponent {
     return this.seasonalItem()?.mediaType ?? this.mal?.mediaType;
   }
 
+  get ageRating(): string | undefined {
+    return this.seasonalItem()?.ageRating ?? this.mal?.ageRating;
+  }
+
   mediaTypeLabel(type: string): string {
     const key = `animeDetailPanel.mediaType.${type.toLowerCase()}`;
     const t = this.translate.instant(key);
     return t !== key ? t : type.toUpperCase();
+  }
+
+  ageRatingLabel(rating: string): string {
+    const key = `animeDetailPanel.ageRating.${rating}`;
+    const t = this.translate.instant(key);
+    return t !== key ? t : rating.toUpperCase();
   }
 
   viewStateLabel(state: string): string {

@@ -279,46 +279,24 @@
         </span>
         <span>MyAnimeList</span>
       </a>
-      @if (sonarrHomeUrl()) {
-        @if (providerState.sonarrEnabled()) {
-          <a class="drawer-provider" [href]="sonarrHomeUrl()" target="_blank" rel="noopener noreferrer"
-            (click)="closeMenu()">
-            <span class="ph-item">
-              <img src="assets/images/sonarr.svg" alt="Sonarr" width="28" height="28" />
-              <span [class]="drawerDotClass(drawerSonarrHealth())"></span>
-            </span>
-            <span>Sonarr</span>
-          </a>
-        } @else {
-          <button type="button" class="drawer-provider drawer-provider--disabled"
-            (click)="openDisabledProviderModal('sonarr', $event)">
-            <span class="ph-item">
-              <img src="assets/images/sonarr.svg" alt="Sonarr" width="28" height="28" />
-              <span [class]="drawerDotClass(drawerSonarrHealth())"></span>
-            </span>
-            <span>Sonarr</span>
-          </button>
-        }
+      @if (sonarrHomeUrl() && providerState.sonarrEnabled()) {
+        <a class="drawer-provider" [href]="sonarrHomeUrl()" target="_blank" rel="noopener noreferrer"
+          (click)="closeMenu()">
+          <span class="ph-item">
+            <img src="assets/images/sonarr.svg" alt="Sonarr" width="28" height="28" />
+            <span [class]="drawerDotClass(drawerSonarrHealth())"></span>
+          </span>
+          <span>Sonarr</span>
+        </a>
       }
-      @if (plexHomeUrl()) {
-        @if (providerState.plexEnabled()) {
-          <a class="drawer-provider" href="javascript:void(0)" (click)="openPlexHomeLink($event); closeMenu()">
-            <span class="ph-item">
-              <img src="assets/images/plex.svg" alt="Plex" width="28" height="28" />
-              <span [class]="drawerDotClass(drawerPlexHealth())"></span>
-            </span>
-            <span>Plex</span>
-          </a>
-        } @else {
-          <button type="button" class="drawer-provider drawer-provider--disabled"
-            (click)="openDisabledProviderModal('plex', $event)">
-            <span class="ph-item">
-              <img src="assets/images/plex.svg" alt="Plex" width="28" height="28" />
-              <span [class]="drawerDotClass(drawerPlexHealth())"></span>
-            </span>
-            <span>Plex</span>
-          </button>
-        }
+      @if (plexHomeUrl() && providerState.plexEnabled()) {
+        <a class="drawer-provider" href="javascript:void(0)" (click)="openPlexHomeLink($event); closeMenu()">
+          <span class="ph-item">
+            <img src="assets/images/plex.svg" alt="Plex" width="28" height="28" />
+            <span [class]="drawerDotClass(drawerPlexHealth())"></span>
+          </span>
+          <span>Plex</span>
+        </a>
       }
     </div>
 
@@ -599,19 +577,21 @@
   <app-franchise-constellation />
 }
 
-<!-- ── Bot-san Chat Drawer ───────────────────────────────────────────────── -->
-<app-bot-san
-  (animeSelected)="onBotSanAnimeSelected($event)"
-  [detailPanelOpen]="!!botSanSelectedMalId()"
-/>
-
-<!-- ── Bot-san → Anime Detail Panel (side-by-side on desktop, no backdrop) ── -->
-@if (botSanSelectedMalId()) {
-  <app-anime-detail-panel
-    [malId]="botSanSelectedMalId()"
-    [noBackdrop]="true"
-    (closed)="closeBotSanDetailPanel()"
+<!-- ── Bot-kun Chat Drawer ───────────────────────────────────────────────── -->
+@if (providerState.botkunEnabled()) {
+  <app-bot-kun
+    (animeSelected)="onBotKunAnimeSelected($event)"
+    [detailPanelOpen]="!!botKunSelectedMalId()"
   />
+
+  <!-- ── Bot-kun → Anime Detail Panel (side-by-side on desktop, no backdrop) ── -->
+  @if (botKunSelectedMalId()) {
+    <app-anime-detail-panel
+      [malId]="botKunSelectedMalId()"
+      [noBackdrop]="true"
+      (closed)="closeBotKunDetailPanel()"
+    />
+  }
 }
 
 <!-- ── Synopsis Modal ───────────────────────────────────────────────────── -->

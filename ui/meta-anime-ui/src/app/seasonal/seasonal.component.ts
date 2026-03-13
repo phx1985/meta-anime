@@ -40,7 +40,7 @@ import {
   NSFW_GENRES,
   NSFW_THEMES,
 } from '../constants/genre-lists';
-import { MEDIA_TYPE_OPTIONS } from '../anime-list/anime-list.component';
+import { MEDIA_TYPE_OPTIONS, RATING_OPTIONS } from '../anime-list/anime-list.component';
 import { AddSeriesWizardComponent } from '../add-series-wizard/add-series-wizard.component';
 
 const MIN_YEAR = 1963;
@@ -274,6 +274,7 @@ export class SeasonalComponent {
   demographicOperator = signal<'or' | 'and'>('or');
   filterMalStatus = signal<string[]>([]);
   filterMediaType = signal<string[]>([]);
+  filterAgeRating = signal<string[]>([]);
   sortBy = signal('title');
   sortOrder = signal<'asc' | 'desc'>('asc');
 
@@ -296,6 +297,7 @@ export class SeasonalComponent {
   readonly malStates = SEASONAL_MAL_STATES;
   readonly sortOptions = SEASONAL_SORT_OPTIONS;
   readonly mediaTypeOptions = MEDIA_TYPE_OPTIONS;
+  readonly ratingOptions = RATING_OPTIONS;
 
   /** Genre list filtered by NSFW setting */
   readonly filteredGenreList = computed(() => (this.showNsfw() ? GENRE_LIST : SFW_GENRE_LIST));
@@ -381,6 +383,7 @@ export class SeasonalComponent {
     if (this.filterDemographic().length) n++;
     if (this.filterMalStatus().length) n++;
     if (this.filterMediaType().length) n++;
+    if (this.filterAgeRating().length) n++;
     if (this.sortBy() !== 'title' || this.sortOrder() !== 'asc') n++;
     return n;
   }
@@ -419,6 +422,14 @@ export class SeasonalComponent {
     if (mediaTypes.length) {
       parts.push(
         mediaTypes.map((t) => this.translateService.instant(`animeCard.mediaType.${t}`)).join(', '),
+      );
+    }
+    const ageRatings = this.filterAgeRating();
+    if (ageRatings.length) {
+      parts.push(
+        ageRatings
+          .map((v) => this.translateService.instant(`animeList.filter.ratings.${v}`))
+          .join(', '),
       );
     }
     const isDefaultSort = this.sortBy() === 'title' && this.sortOrder() === 'asc';
@@ -505,6 +516,14 @@ export class SeasonalComponent {
     if (mediaTypes.length > 0) {
       result = result.filter((a) =>
         mediaTypes.some((t) => (a.mediaType ?? '').toLowerCase() === t.toLowerCase()),
+      );
+    }
+
+    // Age rating filter — exclusive: only items with a matching rating pass.
+    const ageRatings = this.filterAgeRating();
+    if (ageRatings.length > 0) {
+      result = result.filter(
+        (a) => !!a.ageRating && ageRatings.some((r) => r.toLowerCase() === a.ageRating!.toLowerCase()),
       );
     }
 
@@ -757,6 +776,13 @@ export class SeasonalComponent {
     );
   }
 
+  toggleAgeRating(rating: string): void {
+    this.invalidatePreset();
+    this.filterAgeRating.update((current) =>
+      current.includes(rating) ? current.filter((r) => r !== rating) : [...current, rating],
+    );
+  }
+
   // ── Sort ──────────────────────────────────────────────────────────────────
 
   setGenreOperator(op: 'or' | 'and', event: MouseEvent): void {
@@ -807,6 +833,7 @@ export class SeasonalComponent {
     this.demographicOperator.set('or');
     this.filterMalStatus.set([]);
     this.filterMediaType.set([]);
+    this.filterAgeRating.set([]);
     this.sortBy.set('title');
     this.sortOrder.set('asc');
     this.genreDropdownOpen = false;
@@ -834,6 +861,7 @@ export class SeasonalComponent {
     this.demographicOperator.set(f.demographicOperator ?? 'or');
     this.filterMalStatus.set(f.malStatus ?? []);
     this.filterMediaType.set(f.mediaType ?? []);
+    this.filterAgeRating.set(f.ageRating ?? []);
     this.sortBy.set(f.sortBy ?? 'title');
     this.sortOrder.set(f.sortOrder ?? 'asc');
     this.genreDropdownOpen = false;
@@ -893,6 +921,7 @@ export class SeasonalComponent {
         this.filterDemographic().length > 1 ? this.demographicOperator() : undefined,
       malStatus: this.filterMalStatus().length ? this.filterMalStatus() : undefined,
       mediaType: this.filterMediaType().length ? this.filterMediaType() : undefined,
+      ageRating: this.filterAgeRating().length ? this.filterAgeRating() : undefined,
       sortBy: this.sortBy() !== 'title' ? this.sortBy() : undefined,
       sortOrder: this.sortOrder() !== 'asc' ? this.sortOrder() : undefined,
     };
@@ -907,6 +936,7 @@ export class SeasonalComponent {
     this.demographicOperator.set(state.demographicOperator ?? 'or');
     this.filterMalStatus.set(state.malStatus ?? []);
     this.filterMediaType.set(state.mediaType ?? []);
+    this.filterAgeRating.set(state.ageRating ?? []);
     this.sortBy.set(state.sortBy ?? 'title');
     this.sortOrder.set(state.sortOrder ?? 'asc');
   }

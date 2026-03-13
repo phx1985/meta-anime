@@ -1,7 +1,7 @@
-<!-- ── Bot-san FAB ──────────────────────────────────────────────────────── -->
+<!-- ── Bot-kun FAB ──────────────────────────────────────────────────────── -->
 <!-- Always keep the FAB in the DOM so the entrance animation plays exactly once. -->
-<button class="bot-san__fab" [class.bot-san__fab--inactive]="isOpen() || isClosing()"
-  type="button" (click)="open()" aria-label="Open Bot-san AI concierge"
+<button class="bot-kun__fab" [class.bot-kun__fab--inactive]="isOpen() || isClosing()"
+  type="button" (click)="open()" aria-label="Open Bot-kun AI concierge"
   [attr.aria-hidden]="isOpen() || isClosing()">
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -16,27 +16,27 @@
     <path d="M8 19l-2 3" />
     <path d="M16 19l2 3" />
   </svg>
-  <span class="bot-san__fab-label">Bot-san</span>
+  <span class="bot-kun__fab-label">Bot-kun</span>
   @if (hasUnread()) {
-    <span class="bot-san__fab-badge" aria-label="New message from Bot-san"></span>
+    <span class="bot-kun__fab-badge" aria-label="New message from Bot-kun"></span>
   }
 </button>
 
 <!-- ── Chat Drawer ─────────────────────────────────────────────────────── -->
 @if (isOpen() || isClosing()) {
-<div class="bot-san__backdrop"
-  [class.bot-san__backdrop--closing]="isClosing()"
-  [class.bot-san__backdrop--detail-open]="detailPanelOpen()"
+<div class="bot-kun__backdrop"
+  [class.bot-kun__backdrop--closing]="isClosing()"
+  [class.bot-kun__backdrop--detail-open]="detailPanelOpen()"
   (click)="close()" aria-hidden="true"></div>
-<aside class="bot-san__drawer"
-  [class.bot-san__drawer--closing]="isClosing()"
-  [class.bot-san__drawer--detail-open]="detailPanelOpen()"
-  role="dialog" aria-modal="true" aria-label="Bot-san AI Anime Concierge">
+<aside class="bot-kun__drawer"
+  [class.bot-kun__drawer--closing]="isClosing()"
+  [class.bot-kun__drawer--detail-open]="detailPanelOpen()"
+  role="dialog" aria-modal="true" aria-label="Bot-kun AI Anime Concierge">
 
   <!-- Header -->
-  <div class="bot-san__header">
-    <div class="bot-san__header-info">
-      <div class="bot-san__avatar" aria-hidden="true">
+  <div class="bot-kun__header">
+    <div class="bot-kun__header-info">
+      <div class="bot-kun__avatar" aria-hidden="true">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
           stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="18" height="12" rx="2" ry="2" />
@@ -49,13 +49,13 @@
         </svg>
       </div>
       <div>
-        <span class="bot-san__title">Bot-san</span>
-        <span class="bot-san__subtitle">AI Anime Concierge</span>
+        <span class="bot-kun__title">Bot-kun</span>
+        <span class="bot-kun__subtitle">AI Anime Concierge</span>
       </div>
     </div>
-    <div class="bot-san__header-actions">
+    <div class="bot-kun__header-actions">
       @if (hasMessages()) {
-      <button class="bot-san__icon-btn" type="button" (click)="clearHistory()" title="Clear conversation"
+      <button class="bot-kun__icon-btn" type="button" (click)="clearHistory()" title="Clear conversation"
         aria-label="Clear conversation">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -66,7 +66,7 @@
         </svg>
       </button>
       }
-      <button class="bot-san__icon-btn" type="button" (click)="close()" aria-label="Close Bot-san">
+      <button class="bot-kun__icon-btn" type="button" (click)="close()" aria-label="Close Bot-kun">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <line x1="18" y1="6" x2="6" y2="18" />
@@ -77,14 +77,14 @@
   </div>
 
   <!-- Messages -->
-  <div class="bot-san__messages">
+  <div class="bot-kun__messages">
     @for (msg of messages(); track $index) {
-    <div class="bot-san__msg" [class.bot-san__msg--user]="msg.role === 'user'"
-      [class.bot-san__msg--bot]="msg.role === 'assistant'">
+    <div class="bot-kun__msg" [class.bot-kun__msg--user]="msg.role === 'user'"
+      [class.bot-kun__msg--bot]="msg.role === 'assistant'">
       @if (msg.role === 'assistant') {
-      <div class="bot-san__msg-avatar" aria-hidden="true">
+      <div class="bot-kun__msg-avatar" aria-hidden="true">
         @if (msg.typing) {
-          <div class="bot-san__avatar-dots">
+          <div class="bot-kun__avatar-dots">
             <span></span><span></span><span></span>
           </div>
         } @else {
@@ -97,20 +97,20 @@
         }
       </div>
       }
-      <div class="bot-san__bubble">
+      <div class="bot-kun__bubble">
         @if (msg.role === 'assistant' && msg.typing && msg.typedContent === '') {
         <!-- Typing animation -->
-        <div class="bot-san__typing" aria-label="Bot-san is typing">
+        <div class="bot-kun__typing" aria-label="Bot-kun is typing">
           <span></span><span></span><span></span>
         </div>
         } @else if (msg.role === 'assistant') {
         <!-- Segment-based rendering: text runs as markdown HTML, anime tags as real cards -->
-        <div class="bot-san__md">
+        <div class="bot-kun__md">
           @for (seg of parseSegments(msg.typedContent, false); track segmentTrackKey($index, seg)) {
             @if (seg.type === 'text') {
               <span [innerHTML]="seg.html"></span>
             } @else {
-              <app-bot-san-anime-card
+              <app-bot-kun-anime-card
                 [malId]="seg.malId"
                 [title]="seg.title"
                 (cardClicked)="animeSelected.emit($event)"
@@ -119,7 +119,7 @@
           }
         </div>
         } @else {
-        <span class="bot-san__user-text">{{ msg.content }}</span>
+        <span class="bot-kun__user-text">{{ msg.content }}</span>
         }
       </div>
     </div>
@@ -128,23 +128,23 @@
   </div>
 
   <!-- Input area -->
-  <div class="bot-san__footer">
+  <div class="bot-kun__footer">
     <textarea
-      class="bot-san__input"
+      class="bot-kun__input"
       [value]="inputText()"
       (input)="handleInput($event)"
       (keydown)="onKeyDown($event)"
       placeholder="Ask me about anime…"
       rows="1"
       [disabled]="isStreaming() || hasTypingMessage()"
-      aria-label="Message Bot-san"
+      aria-label="Message Bot-kun"
     ></textarea>
-    <button class="bot-san__send" type="button" (click)="send()"
+    <button class="bot-kun__send" type="button" (click)="send()"
       [disabled]="isStreaming() || hasTypingMessage() || !inputText().trim()"
       aria-label="Send message">
       @if (isStreaming() || hasTypingMessage()) {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="bot-san__spin">
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="bot-kun__spin">
         <circle cx="12" cy="12" r="10" stroke-dasharray="40 20" />
       </svg>
       } @else {

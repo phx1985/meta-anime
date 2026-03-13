@@ -1,5 +1,5 @@
 @if (animeId() !== null || malId() !== null) {
-  <!-- Backdrop — hidden in side-by-side Bot-san mode to keep chat visible -->
+  <!-- Backdrop — hidden in side-by-side Bot-kun mode to keep chat visible -->
   @if (!noBackdrop()) {
   <div
     class="panel-backdrop"
@@ -121,6 +121,9 @@
               }
               @if (mal?.status) {
                 <span class="panel__pill panel__pill--status">{{ ('animeDetailPanel.seriesStatus.' + (mal!.status | lowercase)) | translate }}</span>
+              }
+              @if (mal?.ageRating) {
+                <span class="panel__pill panel__pill--age-rating">{{ ('animeDetailPanel.ageRating.' + mal!.ageRating) | translate }}</span>
               }
 
             </div>

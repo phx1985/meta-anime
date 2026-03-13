@@ -79,12 +79,13 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
         [FromQuery] string[]? theme = null,
         [FromQuery] string? themeOperator = "or",
         [FromQuery] string[]? demographic = null,
-        [FromQuery] string? demographicOperator = "or")
+        [FromQuery] string? demographicOperator = "or",
+        [FromQuery] string[]? ageRating = null)
     {
         if (page < 1) page = 1;
         if (pageSize < 1 || pageSize > 100) pageSize = 100;
 
-        var filters = new AnimeFilters(title, source, status, genre, genreOperator, sortBy, sortOrder, airingStatus, hasFile, codec, mediaType, theme, themeOperator, demographic, demographicOperator);
+        var filters = new AnimeFilters(title, source, status, genre, genreOperator, sortBy, sortOrder, airingStatus, hasFile, codec, mediaType, theme, themeOperator, demographic, demographicOperator, ageRating);
         var result = await mediator.Send(new GetAllAnimesQuery(page, pageSize, filters, enriched));
 
         if (result.IsFailure)

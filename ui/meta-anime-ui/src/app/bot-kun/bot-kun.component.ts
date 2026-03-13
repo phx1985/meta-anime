@@ -13,15 +13,15 @@ import {
 } from '@angular/core';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
-import { BotSanService, BotSanHistoryMessage } from '../services/bot-san.service';
-import { BotSanAnimeCardComponent } from './bot-san-anime-card/bot-san-anime-card.component';
+import { BotKunService, BotKunHistoryMessage } from '../services/bot-kun.service';
+import { BotKunAnimeCardComponent } from './bot-kun-anime-card/bot-kun-anime-card.component';
 import { Subscription } from 'rxjs';
 
 // Register marked extensions once: line breaks, no special link renderer needed
 // (anime titles are handled via pre-processing in renderMarkdown, not via marked links)
 marked.use({ breaks: true });
 
-export type BotSanMessage = {
+export type BotKunMessage = {
   role: 'user' | 'assistant';
   content: string;
   /** The portion of content that has been "typed out" and is currently visible */
@@ -38,15 +38,15 @@ export type MessageSegment =
   | { type: 'card'; malId: string; title: string };
 
 @Component({
-  selector: 'app-bot-san',
+  selector: 'app-bot-kun',
   standalone: true,
-  imports: [BotSanAnimeCardComponent],
+  imports: [BotKunAnimeCardComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  templateUrl: './bot-san.component.html',
-  styleUrl: './bot-san.component.scss',
+  templateUrl: './bot-kun.component.html',
+  styleUrl: './bot-kun.component.scss',
 })
-export class BotSanComponent implements OnDestroy {
-  private readonly botSanService = inject(BotSanService);
+export class BotKunComponent implements OnDestroy {
+  private readonly botKunService = inject(BotKunService);
 
   /** Emits the MAL ID of an anime the user clicked */
   readonly animeSelected = output<string>();
@@ -56,10 +56,10 @@ export class BotSanComponent implements OnDestroy {
 
   readonly isOpen = signal(false);
   readonly isClosing = signal(false);
-  readonly messages = signal<BotSanMessage[]>([]);
+  readonly messages = signal<BotKunMessage[]>([]);
   readonly inputText = signal('');
   readonly isStreaming = signal(false);
-  /** True when Bot-san has a new response and the drawer is currently closed */
+  /** True when Bot-kun has a new response and the drawer is currently closed */
   readonly hasUnread = signal(false);
 
   readonly hasMessages = computed(() => this.messages().length > 0);
@@ -84,8 +84,8 @@ export class BotSanComponent implements OnDestroy {
   ngOnDestroy(): void {
     this.streamSub?.unsubscribe();
     this.greetingSub?.unsubscribe();
-    this.botSanService.cancel();
-    this.botSanService.cancelGreeting();
+    this.botKunService.cancel();
+    this.botKunService.cancelGreeting();
   }
 
   open(): void {
@@ -130,12 +130,12 @@ export class BotSanComponent implements OnDestroy {
     this.inputText.set('');
     this.appendMessage({ role: 'user', content: text, typedContent: text });
 
-    const history: BotSanHistoryMessage[] = this.messages()
+    const history: BotKunHistoryMessage[] = this.messages()
       .filter(m => !m.streaming)
       .map(m => ({ role: m.role, content: m.content }));
 
     // Add the streaming placeholder
-    const botMsg: BotSanMessage = { role: 'assistant', content: '', typedContent: '', streaming: true, typing: true };
+    const botMsg: BotKunMessage = { role: 'assistant', content: '', typedContent: '', streaming: true, typing: true };
     this.appendMessage(botMsg);
     this.isStreaming.set(true);
 
@@ -144,7 +144,7 @@ export class BotSanComponent implements OnDestroy {
     this.startTypewriter(msgIndex, version);
 
     this.streamSub?.unsubscribe();
-    this.streamSub = this.botSanService.sendMessage(text, history.slice(0, -1)).subscribe({
+    this.streamSub = this.botKunService.sendMessage(text, history.slice(0, -1)).subscribe({
       next: chunk => {
         this.messages.update(msgs => {
           const updated = [...msgs];
@@ -177,7 +177,7 @@ export class BotSanComponent implements OnDestroy {
           if (last?.role === 'assistant' && last.streaming) {
             updated[updated.length - 1] = {
               ...last,
-              content: last.content || 'Something went wrong connecting to Bot-san. Please try again!',
+              content: last.content || 'Something went wrong connecting to Bot-kun. Please try again!',
               streaming: false,
             };
           }
@@ -234,14 +234,14 @@ export class BotSanComponent implements OnDestroy {
   clearHistory(): void {
     this.typewriterVersion++; // cancel any running typewriter
     this.messages.set([]);
-    this.botSanService.cancel();
-    this.botSanService.cancelGreeting();
+    this.botKunService.cancel();
+    this.botKunService.cancelGreeting();
     this.isStreaming.set(false);
     this.hasUnread.set(false);
   }
 
   private streamGreeting(): void {
-    const botMsg: BotSanMessage = { role: 'assistant', content: '', typedContent: '', streaming: true, typing: true };
+    const botMsg: BotKunMessage = { role: 'assistant', content: '', typedContent: '', streaming: true, typing: true };
     this.appendMessage(botMsg);
 
     const msgIndex = this.messages().length - 1;
@@ -249,7 +249,7 @@ export class BotSanComponent implements OnDestroy {
     this.startTypewriter(msgIndex, version);
 
     this.greetingSub?.unsubscribe();
-    this.greetingSub = this.botSanService.streamGreeting().subscribe({
+    this.greetingSub = this.botKunService.streamGreeting().subscribe({
       next: chunk => {
         this.messages.update(msgs => {
           const updated = [...msgs];
@@ -277,7 +277,7 @@ export class BotSanComponent implements OnDestroy {
           if (last?.role === 'assistant' && last.streaming) {
             updated[updated.length - 1] = {
               ...last,
-              content: last.content || "Yosh! Bot-san is here! 🎌 Ask me anything about anime — Dattebayo!",
+              content: last.content || "Yosh! Bot-kun is here! 🎌 Ask me anything about anime — Dattebayo!",
               streaming: false,
             };
           }
@@ -287,7 +287,7 @@ export class BotSanComponent implements OnDestroy {
     });
   }
 
-  private appendMessage(msg: BotSanMessage): void {
+  private appendMessage(msg: BotKunMessage): void {
     this.messages.update(msgs => [...msgs, msg]);
   }
 

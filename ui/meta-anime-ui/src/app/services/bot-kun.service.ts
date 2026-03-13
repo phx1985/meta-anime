@@ -3,21 +3,21 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 
-export type BotSanRole = 'user' | 'assistant';
+export type BotKunRole = 'user' | 'assistant';
 
-export interface BotSanHistoryMessage {
-  role: BotSanRole;
+export interface BotKunHistoryMessage {
+  role: BotKunRole;
   content: string;
 }
 
 @Injectable({ providedIn: 'root' })
-export class BotSanService {
+export class BotKunService {
   private readonly authService = inject(AuthService);
   private readonly http = inject(HttpClient);
   private abortController: AbortController | null = null;
   private greetingAbortController: AbortController | null = null;
 
-  sendMessage(userMessage: string, history: BotSanHistoryMessage[]): Observable<string> {
+  sendMessage(userMessage: string, history: BotKunHistoryMessage[]): Observable<string> {
     return new Observable<string>(subscriber => {
       this.abortController = new AbortController();
       const { signal } = this.abortController;
@@ -26,7 +26,7 @@ export class BotSanService {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      fetch('/api/v1/bot-san/chat', {
+      fetch('/api/v1/bot-kun/chat', {
         method: 'POST',
         headers,
         body: JSON.stringify({ userMessage, history }),
@@ -61,7 +61,7 @@ export class BotSanService {
       const headers: Record<string, string> = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      fetch('/api/v1/bot-san/greeting', {
+      fetch('/api/v1/bot-kun/greeting', {
         method: 'GET',
         headers,
         signal,
@@ -96,7 +96,7 @@ export class BotSanService {
   }
 
   fetchModels(baseUrl: string, apiKey: string): Observable<string[]> {
-    return this.http.post<string[]>('/api/v1/bot-san/models', { baseUrl, apiKey });
+    return this.http.post<string[]>('/api/v1/bot-kun/models', { baseUrl, apiKey });
   }
 
   private async consumeSseStream(

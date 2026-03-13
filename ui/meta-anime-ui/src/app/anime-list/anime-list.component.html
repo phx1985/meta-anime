@@ -541,6 +541,23 @@
               </div>
             </div>
 
+            <!-- Age Rating -->
+            <div class="filter-field filter-field--pills">
+              <span class="filter-label">{{ 'animeList.filter.ageRating' | translate }}</span>
+              <div class="filter-pills">
+                @for (r of ratingOptions; track r.value) {
+                  <button
+                    type="button"
+                    class="filter-pill"
+                    [class.filter-pill--active]="filterAgeRating().includes(r.value)"
+                    (click)="filterAgeRating.set(togglePill(filterAgeRating(), r.value)); invalidatePreset()"
+                  >
+                    {{ r.labelKey | translate }}
+                  </button>
+                }
+              </div>
+            </div>
+
             <!-- Codec (Sonarr-only filter, Table view only) -->
             @if (providerState.sonarrEnabled() && displayMode() === 4) {
               <div class="filter-field filter-field--pills">

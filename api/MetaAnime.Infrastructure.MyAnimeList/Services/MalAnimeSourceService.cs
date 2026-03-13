@@ -19,6 +19,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
                                                                     "main_picture, " +
                                                                     "my_list_status{score,num_episodes_watched,created_at,updated_at,status}, " +
                                                                     "nsfw, " +
+                                                                    "rating, " +
                                                                     "popularity, " +
                                                                     "rank, " +
                                                                     "start_date, " +
@@ -40,7 +41,8 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
                                            "status, " +
                                            "media_type, " +
                                            "mean, " +
-                                           "num_episodes";
+                                           "num_episodes, " +
+                                           "rating";
     private const string FRANCHISE_FIELDS = "id,title,main_picture,synopsis,start_date,end_date,media_type,related_anime{node{id,title,main_picture,media_type},relation_type,relation_type_formatted}";
     #endregion
 

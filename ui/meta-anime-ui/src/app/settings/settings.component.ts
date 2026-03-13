@@ -23,7 +23,7 @@ import { PopupService } from '../services/popup.service';
 import { SonarrService, SonarrTag } from '../services/sonarr.service';
 import { AuthService } from '../services/auth.service';
 import { EnrollmentService, PlexLibrary } from '../services/enrollment.service';
-import { BotSanService } from '../services/bot-san.service';
+import { BotKunService } from '../services/bot-kun.service';
 import { SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
 import { SyncStep } from '../models/sync-progress.models';
@@ -72,7 +72,7 @@ export class SettingsComponent {
   private providerState = inject(ProviderStateService);
   readonly popupService = inject(PopupService);
   private enrollmentService = inject(EnrollmentService);
-  private botSanService = inject(BotSanService);
+  private botKunService = inject(BotKunService);
 
   loading = signal(true);
   error = signal(false);
@@ -160,7 +160,7 @@ export class SettingsComponent {
     kometa: 'assets/images/kometa.png',
     app: 'assets/images/app.svg',
     matching: 'assets/images/app.svg',
-    botsan: 'assets/images/app.svg',
+    botkun: 'assets/images/app.svg',
   };
 
   grouped = computed<SettingsByCategory>(() =>
@@ -229,10 +229,10 @@ export class SettingsComponent {
   /** True when the provider-enable warning dialog exit animation is playing. */
   providerEnableWarnLeaving = signal(false);
 
-  // ── Bot-san model fetching ─────────────────────────────────────────────────
-  botsanModels = signal<string[]>([]);
-  botsanModelsFetching = signal(false);
-  botsanModelsFetchError = signal('');
+  // ── Bot-kun model fetching ─────────────────────────────────────────────────
+  botkunModels = signal<string[]>([]);
+  botkunModelsFetching = signal(false);
+  botkunModelsFetchError = signal('');
 
   sonarrDefaultSettings = computed(() => {
     const order = [
@@ -267,6 +267,10 @@ export class SettingsComponent {
 
   sonarrEnabled = computed(
     () => this.settings().find((s) => s.key === 'Sonarr:Enabled')?.value === 'true',
+  );
+
+  botkunEnabled = computed(
+    () => this.settings().find((s) => s.key === 'BotKun:Enabled')?.value === 'true',
   );
 
   plexBasicConfigured = computed(() => {
@@ -326,7 +330,7 @@ export class SettingsComponent {
   /** Max number of polls before giving up (3 s × 40 = 2 minutes). */
   private static readonly PLEX_POLL_MAX = 40;
 
-  private static readonly CATEGORY_ORDER = ['kometa', 'mal', 'plex', 'sonarr', 'app', 'botsan'];
+  private static readonly CATEGORY_ORDER = ['kometa', 'mal', 'plex', 'sonarr', 'app', 'botkun'];
   /** Categories that always appear even when they have no regular settings (they have integration cards). */
   private static readonly INTEGRATION_CARD_CATS = new Set(['mal', 'plex']);
   /** Keys that must be treated as sensitive on the frontend regardless of the backend flag. */
@@ -769,6 +773,14 @@ export class SettingsComponent {
             this.loadSonarrDefaults();
             await this.loadSonarrTagsForSettings();
           }
+
+          // Handle Bot-kun settings updates — keep config signals in sync
+          if (setting.key === 'BotKun:BaseUrl' || setting.key === 'BotKun:Model') {
+            const updated = this.settings();
+            const url   = updated.find((s) => s.key === 'BotKun:BaseUrl')?.value ?? '';
+            const model = updated.find((s) => s.key === 'BotKun:Model')?.value ?? '';
+            this.providerState.setBotKunConfig(url, model);
+          }
         },
         error: () => {
           this.savingKey.set(null);
@@ -950,6 +962,7 @@ export class SettingsComponent {
   isProviderEnabled(cat: string): boolean {
     if (cat === 'plex') return this.plexEnabled();
     if (cat === 'sonarr') return this.sonarrEnabled();
+    if (cat === 'botkun') return this.botkunEnabled();
     return true;
   }
 
@@ -961,17 +974,19 @@ export class SettingsComponent {
   }
 
   toggleProviderEnabled(cat: string): void {
-    const key = cat === 'plex' ? 'Plex:Enabled' : 'Sonarr:Enabled';
+    const key = cat === 'plex' ? 'Plex:Enabled' : cat === 'sonarr' ? 'Sonarr:Enabled' : 'BotKun:Enabled';
     const current = this.settings().find((s) => s.key === key)?.value;
-    const enabling = current === 'false'; // toggling from disabled → enabled
-    // Guard: prevent enabling if basic settings not yet configured
+    const enabling = current !== 'true';
+    // Guard: prevent enabling if basic settings not yet configured (Plex/Sonarr only)
     if (enabling) {
       if (cat === 'plex' && !this.plexBasicConfigured()) return;
       if (cat === 'sonarr' && !this.sonarrBasicConfigured()) return;
       // Warn if no library sections / tags selected yet
       const hasSelections = cat === 'plex'
         ? this.plexSelectedSectionKeys().length > 0
-        : this.sonarrSelectedTagLabels().length > 0;
+        : cat === 'sonarr'
+          ? this.sonarrSelectedTagLabels().length > 0
+          : true;
       if (!hasSelections) {
         this.providerEnableWarnFor.set(cat);
         return;
@@ -997,7 +1012,7 @@ export class SettingsComponent {
   }
 
   private _doProviderToggle(cat: string, enabling: boolean): void {
-    const key = cat === 'plex' ? 'Plex:Enabled' : 'Sonarr:Enabled';
+    const key = cat === 'plex' ? 'Plex:Enabled' : cat === 'sonarr' ? 'Sonarr:Enabled' : 'BotKun:Enabled';
     const next = enabling ? 'true' : 'false';
     this.savingKey.set(key);
     this.settingsService
@@ -1006,17 +1021,23 @@ export class SettingsComponent {
       .subscribe({
         next: () => {
           this.savingKey.set(null);
-          this.settings.update((list) =>
-            list.map((s) => (s.key === key ? { ...s, value: next } : s)),
-          );
+          this.settings.update((list) => {
+            if (list.some((s) => s.key === key)) {
+              return list.map((s) => (s.key === key ? { ...s, value: next } : s));
+            }
+            // Key not yet in list (edge case: first toggle before seed runs) — add it.
+            return [...list, { key, value: next, category: cat, isSensitive: false, isRequired: false, fieldType: 'boolean' }];
+          });
           // Update the shared provider state service immediately
           if (cat === 'plex') {
             this.providerState.setPlexEnabled(enabling);
-          } else {
+          } else if (cat === 'sonarr') {
             this.providerState.setSonarrEnabled(enabling);
+          } else {
+            this.providerState.setBotKunEnabled(enabling);
           }
-          // Show sync recommendation prompt when enabling a provider
-          if (enabling) {
+          // Show sync recommendation prompt when enabling a provider (Plex/Sonarr only)
+          if (enabling && cat !== 'botkun') {
             this.popupService.openSyncPrompt(cat);
           }
         },
@@ -1182,29 +1203,29 @@ export class SettingsComponent {
       });
   }
 
-  // ── Bot-san model fetching ─────────────────────────────────────────────────
+  // ── Bot-kun model fetching ─────────────────────────────────────────────────
 
-  fetchBotsanModels(): void {
+  fetchBotkunModels(): void {
     const list = this.settings();
-    const baseUrl = list.find((s) => s.key === 'BotSan:BaseUrl')?.value ?? '';
-    const apiKey  = list.find((s) => s.key === 'BotSan:ApiKey')?.value ?? '';
+    const baseUrl = list.find((s) => s.key === 'BotKun:BaseUrl')?.value ?? '';
+    const apiKey  = list.find((s) => s.key === 'BotKun:ApiKey')?.value ?? '';
 
     if (!baseUrl.trim()) {
-      this.botsanModelsFetchError.set(this.translate.instant('settings.botsan.fetchModelsNoUrl'));
+      this.botkunModelsFetchError.set(this.translate.instant('settings.botkun.fetchModelsNoUrl'));
       return;
     }
 
-    this.botsanModelsFetching.set(true);
-    this.botsanModelsFetchError.set('');
+    this.botkunModelsFetching.set(true);
+    this.botkunModelsFetchError.set('');
 
-    this.botSanService.fetchModels(baseUrl, apiKey)
+    this.botKunService.fetchModels(baseUrl, apiKey)
       .pipe(
         takeUntilDestroyed(this.destroyRef),
-        finalize(() => this.botsanModelsFetching.set(false)),
+        finalize(() => this.botkunModelsFetching.set(false)),
       )
       .subscribe({
-        next: (models) => this.botsanModels.set(models),
-        error: () => this.botsanModelsFetchError.set(this.translate.instant('settings.botsan.fetchModelsError')),
+        next: (models) => this.botkunModels.set(models),
+        error: () => this.botkunModelsFetchError.set(this.translate.instant('settings.botkun.fetchModelsError')),
       });
   }
 

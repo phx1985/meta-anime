@@ -3,7 +3,7 @@
   width: 100%;
 }
 
-.bot-san-card {
+.bot-kun-card {
   display: flex;
   flex-direction: row;
   align-items: stretch;
@@ -34,21 +34,21 @@
 
 // ── Poster (left, fixed width) ─────────────────────────────────────────────────
 
-.bot-san-card__poster {
+.bot-kun-card__poster {
   position: relative;
   width: 72px;
   flex-shrink: 0;
   background: rgba(255, 255, 255, 0.04);
 }
 
-.bot-san-card__img {
+.bot-kun-card__img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.bot-san-card__skeleton {
+.bot-kun-card__skeleton {
   width: 100%;
   height: 100%;
   background: linear-gradient(
@@ -58,15 +58,15 @@
     rgba(157, 148, 255, 0.08) 75%
   );
   background-size: 200% 100%;
-  animation: botSanCardShimmer 1.4s ease infinite;
+  animation: botKunCardShimmer 1.4s ease infinite;
 }
 
-@keyframes botSanCardShimmer {
+@keyframes botKunCardShimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
-.bot-san-card__fallback {
+.bot-kun-card__fallback {
   width: 100%;
   height: 100%;
   display: flex;
@@ -76,7 +76,7 @@
   color: rgba(157, 148, 255, 0.5);
 }
 
-.bot-san-card__overlay {
+.bot-kun-card__overlay {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
@@ -87,14 +87,14 @@
   opacity: 0;
   transition: opacity 0.18s ease;
 
-  .bot-san-card:hover & {
+  .bot-kun-card:hover & {
     opacity: 1;
   }
 }
 
 // ── Info column (right, flex-grow) ─────────────────────────────────────────────
 
-.bot-san-card__info {
+.bot-kun-card__info {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -106,7 +106,7 @@
 
 // ── Title ─────────────────────────────────────────────────────────────────────
 
-.bot-san-card__title {
+.bot-kun-card__title {
   margin: 0;
   font-size: 0.8rem;
   font-weight: 700;
@@ -121,7 +121,7 @@
 
 // ── Meta row (type · year · status) ───────────────────────────────────────────
 
-.bot-san-card__meta {
+.bot-kun-card__meta {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -131,30 +131,30 @@
   line-height: 1;
 }
 
-.bot-san-card__dot {
+.bot-kun-card__dot {
   opacity: 0.45;
   font-size: 0.6rem;
 }
 
-.bot-san-card__type {
+.bot-kun-card__type {
   font-weight: 600;
   color: var(--accent-primary, #9d94ff);
 }
 
-.bot-san-card__year,
-.bot-san-card__status {
+.bot-kun-card__year,
+.bot-kun-card__status {
   opacity: 0.75;
 }
 
 // ── Genre chips ───────────────────────────────────────────────────────────────
 
-.bot-san-card__genres {
+.bot-kun-card__genres {
   display: flex;
   flex-wrap: wrap;
   gap: 3px;
 }
 
-.bot-san-card__chip {
+.bot-kun-card__chip {
   display: inline-block;
   font-size: 0.6rem;
   font-weight: 600;
@@ -169,17 +169,23 @@
     background: rgba(255, 255, 255, 0.07);
     color: var(--text-secondary, #a8a8c0);
   }
+  &--age-rating {
+    background: rgba(245, 158, 11, 0.14);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.28);
+    letter-spacing: 0.04em;
+  }
 }
 
 // ── Star rating ───────────────────────────────────────────────────────────────
 
-.bot-san-card__stars {
+.bot-kun-card__stars {
   display: flex;
   align-items: center;
   gap: 1px;
 }
 
-.bot-san-card__star {
+.bot-kun-card__star {
   flex-shrink: 0;
 
   &--full,
@@ -192,7 +198,7 @@
   }
 }
 
-.bot-san-card__score-val {
+.bot-kun-card__score-val {
   margin-left: 4px;
   font-size: 0.68rem;
   font-weight: 600;

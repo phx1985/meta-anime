@@ -89,7 +89,7 @@
                 [class.sidenav-btn--provider-disabled]="!isProviderEnabled(cat)"
                 (click)="scrollToSection(cat)"
               >
-                @if (cat !== 'sync' && cat !== 'security') {
+                @if (cat !== 'sync' && cat !== 'security' && cat !== 'botkun') {
                   <img
                     [src]="providerImages[cat]"
                     [alt]="cat"
@@ -98,6 +98,25 @@
                     class="sidenav-icon"
                     aria-hidden="true"
                   />
+                } @else if (cat === 'botkun') {
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="sidenav-icon"
+                    aria-hidden="true"
+                  >
+                    <rect x="3" y="8" width="18" height="13" rx="2"/>
+                    <path d="M9 8V6a3 3 0 0 1 6 0v2"/>
+                    <circle cx="9" cy="14" r="1" fill="currentColor" stroke="none"/>
+                    <circle cx="15" cy="14" r="1" fill="currentColor" stroke="none"/>
+                    <path d="M9 18h6"/>
+                  </svg>
                 } @else if (cat === 'sync') {
                   <svg
                     width="16"
@@ -201,14 +220,14 @@
                   </div>
                 }
 
-                <!-- Plex / Sonarr: master enabled toggle -->
-                @if (cat === 'plex' || cat === 'sonarr') {
+                <!-- Plex / Sonarr / Bot-kun: master enabled toggle -->
+                @if (cat === 'plex' || cat === 'sonarr' || cat === 'botkun') {
                   <div class="provider-enable-toggle">
                     <button
                       type="button"
                       class="toggle-switch"
                       [class.toggle-switch--on]="isProviderEnabled(cat)"
-                      [disabled]="savingKey() === (cat === 'plex' ? 'Plex:Enabled' : 'Sonarr:Enabled') || (!isProviderEnabled(cat) && isProviderToggleBlocked(cat))"
+                      [disabled]="savingKey() === (cat === 'plex' ? 'Plex:Enabled' : cat === 'sonarr' ? 'Sonarr:Enabled' : 'BotKun:Enabled') || (!isProviderEnabled(cat) && isProviderToggleBlocked(cat))"
                       [title]="(!isProviderEnabled(cat) && isProviderToggleBlocked(cat)) ? ('settings.provider.configureFirstTooltip' | translate) : ''"
                       (click)="toggleProviderEnabled(cat)"
                       role="switch"
@@ -402,6 +421,7 @@
                 }
 
                   @for (setting of grouped()[cat]; track setting.key) {
+                  @if (setting.key !== 'Plex:Enabled' && setting.key !== 'Sonarr:Enabled' && setting.key !== 'BotKun:Enabled') {
                   <div
                     class="setting-row"
                     [class.setting-row--editing]="editing()[setting.key]"
@@ -613,16 +633,16 @@
                           (ngSubmit)="save(setting)"
                           class="edit-form"
                         >
-                          @if (setting.key === 'BotSan:Model') {
+                          @if (setting.key === 'BotKun:Model') {
                             <div class="input-with-eye">
-                              @if (botsanModels().length > 0) {
+                              @if (botkunModels().length > 0) {
                                 <select
                                   formControlName="value"
                                   class="form-control form-control-sm setting-select"
-                                  [attr.aria-label]="'settings.fields.BotSan_Model.name' | translate"
+                                  [attr.aria-label]="'settings.fields.BotKun_Model.name' | translate"
                                 >
-                                  <option value="">{{ 'settings.botsan.selectModel' | translate }}</option>
-                                  @for (m of botsanModels(); track m) {
+                                  <option value="">{{ 'settings.botkun.selectModel' | translate }}</option>
+                                  @for (m of botkunModels(); track m) {
                                     <option [value]="m">{{ m }}</option>
                                   }
                                 </select>
@@ -631,26 +651,26 @@
                                   type="text"
                                   formControlName="value"
                                   class="form-control form-control-sm setting-input"
-                                  [placeholder]="'settings.fields.BotSan_Model.name' | translate"
-                                  [attr.aria-label]="'settings.fields.BotSan_Model.name' | translate"
+                                  [placeholder]="'settings.fields.BotKun_Model.name' | translate"
+                                  [attr.aria-label]="'settings.fields.BotKun_Model.name' | translate"
                                 />
                               }
                               <button
                                 type="button"
                                 class="btn btn-sm btn-outline-secondary ms-1"
-                                (click)="fetchBotsanModels()"
-                                [disabled]="botsanModelsFetching()"
-                                [attr.aria-label]="'settings.botsan.fetchModels' | translate"
+                                (click)="fetchBotkunModels()"
+                                [disabled]="botkunModelsFetching()"
+                                [attr.aria-label]="'settings.botkun.fetchModels' | translate"
                               >
-                                @if (botsanModelsFetching()) {
+                                @if (botkunModelsFetching()) {
                                   <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                 } @else {
-                                  {{ 'settings.botsan.fetchModels' | translate }}
+                                  {{ 'settings.botkun.fetchModels' | translate }}
                                 }
                               </button>
                             </div>
-                            @if (botsanModelsFetchError()) {
-                              <div class="text-danger small mt-1">{{ botsanModelsFetchError() }}</div>
+                            @if (botkunModelsFetchError()) {
+                              <div class="text-danger small mt-1">{{ botkunModelsFetchError() }}</div>
                             }
                           } @else {
                             <div class="input-with-eye">
@@ -750,6 +770,7 @@
                       }
                     </div>
                   </div>
+                  }
                 }
                 @if (cat === 'sonarr') {
                   <!-- ── Sonarr Anime Tags picker ───────────────────────────── -->

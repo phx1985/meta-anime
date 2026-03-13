@@ -10,20 +10,20 @@ using MetaAnime.Application.Queries;
 using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
-using MetaAnime.Core.Models.BotSan;
+using MetaAnime.Core.Models.BotKun;
 using MetaAnime.Infrastructure.MyAnimeList.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace MetaAnime.Application.Services.BotSan;
+namespace MetaAnime.Application.Services.BotKun;
 
-public sealed class BotSanChatService(
+public sealed class BotKunChatService(
     HttpClient httpClient,
     IPropertyBagRepository propertyBagRepository,
     IMalAnimeSourceService<MalAnime> malAnimeSourceService,
     IAnimeMediatorService animeMediatorService,
-    ILogger<BotSanChatService> logger,
-    IConfiguration configuration) : IBotSanChatService
+    ILogger<BotKunChatService> logger,
+    IConfiguration configuration) : IBotKunChatService
 {
     private static readonly JsonSerializerOptions SerializeOptions = new()
     {
@@ -62,27 +62,27 @@ public sealed class BotSanChatService(
     // ── Public streaming entry points ──────────────────────────────────────────
 
     public async IAsyncEnumerable<string> StreamChatAsync(
-        BotSanChatRequest request,
+        BotKunChatRequest request,
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var isNsfw  = await IsNsfwAllowedAsync();
         var baseUrl = await ResolveEndpointAsync();
-        var model   = await GetSettingAsync(SettingsKeys.BotSanModel) ?? string.Empty;
-        var apiKey  = await GetSettingAsync(SettingsKeys.BotSanApiKey) ?? string.Empty;
+        var model   = await GetSettingAsync(SettingsKeys.BotKunModel) ?? string.Empty;
+        var apiKey  = await GetSettingAsync(SettingsKeys.BotKunApiKey) ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(model))
         {
-            yield return "Ara ara~ 🎌 Bot-san has no AI provider configured! Head to **Settings → Bot-san AI** and enter your API Base URL and Model name first.";
+            yield return "Ara ara~ 🎌 Bot-kun has no AI provider configured! Head to **Settings → Bot-kun AI** and enter your API Base URL and Model name first.";
             yield break;
         }
 
         // ── Pass 1: Intent extraction (non-streaming) ──────────────────────
-        BotSanSearchIntent? intent = null;
+        BotKunSearchIntent? intent = null;
         try
         {
             intent = await ExtractSearchIntentAsync(request.UserMessage, request.History, baseUrl, model, apiKey, cancellationToken);
             logger.LogInformation(
-                "Bot-san intent: type={Type} genres=[{Genres}] airingStatus={AiringStatus} watchStatus={WatchStatus} page={Page}",
+                "Bot-kun intent: type={Type} genres=[{Genres}] airingStatus={AiringStatus} watchStatus={WatchStatus} page={Page}",
                 intent?.Type,
                 string.Join(",", intent?.Genres ?? []),
                 intent?.AiringStatus,
@@ -91,7 +91,7 @@ public sealed class BotSanChatService(
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            logger.LogWarning("Bot-san intent extraction failed ({Error}); falling back to RAG.", ex.Message);
+            logger.LogWarning("Bot-kun intent extraction failed ({Error}); falling back to RAG.", ex.Message);
         }
 
         // ── Pass 2: Query database or fall back to MAL RAG ────────────────
@@ -101,21 +101,21 @@ public sealed class BotSanChatService(
 
         if (isDbQuery)
         {
-            var filters = BuildFiltersFromIntent(intent!);
+            var filters = BuildFiltersFromIntent(intent!, isNsfw);
             var (results, nextPage) = await QueryAnimeAsync(filters, intent!.Page, cancellationToken);
             hasNextPage = nextPage;
 
             var filteredResults = ApplyYearFilter(results, intent!.MinYear, intent!.MaxYear);
 
-            logger.LogInformation("Bot-san DB query returned {Count} result(s) (after year filter).", filteredResults.Count);
+            logger.LogInformation("Bot-kun DB query returned {Count} result(s) (after year filter).", filteredResults.Count);
 
             if (filteredResults.Count == 0)
             {
                 // Stream an AI-generated "nothing found" response instead of a hardcoded string
-                // so the Bot-san persona stays consistent and natural.
+                // so the Bot-kun persona stays consistent and natural.
                 var zeroResultsPayload = new OpenAiChatRequest(
                     model,
-                    [new("system", BotSanPromptBuilder.BuildZeroResults()), new("user", request.UserMessage)],
+                    [new("system", BotKunPromptBuilder.BuildZeroResults()), new("user", request.UserMessage)],
                     Stream: true,
                     MaxTokens: 100);
 
@@ -132,7 +132,7 @@ public sealed class BotSanChatService(
         }
 
         // ── Pass 3: Stream final response ─────────────────────────────────
-        var systemPrompt = BotSanPromptBuilder.Build(isNsfw, animeContext, isDbQuery, intent?.Page ?? 1, hasNextPage);
+        var systemPrompt = BotKunPromptBuilder.Build(isNsfw, animeContext, isDbQuery, intent?.Page ?? 1, hasNextPage);
         List<OpenAiMessage> messages = [new("system", systemPrompt)];
         foreach (var h in request.History)
             messages.Add(new(h.Role, h.Content));
@@ -148,19 +148,19 @@ public sealed class BotSanChatService(
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         var baseUrl = await ResolveEndpointAsync();
-        var model   = await GetSettingAsync(SettingsKeys.BotSanModel) ?? string.Empty;
-        var apiKey  = await GetSettingAsync(SettingsKeys.BotSanApiKey) ?? string.Empty;
+        var model   = await GetSettingAsync(SettingsKeys.BotKunModel) ?? string.Empty;
+        var apiKey  = await GetSettingAsync(SettingsKeys.BotKunApiKey) ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(model))
         {
-            yield return "Yosh! Bot-san is here! 🎌 Ask me anything about anime, manga, or your watch list. " +
+            yield return "Yosh! Bot-kun is here! 🎌 Ask me anything about anime, manga, or your watch list. " +
                 "I'm like a Pokédex, but for otakus — Dattebayo! (Configure your AI provider in Settings to enable AI responses.)";
             yield break;
         }
 
         List<OpenAiMessage> messages =
         [
-            new("system", BotSanPromptBuilder.GreetingSystemPrompt),
+            new("system", BotKunPromptBuilder.GreetingSystemPrompt),
             new("user", "greet"),
         ];
 
@@ -223,7 +223,7 @@ public sealed class BotSanChatService(
         {
             logger.LogWarning("AI provider unreachable at {Endpoint}: {Error}", endpoint, ex.Message);
             errorMessage = "Gomen nasai~ 🙏 I can't reach the AI provider right now. " +
-                "Please check your **Bot-san AI** settings and make sure the provider is running!";
+                "Please check your **Bot-kun AI** settings and make sure the provider is running!";
         }
         catch (TaskCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -237,7 +237,7 @@ public sealed class BotSanChatService(
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
             logger.LogError("AI provider returned HTTP {StatusCode}: {Body}", response.StatusCode, body);
             yield return $"Something went haywire — the AI provider returned HTTP {(int)response.StatusCode}. " +
-                "Check your model name and API key in **Settings → Bot-san AI**.";
+                "Check your model name and API key in **Settings → Bot-kun AI**.";
             yield break;
         }
 
@@ -266,10 +266,10 @@ public sealed class BotSanChatService(
 
     // ── Pass 1: Intent extraction (non-streaming) ──────────────────────────────
 
-    private async Task<BotSanSearchIntent?> ExtractSearchIntentAsync(
+    private async Task<BotKunSearchIntent?> ExtractSearchIntentAsync(
         string userMessage, IList<ChatMessage> history, string endpoint, string model, string apiKey, CancellationToken ct)
     {
-        List<OpenAiMessage> messages = [new("system", BotSanPromptBuilder.IntentExtractionSystemPrompt)];
+        List<OpenAiMessage> messages = [new("system", BotKunPromptBuilder.IntentExtractionSystemPrompt)];
 
         // Include recent history so AI can detect "more/next" pagination intent
         foreach (var h in history.TakeLast(4))
@@ -293,7 +293,7 @@ public sealed class BotSanChatService(
         var end   = content.LastIndexOf('}');
         if (start < 0 || end <= start) return null;
 
-        return JsonSerializer.Deserialize<BotSanSearchIntent>(content[start..(end + 1)], DeserializeOptions);
+        return JsonSerializer.Deserialize<BotKunSearchIntent>(content[start..(end + 1)], DeserializeOptions);
     }
 
     // ── HTTP request builder ───────────────────────────────────────────────────
@@ -313,18 +313,50 @@ public sealed class BotSanChatService(
 
     // ── Database filters from intent ───────────────────────────────────────────
 
+    private static readonly FrozenSet<string> NsfwGenres = FrozenSet.Create(
+        StringComparer.OrdinalIgnoreCase,
+        "Ecchi", "Hentai", "Erotica");
+
+    private static readonly FrozenSet<string> NsfwRatings = FrozenSet.Create(
+        StringComparer.OrdinalIgnoreCase,
+        "r+", "rx");
+
     private static readonly FrozenSet<string> ValidAiringStatuses = FrozenSet.Create(
         StringComparer.OrdinalIgnoreCase,
         "finished_airing", "currently_airing", "not_yet_aired");
 
-    private static AnimeFilters BuildFiltersFromIntent(BotSanSearchIntent intent) => new(
-        Title:        intent.Title,
-        Genre:        intent.Genres,
-        AiringStatus: NormalizeAiringStatus(intent.AiringStatus) is string ais ? [ais] : null,
-        Status:       NormalizeWatchStatus(intent.WatchStatus) is string ws ? [ws] : null,
-        MediaType:    intent.MediaType   is not null ? [intent.MediaType]   : null,
-        Demographic:  intent.Demographic is not null ? [intent.Demographic] : null,
-        Theme:        intent.Themes);
+    private static AnimeFilters BuildFiltersFromIntent(BotKunSearchIntent intent, bool isNsfw)
+    {
+        // SFW hard-filter: strip NSFW genres and ratings from intent before querying DB.
+        // AnimeMediatorService also enforces this at DB level — this is defence-in-depth
+        // so the AI context never even requests NSFW content when the setting is off.
+        string[]? genres;
+        string[]? ageRating;
+
+        if (isNsfw)
+        {
+            genres    = intent.Genres;
+            ageRating = intent.AgeRating;
+        }
+        else
+        {
+            var safeGenres = intent.Genres?.Where(g => !NsfwGenres.Contains(g)).ToArray();
+            genres = safeGenres is { Length: > 0 } ? safeGenres : null;
+
+            var safeRatings = intent.AgeRating?.Where(r => !NsfwRatings.Contains(r)).ToArray();
+            ageRating = safeRatings is { Length: > 0 } ? safeRatings : null;
+        }
+
+        return new(
+            Title:        intent.Title,
+            Genre:        genres,
+            AiringStatus: NormalizeAiringStatus(intent.AiringStatus) is string ais ? [ais] : null,
+            Status:       NormalizeWatchStatus(intent.WatchStatus) is string ws ? [ws] : null,
+            MediaType:    intent.MediaType   is not null ? [intent.MediaType]   : null,
+            Demographic:  intent.Demographic is not null ? [intent.Demographic] : null,
+            Theme:        intent.Themes,
+            AgeRating:    ageRating);
+    }
 
     private static string? NormalizeAiringStatus(string? raw) =>
         raw is not null && ValidAiringStatuses.Contains(raw) ? raw : null;
@@ -430,7 +462,7 @@ public sealed class BotSanChatService(
     /// </summary>
     private async Task<string> ResolveEndpointAsync()
     {
-        var raw = await GetSettingAsync(SettingsKeys.BotSanBaseUrl) ?? string.Empty;
+        var raw = await GetSettingAsync(SettingsKeys.BotKunBaseUrl) ?? string.Empty;
         if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
 
         var trimmed = raw.TrimEnd('/');
