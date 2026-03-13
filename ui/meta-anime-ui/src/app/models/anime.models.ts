@@ -58,6 +58,7 @@ export interface MalAnimeInfo {
   popularity?: number;
   rank?: number;
   pictures?: string[];
+  ageRating?: string;
 }
 
 export interface SonarrAnimeInfo {
@@ -167,6 +168,7 @@ export interface AnimeFilters {
   hasFile?: boolean;
   codec?: string[];
   mediaType?: string[];
+  ageRating?: string[];
 }
 
 /** Serialisable snapshot of the filter panel state for saved presets. */
@@ -183,6 +185,7 @@ export interface SavedFilterState {
   hasFile?: 'any' | 'yes' | 'no';
   codec?: string[];
   mediaType?: string[];
+  ageRating?: string[];
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   /** Name of the active preset when the state was saved; absent when no preset was active. */
@@ -229,6 +232,7 @@ export interface SeasonalAnimeItem {
   englishTitle?: string;
   malViewState?: string;
   aniDbId?: string;
+  ageRating?: string;
 }
 
 export type SeasonName = 'winter' | 'spring' | 'summer' | 'fall';
@@ -294,6 +298,7 @@ export interface SeasonalSavedFilterState {
   demographicOperator?: 'or' | 'and';
   malStatus?: string[];
   mediaType?: string[];
+  ageRating?: string[];
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }

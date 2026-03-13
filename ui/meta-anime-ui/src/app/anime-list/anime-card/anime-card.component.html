@@ -52,6 +52,9 @@
               {{ seriesStatusLabel(seriesStatus) }}
             </span>
           }
+          @if (ageRating) {
+            <span class="pill pill--age-rating">{{ ageRatingLabel(ageRating) }}</span>
+          }
         </div>
       </div>
 

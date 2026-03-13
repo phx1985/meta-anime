@@ -22,7 +22,8 @@ public sealed record MalAnimeInfo(
     string? TrailerUrl,
     int? Popularity,
     int? Rank,
-    string[]? Pictures
+    string[]? Pictures,
+    string? AgeRating
 )
 {
     public MalAnimeInfo(Anime? anime, string malBaseUrl)
@@ -45,7 +46,8 @@ public sealed record MalAnimeInfo(
             TrailerUrl: null,
             Popularity: null,
             Rank: null,
-            Pictures: null
+            Pictures: null,
+            AgeRating: null
         )
     { }
 
@@ -84,7 +86,8 @@ public sealed record MalAnimeInfo(
                 .Select(p => p.Large ?? p.Medium)
                 .Where(url => url != null)
                 .Select(url => url!)
-                .ToArray()
+                .ToArray(),
+            malAnime?.Rating
         )
     { }
 }

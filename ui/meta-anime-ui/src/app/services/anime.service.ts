@@ -60,6 +60,8 @@ export class AnimeService {
     if (filters?.codec?.length) filters.codec.forEach((c) => (params = params.append('codec', c)));
     if (filters?.mediaType?.length)
       filters.mediaType.forEach((t) => (params = params.append('mediaType', t)));
+    if (filters?.ageRating?.length)
+      filters.ageRating.forEach((r) => (params = params.append('ageRating', r)));
     if (enriched !== undefined) params = params.set('enriched', enriched);
     return this.http.get<PagedResponse<AnimeDetailsResponse>>(this.base, { params });
   }

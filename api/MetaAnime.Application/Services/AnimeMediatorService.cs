@@ -122,6 +122,7 @@ public sealed class AnimeMediatorService(
                                          || filters?.HasFile.HasValue == true
                                          || filters?.Codec?.Length > 0
                                          || filters?.MediaType?.Length > 0
+                                         || filters?.AgeRating?.Length > 0
                                          || !showNsfw;
 
             List<string> aniDbIds;
@@ -458,6 +459,15 @@ public sealed class AnimeMediatorService(
                 filters.MediaType.Any(t =>
                     a.MalAnimes?.Any(m => m.MediaType != null &&
                         m.MediaType.Equals(t, StringComparison.OrdinalIgnoreCase)) == true));
+        }
+
+        if (filters?.AgeRating?.Length > 0)
+        {
+            result = result.Where(a =>
+                a.MalAnimes?.Any(m =>
+                    m.AgeRating != null &&
+                    filters.AgeRating.Any(r =>
+                        m.AgeRating.Equals(r, StringComparison.OrdinalIgnoreCase))) == true);
         }
 
         if (!showNsfw)
@@ -1322,7 +1332,8 @@ public sealed class AnimeMediatorService(
                     TvdbId: tvdbId,
                     EnglishTitle: anime.AlternativeTitles?.En,
                     MalViewState: malViewState,
-                    AniDbId: aniDbId
+                    AniDbId: aniDbId,
+                    AgeRating: anime.Rating
                 );
             });
 

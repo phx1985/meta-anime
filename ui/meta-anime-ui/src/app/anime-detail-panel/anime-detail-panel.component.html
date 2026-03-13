@@ -1,12 +1,14 @@
 @if (animeId() !== null || malId() !== null) {
-  <!-- Backdrop -->
-  <div 
-    class="panel-backdrop" 
-    (click)="close()" 
-    aria-hidden="true" 
+  <!-- Backdrop — hidden in side-by-side Bot-kun mode to keep chat visible -->
+  @if (!noBackdrop()) {
+  <div
+    class="panel-backdrop"
+    (click)="close()"
+    aria-hidden="true"
     [class.visible]="true"
     [class.closing]="closing()"
   ></div>
+  }
 
   <!-- Side panel -->
   <aside
@@ -119,6 +121,9 @@
               }
               @if (mal?.status) {
                 <span class="panel__pill panel__pill--status">{{ ('animeDetailPanel.seriesStatus.' + (mal!.status | lowercase)) | translate }}</span>
+              }
+              @if (mal?.ageRating) {
+                <span class="panel__pill panel__pill--age-rating">{{ ('animeDetailPanel.ageRating.' + mal!.ageRating) | translate }}</span>
               }
 
             </div>

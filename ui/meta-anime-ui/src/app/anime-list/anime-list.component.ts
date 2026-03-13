@@ -94,6 +94,15 @@ export const MEDIA_TYPE_OPTIONS = [
   { value: 'music', labelKey: 'animeDetailPanel.mediaType.music' },
 ];
 
+export const RATING_OPTIONS = [
+  { value: 'g',     labelKey: 'animeList.filter.ratings.g' },
+  { value: 'pg',    labelKey: 'animeList.filter.ratings.pg' },
+  { value: 'pg_13', labelKey: 'animeList.filter.ratings.pg_13' },
+  { value: 'r',     labelKey: 'animeList.filter.ratings.r' },
+  { value: 'r+',    labelKey: 'animeList.filter.ratings.r+' },
+  { value: 'rx',    labelKey: 'animeList.filter.ratings.rx' },
+];
+
 @Component({
   selector: 'app-anime-list',
   standalone: true,
@@ -209,6 +218,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   filterHasFile: 'any' | 'yes' | 'no' = 'any';
   filterCodec: string[] = [];
   filterMediaType: string[] = [];
+  filterAgeRating = signal<string[]>([]);
   sortBy = 'title';
   sortOrder: 'asc' | 'desc' = 'asc';
 
@@ -217,6 +227,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   readonly sortOptions = SORT_OPTIONS;
   readonly codecOptions = CODEC_OPTIONS;
   readonly mediaTypeOptions = MEDIA_TYPE_OPTIONS;
+  readonly ratingOptions = RATING_OPTIONS;
 
   /** Genre list filtered by NSFW setting */
   readonly filteredGenreList = computed(() => (this.showNsfw() ? GENRE_LIST : SFW_GENRE_LIST));
@@ -250,6 +261,16 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     const sel = this.filterDemographic();
     if (sel.length === 0) return null;
     const t = (k: string) => this.translateService.instant(`genres.${k}`);
+    if (sel.length <= 2) return sel.map(t).join(', ');
+    return `${t(sel[0])}, ${t(sel[1])} +${sel.length - 2}`;
+  });
+
+  /** Label shown on the age rating dropdown trigger button */
+  readonly ageRatingLabel = computed(() => {
+    this.langSignal();
+    const sel = this.filterAgeRating();
+    if (sel.length === 0) return null;
+    const t = (k: string) => this.translateService.instant(`animeList.filter.ratings.${k}`);
     if (sel.length <= 2) return sel.map(t).join(', ');
     return `${t(sel[0])}, ${t(sel[1])} +${sel.length - 2}`;
   });
@@ -306,6 +327,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     if (this.filterHasFile !== 'any') n++;
     if (this.filterCodec.length) n++;
     if (this.filterMediaType.length) n++;
+    if (this.filterAgeRating().length) n++;
     return n;
   }
 
@@ -320,6 +342,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     if (this.filterHasFile !== 'any') n++;
     if (this.filterCodec.length) n++;
     if (this.filterMediaType.length) n++;
+    if (this.filterAgeRating().length) n++;
     if (this.sortBy !== 'title' || this.sortOrder !== 'asc') n++;
     return n;
   }
@@ -387,7 +410,15 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
           .join(', '),
       );
     }
-    const isDefaultSort = this.sortBy === 'title' && this.sortOrder === 'asc';
+    const ageRatings = this.filterAgeRating();
+    if (ageRatings.length) {
+      parts.push(
+        ageRatings
+          .map((v) => this.translateService.instant(`animeList.filter.ratings.${v}`))
+          .join(', '),
+      );
+    }
+    const isDefaultSort= this.sortBy === 'title' && this.sortOrder === 'asc';
     if (!isDefaultSort) {
       const sortOpt = SORT_OPTIONS.find((o) => o.value === this.sortBy);
       const sortLabel = sortOpt ? this.translateService.instant(sortOpt.labelKey) : this.sortBy;
@@ -750,6 +781,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.filterHasFile = 'any';
     this.filterCodec = [];
     this.filterMediaType = [];
+    this.filterAgeRating.set([]);
     this.sortBy = 'title';
     this.sortOrder = 'asc';
     this.searched.set(false);
@@ -787,6 +819,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
       f.hasFile ||
       f.codec?.length ||
       f.mediaType?.length ||
+      f.ageRating?.length ||
       (f.sortBy && f.sortBy !== 'title') ||
       (f.sortOrder && f.sortOrder !== 'asc')
     );
@@ -808,6 +841,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.filterHasFile = f.hasFile ?? 'any';
     this.filterCodec = f.codec ?? [];
     this.filterMediaType = f.mediaType ?? [];
+    this.filterAgeRating.set(f.ageRating ?? []);
     this.sortBy = f.sortBy ?? 'title';
     this.sortOrder = f.sortOrder ?? 'asc';
   }
@@ -866,6 +900,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
       hasFile: this.filterHasFile !== 'any' ? this.filterHasFile : undefined,
       codec: this.filterCodec.length ? this.filterCodec : undefined,
       mediaType: this.filterMediaType.length ? this.filterMediaType : undefined,
+      ageRating: this.filterAgeRating().length ? this.filterAgeRating() : undefined,
       sortBy: this.sortBy !== 'title' ? this.sortBy : undefined,
       sortOrder: this.sortOrder !== 'asc' ? this.sortOrder : undefined,
       activePresetName: this.activePresetName() ?? undefined,
@@ -893,6 +928,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
       hasFile: this.resolveHasFile(),
       codec: this.filterCodec.length ? this.filterCodec : undefined,
       mediaType: this.filterMediaType.length ? this.filterMediaType : undefined,
+      ageRating: this.filterAgeRating().length ? this.filterAgeRating() : undefined,
       sortBy: this.sortBy,
       sortOrder: this.sortOrder,
     };

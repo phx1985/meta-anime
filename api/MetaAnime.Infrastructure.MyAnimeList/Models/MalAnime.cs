@@ -22,6 +22,8 @@ public partial class MalAnime
     public MyListStatus? MyListStatus { get; set; }
     [JsonPropertyName("nsfw")]
     public string? Nsfw { get; set; }
+    [JsonPropertyName("rating")]
+    public string? Rating { get; set; }
     [JsonPropertyName("popularity")]
     public int Popularity { get; set; }
     [JsonPropertyName("rank")]

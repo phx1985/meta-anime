@@ -547,6 +547,23 @@
                   }
                 </div>
               </div>
+
+              <!-- Age rating -->
+              <div class="filter-field filter-field--pills">
+                <span class="filter-label">{{ 'animeList.filter.ageRating' | translate }}</span>
+                <div class="filter-pills">
+                  @for (r of ratingOptions; track r.value) {
+                    <button
+                      type="button"
+                      class="filter-pill"
+                      [class.filter-pill--active]="filterAgeRating().includes(r.value)"
+                      (click)="toggleAgeRating(r.value)"
+                    >
+                      {{ r.labelKey | translate }}
+                    </button>
+                  }
+                </div>
+              </div>
             </div>
 
             <!-- Footer: Sort + Reset -->
