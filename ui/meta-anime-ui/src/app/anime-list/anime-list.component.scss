@@ -1828,7 +1828,7 @@ app-anime-card {
     &.tbl-th--size     { width: 9%; }
     &.tbl-th--avgsize  { width: 10%; }
     &.tbl-th--added    { width: 10%; }
-    &.tbl-th--actions  { width: 6%; }
+    &.tbl-th--actions  { width: 8%; min-width: 110px; }
 
     &.tbl-th--sortable {
       cursor: pointer;
