@@ -26,7 +26,7 @@ type LuckyCardState = 'rolling' | 'loaded' | 'error';
 })
 export class FeelingLuckyCardComponent implements OnInit {
   readonly malId = input.required<string>();
-  readonly title = input.required<string>();
+  readonly title = input<string>('');
 
   readonly cardReady = output<void>();
   readonly cardClicked = output<string>();

@@ -22,7 +22,7 @@ import { AnimeService } from '../../services/anime.service';
 })
 export class BotKunAnimeCardComponent implements OnInit {
   readonly malId = input.required<string>();
-  readonly title = input.required<string>();
+  readonly title = input<string>('');
 
   readonly cardClicked = output<string>();
 

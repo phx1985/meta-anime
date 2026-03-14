@@ -113,13 +113,11 @@
             } @else if (seg.type === 'card') {
               <app-bot-kun-anime-card
                 [malId]="seg.malId"
-                [title]="seg.title"
                 (cardClicked)="animeSelected.emit($event)"
               />
             } @else if (seg.type === 'lucky') {
               <app-feeling-lucky-card
                 [malId]="seg.malId"
-                [title]="seg.title"
                 (cardReady)="onLuckyCardReady()"
                 (cardClicked)="animeSelected.emit($event)"
               />

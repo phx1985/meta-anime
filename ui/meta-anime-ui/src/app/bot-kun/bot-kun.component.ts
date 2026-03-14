@@ -39,8 +39,8 @@ export type BotKunMessage = {
 /** A parsed segment of a bot message — either plain HTML, an anime mini-card, or a Feeling Lucky card */
 export type MessageSegment =
   | { type: 'text'; html: string }
-  | { type: 'card'; malId: string; title: string }
-  | { type: 'lucky'; malId: string; title: string };
+  | { type: 'card'; malId: string }
+  | { type: 'lucky'; malId: string };
 
 @Component({
   selector: 'app-bot-kun',
@@ -228,9 +228,9 @@ export class BotKunComponent implements OnDestroy {
   /**
    * Parse a finished bot message into display segments.
    * While still streaming, returns a single text segment so cards don't flash/reload on each chunk.
-   * Deduplicates by malId — if the AI emits the same [anime:ID:Title] tag more than once,
+   * Deduplicates by malId — if the AI emits the same [anime:ID] tag more than once,
    * only the first occurrence is rendered as a card.
-   * R17f: regex uses \d+ for ID and .+? for title to support colons in titles (Re:Zero, Gate:, etc.)
+   * Tag format: [anime:ID] or [lucky:ID] — ID only, no title in the tag.
    * S6: non-streaming results are cached by content string to avoid redundant parsing.
    */
   parseSegments(content: string, streaming: boolean): MessageSegment[] {
@@ -248,8 +248,8 @@ export class BotKunComponent implements OnDestroy {
     const segments: MessageSegment[] = [];
     let lastIndex = 0;
 
-    // R17f: \d+ for numeric MAL ID; .+? (lazy) for title — allows colons inside titles
-    for (const match of content.matchAll(/\[(anime|lucky):(\d+):(.+?)\]/g)) {
+    // ID-only tag format: [anime:digits] or [lucky:digits]
+    for (const match of content.matchAll(/\[(anime|lucky):(\d+)\]/g)) {
       const matchIndex = match.index ?? 0;
 
       if (matchIndex > lastIndex) {
@@ -263,23 +263,16 @@ export class BotKunComponent implements OnDestroy {
       // permittedMalIds is empty for RAG/greeting paths (all IDs allowed) and for lucky picks.
       const permitted = this.botKunService.permittedMalIds();
       if (tagType === 'anime' && permitted.size > 0 && !permitted.has(malId)) {
-        // Replace hallucinated tag with its display title as plain text
-        segments.push({ type: 'text', html: this.toSafeHtml(match[3].trim()) });
+        // Replace hallucinated tag with its ID as plain text (no title to fall back on)
+        segments.push({ type: 'text', html: this.toSafeHtml(`[anime:${malId}]`) });
         lastIndex = matchIndex + match[0].length;
         continue;
       }
 
       // Per-call dedup prevents the same ID appearing twice in one message.
-      // Component-level dedup would break card rendering during typewriter
-      // playback (RG1: seenMalIds would persist across cache-miss re-parses
-      // as the content string grows one character at a time).
       if (!seenMalIds.has(malId)) {
         seenMalIds.add(malId);
-        segments.push({
-          type: tagType === 'lucky' ? 'lucky' : 'card',
-          malId,
-          title: match[3].trim(),
-        });
+        segments.push({ type: tagType === 'lucky' ? 'lucky' : 'card', malId });
       }
 
       lastIndex = matchIndex + match[0].length;
@@ -376,7 +369,7 @@ export class BotKunComponent implements OnDestroy {
    * S5: incomplete-tag wait has a 5 s safety timeout so a malformed tag can't block the typewriter.
    */
   private startTypewriter(msgIndex: number, version: number): void {
-    const COMPLETE_TAG_RE = /^\[(anime|lucky):[^:\]]+:[^\]]+\]/;
+    const COMPLETE_TAG_RE = /^\[(anime|lucky):\d+\]/;
     const MIN_DELAY = 5;
     const VAR_DELAY = 5;
 

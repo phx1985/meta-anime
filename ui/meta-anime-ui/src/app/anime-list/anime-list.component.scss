@@ -2034,15 +2034,13 @@ app-anime-card {
 }
 
 .actions-cell-container {
-  display: grid;
-  grid-template-columns: 32px 32px 32px;
+  display: flex;
   gap: 8px;
-  justify-content: start;
+  align-items: center;
+  justify-content: flex-start;
 }
 
-.btn-mal    { grid-column: 1; }
-.btn-plex   { grid-column: 2; }
-.btn-sonarr { grid-column: 3; }
+
 
 
 // ─── Table pagination ──────────────────────────────────────────────────────────

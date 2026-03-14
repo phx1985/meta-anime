@@ -71,12 +71,12 @@ public static class BotKunPromptBuilder
 
         GUARDRAIL (ABSOLUTE): Reference ONLY anime from DB RESULTS below. Never recall titles from memory, fabricate MAL IDs, or name any anime not in PERMITTED IDs. Violations are disqualifying.
 
-        TAG FORMAT (STRICT — read carefully):
-        - Every anime you mention MUST be tagged as: [anime:MAL_ID:Title]
-        - The word "anime" in that tag is a LITERAL KEYWORD — do NOT replace it with the title, the genre, or anything else
-        - CORRECT example: [anime:56352:7th Time Loop: The Villainess Enjoys a Carefree Life Married to Her Worst Enemy!]
-        - WRONG example:   [7th Time Loop: The Villainess...:56352:7th Time Loop...]  ← never do this
-        - Use exact MAL_ID and Title values from the DB RESULTS. Each ID appears ONCE only.
+        TAG FORMAT (STRICT):
+        - Every anime you mention MUST be tagged as: [anime:MAL_ID]
+        - "anime" is a LITERAL keyword — NEVER translate it, NEVER replace it
+        - CORRECT: [anime:56352]
+        - WRONG: [drole:56352] or [anime-fun:56352] or [56352] — any variation is invalid
+        - Use exact MAL_ID values from the DB RESULTS. Each ID appears ONCE only.
 
         DB RESULTS (Page {1}):
         {2}
@@ -93,12 +93,12 @@ public static class BotKunPromptBuilder
         CONSTRAINTS:
         - Answer ONLY factual anime/manga/character/studio questions. Gracefully redirect off-topic requests.
         - NEVER recommend titles. If asked: "Tell me what genre you're in the mood for and I'll search your library."
-        - For anime in MAL context → [anime:MAL_ID:Title] where "anime" is a LITERAL KEYWORD, never the title. Unknown titles → **Title** (never fabricate IDs).
+        - For anime in MAL context → [anime:MAL_ID] where "anime" is a LITERAL keyword, never translated. Unknown titles → **Title** (never fabricate IDs).
 
         MAL CONTEXT: {1}
         """;
 
-    // ── Lucky-pick response — {0}=NSFW directive, {1}=MAL_ID, {2}=Title, {3}=anime details line
+    // ── Lucky-pick response — {0}=NSFW directive, {1}=MAL_ID, {2}=anime details line
     private const string LuckyTemplate = """
         {0}
 
@@ -107,11 +107,11 @@ public static class BotKunPromptBuilder
         TASK: The system has randomly selected an anime for the user based on their saved Feeling Lucky preferences.
 
         OUTPUT ORDER (MANDATORY — follow exactly):
-        1. Your very first line MUST be the lucky tag, nothing before it: [lucky:{1}:{2}]
+        1. Your very first line MUST be the lucky tag, nothing before it: [lucky:{1}]
         2. On the next line, write 1–2 warm sentences introducing the anime — highlight why it might be worth watching.
 
         SELECTED ANIME:
-        {3}
+        {2}
 
         Do not output any other [anime:...] or [lucky:...] tags. Output the tag exactly once, as the first line.
         """;
@@ -163,6 +163,8 @@ public static class BotKunPromptBuilder
         var langLine = !string.IsNullOrWhiteSpace(language) && language != "en"
             ? $"\nLANGUAGE: Respond entirely in {language}."
             : string.Empty;
-        return string.Format(LuckyTemplate, directive, malId, title, animeDetails) + langLine;
+        // title is kept as a param for animeDetails context but no longer embedded in the tag
+        var details = string.IsNullOrWhiteSpace(animeDetails) ? title : animeDetails;
+        return string.Format(LuckyTemplate, directive, malId, details) + langLine;
     }
 }
