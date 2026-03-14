@@ -62,6 +62,8 @@ export class ThemeService {
       const prefersDark = this.mediaQuery?.matches ?? false;
       this.isDarkTheme.set(prefersDark);
       localStorage.setItem(this.STORAGE_KEY, prefersDark ? 'dark' : 'light');
+      // F8: remove before adding to prevent duplicate listener registration
+      this.mediaQuery?.removeEventListener('change', this.osListener);
       this.mediaQuery?.addEventListener('change', this.osListener);
     } else {
       this.mediaQuery?.removeEventListener('change', this.osListener);

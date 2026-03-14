@@ -82,13 +82,30 @@ export class BotKunComponent implements OnDestroy {
   private streamSub: Subscription | null = null;
   private greetingSub: Subscription | null = null;
 
+  // S3: typewriter timer handle — tracked so we can cancel on destroy / new message
+  private _typewriterHandle: ReturnType<typeof setTimeout> | null = null;
+  // S5: tracks how long we've been waiting for an incomplete tag to close
+  private _incompleteTagWaitMs = 0;
+  // S7: debounce handle for scroll-to-bottom effect
+  private _scrollDebounceHandle: ReturnType<typeof setTimeout> | null = null;
+  // S6: cache for parseSegments results (non-streaming only)
+  private readonly _segmentCache = new Map<string, MessageSegment[]>();
+
   constructor() {
-    // Smooth-scroll only when a new message is added (length changes), not on every typed char
+    // S7: debounce scroll so it doesn't fire on every streamed character
     effect(() => {
       const count = this._msgCount();
       if (count > 0) {
-        setTimeout(() => this.scrollToBottom('smooth'), 30);
+        clearTimeout(this._scrollDebounceHandle ?? undefined);
+        this._scrollDebounceHandle = setTimeout(() => this.scrollToBottom('smooth'), 100);
       }
+    });
+
+    // RG2: invalidate segment cache when permittedMalIds changes so R17b
+    // hallucination validation reflects the latest [PI:] chunk immediately.
+    effect(() => {
+      void this.botKunService.permittedMalIds();
+      this._segmentCache.clear();
     });
 
     this.translate.onLangChange
@@ -101,6 +118,11 @@ export class BotKunComponent implements OnDestroy {
     this.greetingSub?.unsubscribe();
     this.botKunService.cancel();
     this.botKunService.cancelGreeting();
+    // S3: cancel any in-flight typewriter tick
+    clearTimeout(this._typewriterHandle ?? undefined);
+    this._typewriterHandle = null;
+    // S7: cancel any pending scroll debounce
+    clearTimeout(this._scrollDebounceHandle ?? undefined);
   }
 
   open(): void {
@@ -208,17 +230,26 @@ export class BotKunComponent implements OnDestroy {
    * While still streaming, returns a single text segment so cards don't flash/reload on each chunk.
    * Deduplicates by malId — if the AI emits the same [anime:ID:Title] tag more than once,
    * only the first occurrence is rendered as a card.
+   * R17f: regex uses \d+ for ID and .+? for title to support colons in titles (Re:Zero, Gate:, etc.)
+   * S6: non-streaming results are cached by content string to avoid redundant parsing.
    */
   parseSegments(content: string, streaming: boolean): MessageSegment[] {
     if (streaming) {
       return [{ type: 'text', html: this.toSafeHtml(content) }];
     }
 
-    const segments: MessageSegment[] = [];
+    // S6: return cached result if available
+    const cached = this._segmentCache.get(content);
+    if (cached) return cached;
+
+    // Per-call local set — deduplicates within a single message without persisting
+    // across cache-miss re-parses (which happen each time the typewriter adds a char).
     const seenMalIds = new Set<string>();
+    const segments: MessageSegment[] = [];
     let lastIndex = 0;
 
-    for (const match of content.matchAll(/\[(anime|lucky):([^:\]]+):([^\]]+)\]/g)) {
+    // R17f: \d+ for numeric MAL ID; .+? (lazy) for title — allows colons inside titles
+    for (const match of content.matchAll(/\[(anime|lucky):(\d+):(.+?)\]/g)) {
       const matchIndex = match.index ?? 0;
 
       if (matchIndex > lastIndex) {
@@ -227,6 +258,21 @@ export class BotKunComponent implements OnDestroy {
 
       const tagType = match[1].trim() as 'anime' | 'lucky';
       const malId = match[2].trim();
+
+      // R17b: reject [anime:ID] tags whose ID was not in the backend's PERMITTED IDs list.
+      // permittedMalIds is empty for RAG/greeting paths (all IDs allowed) and for lucky picks.
+      const permitted = this.botKunService.permittedMalIds();
+      if (tagType === 'anime' && permitted.size > 0 && !permitted.has(malId)) {
+        // Replace hallucinated tag with its display title as plain text
+        segments.push({ type: 'text', html: this.toSafeHtml(match[3].trim()) });
+        lastIndex = matchIndex + match[0].length;
+        continue;
+      }
+
+      // Per-call dedup prevents the same ID appearing twice in one message.
+      // Component-level dedup would break card rendering during typewriter
+      // playback (RG1: seenMalIds would persist across cache-miss re-parses
+      // as the content string grows one character at a time).
       if (!seenMalIds.has(malId)) {
         seenMalIds.add(malId);
         segments.push({
@@ -243,7 +289,10 @@ export class BotKunComponent implements OnDestroy {
       segments.push({ type: 'text', html: this.toSafeHtml(content.slice(lastIndex)) });
     }
 
-    return segments.length > 0 ? segments : [{ type: 'text', html: this.toSafeHtml(content) }];
+    const result: MessageSegment[] = segments.length > 0 ? segments : [{ type: 'text', html: this.toSafeHtml(content) }];
+    // S6: cache for subsequent calls with the same finalised content
+    this._segmentCache.set(content, result);
+    return result;
   }
 
   /** Stable track key for `@for` over MessageSegment arrays — cards track by malId, text by position. */
@@ -260,6 +309,8 @@ export class BotKunComponent implements OnDestroy {
     this.botKunService.cancelGreeting();
     this.isStreaming.set(false);
     this.hasUnread.set(false);
+    // S6: invalidate segment cache
+    this._segmentCache.clear();
   }
 
   onLuckyCardReady(): void {
@@ -321,11 +372,19 @@ export class BotKunComponent implements OnDestroy {
   /**
    * Typewriter engine — advances `typedContent` one character (or one complete anime tag) at a time.
    * Self-schedules via setTimeout; stops when the `version` is superseded (clearHistory / new send).
+   * S3: all setTimeout handles are tracked in _typewriterHandle so they can be cancelled on destroy.
+   * S5: incomplete-tag wait has a 5 s safety timeout so a malformed tag can't block the typewriter.
    */
   private startTypewriter(msgIndex: number, version: number): void {
     const COMPLETE_TAG_RE = /^\[(anime|lucky):[^:\]]+:[^\]]+\]/;
     const MIN_DELAY = 5;
     const VAR_DELAY = 5;
+
+    // S3: cancel any previous handle before starting a new tick loop
+    clearTimeout(this._typewriterHandle ?? undefined);
+    this._typewriterHandle = null;
+    // S5: reset incomplete-tag wait counter for this new message
+    this._incompleteTagWaitMs = 0;
 
     const tick = () => {
       if (this.typewriterVersion !== version) return; // superseded — stop
@@ -346,7 +405,7 @@ export class BotKunComponent implements OnDestroy {
           return;
         }
         // Caught up to buffer while stream is still open — poll for more chunks
-        setTimeout(tick, 16);
+        this._typewriterHandle = setTimeout(tick, 16);
         return;
       }
 
@@ -360,9 +419,18 @@ export class BotKunComponent implements OnDestroy {
         step = tagMatch[0].length;
         nextDelay = 0;
       } else if ((remaining.startsWith('[anime:') || remaining.startsWith('[lucky:')) && msg.streaming) {
-        // Incomplete tag while stream is still open — wait for the rest of the tag
-        setTimeout(tick, 30);
-        return;
+        // S5: Incomplete tag while stream is still open — wait for the rest of the tag,
+        // but bail out after 5 s to prevent permanent typewriter stall on malformed tags.
+        this._incompleteTagWaitMs += 30;
+        if (this._incompleteTagWaitMs > 5000) {
+          // Tag never closed — treat as plain text to unblock the typewriter
+          this._incompleteTagWaitMs = 0;
+          step = 1;
+          nextDelay = MIN_DELAY;
+        } else {
+          this._typewriterHandle = setTimeout(tick, 30);
+          return;
+        }
       } else {
         step = 1;
         nextDelay = MIN_DELAY + Math.floor(Math.random() * VAR_DELAY);
@@ -380,10 +448,12 @@ export class BotKunComponent implements OnDestroy {
         return;
       }
 
-      setTimeout(tick, nextDelay);
+      // S3: store the handle so it can be cleared on destroy
+      this._typewriterHandle = setTimeout(tick, nextDelay);
     };
 
-    setTimeout(tick, 10);
+    // S3: store the initial handle
+    this._typewriterHandle = setTimeout(tick, 10);
   }
 
   private scrollToBottom(behavior: ScrollBehavior = 'smooth'): void {

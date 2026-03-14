@@ -1038,9 +1038,9 @@
                           <img src="assets/images/plex.svg" alt="Plex" width="16" height="16" />
                         </a>
                       }
-                      @if (providerState.sonarrEnabled() && anime.sonarrAnimes?.[0]?.url) {
+                      @if (providerState.sonarrEnabled() && (anime.sonarrAnimes?.length ?? 0) > 0) {
                         <a class="tbl-action-btn btn-sonarr"
-                           [href]="anime.sonarrAnimes![0].url!"
+                           [href]="anime.sonarrAnimes![0].url || sonarrBaseUrl() || ''"
                            target="_blank"
                            rel="noopener noreferrer"
                            [title]="'animeList.table.openSonarr' | translate">

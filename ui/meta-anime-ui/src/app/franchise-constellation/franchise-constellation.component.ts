@@ -261,6 +261,8 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this._stopRenderDrain();
+    // F13: explicitly clear the queue reference so any captured closures can be GC'd
+    this._renderQueue.length = 0;
     this.popupService.franchiseConstellationOpen.set(false);
   }
 

@@ -99,8 +99,11 @@ export class AnimeService {
     return this.http.get<SeasonalAnimeItem[]>(this.seasonalBase, { params });
   }
 
-  updateMalListStatus(malId: string, request: MalListStatusRequest): Observable<void> {
-    return this.http.put<void>(`${this.malBase}/list/${malId}`, request);
+  updateMalListStatus(malId: string, request: MalListStatusRequest, sourceAniDbId?: string | null): Observable<void> {
+    const params = sourceAniDbId
+      ? new HttpParams().set('sourceAniDbId', sourceAniDbId)
+      : undefined;
+    return this.http.put<void>(`${this.malBase}/list/${malId}`, request, { params });
   }
 
   refreshMalToken(): Observable<void> {

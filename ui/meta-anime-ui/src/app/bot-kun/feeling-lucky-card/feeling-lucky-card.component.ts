@@ -83,6 +83,8 @@ export class FeelingLuckyCardComponent implements OnInit {
           this.score.set(mal?.rating?.malMean ?? null);
           this.genres.set((mal?.genres ?? []).slice(0, 4));
           this.mediaType.set(mal?.mediaType ?? null);
+          // F10: clear any previous timer before scheduling a new one
+          if (this.rollTimer !== null) clearTimeout(this.rollTimer);
           // Wait for the roll animation before revealing the result
           this.rollTimer = setTimeout(() => {
             this.state.set('loaded');
@@ -90,6 +92,8 @@ export class FeelingLuckyCardComponent implements OnInit {
           }, 1500);
         },
         error: () => {
+          // F10: clear any previous timer before scheduling a new one
+          if (this.rollTimer !== null) clearTimeout(this.rollTimer);
           this.rollTimer = setTimeout(() => {
             this.state.set('error');
             this.cardReady.emit();

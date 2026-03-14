@@ -276,6 +276,8 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
   }
 
   private finishSpin(nextState: LuckyState): void {
+    // F11: always cancel any previously-queued transition before scheduling a new one
+    this.clearTimer();
     if (this.SPIN_MS > 0) {
       this.spinTimer = setTimeout(() => this.state.set(nextState), this.SPIN_MS);
     } else {

@@ -24,7 +24,7 @@ public interface IAnimeMediatorService
     Task<Result<IList<SonarrLookupItem>>> SearchSonarrLookupAsync(string term);
     Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, string monitor = "all", bool seasonFolder = true, string? malId = null);
     Task<Result> RemoveSonarrSeriesAsync(int sonarrId);
-    Task<Result> UpdateMalListStatusAsync(string malId, string status, int numWatchedEpisodes, int score);
+    Task<Result> UpdateMalListStatusAsync(string malId, string status, int numWatchedEpisodes, int score, string? sourceAniDbId = null);
     Task<Result<FranchiseConstellationResponse>> GetFranchiseConstellationAsync(string malId);
     Task<Result<IList<SonarrTagInfo>>> GetAllSonarrTagsAsync();
     Task<Result<SonarrTagInfo>> CreateSonarrTagAsync(string label);

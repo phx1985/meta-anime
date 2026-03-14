@@ -52,7 +52,8 @@ public sealed class MalController(
     [Authorize]
     public async Task<ActionResult> UpdateListStatus(
         string animeId,
-        [FromBody] MalListStatusRequest request)
+        [FromBody] MalListStatusRequest request,
+        [FromQuery] string? sourceAniDbId = null)
     {
         if (string.IsNullOrWhiteSpace(animeId))
             return BadRequest(PresentationConstants.Messages.MalAnimeIdRequired);
@@ -63,7 +64,7 @@ public sealed class MalController(
         try
         {
             var result = await animeMediatorService.UpdateMalListStatusAsync(
-                animeId, request.Status, request.NumWatchedEpisodes, request.Score);
+                animeId, request.Status, request.NumWatchedEpisodes, request.Score, sourceAniDbId);
 
             if (result.IsFailure)
             {

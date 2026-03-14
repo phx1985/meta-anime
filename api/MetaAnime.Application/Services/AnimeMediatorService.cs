@@ -241,10 +241,10 @@ public sealed class AnimeMediatorService(
             if (needsInMemoryPostFilter)
             {
                 // Apply all in-memory filters including fuzzy title similarity
-                var filtered = ApplyFilters(animeDtos, filters, malCache, showNsfw, similarityThreshold);
-                var sorted = ApplySorting(filtered, filters);
-                totalCount = sorted.Count();
-                var paged = sorted.Skip((page - 1) * pageSize).Take(pageSize);
+                var filtered    = ApplyFilters(animeDtos, filters, malCache, showNsfw, similarityThreshold);
+                var sortedList  = ApplySorting(filtered, filters).ToList();
+                totalCount      = sortedList.Count;
+                var paged       = sortedList.Skip((page - 1) * pageSize).Take(pageSize);
                 return Result.Success(PagedResponse<IEnumerable<AnimeDetailsResponse>>.Create(
                     paged, page, pageSize, totalCount));
             }
@@ -326,8 +326,7 @@ public sealed class AnimeMediatorService(
 
                     try
                     {
-                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                        var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, options);
+                        var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, JsonOptions);
                         var animeGenres = malAnime?.Genres?.Select(g => g.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
                         if (animeGenres == null) return false;
 
@@ -366,8 +365,7 @@ public sealed class AnimeMediatorService(
 
                     try
                     {
-                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                        var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, options);
+                        var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, JsonOptions);
                         var animeGenres = malAnime?.Genres?.Select(g => g.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
                         if (animeGenres == null) return false;
 
@@ -405,8 +403,7 @@ public sealed class AnimeMediatorService(
 
                     try
                     {
-                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                        var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, options);
+                        var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, JsonOptions);
                         var animeGenres = malAnime?.Genres?.Select(g => g.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
                         if (animeGenres == null) return false;
 
@@ -1514,7 +1511,7 @@ public sealed class AnimeMediatorService(
         }
     }
 
-    public async Task<Result> UpdateMalListStatusAsync(string malId, string status, int numWatchedEpisodes, int score)
+    public async Task<Result> UpdateMalListStatusAsync(string malId, string status, int numWatchedEpisodes, int score, string? sourceAniDbId = null)
     {
         try
         {
@@ -1539,10 +1536,12 @@ public sealed class AnimeMediatorService(
                 var existingAnime = await animeRepository.GetAnimeAsync(AnimeSource.MyAnimeList, malId);
                 if (existingAnime == null)
                 {
-                    // Look up AniDbId via Kometa (malId → AniDbId)
+                    // Look up AniDbId via Kometa (malId → AniDbId).
+                    // Fall back to sourceAniDbId (passed from the gap-confirm flow) when the
+                    // anime isn't catalogued in Kometa — this covers niche entries like DBS films.
                     var malMappings = await kometaAnimeMappingRepository.GetByPlatformIdsAsync(
                         MetaAnime.Domain.Enums.KometaAnimePlatform.Mal, new[] { malId });
-                    var aniDbId = malMappings.FirstOrDefault()?.AniDbId;
+                    var aniDbId = malMappings.FirstOrDefault()?.AniDbId ?? sourceAniDbId;
 
                     var animeForDb = malAnime.ToAnime();
                     await animeRepository.AddAsync(animeForDb);
