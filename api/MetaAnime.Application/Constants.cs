@@ -2,6 +2,12 @@ namespace MetaAnime.Application;
 
 public static class Constants
 {
+    public static class BotKunEndpoints
+    {
+        public const string Models           = "/models";
+        public const string ChatCompletions  = "/chat/completions";
+    }
+
     public static class Errors
     {
         public const string AddAsync = "Error.AddAsync";

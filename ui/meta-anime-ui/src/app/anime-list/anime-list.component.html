@@ -835,7 +835,7 @@
     } @else if (loading()) {
       <div class="d-flex justify-content-center py-5">
         <div class="spinner-border" role="status">
-          <span class="visually-hidden">Loading...</span>
+          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
         </div>
       </div>
     } @else if (error()) {
@@ -853,18 +853,18 @@
         <div class="provider-legend" aria-hidden="true">
           <span class="legend-item">
             <span class="legend-dot legend-dot--mal"></span>
-            <span class="legend-label">MAL</span>
+            <span class="legend-label">{{ 'providers.malShort' | translate }}</span>
           </span>
           @if (providerState.plexEnabled()) {
             <span class="legend-item">
               <span class="legend-dot legend-dot--plex"></span>
-              <span class="legend-label">Plex</span>
+              <span class="legend-label">{{ 'providers.plex' | translate }}</span>
             </span>
           }
           @if (providerState.sonarrEnabled()) {
             <span class="legend-item">
               <span class="legend-dot legend-dot--sonarr"></span>
-              <span class="legend-label">Sonarr</span>
+              <span class="legend-label">{{ 'providers.sonarr' | translate }}</span>
             </span>
           }
         </div>
@@ -893,12 +893,12 @@
           </span>
           <div class="table-toolbar__controls">
             @if (searched() && animes().length > 0 && totalPages() > 1) {
-              <nav class="tbl-pagination tbl-pagination--compact" aria-label="Table pagination top">
+              <nav class="tbl-pagination tbl-pagination--compact" [attr.aria-label]="'aria.tablePaginationTop' | translate">
                 <button
                   class="tbl-page-btn"
                   [disabled]="tablePage() <= 1 || loading()"
                   (click)="goToTablePage(tablePage() - 1)"
-                  aria-label="Previous page"
+                  [attr.aria-label]="'common.previousPage' | translate"
                 >‹</button>
                 @for (p of tablePageRange(); track $index) {
                   @if (p === null) {
@@ -916,7 +916,7 @@
                   class="tbl-page-btn"
                   [disabled]="tablePage() >= totalPages() || loading()"
                   (click)="goToTablePage(tablePage() + 1)"
-                  aria-label="Next page"
+                  [attr.aria-label]="'common.nextPage' | translate"
                 >›</button>
               </nav>
             }
@@ -1057,12 +1057,12 @@
         </div>
 
         @if (searched() && animes().length > 0 && totalPages() > 1) {
-          <nav class="tbl-pagination" aria-label="Table pagination">
+          <nav class="tbl-pagination" [attr.aria-label]="'aria.tablePagination' | translate">
             <button
               class="tbl-page-btn"
               [disabled]="tablePage() <= 1 || loading()"
               (click)="goToTablePage(tablePage() - 1)"
-              aria-label="Previous page"
+              [attr.aria-label]="'common.previousPage' | translate"
             >‹</button>
             @for (p of tablePageRange(); track $index) {
               @if (p === null) {
@@ -1080,7 +1080,7 @@
               class="tbl-page-btn"
               [disabled]="tablePage() >= totalPages() || loading()"
               (click)="goToTablePage(tablePage() + 1)"
-              aria-label="Next page"
+              [attr.aria-label]="'common.nextPage' | translate"
             >›</button>
           </nav>
         }
@@ -1214,7 +1214,7 @@
           type="button"
           class="fp-popup__close"
           (click)="genreDropdownOpen = false"
-          aria-label="Close"
+          [attr.aria-label]="'common.close' | translate"
         >
           <svg
             width="14"
@@ -1329,7 +1329,7 @@
           type="button"
           class="fp-popup__close"
           (click)="themeDropdownOpen = false"
-          aria-label="Close"
+          [attr.aria-label]="'common.close' | translate"
         >
           <svg
             width="14"
@@ -1449,7 +1449,7 @@
           type="button"
           class="fp-popup__close"
           (click)="demographicDropdownOpen = false"
-          aria-label="Close"
+          [attr.aria-label]="'common.close' | translate"
         >
           <svg
             width="14"

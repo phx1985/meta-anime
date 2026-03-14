@@ -162,7 +162,7 @@
     }
 
     <!-- ── Desktop Legend (bottom-left) ───────────────────────────────── -->
-    <div class="edge-legend edge-legend--desktop" aria-label="Legend">
+    <div class="edge-legend edge-legend--desktop" [attr.aria-label]="'aria.legend' | translate">
       <span class="edge-legend-title">{{ 'franchise.legend.title' | translate }}</span>
       <div class="edge-legend-item">
         <svg class="edge-legend-svg" viewBox="0 0 36 8" aria-hidden="true">

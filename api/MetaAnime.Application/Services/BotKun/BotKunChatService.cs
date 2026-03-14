@@ -185,7 +185,7 @@ public sealed class BotKunChatService(
     {
         if (string.IsNullOrWhiteSpace(baseUrl)) return [];
 
-        var url = baseUrl.TrimEnd('/') + "/models";
+        var url = baseUrl.TrimEnd('/') + Constants.BotKunEndpoints.Models;
         using var req = new HttpRequestMessage(HttpMethod.Get, url);
         if (!string.IsNullOrWhiteSpace(apiKey))
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
@@ -320,18 +320,6 @@ public sealed class BotKunChatService(
 
     // ── Database filters from intent ───────────────────────────────────────────
 
-    private static readonly FrozenSet<string> NsfwGenres = FrozenSet.Create(
-        StringComparer.OrdinalIgnoreCase,
-        "Ecchi", "Hentai", "Erotica");
-
-    private static readonly FrozenSet<string> NsfwRatings = FrozenSet.Create(
-        StringComparer.OrdinalIgnoreCase,
-        "r+", "rx");
-
-    private static readonly FrozenSet<string> ValidAiringStatuses = FrozenSet.Create(
-        StringComparer.OrdinalIgnoreCase,
-        "finished_airing", "currently_airing", "not_yet_aired");
-
     private static AnimeFilters BuildFiltersFromIntent(BotKunSearchIntent intent, bool isNsfw)
     {
         // SFW hard-filter: strip NSFW genres and ratings from intent before querying DB.
@@ -347,10 +335,10 @@ public sealed class BotKunChatService(
         }
         else
         {
-            var safeGenres = intent.Genres?.Where(g => !NsfwGenres.Contains(g)).ToArray();
+            var safeGenres = intent.Genres?.Where(g => !MalConstants.NsfwGenres.Contains(g)).ToArray();
             genres = safeGenres is { Length: > 0 } ? safeGenres : null;
 
-            var safeRatings = intent.AgeRating?.Where(r => !NsfwRatings.Contains(r)).ToArray();
+            var safeRatings = intent.AgeRating?.Where(r => !MalConstants.NsfwRatings.Contains(r)).ToArray();
             ageRating = safeRatings is { Length: > 0 } ? safeRatings : null;
         }
 
@@ -366,7 +354,7 @@ public sealed class BotKunChatService(
     }
 
     private static string? NormalizeAiringStatus(string? raw) =>
-        raw is not null && ValidAiringStatuses.Contains(raw) ? raw : null;
+        raw is not null && MalConstants.AiringStatus.All.Contains(raw) ? raw : null;
 
     private static string? NormalizeWatchStatus(string? raw) => raw?.ToLowerInvariant() switch
     {
@@ -479,7 +467,7 @@ public sealed class BotKunChatService(
         if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
 
         var trimmed = raw.TrimEnd('/');
-        const string suffix = "/chat/completions";
+        const string suffix = Constants.BotKunEndpoints.ChatCompletions;
         return trimmed.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
             ? trimmed
             : trimmed + suffix;

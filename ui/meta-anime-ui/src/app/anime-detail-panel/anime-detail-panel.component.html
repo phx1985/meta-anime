@@ -95,9 +95,9 @@
                   <button
                     type="button"
                     class="panel__aka-btn"
-                    aria-label="Alternative titles"
+                    [attr.aria-label]="'aria.alternativeTitles' | translate"
                     (click)="toggleAkaPopover()"
-                  >AKA</button>
+                  >{{ 'animeDetailPanel.aka' | translate }}</button>
                   @if (showAkaPopover()) {
                     <div class="panel__aka-popover" role="tooltip">
                       @for (t of allAltTitles; track t) {

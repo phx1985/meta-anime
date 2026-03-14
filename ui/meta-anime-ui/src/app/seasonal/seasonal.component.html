@@ -675,15 +675,15 @@
         <div class="provider-legend" aria-hidden="true">
           <span class="legend-item">
             <span class="legend-dot legend-dot--mal"></span>
-            <span class="legend-label">MAL</span>
+            <span class="legend-label">{{ 'providers.malShort' | translate }}</span>
           </span>
           <span class="legend-item">
             <span class="legend-dot legend-dot--plex"></span>
-            <span class="legend-label">Plex</span>
+            <span class="legend-label">{{ 'providers.plex' | translate }}</span>
           </span>
           <span class="legend-item">
             <span class="legend-dot legend-dot--sonarr"></span>
-            <span class="legend-label">Sonarr</span>
+            <span class="legend-label">{{ 'providers.sonarr' | translate }}</span>
           </span>
         </div>
       </div>
@@ -745,7 +745,7 @@
       <div class="presets-sheet__handle" aria-hidden="true"></div>
       <div class="presets-sheet__header">
         <span class="presets-sheet__title">{{ 'seasonal.filter.presets.label' | translate }}</span>
-        <button type="button" class="presets-sheet__close" (click)="presetsSheetOpen.set(false)" aria-label="Close">
+        <button type="button" class="presets-sheet__close" (click)="presetsSheetOpen.set(false)" [attr.aria-label]="'common.close' | translate">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
         </button>
       </div>
@@ -811,7 +811,7 @@
           type="button"
           class="fp-popup__close"
           (click)="genreDropdownOpen = false"
-          aria-label="Close"
+          [attr.aria-label]="'common.close' | translate"
         >
           <svg
             width="14"
@@ -926,7 +926,7 @@
           type="button"
           class="fp-popup__close"
           (click)="themeDropdownOpen = false"
-          aria-label="Close"
+          [attr.aria-label]="'common.close' | translate"
         >
           <svg
             width="14"
@@ -1046,7 +1046,7 @@
           type="button"
           class="fp-popup__close"
           (click)="demographicDropdownOpen = false"
-          aria-label="Close"
+          [attr.aria-label]="'common.close' | translate"
         >
           <svg
             width="14"

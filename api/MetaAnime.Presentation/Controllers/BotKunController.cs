@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using MetaAnime.Application.Services.BotKun;
 using MetaAnime.Core.Models.BotKun;
+using MetaAnime.Presentation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -19,27 +20,25 @@ public sealed class BotKunController(IBotKunChatService botKunChatService) : Con
     /// <summary>
     /// Streams a Bot-kun chat response as Server-Sent Events.
     /// Each event is <c>data: {"c":"token"}\n\n</c>; the final event is <c>data: [DONE]\n\n</c>.
-    /// When the service emits telemetry (prefixed with <c>\x1E</c>), it is forwarded as
-    /// <c>data: {"t":{...}}\n\n</c> without appearing in the chat text stream.
     /// </summary>
     [HttpPost("chat")]
     [Authorize]
     public async Task StreamChat([FromBody] BotKunChatRequest request, CancellationToken cancellationToken)
     {
-        Response.ContentType = "text/event-stream; charset=utf-8";
-        Response.Headers["Cache-Control"] = "no-cache";
-        Response.Headers["X-Accel-Buffering"] = "no";
+        Response.ContentType = SseConstants.ContentType;
+        Response.Headers["Cache-Control"] = SseConstants.CacheControl;
+        Response.Headers["X-Accel-Buffering"] = SseConstants.XAccelBuffering;
 
         try
         {
             await foreach (var chunk in botKunChatService.StreamChatAsync(request, cancellationToken))
             {
                 var payload = JsonSerializer.Serialize(new { c = chunk }, JsonOptions);
-                await Response.WriteAsync($"data: {payload}\n\n", cancellationToken);
+                await Response.WriteAsync($"{SseConstants.DataPrefix}{payload}\n\n", cancellationToken);
                 await Response.Body.FlushAsync(cancellationToken);
             }
 
-            await Response.WriteAsync("data: [DONE]\n\n", cancellationToken);
+            await Response.WriteAsync(SseConstants.DoneMessage, cancellationToken);
             await Response.Body.FlushAsync(cancellationToken);
         }
         catch (OperationCanceledException)
@@ -56,20 +55,20 @@ public sealed class BotKunController(IBotKunChatService botKunChatService) : Con
     [Authorize]
     public async Task StreamGreeting(CancellationToken cancellationToken)
     {
-        Response.ContentType = "text/event-stream; charset=utf-8";
-        Response.Headers["Cache-Control"] = "no-cache";
-        Response.Headers["X-Accel-Buffering"] = "no";
+        Response.ContentType = SseConstants.ContentType;
+        Response.Headers["Cache-Control"] = SseConstants.CacheControl;
+        Response.Headers["X-Accel-Buffering"] = SseConstants.XAccelBuffering;
 
         try
         {
             await foreach (var chunk in botKunChatService.StreamGreetingAsync(cancellationToken))
             {
                 var payload = JsonSerializer.Serialize(new { c = chunk }, JsonOptions);
-                await Response.WriteAsync($"data: {payload}\n\n", cancellationToken);
+                await Response.WriteAsync($"{SseConstants.DataPrefix}{payload}\n\n", cancellationToken);
                 await Response.Body.FlushAsync(cancellationToken);
             }
 
-            await Response.WriteAsync("data: [DONE]\n\n", cancellationToken);
+            await Response.WriteAsync(SseConstants.DoneMessage, cancellationToken);
             await Response.Body.FlushAsync(cancellationToken);
         }
         catch (OperationCanceledException)

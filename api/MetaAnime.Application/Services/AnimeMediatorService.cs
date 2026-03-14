@@ -42,12 +42,6 @@ public sealed class AnimeMediatorService(
         DefaultIgnoreCondition = JsonIgnoreCondition.Never
     };
 
-    /// <summary>Genre names that are always treated as NSFW regardless of the MAL <c>nsfw</c> field value.</summary>
-    private static readonly HashSet<string> NsfwGenres = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "Ecchi", "Hentai", "Erotica"
-    };
-
     /// <summary>Maps filter codec tokens to all equivalent codec strings that may appear in file metadata.</summary>
     private static readonly Dictionary<string, string[]> CodecAliases = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -100,16 +94,16 @@ public sealed class AnimeMediatorService(
 
             AnimeSource? sourceFilter = filters?.Source?.ToLower() switch
             {
-                "plex" => AnimeSource.Plex,
-                "mal" => AnimeSource.MyAnimeList,
-                "sonarr" => AnimeSource.Sonarr,
+                FilterConstants.Source.Plex   => AnimeSource.Plex,
+                FilterConstants.Source.Mal    => AnimeSource.MyAnimeList,
+                FilterConstants.Source.Sonarr => AnimeSource.Sonarr,
                 _ => null
             };
-            bool sortDescending = filters?.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) == true;
+            bool sortDescending = filters?.SortOrder?.Equals(FilterConstants.SortOrder.Descending, StringComparison.OrdinalIgnoreCase) == true;
             // The DB repository only supports title/anidbid sorting. Any other sort field (malscore,
             // sizeondisk, avgepsize, etc.) requires in-memory ApplySorting() on the full result set.
             bool sortRequiresInMemory = !string.IsNullOrWhiteSpace(filters?.SortBy) &&
-                filters.SortBy.ToLower() is not ("title" or "anidbid");
+                filters.SortBy.ToLower() is not (FilterConstants.SortField.Title or FilterConstants.SortField.AniDbId);
             // Title is always handled in-memory (word-level Levenshtein fuzzy match).
             // The DB-level ILike pre-filter cannot handle typos, so we bypass it for title searches.
             bool needsInMemoryPostFilter = sortRequiresInMemory
@@ -297,9 +291,9 @@ public sealed class AnimeMediatorService(
         {
             var source = filters.Source;
             result = result.Where(a =>
-                (source.Equals("plex", StringComparison.OrdinalIgnoreCase) && a.PlexAnimes?.Any() == true) ||
-                (source.Equals("mal", StringComparison.OrdinalIgnoreCase) && a.MalAnimes?.Any() == true) ||
-                (source.Equals("sonarr", StringComparison.OrdinalIgnoreCase) && a.SonarrAnimes?.Any() == true)
+                (source.Equals(FilterConstants.Source.Plex,   StringComparison.OrdinalIgnoreCase) && a.PlexAnimes?.Any() == true) ||
+                (source.Equals(FilterConstants.Source.Mal,    StringComparison.OrdinalIgnoreCase) && a.MalAnimes?.Any() == true) ||
+                (source.Equals(FilterConstants.Source.Sonarr, StringComparison.OrdinalIgnoreCase) && a.SonarrAnimes?.Any() == true)
             );
         }
 
@@ -315,7 +309,7 @@ public sealed class AnimeMediatorService(
         {
             // Use a HashSet for O(1) genre lookups instead of O(n) inner Any()
             var genreSet = new HashSet<string>(filters.Genre, StringComparer.OrdinalIgnoreCase);
-            bool isAnd = "and".Equals(filters.GenreOperator, StringComparison.OrdinalIgnoreCase);
+            bool isAnd = FilterConstants.Operator.And.Equals(filters.GenreOperator, StringComparison.OrdinalIgnoreCase);
 
             result = result.Where(a =>
             {
@@ -355,7 +349,7 @@ public sealed class AnimeMediatorService(
         {
             // Theme filtering works identically to genre filtering — both are stored in the MAL Genres array.
             var themeSet = new HashSet<string>(filters.Theme, StringComparer.OrdinalIgnoreCase);
-            bool isAnd = "and".Equals(filters.ThemeOperator, StringComparison.OrdinalIgnoreCase);
+            bool isAnd = FilterConstants.Operator.And.Equals(filters.ThemeOperator, StringComparison.OrdinalIgnoreCase);
 
             result = result.Where(a =>
             {
@@ -394,7 +388,7 @@ public sealed class AnimeMediatorService(
         {
             // Demographic filtering works identically to genre/theme filtering — stored in the MAL Genres array.
             var demographicSet = new HashSet<string>(filters.Demographic, StringComparer.OrdinalIgnoreCase);
-            bool isAnd = "and".Equals(filters.DemographicOperator, StringComparison.OrdinalIgnoreCase);
+            bool isAnd = FilterConstants.Operator.And.Equals(filters.DemographicOperator, StringComparison.OrdinalIgnoreCase);
 
             result = result.Where(a =>
             {
@@ -509,15 +503,15 @@ public sealed class AnimeMediatorService(
         if (filters == null || string.IsNullOrWhiteSpace(filters.SortBy))
             return data.OrderBy(a => a.Title);
 
-        var desc = filters.SortOrder?.Equals("desc", StringComparison.OrdinalIgnoreCase) == true;
+        var desc = filters.SortOrder?.Equals(FilterConstants.SortOrder.Descending, StringComparison.OrdinalIgnoreCase) == true;
 
         return filters.SortBy.ToLower() switch
         {
-            "title" => desc ? data.OrderByDescending(a => a.Title) : data.OrderBy(a => a.Title),
-            "anidbid" => desc ? data.OrderByDescending(a => a.AniDbId) : data.OrderBy(a => a.AniDbId),
-            "malscore" => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MalMean ?? 0)
+            FilterConstants.SortField.Title   => desc ? data.OrderByDescending(a => a.Title) : data.OrderBy(a => a.Title),
+            FilterConstants.SortField.AniDbId => desc ? data.OrderByDescending(a => a.AniDbId) : data.OrderBy(a => a.AniDbId),
+            FilterConstants.SortField.MalScore => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MalMean ?? 0)
                                 : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MalMean ?? 0),
-            "myscore" => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MyScore ?? 0)
+            FilterConstants.SortField.MyScore => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MyScore ?? 0)
                                : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.Rating?.MyScore ?? 0),
             "startdate" => desc ? data.OrderByDescending(a => a.MalAnimes?.FirstOrDefault()?.StartDate)
                                  : data.OrderBy(a => a.MalAnimes?.FirstOrDefault()?.StartDate),
@@ -1602,7 +1596,7 @@ public sealed class AnimeMediatorService(
             return true;
 
         // Some Ecchi/Hentai titles are rated "white" by MAL but carry explicit genres
-        return malAnime.Genres?.Any(g => NsfwGenres.Contains(g.Name)) == true;
+        return malAnime.Genres?.Any(g => MalConstants.NsfwGenres.Contains(g.Name)) == true;
     }
 
     private async Task<PlexAnimeInfo> CreatePlexAnimeInfoFromCacheAsync(AnimeMapping mapping, Dictionary<string, string> plexCache)

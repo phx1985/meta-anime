@@ -1,4 +1,4 @@
-<div class="provider-links" aria-label="Provider links">
+<div class="provider-links" [attr.aria-label]="'aria.providerLinks' | translate">
 
   <!-- MAL — always shown if client ID is configured -->
   @if (malConfigured()) {

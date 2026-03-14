@@ -11,7 +11,7 @@
   @if (loading()) {
     <div class="d-flex justify-content-center py-5">
       <div class="spinner-border" role="status">
-        <span class="visually-hidden">Loading...</span>
+        <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
       </div>
     </div>
   } @else if (error()) {
@@ -20,7 +20,7 @@
     </div>
   } @else {
     <!-- ── Mobile sticky subnav (replaces hidden sidenav on small screens) ──── -->
-    <nav class="settings-mobile-subnav" aria-label="Settings navigation">
+    <nav class="settings-mobile-subnav" [attr.aria-label]="'aria.settingsNavigation' | translate">
       @for (cat of navItems(); track cat) {
         <button
           type="button"
@@ -77,7 +77,7 @@
 
     <div class="settings-layout">
       <!-- ── Floating vertical side nav ─────────────────────────────────────── -->
-      <nav class="settings-sidenav" aria-label="Settings navigation">
+      <nav class="settings-sidenav" [attr.aria-label]="'aria.settingsNavigation' | translate">
         <ul class="sidenav-list">
           @for (cat of navItems(); track cat) {
             <li class="sidenav-item">
@@ -383,11 +383,11 @@
 
                   <!-- ── Plex Library Picker Modal ───────────────────────────── -->
                   @if (plexPickerOpen()) {
-                    <div class="picker-modal-backdrop" (click)="plexPickerOpen.set(false)" role="dialog" aria-modal="true" aria-label="Select Plex Libraries">
+                    <div class="picker-modal-backdrop" (click)="plexPickerOpen.set(false)" role="dialog" aria-modal="true" [attr.aria-label]="'aria.selectPlexLibraries' | translate">
                       <div class="picker-modal" (click)="$event.stopPropagation()">
                         <div class="picker-modal__header">
                           <span class="picker-modal__title">{{ 'settings.plex.manageLibraries' | translate }}</span>
-                          <button type="button" class="picker-modal__close" (click)="plexPickerOpen.set(false)" aria-label="Close">✕</button>
+                          <button type="button" class="picker-modal__close" (click)="plexPickerOpen.set(false)" [attr.aria-label]="'common.close' | translate">✕</button>
                         </div>
                         <div class="picker-modal__body">
                           @if (plexLibsForSettings().length === 0) {
@@ -812,11 +812,11 @@
 
                   <!-- ── Sonarr Tag Picker Modal ─────────────────────────────── -->
                   @if (sonarrPickerOpen()) {
-                    <div class="picker-modal-backdrop" (click)="sonarrPickerOpen.set(false)" role="dialog" aria-modal="true" aria-label="Manage Sonarr Tags">
+                    <div class="picker-modal-backdrop" (click)="sonarrPickerOpen.set(false)" role="dialog" aria-modal="true" [attr.aria-label]="'aria.manageSonarrTags' | translate">
                       <div class="picker-modal" (click)="$event.stopPropagation()">
                         <div class="picker-modal__header">
                           <span class="picker-modal__title">{{ 'settings.sonarr.manageTags' | translate }}</span>
-                          <button type="button" class="picker-modal__close" (click)="sonarrPickerOpen.set(false)" aria-label="Close">✕</button>
+                          <button type="button" class="picker-modal__close" (click)="sonarrPickerOpen.set(false)" [attr.aria-label]="'common.close' | translate">✕</button>
                         </div>
                         <div class="picker-modal__body">
                           @if (sonarrTagsForSettings().length === 0) {
@@ -1407,7 +1407,7 @@
               </div>
             }
 
-            <ol class="sync-hub-steps" aria-label="Sync steps">
+            <ol class="sync-hub-steps" [attr.aria-label]="'aria.syncSteps' | translate">
               @for (step of syncSteps(); track step.stepKey) {
                 @if (shouldShowSyncStep(step)) {
                   <app-sync-step [step]="step" />

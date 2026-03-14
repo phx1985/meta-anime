@@ -86,7 +86,7 @@
           class="mal-qu-step-btn"
           (click)="decrementEpisodes()"
           [disabled]="episodesWatched() <= 0"
-          aria-label="Decrease"
+          [attr.aria-label]="'aria.decreaseEpisodes' | translate"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
             <line x1="5" y1="12" x2="19" y2="12" />
@@ -101,14 +101,14 @@
           [max]="ctx()?.totalEpisodes ?? 99999"
           (change)="onEpisodesInput($event)"
           (blur)="onEpisodesInput($event)"
-          aria-label="Episodes watched"
+          [attr.aria-label]="'aria.episodesWatched' | translate"
         />
         <button
           type="button"
           class="mal-qu-step-btn"
           (click)="incrementEpisodes()"
           [disabled]="ctx()?.totalEpisodes != null && episodesWatched() >= (ctx()?.totalEpisodes ?? 99999)"
-          aria-label="Increase"
+          [attr.aria-label]="'aria.increaseEpisodes' | translate"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
             <line x1="12" y1="5" x2="12" y2="19" />

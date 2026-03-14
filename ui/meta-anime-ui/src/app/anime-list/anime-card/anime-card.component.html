@@ -124,23 +124,23 @@
   @if (inMal || inSonarr || inPlex) {
     <div class="provider-dots" (click)="$event.stopPropagation(); activeProviderTooltip.set(null)">
       @if (inSonarr) {
-        <span class="dot dot--sonarr" [class.dot--active]="activeProviderTooltip() === 'sonarr'" (click)="toggleTooltip('sonarr', $event)" title="In Sonarr">
+        <span class="dot dot--sonarr" [class.dot--active]="activeProviderTooltip() === 'sonarr'" (click)="toggleTooltip('sonarr', $event)" [title]="'providers.inSonarr' | translate">
           @if (activeProviderTooltip() === 'sonarr') {
-            <span class="dot-tooltip">In Sonarr</span>
+            <span class="dot-tooltip">{{ 'providers.inSonarr' | translate }}</span>
           }
         </span>
       }
       @if (inPlex) {
-        <span class="dot dot--plex" [class.dot--active]="activeProviderTooltip() === 'plex'" (click)="toggleTooltip('plex', $event)" title="In Plex">
+        <span class="dot dot--plex" [class.dot--active]="activeProviderTooltip() === 'plex'" (click)="toggleTooltip('plex', $event)" [title]="'providers.inPlex' | translate">
           @if (activeProviderTooltip() === 'plex') {
-            <span class="dot-tooltip">In Plex</span>
+            <span class="dot-tooltip">{{ 'providers.inPlex' | translate }}</span>
           }
         </span>
       }
       @if (inMal) {
-        <span class="dot dot--mal" [class.dot--active]="activeProviderTooltip() === 'mal'" (click)="toggleTooltip('mal', $event)" title="In MAL">
+        <span class="dot dot--mal" [class.dot--active]="activeProviderTooltip() === 'mal'" (click)="toggleTooltip('mal', $event)" [title]="'providers.inMal' | translate">
           @if (activeProviderTooltip() === 'mal') {
-            <span class="dot-tooltip">In MAL</span>
+            <span class="dot-tooltip">{{ 'providers.inMal' | translate }}</span>
           }
         </span>
       }
@@ -204,7 +204,7 @@
 <!-- ── Lightbox overlay ──────────────────────────────────────────────────── -->
 @if (showLightbox() && coverImageUrl) {
   <div class="lightbox-overlay" (click)="closeLightbox()" role="dialog" aria-modal="true">
-    <button class="lightbox-close" type="button" (click)="closeLightbox()" aria-label="Close">
+    <button class="lightbox-close" type="button" (click)="closeLightbox()" [attr.aria-label]="'common.close' | translate">
       <svg
         viewBox="0 0 24 24"
         fill="none"

@@ -6,11 +6,13 @@ import {
   signal,
   effect,
 } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeImageGalleryService } from '../services/anime-image-gallery.service';
 
 @Component({
   selector: 'app-anime-image-gallery',
   standalone: true,
+  imports: [TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './anime-image-gallery.component.html',
   styleUrl: './anime-image-gallery.component.scss',

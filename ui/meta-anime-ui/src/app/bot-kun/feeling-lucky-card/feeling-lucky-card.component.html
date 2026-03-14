@@ -2,7 +2,7 @@
 
   @if (isRolling()) {
     <!-- Rolling animation -->
-    <div class="lucky-card__rolling" aria-label="Feeling lucky, picking your anime…" aria-live="polite">
+    <div class="lucky-card__rolling" [attr.aria-label]="'aria.feelingLucky' | translate" aria-live="polite">
       <div class="lucky-card__dice-wrap" aria-hidden="true">
         <svg class="lucky-card__dice-icon" width="28" height="28" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">

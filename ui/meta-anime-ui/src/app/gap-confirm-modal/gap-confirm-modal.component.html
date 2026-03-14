@@ -80,7 +80,7 @@
           class="gcm-card gcm-card--mal gcm-card--clickable"
           (click)="openPreview()"
         >
-          <div class="gcm-card__label">MAL ITEM</div>
+          <div class="gcm-card__label">{{ 'gapConfirmModal.malItemLabel' | translate }}</div>
           <div class="gcm-poster-wrap">
             @if (targetItem().thumbnailUrl) {
               <img
@@ -99,7 +99,7 @@
               class="gcm-info-btn"
               (click)="$event.stopPropagation(); openPreview()"
               title="See details"
-              aria-label="See details"
+              [attr.aria-label]="'aria.seeDetails' | translate"
             >
               <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                 <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.4"/>

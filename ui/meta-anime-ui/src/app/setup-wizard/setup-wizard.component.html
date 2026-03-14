@@ -10,13 +10,13 @@
     @if (initializing()) {
       <div class="wizard-loading">
         <div class="spinner-border" role="status">
-          <span class="visually-hidden">Loading...</span>
+          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
         </div>
       </div>
     } @else {
 
       <!-- Progress dots -->
-      <div class="wizard-progress" aria-label="Setup progress">
+      <div class="wizard-progress" [attr.aria-label]="'aria.setupProgress' | translate">
         @for (n of [1, 2, 3, 4, 5, 6, 7]; track n) {
           <div
             class="wizard-dot"
@@ -578,21 +578,21 @@
             <ul class="wizard-status-list">
               <li class="wizard-status-item">
                 <span class="wizard-status-dot" [class.wizard-status-dot--ok]="malConnected()" aria-hidden="true"></span>
-                <span class="wizard-status-name">MyAnimeList</span>
+                <span class="wizard-status-name">{{ 'providers.mal' | translate }}</span>
                 <span class="wizard-status-badge" [class.wizard-status-badge--ok]="malConnected()" [class.wizard-status-badge--skip]="!malConnected()">
                   {{ (malConnected() ? 'wizard.step6.configured' : 'wizard.step6.skipped') | translate }}
                 </span>
               </li>
               <li class="wizard-status-item">
                 <span class="wizard-status-dot" [class.wizard-status-dot--ok]="plexConnected()" aria-hidden="true"></span>
-                <span class="wizard-status-name">Plex</span>
+                <span class="wizard-status-name">{{ 'providers.plex' | translate }}</span>
                 <span class="wizard-status-badge" [class.wizard-status-badge--ok]="plexConnected()" [class.wizard-status-badge--skip]="!plexConnected()">
                   {{ (plexConnected() ? 'wizard.step6.configured' : 'wizard.step6.skipped') | translate }}
                 </span>
               </li>
               <li class="wizard-status-item">
                 <span class="wizard-status-dot" [class.wizard-status-dot--ok]="sonarrSaved()" aria-hidden="true"></span>
-                <span class="wizard-status-name">Sonarr</span>
+                <span class="wizard-status-name">{{ 'providers.sonarr' | translate }}</span>
                 <span class="wizard-status-badge" [class.wizard-status-badge--ok]="sonarrSaved()" [class.wizard-status-badge--skip]="!sonarrSaved()">
                   {{ (sonarrSaved() ? 'wizard.step6.configured' : 'wizard.step6.skipped') | translate }}
                 </span>
