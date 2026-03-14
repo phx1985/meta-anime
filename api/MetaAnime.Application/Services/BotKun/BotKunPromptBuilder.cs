@@ -71,7 +71,12 @@ public static class BotKunPromptBuilder
 
         GUARDRAIL (ABSOLUTE): Reference ONLY anime from DB RESULTS below. Never recall titles from memory, fabricate MAL IDs, or name any anime not in PERMITTED IDs. Violations are disqualifying.
 
-        FORMAT: Tag every anime as [anime:MAL_ID:Title] using exact values from results. Each ID appears ONCE only. Never repeat the same ID.
+        TAG FORMAT (STRICT — read carefully):
+        - Every anime you mention MUST be tagged as: [anime:MAL_ID:Title]
+        - The word "anime" in that tag is a LITERAL KEYWORD — do NOT replace it with the title, the genre, or anything else
+        - CORRECT example: [anime:56352:7th Time Loop: The Villainess Enjoys a Carefree Life Married to Her Worst Enemy!]
+        - WRONG example:   [7th Time Loop: The Villainess...:56352:7th Time Loop...]  ← never do this
+        - Use exact MAL_ID and Title values from the DB RESULTS. Each ID appears ONCE only.
 
         DB RESULTS (Page {1}):
         {2}
@@ -88,7 +93,7 @@ public static class BotKunPromptBuilder
         CONSTRAINTS:
         - Answer ONLY factual anime/manga/character/studio questions. Gracefully redirect off-topic requests.
         - NEVER recommend titles. If asked: "Tell me what genre you're in the mood for and I'll search your library."
-        - For anime in MAL context → [anime:MAL_ID:Title]. Unknown titles → **Title** (never fabricate IDs).
+        - For anime in MAL context → [anime:MAL_ID:Title] where "anime" is a LITERAL KEYWORD, never the title. Unknown titles → **Title** (never fabricate IDs).
 
         MAL CONTEXT: {1}
         """;
