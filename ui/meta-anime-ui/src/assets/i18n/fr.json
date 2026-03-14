@@ -1012,6 +1012,13 @@
       }
     }
   },
+  "botKun": {
+    "subtitle": "Concierge IA Anime",
+    "inputPlaceholder": "Parlez-moi d'anime…",
+    "clearConversation": "Effacer la conversation",
+    "errorFallback": "Désolé, une erreur s'est produite. Veuillez réessayer.",
+    "connectionError": "Erreur de connexion — vérifiez vos paramètres Bot-kun."
+  },
   "luckyPick": {
     "buttonLabel": "J'ai de la chance!",
     "ariaLabel": "Superposition de sélection aléatoire d'anime",
@@ -1030,6 +1037,17 @@
       "title": "Connexion perdue",
       "desc": "Impossible de joindre le serveur. Veuillez vérifier votre connexion.",
       "retry": "Réessayer"
+    },
+    "chatCard": {
+      "rolling": "Feeling Lucky",
+      "label": "Feeling Lucky",
+      "scoreSuffix": "/ 10",
+      "openDetails": "Ouvrir les détails",
+      "addToList": "Ajouter à ma liste",
+      "addingToList": "Ajout à ma liste…",
+      "addedToList": "Ajouté à ma liste",
+      "loadError": "Impossible de charger les détails de cette sélection aléatoire.",
+      "updateError": "Impossible de mettre à jour votre liste MAL pour le moment."
     },
     "phrases": {
       "plex": [

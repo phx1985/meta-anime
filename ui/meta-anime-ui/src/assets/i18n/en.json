@@ -1020,6 +1020,13 @@
       }
     }
   },
+  "botKun": {
+    "subtitle": "AI Anime Concierge",
+    "inputPlaceholder": "Ask me about anime…",
+    "clearConversation": "Clear conversation",
+    "errorFallback": "Sorry, something went wrong. Please try again.",
+    "connectionError": "Connection error — please check your Bot-kun settings."
+  },
   "luckyPick": {
     "buttonLabel": "I'm Feeling Lucky",
     "ariaLabel": "Random anime pick overlay",
@@ -1038,6 +1045,17 @@
       "title": "Connection lost",
       "desc": "Could not reach the server. Please check your connection.",
       "retry": "Retry"
+    },
+    "chatCard": {
+      "rolling": "Feeling Lucky",
+      "label": "Feeling Lucky",
+      "scoreSuffix": "/ 10",
+      "openDetails": "Open details",
+      "addToList": "Add to My List",
+      "addingToList": "Adding to My List…",
+      "addedToList": "Added to My List",
+      "loadError": "Could not load the lucky pick details.",
+      "updateError": "Could not update your MAL list right now."
     },
     "phrases": {
       "plex": [

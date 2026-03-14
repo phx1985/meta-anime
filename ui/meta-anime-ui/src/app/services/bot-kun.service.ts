@@ -17,7 +17,7 @@ export class BotKunService {
   private abortController: AbortController | null = null;
   private greetingAbortController: AbortController | null = null;
 
-  sendMessage(userMessage: string, history: BotKunHistoryMessage[]): Observable<string> {
+  sendMessage(userMessage: string, history: BotKunHistoryMessage[], language = 'en'): Observable<string> {
     return new Observable<string>(subscriber => {
       this.abortController = new AbortController();
       const { signal } = this.abortController;
@@ -29,7 +29,7 @@ export class BotKunService {
       fetch('/api/v1/bot-kun/chat', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ userMessage, history }),
+        body: JSON.stringify({ userMessage, history, language }),
         signal,
       })
         .then(async response => {
@@ -125,7 +125,9 @@ export class BotKunService {
           }
           try {
             const parsed = JSON.parse(data) as { c?: string };
-            if (parsed.c) subscriber.next(parsed.c);
+            if (parsed.c) {
+              subscriber.next(parsed.c);
+            }
           } catch {
             // malformed chunk — skip
           }
@@ -138,5 +140,4 @@ export class BotKunService {
     subscriber.complete();
   }
 }
-
 

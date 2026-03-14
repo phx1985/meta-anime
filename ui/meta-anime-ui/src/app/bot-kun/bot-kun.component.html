@@ -50,13 +50,14 @@
       </div>
       <div>
         <span class="bot-kun__title">Bot-kun</span>
-        <span class="bot-kun__subtitle">AI Anime Concierge</span>
+        <span class="bot-kun__subtitle">{{ 'botKun.subtitle' | translate }}</span>
       </div>
     </div>
     <div class="bot-kun__header-actions">
       @if (hasMessages()) {
-      <button class="bot-kun__icon-btn" type="button" (click)="clearHistory()" title="Clear conversation"
-        aria-label="Clear conversation">
+      <button class="bot-kun__icon-btn" type="button" (click)="clearHistory()"
+        [title]="'botKun.clearConversation' | translate"
+        [attr.aria-label]="'botKun.clearConversation' | translate">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <polyline points="3 6 5 6 21 6" />
@@ -109,10 +110,17 @@
           @for (seg of parseSegments(msg.typedContent, false); track segmentTrackKey($index, seg)) {
             @if (seg.type === 'text') {
               <span [innerHTML]="seg.html"></span>
-            } @else {
+            } @else if (seg.type === 'card') {
               <app-bot-kun-anime-card
                 [malId]="seg.malId"
                 [title]="seg.title"
+                (cardClicked)="animeSelected.emit($event)"
+              />
+            } @else if (seg.type === 'lucky') {
+              <app-feeling-lucky-card
+                [malId]="seg.malId"
+                [title]="seg.title"
+                (cardReady)="onLuckyCardReady()"
                 (cardClicked)="animeSelected.emit($event)"
               />
             }
@@ -134,7 +142,7 @@
       [value]="inputText()"
       (input)="handleInput($event)"
       (keydown)="onKeyDown($event)"
-      placeholder="Ask me about anime…"
+      [placeholder]="'botKun.inputPlaceholder' | translate"
       rows="1"
       [disabled]="isStreaming() || hasTypingMessage()"
       aria-label="Message Bot-kun"

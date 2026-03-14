@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
   effect,
   ElementRef,
@@ -11,10 +12,13 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { BotKunService, BotKunHistoryMessage } from '../services/bot-kun.service';
 import { BotKunAnimeCardComponent } from './bot-kun-anime-card/bot-kun-anime-card.component';
+import { FeelingLuckyCardComponent } from './feeling-lucky-card/feeling-lucky-card.component';
 import { Subscription } from 'rxjs';
 
 // Register marked extensions once: line breaks, no special link renderer needed
@@ -32,21 +36,28 @@ export type BotKunMessage = {
   typing?: boolean;
 };
 
-/** A parsed segment of a bot message — either plain HTML or an anime mini-card */
+/** A parsed segment of a bot message — either plain HTML, an anime mini-card, or a Feeling Lucky card */
 export type MessageSegment =
   | { type: 'text'; html: string }
-  | { type: 'card'; malId: string; title: string };
+  | { type: 'card'; malId: string; title: string }
+  | { type: 'lucky'; malId: string; title: string };
 
 @Component({
   selector: 'app-bot-kun',
   standalone: true,
-  imports: [BotKunAnimeCardComponent],
+  imports: [BotKunAnimeCardComponent, FeelingLuckyCardComponent, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bot-kun.component.html',
   styleUrl: './bot-kun.component.scss',
 })
 export class BotKunComponent implements OnDestroy {
   private readonly botKunService = inject(BotKunService);
+  private readonly translate = inject(TranslateService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  private luckyCardResume: (() => void) | null = null;
+
+  readonly currentLang = signal(this.translate.currentLang ?? 'en');
 
   /** Emits the MAL ID of an anime the user clicked */
   readonly animeSelected = output<string>();
@@ -79,6 +90,10 @@ export class BotKunComponent implements OnDestroy {
         setTimeout(() => this.scrollToBottom('smooth'), 30);
       }
     });
+
+    this.translate.onLangChange
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(e => this.currentLang.set(e.lang));
   }
 
   ngOnDestroy(): void {
@@ -144,7 +159,7 @@ export class BotKunComponent implements OnDestroy {
     this.startTypewriter(msgIndex, version);
 
     this.streamSub?.unsubscribe();
-    this.streamSub = this.botKunService.sendMessage(text, history.slice(0, -1)).subscribe({
+    this.streamSub = this.botKunService.sendMessage(text, history.slice(0, -1), this.currentLang()).subscribe({
       next: chunk => {
         this.messages.update(msgs => {
           const updated = [...msgs];
@@ -177,7 +192,7 @@ export class BotKunComponent implements OnDestroy {
           if (last?.role === 'assistant' && last.streaming) {
             updated[updated.length - 1] = {
               ...last,
-              content: last.content || 'Something went wrong connecting to Bot-kun. Please try again!',
+              content: last.content || this.translate.instant('botKun.errorFallback'),
               streaming: false,
             };
           }
@@ -203,17 +218,22 @@ export class BotKunComponent implements OnDestroy {
     const seenMalIds = new Set<string>();
     let lastIndex = 0;
 
-    for (const match of content.matchAll(/\[anime:([^:\]]+):([^\]]+)\]/g)) {
+    for (const match of content.matchAll(/\[(anime|lucky):([^:\]]+):([^\]]+)\]/g)) {
       const matchIndex = match.index ?? 0;
 
       if (matchIndex > lastIndex) {
         segments.push({ type: 'text', html: this.toSafeHtml(content.slice(lastIndex, matchIndex)) });
       }
 
-      const malId = match[1].trim();
+      const tagType = match[1].trim() as 'anime' | 'lucky';
+      const malId = match[2].trim();
       if (!seenMalIds.has(malId)) {
         seenMalIds.add(malId);
-        segments.push({ type: 'card', malId, title: match[2].trim() });
+        segments.push({
+          type: tagType === 'lucky' ? 'lucky' : 'card',
+          malId,
+          title: match[3].trim(),
+        });
       }
 
       lastIndex = matchIndex + match[0].length;
@@ -228,7 +248,9 @@ export class BotKunComponent implements OnDestroy {
 
   /** Stable track key for `@for` over MessageSegment arrays — cards track by malId, text by position. */
   segmentTrackKey(index: number, seg: MessageSegment): string {
-    return seg.type === 'card' ? `card-${seg.malId}` : `text-${index}`;
+    if (seg.type === 'card') return `card-${seg.malId}`;
+    if (seg.type === 'lucky') return `lucky-${seg.malId}`;
+    return `text-${index}`;
   }
 
   clearHistory(): void {
@@ -238,6 +260,11 @@ export class BotKunComponent implements OnDestroy {
     this.botKunService.cancelGreeting();
     this.isStreaming.set(false);
     this.hasUnread.set(false);
+  }
+
+  onLuckyCardReady(): void {
+    this.luckyCardResume?.();
+    this.luckyCardResume = null;
   }
 
   private streamGreeting(): void {
@@ -277,7 +304,7 @@ export class BotKunComponent implements OnDestroy {
           if (last?.role === 'assistant' && last.streaming) {
             updated[updated.length - 1] = {
               ...last,
-              content: last.content || "Yosh! Bot-kun is here! 🎌 Ask me anything about anime — Dattebayo!",
+              content: last.content || this.translate.instant('botKun.connectionError'),
               streaming: false,
             };
           }
@@ -296,7 +323,7 @@ export class BotKunComponent implements OnDestroy {
    * Self-schedules via setTimeout; stops when the `version` is superseded (clearHistory / new send).
    */
   private startTypewriter(msgIndex: number, version: number): void {
-    const COMPLETE_TAG_RE = /^\[anime:[^:\]]+:[^\]]+\]/;
+    const COMPLETE_TAG_RE = /^\[(anime|lucky):[^:\]]+:[^\]]+\]/;
     const MIN_DELAY = 5;
     const VAR_DELAY = 5;
 
@@ -329,10 +356,10 @@ export class BotKunComponent implements OnDestroy {
 
       const tagMatch = COMPLETE_TAG_RE.exec(remaining);
       if (tagMatch) {
-        // Fully-formed anime tag — pop the whole tag in one frame, no delay
+        // Fully-formed media tag — pop the whole tag in one frame, no delay
         step = tagMatch[0].length;
         nextDelay = 0;
-      } else if (remaining.startsWith('[anime:') && msg.streaming) {
+      } else if ((remaining.startsWith('[anime:') || remaining.startsWith('[lucky:')) && msg.streaming) {
         // Incomplete tag while stream is still open — wait for the rest of the tag
         setTimeout(tick, 30);
         return;
@@ -346,6 +373,13 @@ export class BotKunComponent implements OnDestroy {
       ));
 
       this.scrollToBottom('instant');
+
+      // For lucky tags, pause typewriter until the card emits cardReady
+      if (tagMatch?.[0].startsWith('[lucky:')) {
+        this.luckyCardResume = () => { this.luckyCardResume = null; tick(); };
+        return;
+      }
+
       setTimeout(tick, nextDelay);
     };
 

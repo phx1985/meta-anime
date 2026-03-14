@@ -42,6 +42,9 @@ public static class SettingsKeys
     public const string AppShowNsfw = "App:ShowNsfw";
     public const string AppSyncInterval = "App:SyncInterval";
     public const string AppTitleSimilarityThreshold = "App:TitleSimilarityThreshold";
+    public const string LuckyOnlyFinished = "meta-anime:luckyOnlyFinished";
+    public const string LuckyOnlyPlanToWatch = "meta-anime:luckyOnlyPlanToWatch";
+    public const string LuckyOnlyWithFiles = "meta-anime:luckyOnlyWithFiles";
 
     // Internal token storage keys (managed exclusively by backend OAuth flows)
     public const string MalAccessToken = "MAL_ACCESS_TOKEN";

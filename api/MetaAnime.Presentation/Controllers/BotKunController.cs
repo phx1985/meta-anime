@@ -19,6 +19,8 @@ public sealed class BotKunController(IBotKunChatService botKunChatService) : Con
     /// <summary>
     /// Streams a Bot-kun chat response as Server-Sent Events.
     /// Each event is <c>data: {"c":"token"}\n\n</c>; the final event is <c>data: [DONE]\n\n</c>.
+    /// When the service emits telemetry (prefixed with <c>\x1E</c>), it is forwarded as
+    /// <c>data: {"t":{...}}\n\n</c> without appearing in the chat text stream.
     /// </summary>
     [HttpPost("chat")]
     [Authorize]
