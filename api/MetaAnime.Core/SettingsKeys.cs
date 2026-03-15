@@ -60,6 +60,9 @@ public static class SettingsKeys
     public const string BotKunApiKey   = "BotKun:ApiKey";
     public const string BotKunModel    = "BotKun:Model";
 
+    // Known AI provider URLs (app-seeded reference list; not user-configurable)
+    public const string KnownAiApiUrls = "App:KnownAiApiUrls";
+
     // Admin authentication (stored as hashed value; absent = public mode)
     public const string AdminPasswordHash = "System:AdminPasswordHash";
     public const string JwtSecret = "System:JwtSecret";

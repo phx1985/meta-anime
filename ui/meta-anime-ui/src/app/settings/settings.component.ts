@@ -25,6 +25,7 @@ import { SonarrService, SonarrTag } from '../services/sonarr.service';
 import { AuthService } from '../services/auth.service';
 import { EnrollmentService, PlexLibrary } from '../services/enrollment.service';
 import { BotKunService } from '../services/bot-kun.service';
+import { PropertyBagService } from '../services/property-bag.service';
 import { SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
 import { SyncStep } from '../models/sync-progress.models';
@@ -74,6 +75,7 @@ export class SettingsComponent {
   readonly popupService = inject(PopupService);
   private enrollmentService = inject(EnrollmentService);
   private botKunService = inject(BotKunService);
+  private propertyBagService = inject(PropertyBagService);
 
   loading = signal(true);
   error = signal(false);
@@ -234,6 +236,10 @@ export class SettingsComponent {
   botkunModels = signal<string[]>([]);
   botkunModelsFetching = signal(false);
   botkunModelsFetchError = signal('');
+  /** True when the last model fetch failed with an HTTP/connectivity error (invalid credentials or unreachable URL). */
+  botkunCredentialsError = signal(false);
+  /** Known AI provider URLs fetched from the property bag seed. */
+  knownAiApiUrls = signal<{ url: string; name: string }[]>([]);
 
   sonarrDefaultSettings = computed(() => {
     const order = [
@@ -458,6 +464,19 @@ export class SettingsComponent {
       });
 
     this.loadSyncStatus();
+
+    // Load known AI provider URLs from the property bag (seeded on startup)
+    this.propertyBagService.get('App:KnownAiApiUrls')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (entry) => {
+          try {
+            const parsed = JSON.parse(entry.value) as { url: string; name: string }[];
+            if (Array.isArray(parsed)) this.knownAiApiUrls.set(parsed);
+          } catch { /* non-critical */ }
+        },
+        error: () => { /* non-critical */ },
+      });
 
     this.translate.onLangChange
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -776,11 +795,16 @@ export class SettingsComponent {
           }
 
           // Handle Bot-kun settings updates — keep config signals in sync
-          if (setting.key === 'BotKun:BaseUrl' || setting.key === 'BotKun:Model') {
+          if (setting.key === 'BotKun:BaseUrl' || setting.key === 'BotKun:Model' || setting.key === 'BotKun:ApiKey') {
             const updated = this.settings();
             const url   = updated.find((s) => s.key === 'BotKun:BaseUrl')?.value ?? '';
             const model = updated.find((s) => s.key === 'BotKun:Model')?.value ?? '';
             this.providerState.setBotKunConfig(url, model);
+            // Auto-fetch models when BaseUrl or ApiKey is saved (if URL is available)
+            if ((setting.key === 'BotKun:BaseUrl' || setting.key === 'BotKun:ApiKey') && url.trim()) {
+              this.botkunCredentialsError.set(false);
+              this.fetchBotkunModels();
+            }
           }
         },
         error: () => {
@@ -1218,6 +1242,7 @@ export class SettingsComponent {
 
     this.botkunModelsFetching.set(true);
     this.botkunModelsFetchError.set('');
+    this.botkunCredentialsError.set(false);
 
     this.botKunService.fetchModels(baseUrl, apiKey)
       .pipe(
@@ -1225,8 +1250,26 @@ export class SettingsComponent {
         finalize(() => this.botkunModelsFetching.set(false)),
       )
       .subscribe({
-        next: (models) => this.botkunModels.set(models),
-        error: () => this.botkunModelsFetchError.set(this.translate.instant('settings.botkun.fetchModelsError')),
+        next: (models) => {
+          this.botkunModels.set(models);
+          this.botkunCredentialsError.set(false);
+          // Auto-select when the provider exposes exactly one model (common for local setups)
+          if (models.length === 1) {
+            this.settingsService.update('BotKun:Model', { value: models[0] })
+              .pipe(takeUntilDestroyed(this.destroyRef))
+              .subscribe({
+                next: () => {
+                  this.settings.update((s) => s.map((x) => x.key === 'BotKun:Model' ? { ...x, value: models[0] } : x));
+                  this.forms['BotKun:Model']?.patchValue({ value: models[0] });
+                },
+                error: () => {},
+              });
+          }
+        },
+        error: () => {
+          this.botkunModelsFetchError.set(this.translate.instant('settings.botkun.fetchModelsError'));
+          this.botkunCredentialsError.set(true);
+        },
       });
   }
 

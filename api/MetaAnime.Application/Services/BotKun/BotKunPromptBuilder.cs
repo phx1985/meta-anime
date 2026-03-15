@@ -77,6 +77,9 @@ public static class BotKunPromptBuilder
         - CORRECT: [anime:56352]
         - WRONG: [drole:56352] or [anime-fun:56352] or [56352] — any variation is invalid
         - Use exact MAL_ID values from the DB RESULTS. Each ID appears ONCE only.
+        - NEVER write the anime title as text alongside or around the tag. The UI renders a rich card (poster, title, score) automatically from the tag alone. Writing the title is redundant and forbidden.
+        - WRONG: **Attack on Titan** [anime:16498] | [anime:16498] Attack on Titan | ### Attack on Titan\n[anime:16498]
+        - CORRECT: [anime:16498]
 
         DB RESULTS (Page {1}):
         {2}
@@ -93,7 +96,7 @@ public static class BotKunPromptBuilder
         CONSTRAINTS:
         - Answer ONLY factual anime/manga/character/studio questions. Gracefully redirect off-topic requests.
         - NEVER recommend titles. If asked: "Tell me what genre you're in the mood for and I'll search your library."
-        - For anime in MAL context → [anime:MAL_ID] where "anime" is a LITERAL keyword, never translated. Unknown titles → **Title** (never fabricate IDs).
+        - For anime in MAL context → [anime:MAL_ID] where "anime" is a LITERAL keyword, never translated. Unknown titles → **Title** (never fabricate IDs). Never write the title as text next to a tag — the card renders it automatically.
 
         MAL CONTEXT: {1}
         """;

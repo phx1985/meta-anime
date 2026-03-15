@@ -107,7 +107,7 @@
         } @else if (msg.role === 'assistant') {
         <!-- Segment-based rendering: text runs as markdown HTML, anime tags as real cards -->
         <div class="bot-kun__md">
-          @for (seg of parseSegments(msg.typedContent, false); track segmentTrackKey($index, seg)) {
+          @for (seg of parseSegments(msg.typedContent, false, msg.permittedIds ?? botKunService.permittedMalIds()); track segmentTrackKey($index, seg)) {
             @if (seg.type === 'text') {
               <span [innerHTML]="seg.html"></span>
             } @else if (seg.type === 'card') {
@@ -136,6 +136,7 @@
   <!-- Input area -->
   <div class="bot-kun__footer">
     <textarea
+      #chatInput
       class="bot-kun__input"
       [value]="inputText()"
       (input)="handleInput($event)"

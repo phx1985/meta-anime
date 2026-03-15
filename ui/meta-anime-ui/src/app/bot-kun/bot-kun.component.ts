@@ -17,6 +17,7 @@ import { TranslateService, TranslatePipe } from '@ngx-translate/core';
 import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 import { BotKunService, BotKunHistoryMessage } from '../services/bot-kun.service';
+import { ProviderStateService } from '../services/provider-state.service';
 import { BotKunAnimeCardComponent } from './bot-kun-anime-card/bot-kun-anime-card.component';
 import { FeelingLuckyCardComponent } from './feeling-lucky-card/feeling-lucky-card.component';
 import { Subscription } from 'rxjs';
@@ -34,6 +35,8 @@ export type BotKunMessage = {
   streaming?: boolean;
   /** True while the typewriter engine still has chars to display */
   typing?: boolean;
+  /** Snapshot of permittedMalIds captured when this message was finalised (undefined = all allowed) */
+  permittedIds?: ReadonlySet<string>;
 };
 
 /** A parsed segment of a bot message — either plain HTML, an anime mini-card, or a Feeling Lucky card */
@@ -51,7 +54,8 @@ export type MessageSegment =
   styleUrl: './bot-kun.component.scss',
 })
 export class BotKunComponent implements OnDestroy {
-  private readonly botKunService = inject(BotKunService);
+  protected readonly botKunService = inject(BotKunService);
+  private readonly providerState = inject(ProviderStateService);
   private readonly translate = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -79,6 +83,7 @@ export class BotKunComponent implements OnDestroy {
   private typewriterVersion = 0;
 
   private readonly messagesEnd = viewChild<ElementRef<HTMLElement>>('messagesEnd');
+  private readonly chatInput = viewChild<ElementRef<HTMLTextAreaElement>>('chatInput');
   private streamSub: Subscription | null = null;
   private greetingSub: Subscription | null = null;
 
@@ -91,6 +96,9 @@ export class BotKunComponent implements OnDestroy {
   // S6: cache for parseSegments results (non-streaming only)
   private readonly _segmentCache = new Map<string, MessageSegment[]>();
 
+  // Track previous botkunEnabled state for open/close effect
+  private _prevBotkunEnabled: boolean | null = null;
+
   constructor() {
     // S7: debounce scroll so it doesn't fire on every streamed character
     effect(() => {
@@ -101,11 +109,25 @@ export class BotKunComponent implements OnDestroy {
       }
     });
 
-    // RG2: invalidate segment cache when permittedMalIds changes so R17b
-    // hallucination validation reflects the latest [PI:] chunk immediately.
+    // Open/close drawer automatically when bot-kun is enabled or disabled
     effect(() => {
-      void this.botKunService.permittedMalIds();
-      this._segmentCache.clear();
+      const enabled = this.providerState.botkunEnabled();
+      if (this._prevBotkunEnabled !== null) {
+        if (enabled && !this._prevBotkunEnabled && !this.isOpen()) {
+          this.open();
+        } else if (!enabled && this._prevBotkunEnabled && this.isOpen()) {
+          this.close();
+        }
+      }
+      this._prevBotkunEnabled = enabled;
+    });
+
+    // Auto-focus the textarea once the bot finishes responding
+    effect(() => {
+      const idle = !this.isStreaming() && !this.hasTypingMessage();
+      if (idle && this.isOpen() && this.hasMessages()) {
+        setTimeout(() => this.chatInput()?.nativeElement?.focus(), 50);
+      }
     });
 
     this.translate.onLangChange
@@ -233,13 +255,17 @@ export class BotKunComponent implements OnDestroy {
    * Tag format: [anime:ID] or [lucky:ID] — ID only, no title in the tag.
    * S6: non-streaming results are cached by content string to avoid redundant parsing.
    */
-  parseSegments(content: string, streaming: boolean): MessageSegment[] {
+  parseSegments(content: string, streaming: boolean, permittedIds: ReadonlySet<string> = this.botKunService.permittedMalIds()): MessageSegment[] {
     if (streaming) {
       return [{ type: 'text', html: this.toSafeHtml(content) }];
     }
 
-    // S6: return cached result if available
-    const cached = this._segmentCache.get(content);
+    // S6: return cached result if available; key includes permittedIds when non-empty
+    // so finalized messages with different ID snapshots don't collide.
+    const cacheKey = permittedIds.size > 0
+      ? `${content}\x00${[...permittedIds].sort().join(',')}`
+      : content;
+    const cached = this._segmentCache.get(cacheKey);
     if (cached) return cached;
 
     // Per-call local set — deduplicates within a single message without persisting
@@ -247,24 +273,29 @@ export class BotKunComponent implements OnDestroy {
     const seenMalIds = new Set<string>();
     const segments: MessageSegment[] = [];
     let lastIndex = 0;
+    let prevWasCard = false;
 
     // ID-only tag format: [anime:digits] or [lucky:digits]
     for (const match of content.matchAll(/\[(anime|lucky):(\d+)\]/g)) {
       const matchIndex = match.index ?? 0;
 
       if (matchIndex > lastIndex) {
-        segments.push({ type: 'text', html: this.toSafeHtml(content.slice(lastIndex, matchIndex)) });
+        let textChunk = content.slice(lastIndex, matchIndex);
+        if (prevWasCard) textChunk = this.stripLeadingTitleLine(textChunk);
+        textChunk = this.stripTrailingTitleLine(textChunk);
+        segments.push({ type: 'text', html: this.toSafeHtml(textChunk) });
+        prevWasCard = false;
       }
 
       const tagType = match[1].trim() as 'anime' | 'lucky';
       const malId = match[2].trim();
 
       // R17b: reject [anime:ID] tags whose ID was not in the backend's PERMITTED IDs list.
-      // permittedMalIds is empty for RAG/greeting paths (all IDs allowed) and for lucky picks.
-      const permitted = this.botKunService.permittedMalIds();
-      if (tagType === 'anime' && permitted.size > 0 && !permitted.has(malId)) {
+      // permittedIds is empty for RAG/greeting paths (all IDs allowed) and for lucky picks.
+      if (tagType === 'anime' && permittedIds.size > 0 && !permittedIds.has(malId)) {
         // Replace hallucinated tag with its ID as plain text (no title to fall back on)
         segments.push({ type: 'text', html: this.toSafeHtml(`[anime:${malId}]`) });
+        prevWasCard = false;
         lastIndex = matchIndex + match[0].length;
         continue;
       }
@@ -273,18 +304,21 @@ export class BotKunComponent implements OnDestroy {
       if (!seenMalIds.has(malId)) {
         seenMalIds.add(malId);
         segments.push({ type: tagType === 'lucky' ? 'lucky' : 'card', malId });
+        prevWasCard = true;
       }
 
       lastIndex = matchIndex + match[0].length;
     }
 
     if (lastIndex < content.length) {
-      segments.push({ type: 'text', html: this.toSafeHtml(content.slice(lastIndex)) });
+      let tail = content.slice(lastIndex);
+      if (prevWasCard) tail = this.stripLeadingTitleLine(tail);
+      segments.push({ type: 'text', html: this.toSafeHtml(tail) });
     }
 
     const result: MessageSegment[] = segments.length > 0 ? segments : [{ type: 'text', html: this.toSafeHtml(content) }];
     // S6: cache for subsequent calls with the same finalised content
-    this._segmentCache.set(content, result);
+    this._segmentCache.set(cacheKey, result);
     return result;
   }
 
@@ -391,9 +425,9 @@ export class BotKunComponent implements OnDestroy {
 
       if (displayed.length >= buffer.length) {
         if (!msg.streaming) {
-          // Stream closed and every char is typed — finalise
+          // Stream closed and every char is typed — finalise with a permittedIds snapshot
           this.messages.update(m => m.map((x, i) =>
-            i === msgIndex ? { ...x, typing: false, typedContent: x.content } : x
+            i === msgIndex ? { ...x, typing: false, typedContent: x.content, permittedIds: this.botKunService.permittedMalIds() } : x
           ));
           return;
         }
@@ -454,8 +488,39 @@ export class BotKunComponent implements OnDestroy {
   }
 
   /** Parse markdown → sanitize HTML (no anime card tags — those are handled by parseSegments) */
+  /**
+   * Strips a trailing standalone heading (`### Title`) or bold-only line (`**Title**`)
+   * from a markdown text chunk that immediately precedes a card segment.
+   * The card itself renders the title, so this text label is redundant.
+   */
+  private stripTrailingTitleLine(text: string): string {
+    return text
+      .replace(/(?:\n|^)[ \t]*(#{1,6} [^\n]+|\*\*[^\n*]+\*\*)[ \t]*\n*$/, '')
+      .trimEnd();
+  }
+
+  /**
+   * Strips a leading standalone heading (`### Title`) or bold-only line (`**Title**`)
+   * from a markdown text chunk that immediately follows a card segment.
+   * The card already shows the title — the trailing label is redundant.
+   */
+  private stripLeadingTitleLine(text: string): string {
+    return text
+      .replace(/^[ \t]*(#{1,6} [^\n]+|\*\*[^\n*]+\*\*)[ \t]*(\n|$)/, '')
+      .trimStart();
+  }
+
+  private readonly _renderer = (() => {
+    const r = new marked.Renderer();
+    // Safety net: headings inside the chat bubble must never get browser-default h1–h6 sizes.
+    // Render them as compact labelled spans instead.
+    r.heading = ({ text }: { text: string }) =>
+      `<span class="bot-kun__label">${text}</span> `;
+    return r;
+  })();
+
   private toSafeHtml(text: string): string {
-    const raw = marked.parse(text, { async: false }) as string;
+    const raw = marked.parse(text, { async: false, renderer: this._renderer }) as string;
     return DOMPurify.sanitize(raw);
   }
 }

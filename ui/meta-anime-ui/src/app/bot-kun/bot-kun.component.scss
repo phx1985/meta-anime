@@ -354,6 +354,23 @@
     font-weight: 600;
   }
 
+  // Compact label rendered from markdown headings — never uses browser-default h-tag sizes
+  .bot-kun__label {
+    display: inline;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-secondary, #a8a8c0);
+  }
+
+  // Safety-net: if an h-tag ever bypasses the custom renderer
+  h1, h2, h3, h4, h5, h6 {
+    font-size: 0.875rem;
+    font-weight: 700;
+    margin: 0.2em 0 0.3em;
+    color: var(--text-primary, #e8e8f0);
+    line-height: 1.3;
+  }
+
   code {
     background: rgba(255, 255, 255, 0.08);
     border-radius: 4px;

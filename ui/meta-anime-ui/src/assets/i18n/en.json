@@ -596,7 +596,7 @@
       },
       "BotKun_BaseUrl": {
         "name": "API Base URL",
-        "desc": "Base URL of your OpenAI-compatible AI provider (e.g. https://api.groq.com/openai/v1, https://api.openai.com/v1, http://localhost:11434/v1)."
+        "desc": "Select a provider from the list or type any OpenAI-compatible API URI."
       },
       "BotKun_ApiKey": {
         "name": "API Key",
@@ -604,7 +604,7 @@
       },
       "BotKun_Model": {
         "name": "Model",
-        "desc": "Model identifier to use for chat (e.g. llama-3.3-70b-versatile, gpt-4o-mini, qwen2.5:1.5b, mistral)."
+        "desc": "Model identifier to use for chat (e.g. llama-3.3-70b-versatile, gpt-4o-mini, qwen2.5:1.5b). Optional for local setups that expose only one model."
       }
     },
     "toggle": {
@@ -627,7 +627,8 @@
       "fetchModelsLoading": "Fetching...",
       "fetchModelsError": "Could not fetch models. Check your Base URL and API Key.",
       "fetchModelsNoUrl": "Please configure a Base URL first.",
-      "selectModel": "— Select a model —"
+      "selectModel": "— Select a model —",
+      "credentialsError": "Invalid credentials or unreachable URL — Bot-kun has been disabled."
     },
     "provider": {
       "enabled": "Enabled",

@@ -245,8 +245,8 @@
                       }}
                     </span>
                     @if (!isProviderEnabled(cat) && isProviderToggleBlocked(cat)) {
-                      <span class="provider-configure-hint">
-                        {{ 'settings.provider.configureFirstTooltip' | translate }}
+                      <span class="provider-configure-hint" [class.text-danger]="cat === 'botkun'">
+                        {{ (cat === 'botkun' ? 'settings.botkun.credentialsError' : 'settings.provider.configureFirstTooltip') | translate }}
                       </span>
                     }
                   </div>
@@ -682,6 +682,7 @@
                                 "
                                 formControlName="value"
                                 class="form-control form-control-sm setting-input"
+                                [attr.list]="setting.key === 'BotKun:BaseUrl' ? 'botkun-url-list' : null"
                                 [placeholder]="
                                   setting.isSensitive
                                     ? ('settings.sensitiveHint' | translate)
@@ -691,6 +692,13 @@
                                   'settings.fields.' + slug(setting.key) + '.name' | translate
                                 "
                               />
+                              @if (setting.key === 'BotKun:BaseUrl' && knownAiApiUrls().length > 0) {
+                                <datalist id="botkun-url-list">
+                                  @for (p of knownAiApiUrls(); track p.url) {
+                                    <option [value]="p.url">{{ p.name }}</option>
+                                  }
+                                </datalist>
+                              }
                               @if (setting.isSensitive) {
                                 <button
                                   type="button"

@@ -86,8 +86,15 @@ public sealed class BotKunController(IBotKunChatService botKunChatService) : Con
         [FromBody] BotKunModelsRequest request,
         CancellationToken cancellationToken)
     {
-        var models = await botKunChatService.GetAvailableModelsAsync(
-            request.BaseUrl, request.ApiKey, cancellationToken);
-        return Ok(models);
+        try
+        {
+            var models = await botKunChatService.GetAvailableModelsAsync(
+                request.BaseUrl, request.ApiKey, cancellationToken);
+            return Ok(models);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Problem(title: ex.Message, statusCode: StatusCodes.Status502BadGateway);
+        }
     }
 }

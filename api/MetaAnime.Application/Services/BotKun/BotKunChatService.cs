@@ -70,9 +70,9 @@ public sealed class BotKunChatService(
         var model   = await GetSettingAsync(SettingsKeys.BotKunModel) ?? string.Empty;
         var apiKey  = await GetSettingAsync(SettingsKeys.BotKunApiKey) ?? string.Empty;
 
-        if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(model))
+        if (string.IsNullOrWhiteSpace(baseUrl))
         {
-            yield return "Bot-kun AI is not configured yet. Open **Settings → Bot-kun AI** and enter your AI Base URL and model name before starting a conversation.";
+            yield return "Bot-kun AI is not configured yet. Open **Settings → Bot-kun AI** and enter your AI Base URL before starting a conversation.";
             yield break;
         }
 
@@ -180,7 +180,7 @@ public sealed class BotKunChatService(
         var model   = await GetSettingAsync(SettingsKeys.BotKunModel) ?? string.Empty;
         var apiKey  = await GetSettingAsync(SettingsKeys.BotKunApiKey) ?? string.Empty;
 
-        if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(model))
+        if (string.IsNullOrWhiteSpace(baseUrl))
         {
             yield return "Bot-kun is ready. Ask about anime, manga, or your watch list. Configure your AI provider in Settings to enable AI responses.";
             yield break;
@@ -210,24 +210,46 @@ public sealed class BotKunChatService(
         if (!string.IsNullOrWhiteSpace(apiKey))
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
+        HttpResponseMessage response;
         try
         {
-            using var response = await httpClient.SendAsync(req, cancellationToken);
-            if (!response.IsSuccessStatusCode) return [];
-
-            var json = await response.Content.ReadAsStringAsync(cancellationToken);
-            var modelsResponse = JsonSerializer.Deserialize<ModelsResponse>(json, DeserializeOptions);
-            return modelsResponse?.Data?
-                .Select(m => m.Id)
-                .Where(id => !string.IsNullOrWhiteSpace(id))
-                .Select(id => id!)
-                .Order()
-                .ToArray() ?? [];
+            response = await httpClient.SendAsync(req, cancellationToken);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (OperationCanceledException)
         {
-            logger.LogWarning("Failed to fetch models from {Url}: {Error}", url, ex.Message);
-            return [];
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("Failed to reach AI provider at {Url}: {Error}", url, ex.Message);
+            throw new InvalidOperationException($"Cannot reach provider: {ex.Message}", ex);
+        }
+
+        using (response)
+        {
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogWarning("AI provider returned HTTP {StatusCode} for models at {Url}", response.StatusCode, url);
+                throw new InvalidOperationException($"Provider returned {(int)response.StatusCode}: {response.ReasonPhrase}");
+            }
+
+            try
+            {
+                var json = await response.Content.ReadAsStringAsync(cancellationToken);
+                var modelsResponse = JsonSerializer.Deserialize<ModelsResponse>(json, DeserializeOptions);
+                return modelsResponse?.Data?
+                    .Select(m => m.Id)
+                    .Where(id => !string.IsNullOrWhiteSpace(id))
+                    .Select(id => id!)
+                    .Order()
+                    .ToArray() ?? [];
+            }
+            catch (JsonException ex)
+            {
+                // Provider does not expose a /models endpoint — return empty list gracefully
+                logger.LogWarning("Failed to parse models response from {Url}: {Error}", url, ex.Message);
+                return [];
+            }
         }
     }
 
