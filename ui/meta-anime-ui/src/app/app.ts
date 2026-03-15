@@ -145,12 +145,7 @@ export class App implements OnInit, AfterViewInit {
   protected hideNavRoute = signal<boolean>(false);
   /** True while the bottom nav bar is retracted (scroll-down hide on mobile) */
   protected bottomNavHidden = signal<boolean>(false);
-  /**
-   * True whenever any overlay / bottom-sheet / modal is open.
-   * Combines signals from this component (Lucky Pick, side drawer) and from
-   * PopupService (disabled-provider, synopsis, sync-prompt modals, and the
-   * child-component filter / presets sheets registered via `childOverlayOpen`).
-   */
+  /** True whenever any overlay / bottom-sheet / modal is open. */
   protected anyOverlayOpen = computed(
     () =>
       this.luckyPickOpen() ||
@@ -168,7 +163,7 @@ export class App implements OnInit, AfterViewInit {
   protected currentPageKey = signal<string>('');
   /** Tracks the last scroll position for scroll-direction detection */
   private lastScrollY = 0;
-  /** Minimum scroll delta (px) before direction is detected, avoids micro-jitter */
+  /** Minimum scroll delta (px) before direction is detected */
   private static readonly SCROLL_DELTA_THRESHOLD = 4;
   /** If scroll position is at or below this many px from the top, always reveal the nav */
   private static readonly SCROLL_TOP_THRESHOLD = 40;
@@ -190,7 +185,7 @@ export class App implements OnInit, AfterViewInit {
   protected get synopsisLeaving() { return this.popupService.synopsisLeaving; }
 
   constructor() {
-    this.translate.use(localStorage.getItem(StorageKeys.language) || 'en');
+    this.translate.use(localStorage.getItem(StorageKeys.language) || App.DEFAULT_LANG);
   }
 
   ngOnInit(): void {
@@ -405,7 +400,7 @@ export class App implements OnInit, AfterViewInit {
     this.luckyPickBusy = true;
     this.luckyPickOpen.set(true);
     // Reset busy flag after a short guard window
-    setTimeout(() => (this.luckyPickBusy = false), 500);
+    setTimeout(() => (this.luckyPickBusy = false), App.LUCKY_PICK_GUARD_MS);
   }
 
   closeLuckyPick(): void {
@@ -476,19 +471,25 @@ export class App implements OnInit, AfterViewInit {
   /** Human-readable relative timestamp — language-agnostic short form */
   formatRelTime(ts: number): string {
     const diff = Date.now() - ts;
-    if (diff < 60_000) return this.translate.instant('notifications.time.justNow');
-    if (diff < 3_600_000)
+    if (diff < App.MS_PER_MINUTE) return this.translate.instant('notifications.time.justNow');
+    if (diff < App.MS_PER_HOUR)
       return this.translate.instant('notifications.time.minutesAgo', {
-        n: Math.floor(diff / 60_000),
+        n: Math.floor(diff / App.MS_PER_MINUTE),
       });
-    if (diff < 86_400_000)
+    if (diff < App.MS_PER_DAY)
       return this.translate.instant('notifications.time.hoursAgo', {
-        n: Math.floor(diff / 3_600_000),
+        n: Math.floor(diff / App.MS_PER_HOUR),
       });
     return this.translate.instant('notifications.time.daysAgo', {
-      n: Math.floor(diff / 86_400_000),
+      n: Math.floor(diff / App.MS_PER_DAY),
     });
   }
+
+  private static readonly MS_PER_MINUTE  = 60_000;
+  private static readonly MS_PER_HOUR    = 3_600_000;
+  private static readonly MS_PER_DAY     = 86_400_000;
+  private static readonly LUCKY_PICK_GUARD_MS = 500;
+  private static readonly DEFAULT_LANG        = 'en';
 
   /** Duration of the CSS `.navbar-collapse` max-height transition — keep in sync with app.scss */
   private static readonly NAVBAR_COLLAPSE_MS = 310;

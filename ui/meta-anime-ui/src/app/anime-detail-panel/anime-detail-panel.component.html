@@ -11,7 +11,6 @@
   ></div>
   }
 
-  <!-- Side panel -->
   <aside
     #panelEl
     class="panel"
@@ -23,15 +22,13 @@
     [attr.aria-label]="anime()?.title ?? ('animeDetailPanel.loading' | translate)"
     [style.z-index]="zIndexBase() + 1"
   >
-    <!-- Close button -->
-    <button class="panel__close" type="button" (click)="close()" [title]="'animeDetailPanel.close' | translate" [attr.aria-label]="'animeDetailPanel.close' | translate">
+    <button class="panel__close" type="button" (click)="close()"[title]="'animeDetailPanel.close' | translate" [attr.aria-label]="'animeDetailPanel.close' | translate">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="18" height="18" aria-hidden="true">
         <path d="M18 6L6 18M6 6l12 12" />
       </svg>
     </button>
 
     @if (isLoading()) {
-      <!-- Skeleton loading state -->
       <div class="panel__skeleton">
         <div class="skeleton skeleton--hero">
           <div class="skeleton__image"></div>
@@ -52,11 +49,10 @@
       <!-- ── 2-Column Top Grid: poster (left) + info + actions (right) ── -->
       <div class="panel__top-grid">
 
-        <!-- Left: poster — fills the full height of the grid row -->
         <div class="panel__cover-col" (click)="openPosterGallery()">
           @if (mal?.coverImageUrl) {
             <div class="poster-wrapper">
-              <!-- Blurred ambient background — stretched and darkened to fill the box -->
+          <!-- Blurred ambient background fills the box behind the sharp foreground -->
               <img
                 class="poster-bg"
                 [src]="mal!.coverImageUrl"
@@ -64,7 +60,6 @@
                 aria-hidden="true"
                 loading="lazy"
               />
-              <!-- Sharp foreground — object-fit: contain so nothing is cropped -->
               <img
                 class="poster-fg"
                 [src]="mal!.coverImageUrl"
@@ -75,9 +70,7 @@
           } @else {
             <div class="panel__cover-placeholder">{{ displayTitle.charAt(0) }}</div>
           }
-          <!-- Bottom gradient — always-on on mobile, blends poster into background (z-index: 1) -->
           <div class="panel__cover-gradient" aria-hidden="true"></div>
-          <!-- Hover zoom hint (z-index: 3) -->
           <div class="panel__cover-overlay" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
               <rect x="3" y="3" width="18" height="18" rx="2"/>
@@ -87,9 +80,7 @@
           </div>
         </div>
 
-        <!-- Right: title/meta + action buttons + universe — all in one column -->
         <div class="panel__info-col">
-          <!-- Title, alt title, pills, scores — flex: 1 pushes button area to bottom -->
           <div class="panel__title-block">
             <div class="panel__title-row">
               <h2 class="panel__title">{{ displayTitle }}</h2>
@@ -114,7 +105,6 @@
             @if (mal?.alternativeTitles?.en && mal!.alternativeTitles!.en !== a.title) {
               <p class="panel__alt-title">{{ mal!.alternativeTitles!.en }}</p>
             }
-            <!-- Status pills -->
             <div class="panel__pills">
               @if (mal?.mediaType) {
                 <span class="panel__pill panel__pill--media-type">{{ ('animeDetailPanel.mediaType.' + (mal!.mediaType | lowercase)) | translate }}</span>
@@ -130,7 +120,6 @@
               }
 
             </div>
-            <!-- Scores row -->
             <div class="panel__scores">
               @if (malScore > 0) {
                 <div class="panel__score-item">
@@ -195,7 +184,6 @@
 
           </div>
 
-          <!-- Provider action buttons — pinned to bottom of info-col by title-block flex: 1 -->
           <div class="panel__actions">
             @if (mal?.url) {
               <a
@@ -259,7 +247,6 @@
             </button>
           }
 
-          <!-- Explore Universe — full-width, below provider buttons -->
           <button
             class="panel__action-btn panel__action-btn--constellation panel__action-btn--universe"
             (click)="openFranchiseConstellation()"
@@ -281,7 +268,6 @@
         </div>
       </div>
 
-      <!-- Meta stats row — immediately below the grid -->
       <div class="panel__meta-row">
         @if (mal?.startDate) {
           <span class="panel__meta-item">
@@ -315,7 +301,6 @@
         }
       </div>
 
-      <!-- Genres / Themes / Demographics — quick-read tags above synopsis -->
       @if (pureGenres.length || themes.length || demographics.length) {
         <section class="panel__section">
           <h3 class="panel__section-title">{{ 'animeDetailPanel.tags' | translate }}</h3>
@@ -333,7 +318,6 @@
         </section>
       }
 
-      <!-- Synopsis -->
       @if (mal?.synopsis) {
         <section class="panel__section">
           <h3 class="panel__section-title">{{ 'animeDetailPanel.synopsis' | translate }}</h3>
@@ -341,7 +325,6 @@
         </section>
       }
 
-      <!-- Trailer -->
       @if (mal?.trailerUrl) {
         <section class="panel__section">
           <h3 class="panel__section-title">{{ 'animeDetailPanel.trailer' | translate }}</h3>
@@ -359,7 +342,6 @@
         </section>
       }
 
-      <!-- Plex status -->
       @if (plex?.progression) {
         <section class="panel__section">
           <h3 class="panel__section-title">{{ 'animeDetailPanel.plexStatus' | translate }}</h3>
@@ -375,7 +357,6 @@
         </section>
       }
 
-      <!-- Sonarr status -->
       @if (sonarr) {
         <section class="panel__section">
           <h3 class="panel__section-title">{{ 'animeDetailPanel.sonarrStatus' | translate }}</h3>
@@ -405,7 +386,6 @@
             <div class="panel__codec-bar">
               @if (sonarr!.sizeOnDisk) {
                 <span class="panel__codec-pill panel__codec-pill--size" [title]="'animeDetailPanel.diskSize' | translate">
-                  <!-- HDD icon replaces the plain colored dot -->
                   <svg class="panel__codec-hdd-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                        width="11" height="11" aria-hidden="true">

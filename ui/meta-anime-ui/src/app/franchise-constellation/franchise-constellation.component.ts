@@ -81,7 +81,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   protected readonly CANVAS_W = CANVAS_W;
   protected readonly CANVAS_H = CANVAS_H;
 
-  // ── Pan / zoom state ──────────────────────────────────────────────────────
   protected translateX = signal(0);
   protected translateY = signal(0);
   protected scale = signal(1);
@@ -90,7 +89,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     () => `translate(${this.translateX()}px, ${this.translateY()}px) scale(${this.scale()})`,
   );
 
-  // ── Node positions ────────────────────────────────────────────────────────
   /** Map<malId, {x, y}> — top-left corner of each card in canvas space. */
   protected nodePositions = signal<Map<string, { x: number; y: number }>>(new Map());
 
@@ -100,16 +98,11 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   /** IDs the user has manually repositioned — excluded from auto-layout. */
   private manuallyDraggedIds = new Set<string>();
 
-  // ── Sequential render queue ────────────────────────────────────────────────
   /** Node IDs waiting to become visible; drained one at a time at RENDER_INTERVAL_MS. */
   private _renderQueue: string[] = [];
   private _renderTimer: ReturnType<typeof setTimeout> | null = null;
   /** Subset of graph nodes currently rendered in the DOM. */
   protected visibleNodeIds = signal<Set<string>>(new Set());
-
-  // ── Quick Look modal ──────────────────────────────────────────────────────
-  /** @deprecated Quick Look removed — clicking a node now opens the detail panel via nodeSelected output. */
-  // quickLookNode and quickLookSynopsisLong removed
 
   /** Unique media types present in the current franchise graph (for legend). */
   protected readonly presentMediaTypes = computed<string[]>(() => {
@@ -169,7 +162,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
       .filter((e) => e.d !== '');
   });
 
-  // ── Pointer state ─────────────────────────────────────────────────────────
   private isPanning = false;
   private panStartX = 0;
   private panStartY = 0;
@@ -185,7 +177,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   private nodeDragActive = false;
 
   constructor() {
-    // ── Live-build layout effect ────────────────────────────────────────────
     // Triggered on every BFS graph update. New nodes are placed; existing nodes
     // (including manually-dragged ones) are NOT moved. Camera auto-fits after
     // every placement so no card is ever off-screen.
@@ -225,7 +216,7 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
         return m;
       });
 
-      // V6: auto-fit camera after every node arrival (pass data to avoid
+      // Auto-fit camera after every node arrival (pass data to avoid
       // reading the just-written signal and creating a re-entrant effect).
       if (merged) this._fitCameraToNodes(merged, g);
 
@@ -241,7 +232,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
       this._startRenderDrain();
     });
 
-    // ── Reset effect ────────────────────────────────────────────────────────
     // When a new franchise is opened (graph resets to null), clear all local state.
     effect(() => {
       const g = this.svc.graph();
@@ -300,11 +290,8 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     this.legendOpen.update((v) => !v);
   }
 
-  // ── Pointer events ─────────────────────────────────────────────────────────
-  // V6: ALL interactions are disabled while the tree is being built.
-
   onPointerDown(event: PointerEvent): void {
-    // V6: Observe-then-play lock — no interaction while loading.
+    // Interactions are disabled while the graph is loading.
     if (this.svc.loading()) return;
 
     const nodeEl = (event.target as HTMLElement).closest<HTMLElement>('[data-mal-id]');
@@ -366,7 +353,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   }
 
   onWheel(event: WheelEvent): void {
-    // V6: Observe-then-play lock.
     if (this.svc.loading()) return;
     event.preventDefault();
     const factor = event.deltaY < 0 ? 1.1 : 0.9;
@@ -392,9 +378,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
       this.lastPinchDist = dist;
     }
   }
-
-  // ── Quick Look modal (removed) ────────────────────────────────────────────
-  // Node clicks now emit nodeSelected output; parent opens the detail panel.
 
   openMalPage(malId: string): void {
     window.open(`https://myanimelist.net/anime/${malId}`, '_blank', 'noopener,noreferrer');
@@ -422,8 +405,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     if (isNaN(d.getTime())) return rawDate;
     return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   }
-
-  // ── Render queue (sequential appearance animation) ────────────────────────
 
   /** Starts draining the render queue if not already running. */
   private _startRenderDrain(): void {
@@ -458,21 +439,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     this._renderQueue = [];
   }
 
-  // ── Snake (Boustrophedon) Layout ──────────────────────────────────────────
-
-  /**
-   * Places all nodes in a snake (boustrophedon) wrapping pattern:
-   *   - Row 0 (even): nodes flow LEFT → RIGHT
-   *   - Row 1 (odd):  nodes flow RIGHT → LEFT
-   *   - Row 2 (even): nodes flow LEFT → RIGHT  … and so on.
-   *
-   * The number of columns per row is calculated dynamically from the current
-   * viewport width so the timeline always fits horizontally.
-   *
-   * Parallel nodes (same chronological column, e.g. a TV arc and a movie)
-   * are stacked vertically and treated as a single column step, so they
-   * never break the snake pattern.
-   */
   private _computeSnakePositions(graph: FranchiseGraph): {
     positions: Map<string, { x: number; y: number }>;
     layoutInfo: Map<string, LayoutMeta>;
@@ -583,8 +549,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     return trunkCols;
   }
 
-  // ── Camera auto-fit ────────────────────────────────────────────────────────
-
   /**
    * Fits the camera so that every placed node is visible in the viewport.
    * Called after every BFS graph update so no card is ever off-screen.
@@ -638,8 +602,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     this.translateX.set(tx);
     this.translateY.set(ty);
   }
-
-  // ── Edge drawing ──────────────────────────────────────────────────────────
 
   /**
    * Computes an SVG path for one edge, aware of the snake layout:

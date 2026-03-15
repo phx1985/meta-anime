@@ -87,20 +87,20 @@ export class BotKunComponent implements OnDestroy {
   private streamSub: Subscription | null = null;
   private greetingSub: Subscription | null = null;
 
-  // S3: typewriter timer handle — tracked so we can cancel on destroy / new message
+  // Typewriter timer handle — tracked so we can cancel on destroy / new message
   private _typewriterHandle: ReturnType<typeof setTimeout> | null = null;
-  // S5: tracks how long we've been waiting for an incomplete tag to close
+  // Tracks how long we've been waiting for an incomplete tag to close
   private _incompleteTagWaitMs = 0;
-  // S7: debounce handle for scroll-to-bottom effect
+  // Debounce handle for scroll-to-bottom effect
   private _scrollDebounceHandle: ReturnType<typeof setTimeout> | null = null;
-  // S6: cache for parseSegments results (non-streaming only)
+  // Cache for parseSegments results (non-streaming only)
   private readonly _segmentCache = new Map<string, MessageSegment[]>();
 
   // Track previous botkunEnabled state for open/close effect
   private _prevBotkunEnabled: boolean | null = null;
 
   constructor() {
-    // S7: debounce scroll so it doesn't fire on every streamed character
+    // Debounce scroll so it doesn't fire on every streamed character
     effect(() => {
       const count = this._msgCount();
       if (count > 0) {
@@ -140,10 +140,10 @@ export class BotKunComponent implements OnDestroy {
     this.greetingSub?.unsubscribe();
     this.botKunService.cancel();
     this.botKunService.cancelGreeting();
-    // S3: cancel any in-flight typewriter tick
+    // Cancel any in-flight typewriter tick
     clearTimeout(this._typewriterHandle ?? undefined);
     this._typewriterHandle = null;
-    // S7: cancel any pending scroll debounce
+    // Cancel any pending scroll debounce
     clearTimeout(this._scrollDebounceHandle ?? undefined);
   }
 
@@ -260,7 +260,7 @@ export class BotKunComponent implements OnDestroy {
       return [{ type: 'text', html: this.toSafeHtml(content) }];
     }
 
-    // S6: return cached result if available; key includes permittedIds when non-empty
+    // Return cached result if available; key includes permittedIds when non-empty
     // so finalized messages with different ID snapshots don't collide.
     const cacheKey = permittedIds.size > 0
       ? `${content}\x00${[...permittedIds].sort().join(',')}`
@@ -317,7 +317,6 @@ export class BotKunComponent implements OnDestroy {
     }
 
     const result: MessageSegment[] = segments.length > 0 ? segments : [{ type: 'text', html: this.toSafeHtml(content) }];
-    // S6: cache for subsequent calls with the same finalised content
     this._segmentCache.set(cacheKey, result);
     return result;
   }
@@ -336,7 +335,6 @@ export class BotKunComponent implements OnDestroy {
     this.botKunService.cancelGreeting();
     this.isStreaming.set(false);
     this.hasUnread.set(false);
-    // S6: invalidate segment cache
     this._segmentCache.clear();
   }
 
@@ -407,10 +405,8 @@ export class BotKunComponent implements OnDestroy {
     const MIN_DELAY = 5;
     const VAR_DELAY = 5;
 
-    // S3: cancel any previous handle before starting a new tick loop
     clearTimeout(this._typewriterHandle ?? undefined);
     this._typewriterHandle = null;
-    // S5: reset incomplete-tag wait counter for this new message
     this._incompleteTagWaitMs = 0;
 
     const tick = () => {
@@ -446,8 +442,7 @@ export class BotKunComponent implements OnDestroy {
         step = tagMatch[0].length;
         nextDelay = 0;
       } else if ((remaining.startsWith('[anime:') || remaining.startsWith('[lucky:')) && msg.streaming) {
-        // S5: Incomplete tag while stream is still open — wait for the rest of the tag,
-        // but bail out after 5 s to prevent permanent typewriter stall on malformed tags.
+        // Incomplete tag while stream is open — wait up to 5 s before treating as plain text
         this._incompleteTagWaitMs += 30;
         if (this._incompleteTagWaitMs > 5000) {
           // Tag never closed — treat as plain text to unblock the typewriter
@@ -475,11 +470,9 @@ export class BotKunComponent implements OnDestroy {
         return;
       }
 
-      // S3: store the handle so it can be cleared on destroy
       this._typewriterHandle = setTimeout(tick, nextDelay);
     };
 
-    // S3: store the initial handle
     this._typewriterHandle = setTimeout(tick, 10);
   }
 
