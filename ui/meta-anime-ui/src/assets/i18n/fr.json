@@ -132,7 +132,7 @@
     "malAddSuccess": "Ajouté avec succès à votre liste MAL !",
     "malStatus": {
       "watching": "En cours",
-      "completed": "Terminé",
+      "completed": "Vu",
       "on_hold": "En pause",
       "dropped": "Abandonné",
       "plan_to_watch": "À regarder"
@@ -351,7 +351,7 @@
     "openMal": "Ouvrir dans MyAnimeList",
     "malStatus": {
       "watching": "En cours",
-      "completed": "Terminé",
+      "completed": "Vu",
       "on_hold": "En pause",
       "dropped": "Abandonné",
       "plan_to_watch": "À regarder"
@@ -1196,7 +1196,7 @@
         "Ton entrée MAL se sent seule. Rends-lui visite.",
         "Mets à jour ce compteur d'épisodes, procrastinateur.",
         "Le champ de score est vide. Répare ça.",
-        "Marque-le 'Terminé' pour la dose de dopamine.",
+        "Marque-le 'Vu' pour la dose de dopamine.",
         "Ton statut MAL : toujours un mensonge.",
         "Il est temps de mettre à jour les épisodes vus.",
         "La communauté est divisée. Où te situes-tu ?",
@@ -1215,7 +1215,7 @@
         "Lis les critiques. Pleure un peu.",
         "Vérifie le générique d'ouverture sur YouTube après.",
         "Ton entrée indique 0 épisodes. Les menteurs ne prospèrent pas.",
-        "Marque-le 'Terminé'. Tu l'as mérité.",
+        "Marque-le 'Vu'. Tu l'as mérité.",
         "Le débat de score dans le forum est épicé.",
         "Mets à jour ton journal MAL. Tu as encore oublié.",
         "Ton historique de visionnage est une scène de crime.",
@@ -1227,7 +1227,7 @@
         "Augmente ton compteur d'épisodes d'au moins un.",
         "Déclare ton score avant qu'internet le fasse.",
         "Le synopsis te rappellera de quoi ça parle.",
-        "Ta liste 'Terminé' manque d'une entrée.",
+        "Ta liste 'Vu' manque d'une entrée.",
         "Les critiques sont déjantées. Parfait.",
         "Mets à jour le statut. Agis comme un adulte accompli.",
         "Abandonne la stigmate 'En pause'. Finis-le.",
@@ -1242,7 +1242,7 @@
         "La liste du staff est plus intéressante que tu ne le penses.",
         "Ton futur revisionnage a besoin d'un marque-page.",
         "Le score est à 8,2. Tu es d'accord ?",
-        "Marque-le 'Terminé' et sens-toi supérieur.",
+        "Marque-le 'Vu' et sens-toi supérieur.",
         "Les critiques de fans sont une mine d'or de passion.",
         "Mets à jour ton score. Tu as évolué en tant que personne.",
         "Vérifie si le manga est mieux. Spoiler : peut-être.",
