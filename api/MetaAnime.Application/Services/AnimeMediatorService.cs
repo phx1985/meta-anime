@@ -42,6 +42,10 @@ public sealed class AnimeMediatorService(
         DefaultIgnoreCondition = JsonIgnoreCondition.Never
     };
 
+    private const int    TitleSimilarityDefault = 80;
+    private const double MinLengthRatioForFuzzy = 0.2;
+    private const string SonarrCoverType        = "poster";
+
     /// <summary>Maps filter codec tokens to all equivalent codec strings that may appear in file metadata.</summary>
     private static readonly Dictionary<string, string[]> CodecAliases = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -274,7 +278,7 @@ public sealed class AnimeMediatorService(
         if (!string.IsNullOrWhiteSpace(filters?.Title))
         {
             var query = filters.Title;
-            var threshold = (titleSimilarityThreshold ?? 80) / 100.0;
+            var threshold = (titleSimilarityThreshold ?? TitleSimilarityDefault) / 100.0;
             // Accept if the title contains the query as a substring OR
             // the word-level Levenshtein similarity meets the threshold (handles typos).
             // Also search in alternative titles (English, Japanese, synonyms) from MAL.
@@ -305,120 +309,9 @@ public sealed class AnimeMediatorService(
                         m.ViewState.Equals(s, StringComparison.OrdinalIgnoreCase)) == true));
         }
 
-        if (filters?.Genre?.Length > 0)
-        {
-            // Use a HashSet for O(1) genre lookups instead of O(n) inner Any()
-            var genreSet = new HashSet<string>(filters.Genre, StringComparer.OrdinalIgnoreCase);
-            bool isAnd = FilterConstants.Operator.And.Equals(filters.GenreOperator, StringComparison.OrdinalIgnoreCase);
-
-            result = result.Where(a =>
-            {
-                if (a.MalAnimes == null || !a.MalAnimes.Any())
-                    return false;
-
-                return a.MalAnimes.Any(m =>
-                {
-                    if (string.IsNullOrWhiteSpace(m.Id))
-                        return false;
-
-                    if (!malCache.TryGetValue(m.Id, out var malJson) || string.IsNullOrWhiteSpace(malJson))
-                        return false;
-
-                    try
-                    {
-                        var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, JsonOptions);
-                        var animeGenres = malAnime?.Genres?.Select(g => g.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-                        if (animeGenres == null) return false;
-
-                        // OR: any selected genre present; AND: all selected genres present
-                        return isAnd
-                            ? genreSet.All(g => animeGenres.Contains(g))
-                            : genreSet.Any(g => animeGenres.Contains(g));
-                    }
-                    catch (JsonException ex)
-                    {
-                        logger.LogWarning(Constants.LogMessages.AnimeMediatorService.MalDeserializeFailedGenreFilter, m.Id, ex.Message);
-                        return false;
-                    }
-                });
-            });
-        }
-
-        if (filters?.Theme?.Length > 0)
-        {
-            // Theme filtering works identically to genre filtering — both are stored in the MAL Genres array.
-            var themeSet = new HashSet<string>(filters.Theme, StringComparer.OrdinalIgnoreCase);
-            bool isAnd = FilterConstants.Operator.And.Equals(filters.ThemeOperator, StringComparison.OrdinalIgnoreCase);
-
-            result = result.Where(a =>
-            {
-                if (a.MalAnimes == null || !a.MalAnimes.Any())
-                    return false;
-
-                return a.MalAnimes.Any(m =>
-                {
-                    if (string.IsNullOrWhiteSpace(m.Id))
-                        return false;
-
-                    if (!malCache.TryGetValue(m.Id, out var malJson) || string.IsNullOrWhiteSpace(malJson))
-                        return false;
-
-                    try
-                    {
-                        var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, JsonOptions);
-                        var animeGenres = malAnime?.Genres?.Select(g => g.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-                        if (animeGenres == null) return false;
-
-                        return isAnd
-                            ? themeSet.All(t => animeGenres.Contains(t))
-                            : themeSet.Any(t => animeGenres.Contains(t));
-                    }
-                    catch (JsonException ex)
-                    {
-                        logger.LogWarning(Constants.LogMessages.AnimeMediatorService.MalDeserializeFailedGenreFilter, m.Id, ex.Message);
-                        return false;
-                    }
-                });
-            });
-        }
-
-        if (filters?.Demographic?.Length > 0)
-        {
-            // Demographic filtering works identically to genre/theme filtering — stored in the MAL Genres array.
-            var demographicSet = new HashSet<string>(filters.Demographic, StringComparer.OrdinalIgnoreCase);
-            bool isAnd = FilterConstants.Operator.And.Equals(filters.DemographicOperator, StringComparison.OrdinalIgnoreCase);
-
-            result = result.Where(a =>
-            {
-                if (a.MalAnimes == null || !a.MalAnimes.Any())
-                    return false;
-
-                return a.MalAnimes.Any(m =>
-                {
-                    if (string.IsNullOrWhiteSpace(m.Id))
-                        return false;
-
-                    if (!malCache.TryGetValue(m.Id, out var malJson) || string.IsNullOrWhiteSpace(malJson))
-                        return false;
-
-                    try
-                    {
-                        var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, JsonOptions);
-                        var animeGenres = malAnime?.Genres?.Select(g => g.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
-                        if (animeGenres == null) return false;
-
-                        return isAnd
-                            ? demographicSet.All(d => animeGenres.Contains(d))
-                            : demographicSet.Any(d => animeGenres.Contains(d));
-                    }
-                    catch (JsonException ex)
-                    {
-                        logger.LogWarning(Constants.LogMessages.AnimeMediatorService.MalDeserializeFailedGenreFilter, m.Id, ex.Message);
-                        return false;
-                    }
-                });
-            });
-        }
+        result = ApplyTagsFilter(result, filters?.Genre,        filters?.GenreOperator,       malCache);
+        result = ApplyTagsFilter(result, filters?.Theme,        filters?.ThemeOperator,       malCache);
+        result = ApplyTagsFilter(result, filters?.Demographic,  filters?.DemographicOperator, malCache);
 
         // AiringStatus maps to the MAL series broadcast status (finished_airing / currently_airing / not_yet_aired)
         if (filters?.AiringStatus?.Length > 0)
@@ -604,7 +497,7 @@ public sealed class AnimeMediatorService(
         if (maxLen == 0) return 1.0;
         // Skip if lengths differ too much to ever reach the caller's 80% threshold
         int minLen = Math.Min(a.Length, b.Length);
-        if ((double)minLen / maxLen < 0.2) return 0.0;
+        if ((double)minLen / maxLen < MinLengthRatioForFuzzy) return 0.0;
         return 1.0 - (double)LevenshteinDistance(a, b) / maxLen;
     }
 
@@ -696,7 +589,6 @@ public sealed class AnimeMediatorService(
                     if (malAnime == null)
                         continue;
 
-                    // Skip NSFW entries when NSFW content is disabled
                     if (!showNsfw && IsNsfwAnime(malAnime))
                         continue;
 
@@ -779,7 +671,6 @@ public sealed class AnimeMediatorService(
                 _                 => []
             };
 
-            // Resolve provider base URLs once.
             var plexBaseUrl   = await GetPlexBaseUrlAsync();
             var sonarrBaseUrl = await GetSonarrSeriesBaseUrlAsync();
 
@@ -870,7 +761,6 @@ public sealed class AnimeMediatorService(
                             plexUrl = $"{plexBaseUrl}{linkedPlex.Anime.SourceId}";
                     }
 
-                    // Plex progress and year enrichment.
                     PlexProgressionInfo? plexProgress = null;
                     int? year = null;
                     string? originalTitle = null;
@@ -898,7 +788,7 @@ public sealed class AnimeMediatorService(
                         {
                             var sonarrSeries = JsonSerializer.Deserialize<SonarrSeries>(sonarrRawData, JsonOptions);
                             thumbnailUrl = sonarrSeries?.Images?
-                                .FirstOrDefault(i => string.Equals(i.CoverType, "poster", StringComparison.OrdinalIgnoreCase))
+                                .FirstOrDefault(i => string.Equals(i.CoverType, SonarrCoverType, StringComparison.OrdinalIgnoreCase))
                                 ?.RemoteUrl;
                             if (sonarrSeries?.Year > 0)
                                 year = sonarrSeries.Year;
@@ -1564,6 +1454,54 @@ public sealed class AnimeMediatorService(
         }
     }
 
+    /// <summary>
+    /// Filters anime by a tag set (genre, theme, or demographic) resolved from the MAL cache.
+    /// All three tag categories are stored in the MAL Genres array; the caller supplies the
+    /// appropriate selected values and AND/OR operator string.
+    /// </summary>
+    private IEnumerable<AnimeDetailsResponse> ApplyTagsFilter(
+        IEnumerable<AnimeDetailsResponse> data,
+        string[]? selectedValues,
+        string? op,
+        Dictionary<string, string> malCache)
+    {
+        if (selectedValues is not { Length: > 0 }) return data;
+
+        var tagSet = new HashSet<string>(selectedValues, StringComparer.OrdinalIgnoreCase);
+        bool isAnd = FilterConstants.Operator.And.Equals(op, StringComparison.OrdinalIgnoreCase);
+
+        return data.Where(a =>
+        {
+            if (a.MalAnimes == null || !a.MalAnimes.Any())
+                return false;
+
+            return a.MalAnimes.Any(m =>
+            {
+                if (string.IsNullOrWhiteSpace(m.Id))
+                    return false;
+
+                if (!malCache.TryGetValue(m.Id, out var malJson) || string.IsNullOrWhiteSpace(malJson))
+                    return false;
+
+                try
+                {
+                    var malAnime = JsonSerializer.Deserialize<MalAnime>(malJson, JsonOptions);
+                    var animeGenres = malAnime?.Genres?.Select(g => g.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                    if (animeGenres == null) return false;
+
+                    return isAnd
+                        ? tagSet.All(g => animeGenres.Contains(g))
+                        : tagSet.Any(g => animeGenres.Contains(g));
+                }
+                catch (JsonException ex)
+                {
+                    logger.LogWarning(Constants.LogMessages.AnimeMediatorService.MalDeserializeFailedGenreFilter, m.Id, ex.Message);
+                    return false;
+                }
+            });
+        });
+    }
+
     #region Private Helper Methods
     private async Task<bool> IsNsfwAllowedAsync()
     {
@@ -1580,7 +1518,7 @@ public sealed class AnimeMediatorService(
         var entry = await propertyBagRepository.GetByKeyAsync(MetaAnime.Core.SettingsKeys.AppTitleSimilarityThreshold);
         if (double.TryParse(entry?.Value, out var v) && v is >= 1 and <= 100)
             return v;
-        return 80; // default
+        return TitleSimilarityDefault;
     }
 
     /// <summary>
