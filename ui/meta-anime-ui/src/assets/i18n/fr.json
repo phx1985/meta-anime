@@ -60,7 +60,7 @@
         "colTitle": "Titre",
         "colActions": "Actions",
         "colProgress": "Progression",
-        "addToMal": "Lier à une entrée MAL",
+        "addToMal": "Ajouter à MAL",
         "searchPlaceholder": "Rechercher sur MyAnimeList...",
         "searchButton": "Rechercher",
         "searchError": "La recherche a échoué. Veuillez réessayer.",
@@ -75,7 +75,6 @@
         "confirmSeeDetails": "Voir les détails",
         "confirmLocalLabel": "Élément local",
         "confirmMalLabel": "Entrée MAL",
-        "addToMal": "Ajouter à MAL",
         "addMalError": "Échec de l'ajout à MAL. Veuillez réessayer."
       },
       "noProviders": {
@@ -201,6 +200,13 @@
       "unmonitorSpecials": "Ne plus surveiller les spéciaux",
       "none": "Aucun"
     }
+  },
+  "gapConfirmModal": {
+    "malItemLabel": "ÉLÉMENT MAL",
+    "seeDetails": "Voir les détails"
+  },
+  "addSeriesWizard": {
+    "alreadyTracked": "Déjà suivi"
   },
   "animeList": {
     "title": "Liste des Animes",
@@ -381,7 +387,23 @@
       "rx": "Rx"
     },
     "sizeUnit": "Go",
-    "seeMore": "Voir plus"
+    "seeMore": "Voir plus",
+    "aka": "Aussi connu sous",
+    "addToMal": "Ajouter à MAL",
+    "addToSonarr": "Ajouter à Sonarr",
+    "sonarrAdd": {
+      "title": "Ajouter à Sonarr",
+      "searchPlaceholder": "Rechercher par titre…",
+      "searching": "Recherche…",
+      "noResults": "Aucun résultat",
+      "lookupError": "Échec de la recherche",
+      "addError": "Échec de l'ajout",
+      "alreadyAdded": "Déjà dans la bibliothèque",
+      "rootFolder": "Dossier racine",
+      "quality": "Qualité",
+      "add": "Ajouter",
+      "success": "Ajouté à Sonarr !"
+    }
   },
   "animeCard": {
     "malScore": "Score MAL",
@@ -401,7 +423,8 @@
       "tv_special": "Spécial TV",
       "music": "Musique",
       "unknown": "Inconnu"
-    }
+    },
+    "seeMore": "Voir plus"
   },
   "settings": {
     "title": "Paramètres",
@@ -588,7 +611,7 @@
       },
       "BotKun_BaseUrl": {
         "name": "URL de base de l'API",
-        "desc": "URL de base de votre fournisseur d'IA compatible OpenAI (ex. https://api.groq.com/openai/v1, https://api.openai.com/v1, http://localhost:11434/v1)."
+        "desc": "Sélectionnez un fournisseur dans la liste ou saisissez n'importe quel URI d'API compatible OpenAI."
       },
       "BotKun_ApiKey": {
         "name": "Clé API",
@@ -596,7 +619,7 @@
       },
       "BotKun_Model": {
         "name": "Modèle",
-        "desc": "Identifiant du modèle à utiliser (ex. llama-3.3-70b-versatile, gpt-4o-mini, qwen2.5:1.5b, mistral)."
+        "desc": "Identifiant du modèle à utiliser (ex. llama-3.3-70b-versatile, gpt-4o-mini, qwen2.5:1.5b). Facultatif pour les configurations locales avec un seul modèle."
       }
     },
     "toggle": {
@@ -616,7 +639,8 @@
       "fetchModelsLoading": "Récupération...",
       "fetchModelsError": "Impossible de récupérer les modèles. Vérifiez l'URL de base et la clé API.",
       "fetchModelsNoUrl": "Veuillez d'abord configurer une URL de base.",
-      "selectModel": "— Sélectionner un modèle —"
+      "selectModel": "— Sélectionner un modèle —",
+      "credentialsError": "Identifiants invalides ou URL inaccessible — Bot-kun a été désactivé."
     },
     "provider": {
       "enabled": "Activé",
@@ -930,7 +954,51 @@
       "mb": "Mo",
       "gb": "Go",
       "tb": "To"
-    }
+    },
+    "loading": "Chargement...",
+    "previousPage": "Page précédente",
+    "nextPage": "Page suivante",
+    "dismiss": "Ignorer"
+  },
+  "providers": {
+    "mal": "MyAnimeList",
+    "malShort": "MAL",
+    "plex": "Plex",
+    "sonarr": "Sonarr",
+    "inMal": "Dans MAL",
+    "inPlex": "Dans Plex",
+    "inSonarr": "Dans Sonarr",
+    "alreadyTracked": "Déjà suivi"
+  },
+  "aria": {
+    "primaryNavigation": "Navigation principale",
+    "settingsNavigation": "Navigation des paramètres",
+    "tablePaginationTop": "Pagination du tableau (haut)",
+    "tablePagination": "Pagination du tableau",
+    "closeMenu": "Fermer le menu",
+    "closeGallery": "Fermer la galerie",
+    "previousImage": "Image précédente",
+    "nextImage": "Image suivante",
+    "imageGallery": "Galerie d'images",
+    "syncSteps": "Étapes de synchronisation",
+    "legend": "Légende",
+    "providerLinks": "Liens des fournisseurs",
+    "setupProgress": "Progression de la configuration",
+    "decreaseEpisodes": "Diminuer",
+    "increaseEpisodes": "Augmenter",
+    "episodesWatched": "Épisodes regardés",
+    "selectPlexLibraries": "Sélectionner les bibliothèques Plex",
+    "manageSonarrTags": "Gérer les tags Sonarr",
+    "toggleSonarr": "Activer/désactiver Sonarr",
+    "toggleMal": "Activer/désactiver MAL",
+    "alternativeTitles": "Titres alternatifs",
+    "seeDetails": "Voir les détails",
+    "feelingLucky": "Feeling lucky, sélection de votre anime…"
+  },
+  "app": {
+    "title": "Meta Anime",
+    "closeMenu": "Fermer le menu",
+    "dismissNotification": "Ignorer"
   },
   "notFound": {
     "ariaLabel": "404 – Page introuvable",
@@ -1012,6 +1080,22 @@
       }
     }
   },
+  "botKun": {
+    "subtitle": "Concierge IA Anime",
+    "inputPlaceholder": "Parlez-moi d'anime…",
+    "clearConversation": "Effacer la conversation",
+    "errorFallback": "Désolé, une erreur s'est produite. Veuillez réessayer.",
+    "connectionError": "Erreur de connexion — vérifiez vos paramètres Bot-kun.",
+    "fabLabel": "Bot-kun",
+    "fabOpen": "Ouvrir le concierge IA Bot-kun",
+    "newMessage": "Nouveau message de Bot-kun",
+    "dialogLabel": "Bot-kun Concierge Anime IA",
+    "title": "Bot-kun",
+    "close": "Fermer Bot-kun",
+    "typingIndicator": "Bot-kun est en train d'écrire",
+    "inputLabel": "Écrire à Bot-kun",
+    "sendMessage": "Envoyer le message"
+  },
   "luckyPick": {
     "buttonLabel": "J'ai de la chance!",
     "ariaLabel": "Superposition de sélection aléatoire d'anime",
@@ -1030,6 +1114,17 @@
       "title": "Connexion perdue",
       "desc": "Impossible de joindre le serveur. Veuillez vérifier votre connexion.",
       "retry": "Réessayer"
+    },
+    "chatCard": {
+      "rolling": "Feeling Lucky",
+      "label": "Feeling Lucky",
+      "scoreSuffix": "/ 10",
+      "openDetails": "Ouvrir les détails",
+      "addToList": "Ajouter à ma liste",
+      "addingToList": "Ajout à ma liste…",
+      "addedToList": "Ajouté à ma liste",
+      "loadError": "Impossible de charger les détails de cette sélection aléatoire.",
+      "updateError": "Impossible de mettre à jour votre liste MAL pour le moment."
     },
     "phrases": {
       "plex": [

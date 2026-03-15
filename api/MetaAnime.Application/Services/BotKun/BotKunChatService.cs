@@ -70,9 +70,9 @@ public sealed class BotKunChatService(
         var model   = await GetSettingAsync(SettingsKeys.BotKunModel) ?? string.Empty;
         var apiKey  = await GetSettingAsync(SettingsKeys.BotKunApiKey) ?? string.Empty;
 
-        if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(model))
+        if (string.IsNullOrWhiteSpace(baseUrl))
         {
-            yield return "Ara ara~ 🎌 Bot-kun has no AI provider configured! Head to **Settings → Bot-kun AI** and enter your API Base URL and Model name first.";
+            yield return "Bot-kun AI is not configured yet. Open **Settings → Bot-kun AI** and enter your AI Base URL before starting a conversation.";
             yield break;
         }
 
@@ -82,16 +82,25 @@ public sealed class BotKunChatService(
         {
             intent = await ExtractSearchIntentAsync(request.UserMessage, request.History, baseUrl, model, apiKey, cancellationToken);
             logger.LogInformation(
-                "Bot-kun intent: type={Type} genres=[{Genres}] airingStatus={AiringStatus} watchStatus={WatchStatus} page={Page}",
+                "Bot-kun intent: type={Type} genres=[{Genres}] airingStatus={AiringStatus} watchStatus={WatchStatus} feelingLucky={IsFeelingLucky} page={Page}",
                 intent?.Type,
                 string.Join(",", intent?.Genres ?? []),
                 intent?.AiringStatus,
                 intent?.WatchStatus,
+                intent?.IsFeelingLucky,
                 intent?.Page);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             logger.LogWarning("Bot-kun intent extraction failed ({Error}); falling back to RAG.", ex.Message);
+        }
+
+        // ── Lucky short-circuit ───────────────────────────────────────────
+        if (intent?.IsFeelingLucky == true)
+        {
+            await foreach (var token in StreamLuckyResponseAsync(request, baseUrl, model, apiKey, isNsfw, cancellationToken))
+                yield return token;
+            yield break;
         }
 
         // ── Pass 2: Query database or fall back to MAL RAG ────────────────
@@ -102,12 +111,21 @@ public sealed class BotKunChatService(
         if (isDbQuery)
         {
             var filters = BuildFiltersFromIntent(intent!, isNsfw);
-            var (results, nextPage) = await QueryAnimeAsync(filters, intent!.Page, cancellationToken);
+
+            // R22: use explicit pagination context if the LLM didn't advance the page itself.
+            // When the client sends PreviousSearchPage and the user asks for "more", the LLM
+            // typically sets Page=1 (it doesn't always track pagination reliably). We override
+            // with PreviousSearchPage + 1 to ensure reliable "next page" behaviour.
+            var queryPage = (intent!.Page <= 1 && request.PreviousSearchPage.HasValue && request.PreviousSearchPage.Value >= 1)
+                ? request.PreviousSearchPage.Value + 1
+                : intent.Page;
+
+            var (results, nextPage) = await QueryAnimeAsync(filters, queryPage, cancellationToken);
             hasNextPage = nextPage;
 
             var filteredResults = ApplyYearFilter(results, intent!.MinYear, intent!.MaxYear);
 
-            logger.LogInformation("Bot-kun DB query returned {Count} result(s) (after year filter).", filteredResults.Count);
+            logger.LogInformation("Bot-kun DB query returned {Count} result(s) (after year filter, page {Page}).", filteredResults.Count, queryPage);
 
             if (filteredResults.Count == 0)
             {
@@ -115,7 +133,7 @@ public sealed class BotKunChatService(
                 // so the Bot-kun persona stays consistent and natural.
                 var zeroResultsPayload = new OpenAiChatRequest(
                     model,
-                    [new("system", BotKunPromptBuilder.BuildZeroResults()), new("user", request.UserMessage)],
+                    [new("system", BotKunPromptBuilder.BuildZeroResults(request.Language)), new("user", request.UserMessage)],
                     Stream: true,
                     MaxTokens: 100);
 
@@ -125,20 +143,31 @@ public sealed class BotKunChatService(
             }
 
             animeContext = BuildDbAnimeContext(filteredResults, isNsfw);
+
+            // R17b: Emit permitted MAL IDs as a metadata chunk so the frontend can validate
+            // [anime:ID] tags and reject any IDs the LLM may have hallucinated.
+            var permittedMalIds = filteredResults
+                .Select(a => a.MalAnimes?.FirstOrDefault()?.Id)
+                .Where(id => id != null)
+                .ToList();
+            if (permittedMalIds.Count > 0)
+                yield return $"[PI:{string.Join(",", permittedMalIds)}]";
         }
         else
         {
-            animeContext = await BuildRagContextAsync(request.UserMessage);
+            animeContext = await BuildRagContextAsync(request.UserMessage, isNsfw);
         }
 
         // ── Pass 3: Stream final response ─────────────────────────────────
-        var systemPrompt = BotKunPromptBuilder.Build(isNsfw, animeContext, isDbQuery, intent?.Page ?? 1, hasNextPage);
+        var systemPrompt = BotKunPromptBuilder.Build(isNsfw, animeContext, isDbQuery, intent?.Page ?? 1, hasNextPage, request.Language);
         List<OpenAiMessage> messages = [new("system", systemPrompt)];
-        foreach (var h in request.History)
+        // Cap history to prevent unbounded token consumption on long conversations.
+        const int MaxHistoryMessages = 10;
+        foreach (var h in request.History.TakeLast(MaxHistoryMessages))
             messages.Add(new(h.Role, h.Content));
         messages.Add(new("user", request.UserMessage));
 
-        var payload = new OpenAiChatRequest(model, messages, Stream: true);
+        var payload = new OpenAiChatRequest(model, messages, Stream: true, MaxTokens: 600);
 
         await foreach (var token in ExecuteStreamAsync(baseUrl, apiKey, payload, cancellationToken))
             yield return token;
@@ -151,10 +180,9 @@ public sealed class BotKunChatService(
         var model   = await GetSettingAsync(SettingsKeys.BotKunModel) ?? string.Empty;
         var apiKey  = await GetSettingAsync(SettingsKeys.BotKunApiKey) ?? string.Empty;
 
-        if (string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(model))
+        if (string.IsNullOrWhiteSpace(baseUrl))
         {
-            yield return "Yosh! Bot-kun is here! 🎌 Ask me anything about anime, manga, or your watch list. " +
-                "I'm like a Pokédex, but for otakus — Dattebayo! (Configure your AI provider in Settings to enable AI responses.)";
+            yield return "Bot-kun is ready. Ask about anime, manga, or your watch list. Configure your AI provider in Settings to enable AI responses.";
             yield break;
         }
 
@@ -170,36 +198,58 @@ public sealed class BotKunChatService(
             yield return token;
     }
 
-    // ── Model listing ──────────────────────────────────────────────────────────
+    // ── Model listing──────────────────────────────────────────────────────────
 
     public async Task<string[]> GetAvailableModelsAsync(
         string baseUrl, string apiKey, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(baseUrl)) return [];
 
-        var url = baseUrl.TrimEnd('/') + "/models";
+        var url = baseUrl.TrimEnd('/') + Constants.BotKunEndpoints.Models;
         using var req = new HttpRequestMessage(HttpMethod.Get, url);
         if (!string.IsNullOrWhiteSpace(apiKey))
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
+        HttpResponseMessage response;
         try
         {
-            using var response = await httpClient.SendAsync(req, cancellationToken);
-            if (!response.IsSuccessStatusCode) return [];
-
-            var json = await response.Content.ReadAsStringAsync(cancellationToken);
-            var modelsResponse = JsonSerializer.Deserialize<ModelsResponse>(json, DeserializeOptions);
-            return modelsResponse?.Data?
-                .Select(m => m.Id)
-                .Where(id => !string.IsNullOrWhiteSpace(id))
-                .Select(id => id!)
-                .Order()
-                .ToArray() ?? [];
+            response = await httpClient.SendAsync(req, cancellationToken);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        catch (OperationCanceledException)
         {
-            logger.LogWarning("Failed to fetch models from {Url}: {Error}", url, ex.Message);
-            return [];
+            throw;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("Failed to reach AI provider at {Url}: {Error}", url, ex.Message);
+            throw new InvalidOperationException($"Cannot reach provider: {ex.Message}", ex);
+        }
+
+        using (response)
+        {
+            if (!response.IsSuccessStatusCode)
+            {
+                logger.LogWarning("AI provider returned HTTP {StatusCode} for models at {Url}", response.StatusCode, url);
+                throw new InvalidOperationException($"Provider returned {(int)response.StatusCode}: {response.ReasonPhrase}");
+            }
+
+            try
+            {
+                var json = await response.Content.ReadAsStringAsync(cancellationToken);
+                var modelsResponse = JsonSerializer.Deserialize<ModelsResponse>(json, DeserializeOptions);
+                return modelsResponse?.Data?
+                    .Select(m => m.Id)
+                    .Where(id => !string.IsNullOrWhiteSpace(id))
+                    .Select(id => id!)
+                    .Order()
+                    .ToArray() ?? [];
+            }
+            catch (JsonException ex)
+            {
+                // Provider does not expose a /models endpoint — return empty list gracefully
+                logger.LogWarning("Failed to parse models response from {Url}: {Error}", url, ex.Message);
+                return [];
+            }
         }
     }
 
@@ -222,8 +272,7 @@ public sealed class BotKunChatService(
         catch (HttpRequestException ex)
         {
             logger.LogWarning("AI provider unreachable at {Endpoint}: {Error}", endpoint, ex.Message);
-            errorMessage = "Gomen nasai~ 🙏 I can't reach the AI provider right now. " +
-                "Please check your **Bot-kun AI** settings and make sure the provider is running!";
+            errorMessage = "I can't reach the AI provider right now. Please check your **Bot-kun AI** settings and make sure the provider is running.";
         }
         catch (TaskCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -234,8 +283,7 @@ public sealed class BotKunChatService(
 
         if (!response!.IsSuccessStatusCode)
         {
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
-            logger.LogError("AI provider returned HTTP {StatusCode}: {Body}", response.StatusCode, body);
+            logger.LogError("AI provider returned HTTP {StatusCode}. Check model name and API key in settings.", response.StatusCode);
             yield return $"Something went haywire — the AI provider returned HTTP {(int)response.StatusCode}. " +
                 "Check your model name and API key in **Settings → Bot-kun AI**.";
             yield break;
@@ -251,12 +299,17 @@ public sealed class BotKunChatService(
             if (!line.StartsWith("data: ", StringComparison.Ordinal)) continue;
 
             var json = line["data: ".Length..].Trim();
-            if (json is "[DONE]") yield break;
+            if (json is "[DONE]") break;
             if (string.IsNullOrEmpty(json)) continue;
 
             OpenAiStreamChunk? chunk;
             try { chunk = JsonSerializer.Deserialize<OpenAiStreamChunk>(json, DeserializeOptions); }
-            catch (JsonException ex) { logger.LogWarning(ex, "Failed to parse stream chunk: {Json}", json); continue; }
+            catch (JsonException ex)
+            {
+                logger.LogWarning("Bot-kun stream chunk parse failed ({Error}): {Excerpt}",
+                    ex.Message, json.Length > 100 ? json[..100] + "…" : json);
+                continue;
+            }
 
             var content = chunk?.Choices?[0]?.Delta?.Content;
             if (!string.IsNullOrEmpty(content))
@@ -288,12 +341,40 @@ public sealed class BotKunChatService(
         var content = envelope?.Choices?[0]?.Message?.Content;
         if (string.IsNullOrWhiteSpace(content)) return null;
 
-        // The model may wrap JSON in prose — extract the first {...} object
+        // The model may wrap JSON in prose — extract the first balanced {...} block.
         var start = content.IndexOf('{');
-        var end   = content.LastIndexOf('}');
-        if (start < 0 || end <= start) return null;
+        if (start < 0) return null;
 
-        return JsonSerializer.Deserialize<BotKunSearchIntent>(content[start..(end + 1)], DeserializeOptions);
+        // Find the matching closing brace by counting depth, not just LastIndexOf,
+        // to handle nested objects correctly and avoid misparse on trailing text.
+        int depth = 0;
+        int end = -1;
+        for (int i = start; i < content.Length; i++)
+        {
+            if (content[i] == '{') depth++;
+            else if (content[i] == '}')
+            {
+                depth--;
+                if (depth == 0) { end = i; break; }
+            }
+        }
+        if (end < 0) return null;
+
+        try
+        {
+            var intent = JsonSerializer.Deserialize<BotKunSearchIntent>(content[start..(end + 1)], DeserializeOptions);
+            // R21: Validate the type field is a known intent value
+            return intent?.Type switch
+            {
+                "search" or "recommendation" or "question" or "other" => intent,
+                _ => null,
+            };
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning("Bot-kun intent JSON parse failed: {Error}", ex.Message);
+            return null;
+        }
     }
 
     // ── HTTP request builder ───────────────────────────────────────────────────
@@ -313,18 +394,6 @@ public sealed class BotKunChatService(
 
     // ── Database filters from intent ───────────────────────────────────────────
 
-    private static readonly FrozenSet<string> NsfwGenres = FrozenSet.Create(
-        StringComparer.OrdinalIgnoreCase,
-        "Ecchi", "Hentai", "Erotica");
-
-    private static readonly FrozenSet<string> NsfwRatings = FrozenSet.Create(
-        StringComparer.OrdinalIgnoreCase,
-        "r+", "rx");
-
-    private static readonly FrozenSet<string> ValidAiringStatuses = FrozenSet.Create(
-        StringComparer.OrdinalIgnoreCase,
-        "finished_airing", "currently_airing", "not_yet_aired");
-
     private static AnimeFilters BuildFiltersFromIntent(BotKunSearchIntent intent, bool isNsfw)
     {
         // SFW hard-filter: strip NSFW genres and ratings from intent before querying DB.
@@ -340,10 +409,10 @@ public sealed class BotKunChatService(
         }
         else
         {
-            var safeGenres = intent.Genres?.Where(g => !NsfwGenres.Contains(g)).ToArray();
+            var safeGenres = intent.Genres?.Where(g => !MalConstants.NsfwGenres.Contains(g)).ToArray();
             genres = safeGenres is { Length: > 0 } ? safeGenres : null;
 
-            var safeRatings = intent.AgeRating?.Where(r => !NsfwRatings.Contains(r)).ToArray();
+            var safeRatings = intent.AgeRating?.Where(r => !MalConstants.NsfwRatings.Contains(r)).ToArray();
             ageRating = safeRatings is { Length: > 0 } ? safeRatings : null;
         }
 
@@ -359,7 +428,7 @@ public sealed class BotKunChatService(
     }
 
     private static string? NormalizeAiringStatus(string? raw) =>
-        raw is not null && ValidAiringStatuses.Contains(raw) ? raw : null;
+        raw is not null && MalConstants.AiringStatus.All.Contains(raw) ? raw : null;
 
     private static string? NormalizeWatchStatus(string? raw) => raw?.ToLowerInvariant() switch
     {
@@ -382,6 +451,9 @@ public sealed class BotKunChatService(
         if (result.IsFailure) return ([], false);
         return (result.Value.Data?.ToList() ?? [], result.Value.HasNextPage);
     }
+
+
+
 
     private static IReadOnlyList<AnimeDetailsResponse> ApplyYearFilter(
         IReadOnlyList<AnimeDetailsResponse> results, int? minYear, int? maxYear)
@@ -439,6 +511,7 @@ public sealed class BotKunChatService(
         return sb.ToString();
     }
 
+
     // ── Shared helpers ─────────────────────────────────────────────────────────
 
     private async Task<bool> IsNsfwAllowedAsync()
@@ -446,6 +519,8 @@ public sealed class BotKunChatService(
         var entry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.AppShowNsfw);
         return entry?.Value?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
     }
+
+
 
     private async Task<string?> GetSettingAsync(string key)
     {
@@ -466,17 +541,21 @@ public sealed class BotKunChatService(
         if (string.IsNullOrWhiteSpace(raw)) return string.Empty;
 
         var trimmed = raw.TrimEnd('/');
-        const string suffix = "/chat/completions";
+        const string suffix = Constants.BotKunEndpoints.ChatCompletions;
         return trimmed.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
             ? trimmed
             : trimmed + suffix;
     }
 
-    private async Task<string> BuildRagContextAsync(string userMessage)
+    private async Task<string> BuildRagContextAsync(string userMessage, bool isNsfw)
     {
         if (string.IsNullOrWhiteSpace(userMessage)) return string.Empty;
 
-        var result = await malAnimeSourceService.SearchByTitleAsync(userMessage, limit: 3);
+        // Request more results in SFW mode so we have headroom after any local filtering.
+        // MalSearchResultItem does not carry Genres or Rating fields, so genre/rating-based
+        // NSFW filtering cannot be applied here — the MAL API search endpoint itself is
+        // the authority on content classification at this level.
+        var result = await malAnimeSourceService.SearchByTitleAsync(userMessage, limit: isNsfw ? 3 : 5);
         if (result.IsFailure || result.Value.Count == 0) return string.Empty;
 
         var lines = result.Value.Select(item =>
@@ -484,4 +563,101 @@ public sealed class BotKunChatService(
 
         return string.Join("\n", lines);
     }
+
+    // ── Feeling Lucky: random anime picker ────────────────────────────────────
+
+    private async IAsyncEnumerable<string> StreamLuckyResponseAsync(
+        BotKunChatRequest request,
+        string baseUrl,
+        string model,
+        string apiKey,
+        bool isNsfw,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var picked = await TryPickLuckyAnimeAsync(cancellationToken);
+
+        if (picked is null)
+        {
+            logger.LogInformation("Bot-kun Lucky: no anime matched the saved preferences.");
+            var zeroPayload = new OpenAiChatRequest(
+                model,
+                [new("system", BotKunPromptBuilder.BuildZeroResults(request.Language)), new("user", request.UserMessage)],
+                Stream: true,
+                MaxTokens: 100);
+            await foreach (var token in ExecuteStreamAsync(baseUrl, apiKey, zeroPayload, cancellationToken))
+                yield return token;
+            yield break;
+        }
+
+        var mal    = picked.MalAnimes?.FirstOrDefault();
+        var malId  = mal?.Id ?? string.Empty;
+        var title  = picked.Title;
+        var type   = mal?.MediaType ?? "N/A";
+        var score  = mal?.Rating?.MalMean is double d ? $"{d:F1}" : "N/A";
+        var year   = mal?.StartDate is { Length: >= 4 } s ? s[..4] : "N/A";
+        var genres = string.Join(", ", (mal?.Genres ?? []).Take(4));
+
+        var detailsLine = $"MAL_ID={malId} | Title=\"{title}\" | Type={type} | Score={score} | Year={year}"
+            + (genres.Length > 0 ? $" | Genres={genres}" : string.Empty);
+
+        logger.LogInformation("Bot-kun Lucky: selected MAL_ID={MalId} Title=\"{Title}\"", malId, title);
+
+        var systemPrompt = BotKunPromptBuilder.BuildLucky(isNsfw, malId, title, detailsLine, request.Language);
+        List<OpenAiMessage> messages = [new("system", systemPrompt), new("user", request.UserMessage)];
+        var payload = new OpenAiChatRequest(model, messages, Stream: true, MaxTokens: 180);
+
+        await foreach (var token in ExecuteStreamAsync(baseUrl, apiKey, payload, cancellationToken))
+            yield return token;
+    }
+
+    /// <summary>
+    /// Mirrors the frontend LuckyPickComponent.spin() logic exactly.
+    /// Reads saved user preferences from the property bag, applies the same filters,
+    /// gets the total count, then picks a random single item.
+    /// </summary>
+    private async Task<AnimeDetailsResponse?> TryPickLuckyAnimeAsync(CancellationToken ct)
+    {
+        var luckyOnlyFinished    = await GetPropertyBagBoolAsync(SettingsKeys.LuckyOnlyFinished, defaultValue: false);
+        var luckyOnlyPlanToWatch = await GetPropertyBagBoolAsync(SettingsKeys.LuckyOnlyPlanToWatch, defaultValue: true);
+        var luckyOnlyWithFiles   = await GetPropertyBagBoolAsync(SettingsKeys.LuckyOnlyWithFiles, defaultValue: true);
+        var sonarrEnabled        = await GetPropertyBagBoolAsync(SettingsKeys.SonarrEnabled, defaultValue: false);
+
+        var filters = new AnimeFilters(
+            Status:       luckyOnlyPlanToWatch ? ["plan_to_watch"]   : null,
+            AiringStatus: luckyOnlyFinished    ? ["finished_airing"] : null,
+            HasFile:      (luckyOnlyWithFiles && sonarrEnabled)      ? true : null);
+
+        // Step 1: get total count
+        var countResult = await animeMediatorService.GetAllAsync(page: 1, pageSize: 1, filters: filters, enriched: false);
+        if (countResult.IsFailure)
+        {
+            logger.LogWarning("Bot-kun Lucky: count query failed — {Error}", countResult.Error.Message);
+            return null;
+        }
+
+        var total = countResult.Value.TotalCount;
+        if (total == 0) return null;
+
+        ct.ThrowIfCancellationRequested();
+
+        // Step 2: pick a random item (pageSize=1 so page N === item N, identical to frontend logic)
+        var randomPage = Random.Shared.Next(0, total) + 1;
+        var itemResult = await animeMediatorService.GetAllAsync(page: randomPage, pageSize: 1, filters: filters, enriched: false);
+        if (itemResult.IsFailure)
+        {
+            logger.LogWarning("Bot-kun Lucky: item fetch failed — {Error}", itemResult.Error.Message);
+            return null;
+        }
+
+        return itemResult.Value.Data?.FirstOrDefault();
+    }
+
+    private async Task<bool> GetPropertyBagBoolAsync(string key, bool defaultValue)
+    {
+        var entry = await propertyBagRepository.GetByKeyAsync(key);
+        if (entry?.Value is null) return defaultValue;
+        return entry.Value.Equals("true", StringComparison.OrdinalIgnoreCase);
+    }
+
 }
+

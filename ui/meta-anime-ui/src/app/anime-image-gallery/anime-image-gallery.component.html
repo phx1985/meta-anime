@@ -5,14 +5,14 @@
     class="gallery-shell"
     role="dialog"
     aria-modal="true"
-    aria-label="Image Gallery"
+    [attr.aria-label]="'aria.imageGallery' | translate"
   >
     <!-- Close button -->
     <button
       type="button"
       class="gallery-close"
       (click)="gallery.close()"
-      aria-label="Close gallery"
+      [attr.aria-label]="'aria.closeGallery' | translate"
       title="Close (Esc)"
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="20" height="20" aria-hidden="true">
@@ -27,7 +27,7 @@
         class="gallery-nav gallery-nav--prev"
         [class.gallery-nav--active]="swipeHint() === 'prev'"
         (click)="gallery.prev(); $event.stopPropagation()"
-        aria-label="Previous image"
+        [attr.aria-label]="'aria.previousImage' | translate"
         title="Previous (←)"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" aria-hidden="true">
@@ -63,7 +63,7 @@
         class="gallery-nav gallery-nav--next"
         [class.gallery-nav--active]="swipeHint() === 'next'"
         (click)="gallery.next(); $event.stopPropagation()"
-        aria-label="Next image"
+        [attr.aria-label]="'aria.nextImage' | translate"
         title="Next (→)"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22" aria-hidden="true">

@@ -66,6 +66,7 @@ public static class ServicesExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddHttpClient("Kometa");
         services.AddScoped<IKometaAnimeJsonService<KometaRaw>, KometaAnimeJsonService>();
         services.AddScoped<IKometaAnimeMappingService, KometaAnimeMappingService>();
         services.AddScoped<ISonarrAnimeSourceService<SonarrSeries>, SonarrAnimeSourceService>();
@@ -94,7 +95,9 @@ public static class ServicesExtensions
 #pragma warning disable EXTEXP0001 // RemoveAllResilienceHandlers is experimental but stable for our use
         services.AddHttpClient<IBotKunChatService, BotKunChatService>()
             .RemoveAllResilienceHandlers()
-            .ConfigureHttpClient(client => client.Timeout = Timeout.InfiniteTimeSpan);
+            // AI providers can take up to 3 minutes for long-form streaming responses.
+            // We rely on the per-request CancellationToken for user-initiated cancellation.
+            .ConfigureHttpClient(client => client.Timeout = TimeSpan.FromMinutes(3));
 #pragma warning restore EXTEXP0001
 
         services.AddScoped<IKometaAnimeMappingRepository, KometaAnimeMappingRepository>();
@@ -121,7 +124,18 @@ public static class ServicesExtensions
             ?? configuration.GetSection(DatabaseSettings.SectionName).Get<DatabaseSettings>()?.ConnectionString
             ?? string.Empty;
 
-        services.AddDbContext<MetaAnimeDbContext>(options => options.UseNpgsql(connectionString));
+        // Augment the connection string with explicit pool limits so EF Core inherits them.
+        // NpgsqlDbContextOptionsBuilder does not expose MaxPoolSize/MinPoolSize in v10+;
+        // they are Npgsql connection-string-level settings.
+        var pooledConnectionString = new Npgsql.NpgsqlConnectionStringBuilder(connectionString)
+        {
+            MaxPoolSize             = 50,
+            MinPoolSize             = 5,
+            ConnectionIdleLifetime  = (int)TimeSpan.FromMinutes(5).TotalSeconds,
+        }.ConnectionString;
+
+        services.AddDbContext<MetaAnimeDbContext>(options =>
+            options.UseNpgsql(pooledConnectionString));
     }
 
 

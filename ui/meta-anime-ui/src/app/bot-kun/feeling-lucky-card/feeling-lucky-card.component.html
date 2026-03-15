@@ -1,0 +1,135 @@
+<div class="lucky-card">
+
+  @if (isRolling()) {
+    <!-- Rolling animation -->
+    <div class="lucky-card__rolling" [attr.aria-label]="'aria.feelingLucky' | translate" aria-live="polite">
+      <div class="lucky-card__dice-wrap" aria-hidden="true">
+        <svg class="lucky-card__dice-icon" width="28" height="28" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="2" width="20" height="20" rx="4" />
+          <circle cx="8"  cy="8"  r="1.3" fill="currentColor" stroke="none" />
+          <circle cx="16" cy="8"  r="1.3" fill="currentColor" stroke="none" />
+          <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
+          <circle cx="8"  cy="16" r="1.3" fill="currentColor" stroke="none" />
+          <circle cx="16" cy="16" r="1.3" fill="currentColor" stroke="none" />
+        </svg>
+      </div>
+      <p class="lucky-card__rolling-text">
+        {{ 'luckyPick.chatCard.rolling' | translate }}
+        <span class="lucky-card__dots" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+      </p>
+    </div>
+
+  } @else if (isLoaded()) {
+    <!-- Result card -->
+    <div class="lucky-card__result">
+
+      <!-- Poster column -->
+      <div class="lucky-card__poster-wrap">
+        @if (coverUrl()) {
+          <img class="lucky-card__poster" [src]="coverUrl()!" [alt]="displayTitle()" loading="lazy" />
+        } @else {
+          <div class="lucky-card__poster lucky-card__poster--fallback" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="12" rx="2" />
+              <circle cx="8"  cy="8"  r="1.2" fill="currentColor" stroke="none" />
+              <circle cx="16" cy="8"  r="1.2" fill="currentColor" stroke="none" />
+              <path d="M5 19h14" /><path d="M8 19l-2 3" /><path d="M16 19l2 3" />
+            </svg>
+          </div>
+        }
+      </div>
+
+      <!-- Info column -->
+      <div class="lucky-card__info">
+        <span class="lucky-card__badge" aria-hidden="true">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+            <rect x="2" y="2" width="20" height="20" rx="4" />
+          </svg>
+          {{ 'luckyPick.chatCard.label' | translate }}
+        </span>
+
+        <h3 class="lucky-card__title">{{ displayTitle() }}</h3>
+
+        <!-- Meta chips: type + year -->
+        <div class="lucky-card__meta">
+          @if (mediaType()) {
+            <span class="lucky-card__chip lucky-card__chip--type">{{ mediaType() }}</span>
+          }
+          @if (year()) {
+            <span class="lucky-card__chip">{{ year() }}</span>
+          }
+        </div>
+
+        <!-- Score -->
+        @if (score() !== null) {
+          <div class="lucky-card__score">
+            <svg class="lucky-card__score-star" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+            <span class="lucky-card__score-val">{{ score()!.toFixed(1) }}</span>
+            <span class="lucky-card__score-max">{{ 'luckyPick.chatCard.scoreSuffix' | translate }}</span>
+          </div>
+        }
+
+        <!-- Genre chips -->
+        @if (genres().length > 0) {
+          <div class="lucky-card__genres">
+            @for (genre of genres(); track genre) {
+              <span class="lucky-card__chip">{{ genre }}</span>
+            }
+          </div>
+        }
+
+        <div class="lucky-card__actions">
+          @if (isTrackedLocally()) {
+            <button
+              class="lucky-card__action lucky-card__action--primary"
+              type="button"
+              (click)="onOpenDetails($event)"
+            >
+              {{ 'luckyPick.chatCard.openDetails' | translate }}
+            </button>
+          } @else {
+            <button
+              class="lucky-card__action lucky-card__action--primary"
+              type="button"
+              [disabled]="isAddingToList() || addedToList()"
+              (click)="onAddToList($event)"
+            >
+              @if (addedToList()) {
+                {{ 'luckyPick.chatCard.addedToList' | translate }}
+              } @else if (isAddingToList()) {
+                {{ 'luckyPick.chatCard.addingToList' | translate }}
+              } @else {
+                {{ 'luckyPick.chatCard.addToList' | translate }}
+              }
+            </button>
+
+            <button
+              class="lucky-card__action lucky-card__action--secondary"
+              type="button"
+              (click)="onOpenDetails($event)"
+            >
+              {{ 'luckyPick.chatCard.openDetails' | translate }}
+            </button>
+          }
+        </div>
+
+        @if (actionErrorKey(); as actionErrorKey) {
+          <span class="lucky-card__error-note" role="alert">{{ actionErrorKey | translate }}</span>
+        }
+      </div>
+    </div>
+
+  } @else {
+    <!-- Error state -->
+    <div class="lucky-card__error" role="alert">
+      <span>{{ 'luckyPick.chatCard.loadError' | translate }}</span>
+    </div>
+  }
+
+</div>

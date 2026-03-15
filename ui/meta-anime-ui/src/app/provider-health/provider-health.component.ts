@@ -10,6 +10,7 @@ import {
   effect,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslatePipe } from '@ngx-translate/core';
 import { ProviderStateService } from '../services/provider-state.service';
 import { PopupService } from '../services/popup.service';
 import { PlexDeepLinkService } from '../services/plex-deep-link.service';
@@ -21,6 +22,7 @@ import { ProviderHealthResult, ProviderHealthStatus } from '../models/health.mod
 @Component({
   selector: 'app-provider-health',
   standalone: true,
+  imports: [TranslatePipe],
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './provider-health.component.html',

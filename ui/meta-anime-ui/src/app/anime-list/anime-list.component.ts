@@ -13,6 +13,7 @@ import {
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime } from 'rxjs/operators';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { NgTemplateOutlet, DatePipe } from '@angular/common';
@@ -490,7 +491,9 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.cardRefs.changes
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      // F12: debounce rapid QueryList changes (e.g. virtual-scroll batch renders) to avoid
+      // tearing down and rebuilding the IntersectionObserver on every individual card update
+      .pipe(debounceTime(100), takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.setupScrollSentinel());
   }
 

@@ -60,7 +60,7 @@
         "colTitle": "Title",
         "colActions": "Actions",
         "colProgress": "Progress",
-        "addToMal": "Link to MAL entry",
+        "addToMal": "Add to MAL",
         "searchPlaceholder": "Search MyAnimeList...",
         "searchButton": "Search",
         "searchError": "Search failed. Please try again.",
@@ -75,7 +75,6 @@
         "confirmSeeDetails": "See details",
         "confirmLocalLabel": "Local item",
         "confirmMalLabel": "MAL entry",
-        "addToMal": "Add to MAL",
         "addMalError": "Failed to add to MAL. Please try again."
       },
       "noProviders": {
@@ -201,6 +200,13 @@
       "unmonitorSpecials": "Unmonitor Specials",
       "none": "None"
     }
+  },
+  "gapConfirmModal": {
+    "malItemLabel": "MAL ITEM",
+    "seeDetails": "See details"
+  },
+  "addSeriesWizard": {
+    "alreadyTracked": "Already tracked"
   },
   "animeList": {
     "title": "Anime List",
@@ -381,7 +387,23 @@
       "rx": "Rx"
     },
     "sizeUnit": "GB",
-    "seeMore": "See more"
+    "seeMore": "See more",
+    "aka": "AKA",
+    "addToMal": "Add to MAL",
+    "addToSonarr": "Add to Sonarr",
+    "sonarrAdd": {
+      "title": "Add to Sonarr",
+      "searchPlaceholder": "Search by title…",
+      "searching": "Searching…",
+      "noResults": "No results found",
+      "lookupError": "Search failed",
+      "addError": "Failed to add",
+      "alreadyAdded": "Already in library",
+      "rootFolder": "Root folder",
+      "quality": "Quality",
+      "add": "Add",
+      "success": "Added to Sonarr!"
+    }
   },
   "animeCard": {
     "malScore": "MAL Score",
@@ -401,7 +423,8 @@
       "tv_special": "TV Special",
       "music": "Music",
       "unknown": "Unknown"
-    }
+    },
+    "seeMore": "See More"
   },
   "settings": {
     "title": "Settings",
@@ -588,7 +611,7 @@
       },
       "BotKun_BaseUrl": {
         "name": "API Base URL",
-        "desc": "Base URL of your OpenAI-compatible AI provider (e.g. https://api.groq.com/openai/v1, https://api.openai.com/v1, http://localhost:11434/v1)."
+        "desc": "Select a provider from the list or type any OpenAI-compatible API URI."
       },
       "BotKun_ApiKey": {
         "name": "API Key",
@@ -596,7 +619,7 @@
       },
       "BotKun_Model": {
         "name": "Model",
-        "desc": "Model identifier to use for chat (e.g. llama-3.3-70b-versatile, gpt-4o-mini, qwen2.5:1.5b, mistral)."
+        "desc": "Model identifier to use for chat (e.g. llama-3.3-70b-versatile, gpt-4o-mini, qwen2.5:1.5b). Optional for local setups that expose only one model."
       }
     },
     "toggle": {
@@ -619,7 +642,8 @@
       "fetchModelsLoading": "Fetching...",
       "fetchModelsError": "Could not fetch models. Check your Base URL and API Key.",
       "fetchModelsNoUrl": "Please configure a Base URL first.",
-      "selectModel": "— Select a model —"
+      "selectModel": "— Select a model —",
+      "credentialsError": "Invalid credentials or unreachable URL — Bot-kun has been disabled."
     },
     "provider": {
       "enabled": "Enabled",
@@ -938,7 +962,51 @@
       "mb": "MB",
       "gb": "GB",
       "tb": "TB"
-    }
+    },
+    "loading": "Loading...",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "dismiss": "Dismiss"
+  },
+  "providers": {
+    "mal": "MyAnimeList",
+    "malShort": "MAL",
+    "plex": "Plex",
+    "sonarr": "Sonarr",
+    "inMal": "In MAL",
+    "inPlex": "In Plex",
+    "inSonarr": "In Sonarr",
+    "alreadyTracked": "Already tracked"
+  },
+  "aria": {
+    "primaryNavigation": "Primary navigation",
+    "settingsNavigation": "Settings navigation",
+    "tablePaginationTop": "Table pagination top",
+    "tablePagination": "Table pagination",
+    "closeMenu": "Close menu",
+    "closeGallery": "Close gallery",
+    "previousImage": "Previous image",
+    "nextImage": "Next image",
+    "imageGallery": "Image Gallery",
+    "syncSteps": "Sync steps",
+    "legend": "Legend",
+    "providerLinks": "Provider links",
+    "setupProgress": "Setup progress",
+    "decreaseEpisodes": "Decrease",
+    "increaseEpisodes": "Increase",
+    "episodesWatched": "Episodes watched",
+    "selectPlexLibraries": "Select Plex Libraries",
+    "manageSonarrTags": "Manage Sonarr Tags",
+    "toggleSonarr": "Toggle Sonarr",
+    "toggleMal": "Toggle MAL",
+    "alternativeTitles": "Alternative titles",
+    "seeDetails": "See details",
+    "feelingLucky": "Feeling lucky, picking your anime…"
+  },
+  "app": {
+    "title": "Meta Anime",
+    "closeMenu": "Close menu",
+    "dismissNotification": "Dismiss"
   },
   "notFound": {
     "ariaLabel": "404 – Page not found",
@@ -1020,6 +1088,22 @@
       }
     }
   },
+  "botKun": {
+    "subtitle": "AI Anime Concierge",
+    "inputPlaceholder": "Ask me about anime…",
+    "clearConversation": "Clear conversation",
+    "errorFallback": "Sorry, something went wrong. Please try again.",
+    "connectionError": "Connection error — please check your Bot-kun settings.",
+    "fabLabel": "Bot-kun",
+    "fabOpen": "Open Bot-kun AI concierge",
+    "newMessage": "New message from Bot-kun",
+    "dialogLabel": "Bot-kun AI Anime Concierge",
+    "title": "Bot-kun",
+    "close": "Close Bot-kun",
+    "typingIndicator": "Bot-kun is typing",
+    "inputLabel": "Message Bot-kun",
+    "sendMessage": "Send message"
+  },
   "luckyPick": {
     "buttonLabel": "I'm Feeling Lucky",
     "ariaLabel": "Random anime pick overlay",
@@ -1038,6 +1122,17 @@
       "title": "Connection lost",
       "desc": "Could not reach the server. Please check your connection.",
       "retry": "Retry"
+    },
+    "chatCard": {
+      "rolling": "Feeling Lucky",
+      "label": "Feeling Lucky",
+      "scoreSuffix": "/ 10",
+      "openDetails": "Open details",
+      "addToList": "Add to My List",
+      "addingToList": "Adding to My List…",
+      "addedToList": "Added to My List",
+      "loadError": "Could not load the lucky pick details.",
+      "updateError": "Could not update your MAL list right now."
     },
     "phrases": {
       "plex": [

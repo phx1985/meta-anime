@@ -89,6 +89,9 @@ public sealed class SettingsSeedService(
 
             // Only upsert the Kometa URL when explicitly set in config (null/empty values are skipped in the upsert loop above)
             [SettingsKeys.KometaAnimeIdsJsonUrl] = kometa.AnimeIdsJsonUrl,
+
+            // Always-refreshed app reference data (updated with each release)
+            [SettingsKeys.KnownAiApiUrls] = """[{"url":"https://api.openai.com/v1","name":"OpenAI"},{"url":"https://api.groq.com/openai/v1","name":"Groq"},{"url":"http://localhost:11434/v1","name":"Ollama (local)"},{"url":"http://localhost:1234/v1","name":"LM Studio (local)"},{"url":"https://openrouter.ai/api/v1","name":"OpenRouter"},{"url":"https://api.together.xyz/v1","name":"Together AI"}]""",
         };
     }
 

@@ -123,8 +123,8 @@
             [style.top.px]="node.y"
             role="button"
             tabindex="0"
-            (keydown.enter)="openQuickLook(node.malId)"
-            (keydown.space)="openQuickLook(node.malId)"
+            (keydown.enter)="nodeSelected.emit(node.malId)"
+            (keydown.space)="nodeSelected.emit(node.malId)"
             [attr.aria-label]="node.title"
             [title]="node.title"
           >
@@ -144,6 +144,20 @@
               }
               <div class="node-meta">
                 <span class="node-title">{{ node.title }}</span>
+                @if (node.watchingStatus || node.airingStatus) {
+                  <div class="node-status-pills">
+                    @if (node.watchingStatus) {
+                      <span class="node-status-pill node-status-pill--watching node-status-pill--{{ node.watchingStatus }}">
+                        {{ 'animeDetailPanel.malStatus.' + node.watchingStatus | translate }}
+                      </span>
+                    }
+                    @if (node.airingStatus) {
+                      <span class="node-status-pill node-status-pill--airing node-status-pill--{{ node.airingStatus }}">
+                        {{ 'animeDetailPanel.seriesStatus.' + node.airingStatus | translate }}
+                      </span>
+                    }
+                  </div>
+                }
               </div>
               <!-- V9: Truncation badge — shown when BFS pruned hidden relations -->
               @if (node.isTruncated) {
@@ -162,7 +176,7 @@
     }
 
     <!-- ── Desktop Legend (bottom-left) ───────────────────────────────── -->
-    <div class="edge-legend edge-legend--desktop" aria-label="Legend">
+    <div class="edge-legend edge-legend--desktop" [attr.aria-label]="'aria.legend' | translate">
       <span class="edge-legend-title">{{ 'franchise.legend.title' | translate }}</span>
       <div class="edge-legend-item">
         <svg class="edge-legend-svg" viewBox="0 0 36 8" aria-hidden="true">
@@ -225,91 +239,5 @@
         }
       </div>
     }
-  }
-
-  <!-- ── Quick Look modal (layered over the full constellation) ──────── -->
-  @if (quickLookNode()) {
-    <div
-      class="ql-backdrop"
-      role="dialog"
-      aria-modal="true"
-      [attr.aria-label]="quickLookNode()!.title"
-      (click)="closeQuickLook()"
-    >
-      <div class="ql-modal" (click)="$event.stopPropagation()">
-        <!-- Close button -->
-        <button
-          type="button"
-          class="ql-close"
-          (click)="closeQuickLook()"
-          [attr.aria-label]="'franchise.close' | translate"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
-        </button>
-
-        <!-- Poster -->
-        @if (quickLookNode()!.coverImageUrl) {
-          <img
-            class="ql-poster"
-            [src]="quickLookNode()!.coverImageUrl"
-            [alt]="quickLookNode()!.title"
-          />
-        } @else {
-          <div class="ql-poster-placeholder" aria-hidden="true">
-            {{ quickLookNode()!.title.charAt(0) }}
-          </div>
-        }
-
-        <!-- Body -->
-        <div class="ql-body">
-          <h2 class="ql-title">{{ quickLookNode()!.title }}</h2>
-
-          <!-- Airing dates -->
-          <p class="ql-dates">
-            {{ formatDateOrUnknown(quickLookNode()!.startDate) }}
-            –
-            {{ formatDateOrUnknown(quickLookNode()!.endDate) }}
-          </p>
-
-          <!-- Media type pill -->
-          @if (quickLookNode()!.mediaType) {
-            <span class="ql-media-pill" [class]="mediaTypeClass(quickLookNode()!.mediaType, 'ql-media-pill')">
-              {{ 'animeCard.mediaType.' + quickLookNode()!.mediaType!.toLowerCase() | translate }}
-            </span>
-          }
-
-          <!-- Synopsis (truncated, with Read More for long text) -->
-          @if (quickLookNode()!.synopsis) {
-            <p
-              class="ql-synopsis"
-              [class.ql-synopsis--clickable]="quickLookSynopsisLong()"
-              [attr.role]="quickLookSynopsisLong() ? 'button' : null"
-              [attr.tabindex]="quickLookSynopsisLong() ? 0 : null"
-              (click)="quickLookSynopsisLong() && onQuickLookReadMore()"
-              (keydown.enter)="quickLookSynopsisLong() && onQuickLookReadMore()"
-              (keydown.space)="quickLookSynopsisLong() && onQuickLookReadMore()"
-            >{{ quickLookNode()!.synopsis }}</p>
-            @if (quickLookSynopsisLong()) {
-              <button type="button" class="ql-read-more" (click)="onQuickLookReadMore()">
-                {{ 'franchise.quickLook.readMore' | translate }}
-              </button>
-            }
-          }
-        </div>
-
-        <!-- Action buttons -->
-        <div class="ql-actions">
-          <button type="button" class="ql-btn ql-btn--close" (click)="closeQuickLook()">
-            {{ 'franchise.close' | translate }}
-          </button>
-          <button type="button" class="ql-btn ql-btn--mal" (click)="openNodeOnMal()">
-            <img class="ql-mal-icon" src="assets/images/mal.svg" alt="" aria-hidden="true" />
-            {{ 'franchise.quickLook.openInMal' | translate }}
-          </button>
-        </div>
-      </div>
-    </div>
   }
 </div>

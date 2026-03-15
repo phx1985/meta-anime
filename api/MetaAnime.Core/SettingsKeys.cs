@@ -42,6 +42,9 @@ public static class SettingsKeys
     public const string AppShowNsfw = "App:ShowNsfw";
     public const string AppSyncInterval = "App:SyncInterval";
     public const string AppTitleSimilarityThreshold = "App:TitleSimilarityThreshold";
+    public const string LuckyOnlyFinished = "meta-anime:luckyOnlyFinished";
+    public const string LuckyOnlyPlanToWatch = "meta-anime:luckyOnlyPlanToWatch";
+    public const string LuckyOnlyWithFiles = "meta-anime:luckyOnlyWithFiles";
 
     // Internal token storage keys (managed exclusively by backend OAuth flows)
     public const string MalAccessToken = "MAL_ACCESS_TOKEN";
@@ -56,6 +59,9 @@ public static class SettingsKeys
     public const string BotKunBaseUrl  = "BotKun:BaseUrl";
     public const string BotKunApiKey   = "BotKun:ApiKey";
     public const string BotKunModel    = "BotKun:Model";
+
+    // Known AI provider URLs (app-seeded reference list; not user-configurable)
+    public const string KnownAiApiUrls = "App:KnownAiApiUrls";
 
     // Admin authentication (stored as hashed value; absent = public mode)
     public const string AdminPasswordHash = "System:AdminPasswordHash";

@@ -1,7 +1,7 @@
 <!-- ── Bot-kun FAB ──────────────────────────────────────────────────────── -->
 <!-- Always keep the FAB in the DOM so the entrance animation plays exactly once. -->
 <button class="bot-kun__fab" [class.bot-kun__fab--inactive]="isOpen() || isClosing()"
-  type="button" (click)="open()" aria-label="Open Bot-kun AI concierge"
+  type="button" (click)="open()" [attr.aria-label]="'botKun.fabOpen' | translate"
   [attr.aria-hidden]="isOpen() || isClosing()">
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -16,9 +16,9 @@
     <path d="M8 19l-2 3" />
     <path d="M16 19l2 3" />
   </svg>
-  <span class="bot-kun__fab-label">Bot-kun</span>
+  <span class="bot-kun__fab-label">{{ 'botKun.fabLabel' | translate }}</span>
   @if (hasUnread()) {
-    <span class="bot-kun__fab-badge" aria-label="New message from Bot-kun"></span>
+    <span class="bot-kun__fab-badge" [attr.aria-label]="'botKun.newMessage' | translate"></span>
   }
 </button>
 
@@ -31,7 +31,7 @@
 <aside class="bot-kun__drawer"
   [class.bot-kun__drawer--closing]="isClosing()"
   [class.bot-kun__drawer--detail-open]="detailPanelOpen()"
-  role="dialog" aria-modal="true" aria-label="Bot-kun AI Anime Concierge">
+  role="dialog" aria-modal="true" [attr.aria-label]="'botKun.dialogLabel' | translate">
 
   <!-- Header -->
   <div class="bot-kun__header">
@@ -49,14 +49,15 @@
         </svg>
       </div>
       <div>
-        <span class="bot-kun__title">Bot-kun</span>
-        <span class="bot-kun__subtitle">AI Anime Concierge</span>
+        <span class="bot-kun__title">{{ 'botKun.title' | translate }}</span>
+        <span class="bot-kun__subtitle">{{ 'botKun.subtitle' | translate }}</span>
       </div>
     </div>
     <div class="bot-kun__header-actions">
       @if (hasMessages()) {
-      <button class="bot-kun__icon-btn" type="button" (click)="clearHistory()" title="Clear conversation"
-        aria-label="Clear conversation">
+      <button class="bot-kun__icon-btn" type="button" (click)="clearHistory()"
+        [title]="'botKun.clearConversation' | translate"
+        [attr.aria-label]="'botKun.clearConversation' | translate">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <polyline points="3 6 5 6 21 6" />
@@ -66,7 +67,7 @@
         </svg>
       </button>
       }
-      <button class="bot-kun__icon-btn" type="button" (click)="close()" aria-label="Close Bot-kun">
+      <button class="bot-kun__icon-btn" type="button" (click)="close()" [attr.aria-label]="'botKun.close' | translate">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <line x1="18" y1="6" x2="6" y2="18" />
@@ -100,19 +101,24 @@
       <div class="bot-kun__bubble">
         @if (msg.role === 'assistant' && msg.typing && msg.typedContent === '') {
         <!-- Typing animation -->
-        <div class="bot-kun__typing" aria-label="Bot-kun is typing">
+        <div class="bot-kun__typing" [attr.aria-label]="'botKun.typingIndicator' | translate">
           <span></span><span></span><span></span>
         </div>
         } @else if (msg.role === 'assistant') {
         <!-- Segment-based rendering: text runs as markdown HTML, anime tags as real cards -->
         <div class="bot-kun__md">
-          @for (seg of parseSegments(msg.typedContent, false); track segmentTrackKey($index, seg)) {
+          @for (seg of parseSegments(msg.typedContent, false, msg.permittedIds ?? botKunService.permittedMalIds()); track segmentTrackKey($index, seg)) {
             @if (seg.type === 'text') {
               <span [innerHTML]="seg.html"></span>
-            } @else {
+            } @else if (seg.type === 'card') {
               <app-bot-kun-anime-card
                 [malId]="seg.malId"
-                [title]="seg.title"
+                (cardClicked)="animeSelected.emit($event)"
+              />
+            } @else if (seg.type === 'lucky') {
+              <app-feeling-lucky-card
+                [malId]="seg.malId"
+                (cardReady)="onLuckyCardReady()"
                 (cardClicked)="animeSelected.emit($event)"
               />
             }
@@ -130,18 +136,19 @@
   <!-- Input area -->
   <div class="bot-kun__footer">
     <textarea
+      #chatInput
       class="bot-kun__input"
       [value]="inputText()"
       (input)="handleInput($event)"
       (keydown)="onKeyDown($event)"
-      placeholder="Ask me about anime…"
+      [placeholder]="'botKun.inputPlaceholder' | translate"
       rows="1"
       [disabled]="isStreaming() || hasTypingMessage()"
-      aria-label="Message Bot-kun"
+      [attr.aria-label]="'botKun.inputLabel' | translate"
     ></textarea>
     <button class="bot-kun__send" type="button" (click)="send()"
       [disabled]="isStreaming() || hasTypingMessage() || !inputText().trim()"
-      aria-label="Send message">
+      [attr.aria-label]="'botKun.sendMessage' | translate">
       @if (isStreaming() || hasTypingMessage()) {
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="bot-kun__spin">

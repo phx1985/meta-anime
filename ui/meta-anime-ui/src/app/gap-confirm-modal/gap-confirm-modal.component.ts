@@ -76,7 +76,7 @@ export class GapConfirmModalComponent {
         status: 'plan_to_watch',
         numWatchedEpisodes: 0,
         score: 0,
-      })
+      }, this.sourceItem().aniDbId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {

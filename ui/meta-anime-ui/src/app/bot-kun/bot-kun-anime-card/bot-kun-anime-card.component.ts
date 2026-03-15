@@ -22,10 +22,9 @@ import { AnimeService } from '../../services/anime.service';
 })
 export class BotKunAnimeCardComponent implements OnInit {
   readonly malId = input.required<string>();
-  readonly title = input.required<string>();
-
   readonly cardClicked = output<string>();
 
+  protected readonly title      = signal<string>('');
   protected readonly coverUrl    = signal<string | null>(null);
   protected readonly loadState   = signal<'loading' | 'loaded' | 'error'>('loading');
   protected readonly year        = signal<string | null>(null);
@@ -49,6 +48,7 @@ export class BotKunAnimeCardComponent implements OnInit {
           this.coverUrl.set(url);
           this.loadState.set(url ? 'loaded' : 'error');
 
+          this.title.set(mal?.alternativeTitles?.en || mal?.title || '');
           this.year.set(mal?.startDate?.slice(0, 4) ?? null);
           this.airingStatus.set(this.formatStatus(mal?.status ?? null));
           this.genres.set(mal?.genres ?? []);
