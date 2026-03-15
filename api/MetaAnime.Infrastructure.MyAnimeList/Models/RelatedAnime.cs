@@ -27,4 +27,10 @@ public sealed class RelatedAnimeNode
 
     [JsonPropertyName("media_type")]
     public string? MediaType { get; set; }
+
+    [JsonPropertyName("status")]
+    public string? Status { get; set; }
+
+    [JsonPropertyName("my_list_status")]
+    public MyListStatus? MyListStatus { get; set; }
 }

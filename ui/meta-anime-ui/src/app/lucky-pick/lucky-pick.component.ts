@@ -6,9 +6,9 @@ import {
   OnInit,
   OnDestroy,
   HostListener,
-  Output,
-  EventEmitter,
   ChangeDetectionStrategy,
+  input,
+  output,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -17,7 +17,6 @@ import { AnimeService } from '../services/anime.service';
 import { UserPreferencesService } from '../services/user-preferences.service';
 import { ProviderStateService } from '../services/provider-state.service';
 import { PlexDeepLinkService } from '../services/plex-deep-link.service';
-import { PopupService } from '../services/popup.service';
 import { AnimeDetailsResponse, AnimeFilters, MalAnimeInfo } from '../models/anime.models';
 import { ScoreBadgeComponent } from '../anime-list/anime-card/score-badge/score-badge.component';
 import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../constants/genre-lists';
@@ -33,21 +32,23 @@ type LuckyState = 'idle' | 'spinning' | 'result' | 'no-match' | 'error';
   styleUrl: './lucky-pick.component.scss',
 })
 export class LuckyPickComponent implements OnInit, OnDestroy {
-  @Output() closed = new EventEmitter<void>();
+  readonly closed = output<void>();
+  /** Emits the MetaAnime internal ID (aniDbId) when user clicks image or "See More" to open the detail panel. */
+  readonly animeSelected = output<string>();
+  /** Set to true by the parent when a detail panel is already open — suppresses the local escape handler to avoid double-close. */
+  readonly detailPanelOpen = input<boolean>(false);
 
   private animeService = inject(AnimeService);
   protected userPrefs = inject(UserPreferencesService);
   private providerState = inject(ProviderStateService);
   private translate = inject(TranslateService);
   private plexDeepLink = inject(PlexDeepLinkService);
-  private popupService = inject(PopupService);
 
   /** Minimum character count above which the synopsis is considered truncated. */
   private static readonly SYNOPSIS_TRUNCATE_THRESHOLD = 300;
 
   protected state = signal<LuckyState>('idle');
   protected result = signal<AnimeDetailsResponse | null>(null);
-  protected isImageExpanded = signal(false);
 
   /** Randomly-selected humorous button phrases, rerolled on every spin */
   protected plexPhrase      = signal(this.pickPhrase('luckyPick.phrases.plex'));
@@ -97,8 +98,14 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
     return this.anime?.malAnimes?.[0]?.coverImageUrl;
   }
 
+  /** Opens the detail panel for the current lucky-pick result. */
+  protected openDetail(): void {
+    const id = this.anime?.aniDbId;
+    if (id) this.animeSelected.emit(id);
+  }
+
   protected toggleFullScreenImage(): void {
-    this.isImageExpanded.update(v => !v);
+    this.openDetail();
   }
 
   protected get title(): string {
@@ -120,7 +127,7 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
 
   protected openSynopsisModal(event?: Event): void {
     event?.preventDefault();
-    this.popupService.openSynopsis(this.title, this.synopsis);
+    this.openDetail();
   }
 
   protected get malUrl(): string | null {
@@ -192,13 +199,13 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
   }
 
   protected viewStateLabel(state: string): string {
-    const key = `animeCard.malStatus.${state}`;
+    const key = `animeDetailPanel.malStatus.${state}`;
     const t = this.translate.instant(key);
     return t !== key ? t : state;
   }
 
   protected seriesStatusLabel(status: string): string {
-    const key = `animeCard.seriesStatus.${status}`;
+    const key = `animeDetailPanel.seriesStatus.${status}`;
     const t = this.translate.instant(key);
     return t !== key ? t : status.replace(/_/g, ' ');
   }
@@ -296,6 +303,7 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
+    if (this.detailPanelOpen()) return; // let the detail panel handle its own escape
     this.close();
   }
 

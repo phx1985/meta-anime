@@ -7,11 +7,13 @@
     aria-hidden="true"
     [class.visible]="true"
     [class.closing]="closing()"
+    [style.z-index]="zIndexBase()"
   ></div>
   }
 
   <!-- Side panel -->
   <aside
+    #panelEl
     class="panel"
     [class.panel--mal-updated]="neonGlow()"
     [class.visible]="true"
@@ -19,6 +21,7 @@
     role="dialog"
     aria-modal="true"
     [attr.aria-label]="anime()?.title ?? ('animeDetailPanel.loading' | translate)"
+    [style.z-index]="zIndexBase() + 1"
   >
     <!-- Close button -->
     <button class="panel__close" type="button" (click)="close()" [title]="'animeDetailPanel.close' | translate" [attr.aria-label]="'animeDetailPanel.close' | translate">
@@ -139,16 +142,17 @@
                   <app-score-badge [score]="myScore" [mine]="true" [label]="'animeCard.myScore' | translate" [titleKey]="'animeCard.myScore'" />
                 </div>
               }
-              @if (mal?.id && malViewState) {
+              @if (mal?.id) {
                 <button
                   #malUpdateBtn
                   type="button"
                   class="panel__mal-update-btn"
+                  [class.panel__mal-update-btn--add]="!malViewState"
                   [class.panel__mal-update-btn--updating]="malUpdating()"
                   [disabled]="malUpdating()"
                   (click)="openMalQuickUpdate()"
-                  [title]="'malQuickUpdate.openModal' | translate"
-                  [attr.aria-label]="'malQuickUpdate.openModal' | translate"
+                  [title]="(malViewState ? 'malQuickUpdate.openModal' : 'animeDetailPanel.addToMal') | translate"
+                  [attr.aria-label]="(malViewState ? 'malQuickUpdate.openModal' : 'animeDetailPanel.addToMal') | translate"
                 >
                   @if (malUpdating()) {
                     <!-- SVG neon tracer: stroke-dashoffset races the real pill perimeter.
@@ -183,7 +187,7 @@
                   }
                   <span class="panel__mal-update-btn__content">
                     <img src="assets/images/mal.svg" alt="" width="16" height="16" aria-hidden="true" />
-                    {{ 'malQuickUpdate.label' | translate }}
+                    {{ (malViewState ? 'malQuickUpdate.label' : 'animeDetailPanel.addToMal') | translate }}
                   </span>
                 </button>
               }
@@ -227,6 +231,17 @@
               >
                 <img src="assets/images/sonarr.svg" alt="" width="20" height="20" aria-hidden="true" />
               </a>
+            }
+            @if (sonarrEnabled() && (!sonarr || !sonarr.exists)) {
+              <button
+                type="button"
+                class="panel__action-btn panel__action-btn--add panel__action-btn--add-sonarr"
+                (click)="openSonarrAdd()"
+                [title]="'animeDetailPanel.addToSonarr' | translate"
+                [attr.aria-label]="'animeDetailPanel.addToSonarr' | translate"
+              >
+                <img src="assets/images/sonarr.svg" alt="" width="18" height="18" aria-hidden="true" />
+              </button>
             }
           </div>
 
@@ -413,6 +428,118 @@
           </div>
         </section>
       }
+    }
+
+    <!-- Sonarr Add Overlay — covers the full panel when open -->
+    @if (sonarrAddOpen()) {
+      <div
+        class="panel__sonarr-add"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-label]="'animeDetailPanel.sonarrAdd.title' | translate"
+      >
+        <div class="panel__sonarr-add__header">
+          <span class="panel__sonarr-add__title">{{ 'animeDetailPanel.sonarrAdd.title' | translate }}</span>
+          <button type="button" class="panel__sonarr-add__close" (click)="closeSonarrAdd()" [title]="'animeDetailPanel.close' | translate">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" width="16" height="16" aria-hidden="true">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="panel__sonarr-add__search-wrap">
+          <input
+            type="text"
+            class="panel__sonarr-add__input"
+            [value]="sonarrSearchTerm()"
+            (input)="sonarrSearchInput($event)"
+            [placeholder]="'animeDetailPanel.sonarrAdd.searchPlaceholder' | translate"
+            autocomplete="off"
+          />
+        </div>
+
+        @if (sonarrLookupLoading()) {
+          <div class="panel__sonarr-add__state">{{ 'animeDetailPanel.sonarrAdd.searching' | translate }}</div>
+        } @else if (sonarrLookupError()) {
+          <div class="panel__sonarr-add__state panel__sonarr-add__state--error">{{ sonarrLookupError() | translate }}</div>
+        } @else if (!sonarrLookupResults().length && sonarrSearchTerm()) {
+          <div class="panel__sonarr-add__state">{{ 'animeDetailPanel.sonarrAdd.noResults' | translate }}</div>
+        }
+
+        @if (sonarrLookupResults().length) {
+          <div class="panel__sonarr-add__results">
+            @for (result of sonarrLookupResults(); track result.tvdbId) {
+              <button
+                type="button"
+                class="panel__sonarr-add__result"
+                [class.panel__sonarr-add__result--selected]="sonarrSelectedResult()?.tvdbId === result.tvdbId"
+                [class.panel__sonarr-add__result--taken]="result.alreadyInLibrary"
+                [disabled]="!!result.alreadyInLibrary"
+                (click)="sonarrSelectedResult.set(result)"
+              >
+                @if (result.remotePoster) {
+                  <img class="panel__sonarr-add__result-img" [src]="result.remotePoster" [alt]="result.title" />
+                } @else {
+                  <div class="panel__sonarr-add__result-img panel__sonarr-add__result-img--placeholder"></div>
+                }
+                <div class="panel__sonarr-add__result-info">
+                  <span class="panel__sonarr-add__result-title">{{ result.title }}</span>
+                  @if (result.year) {
+                    <span class="panel__sonarr-add__result-year">{{ result.year }}</span>
+                  }
+                  @if (result.alreadyInLibrary) {
+                    <span class="panel__sonarr-add__result-tag">{{ 'animeDetailPanel.sonarrAdd.alreadyAdded' | translate }}</span>
+                  }
+                </div>
+              </button>
+            }
+          </div>
+        }
+
+        @if (sonarrRootFolders().length > 1 || sonarrQualityProfiles().length > 1) {
+          <div class="panel__sonarr-add__config">
+            @if (sonarrRootFolders().length > 1) {
+              <label class="panel__sonarr-add__label">{{ 'animeDetailPanel.sonarrAdd.rootFolder' | translate }}</label>
+              <select class="panel__sonarr-add__select" (change)="sonarrRootFolder.set($any($event.target).value)">
+                @for (folder of sonarrRootFolders(); track folder.id) {
+                  <option [value]="folder.path" [selected]="sonarrRootFolder() === folder.path">{{ folder.path }}</option>
+                }
+              </select>
+            }
+            @if (sonarrQualityProfiles().length > 1) {
+              <label class="panel__sonarr-add__label">{{ 'animeDetailPanel.sonarrAdd.quality' | translate }}</label>
+              <select class="panel__sonarr-add__select" (change)="sonarrProfileId.set(+$any($event.target).value)">
+                @for (profile of sonarrQualityProfiles(); track profile.id) {
+                  <option [value]="profile.id" [selected]="sonarrProfileId() === profile.id">{{ profile.name }}</option>
+                }
+              </select>
+            }
+          </div>
+        }
+
+        @if (sonarrAddError()) {
+          <div class="panel__sonarr-add__state panel__sonarr-add__state--error">{{ sonarrAddError() | translate }}</div>
+        }
+        @if (sonarrAddSuccess()) {
+          <div class="panel__sonarr-add__state panel__sonarr-add__state--success">{{ 'animeDetailPanel.sonarrAdd.success' | translate }}</div>
+        }
+
+        <div class="panel__sonarr-add__footer">
+          <button
+            type="button"
+            class="panel__sonarr-add__confirm"
+            [disabled]="!sonarrSelectedResult() || sonarrAddBusy() || sonarrAddSuccess()"
+            (click)="doSonarrAdd()"
+          >
+            @if (sonarrAddBusy()) {
+              <svg class="panel__sonarr-add__spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="16" height="16" aria-hidden="true">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+              </svg>
+            }
+            {{ 'animeDetailPanel.sonarrAdd.add' | translate }}
+          </button>
+        </div>
+      </div>
     }
   </aside>
 }

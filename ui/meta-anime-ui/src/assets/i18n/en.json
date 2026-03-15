@@ -388,7 +388,22 @@
     },
     "sizeUnit": "GB",
     "seeMore": "See more",
-    "aka": "AKA"
+    "aka": "AKA",
+    "addToMal": "Add to MAL",
+    "addToSonarr": "Add to Sonarr",
+    "sonarrAdd": {
+      "title": "Add to Sonarr",
+      "searchPlaceholder": "Search by title…",
+      "searching": "Searching…",
+      "noResults": "No results found",
+      "lookupError": "Search failed",
+      "addError": "Failed to add",
+      "alreadyAdded": "Already in library",
+      "rootFolder": "Root folder",
+      "quality": "Quality",
+      "add": "Add",
+      "success": "Added to Sonarr!"
+    }
   },
   "animeCard": {
     "malScore": "MAL Score",

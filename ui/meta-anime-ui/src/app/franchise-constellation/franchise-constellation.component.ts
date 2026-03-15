@@ -7,6 +7,8 @@ import {
   computed,
   effect,
   inject,
+  input,
+  output,
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -71,6 +73,11 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   private readonly popupService = inject(PopupService);
   protected readonly translate = inject(TranslateService);
 
+  /** Emits the MAL ID of the node the user clicked — parent opens the detail panel. */
+  readonly nodeSelected = output<string>();
+  /** Set to true by the parent when a detail panel is already open — suppresses the local escape handler. */
+  readonly detailPanelOpen = input<boolean>(false);
+
   protected readonly CANVAS_W = CANVAS_W;
   protected readonly CANVAS_H = CANVAS_H;
 
@@ -101,12 +108,8 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   protected visibleNodeIds = signal<Set<string>>(new Set());
 
   // ── Quick Look modal ──────────────────────────────────────────────────────
-  /** Node currently open in the Quick Look modal; null when closed. */
-  protected quickLookNode = signal<FranchiseGraphNode | null>(null);
-  /** True when the Quick Look synopsis text needs a "Read More" trigger. */
-  protected readonly quickLookSynopsisLong = computed(
-    () => (this.quickLookNode()?.synopsis?.length ?? 0) > 200,
-  );
+  /** @deprecated Quick Look removed — clicking a node now opens the detail panel via nodeSelected output. */
+  // quickLookNode and quickLookSynopsisLong removed
 
   /** Unique media types present in the current franchise graph (for legend). */
   protected readonly presentMediaTypes = computed<string[]>(() => {
@@ -268,10 +271,9 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
+    if (this.detailPanelOpen()) return; // let the detail panel handle its own escape
     if (this.legendOpen()) {
       this.legendOpen.set(false);
-    } else if (this.quickLookNode()) {
-      this.closeQuickLook();
     } else {
       this.svc.close();
     }
@@ -356,7 +358,7 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     if (this.dragNodeId && this.nodeDragActive) {
       this.manuallyDraggedIds.add(this.dragNodeId);
     } else if (this.dragNodeId && !this.nodeDragActive) {
-      this.openQuickLook(this.dragNodeId);
+      this.nodeSelected.emit(this.dragNodeId);
     }
     this.dragNodeId = null;
     this.nodeDragActive = false;
@@ -391,31 +393,11 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ── Quick Look modal (removed) ────────────────────────────────────────────
+  // Node clicks now emit nodeSelected output; parent opens the detail panel.
+
   openMalPage(malId: string): void {
     window.open(`https://myanimelist.net/anime/${malId}`, '_blank', 'noopener,noreferrer');
-  }
-
-  // ── Quick Look modal ──────────────────────────────────────────────────────
-
-  openQuickLook(malId: string): void {
-    const node = this.nodeMap().get(malId);
-    if (node) this.quickLookNode.set(node);
-  }
-
-  closeQuickLook(): void {
-    this.quickLookNode.set(null);
-  }
-
-  onQuickLookReadMore(): void {
-    const node = this.quickLookNode();
-    if (!node?.synopsis) return;
-    this.popupService.openSynopsis(node.title, node.synopsis);
-  }
-
-  openNodeOnMal(): void {
-    const node = this.quickLookNode();
-    if (!node) return;
-    this.openMalPage(node.malId);
   }
 
   protected get rootTitle(): string | undefined {

@@ -503,7 +503,18 @@
 
 <!-- ── Lucky Pick overlay ────────────────────────────────────────────────── -->
 @if (luckyPickOpen()) {
-<app-lucky-pick (closed)="closeLuckyPick()" />
+<app-lucky-pick
+  (closed)="closeLuckyPick()"
+  (animeSelected)="openLuckyPickDetail($event)"
+  [detailPanelOpen]="!!luckyPickDetailAnimeId()"
+/>
+}
+@if (luckyPickDetailAnimeId()) {
+  <app-anime-detail-panel
+    [animeId]="luckyPickDetailAnimeId()"
+    [zIndexBase]="1082"
+    (closed)="closeLuckyPickDetail()"
+  />
 }
 
 <!-- ── Disabled Provider Interception Modal ──────────────────────────────── -->
@@ -574,7 +585,17 @@
 
 <!-- ── Franchise Constellation Overlay ──────────────────────────────────── -->
 @if (franchiseConstellationSvc.isOpen()) {
-  <app-franchise-constellation />
+  <app-franchise-constellation
+    (nodeSelected)="openConstellationDetail($event)"
+    [detailPanelOpen]="!!constellationDetailMalId()"
+  />
+}
+@if (constellationDetailMalId()) {
+  <app-anime-detail-panel
+    [malId]="constellationDetailMalId()"
+    [zIndexBase]="1100"
+    (closed)="closeConstellationDetail()"
+  />
 }
 
 <!-- ── Bot-kun Chat Drawer ───────────────────────────────────────────────── -->

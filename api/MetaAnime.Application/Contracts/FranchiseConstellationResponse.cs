@@ -6,7 +6,9 @@ public sealed record FranchiseRelationDto(
     string? CoverImageUrl,
     string? RelationType,
     string? RelationTypeFormatted,
-    string? MediaType
+    string? MediaType,
+    string? AiringStatus,
+    string? WatchingStatus
 );
 
 public sealed record FranchiseConstellationResponse(
@@ -17,5 +19,7 @@ public sealed record FranchiseConstellationResponse(
     string? StartDate,
     string? EndDate,
     IEnumerable<FranchiseRelationDto> Relations,
-    string? MediaType
+    string? MediaType,
+    string? AiringStatus,
+    string? WatchingStatus
 );

@@ -101,6 +101,28 @@ export class App implements OnInit, AfterViewInit {
     this.botKunSelectedMalId.set(null);
   }
 
+  /** Lucky Pick: internal anime ID to open in the detail panel (on image/see-more click) */
+  protected luckyPickDetailAnimeId = signal<string | null>(null);
+
+  openLuckyPickDetail(animeId: string): void {
+    this.luckyPickDetailAnimeId.set(animeId);
+  }
+
+  closeLuckyPickDetail(): void {
+    this.luckyPickDetailAnimeId.set(null);
+  }
+
+  /** Explore Universe: MAL ID to open in the detail panel (on graph node click) */
+  protected constellationDetailMalId = signal<string | null>(null);
+
+  openConstellationDetail(malId: string): void {
+    this.constellationDetailMalId.set(malId);
+  }
+
+  closeConstellationDetail(): void {
+    this.constellationDetailMalId.set(null);
+  }
+
   /** True when a JWT token is stored — controls logout button visibility. */
   protected isAuthenticated = computed(() => this.authService.isAuthenticated());
 

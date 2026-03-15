@@ -17,8 +17,8 @@ import {
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { DatePipe, LowerCasePipe, TitleCasePipe } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { switchMap, tap, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { switchMap, tap, catchError, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { of, Subject } from 'rxjs';
 import { AnimeDetailsResponse, MalAnimeInfo, SonarrAnimeInfo, PlexAnimeInfo, SeasonalAnimeItem } from '../models/anime.models';
 import { AnimeService } from '../services/anime.service';
 import { SafePipe } from './safe.pipe';
@@ -29,6 +29,8 @@ import { PlexDeepLinkService } from '../services/plex-deep-link.service';
 import { FranchiseConstellationService } from '../services/franchise-constellation.service';
 import { AnimeImageGalleryService } from '../services/anime-image-gallery.service';
 import { ProviderStateService } from '../services/provider-state.service';
+import { SonarrService } from '../services/sonarr.service';
+import { SonarrLookupResult, SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
 
 @Component({
   selector: 'app-anime-detail-panel',
@@ -51,6 +53,8 @@ export class AnimeDetailPanelComponent {
   readonly addRequested = output<void>();
   /** When true, the dimming backdrop behind the panel is not rendered (e.g. Bot-kun side-by-side mode). */
   readonly noBackdrop = input<boolean>(false);
+  /** Override the base z-index for backdrop and panel so callers can stack the panel above their own overlay. Backdrop = zIndexBase, panel = zIndexBase + 1. */
+  readonly zIndexBase = input<number>(1080);
 
   get showAddButton(): boolean {
     const s = this.seasonalItem();
@@ -83,6 +87,7 @@ export class AnimeDetailPanelComponent {
   private franchiseConstellation = inject(FranchiseConstellationService);
   private gallery = inject(AnimeImageGalleryService);
   private providerState = inject(ProviderStateService);
+  private sonarrService = inject(SonarrService);
 
   /** Expose provider state for template conditional rendering. */
   readonly plexEnabled = this.providerState.plexEnabled;
@@ -96,6 +101,22 @@ export class AnimeDetailPanelComponent {
   showAkaPopover = signal(false);
   toggleAkaPopover(): void { this.showAkaPopover.update(v => !v); }
 
+  // ── Sonarr Add flow ────────────────────────────────────────────────────────
+  readonly sonarrAddOpen = signal(false);
+  readonly sonarrLookupResults = signal<SonarrLookupResult[]>([]);
+  readonly sonarrLookupLoading = signal(false);
+  readonly sonarrLookupError = signal('');
+  readonly sonarrSelectedResult = signal<SonarrLookupResult | null>(null);
+  readonly sonarrRootFolders = signal<SonarrRootFolder[]>([]);
+  readonly sonarrQualityProfiles = signal<SonarrQualityProfile[]>([]);
+  readonly sonarrRootFolder = signal('');
+  readonly sonarrProfileId = signal(0);
+  readonly sonarrAddBusy = signal(false);
+  readonly sonarrAddError = signal('');
+  readonly sonarrAddSuccess = signal(false);
+  readonly sonarrSearchTerm = signal('');
+  private readonly sonarrSearchSubject = new Subject<string>();
+
   // ── Local MAL overrides — immediate feedback after quick-update ──────────
   private localMalStatus = signal<string | null>(null);
   private localMalEpisodes = signal<number | null>(null);
@@ -107,6 +128,8 @@ export class AnimeDetailPanelComponent {
 
   /** Reference to the Quick Update button element — used by afterRender to measure real pixel dimensions. */
   private readonly malUpdateBtnRef = viewChild<ElementRef<HTMLButtonElement>>('malUpdateBtn');
+  /** Reference to the panel `<aside>` — used to scroll to top when the Sonarr add overlay opens. */
+  private readonly panelElRef = viewChild<ElementRef<HTMLElement>>('panelEl');
 
   /**
    * Measured button dimensions, written by afterRender after every Angular render cycle.
@@ -270,6 +293,13 @@ export class AnimeDetailPanelComponent {
       }
     });
 
+    // Scroll panel to top whenever the Sonarr add overlay opens so position:absolute inset:0 is visible.
+    effect(() => {
+      if (this.sonarrAddOpen()) {
+        untracked(() => { this.panelElRef()?.nativeElement.scrollTo({ top: 0 }); });
+      }
+    });
+
     // Measure the Quick Update button after every render so neonGeometry() always has
     // accurate pixel dimensions regardless of layout context (mobile vs PC).
     afterEveryRender(() => {
@@ -282,6 +312,30 @@ export class AnimeDetailPanelComponent {
         if (cur.w !== w || cur.h !== h) {
           untracked(() => this._neonDims.set({ w, h }));
         }
+      }
+    });
+
+    // Debounced Sonarr title search wired from sonarrSearchSubject
+    this.sonarrSearchSubject.pipe(
+      debounceTime(350),
+      distinctUntilChanged(),
+      tap(() => { this.sonarrLookupLoading.set(true); this.sonarrLookupError.set(''); }),
+      switchMap((term) =>
+        term.trim()
+          ? this.sonarrService.lookup(term).pipe(
+              catchError(() => {
+                this.sonarrLookupError.set('animeDetailPanel.sonarrAdd.lookupError');
+                return of([] as SonarrLookupResult[]);
+              }),
+            )
+          : of([] as SonarrLookupResult[]),
+      ),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe((results) => {
+      this.sonarrLookupResults.set(results);
+      this.sonarrLookupLoading.set(false);
+      if (!this.sonarrSelectedResult() && results.length > 0 && !results[0].alreadyInLibrary) {
+        this.sonarrSelectedResult.set(results[0]);
       }
     });
   }
@@ -320,6 +374,7 @@ export class AnimeDetailPanelComponent {
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
+    if (this.sonarrAddOpen()) { this.closeSonarrAdd(); return; }
     if (this.animeId() !== null || this.malId() !== null) this.close();
   }
 
@@ -474,6 +529,82 @@ export class AnimeDetailPanelComponent {
   }
 
   // ── Actions ───────────────────────────────────────────────────────────────
+
+  openSonarrAdd(): void {
+    this.sonarrAddOpen.set(true);
+    this.sonarrAddError.set('');
+    this.sonarrAddSuccess.set(false);
+    this.sonarrLookupError.set('');
+    this.sonarrSelectedResult.set(null);
+    this.sonarrLookupResults.set([]);
+
+    // Parallel: fetch Sonarr config options
+    this.sonarrService.getOptions().subscribe({
+      next: (opts) => {
+        this.sonarrRootFolders.set(opts.rootFolders);
+        this.sonarrQualityProfiles.set(opts.qualityProfiles);
+        if (opts.rootFolders.length && !this.sonarrRootFolder()) this.sonarrRootFolder.set(opts.rootFolders[0].path);
+        if (opts.qualityProfiles.length && !this.sonarrProfileId()) this.sonarrProfileId.set(opts.qualityProfiles[0].id);
+      },
+      error: () => {},
+    });
+
+    // Auto-search by display title
+    const title = this.displayTitle;
+    if (title) {
+      this.sonarrSearchTerm.set(title);
+      this.sonarrLookupLoading.set(true);
+      this.sonarrService.lookup(title).subscribe({
+        next: (results) => {
+          this.sonarrLookupResults.set(results);
+          this.sonarrLookupLoading.set(false);
+          if (results.length > 0 && !results[0].alreadyInLibrary) this.sonarrSelectedResult.set(results[0]);
+        },
+        error: () => {
+          this.sonarrLookupError.set('animeDetailPanel.sonarrAdd.lookupError');
+          this.sonarrLookupLoading.set(false);
+        },
+      });
+    }
+  }
+
+  closeSonarrAdd(): void {
+    this.sonarrAddOpen.set(false);
+    this.sonarrAddSuccess.set(false);
+    this.sonarrAddError.set('');
+  }
+
+  sonarrSearchInput(event: Event): void {
+    const term = (event.target as HTMLInputElement).value;
+    this.sonarrSearchTerm.set(term);
+    this.sonarrSelectedResult.set(null);
+    if (term.trim()) this.sonarrSearchSubject.next(term);
+  }
+
+  doSonarrAdd(): void {
+    const result = this.sonarrSelectedResult();
+    if (!result || this.sonarrAddBusy()) return;
+    this.sonarrAddBusy.set(true);
+    this.sonarrAddError.set('');
+    this.sonarrService.addSeries({
+      tvdbId: result.tvdbId,
+      rootFolderPath: this.sonarrRootFolder(),
+      qualityProfileId: this.sonarrProfileId(),
+      monitor: 'all',
+      seasonFolder: true,
+      malId: this.mal?.id,
+    }).subscribe({
+      next: () => {
+        this.sonarrAddBusy.set(false);
+        this.sonarrAddSuccess.set(true);
+        setTimeout(() => this.closeSonarrAdd(), 1800);
+      },
+      error: (err: { error?: { message?: string } }) => {
+        this.sonarrAddBusy.set(false);
+        this.sonarrAddError.set(err?.error?.message || 'animeDetailPanel.sonarrAdd.addError');
+      },
+    });
+  }
 
   openMalQuickUpdate(): void {
     const malId = this.mal?.id;

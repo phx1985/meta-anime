@@ -388,7 +388,22 @@
     },
     "sizeUnit": "Go",
     "seeMore": "Voir plus",
-    "aka": "Aussi connu sous"
+    "aka": "Aussi connu sous",
+    "addToMal": "Ajouter à MAL",
+    "addToSonarr": "Ajouter à Sonarr",
+    "sonarrAdd": {
+      "title": "Ajouter à Sonarr",
+      "searchPlaceholder": "Rechercher par titre…",
+      "searching": "Recherche…",
+      "noResults": "Aucun résultat",
+      "lookupError": "Échec de la recherche",
+      "addError": "Échec de l'ajout",
+      "alreadyAdded": "Déjà dans la bibliothèque",
+      "rootFolder": "Dossier racine",
+      "quality": "Qualité",
+      "add": "Ajouter",
+      "success": "Ajouté à Sonarr !"
+    }
   },
   "animeCard": {
     "malScore": "Score MAL",

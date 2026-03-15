@@ -246,6 +246,8 @@ export interface FranchiseRelation {
   relationType?: string;
   relationTypeFormatted?: string;
   mediaType?: string;
+  airingStatus?: string;
+  watchingStatus?: string;
 }
 
 export interface FranchiseConstellationData {
@@ -256,6 +258,8 @@ export interface FranchiseConstellationData {
   startDate?: string;
   endDate?: string;
   mediaType?: string;
+  airingStatus?: string;
+  watchingStatus?: string;
   relations: FranchiseRelation[];
 }
 
@@ -268,6 +272,8 @@ export interface FranchiseGraphNode {
   startDate?: string;
   endDate?: string;
   mediaType?: string;
+  airingStatus?: string;
+  watchingStatus?: string;
   isRoot: boolean;
   /** True when this node has relations that were pruned (branch depth cap or 40-card limit). */
   isTruncated?: boolean;

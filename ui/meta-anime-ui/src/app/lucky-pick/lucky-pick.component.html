@@ -205,18 +205,3 @@
   </div>
 </div>
 
-@if (isImageExpanded()) {
-  <div
-    class="lucky-cover-overlay"
-    (click)="isImageExpanded.set(false)"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Full-size poster"
-  >
-    <img
-      [src]="coverImageUrl"
-      [alt]="title"
-      class="lucky-cover-overlay__img"
-    />
-  </div>
-}
