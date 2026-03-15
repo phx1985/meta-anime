@@ -615,6 +615,23 @@
   }
 }
 
+<!-- ── Bot-kun Chat Drawer ───────────────────────────────────────────────── -->
+@if (providerState.botkunEnabled()) {
+  <app-bot-kun
+    (animeSelected)="onBotKunAnimeSelected($event)"
+    [detailPanelOpen]="!!botKunSelectedMalId()"
+  />
+
+  <!-- ── Bot-kun → Anime Detail Panel (side-by-side on desktop, no backdrop) ── -->
+  @if (botKunSelectedMalId()) {
+    <app-anime-detail-panel
+      [malId]="botKunSelectedMalId()"
+      [noBackdrop]="true"
+      (closed)="closeBotKunDetailPanel()"
+    />
+  }
+}
+
 <!-- ── Synopsis Modal ───────────────────────────────────────────────────── -->
 @if (synopsisModal()) {
 <div class="synopsis-backdrop"
