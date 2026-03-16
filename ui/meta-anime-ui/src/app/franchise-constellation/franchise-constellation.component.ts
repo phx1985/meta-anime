@@ -379,6 +379,9 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ── Quick Look modal (removed) ────────────────────────────────────────────
+  // Node clicks now emit nodeSelected output; parent opens the detail panel.
+
   openMalPage(malId: string): void {
     window.open(`https://myanimelist.net/anime/${malId}`, '_blank', 'noopener,noreferrer');
   }
