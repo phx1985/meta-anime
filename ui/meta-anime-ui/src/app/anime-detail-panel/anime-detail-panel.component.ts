@@ -61,9 +61,6 @@ export class AnimeDetailPanelComponent {
     return s !== null && (!s.inMal || !s.inSonarr);
   }
 
-
-  // ── Provider tracking — drives the tracking-status row in the panel ───────
-
   get trackedByMal(): boolean {
     const s = this.seasonalItem();
     return s !== null ? s.inMal : !!(this.mal?.id);
@@ -97,11 +94,10 @@ export class AnimeDetailPanelComponent {
   isLoading = signal(false);
   error = signal<string | null>(null);
 
-  // ── AKA popover — click-toggled list of alternative titles (works on mobile) ──
   showAkaPopover = signal(false);
   toggleAkaPopover(): void { this.showAkaPopover.update(v => !v); }
 
-  // ── Sonarr Add flow ────────────────────────────────────────────────────────
+  // Sonarr Add flow
   readonly sonarrAddOpen = signal(false);
   readonly sonarrLookupResults = signal<SonarrLookupResult[]>([]);
   readonly sonarrLookupLoading = signal(false);
@@ -117,7 +113,7 @@ export class AnimeDetailPanelComponent {
   readonly sonarrSearchTerm = signal('');
   private readonly sonarrSearchSubject = new Subject<string>();
 
-  // ── Local MAL overrides — immediate feedback after quick-update ──────────
+  // Local MAL overrides — immediate feedback after quick-update
   private localMalStatus = signal<string | null>(null);
   private localMalEpisodes = signal<number | null>(null);
   private localMalScore = signal<number | null>(null);
@@ -398,16 +394,13 @@ export class AnimeDetailPanelComponent {
   close(): void {
     if (this.closing()) return;
     this.closing.set(true);
-    // Wait for exit animation (260ms matches CSS slide-out duration)
     setTimeout(() => {
       this.gallery.close();
-      this.anime.set(null); // Clear previous details to prevent flash on next open
+      this.anime.set(null);
       this.closed.emit();
-      this.closing.set(false); // Reset for next open if component instance is reused
-    }, 260);
+      this.closing.set(false);
+    }, AnimeDetailPanelComponent.CLOSE_ANIMATION_MS);
   }
-
-  // ── Data accessors ────────────────────────────────────────────────────────
 
   get mal(): MalAnimeInfo | undefined {
     return this.anime()?.malAnimes?.[0];
@@ -420,8 +413,6 @@ export class AnimeDetailPanelComponent {
   get plex() {
     return this.anime()?.plexAnimes?.[0];
   }
-
-  // ── Derived display values ────────────────────────────────────────────────
 
   get coverImageUrl(): string | undefined {
     return this.mal?.coverImageUrl;
@@ -479,8 +470,6 @@ export class AnimeDetailPanelComponent {
     return (this.localMalScore() ?? this.mal?.rating?.myScore) ?? 0;
   }
 
-  // ── Genre / theme / demographic filtering ────────────────────────────────
-
   get pureGenres(): string[] {
     return this.mal?.genres?.filter((g) => GENRE_LIST.includes(g)) ?? [];
   }
@@ -493,9 +482,7 @@ export class AnimeDetailPanelComponent {
     return this.mal?.genres?.filter((g) => DEMOGRAPHIC_LIST.includes(g)) ?? [];
   }
 
-  // ── Codec breakdown — H.265 / H.264 / Other percentage segments ──────────
-
-  /** Same logic as AnimeCard.codecSegments — percentage-based breakdown. */
+  /** Codec breakdown: percentage-based H.265 / H.264 / Other segments. */
   get codecSegments(): Array<{ label: string; pct: number }> | null {
     const dist = this.sonarr?.codecDistribution;
     if (!dist) return null;
@@ -520,15 +507,93 @@ export class AnimeDetailPanelComponent {
     ].filter((s) => s.pct > 0);
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  private static readonly BYTES_PER_GB = 1_073_741_824;
+  private static readonly BYTES_PER_MB = 1_048_576;
+  private static readonly CLOSE_ANIMATION_MS = 260;
 
   formatSizeOnDisk(bytes?: number): string {
     if (!bytes) return '';
-    const gb = bytes / 1_073_741_824;
-    return gb >= 1 ? `${gb.toFixed(1)} GB` : `${(bytes / 1_048_576).toFixed(0)} MB`;
+    const gb = bytes / AnimeDetailPanelComponent.BYTES_PER_GB;
+    return gb >= 1
+      ? `${gb.toFixed(1)} GB`
+      : `${(bytes / AnimeDetailPanelComponent.BYTES_PER_MB).toFixed(0)} MB`;
   }
 
-  // ── Actions ───────────────────────────────────────────────────────────────
+  openSonarrAdd(): void {
+    this.sonarrAddOpen.set(true);
+    this.sonarrAddError.set('');
+    this.sonarrAddSuccess.set(false);
+    this.sonarrLookupError.set('');
+    this.sonarrSelectedResult.set(null);
+    this.sonarrLookupResults.set([]);
+
+    // Parallel: fetch Sonarr config options
+    this.sonarrService.getOptions().subscribe({
+      next: (opts) => {
+        this.sonarrRootFolders.set(opts.rootFolders);
+        this.sonarrQualityProfiles.set(opts.qualityProfiles);
+        if (opts.rootFolders.length && !this.sonarrRootFolder()) this.sonarrRootFolder.set(opts.rootFolders[0].path);
+        if (opts.qualityProfiles.length && !this.sonarrProfileId()) this.sonarrProfileId.set(opts.qualityProfiles[0].id);
+      },
+      error: () => {},
+    });
+
+    // Auto-search by display title
+    const title = this.displayTitle;
+    if (title) {
+      this.sonarrSearchTerm.set(title);
+      this.sonarrLookupLoading.set(true);
+      this.sonarrService.lookup(title).subscribe({
+        next: (results) => {
+          this.sonarrLookupResults.set(results);
+          this.sonarrLookupLoading.set(false);
+          if (results.length > 0 && !results[0].alreadyInLibrary) this.sonarrSelectedResult.set(results[0]);
+        },
+        error: () => {
+          this.sonarrLookupError.set('animeDetailPanel.sonarrAdd.lookupError');
+          this.sonarrLookupLoading.set(false);
+        },
+      });
+    }
+  }
+
+  closeSonarrAdd(): void {
+    this.sonarrAddOpen.set(false);
+    this.sonarrAddSuccess.set(false);
+    this.sonarrAddError.set('');
+  }
+
+  sonarrSearchInput(event: Event): void {
+    const term = (event.target as HTMLInputElement).value;
+    this.sonarrSearchTerm.set(term);
+    this.sonarrSelectedResult.set(null);
+    if (term.trim()) this.sonarrSearchSubject.next(term);
+  }
+
+  doSonarrAdd(): void {
+    const result = this.sonarrSelectedResult();
+    if (!result || this.sonarrAddBusy()) return;
+    this.sonarrAddBusy.set(true);
+    this.sonarrAddError.set('');
+    this.sonarrService.addSeries({
+      tvdbId: result.tvdbId,
+      rootFolderPath: this.sonarrRootFolder(),
+      qualityProfileId: this.sonarrProfileId(),
+      monitor: 'all',
+      seasonFolder: true,
+      malId: this.mal?.id,
+    }).subscribe({
+      next: () => {
+        this.sonarrAddBusy.set(false);
+        this.sonarrAddSuccess.set(true);
+        setTimeout(() => this.closeSonarrAdd(), 1800);
+      },
+      error: (err: { error?: { message?: string } }) => {
+        this.sonarrAddBusy.set(false);
+        this.sonarrAddError.set(err?.error?.message || 'animeDetailPanel.sonarrAdd.addError');
+      },
+    });
+  }
 
   openSonarrAdd(): void {
     this.sonarrAddOpen.set(true);

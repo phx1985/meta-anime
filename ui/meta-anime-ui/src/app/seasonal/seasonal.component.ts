@@ -308,31 +308,19 @@ export class SeasonalComponent {
   /** Label shown on the genre dropdown trigger button */
   readonly genreLabel = computed(() => {
     this.langSignal();
-    const sel = this.filterGenre();
-    if (sel.length === 0) return null;
-    const t = (k: string) => this.translateService.instant(`genres.${k}`);
-    if (sel.length <= 2) return sel.map(t).join(', ');
-    return `${t(sel[0])}, ${t(sel[1])} +${sel.length - 2}`;
+    return this.makeFilterLabel('genres', this.filterGenre());
   });
 
   /** Label shown on the theme dropdown trigger button */
   readonly themeLabel = computed(() => {
     this.langSignal();
-    const sel = this.filterTheme();
-    if (sel.length === 0) return null;
-    const t = (k: string) => this.translateService.instant(`genres.${k}`);
-    if (sel.length <= 2) return sel.map(t).join(', ');
-    return `${t(sel[0])}, ${t(sel[1])} +${sel.length - 2}`;
+    return this.makeFilterLabel('genres', this.filterTheme());
   });
 
   /** Label shown on the demographic dropdown trigger button */
   readonly demographicLabel = computed(() => {
     this.langSignal();
-    const sel = this.filterDemographic();
-    if (sel.length === 0) return null;
-    const t = (k: string) => this.translateService.instant(`genres.${k}`);
-    if (sel.length <= 2) return sel.map(t).join(', ');
-    return `${t(sel[0])}, ${t(sel[1])} +${sel.length - 2}`;
+    return this.makeFilterLabel('genres', this.filterDemographic());
   });
 
   readonly demographicOptions = DEMOGRAPHIC_LIST;
@@ -672,6 +660,48 @@ export class SeasonalComponent {
     if (this.activePresetName()) this.activePresetName.set(null);
   }
 
+  // ── Generic filter helpers ────────────────────────────────────────────────
+
+  /** Builds the truncated label string for a filter dropdown button. */
+  private makeFilterLabel(translationPrefix: string, filters: string[]): string | null {
+    if (filters.length === 0) return null;
+    const t = (k: string) => this.translateService.instant(`${translationPrefix}.${k}`);
+    if (filters.length <= 2) return filters.map(t).join(', ');
+    return `${t(filters[0])}, ${t(filters[1])} +${filters.length - 2}`;
+  }
+
+  /** Toggles a value in the specified filter signal and resets its operator when ≤1 selected. */
+  private toggleFilterValue(type: 'genre' | 'theme' | 'demographic', value: string): void {
+    const map = {
+      genre: { filter: this.filterGenre, operator: this.genreOperator },
+      theme: { filter: this.filterTheme, operator: this.themeOperator },
+      demographic: { filter: this.filterDemographic, operator: this.demographicOperator },
+    } as const;
+    const { filter, operator } = map[type];
+    filter.update((v) => (v.includes(value) ? v.filter((x) => x !== value) : [...v, value]));
+    if (filter().length <= 1) operator.set('or');
+  }
+
+  /** Clears all selections for the specified filter type. */
+  private clearFilterType(type: 'genre' | 'theme' | 'demographic'): void {
+    const map = {
+      genre: this.filterGenre,
+      theme: this.filterTheme,
+      demographic: this.filterDemographic,
+    } as const;
+    map[type].set([]);
+  }
+
+  /** Sets the AND/OR operator for the specified filter type. */
+  private setFilterOperator(type: 'genre' | 'theme' | 'demographic', op: 'or' | 'and'): void {
+    const map = {
+      genre: this.genreOperator,
+      theme: this.themeOperator,
+      demographic: this.demographicOperator,
+    } as const;
+    map[type].set(op);
+  }
+
   toggleGenreDropdown(event: MouseEvent): void {
     event.stopPropagation();
     this.genreDropdownOpen = !this.genreDropdownOpen;
@@ -684,16 +714,13 @@ export class SeasonalComponent {
   toggleGenre(genre: string, event: MouseEvent): void {
     event.stopPropagation();
     this.invalidatePreset();
-    this.filterGenre.update((v) =>
-      v.includes(genre) ? v.filter((g) => g !== genre) : [...v, genre],
-    );
-    if (this.filterGenre().length <= 1) this.genreOperator.set('or');
+    this.toggleFilterValue('genre', genre);
   }
 
   clearGenres(event: MouseEvent): void {
     event.stopPropagation();
     this.invalidatePreset();
-    this.filterGenre.set([]);
+    this.clearFilterType('genre');
   }
 
   // ── Theme dropdown ────────────────────────────────────────────────────────
@@ -710,16 +737,13 @@ export class SeasonalComponent {
   toggleTheme(theme: string, event: MouseEvent): void {
     event.stopPropagation();
     this.invalidatePreset();
-    this.filterTheme.update((v) =>
-      v.includes(theme) ? v.filter((t) => t !== theme) : [...v, theme],
-    );
-    if (this.filterTheme().length <= 1) this.themeOperator.set('or');
+    this.toggleFilterValue('theme', theme);
   }
 
   clearThemes(event: MouseEvent): void {
     event.stopPropagation();
     this.invalidatePreset();
-    this.filterTheme.set([]);
+    this.clearFilterType('theme');
   }
 
   // ── Demographic dropdown ──────────────────────────────────────────────────
@@ -736,16 +760,13 @@ export class SeasonalComponent {
   toggleDemographic(demographic: string, event: MouseEvent): void {
     event.stopPropagation();
     this.invalidatePreset();
-    this.filterDemographic.update((v) =>
-      v.includes(demographic) ? v.filter((d) => d !== demographic) : [...v, demographic],
-    );
-    if (this.filterDemographic().length <= 1) this.demographicOperator.set('or');
+    this.toggleFilterValue('demographic', demographic);
   }
 
   clearDemographics(event: MouseEvent): void {
     event.stopPropagation();
     this.invalidatePreset();
-    this.filterDemographic.set([]);
+    this.clearFilterType('demographic');
   }
 
   // ── MAL status pills ──────────────────────────────────────────────────────
@@ -788,19 +809,19 @@ export class SeasonalComponent {
   setGenreOperator(op: 'or' | 'and', event: MouseEvent): void {
     event.stopPropagation();
     this.invalidatePreset();
-    this.genreOperator.set(op);
+    this.setFilterOperator('genre', op);
   }
 
   setThemeOperator(op: 'or' | 'and', event: MouseEvent): void {
     event.stopPropagation();
     this.invalidatePreset();
-    this.themeOperator.set(op);
+    this.setFilterOperator('theme', op);
   }
 
   setDemographicOperator(op: 'or' | 'and', event: MouseEvent): void {
     event.stopPropagation();
     this.invalidatePreset();
-    this.demographicOperator.set(op);
+    this.setFilterOperator('demographic', op);
   }
 
   setSortBy(value: string): void {

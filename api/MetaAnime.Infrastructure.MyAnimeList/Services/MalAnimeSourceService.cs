@@ -13,6 +13,7 @@ namespace MetaAnime.Infrastructure.MyAnimeList.Services;
 public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepository, IMalTokenService malTokenService, ILogger<MalAnimeSourceService> logger) : IMalAnimeSourceService<MalAnime>
 {
     #region Fields
+    private const int MalPageLimit = 500;
     private const string REQUEST_FIELDS = "synopsis, ";
     private const string EXTENDED_REQUEST_FIELDS = REQUEST_FIELDS + "alternative_titles{en,ja,synonyms}, " +
                                                                     "genres{id,name}, " +
@@ -67,7 +68,6 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
 
         Paging paging = null!;
 
-        // Fetch json result
         do
         {
             var (response, refreshedToken) = await ExecuteWithAutoRefreshAsync(
@@ -95,17 +95,11 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
 
     public async Task<Result<MalAnime>> GetByIdAsync(string id)
     {
-        var baseUrl = await GetBaseUrlAsync();
-        if (string.IsNullOrWhiteSpace(baseUrl))
-        {
-            return Result.Failure<MalAnime>(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."));
-        }
-
-        var token = await malTokenService.GetAccessTokenAsync();
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            return Result.Failure<MalAnime>(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
-        }
+        var (ok, baseUrl, token) = await ValidateCredentialsAsync();
+        if (!ok)
+            return string.IsNullOrWhiteSpace(baseUrl)
+                ? Result.Failure<MalAnime>(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."))
+                : Result.Failure<MalAnime>(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
 
         var (response, _) = await ExecuteWithAutoRefreshAsync(
             token,
@@ -139,10 +133,8 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
             return Result.Failure<IList<MalAnime>>(new Error(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
         }
 
-        // Fetch all pages from MAL (limit=500 per request, loop until no next page)
-        const int perPage = 500;
         List<MalAnime> allItems = [];
-        string? nextUrl = $"{baseUrl}/anime/season/{year}/{season}?limit={perPage}&offset=0&nsfw=true&fields={SEASONAL_FIELDS}&sort=anime_score";
+        string? nextUrl = $"{baseUrl}/anime/season/{year}/{season}?limit={MalPageLimit}&offset=0&nsfw=true&fields={SEASONAL_FIELDS}&sort=anime_score";
 
         while (nextUrl != null)
         {
@@ -186,17 +178,11 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
     }
     public async Task<Result<MalAnime>> GetWithRelatedAnimeAsync(string id)
     {
-        var baseUrl = await GetBaseUrlAsync();
-        if (string.IsNullOrWhiteSpace(baseUrl))
-        {
-            return Result.Failure<MalAnime>(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."));
-        }
-
-        var token = await malTokenService.GetAccessTokenAsync();
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            return Result.Failure<MalAnime>(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
-        }
+        var (ok, baseUrl, token) = await ValidateCredentialsAsync();
+        if (!ok)
+            return string.IsNullOrWhiteSpace(baseUrl)
+                ? Result.Failure<MalAnime>(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."))
+                : Result.Failure<MalAnime>(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
 
         var (response, _) = await ExecuteWithAutoRefreshAsync(
             token,
@@ -226,15 +212,11 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
 
     public async Task<Result> UpdateListStatusAsync(string animeId, string status, int numWatchedEpisodes, int score)
     {
-        var baseUrl = await GetBaseUrlAsync();
-        if (string.IsNullOrWhiteSpace(baseUrl))
-        {
-            return Result.Failure(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."));
-        }
-
-        var token = await malTokenService.GetAccessTokenAsync();
-        if (string.IsNullOrWhiteSpace(token))
-            return Result.Failure(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
+        var (ok, baseUrl, token) = await ValidateCredentialsAsync();
+        if (!ok)
+            return string.IsNullOrWhiteSpace(baseUrl)
+                ? Result.Failure(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."))
+                : Result.Failure(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
 
         var uri = new Uri($"{baseUrl}/anime/{animeId}/my_list_status");
         var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
@@ -256,13 +238,11 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
 
     public async Task<Result<IList<MalSearchResultItem>>> SearchByTitleAsync(string query, int limit = 10)
     {
-        var baseUrl = await GetBaseUrlAsync();
-        if (string.IsNullOrWhiteSpace(baseUrl))
-            return Result.Failure<IList<MalSearchResultItem>>(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."));
-
-        var token = await malTokenService.GetAccessTokenAsync();
-        if (string.IsNullOrWhiteSpace(token))
-            return Result.Failure<IList<MalSearchResultItem>>(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
+        var (ok, baseUrl, token) = await ValidateCredentialsAsync();
+        if (!ok)
+            return string.IsNullOrWhiteSpace(baseUrl)
+                ? Result.Failure<IList<MalSearchResultItem>>(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."))
+                : Result.Failure<IList<MalSearchResultItem>>(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
 
         var encodedQuery = Uri.EscapeDataString(query);
         var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
@@ -308,6 +288,21 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
     #endregion
 
     #region Private
+    /// <summary>
+    /// Fetches and validates the MAL API base URL and access token.
+    /// Returns <c>(true, baseUrl, token)</c> on success.
+    /// On failure, <c>ok</c> is false; a non-empty <c>baseUrl</c> in a failing tuple means
+    /// the URL was present but the token was missing.
+    /// </summary>
+    private async Task<(bool ok, string baseUrl, string token)> ValidateCredentialsAsync()
+    {
+        var baseUrl = await GetBaseUrlAsync() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(baseUrl)) return (false, string.Empty, string.Empty);
+        var token = await malTokenService.GetAccessTokenAsync() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(token)) return (false, baseUrl, string.Empty);
+        return (true, baseUrl, token);
+    }
+
     private async Task<string?> GetBaseUrlAsync()
         => (await propertyBagRepository.GetByKeyAsync(SettingsKeys.MalApiBaseUrl))?.Value;
 

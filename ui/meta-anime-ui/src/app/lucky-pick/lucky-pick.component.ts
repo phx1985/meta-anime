@@ -88,8 +88,6 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
   protected isNoMatch = computed(() => this.state() === 'no-match');
   protected isError = computed(() => this.state() === 'error');
 
-  // ── Getters for result card ───────────────────────────────────────────────
-
   protected get anime(): AnimeDetailsResponse | null {
     return this.result();
   }
@@ -148,8 +146,6 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
     return this.anime?.malAnimes?.[0];
   }
 
-  // ── Genre / Theme / Demographic ──────────────────────────────────────────
-
   private get allMalGenres(): string[] {
     return this.mal?.genres ?? [];
   }
@@ -165,8 +161,6 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
   protected get demographics(): string[] {
     return this.allMalGenres.filter((g) => DEMOGRAPHIC_LIST.includes(g));
   }
-
-  // ── Status / Scores / Dates ──────────────────────────────────────────────
 
   protected get malViewState(): string | undefined {
     return this.mal?.viewState;
@@ -216,31 +210,24 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
     return t !== key ? t : name;
   }
 
-  // ── Lifecycle ─────────────────────────────────────────────────────────────
+  private rerollPhrases(): void {
+    this.plexPhrase.set(this.pickPhrase('luckyPick.phrases.plex'));
+    this.malPhrase.set(this.pickPhrase('luckyPick.phrases.mal'));
+    this.rerollPhrase.set(this.pickPhrase('luckyPick.phrases.reroll'));
+    this.searchingPhrase.set(this.pickPhrase('luckyPick.phrases.searching'));
+  }
 
   ngOnInit(): void {
     // Re-roll phrases when the user switches language so copy matches locale
-    this.langSub = this.translate.onLangChange.subscribe(() => {
-      this.plexPhrase.set(this.pickPhrase('luckyPick.phrases.plex'));
-      this.malPhrase.set(this.pickPhrase('luckyPick.phrases.mal'));
-      this.rerollPhrase.set(this.pickPhrase('luckyPick.phrases.reroll'));
-      this.searchingPhrase.set(this.pickPhrase('luckyPick.phrases.searching'));
-    });
+    this.langSub = this.translate.onLangChange.subscribe(() => this.rerollPhrases());
     this.spin();
   }
-
-  // ── Spin trigger ─────────────────────────────────────────────────────────
 
   spin(): void {
     if (this.state() === 'spinning') return;
     this.result.set(null);
     this.state.set('spinning');
-
-    // Reroll funny phrases on every spin so the copy feels fresh
-    this.plexPhrase.set(this.pickPhrase('luckyPick.phrases.plex'));
-    this.malPhrase.set(this.pickPhrase('luckyPick.phrases.mal'));
-    this.rerollPhrase.set(this.pickPhrase('luckyPick.phrases.reroll'));
-    this.searchingPhrase.set(this.pickPhrase('luckyPick.phrases.searching'));
+    this.rerollPhrases();
 
     const filters: AnimeFilters = {};
 
