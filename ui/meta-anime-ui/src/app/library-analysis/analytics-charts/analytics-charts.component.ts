@@ -232,7 +232,8 @@ export class AnalyticsChartsComponent implements OnDestroy {
             color: '#fff',
             font: { weight: 'bold' as const, size: 10 },
             formatter: (value: number) => {
-              const pct = total > 0 ? ((value / total) * 100).toFixed(0) : '0';
+              const raw = total > 0 ? (value / total) * 100 : 0;
+              const pct = raw < 1 && raw > 0 ? raw.toFixed(2) : raw.toFixed(0);
               return `${pct}%`;
             },
             display: (ctx: Context) => {
@@ -288,8 +289,17 @@ export class AnalyticsChartsComponent implements OnDestroy {
         plugins: {
           legend: { display: false },
           tooltip: {
+            mode: 'index' as const,
+            intersect: false,
             callbacks: {
-              label: (ctx) => this.tooltipLabel(ctx as never),
+              label: (ctx) => {
+                const value = ctx.raw as number;
+                const total = (ctx.dataset.data as number[]).reduce((a: number, b: number) => a + b, 0);
+                const raw = total > 0 ? (value / total) * 100 : 0;
+                const pct = raw < 1 && raw > 0 ? raw.toFixed(2) : raw.toFixed(1);
+                return ` ${value} ${this.translate.instant('library.table.series')} (${pct}%)`;
+              },
+              title: (items) => items[0]?.label ?? '',
             },
           },
           datalabels: {
@@ -298,7 +308,8 @@ export class AnalyticsChartsComponent implements OnDestroy {
             color: textColor,
             font: { size: 10, weight: 'bold' as const },
             formatter: (value: number) => {
-              const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+              const raw = total > 0 ? (value / total) * 100 : 0;
+              const pct = raw < 1 && raw > 0 ? raw.toFixed(2) : raw.toFixed(1);
               return `${pct}%`;
             },
           } as never,
@@ -319,7 +330,8 @@ export class AnalyticsChartsComponent implements OnDestroy {
     const values = ctx.dataset.data as number[];
     const total = values.reduce((a, b) => a + b, 0);
     const value = ctx.raw as number;
-    const pct = total > 0 ? ((value / total) * 100).toFixed(1) : '0';
+    const raw = total > 0 ? (value / total) * 100 : 0;
+    const pct = raw < 1 && raw > 0 ? raw.toFixed(2) : raw.toFixed(1);
     return ` ${value} (${pct}%)`;
   }
 

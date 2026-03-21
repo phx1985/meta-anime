@@ -8,6 +8,7 @@ import {
   signal,
   WritableSignal,
 } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { LibrarySeriesRow } from '../../models/library-analysis.models';
@@ -17,7 +18,7 @@ import { formatTableSize, getCodecPills } from '../../utils/format.utils';
   selector: 'app-la-analysis-table',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, FormsModule],
+  imports: [TranslatePipe, FormsModule, NgClass],
   templateUrl: './analysis-table.component.html',
   styleUrl: './analysis-table.component.scss',
 })
@@ -48,6 +49,7 @@ export class AnalysisTableComponent {
   readonly filterStatus = signal<string>('');
   readonly filterDownload = signal<string>('');
   readonly filterBitDepth = signal<string>('');
+  readonly filterHasFiles = signal<'all' | 'yes' | 'no'>('all');
 
   // ── Pagination ──────────────────────────────────────────────────────────────
   readonly page = signal<number>(1);
@@ -125,6 +127,11 @@ export class AnalysisTableComponent {
     const bd = this.filterBitDepth();
     if (bd) result = result.filter(r => r.primaryBitDepth === +bd);
 
+    // With Files filter
+    const hasFiles = this.filterHasFiles();
+    if (hasFiles === 'yes') result = result.filter(r => (r.fileCount ?? 0) > 0);
+    if (hasFiles === 'no') result = result.filter(r => (r.fileCount ?? 0) === 0);
+
     // Sort
     const col = this.sortCol();
     const dir = this.sortDir();
@@ -181,6 +188,7 @@ export class AnalysisTableComponent {
     if (this.filterStatus()) count++;
     if (this.filterDownload()) count++;
     if (this.filterBitDepth()) count++;
+    if (this.filterHasFiles() !== 'all') count++;
     return count;
   });
 
@@ -215,7 +223,15 @@ export class AnalysisTableComponent {
     this.filterStatus.set('');
     this.filterDownload.set('');
     this.filterBitDepth.set('');
+    this.filterHasFiles.set('all');
     this.page.set(1);
+  }
+
+  applyPreset(preset: { hasFiles?: 'all' | 'yes' | 'no'; sortCol?: string; sortDir?: 'asc' | 'desc' }): void {
+    this.clearFilters();
+    if (preset.hasFiles) this.filterHasFiles.set(preset.hasFiles);
+    if (preset.sortCol) this.sortCol.set(preset.sortCol);
+    if (preset.sortDir) this.sortDir.set(preset.sortDir);
   }
 
   goToPage(p: number | '...'): void {

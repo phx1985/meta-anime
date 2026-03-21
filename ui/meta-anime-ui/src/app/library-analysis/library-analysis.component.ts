@@ -6,6 +6,7 @@ import {
   HostListener,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
@@ -53,6 +54,9 @@ export class LibraryAnalysisComponent {
 
   // ── Detail panel ─────────────────────────────────────────────────────────
   readonly selectedRow = signal<LibrarySeriesRow | null>(null);
+
+  // ── Table reference (for preset navigation from pill clicks) ─────────────
+  private readonly tableRef = viewChild(AnalysisTableComponent);
 
   // ── Merged rows: start with summary rows, overlay enriched data ─────────
   readonly displayRows = computed(() => {
@@ -154,6 +158,10 @@ export class LibraryAnalysisComponent {
 
   onRowClicked(row: LibrarySeriesRow): void {
     this.selectedRow.set(row);
+  }
+
+  onMissingFilesClick(): void {
+    this.tableRef()?.applyPreset({ hasFiles: 'no', sortCol: 'title', sortDir: 'asc' });
   }
 
   onDetailClosed(): void {

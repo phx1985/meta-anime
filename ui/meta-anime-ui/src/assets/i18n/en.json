@@ -1621,7 +1621,10 @@
       "ended": "Ended",
       "continuing": "Continuing",
       "partial": "Partial",
-      "clearAll": "Clear Filters"
+      "clearAll": "Clear Filters",
+      "withFiles": "With Files",
+      "withFilesYes": "Yes",
+      "withFilesNo": "No"
     },
     "table": {
       "title": "Title",

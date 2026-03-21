@@ -95,6 +95,16 @@
     </select>
   </div>
 
+  <!-- With Files select -->
+  <div class="la-filter">
+    <label class="la-filter__label">{{ 'library.filters.withFiles' | translate }}</label>
+    <select class="la-filter__select" [value]="filterHasFiles()" (change)="filterHasFiles.set($any($event.target).value)">
+      <option value="all">{{ 'library.filters.all' | translate }}</option>
+      <option value="yes">{{ 'library.filters.withFilesYes' | translate }}</option>
+      <option value="no">{{ 'library.filters.withFilesNo' | translate }}</option>
+    </select>
+  </div>
+
   <!-- Clear all filters -->
   @if (activeFilterCount() > 0) {
     <button class="la-filter__clear" (click)="clearFilters()">
@@ -146,13 +156,12 @@
           <td class="la-td--title">{{ row.title }}</td>
 
           <!-- Video Codec -->
-          <td class="la-td--codec">
-            @if (row.videoCodecDistribution && !isEnriching()) {
+          <td class="la-td--video-codec">
+            @if (row.videoCodecDistribution && getCodecPills(row.videoCodecDistribution).length > 0 && !isEnriching()) {
               @for (pill of getCodecPills(row.videoCodecDistribution); track pill.label) {
-                <span [class]="'la-codec-pill la-codec-pill--' + pill.label.toLowerCase()">{{ pill.label }}</span>
-              }
-              @if (getCodecPills(row.videoCodecDistribution).length === 0) {
-                <span class="la-na">—</span>
+                <span class="la-codec-pill" [ngClass]="'la-codec-pill--' + pill.label.toLowerCase()">
+                  {{ pill.label }} <span class="la-pill-pct">{{ pill.pct }}%</span>
+                </span>
               }
             } @else if (isEnriching()) {
               <span class="la-shimmer-inline"></span>
@@ -162,13 +171,12 @@
           </td>
 
           <!-- Audio Codec -->
-          <td class="la-td--codec">
-            @if (row.audioCodecDistribution && !isEnriching()) {
+          <td class="la-td--audio-codec">
+            @if (row.audioCodecDistribution && getCodecPills(row.audioCodecDistribution).length > 0 && !isEnriching()) {
               @for (pill of getCodecPills(row.audioCodecDistribution); track pill.label) {
-                <span [class]="'la-codec-pill la-codec-pill--' + pill.label.toLowerCase()">{{ pill.label }}</span>
-              }
-              @if (getCodecPills(row.audioCodecDistribution).length === 0) {
-                <span class="la-na">—</span>
+                <span class="la-codec-pill la-codec-pill--audio" [ngClass]="'la-codec-pill--' + pill.label.toLowerCase()">
+                  {{ pill.label }} <span class="la-pill-pct">{{ pill.pct }}%</span>
+                </span>
               }
             } @else if (isEnriching()) {
               <span class="la-shimmer-inline"></span>

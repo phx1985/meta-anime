@@ -14,7 +14,7 @@
     <span class="la-pill__label">{{ 'library.pills.totalFiles' | translate }}</span>
   </div>
 
-  <div class="la-pill la-pill--warning">
+  <div class="la-pill la-pill--warning la-pill--clickable" (click)="missingFilesClick.emit()">
     <div class="la-pill__top">
       <span class="la-pill__value" [countUp]="missingSeriesCount()"></span>
     </div>

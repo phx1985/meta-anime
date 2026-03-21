@@ -31,7 +31,8 @@
         <app-la-telemetry-pills
           [totalSizeBytes]="s.totalSizeBytes"
           [totalFileCount]="s.totalFileCount"
-          [missingSeriesCount]="s.missingFileSeriesCount" />
+          [missingSeriesCount]="s.missingFileSeriesCount"
+          (missingFilesClick)="onMissingFilesClick()" />
       }
 
       <!-- Analytics Charts — always visible; shows skeletons during Phase 1 loading -->

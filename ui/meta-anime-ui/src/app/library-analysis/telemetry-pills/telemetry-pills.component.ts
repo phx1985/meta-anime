@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CountUpDirective } from '../../directives/count-up.directive';
 
@@ -14,6 +14,7 @@ export class TelemetryPillsComponent {
   readonly totalSizeBytes = input.required<number>();
   readonly totalFileCount = input.required<number>();
   readonly missingSeriesCount = input.required<number>();
+  readonly missingFilesClick = output<void>();
 
   readonly totalSizeDisplay = computed(() => {
     const bytes = this.totalSizeBytes();

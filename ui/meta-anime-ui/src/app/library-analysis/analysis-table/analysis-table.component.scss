@@ -314,7 +314,8 @@
   font-size: 0.9rem;
 }
 
-.la-td--codec {
+.la-td--video-codec,
+.la-td--audio-codec {
   white-space: normal;
   overflow: visible;
   display: flex;
@@ -366,6 +367,12 @@
     padding: 0.1rem 0.35rem;
     font-size: 0.65rem;
   }
+}
+
+.la-pill-pct {
+  font-size: 0.7em;
+  opacity: 0.75;
+  margin-left: 3px;
 }
 
 // ─── Resolution badge ────────────────────────────────────────────────────────

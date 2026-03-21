@@ -20,7 +20,7 @@ namespace MetaAnime.Application.Services;
 public sealed class LibraryAnalysisService(
     ISonarrAnimeSourceService<SonarrSeries> sonarrService,
     IPropertyBagRepository propertyBagRepository,
-    IAnimeRepository animeRepository,
+    IAnimeMappingRepository animeMappingRepository,
     ILogger<LibraryAnalysisService> logger) : ILibraryAnalysisService
 {
     #region Constants
@@ -55,11 +55,17 @@ public sealed class LibraryAnalysisService(
             var thresholdEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.LibraryAnalysisAvgEpSizeMb);
             var thresholdMb = int.TryParse(thresholdEntry?.Value, out var t) ? t : 1200;
 
-            // BUG 3 — build Sonarr series ID → local anime ID lookup
-            var allAnime = await animeRepository.GetAllAsync();
-            var sonarrIdToAnimeId = allAnime
-                .Where(a => a.AnimeSource == AnimeSource.Sonarr && int.TryParse(a.SourceId, out _))
-                .ToDictionary(a => int.Parse(a.SourceId), a => a.Id.ToString());
+            // Build Sonarr series ID → AniDb ID lookup.
+            // The GET /api/v1/animes/{id} route expects an AniDb ID (e.g. "15"), NOT the
+            // Anime entity GUID. AnimeMappings join Anime↔AniDbId so we load them with
+            // their Anime navigation and filter for Sonarr-sourced entries.
+            var allMappings = await animeMappingRepository.GetAllAsync(includeAnime: true);
+            var sonarrIdToAnimeId = allMappings
+                .Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr
+                         && m.Anime?.SourceId != null
+                         && int.TryParse(m.Anime.SourceId, out _))
+                .DistinctBy(m => m.Anime!.SourceId)
+                .ToDictionary(m => int.Parse(m.Anime!.SourceId), m => m.AniDbId);
 
             var rows = seriesList.Select(s => MapToPhase1Row(s, sonarrIdToAnimeId)).ToList();
 

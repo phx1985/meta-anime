@@ -1612,7 +1612,10 @@
       "ended": "Terminé",
       "continuing": "En cours",
       "partial": "Partiel",
-      "clearAll": "Effacer les filtres"
+      "clearAll": "Effacer les filtres",
+      "withFiles": "Avec fichiers",
+      "withFilesYes": "Oui",
+      "withFilesNo": "Non"
     },
     "table": {
       "title": "Titre",
