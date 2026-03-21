@@ -314,6 +314,16 @@
   font-size: 0.9rem;
 }
 
+.la-td--codec {
+  white-space: normal;
+  overflow: visible;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.35rem 0.75rem;
+}
+
 // ─── Codec pills ─────────────────────────────────────────────────────────────
 
 .la-codec-pill {

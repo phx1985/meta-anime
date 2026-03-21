@@ -232,6 +232,12 @@ export class SettingsComponent {
   /** True when the provider-enable warning dialog exit animation is playing. */
   providerEnableWarnLeaving = signal(false);
 
+  // ── Library Analysis settings ─────────────────────────────────────────────
+  /** Current stored value for LibraryAnalysis:AvgEpSizeMb (if returned by API). */
+  avgEpSizeMbSetting = computed(() =>
+    this.settings().find((s) => s.key === 'LibraryAnalysis:AvgEpSizeMb'),
+  );
+
   // ── Bot-kun model fetching ─────────────────────────────────────────────────
   botkunModels = signal<string[]>([]);
   botkunModelsFetching = signal(false);
@@ -331,6 +337,7 @@ export class SettingsComponent {
   private static readonly PICKER_KEYS = new Set([
     'Plex:AnimeSections',
     'Sonarr:AnimeTags',
+    'LibraryAnalysis:AvgEpSizeMb',
   ]);
 
   private static readonly PLEX_POLL_INTERVAL_MS = 3000;
@@ -1269,6 +1276,33 @@ export class SettingsComponent {
         error: () => {
           this.botkunModelsFetchError.set(this.translate.instant('settings.botkun.fetchModelsError'));
           this.botkunCredentialsError.set(true);
+        },
+      });
+  }
+
+  onAvgEpSizeChange(event: Event): void {
+    const raw = (event.target as HTMLInputElement).value;
+    const numVal = parseInt(raw, 10);
+    const value = String(isNaN(numVal) ? 1200 : Math.max(100, numVal));
+    const key = 'LibraryAnalysis:AvgEpSizeMb';
+    this.savingKey.set(key);
+
+    forkJoin([this.settingsService.update(key, { value }), timer(400)])
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.savingKey.set(null)),
+      )
+      .subscribe({
+        next: () => {
+          this.savedKey.set(key);
+          this.settings.update((list) =>
+            list.some((s) => s.key === key)
+              ? list.map((s) => (s.key === key ? { ...s, value } : s))
+              : [...list, { key, value, category: 'sonarr', isSensitive: false, isRequired: false, fieldType: 'text' }],
+          );
+          setTimeout(() => {
+            if (this.savedKey() === key) this.savedKey.set(null);
+          }, 2000);
         },
       });
   }

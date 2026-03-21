@@ -1,22 +1,24 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   HostListener,
   inject,
   input,
   output,
   signal,
 } from '@angular/core';
-import { DecimalPipe, SlicePipe } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { LibrarySeriesRow } from '../../models/library-analysis.models';
 import { formatTableSize } from '../../utils/format.utils';
+import { AnimeDetailPanelComponent } from '../../anime-detail-panel/anime-detail-panel.component';
 
 @Component({
   selector: 'app-la-detail-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, SlicePipe, DecimalPipe],
+  imports: [TranslatePipe, DecimalPipe, AnimeDetailPanelComponent],
   templateUrl: './detail-panel.component.html',
   styleUrl: './detail-panel.component.scss',
 })
@@ -26,6 +28,7 @@ export class DetailPanelComponent {
   // ── Inputs ──────────────────────────────────────────────────────────────────
   readonly row = input<LibrarySeriesRow | null>(null);
   readonly sonarrRemoteUrl = input<string>('');
+  readonly avgEpSizeThresholdBytes = input<number>(1200 * 1024 * 1024);
 
   // ── Outputs ─────────────────────────────────────────────────────────────────
   readonly closed = output<void>();
@@ -33,10 +36,16 @@ export class DetailPanelComponent {
   // ── State ───────────────────────────────────────────────────────────────────
   readonly closing = signal(false);
   readonly copySuccess = signal(false);
+  readonly animeDetailOpen = signal<boolean>(false);
+
+  // ── Sort state ───────────────────────────────────────────────────────────────
+  protected readonly sortCol = signal<string>('size');
+  protected readonly sortDir = signal<'asc' | 'desc'>('desc');
 
   // ── Keyboard: escape to close ───────────────────────────────────────────────
   @HostListener('document:keydown.escape')
   onEscape(): void {
+    if (this.animeDetailOpen()) return; // let anime panel handle it
     if (this.row()) this.close();
   }
 
@@ -54,7 +63,32 @@ export class DetailPanelComponent {
     if (deltaX >= 60) this.close();
   }
 
+  // ── Computed ─────────────────────────────────────────────────────────────────
+
+  protected readonly sortedFiles = computed(() => {
+    const files = this.row()?.episodeFiles ?? [];
+    const col = this.sortCol();
+    const dir = this.sortDir();
+    return [...files].sort((a, b) => {
+      let va: string | number, vb: string | number;
+      switch (col) {
+        case 'size':     va = a.sizeBytes;           vb = b.sizeBytes;           break;
+        case 'video':    va = a.videoCodec ?? '';     vb = b.videoCodec ?? '';    break;
+        case 'audio':    va = a.audioCodec ?? '';     vb = b.audioCodec ?? '';    break;
+        case 'res':      va = a.resolution ?? '';     vb = b.resolution ?? '';    break;
+        case 'depth':    va = a.videoBitDepth ?? 0;   vb = b.videoBitDepth ?? 0;  break;
+        case 'channels': va = a.audioChannels ?? 0;   vb = b.audioChannels ?? 0;  break;
+        default:         va = a.relativePath;         vb = b.relativePath;
+      }
+      const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+      return dir === 'asc' ? cmp : -cmp;
+    });
+  });
+
   // ── Methods ─────────────────────────────────────────────────────────────────
+
+  openAnimeDetail(): void { this.animeDetailOpen.set(true); }
+  closeAnimeDetail(): void { this.animeDetailOpen.set(false); }
 
   close(): void {
     if (this.closing()) return;
@@ -78,5 +112,18 @@ export class DetailPanelComponent {
   buildSonarrUrl(title: string): string {
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     return `${this.sonarrRemoteUrl()}/series/${slug}`;
+  }
+
+  protected sortBy(col: string): void {
+    if (this.sortCol() === col) {
+      this.sortDir.update(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortCol.set(col);
+      this.sortDir.set(col === 'size' ? 'desc' : 'asc');
+    }
+  }
+
+  protected getFilename(relativePath: string): string {
+    return relativePath.split(/[/\\]/).pop() ?? relativePath;
   }
 }

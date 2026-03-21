@@ -39,6 +39,16 @@
       </a>
     }
 
+    <!-- Open Anime Details button -->
+    @if (r.localAnimeId) {
+      <button class="la-btn-anime" (click)="openAnimeDetail()" [title]="'library.detail.openAnime' | translate">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        {{ 'library.detail.openAnime' | translate }}
+      </button>
+    }
+
     <!-- Aggregate stats grid -->
     <div class="la-panel__stats">
       <div class="la-panel__stat">
@@ -48,7 +58,7 @@
       <div class="la-panel__stat">
         <span class="la-panel__stat-label">{{ 'library.detail.avgEpSize' | translate }}</span>
         <span class="la-panel__stat-value"
-              [class.la-panel__stat-value--bloated]="r.avgEpisodeSizeBytes > 1.2 * 1024 * 1024 * 1024">
+              [class.la-panel__stat-value--bloated]="r.avgEpisodeSizeBytes > avgEpSizeThresholdBytes()">
           {{ formatSize(r.avgEpisodeSizeBytes) }}
         </span>
       </div>
@@ -88,19 +98,35 @@
         <table class="la-panel__files">
           <thead>
             <tr>
-              <th>{{ 'library.detail.file' | translate }}</th>
-              <th>{{ 'library.detail.size' | translate }}</th>
-              <th>{{ 'library.detail.video' | translate }}</th>
-              <th>{{ 'library.detail.audio' | translate }}</th>
-              <th>{{ 'library.detail.res' | translate }}</th>
-              <th>{{ 'library.detail.depth' | translate }}</th>
-              <th>{{ 'library.detail.channels' | translate }}</th>
+              <th class="la-sortable-th" (click)="sortBy('file')" [class.la-sort-active]="sortCol()==='file'">
+                {{ 'library.detail.file' | translate }}
+                <span class="la-sort-icon">{{ sortCol()==='file' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
+              </th>
+              <th class="la-sortable-th" (click)="sortBy('size')" [class.la-sort-active]="sortCol()==='size'">
+                {{ 'library.detail.size' | translate }}
+                <span class="la-sort-icon">{{ sortCol()==='size' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
+              </th>
+              <th class="la-sortable-th" (click)="sortBy('video')" [class.la-sort-active]="sortCol()==='video'">
+                {{ 'library.detail.video' | translate }}
+              </th>
+              <th class="la-sortable-th" (click)="sortBy('audio')" [class.la-sort-active]="sortCol()==='audio'">
+                {{ 'library.detail.audio' | translate }}
+              </th>
+              <th class="la-sortable-th" (click)="sortBy('res')" [class.la-sort-active]="sortCol()==='res'">
+                {{ 'library.detail.res' | translate }}
+              </th>
+              <th class="la-sortable-th" (click)="sortBy('depth')" [class.la-sort-active]="sortCol()==='depth'">
+                {{ 'library.detail.depth' | translate }}
+              </th>
+              <th class="la-sortable-th" (click)="sortBy('channels')" [class.la-sort-active]="sortCol()==='channels'">
+                {{ 'library.detail.channels' | translate }}
+              </th>
             </tr>
           </thead>
           <tbody>
-            @for (f of r.episodeFiles; track f.episodeFileId) {
+            @for (f of sortedFiles(); track f.episodeFileId) {
               <tr>
-                <td class="la-panel__file-path" [title]="f.relativePath">{{ f.relativePath | slice:-40 }}</td>
+                <td class="la-file-path" [title]="f.relativePath">{{ getFilename(f.relativePath) }}</td>
                 <td>{{ formatSize(f.sizeBytes) }}</td>
                 <td><span class="la-codec-pill la-codec-pill--sm">{{ f.videoCodec }}</span></td>
                 <td><span class="la-codec-pill la-codec-pill--sm">{{ f.audioCodec }}</span></td>
@@ -114,4 +140,13 @@
       </div>
     }
   </div>
+}
+
+@if (animeDetailOpen() && row()?.localAnimeId) {
+  <app-anime-detail-panel
+    [animeId]="row()!.localAnimeId!"
+    [noBackdrop]="false"
+    [zIndexBase]="1200"
+    (closed)="closeAnimeDetail()"
+  />
 }

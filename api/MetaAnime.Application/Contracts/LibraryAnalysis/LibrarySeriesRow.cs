@@ -21,5 +21,7 @@ public sealed record LibrarySeriesRow(
     Dictionary<string, int>? VideoCodecDistribution,
     Dictionary<string, int>? AudioCodecDistribution,
     Dictionary<string, int>? ResolutionDistribution,
-    IList<LibraryEpisodeFileInfo>? EpisodeFiles
+    IList<LibraryEpisodeFileInfo>? EpisodeFiles,
+    /// <summary>MetaAnime local anime ID (Guid string) if this Sonarr series is matched in the local library; null otherwise.</summary>
+    string? LocalAnimeId
 );

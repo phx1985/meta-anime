@@ -2,7 +2,9 @@
   <!-- Video Codec Distribution — Doughnut -->
   <div class="la-chart-card">
     <h3 class="la-chart-card__title">{{ 'library.charts.videoCodec' | translate }}</h3>
-    @if (isEnriching()) {
+    @if (isLoading()) {
+      <div class="la-chart-skeleton"></div>
+    } @else if (isEnriching()) {
       <div class="la-chart-card__shimmer"></div>
     } @else {
       <div class="la-chart-card__body">
@@ -14,7 +16,9 @@
   <!-- Resolution Distribution — Horizontal bar -->
   <div class="la-chart-card">
     <h3 class="la-chart-card__title">{{ 'library.charts.resolution' | translate }}</h3>
-    @if (isEnriching()) {
+    @if (isLoading()) {
+      <div class="la-chart-skeleton"></div>
+    } @else if (isEnriching()) {
       <div class="la-chart-card__shimmer"></div>
     } @else {
       <div class="la-chart-card__body">
@@ -26,7 +30,9 @@
   <!-- Audio Codec Distribution — Doughnut -->
   <div class="la-chart-card">
     <h3 class="la-chart-card__title">{{ 'library.charts.audioCodec' | translate }}</h3>
-    @if (isEnriching()) {
+    @if (isLoading()) {
+      <div class="la-chart-skeleton"></div>
+    } @else if (isEnriching()) {
       <div class="la-chart-card__shimmer"></div>
     } @else {
       <div class="la-chart-card__body">
@@ -38,15 +44,21 @@
   <!-- Top 5 Storage Hogs — Ranked list -->
   <div class="la-chart-card">
     <h3 class="la-chart-card__title">{{ 'library.charts.topHogs' | translate }}</h3>
-    <div class="la-chart-card__body la-hogs">
-      @for (hog of topStorageHogs(); track hog.title; let i = $index) {
-        <div class="la-hog">
-          <span class="la-hog__rank">{{ i + 1 }}</span>
-          <span class="la-hog__title">{{ hog.title }}</span>
-          <span class="la-hog__size">{{ formatSize(hog.totalSizeBytes) }}</span>
-          <div class="la-hog__bar" [style.width.%]="hogBarPercent(hog.totalSizeBytes)"></div>
-        </div>
-      }
-    </div>
+    @if (isLoading()) {
+      <div class="la-chart-skeleton"></div>
+    } @else if (isEnriching() && topStorageHogs().length === 0) {
+      <div class="la-chart-card__shimmer"></div>
+    } @else {
+      <div class="la-chart-card__body la-hogs">
+        @for (hog of topStorageHogs(); track hog.title; let i = $index) {
+          <div class="la-hog">
+            <span class="la-hog__rank">{{ i + 1 }}</span>
+            <span class="la-hog__title">{{ hog.title }}</span>
+            <span class="la-hog__size">{{ formatSize(hog.totalSizeBytes) }}</span>
+            <div class="la-hog__bar" [style.width.%]="hogBarPercent(hog.totalSizeBytes)"></div>
+          </div>
+        }
+      </div>
+    }
   </div>
 </div>

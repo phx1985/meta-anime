@@ -1048,6 +1048,46 @@
                       </div>
                     </div>
                   </div>
+                  <!-- /sonarr-add-defaults -->
+
+                  <!-- ── Library Analysis sub-group ──────────────────────── -->
+                  <div class="pref-group">
+                    <div class="pref-group__header">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                      </svg>
+                      <span>{{ 'settings.sonarr.library.title' | translate }}</span>
+                    </div>
+
+                    <!-- Avg Episode Size Alert Threshold -->
+                    <div class="setting-row sonarr-default-row" [class.setting-row--saved]="isSaved('LibraryAnalysis:AvgEpSizeMb')">
+                      <div class="setting-info">
+                        <div class="setting-name">{{ 'settings.sonarr.library.avgEpSizeThreshold' | translate }}</div>
+                        <div class="setting-desc">{{ 'settings.sonarr.library.avgEpSizeThresholdHint' | translate }}</div>
+                      </div>
+                      <div class="setting-value-area">
+                        <div class="display-row display-row--select">
+                          <input
+                            type="number"
+                            class="form-control form-control-sm setting-input"
+                            [value]="avgEpSizeMbSetting()?.value ?? '1200'"
+                            min="100"
+                            step="100"
+                            [disabled]="isSaving('LibraryAnalysis:AvgEpSizeMb')"
+                            (change)="onAvgEpSizeChange($event)"
+                            [attr.aria-label]="'settings.sonarr.library.avgEpSizeThreshold' | translate"
+                          />
+                          @if (isSaving('LibraryAnalysis:AvgEpSizeMb')) {
+                            <span class="spinner-border spinner-border-sm select-spinner" role="status"></span>
+                          }
+                          @if (isSaved('LibraryAnalysis:AvgEpSizeMb')) {
+                            <span class="badge-saved">&#10003;</span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- /library-analysis sub-group -->
                 }
                 @if (cat === 'app') {
                   <div class="setting-row" [class.setting-row--saved]="autoApplySaved()">

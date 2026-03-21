@@ -58,6 +58,7 @@ export class AnalyticsChartsComponent implements OnDestroy {
   readonly resolutionDist = input<Record<string, number>>({});
   readonly topStorageHogs = input<{ title: string; totalSizeBytes: number }[]>([]);
   readonly isEnriching = input<boolean>(false);
+  readonly isLoading = input<boolean>(false);
 
   // ── Canvas refs ────────────────────────────────────────────────────────────
 
@@ -168,7 +169,10 @@ export class AnalyticsChartsComponent implements OnDestroy {
   ): Chart {
     existing?.destroy();
 
-    const entries = Object.entries(dist).sort((a, b) => b[1] - a[1]).slice(0, 15);
+    const entries = Object.entries(dist)
+      .map(([k, v]) => [k || 'Unknown', v] as [string, number])
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 15);
     const labels = entries.map(([k]) => k);
     const data = entries.map(([, v]) => v);
     const total = data.reduce((a, b) => a + b, 0);
@@ -177,7 +181,7 @@ export class AnalyticsChartsComponent implements OnDestroy {
     const isDark = this.themeService.isDarkTheme();
     const textColor = isDark ? '#e8e8f0' : '#1a1a2e';
 
-    const config: ChartConfiguration<'doughnut'> = {
+    const config: ChartConfiguration<'doughnut'>= {
       type: 'doughnut',
       data: {
         labels,
@@ -250,7 +254,10 @@ export class AnalyticsChartsComponent implements OnDestroy {
   ): Chart {
     existing?.destroy();
 
-    const entries = Object.entries(dist).sort((a, b) => b[1] - a[1]).slice(0, 15);
+    const entries = Object.entries(dist)
+      .map(([k, v]) => [k || 'Unknown', v] as [string, number])
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 15);
     const labels = entries.map(([k]) => k);
     const data = entries.map(([, v]) => v);
     const total = data.reduce((a, b) => a + b, 0);
@@ -258,7 +265,7 @@ export class AnalyticsChartsComponent implements OnDestroy {
 
     const isDark = this.themeService.isDarkTheme();
     const textColor = isDark ? '#e8e8f0' : '#1a1a2e';
-    const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+    const gridColor= isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
 
     const config: ChartConfiguration<'bar'> = {
       type: 'bar',

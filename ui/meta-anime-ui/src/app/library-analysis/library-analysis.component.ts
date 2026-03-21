@@ -87,6 +87,11 @@ export class LibraryAnalysisComponent {
   readonly audioCodecDist = computed(() => this.aggregateDistribution('audioCodecDistribution'));
   readonly resolutionDist = computed(() => this.aggregateDistribution('resolutionDistribution'));
 
+  // ── Avg episode size threshold (from summary, default 1200 MB) ───────────
+  readonly avgEpSizeThresholdBytes = computed(() =>
+    (this.summary()?.avgEpSizeThresholdMb ?? 1200) * 1024 * 1024,
+  );
+
   // ── Top 5 storage hogs ──────────────────────────────────────────────────
   readonly topStorageHogs = computed(() => {
     const rows = this.displayRows();

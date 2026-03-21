@@ -25,11 +25,6 @@
         <p>{{ error() }}</p>
         <button (click)="loadData()">{{ 'library.retry' | translate }}</button>
       </div>
-    } @else if (loadingSummary()) {
-      <div class="la-loading">
-        <div class="la-loading__spinner"></div>
-        <p>{{ 'library.loading' | translate }}</p>
-      </div>
     } @else {
       @if (summary(); as s) {
         <!-- Telemetry Pills -->
@@ -37,25 +32,32 @@
           [totalSizeBytes]="s.totalSizeBytes"
           [totalFileCount]="s.totalFileCount"
           [missingSeriesCount]="s.missingFileSeriesCount" />
+      }
 
-        <!-- Analytics Charts -->
-        <app-la-analytics-charts
-          [videoCodecDist]="videoCodecDist()"
-          [audioCodecDist]="audioCodecDist()"
-          [resolutionDist]="resolutionDist()"
-          [topStorageHogs]="topStorageHogs()"
-          [isEnriching]="enriching()" />
+      <!-- Analytics Charts — always visible; shows skeletons during Phase 1 loading -->
+      <app-la-analytics-charts
+        [videoCodecDist]="videoCodecDist()"
+        [audioCodecDist]="audioCodecDist()"
+        [resolutionDist]="resolutionDist()"
+        [topStorageHogs]="topStorageHogs()"
+        [isEnriching]="enriching()"
+        [isLoading]="loadingSummary()" />
 
-        <!-- Analysis Table -->
-        <app-la-analysis-table
-          [rows]="displayRows()"
-          [isEnriching]="enriching()"
-          (rowClicked)="onRowClicked($event)" />
+      @if (!loadingSummary()) {
+        @if (summary(); as s) {
+          <!-- Analysis Table -->
+          <app-la-analysis-table
+            [rows]="displayRows()"
+            [isEnriching]="enriching()"
+            [avgEpSizeThresholdBytes]="avgEpSizeThresholdBytes()"
+            (rowClicked)="onRowClicked($event)" />
 
-        <!-- Detail Panel -->
-        <app-la-detail-panel
-          [row]="selectedRow()"
-          (closed)="onDetailClosed()" />
+          <!-- Detail Panel -->
+          <app-la-detail-panel
+            [row]="selectedRow()"
+            [avgEpSizeThresholdBytes]="avgEpSizeThresholdBytes()"
+            (closed)="onDetailClosed()" />
+        }
       }
     }
   </div>

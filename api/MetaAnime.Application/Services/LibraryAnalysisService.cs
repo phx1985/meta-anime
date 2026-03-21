@@ -4,6 +4,7 @@ using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
+using MetaAnime.Domain.Enums;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
 using Microsoft.Extensions.Logging;
 using RestSharp;
@@ -19,6 +20,7 @@ namespace MetaAnime.Application.Services;
 public sealed class LibraryAnalysisService(
     ISonarrAnimeSourceService<SonarrSeries> sonarrService,
     IPropertyBagRepository propertyBagRepository,
+    IAnimeRepository animeRepository,
     ILogger<LibraryAnalysisService> logger) : ILibraryAnalysisService
 {
     #region Constants
@@ -49,7 +51,17 @@ public sealed class LibraryAnalysisService(
 
             var seriesList = allSeriesResult.Value;
 
-            var rows = seriesList.Select(MapToPhase1Row).ToList();
+            // BUG 4 — read configurable threshold from PropertyBag (default 1200 MB)
+            var thresholdEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.LibraryAnalysisAvgEpSizeMb);
+            var thresholdMb = int.TryParse(thresholdEntry?.Value, out var t) ? t : 1200;
+
+            // BUG 3 — build Sonarr series ID → local anime ID lookup
+            var allAnime = await animeRepository.GetAllAsync();
+            var sonarrIdToAnimeId = allAnime
+                .Where(a => a.AnimeSource == AnimeSource.Sonarr && int.TryParse(a.SourceId, out _))
+                .ToDictionary(a => int.Parse(a.SourceId), a => a.Id.ToString());
+
+            var rows = seriesList.Select(s => MapToPhase1Row(s, sonarrIdToAnimeId)).ToList();
 
             var totalSizeBytes = rows.Sum(r => r.TotalSizeBytes);
             var totalFileCount = rows.Sum(r => r.FileCount);
@@ -60,7 +72,8 @@ public sealed class LibraryAnalysisService(
                 TotalFileCount: totalFileCount,
                 TotalSeriesCount: rows.Count,
                 MissingFileSeriesCount: missingFileSeriesCount,
-                Series: rows
+                Series: rows,
+                AvgEpSizeThresholdMb: thresholdMb
             );
 
             return Result.Success(summary);
@@ -132,7 +145,7 @@ public sealed class LibraryAnalysisService(
     #region Private — Mapping Helpers
 
     /// <summary>Maps a Sonarr series to a Phase 1 row (no episode-file details).</summary>
-    private static LibrarySeriesRow MapToPhase1Row(SonarrSeries series)
+    private static LibrarySeriesRow MapToPhase1Row(SonarrSeries series, Dictionary<int, string> sonarrIdToAnimeId)
     {
         var fileCount = series.Statistics?.EpisodeFileCount ?? 0;
         var totalEpisodes = series.Statistics?.TotalEpisodeCount ?? 0;
@@ -157,7 +170,8 @@ public sealed class LibraryAnalysisService(
             VideoCodecDistribution: null,
             AudioCodecDistribution: null,
             ResolutionDistribution: null,
-            EpisodeFiles: null
+            EpisodeFiles: null,
+            LocalAnimeId: sonarrIdToAnimeId.TryGetValue(series.Id, out var aid) ? aid : null
         );
     }
 
@@ -174,12 +188,9 @@ public sealed class LibraryAnalysisService(
 
         foreach (var file in episodeFiles)
         {
-            var rawVideoCodec = file.MediaInfo?.VideoCodec ?? "Unknown";
-            var normalizedVideoCodec = NormalizeVideoCodec(rawVideoCodec);
-            var rawAudioCodec = file.MediaInfo?.AudioCodec ?? "Unknown";
-            var normalizedAudioCodec = NormalizeAudioCodec(rawAudioCodec);
-            var height = file.MediaInfo?.Height ?? 0;
-            var resolution = MediaInfo.ToResolutionLabel(height);
+            var normalizedVideoCodec = NormalizeVideoCodec(file.MediaInfo?.VideoCodec);
+            var normalizedAudioCodec = NormalizeAudioCodec(file.MediaInfo?.AudioCodec);
+            var resolution = MediaInfo.ParseResolutionLabel(file.MediaInfo?.Resolution ?? string.Empty, file.MediaInfo?.Height ?? 0);
             var bitDepth = file.MediaInfo?.VideoBitDepth ?? 0;
 
             videoCodecDist[normalizedVideoCodec] = videoCodecDist.GetValueOrDefault(normalizedVideoCodec, 0) + 1;
@@ -230,7 +241,8 @@ public sealed class LibraryAnalysisService(
             VideoCodecDistribution: videoCodecDist,
             AudioCodecDistribution: audioCodecDist,
             ResolutionDistribution: resolutionDist,
-            EpisodeFiles: mappedFiles
+            EpisodeFiles: mappedFiles,
+            LocalAnimeId: null        // Caller should merge with Phase 1 data
         );
     }
 
@@ -270,18 +282,21 @@ public sealed class LibraryAnalysisService(
 
     #region Private — Codec Normalization
 
-    /// <summary>Normalizes a raw video codec string to a canonical label (e.g. "x264" → "H264").</summary>
-    private static string NormalizeVideoCodec(string raw)
+    /// <summary>Normalizes a raw video codec string to a canonical label (e.g. "x264" → "H264"). Returns "Unknown" for null/empty input.</summary>
+    private static string NormalizeVideoCodec(string? rawCodec)
     {
-        var trimmed = raw.Trim();
-        return VideoCodecNormalizationMap.TryGetValue(trimmed, out var canonical)
-            ? canonical
-            : trimmed.ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(rawCodec)) return "Unknown";
+        return VideoCodecNormalizationMap.TryGetValue(rawCodec.Trim().ToLowerInvariant(), out var normalized)
+            ? normalized
+            : rawCodec.Trim().ToUpperInvariant();
     }
 
-    /// <summary>Normalizes an audio codec string (uppercase + trim).</summary>
-    private static string NormalizeAudioCodec(string raw) =>
-        raw.Trim().ToUpperInvariant();
+    /// <summary>Normalizes an audio codec string (uppercase + trim). Returns "Unknown" for null/empty input.</summary>
+    private static string NormalizeAudioCodec(string? rawCodec)
+    {
+        if (string.IsNullOrWhiteSpace(rawCodec)) return "Unknown";
+        return rawCodec.Trim().ToUpperInvariant();
+    }
 
     /// <summary>Builds a reverse lookup from each alias to its canonical label.</summary>
     private static Dictionary<string, string> BuildCodecNormalizationMap(

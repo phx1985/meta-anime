@@ -8,17 +8,16 @@ import {
   signal,
   WritableSignal,
 } from '@angular/core';
-import { LowerCasePipe } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { LibrarySeriesRow } from '../../models/library-analysis.models';
-import { formatTableSize } from '../../utils/format.utils';
+import { formatTableSize, getCodecPills } from '../../utils/format.utils';
 
 @Component({
   selector: 'app-la-analysis-table',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, LowerCasePipe, FormsModule],
+  imports: [TranslatePipe, FormsModule],
   templateUrl: './analysis-table.component.html',
   styleUrl: './analysis-table.component.scss',
 })
@@ -28,9 +27,13 @@ export class AnalysisTableComponent {
   // ── Inputs ──────────────────────────────────────────────────────────────────
   readonly rows = input<LibrarySeriesRow[]>([]);
   readonly isEnriching = input<boolean>(false);
+  readonly avgEpSizeThresholdBytes = input<number>(1200 * 1024 * 1024);
 
   // ── Outputs ─────────────────────────────────────────────────────────────────
   readonly rowClicked = output<LibrarySeriesRow>();
+
+  // ── Utility exposed to template ─────────────────────────────────────────────
+  protected readonly getCodecPills = getCodecPills;
 
   // ── Sorting ─────────────────────────────────────────────────────────────────
   readonly sortCol = signal<string>('totalSizeBytes');

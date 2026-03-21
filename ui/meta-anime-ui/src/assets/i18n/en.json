@@ -636,7 +636,12 @@
       "createTagBtn": "Create",
       "manageTags": "Add/Manage Tags",
       "noTagsSelected": "No tags selected",
-      "noTagsLoaded": "No tags loaded. Check your Sonarr connection."
+      "noTagsLoaded": "No tags loaded. Check your Sonarr connection.",
+      "library": {
+        "title": "Library Analysis",
+        "avgEpSizeThreshold": "Avg Episode Size Alert (MB)",
+        "avgEpSizeThresholdHint": "Episodes larger than this will be highlighted as bloated. Default: 1200"
+      }
     },
     "botkun": {
       "fetchModels": "Fetch Models",
@@ -1595,7 +1600,7 @@
     "pills": {
       "totalSpace": "Total Space Used",
       "totalFiles": "Total Files",
-      "missingSeries": "Missing Series"
+      "seriesWithMissingFiles": "Series w/ Missing Files"
     },
     "charts": {
       "videoCodec": "Video Codec Distribution",
@@ -1653,7 +1658,10 @@
       "res": "Res",
       "depth": "Depth",
       "channels": "Ch",
-      "download": "Download"
+      "download": "Download",
+      "openAnime": "Anime Details",
+      "sortAsc": "Ascending",
+      "sortDesc": "Descending"
     }
   }
 }

@@ -146,11 +146,14 @@
           <td class="la-td--title">{{ row.title }}</td>
 
           <!-- Video Codec -->
-          <td>
-            @if (row.primaryVideoCodec) {
-              <span class="la-codec-pill" [class]="'la-codec-pill--' + (row.primaryVideoCodec | lowercase)">
-                {{ row.primaryVideoCodec }}
-              </span>
+          <td class="la-td--codec">
+            @if (row.videoCodecDistribution && !isEnriching()) {
+              @for (pill of getCodecPills(row.videoCodecDistribution); track pill.label) {
+                <span [class]="'la-codec-pill la-codec-pill--' + pill.label.toLowerCase()">{{ pill.label }}</span>
+              }
+              @if (getCodecPills(row.videoCodecDistribution).length === 0) {
+                <span class="la-na">—</span>
+              }
             } @else if (isEnriching()) {
               <span class="la-shimmer-inline"></span>
             } @else {
@@ -159,9 +162,14 @@
           </td>
 
           <!-- Audio Codec -->
-          <td>
-            @if (row.primaryAudioCodec) {
-              <span class="la-codec-pill">{{ row.primaryAudioCodec }}</span>
+          <td class="la-td--codec">
+            @if (row.audioCodecDistribution && !isEnriching()) {
+              @for (pill of getCodecPills(row.audioCodecDistribution); track pill.label) {
+                <span [class]="'la-codec-pill la-codec-pill--' + pill.label.toLowerCase()">{{ pill.label }}</span>
+              }
+              @if (getCodecPills(row.audioCodecDistribution).length === 0) {
+                <span class="la-na">—</span>
+              }
             } @else if (isEnriching()) {
               <span class="la-shimmer-inline"></span>
             } @else {
@@ -187,7 +195,7 @@
           <td class="la-td--num">{{ formatSize(row.totalSizeBytes) }}</td>
 
           <!-- Avg Ep Size -->
-          <td class="la-td--num" [class.la-td--bloated]="row.avgEpisodeSizeBytes > 1.2 * 1024 * 1024 * 1024">
+          <td class="la-td--num" [class.la-td--bloated]="row.avgEpisodeSizeBytes > avgEpSizeThresholdBytes()">
             {{ formatSize(row.avgEpisodeSizeBytes) }}
           </td>
 

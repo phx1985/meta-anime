@@ -3,6 +3,7 @@ export interface LibraryAnalysisSummary {
   totalFileCount: number;
   totalSeriesCount: number;
   missingFileSeriesCount: number;
+  avgEpSizeThresholdMb: number;
   series: LibrarySeriesRow[];
 }
 
@@ -24,6 +25,7 @@ export interface LibrarySeriesRow {
   audioCodecDistribution?: Record<string, number>;
   resolutionDistribution?: Record<string, number>;
   episodeFiles?: LibraryEpisodeFileInfo[];
+  localAnimeId?: string | null;
 }
 
 export interface LibraryEpisodeFileInfo {
