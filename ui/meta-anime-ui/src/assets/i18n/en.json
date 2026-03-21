@@ -1600,7 +1600,8 @@
     "pills": {
       "totalSpace": "Total Space Used",
       "totalFiles": "Total Files",
-      "seriesWithMissingFiles": "Series w/ Missing Files"
+      "seriesWithMissingFiles": "Series w/ Missing Files",
+      "missingFilesHint": "Click to filter series without files"
     },
     "charts": {
       "videoCodec": "Video Codec Distribution",

@@ -318,11 +318,15 @@
 .la-td--audio-codec {
   white-space: normal;
   overflow: visible;
+  padding: 0.35rem 0.75rem;
+  vertical-align: middle;
+}
+
+.la-codec-pills-wrap {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.2rem;
-  padding: 0.35rem 0.75rem;
 }
 
 // ─── Codec pills ─────────────────────────────────────────────────────────────

@@ -63,6 +63,9 @@ public sealed class GetSettingsQueryHandler(
             new(SettingsKeys.SonarrDefaultMonitor, "sonarr", false, false, Get(SettingsKeys.SonarrDefaultMonitor), "select",
                 SelectOptions: ["all", "future", "missing", "existing", "recent", "pilot", "firstSeason", "lastSeason", "monitorSpecials", "unmonitorSpecials", "none"]),
 
+            // ── Library Analysis preferences ──────────────────────────────────
+            new(SettingsKeys.LibraryAnalysisAvgEpSizeMb, "sonarr", false, false, Get(SettingsKeys.LibraryAnalysisAvgEpSizeMb), "number"),
+
             // ── MyAnimeList ───────────────────────────────────────────────────
             new(SettingsKeys.MalClientId, "mal", false, true, Get(SettingsKeys.MalClientId)),
             new(SettingsKeys.MalClientSecret, "mal", true, true, Get(SettingsKeys.MalClientSecret)),

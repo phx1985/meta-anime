@@ -1591,7 +1591,8 @@
     "pills": {
       "totalSpace": "Espace total utilisé",
       "totalFiles": "Fichiers totaux",
-      "seriesWithMissingFiles": "Séries avec fichiers manquants"
+      "seriesWithMissingFiles": "Séries avec fichiers manquants",
+      "missingFilesHint": "Cliquer pour filtrer les séries sans fichiers"
     },
     "charts": {
       "videoCodec": "Distribution des codecs vidéo",

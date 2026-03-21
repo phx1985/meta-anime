@@ -289,7 +289,7 @@ export class AnalyticsChartsComponent implements OnDestroy {
         plugins: {
           legend: { display: false },
           tooltip: {
-            mode: 'index' as const,
+            mode: 'nearest' as const,
             intersect: false,
             callbacks: {
               label: (ctx) => {
@@ -297,9 +297,8 @@ export class AnalyticsChartsComponent implements OnDestroy {
                 const total = (ctx.dataset.data as number[]).reduce((a: number, b: number) => a + b, 0);
                 const raw = total > 0 ? (value / total) * 100 : 0;
                 const pct = raw < 1 && raw > 0 ? raw.toFixed(2) : raw.toFixed(1);
-                return ` ${value} ${this.translate.instant('library.table.series')} (${pct}%)`;
+                return `${value} ${this.translate.instant('library.table.series')} (${pct}%)`;
               },
-              title: (items) => items[0]?.label ?? '',
             },
           },
           datalabels: {

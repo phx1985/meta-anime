@@ -89,6 +89,22 @@
       transform: translateY(0);
     }
   }
+
+  // ── Hint label shown below the pill label ───────────────────────────────────
+
+  &__hint {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    margin-top: 0.4rem;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    opacity: 0.75;
+    letter-spacing: 0.02em;
+    text-transform: none;
+
+    svg { flex-shrink: 0; }
+  }
 }
 
 @keyframes pillFadeIn {

@@ -157,6 +157,7 @@
 
           <!-- Video Codec -->
           <td class="la-td--video-codec">
+            <div class="la-codec-pills-wrap">
             @if (row.videoCodecDistribution && getCodecPills(row.videoCodecDistribution).length > 0 && !isEnriching()) {
               @for (pill of getCodecPills(row.videoCodecDistribution); track pill.label) {
                 <span class="la-codec-pill" [ngClass]="'la-codec-pill--' + pill.label.toLowerCase()">
@@ -168,10 +169,12 @@
             } @else {
               <span class="la-na">—</span>
             }
+            </div>
           </td>
 
           <!-- Audio Codec -->
           <td class="la-td--audio-codec">
+            <div class="la-codec-pills-wrap">
             @if (row.audioCodecDistribution && getCodecPills(row.audioCodecDistribution).length > 0 && !isEnriching()) {
               @for (pill of getCodecPills(row.audioCodecDistribution); track pill.label) {
                 <span class="la-codec-pill la-codec-pill--audio" [ngClass]="'la-codec-pill--' + pill.label.toLowerCase()">
@@ -183,6 +186,7 @@
             } @else {
               <span class="la-na">—</span>
             }
+            </div>
           </td>
 
           <!-- Resolution -->
