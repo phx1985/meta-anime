@@ -12,13 +12,12 @@ import { DecimalPipe } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { LibrarySeriesRow } from '../../models/library-analysis.models';
 import { formatTableSize } from '../../utils/format.utils';
-import { AnimeDetailPanelComponent } from '../../anime-detail-panel/anime-detail-panel.component';
 
 @Component({
   selector: 'app-la-detail-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, DecimalPipe, AnimeDetailPanelComponent],
+  imports: [TranslatePipe, DecimalPipe],
   templateUrl: './detail-panel.component.html',
   styleUrl: './detail-panel.component.scss',
 })
@@ -32,11 +31,11 @@ export class DetailPanelComponent {
 
   // ── Outputs ─────────────────────────────────────────────────────────────────
   readonly closed = output<void>();
+  readonly requestAnimeDetail = output<string>();
 
   // ── State ───────────────────────────────────────────────────────────────────
   readonly closing = signal(false);
   readonly copySuccess = signal(false);
-  readonly animeDetailOpen = signal<boolean>(false);
 
   // ── Sort state ───────────────────────────────────────────────────────────────
   protected readonly sortCol = signal<string>('size');
@@ -45,7 +44,6 @@ export class DetailPanelComponent {
   // ── Keyboard: escape to close ───────────────────────────────────────────────
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    if (this.animeDetailOpen()) return; // let anime panel handle it
     if (this.row()) this.close();
   }
 
@@ -86,9 +84,6 @@ export class DetailPanelComponent {
   });
 
   // ── Methods ─────────────────────────────────────────────────────────────────
-
-  openAnimeDetail(): void { this.animeDetailOpen.set(true); }
-  closeAnimeDetail(): void { this.animeDetailOpen.set(false); }
 
   close(): void {
     if (this.closing()) return;

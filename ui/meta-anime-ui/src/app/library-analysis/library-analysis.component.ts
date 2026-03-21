@@ -17,6 +17,7 @@ import { TelemetryPillsComponent } from './telemetry-pills/telemetry-pills.compo
 import { AnalyticsChartsComponent } from './analytics-charts/analytics-charts.component';
 import { AnalysisTableComponent } from './analysis-table/analysis-table.component';
 import { DetailPanelComponent } from './detail-panel/detail-panel.component';
+import { AnimeDetailPanelComponent } from '../anime-detail-panel/anime-detail-panel.component';
 
 @Component({
   selector: 'app-library-analysis',
@@ -28,6 +29,7 @@ import { DetailPanelComponent } from './detail-panel/detail-panel.component';
     AnalyticsChartsComponent,
     AnalysisTableComponent,
     DetailPanelComponent,
+    AnimeDetailPanelComponent,
   ],
   templateUrl: './library-analysis.component.html',
   styleUrl: './library-analysis.component.scss',
@@ -54,6 +56,7 @@ export class LibraryAnalysisComponent {
 
   // ── Detail panel ─────────────────────────────────────────────────────────
   readonly selectedRow = signal<LibrarySeriesRow | null>(null);
+  readonly selectedAnimeId = signal<string | null>(null);
 
   // ── Table reference (for preset navigation from pill clicks) ─────────────
   private readonly tableRef = viewChild(AnalysisTableComponent);
@@ -166,6 +169,10 @@ export class LibraryAnalysisComponent {
 
   onDetailClosed(): void {
     this.selectedRow.set(null);
+  }
+
+  onRequestAnimeDetail(id: string): void {
+    this.selectedAnimeId.set(id);
   }
 
   private aggregateDistribution(

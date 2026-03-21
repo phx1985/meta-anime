@@ -57,9 +57,21 @@
           <app-la-detail-panel
             [row]="selectedRow()"
             [avgEpSizeThresholdBytes]="avgEpSizeThresholdBytes()"
-            (closed)="onDetailClosed()" />
+            (closed)="onDetailClosed()"
+            (requestAnimeDetail)="onRequestAnimeDetail($event)" />
         }
       }
     }
   </div>
+}
+
+<!-- Anime detail sub-panel — rendered at template root to avoid stacking context issues
+     caused by animation-fill-mode: forwards transforms on the library detail panel -->
+@if (selectedAnimeId()) {
+  <app-anime-detail-panel
+    [animeId]="selectedAnimeId()!"
+    [noBackdrop]="false"
+    [zIndexBase]="1200"
+    (closed)="selectedAnimeId.set(null)"
+  />
 }
