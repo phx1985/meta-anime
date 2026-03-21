@@ -1,0 +1,62 @@
+@if (!isDesktop()) {
+  <div class="la-mobile-fallback">
+    <div class="la-mobile-fallback__icon">🖥️</div>
+    <h2>{{ 'library.desktopOnly.title' | translate }}</h2>
+    <p>{{ 'library.desktopOnly.message' | translate }}</p>
+  </div>
+} @else if (!sonarrEnabled()) {
+  <div class="la-disabled">
+    <h2>{{ 'library.sonarrDisabled.title' | translate }}</h2>
+    <p>{{ 'library.sonarrDisabled.message' | translate }}</p>
+  </div>
+} @else {
+  <div class="la-container">
+    <!-- Header -->
+    <div class="la-header">
+      <h1 class="la-header__title">{{ 'library.title' | translate }}</h1>
+      <button class="la-header__refresh" (click)="loadData()" [disabled]="loadingSummary() || enriching()">
+        <span class="la-header__refresh-icon" [class.la-header__refresh-icon--spinning]="loadingSummary() || enriching()">⟳</span>
+        {{ 'library.refresh' | translate }}
+      </button>
+    </div>
+
+    @if (error()) {
+      <div class="la-error">
+        <p>{{ error() }}</p>
+        <button (click)="loadData()">{{ 'library.retry' | translate }}</button>
+      </div>
+    } @else if (loadingSummary()) {
+      <div class="la-loading">
+        <div class="la-loading__spinner"></div>
+        <p>{{ 'library.loading' | translate }}</p>
+      </div>
+    } @else {
+      @if (summary(); as s) {
+        <!-- Telemetry Pills -->
+        <app-la-telemetry-pills
+          [totalSizeBytes]="s.totalSizeBytes"
+          [totalFileCount]="s.totalFileCount"
+          [missingSeriesCount]="s.missingFileSeriesCount" />
+
+        <!-- Analytics Charts -->
+        <app-la-analytics-charts
+          [videoCodecDist]="videoCodecDist()"
+          [audioCodecDist]="audioCodecDist()"
+          [resolutionDist]="resolutionDist()"
+          [topStorageHogs]="topStorageHogs()"
+          [isEnriching]="enriching()" />
+
+        <!-- Analysis Table -->
+        <app-la-analysis-table
+          [rows]="displayRows()"
+          [isEnriching]="enriching()"
+          (rowClicked)="onRowClicked($event)" />
+
+        <!-- Detail Panel -->
+        <app-la-detail-panel
+          [row]="selectedRow()"
+          (closed)="onDetailClosed()" />
+      }
+    }
+  </div>
+}

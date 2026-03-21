@@ -88,6 +88,7 @@ public static class ServicesExtensions
         services.AddScoped<IAnimeMappingService, AnimeMappingService>();
         services.AddScoped<IAnimeMatchingService, AnimeMatchingService>();
         services.AddScoped<IAnimeMediatorService, AnimeMediatorService>();
+        services.AddScoped<ILibraryAnalysisService, LibraryAnalysisService>();
         // External AI providers (Groq, OpenAI, LM Studio, local runners) can take 30-120 seconds
         // to respond — strip the global standard resilience handler (which imposes a hard 10s
         // AttemptTimeout) and use an infinite HttpClient timeout instead, relying solely on the

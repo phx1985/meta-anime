@@ -10,6 +10,7 @@ import { NotFoundComponent } from './not-found/not-found.component';
 import { MalCallbackComponent } from './mal-callback/mal-callback.component';
 import { SetupWizardComponent } from './setup-wizard/setup-wizard.component';
 import { LoginComponent } from './login/login.component';
+import { LibraryAnalysisComponent } from './library-analysis/library-analysis.component';
 import { EnrollmentService } from './services/enrollment.service';
 import { AuthService } from './services/auth.service';
 import { authGuard } from './guards/auth.guard';
@@ -48,6 +49,7 @@ export const routes: Routes = [
   { path: 'animes', component: AnimeListComponent, canActivate: [authGuard] },
   { path: 'seasonal', component: SeasonalComponent, canActivate: [authGuard] },
   { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
+  { path: 'library', component: LibraryAnalysisComponent, canActivate: [authGuard] },
   { path: 'auth/mal/callback', component: MalCallbackComponent },
   { path: '**', component: NotFoundComponent },
 ];

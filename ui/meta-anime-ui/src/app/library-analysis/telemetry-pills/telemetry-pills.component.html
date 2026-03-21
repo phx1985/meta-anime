@@ -1,0 +1,23 @@
+<div class="la-pills">
+  <div class="la-pill">
+    <div class="la-pill__top">
+      <span class="la-pill__value" [countUp]="totalSizeDisplay().value"></span>
+      <span class="la-pill__unit">{{ totalSizeDisplay().unit }}</span>
+    </div>
+    <span class="la-pill__label">{{ 'library.pills.totalSpace' | translate }}</span>
+  </div>
+
+  <div class="la-pill">
+    <div class="la-pill__top">
+      <span class="la-pill__value" [countUp]="totalFileCount()"></span>
+    </div>
+    <span class="la-pill__label">{{ 'library.pills.totalFiles' | translate }}</span>
+  </div>
+
+  <div class="la-pill la-pill--warning">
+    <div class="la-pill__top">
+      <span class="la-pill__value" [countUp]="missingSeriesCount()"></span>
+    </div>
+    <span class="la-pill__label">{{ 'library.pills.missingSeries' | translate }}</span>
+  </div>
+</div>

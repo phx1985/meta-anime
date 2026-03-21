@@ -1,0 +1,117 @@
+@if (row(); as r) {
+  <!-- Backdrop -->
+  <div class="la-panel-backdrop"
+       [class.la-panel-backdrop--closing]="closing()"
+       (click)="close()">
+  </div>
+
+  <!-- Panel -->
+  <div class="la-panel" [class.la-panel--closing]="closing()">
+    <button class="la-panel__close" (click)="close()" aria-label="Close">✕</button>
+
+    <!-- Header -->
+    <div class="la-panel__header">
+      <h2 class="la-panel__title">{{ r.title }}</h2>
+      @if (r.ended) {
+        <span class="la-panel__badge la-panel__badge--ended">{{ 'library.detail.ended' | translate }}</span>
+      } @else {
+        <span class="la-panel__badge la-panel__badge--airing">{{ 'library.detail.airing' | translate }}</span>
+      }
+    </div>
+
+    <!-- Path + Copy -->
+    <div class="la-panel__path-row">
+      <code class="la-panel__path">{{ r.path }}</code>
+      <button class="la-panel__copy"
+              (click)="copyPath(r.path)"
+              [class.la-panel__copy--success]="copySuccess()">
+        {{ copySuccess() ? ('library.detail.copied' | translate) : ('library.detail.copyPath' | translate) }}
+      </button>
+    </div>
+
+    <!-- Sonarr link -->
+    @if (sonarrRemoteUrl()) {
+      <a class="la-panel__sonarr-link"
+         [href]="buildSonarrUrl(r.title)"
+         target="_blank"
+         rel="noopener noreferrer">
+        {{ 'library.detail.openSonarr' | translate }} ↗
+      </a>
+    }
+
+    <!-- Aggregate stats grid -->
+    <div class="la-panel__stats">
+      <div class="la-panel__stat">
+        <span class="la-panel__stat-label">{{ 'library.detail.totalSize' | translate }}</span>
+        <span class="la-panel__stat-value">{{ formatSize(r.totalSizeBytes) }}</span>
+      </div>
+      <div class="la-panel__stat">
+        <span class="la-panel__stat-label">{{ 'library.detail.avgEpSize' | translate }}</span>
+        <span class="la-panel__stat-value"
+              [class.la-panel__stat-value--bloated]="r.avgEpisodeSizeBytes > 1.2 * 1024 * 1024 * 1024">
+          {{ formatSize(r.avgEpisodeSizeBytes) }}
+        </span>
+      </div>
+      <div class="la-panel__stat">
+        <span class="la-panel__stat-label">{{ 'library.detail.episodes' | translate }}</span>
+        <span class="la-panel__stat-value">{{ r.fileCount }} / {{ r.totalEpisodes }}</span>
+      </div>
+      <div class="la-panel__stat">
+        <span class="la-panel__stat-label">{{ 'library.detail.codec' | translate }}</span>
+        <span class="la-panel__stat-value">{{ r.primaryVideoCodec ?? '—' }}</span>
+      </div>
+      <div class="la-panel__stat">
+        <span class="la-panel__stat-label">{{ 'library.detail.audio' | translate }}</span>
+        <span class="la-panel__stat-value">{{ r.primaryAudioCodec ?? '—' }}</span>
+      </div>
+      <div class="la-panel__stat">
+        <span class="la-panel__stat-label">{{ 'library.detail.resolution' | translate }}</span>
+        <span class="la-panel__stat-value">{{ r.primaryResolution ?? '—' }}</span>
+      </div>
+    </div>
+
+    <!-- Download progress -->
+    <div class="la-panel__progress-section">
+      <span class="la-panel__stat-label">{{ 'library.detail.downloadProgress' | translate }}</span>
+      <div class="la-panel__progress-bar">
+        <div class="la-panel__progress-fill"
+             [style.width.%]="r.percentDownloaded">
+        </div>
+      </div>
+      <span class="la-panel__progress-text">{{ r.percentDownloaded | number:'1.0-0' }}%</span>
+    </div>
+
+    <!-- Episode files table -->
+    @if (r.episodeFiles?.length) {
+      <h3 class="la-panel__section-title">{{ 'library.detail.episodeFiles' | translate }}</h3>
+      <div class="la-panel__files-wrap">
+        <table class="la-panel__files">
+          <thead>
+            <tr>
+              <th>{{ 'library.detail.file' | translate }}</th>
+              <th>{{ 'library.detail.size' | translate }}</th>
+              <th>{{ 'library.detail.video' | translate }}</th>
+              <th>{{ 'library.detail.audio' | translate }}</th>
+              <th>{{ 'library.detail.res' | translate }}</th>
+              <th>{{ 'library.detail.depth' | translate }}</th>
+              <th>{{ 'library.detail.channels' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of r.episodeFiles; track f.episodeFileId) {
+              <tr>
+                <td class="la-panel__file-path" [title]="f.relativePath">{{ f.relativePath | slice:-40 }}</td>
+                <td>{{ formatSize(f.sizeBytes) }}</td>
+                <td><span class="la-codec-pill la-codec-pill--sm">{{ f.videoCodec }}</span></td>
+                <td><span class="la-codec-pill la-codec-pill--sm">{{ f.audioCodec }}</span></td>
+                <td>{{ f.resolution }}</td>
+                <td>{{ f.videoBitDepth }}-bit</td>
+                <td>{{ f.audioChannels }}ch</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+}

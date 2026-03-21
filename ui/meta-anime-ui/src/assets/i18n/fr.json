@@ -1569,5 +1569,18 @@
       "Non. Les boules de dragon ne peuvent pas vous aider maintenant.",
       "Incorrect. L'univers lui-même refuse votre tentative."
     ]
+  },
+  "library": {
+    "pills": {
+      "totalSpace": "Espace total utilisé",
+      "totalFiles": "Fichiers totaux",
+      "missingSeries": "Séries manquantes"
+    },
+    "charts": {
+      "videoCodec": "Distribution des codecs vidéo",
+      "resolution": "Distribution des résolutions",
+      "audioCodec": "Distribution des codecs audio",
+      "topHogs": "Plus gros consommateurs"
+    }
   }
 }

@@ -53,4 +53,18 @@ public partial class MediaInfo
     public double AudioChannels { get; set; }
     [JsonPropertyName("runTime")]
     public string RunTime { get; set; }
+    [JsonPropertyName("width")]
+    public int Width { get; set; }
+    [JsonPropertyName("height")]
+    public int Height { get; set; }
+
+    /// <summary>Maps a pixel height to a human-readable resolution label.</summary>
+    public static string ToResolutionLabel(int height) => height switch
+    {
+        >= 2160 => "4K",
+        >= 1080 => "1080p",
+        >= 720  => "720p",
+        >= 480  => "480p",
+        _       => "SD"
+    };
 }
