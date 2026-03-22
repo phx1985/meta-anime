@@ -18,6 +18,8 @@ export class FranchiseConstellationService {
 
   /** Whether the constellation overlay is visible. */
   readonly isOpen = signal(false);
+  /** Base z-index for the overlay. Set by the caller so the overlay can stack above it. */
+  readonly zIndexBase = signal(1099);
   /** True while the BFS queue is not yet empty. */
   readonly loading = signal(false);
   /** Non-null when the initial fetch failed. */
@@ -35,8 +37,11 @@ export class FranchiseConstellationService {
 
   /**
    * Opens the constellation overlay and starts a BFS crawl of the entire franchise.
+   * @param callerZIndex Pass the z-index of the panel that triggered the open so the
+   *   overlay can stack above it. Defaults to 1099 (above standard content).
    */
-  open(rootMalId: string, rootTitle: string, rootCoverUrl?: string): void {
+  open(rootMalId: string, rootTitle: string, rootCoverUrl?: string, callerZIndex = 1099): void {
+    this.zIndexBase.set(callerZIndex);
     // Cancel any ongoing BFS first
     this.abortCtrl?.abort();
     this.abortCtrl = new AbortController();

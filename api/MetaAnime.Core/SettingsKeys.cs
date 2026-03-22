@@ -29,6 +29,7 @@ public static class SettingsKeys
 
     // Library analysis settings
     public const string LibraryAnalysisAvgEpSizeMb = "LibraryAnalysis:AvgEpSizeMb";
+    public const string LibraryAnalysisAvgGibPerHour = "LibraryAnalysis:AvgGibPerHour";
 
     // MyAnimeList
     public const string MalApiBaseUrl = "MAL:ApiBaseUrl";

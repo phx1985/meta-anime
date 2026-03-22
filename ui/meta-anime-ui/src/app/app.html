@@ -615,7 +615,7 @@
 @if (constellationDetailMalId()) {
   <app-anime-detail-panel
     [malId]="constellationDetailMalId()"
-    [zIndexBase]="1100"
+    [zIndexBase]="franchiseConstellationSvc.zIndexBase() + 1"
     (closed)="closeConstellationDetail()"
   />
 }

@@ -1066,10 +1066,10 @@
                         <div class="setting-desc">{{ 'settings.sonarr.library.avgEpSizeThresholdHint' | translate }}</div>
                       </div>
                       <div class="setting-value-area">
-                        <div class="display-row display-row--select">
+                        <div class="number-input-wrap">
                           <input
                             type="number"
-                            class="form-control form-control-sm setting-input"
+                            class="form-control form-control-sm setting-input setting-input--number"
                             [value]="avgEpSizeMbSetting()?.value ?? 1200"
                             min="100"
                             step="100"
@@ -1078,10 +1078,38 @@
                             [attr.aria-label]="'settings.sonarr.library.avgEpSizeThreshold' | translate"
                           />
                           @if (isSaving('LibraryAnalysis:AvgEpSizeMb')) {
-                            <span class="spinner-border spinner-border-sm select-spinner" role="status"></span>
+                            <span class="spinner-border spinner-border-sm number-input-status" role="status"></span>
                           }
                           @if (isSaved('LibraryAnalysis:AvgEpSizeMb')) {
-                            <span class="badge-saved">&#10003;</span>
+                            <span class="number-input-status number-input-status--saved">&#10003;</span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Avg GiB/h Alert Threshold -->
+                    <div class="setting-row sonarr-default-row" [class.setting-row--saved]="isSaved('LibraryAnalysis:AvgGibPerHour')">
+                      <div class="setting-info">
+                        <div class="setting-name">{{ 'settings.sonarr.library.avgGibPerHourThreshold' | translate }}</div>
+                        <div class="setting-desc">{{ 'settings.sonarr.library.avgGibPerHourThresholdHint' | translate }}</div>
+                      </div>
+                      <div class="setting-value-area">
+                        <div class="number-input-wrap">
+                          <input
+                            type="number"
+                            class="form-control form-control-sm setting-input setting-input--number"
+                            [value]="avgGibPerHourSetting()?.value ?? 1.2"
+                            min="0.1"
+                            step="0.01"
+                            [disabled]="isSaving('LibraryAnalysis:AvgGibPerHour')"
+                            (change)="onAvgGibPerHourChange($event)"
+                            [attr.aria-label]="'settings.sonarr.library.avgGibPerHourThreshold' | translate"
+                          />
+                          @if (isSaving('LibraryAnalysis:AvgGibPerHour')) {
+                            <span class="spinner-border spinner-border-sm number-input-status" role="status"></span>
+                          }
+                          @if (isSaved('LibraryAnalysis:AvgGibPerHour')) {
+                            <span class="number-input-status number-input-status--saved">&#10003;</span>
                           }
                         </div>
                       </div>

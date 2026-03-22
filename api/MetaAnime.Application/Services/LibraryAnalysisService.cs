@@ -55,6 +55,11 @@ public sealed class LibraryAnalysisService(
             var thresholdEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.LibraryAnalysisAvgEpSizeMb);
             var thresholdMb = int.TryParse(thresholdEntry?.Value, out var t) ? t : 1200;
 
+            var gibPerHourEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.LibraryAnalysisAvgGibPerHour);
+            var avgGibPerHourThreshold = double.TryParse(gibPerHourEntry?.Value,
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture, out var gph) ? gph : 1.2;
+
             // Build Sonarr series ID → AniDb ID lookup.
             // The GET /api/v1/animes/{id} route expects an AniDb ID (e.g. "15"), NOT the
             // Anime entity GUID. AnimeMappings join Anime↔AniDbId so we load them with
@@ -79,7 +84,8 @@ public sealed class LibraryAnalysisService(
                 TotalSeriesCount: rows.Count,
                 MissingFileSeriesCount: missingFileSeriesCount,
                 Series: rows,
-                AvgEpSizeThresholdMb: thresholdMb
+                AvgEpSizeThresholdMb: thresholdMb,
+                AvgGibPerHourThreshold: avgGibPerHourThreshold
             );
 
             return Result.Success(summary);
@@ -177,7 +183,9 @@ public sealed class LibraryAnalysisService(
             AudioCodecDistribution: null,
             ResolutionDistribution: null,
             EpisodeFiles: null,
-            LocalAnimeId: sonarrIdToAnimeId.TryGetValue(series.Id, out var aid) ? aid : null
+            LocalAnimeId: sonarrIdToAnimeId.TryGetValue(series.Id, out var aid) ? aid : null,
+            TotalDurationSeconds: 0,
+            GibPerHour: 0.0
         );
     }
 
@@ -191,6 +199,7 @@ public sealed class LibraryAnalysisService(
 
         var mappedFiles = new List<LibraryEpisodeFileInfo>(episodeFiles.Length);
         long totalSize = 0;
+        int totalDurationSeconds = 0;
 
         foreach (var file in episodeFiles)
         {
@@ -198,6 +207,10 @@ public sealed class LibraryAnalysisService(
             var normalizedAudioCodec = NormalizeAudioCodec(file.MediaInfo?.AudioCodec);
             var resolution = MediaInfo.ParseResolutionLabel(file.MediaInfo?.Resolution ?? string.Empty, file.MediaInfo?.Height ?? 0);
             var bitDepth = file.MediaInfo?.VideoBitDepth ?? 0;
+            var rawDurationSeconds = ParseRunTimeSeconds(file.MediaInfo?.RunTime);
+            const int FallbackDurationSeconds = 1380; // 23 minutes
+            var isDurationEstimated = rawDurationSeconds == 0;
+            var durationSeconds = isDurationEstimated ? FallbackDurationSeconds : rawDurationSeconds;
 
             videoCodecDist[normalizedVideoCodec] = videoCodecDist.GetValueOrDefault(normalizedVideoCodec, 0) + 1;
             audioCodecDist[normalizedAudioCodec] = audioCodecDist.GetValueOrDefault(normalizedAudioCodec, 0) + 1;
@@ -205,6 +218,7 @@ public sealed class LibraryAnalysisService(
             bitDepthCounts[bitDepth] = bitDepthCounts.GetValueOrDefault(bitDepth, 0) + 1;
 
             totalSize += file.Size;
+            totalDurationSeconds += durationSeconds;
 
             var qualityProfile = file.Quality?.QualityInfo?.Name ?? "Unknown";
             mappedFiles.Add(new LibraryEpisodeFileInfo(
@@ -216,7 +230,9 @@ public sealed class LibraryAnalysisService(
                 Resolution: resolution,
                 VideoBitDepth: bitDepth,
                 AudioChannels: file.MediaInfo?.AudioChannels ?? 0.0,
-                QualityProfile: qualityProfile
+                QualityProfile: qualityProfile,
+                DurationSeconds: durationSeconds,
+                IsDurationEstimated: isDurationEstimated
             ));
         }
 
@@ -229,6 +245,8 @@ public sealed class LibraryAnalysisService(
 
         var fileCount = episodeFiles.Length;
         var avgSize = fileCount > 0 ? totalSize / fileCount : 0L;
+        var totalHours = totalDurationSeconds / 3600.0;
+        var gibPerHour = totalHours > 0 ? (totalSize / 1_073_741_824.0) / totalHours : 0.0;
 
         return new LibrarySeriesRow(
             SonarrId: sonarrId,
@@ -248,7 +266,9 @@ public sealed class LibraryAnalysisService(
             AudioCodecDistribution: audioCodecDist,
             ResolutionDistribution: resolutionDist,
             EpisodeFiles: mappedFiles,
-            LocalAnimeId: null        // Caller should merge with Phase 1 data
+            LocalAnimeId: null,       // Caller should merge with Phase 1 data
+            TotalDurationSeconds: totalDurationSeconds,
+            GibPerHour: gibPerHour
         );
     }
 
@@ -328,6 +348,29 @@ public sealed class LibraryAnalysisService(
         distribution.Count > 0
             ? distribution.MaxBy(kvp => kvp.Value).Key
             : null;
+
+    /// <summary>
+    /// Parses a Sonarr MediaInfo.RunTime string (e.g. "00:24:02" or "24:02") to a total number of seconds.
+    /// Returns 0 for null, empty, or unrecognised formats.
+    /// </summary>
+    private static int ParseRunTimeSeconds(string? runTime)
+    {
+        if (string.IsNullOrWhiteSpace(runTime)) return 0;
+        var parts = runTime.Trim().Split(':');
+        try
+        {
+            return parts.Length switch
+            {
+                3 => int.Parse(parts[0]) * 3600 + int.Parse(parts[1]) * 60 + int.Parse(parts[2]),
+                2 => int.Parse(parts[0]) * 60 + int.Parse(parts[1]),
+                _ => 0
+            };
+        }
+        catch
+        {
+            return 0;
+        }
+    }
 
     /// <summary>
     /// Safely extracts a long value from the Sonarr Statistics.SizeOnDisk property,

@@ -65,6 +65,17 @@
     </select>
   </div>
 
+  <!-- GiB/h select -->
+  <div class="la-filter">
+    <label class="la-filter__label">{{ 'library.filters.gibPerHour' | translate }}</label>
+    <select class="la-filter__select" (change)="filterGibPerHour.set($any($event.target).value)">
+      <option value="">{{ 'library.filters.all' | translate }}</option>
+      @for (opt of GIB_PER_HOUR_THRESHOLDS; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+  </div>
+
   <!-- Status select -->
   <div class="la-filter">
     <label class="la-filter__label">{{ 'library.filters.status' | translate }}</label>
@@ -209,6 +220,17 @@
           <!-- Avg Ep Size -->
           <td class="la-td--num" [class.la-td--bloated]="row.avgEpisodeSizeBytes > avgEpSizeThresholdBytes()">
             {{ formatSize(row.avgEpisodeSizeBytes) }}
+          </td>
+
+          <!-- GiB/h -->
+          <td class="la-td--num" [class.la-td--bloated]="row.gibPerHour > avgGibPerHourThreshold()">
+            @if (row.gibPerHour > 0) {
+              {{ row.gibPerHour | number:'1.2-2' }} <span class="la-unit">GiB/h</span>
+            } @else if (isEnriching()) {
+              <span class="la-shimmer-inline"></span>
+            } @else {
+              <span class="la-na">—</span>
+            }
           </td>
 
           <!-- Bit Depth -->

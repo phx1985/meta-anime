@@ -28,6 +28,7 @@ export class DetailPanelComponent {
   readonly row = input<LibrarySeriesRow | null>(null);
   readonly sonarrRemoteUrl = input<string>('');
   readonly avgEpSizeThresholdBytes = input<number>(1200 * 1024 * 1024);
+  readonly avgGibPerHourThreshold = input<number>(1.2);
 
   // ── Outputs ─────────────────────────────────────────────────────────────────
   readonly closed = output<void>();
@@ -76,12 +77,21 @@ export class DetailPanelComponent {
         case 'res':      va = a.resolution ?? '';     vb = b.resolution ?? '';    break;
         case 'depth':    va = a.videoBitDepth ?? 0;   vb = b.videoBitDepth ?? 0;  break;
         case 'channels': va = a.audioChannels ?? 0;   vb = b.audioChannels ?? 0;  break;
+        case 'duration': va = a.durationSeconds ?? 0; vb = b.durationSeconds ?? 0; break;
+        case 'gibPerHour':
+          va = a.durationSeconds > 0 ? (a.sizeBytes / 1_073_741_824) / (a.durationSeconds / 3600) : 0;
+          vb = b.durationSeconds > 0 ? (b.sizeBytes / 1_073_741_824) / (b.durationSeconds / 3600) : 0;
+          break;
         default:         va = a.relativePath;         vb = b.relativePath;
       }
       const cmp = va < vb ? -1 : va > vb ? 1 : 0;
       return dir === 'asc' ? cmp : -cmp;
     });
   });
+
+  protected readonly hasDurationEstimates = computed(
+    () => this.row()?.episodeFiles?.some(f => f.isDurationEstimated) ?? false
+  );
 
   // ── Methods ─────────────────────────────────────────────────────────────────
 
@@ -102,6 +112,22 @@ export class DetailPanelComponent {
 
   formatSize(bytes: number | undefined): string {
     return formatTableSize(bytes, key => this.translateService.instant(key));
+  }
+
+  formatDuration(seconds: number): string {
+    if (!seconds) return '—';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    const mm = String(m).padStart(2, '0');
+    const ss = String(s).padStart(2, '0');
+    return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+  }
+
+  formatEpGibPerHour(sizeBytes: number, durationSeconds: number): string {
+    if (!durationSeconds) return '—';
+    const gph = (sizeBytes / 1_073_741_824) / (durationSeconds / 3600);
+    return gph.toFixed(2);
   }
 
   buildSonarrUrl(title: string): string {

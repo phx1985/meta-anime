@@ -23,5 +23,9 @@ public sealed record LibrarySeriesRow(
     Dictionary<string, int>? ResolutionDistribution,
     IList<LibraryEpisodeFileInfo>? EpisodeFiles,
     /// <summary>MetaAnime local anime ID (Guid string) if this Sonarr series is matched in the local library; null otherwise.</summary>
-    string? LocalAnimeId
+    string? LocalAnimeId,
+    /// <summary>Total duration of all episode files in seconds. 0 when duration data is unavailable (Phase 1 or no episode files).</summary>
+    int TotalDurationSeconds,
+    /// <summary>Average storage rate in GiB per hour (TotalSizeBytes / 1 GiB / (TotalDurationSeconds / 3600)). 0 when duration is unavailable.</summary>
+    double GibPerHour
 );

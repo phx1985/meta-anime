@@ -65,6 +65,7 @@ public sealed class GetSettingsQueryHandler(
 
             // ── Library Analysis preferences ──────────────────────────────────
             new(SettingsKeys.LibraryAnalysisAvgEpSizeMb, "sonarr", false, false, Get(SettingsKeys.LibraryAnalysisAvgEpSizeMb), "number"),
+            new(SettingsKeys.LibraryAnalysisAvgGibPerHour, "sonarr", false, false, Get(SettingsKeys.LibraryAnalysisAvgGibPerHour), "number"),
 
             // ── MyAnimeList ───────────────────────────────────────────────────
             new(SettingsKeys.MalClientId, "mal", false, true, Get(SettingsKeys.MalClientId)),

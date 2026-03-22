@@ -255,14 +255,15 @@
 
 // ─── Column widths ───────────────────────────────────────────────────────────
 
-.la-th--title            { width: 28%; }
-.la-th--primaryVideoCodec { width: 10%; }
-.la-th--primaryAudioCodec { width: 10%; }
-.la-th--primaryResolution { width: 9%; }
-.la-th--fileCount         { width: 8%; }
-.la-th--totalSizeBytes    { width: 11%; }
-.la-th--avgEpisodeSizeBytes { width: 12%; }
-.la-th--primaryBitDepth   { width: 8%; }
+.la-th--title              { width: 22%; }
+.la-th--primaryVideoCodec  { width: 12%; }
+.la-th--primaryAudioCodec  { width: 10%; }
+.la-th--primaryResolution  { width: 7%;  }
+.la-th--fileCount          { width: 5%;  }
+.la-th--totalSizeBytes     { width: 9%;  }
+.la-th--avgEpisodeSizeBytes{ width: 10%; }
+.la-th--gibPerHour         { width: 9%;  }
+.la-th--primaryBitDepth    { width: 6%;  }
 
 .la-th--sortable {
   cursor: pointer;
@@ -305,6 +306,14 @@
 .la-na {
   color: var(--text-muted);
   font-style: italic;
+}
+
+.la-unit {
+  font-size: 0.68rem;
+  font-weight: 400;
+  opacity: 0.65;
+  margin-left: 0.1rem;
+  letter-spacing: 0;
 }
 
 .la-empty {

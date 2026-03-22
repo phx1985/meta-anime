@@ -63,6 +63,17 @@
         </span>
       </div>
       <div class="la-panel__stat">
+        <span class="la-panel__stat-label">{{ 'library.detail.avgGibPerHour' | translate }}</span>
+        <span class="la-panel__stat-value"
+              [class.la-panel__stat-value--bloated]="r.gibPerHour > avgGibPerHourThreshold()">
+          @if (r.gibPerHour > 0) {
+            {{ r.gibPerHour | number:'1.2-2' }} GiB/h
+          } @else {
+            —
+          }
+        </span>
+      </div>
+      <div class="la-panel__stat">
         <span class="la-panel__stat-label">{{ 'library.detail.episodes' | translate }}</span>
         <span class="la-panel__stat-value">{{ r.fileCount }} / {{ r.totalEpisodes }}</span>
       </div>
@@ -93,7 +104,7 @@
 
     <!-- Episode files table -->
     @if (r.episodeFiles?.length) {
-      <h3 class="la-panel__section-title">{{ 'library.detail.episodeFiles' | translate }}</h3>
+      <h3 class="la-panel__section-title">{{ 'library.detail.files' | translate }}</h3>
       <div class="la-panel__files-wrap">
         <table class="la-panel__files">
           <thead>
@@ -105,6 +116,14 @@
               <th class="la-sortable-th" (click)="sortBy('size')" [class.la-sort-active]="sortCol()==='size'">
                 {{ 'library.detail.size' | translate }}
                 <span class="la-sort-icon">{{ sortCol()==='size' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
+              </th>
+              <th class="la-sortable-th" (click)="sortBy('duration')" [class.la-sort-active]="sortCol()==='duration'">
+                {{ 'library.detail.duration' | translate }}
+                <span class="la-sort-icon">{{ sortCol()==='duration' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
+              </th>
+              <th class="la-sortable-th" (click)="sortBy('gibPerHour')" [class.la-sort-active]="sortCol()==='gibPerHour'">
+                {{ 'library.detail.gibPerHour' | translate }}
+                <span class="la-sort-icon">{{ sortCol()==='gibPerHour' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
               </th>
               <th class="la-sortable-th" (click)="sortBy('video')" [class.la-sort-active]="sortCol()==='video'">
                 {{ 'library.detail.video' | translate }}
@@ -128,6 +147,12 @@
               <tr>
                 <td class="la-file-path" [title]="f.relativePath">{{ getFilename(f.relativePath) }}</td>
                 <td>{{ formatSize(f.sizeBytes) }}</td>
+                <td>
+                  {{ formatDuration(f.durationSeconds) }}@if (f.isDurationEstimated) {<span class="la-duration--estimated"> *</span>}
+                </td>
+                <td [class.la-td--bloated]="f.durationSeconds > 0 && (f.sizeBytes / 1_073_741_824) / (f.durationSeconds / 3600) > avgGibPerHourThreshold()">
+                  {{ formatEpGibPerHour(f.sizeBytes, f.durationSeconds) }}
+                </td>
                 <td><span class="la-codec-pill la-codec-pill--sm">{{ f.videoCodec }}</span></td>
                 <td><span class="la-codec-pill la-codec-pill--sm">{{ f.audioCodec }}</span></td>
                 <td>{{ f.resolution }}</td>
@@ -138,6 +163,11 @@
           </tbody>
         </table>
       </div>
+      @if (hasDurationEstimates()) {
+        <p class="la-duration-legend">
+          <span class="la-duration--estimated">*</span>&nbsp;{{ 'library.detail.estimatedDurationNote' | translate }}
+        </p>
+      }
     }
   </div>
 }

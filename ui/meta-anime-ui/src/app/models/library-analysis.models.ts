@@ -4,6 +4,7 @@ export interface LibraryAnalysisSummary {
   totalSeriesCount: number;
   missingFileSeriesCount: number;
   avgEpSizeThresholdMb: number;
+  avgGibPerHourThreshold: number;
   series: LibrarySeriesRow[];
 }
 
@@ -26,6 +27,8 @@ export interface LibrarySeriesRow {
   resolutionDistribution?: Record<string, number>;
   episodeFiles?: LibraryEpisodeFileInfo[];
   localAnimeId?: string | null;
+  totalDurationSeconds: number;
+  gibPerHour: number;
 }
 
 export interface LibraryEpisodeFileInfo {
@@ -38,6 +41,8 @@ export interface LibraryEpisodeFileInfo {
   videoBitDepth: number;
   audioChannels: number;
   qualityProfile: string;
+  durationSeconds: number;
+  isDurationEstimated: boolean;
 }
 
 export interface EnrichSeriesRequest {

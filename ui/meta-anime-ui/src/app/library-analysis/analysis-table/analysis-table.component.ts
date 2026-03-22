@@ -8,7 +8,7 @@ import {
   signal,
   WritableSignal,
 } from '@angular/core';
-import { NgClass } from '@angular/common';
+import { DecimalPipe, NgClass } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { FormsModule } from '@angular/forms';
 import { LibrarySeriesRow } from '../../models/library-analysis.models';
@@ -18,7 +18,7 @@ import { formatTableSize, getCodecPills } from '../../utils/format.utils';
   selector: 'app-la-analysis-table',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, FormsModule, NgClass],
+  imports: [TranslatePipe, FormsModule, NgClass, DecimalPipe],
   templateUrl: './analysis-table.component.html',
   styleUrl: './analysis-table.component.scss',
 })
@@ -29,6 +29,7 @@ export class AnalysisTableComponent {
   readonly rows = input<LibrarySeriesRow[]>([]);
   readonly isEnriching = input<boolean>(false);
   readonly avgEpSizeThresholdBytes = input<number>(1200 * 1024 * 1024);
+  readonly avgGibPerHourThreshold = input<number>(1.2);
 
   // ── Outputs ─────────────────────────────────────────────────────────────────
   readonly rowClicked = output<LibrarySeriesRow>();
@@ -46,6 +47,7 @@ export class AnalysisTableComponent {
   readonly filterAudioCodec = signal<string[]>([]);
   readonly filterResolution = signal<string[]>([]);
   readonly filterAvgEpSize = signal<string>('');
+  readonly filterGibPerHour = signal<string>('');
   readonly filterStatus = signal<string>('');
   readonly filterDownload = signal<string>('');
   readonly filterBitDepth = signal<string>('');
@@ -66,6 +68,13 @@ export class AnalysisTableComponent {
     { label: '> 1.5 GB', value: '>1.5gb', bytes: 1.5 * 1024 * 1024 * 1024 },
   ];
 
+  readonly GIB_PER_HOUR_THRESHOLDS = [
+    { label: '> 0.5 GiB/h', value: '>0.5', threshold: 0.5 },
+    { label: '> 1 GiB/h',   value: '>1',   threshold: 1.0 },
+    { label: '> 2 GiB/h',   value: '>2',   threshold: 2.0 },
+    { label: '> 4 GiB/h',   value: '>4',   threshold: 4.0 },
+  ];
+
   // ── Table columns ───────────────────────────────────────────────────────────
   readonly tableColumns = [
     { key: 'title', label: 'library.table.title', sortable: true },
@@ -75,6 +84,7 @@ export class AnalysisTableComponent {
     { key: 'fileCount', label: 'library.table.fileCount', sortable: true },
     { key: 'totalSizeBytes', label: 'library.table.totalSize', sortable: true },
     { key: 'avgEpisodeSizeBytes', label: 'library.table.avgEpSize', sortable: true },
+    { key: 'gibPerHour', label: 'library.table.gibPerHour', sortable: true },
     { key: 'primaryBitDepth', label: 'library.table.bitDepth', sortable: true },
   ];
 
@@ -111,6 +121,13 @@ export class AnalysisTableComponent {
     if (avgSz) {
       const threshold = this.AVG_EP_SIZES.find(s => s.value === avgSz)?.bytes ?? 0;
       result = result.filter(r => r.avgEpisodeSizeBytes > threshold);
+    }
+
+    // GiB/h filter
+    const gibFilter = this.filterGibPerHour();
+    if (gibFilter) {
+      const threshold = this.GIB_PER_HOUR_THRESHOLDS.find(s => s.value === gibFilter)?.threshold ?? 0;
+      result = result.filter(r => (r.gibPerHour ?? 0) > threshold);
     }
 
     // Status filter
@@ -185,6 +202,7 @@ export class AnalysisTableComponent {
     if (this.filterAudioCodec().length) count++;
     if (this.filterResolution().length) count++;
     if (this.filterAvgEpSize()) count++;
+    if (this.filterGibPerHour()) count++;
     if (this.filterStatus()) count++;
     if (this.filterDownload()) count++;
     if (this.filterBitDepth()) count++;
@@ -220,6 +238,7 @@ export class AnalysisTableComponent {
     this.filterAudioCodec.set([]);
     this.filterResolution.set([]);
     this.filterAvgEpSize.set('');
+    this.filterGibPerHour.set('');
     this.filterStatus.set('');
     this.filterDownload.set('');
     this.filterBitDepth.set('');

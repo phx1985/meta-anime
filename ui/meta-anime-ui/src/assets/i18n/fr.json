@@ -636,7 +636,9 @@
       "library": {
         "title": "Analyse de bibliothèque",
         "avgEpSizeThreshold": "Seuil taille moy. épisode (Mo)",
-        "avgEpSizeThresholdHint": "Les épisodes plus grands que ce seuil seront mis en évidence. Défaut : 1200"
+        "avgEpSizeThresholdHint": "Les épisodes plus grands que ce seuil seront mis en évidence. Défaut : 1200",
+        "avgGibPerHourThreshold": "Alerte GiB/h moy.",
+        "avgGibPerHourThresholdHint": "Les séries avec un taux de stockage supérieur seront mises en évidence. Défaut : 1,2"
       }
     },
     "botkun": {
@@ -1606,6 +1608,7 @@
       "audioCodec": "Codec audio",
       "resolution": "Résolution",
       "avgEpSize": "Taille moy. épisode",
+      "gibPerHour": "GiB/h",
       "status": "Statut",
       "downloadPct": "Téléchargement %",
       "bitDepth": "Profondeur",
@@ -1626,6 +1629,7 @@
       "fileCount": "Fichiers",
       "totalSize": "Taille totale",
       "avgEpSize": "Taille moy. ép.",
+      "gibPerHour": "GiB/h",
       "bitDepth": "Prof.",
       "noResults": "Aucune série ne correspond aux filtres actuels.",
       "showing": "Affichage de",
@@ -1642,18 +1646,23 @@
       "openAnime": "Détails de l'animé",
       "totalSize": "Taille totale",
       "avgEpSize": "Taille moy. ép.",
+      "avgGibPerHour": "GiB/h moy.",
       "episodes": "Épisodes",
       "codec": "Codec vidéo",
       "audio": "Codec audio",
       "resolution": "Résolution",
       "downloadProgress": "Téléchargé",
-      "episodeFiles": "Fichiers épisodes",
+      "episodeFiles": "Fichiers",
+      "files": "Fichiers",
       "file": "Fichier",
       "size": "Taille",
       "video": "Vidéo",
       "res": "Rés.",
       "depth": "Prof.",
       "channels": "Ch",
+      "duration": "Durée",
+      "gibPerHour": "GiB/h",
+      "estimatedDurationNote": "Durée indisponible — 23 min supposées",
       "download": "Téléch.",
       "sortAsc": "Croissant",
       "sortDesc": "Décroissant"

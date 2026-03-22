@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   DestroyRef,
+  ElementRef,
   HostListener,
   inject,
   signal,
@@ -18,6 +19,7 @@ import { AnalyticsChartsComponent } from './analytics-charts/analytics-charts.co
 import { AnalysisTableComponent } from './analysis-table/analysis-table.component';
 import { DetailPanelComponent } from './detail-panel/detail-panel.component';
 import { AnimeDetailPanelComponent } from '../anime-detail-panel/anime-detail-panel.component';
+import { AnimeImageGalleryComponent } from '../anime-image-gallery/anime-image-gallery.component';
 
 @Component({
   selector: 'app-library-analysis',
@@ -30,6 +32,7 @@ import { AnimeDetailPanelComponent } from '../anime-detail-panel/anime-detail-pa
     AnalysisTableComponent,
     DetailPanelComponent,
     AnimeDetailPanelComponent,
+    AnimeImageGalleryComponent,
   ],
   templateUrl: './library-analysis.component.html',
   styleUrl: './library-analysis.component.scss',
@@ -60,6 +63,7 @@ export class LibraryAnalysisComponent {
 
   // ── Table reference (for preset navigation from pill clicks) ─────────────
   private readonly tableRef = viewChild(AnalysisTableComponent);
+  private readonly tableAnchorRef = viewChild<ElementRef>('tableAnchor');
 
   // ── Merged rows: start with summary rows, overlay enriched data ─────────
   readonly displayRows = computed(() => {
@@ -85,6 +89,8 @@ export class LibraryAnalysisComponent {
         fileCount: e.fileCount || row.fileCount,
         totalSizeBytes: e.totalSizeBytes || row.totalSizeBytes,
         avgEpisodeSizeBytes: e.avgEpisodeSizeBytes || row.avgEpisodeSizeBytes,
+        totalDurationSeconds: e.totalDurationSeconds,
+        gibPerHour: e.gibPerHour,
       };
     });
   });
@@ -97,6 +103,11 @@ export class LibraryAnalysisComponent {
   // ── Avg episode size threshold (from summary, default 1200 MB) ───────────
   readonly avgEpSizeThresholdBytes = computed(() =>
     (this.summary()?.avgEpSizeThresholdMb ?? 1200) * 1024 * 1024,
+  );
+
+  // ── Avg GiB/h threshold (from summary, default 1.2) ─────────────────────
+  readonly avgGibPerHourThreshold = computed(() =>
+    this.summary()?.avgGibPerHourThreshold ?? 1.2,
   );
 
   // ── Top 5 storage hogs ──────────────────────────────────────────────────
@@ -165,10 +176,15 @@ export class LibraryAnalysisComponent {
 
   onMissingFilesClick(): void {
     this.tableRef()?.applyPreset({ hasFiles: 'no', sortCol: 'title', sortDir: 'asc' });
+    this.scrollToTable();
   }
 
   onDetailClosed(): void {
     this.selectedRow.set(null);
+  }
+
+  private scrollToTable(): void {
+    this.tableAnchorRef()?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   onRequestAnimeDetail(id: string): void {

@@ -12,5 +12,7 @@ public sealed record LibraryAnalysisSummary(
     int MissingFileSeriesCount,
     IList<LibrarySeriesRow> Series,
     /// <summary>The configurable average-episode-size threshold in MB (default 1200).</summary>
-    int AvgEpSizeThresholdMb
+    int AvgEpSizeThresholdMb,
+    /// <summary>The configurable average GiB-per-hour alert threshold (default 1.2).</summary>
+    double AvgGibPerHourThreshold
 );
