@@ -173,6 +173,7 @@ export class App implements OnInit, AfterViewInit {
     '/animes': 'nav.animes',
     '/seasonal': 'nav.seasonal',
     '/settings': 'nav.settings',
+    '/library': 'nav.library',
   };
 
   /** Controls the disabled-provider interception modal — delegated to PopupService */

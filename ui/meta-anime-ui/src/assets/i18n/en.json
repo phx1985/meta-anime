@@ -4,6 +4,7 @@
     "animes": "My Animes",
     "seasonal": "Seasonal",
     "settings": "Settings",
+    "library": "Library",
     "lucky": "Lucky",
     "providers": "Providers",
     "openPlex": "Open Plex",
@@ -635,7 +636,14 @@
       "createTagBtn": "Create",
       "manageTags": "Add/Manage Tags",
       "noTagsSelected": "No tags selected",
-      "noTagsLoaded": "No tags loaded. Check your Sonarr connection."
+      "noTagsLoaded": "No tags loaded. Check your Sonarr connection.",
+      "library": {
+        "title": "Library Analysis",
+        "avgEpSizeThreshold": "Avg Episode Size Alert (MB)",
+        "avgEpSizeThresholdHint": "Episodes larger than this will be highlighted as bloated. Default: 1200",
+        "avgGibPerHourThreshold": "Avg GiB/h Alert",
+        "avgGibPerHourThresholdHint": "Series with a higher storage rate will be highlighted as bloated. Default: 1.2"
+      }
     },
     "botkun": {
       "fetchModels": "Fetch Models",
@@ -1577,5 +1585,96 @@
       "Nope. The dragon balls cannot help you now.",
       "Access denied. Your password chakra has been sealed."
     ]
+  },
+  "library": {
+    "title": "Library Analysis",
+    "refresh": "Refresh",
+    "retry": "Retry",
+    "loading": "Analyzing library…",
+    "desktopOnly": {
+      "title": "Desktop Only",
+      "message": "This feature requires a desktop browser for the best experience."
+    },
+    "sonarrDisabled": {
+      "title": "Sonarr Not Connected",
+      "message": "Enable Sonarr in Settings to use Library Analysis."
+    },
+    "pills": {
+      "totalSpace": "Total Space Used",
+      "totalFiles": "Total Files",
+      "seriesWithMissingFiles": "Series w/ Missing Files",
+      "missingFilesHint": "Click to filter series without files"
+    },
+    "charts": {
+      "videoCodec": "Video Codec Distribution",
+      "resolution": "Resolution Distribution",
+      "audioCodec": "Audio Codec Distribution",
+      "topHogs": "Top Storage Hogs"
+    },
+    "filters": {
+      "searchTitle": "Search by title…",
+      "videoCodec": "Video Codec",
+      "audioCodec": "Audio Codec",
+      "resolution": "Resolution",
+      "avgEpSize": "Avg Ep Size",
+      "gibPerHour": "GiB/h",
+      "status": "Status",
+      "downloadPct": "Download %",
+      "bitDepth": "Bit Depth",
+      "all": "All",
+      "ended": "Ended",
+      "continuing": "Continuing",
+      "partial": "Partial",
+      "clearAll": "Clear Filters",
+      "withFiles": "With Files",
+      "withFilesYes": "Yes",
+      "withFilesNo": "No"
+    },
+    "table": {
+      "title": "Title",
+      "videoCodec": "Video",
+      "audioCodec": "Audio",
+      "resolution": "Res",
+      "fileCount": "Files",
+      "totalSize": "Total Size",
+      "avgEpSize": "Avg Ep Size",
+      "gibPerHour": "GiB/h",
+      "bitDepth": "Depth",
+      "noResults": "No series match the current filters.",
+      "showing": "Showing",
+      "of": "of",
+      "series": "series",
+      "rowsPerPage": "Rows per page"
+    },
+    "detail": {
+      "ended": "Ended",
+      "airing": "Airing",
+      "copyPath": "Copy Path",
+      "copied": "Copied!",
+      "openSonarr": "Open in Sonarr",
+      "totalSize": "Total Size",
+      "avgEpSize": "Avg Ep Size",
+      "avgGibPerHour": "Avg GiB/h",
+      "episodes": "Episodes",
+      "codec": "Video Codec",
+      "audio": "Audio Codec",
+      "resolution": "Resolution",
+      "downloadProgress": "Downloaded",
+      "episodeFiles": "Files",
+      "files": "Files",
+      "file": "File",
+      "size": "Size",
+      "video": "Video",
+      "res": "Res",
+      "depth": "Depth",
+      "channels": "Ch",
+      "duration": "Duration",
+      "gibPerHour": "GiB/h",
+      "estimatedDurationNote": "Duration unavailable — 23 min assumed",
+      "download": "Download",
+      "openAnime": "Anime Details",
+      "sortAsc": "Ascending",
+      "sortDesc": "Descending"
+    }
   }
 }

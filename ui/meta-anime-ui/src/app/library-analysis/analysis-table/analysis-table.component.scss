@@ -1,0 +1,498 @@
+// ─── Analysis Table: Filter Bar ──────────────────────────────────────────────
+
+.la-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  margin-bottom: 0.25rem;
+}
+
+.la-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  &--search {
+    position: relative;
+    flex: 1 1 220px;
+    min-width: 180px;
+    max-width: 320px;
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: 0.65rem;
+    bottom: 0.55rem;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  &__label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  &__input {
+    width: 100%;
+    height: 2rem;
+    padding: 0 0.6rem 0 2rem;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    transition: border-color 0.15s;
+
+    &::placeholder { color: var(--text-muted); }
+    &:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.15);
+    }
+  }
+
+  &__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  &__pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    text-transform: uppercase;
+
+    &:hover {
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+
+    &--active {
+      background: rgba(108, 99, 255, 0.15);
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+      font-weight: 700;
+    }
+  }
+
+  &__select {
+    height: 2rem;
+    padding: 0 0.5rem;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: border-color 0.15s;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+    }
+  }
+
+  &__clear {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 6px;
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s;
+    align-self: flex-end;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+  }
+
+  &__clear-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.2);
+    font-size: 0.65rem;
+    font-weight: 700;
+  }
+}
+
+// ─── Table toolbar ───────────────────────────────────────────────────────────
+
+.la-table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.25rem 0.6rem;
+  gap: 1rem;
+
+  &__count {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__rpp {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.la-rpp-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.la-rpp-select {
+  height: 1.875rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--card-border);
+  border-radius: 0.375rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+  }
+}
+
+// ─── Table ───────────────────────────────────────────────────────────────────
+
+.la-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+}
+
+.la-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  text-align: left;
+  font-size: 0.82rem;
+
+  thead tr {
+    border-bottom: 2px solid rgba(108, 99, 255, 0.25);
+  }
+
+  th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg-primary);
+    padding: 0.6rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    white-space: nowrap;
+    border-bottom: 1px solid rgba(108, 99, 255, 0.2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  td {
+    padding: 0.5rem 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    cursor: pointer;
+    transition: background 0.1s;
+
+    &:nth-child(even) {
+      background: rgba(128, 128, 128, 0.05);
+    }
+
+    &:hover {
+      background: rgba(108, 99, 255, 0.08);
+    }
+  }
+}
+
+// ─── Column widths ───────────────────────────────────────────────────────────
+
+.la-th--title              { width: 22%; }
+.la-th--primaryVideoCodec  { width: 12%; }
+.la-th--primaryAudioCodec  { width: 10%; }
+.la-th--primaryResolution  { width: 7%;  }
+.la-th--fileCount          { width: 5%;  }
+.la-th--totalSizeBytes     { width: 9%;  }
+.la-th--avgEpisodeSizeBytes{ width: 10%; }
+.la-th--gibPerHour         { width: 9%;  }
+.la-th--primaryBitDepth    { width: 6%;  }
+
+.la-th--sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+
+  &:hover { color: var(--accent-primary); }
+}
+
+.la-th--sorted {
+  color: var(--accent-primary);
+}
+
+// ─── Cell styles ─────────────────────────────────────────────────────────────
+
+.la-td--title {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.la-td--num {
+  text-align: right;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.la-td--bloated {
+  color: #ef4444;
+  font-weight: 600;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.25);
+}
+
+.la-sort-arrow {
+  margin-left: 0.25rem;
+  color: var(--accent-primary);
+  font-size: 0.6rem;
+}
+
+.la-na {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.la-unit {
+  font-size: 0.68rem;
+  font-weight: 400;
+  opacity: 0.65;
+  margin-left: 0.1rem;
+  letter-spacing: 0;
+}
+
+.la-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.la-td--video-codec,
+.la-td--audio-codec {
+  white-space: normal;
+  overflow: visible;
+  padding: 0.35rem 0.75rem;
+  vertical-align: middle;
+}
+
+.la-codec-pills-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+// ─── Codec pills ─────────────────────────────────────────────────────────────
+
+.la-codec-pill {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+
+  // Video codecs
+  &--hevc, &--h265, &--x265 {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+  }
+
+  &--h264, &--x264, &--avc {
+    background: rgba(249, 115, 22, 0.15);
+    color: #f97316;
+  }
+
+  &--av1 {
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+  }
+
+  &--mpeg2 {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+  }
+
+  // Default (audio codecs, etc.)
+  &:not([class*='--h']):not([class*='--a']):not([class*='--m']):not([class*='--x']) {
+    background: rgba(108, 99, 255, 0.12);
+    color: var(--accent-primary);
+  }
+
+  &--sm {
+    padding: 0.1rem 0.35rem;
+    font-size: 0.65rem;
+  }
+}
+
+.la-pill-pct {
+  font-size: 0.7em;
+  opacity: 0.75;
+  margin-left: 3px;
+}
+
+// ─── Resolution badge ────────────────────────────────────────────────────────
+
+.la-res-badge {
+  display: inline-block;
+  padding: 0.12rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(108, 99, 255, 0.1);
+  color: var(--accent-primary);
+  border: 1px solid rgba(108, 99, 255, 0.2);
+}
+
+// ─── Shimmer inline ──────────────────────────────────────────────────────────
+
+.la-shimmer-inline {
+  display: inline-block;
+  width: 48px;
+  height: 14px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    rgba(128, 128, 128, 0.08) 25%,
+    rgba(128, 128, 128, 0.18) 50%,
+    rgba(128, 128, 128, 0.08) 75%
+  );
+  background-size: 200% 100%;
+  animation: laShimmer 1.5s infinite ease-in-out;
+}
+
+@keyframes laShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+// ─── Pagination ──────────────────────────────────────────────────────────────
+
+.la-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.75rem 0 0.5rem;
+  flex-wrap: wrap;
+}
+
+.la-page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--card-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #fff;
+  }
+
+  &--active {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.la-page-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+
+// ─── Responsive ──────────────────────────────────────────────────────────────
+
+@media (max-width: 768px) {
+  .la-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .la-filter--search {
+    max-width: 100%;
+  }
+
+  .la-table-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}

@@ -632,7 +632,14 @@
       "connectionError": "Impossible de se connecter à Sonarr. Vérifiez l'URL et la clé API.",
       "loadingOptions": "Chargement des options Sonarr…",
       "createTagPlaceholder": "Nom du nouveau tag...",
-      "createTagBtn": "Créer"
+      "createTagBtn": "Créer",
+      "library": {
+        "title": "Analyse de bibliothèque",
+        "avgEpSizeThreshold": "Seuil taille moy. épisode (Mo)",
+        "avgEpSizeThresholdHint": "Les épisodes plus grands que ce seuil seront mis en évidence. Défaut : 1200",
+        "avgGibPerHourThreshold": "Alerte GiB/h moy.",
+        "avgGibPerHourThresholdHint": "Les séries avec un taux de stockage supérieur seront mises en évidence. Défaut : 1,2"
+      }
     },
     "botkun": {
       "fetchModels": "Récupérer les modèles",
@@ -1569,5 +1576,96 @@
       "Non. Les boules de dragon ne peuvent pas vous aider maintenant.",
       "Incorrect. L'univers lui-même refuse votre tentative."
     ]
+  },
+  "library": {
+    "title": "Analyse de la bibliothèque",
+    "refresh": "Actualiser",
+    "retry": "Réessayer",
+    "loading": "Analyse de la bibliothèque en cours…",
+    "desktopOnly": {
+      "title": "Version bureau uniquement",
+      "message": "Cette fonctionnalité nécessite un navigateur de bureau pour une expérience optimale."
+    },
+    "sonarrDisabled": {
+      "title": "Sonarr non connecté",
+      "message": "Activez Sonarr dans les paramètres pour utiliser l'analyse de bibliothèque."
+    },
+    "pills": {
+      "totalSpace": "Espace total utilisé",
+      "totalFiles": "Fichiers totaux",
+      "seriesWithMissingFiles": "Séries avec fichiers manquants",
+      "missingFilesHint": "Cliquer pour filtrer les séries sans fichiers"
+    },
+    "charts": {
+      "videoCodec": "Distribution des codecs vidéo",
+      "resolution": "Distribution des résolutions",
+      "audioCodec": "Distribution des codecs audio",
+      "topHogs": "Plus gros consommateurs"
+    },
+    "filters": {
+      "searchTitle": "Rechercher par titre…",
+      "videoCodec": "Codec vidéo",
+      "audioCodec": "Codec audio",
+      "resolution": "Résolution",
+      "avgEpSize": "Taille moy. épisode",
+      "gibPerHour": "GiB/h",
+      "status": "Statut",
+      "downloadPct": "Téléchargement %",
+      "bitDepth": "Profondeur",
+      "all": "Tout",
+      "ended": "Terminé",
+      "continuing": "En cours",
+      "partial": "Partiel",
+      "clearAll": "Effacer les filtres",
+      "withFiles": "Avec fichiers",
+      "withFilesYes": "Oui",
+      "withFilesNo": "Non"
+    },
+    "table": {
+      "title": "Titre",
+      "videoCodec": "Vidéo",
+      "audioCodec": "Audio",
+      "resolution": "Rés.",
+      "fileCount": "Fichiers",
+      "totalSize": "Taille totale",
+      "avgEpSize": "Taille moy. ép.",
+      "gibPerHour": "GiB/h",
+      "bitDepth": "Prof.",
+      "noResults": "Aucune série ne correspond aux filtres actuels.",
+      "showing": "Affichage de",
+      "of": "sur",
+      "series": "séries",
+      "rowsPerPage": "Lignes par page"
+    },
+    "detail": {
+      "ended": "Terminé",
+      "airing": "En cours",
+      "copyPath": "Copier le chemin",
+      "copied": "Copié !",
+      "openSonarr": "Ouvrir dans Sonarr",
+      "openAnime": "Détails de l'animé",
+      "totalSize": "Taille totale",
+      "avgEpSize": "Taille moy. ép.",
+      "avgGibPerHour": "GiB/h moy.",
+      "episodes": "Épisodes",
+      "codec": "Codec vidéo",
+      "audio": "Codec audio",
+      "resolution": "Résolution",
+      "downloadProgress": "Téléchargé",
+      "episodeFiles": "Fichiers",
+      "files": "Fichiers",
+      "file": "Fichier",
+      "size": "Taille",
+      "video": "Vidéo",
+      "res": "Rés.",
+      "depth": "Prof.",
+      "channels": "Ch",
+      "duration": "Durée",
+      "gibPerHour": "GiB/h",
+      "estimatedDurationNote": "Durée indisponible — 23 min supposées",
+      "download": "Téléch.",
+      "sortAsc": "Croissant",
+      "sortDesc": "Décroissant"
+    }
   }
 }

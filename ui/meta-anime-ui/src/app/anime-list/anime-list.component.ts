@@ -35,6 +35,7 @@ import { AnimeCardComponent } from './anime-card/anime-card.component';
 import { AnimeDetailPanelComponent } from '../anime-detail-panel/anime-detail-panel.component';
 import { AnimeImageGalleryComponent } from '../anime-image-gallery/anime-image-gallery.component';
 import { StorageKeys } from '../constants/storage-keys';
+import { formatTableSize as formatSize, getCodecPills as codecPills } from '../utils/format.utils';
 
 const DEFAULT_PAGE_SIZE = 20;
 const DISPLAY_MODE_KEY = StorageKeys.displayMode;
@@ -557,13 +558,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   /** Format raw bytes to a human-readable size string using Base-2 (1024) math. */
   formatTableSize(bytes?: number): string {
-    if (!bytes || bytes <= 0) return '—';
-    const GiB = 1024 ** 3;
-    const MiB = 1024 ** 2;
-    const KiB = 1024;
-    if (bytes >= GiB) return (bytes / GiB).toFixed(1) + ' ' + this.translateService.instant('common.units.gb');
-    if (bytes >= MiB) return (bytes / MiB).toFixed(1) + ' ' + this.translateService.instant('common.units.mb');
-    return (bytes / KiB).toFixed(0) + ' ' + this.translateService.instant('common.units.kb');
+    return formatSize(bytes, (key) => this.translateService.instant(key));
   }
 
   /** Average file size per episode for the anime. */
@@ -600,16 +595,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   /** Convert a codec distribution map into a sorted array of { label, pct } pills.
    *  Filters out empty/null keys and entries with 0 count. */
   getCodecPills(dist?: { [key: string]: number }): { label: string; pct: number }[] {
-    if (!dist) return [];
-    const entries = Object.entries(dist).filter(([key, count]) => key?.trim() && count > 0);
-    const total = entries.reduce((s, [, v]) => s + v, 0);
-    if (total === 0) return [];
-    return entries
-      .map(([label, count]) => ({
-        label: label.toUpperCase(),
-        pct: Math.round((count / total) * 100),
-      }))
-      .sort((a, b) => b.pct - a.pct);
+    return codecPills(dist);
   }
 
   /** Average bytes per episode (raw, used for client-side sort). */

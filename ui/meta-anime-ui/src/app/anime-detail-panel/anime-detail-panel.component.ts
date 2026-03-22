@@ -626,7 +626,7 @@ export class AnimeDetailPanelComponent {
   openFranchiseConstellation(): void {
     const malId = this.mal?.id;
     if (!malId) return;
-    this.franchiseConstellation.open(malId, this.displayTitle, this.coverImageUrl);
+    this.franchiseConstellation.open(malId, this.displayTitle, this.coverImageUrl, this.zIndexBase() + 2);
   }
 
   openPosterGallery(): void {

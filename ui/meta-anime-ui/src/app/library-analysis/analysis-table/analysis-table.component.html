@@ -1,0 +1,285 @@
+<!-- ─── Filter bar ──────────────────────────────────────────────────────────── -->
+<div class="la-filter-bar">
+  <!-- Title search -->
+  <div class="la-filter la-filter--search">
+    <svg class="la-filter__search-icon" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+      <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+    </svg>
+    <input type="text"
+           [value]="filterTitle()"
+           (input)="filterTitle.set($any($event.target).value)"
+           placeholder="{{ 'library.filters.searchTitle' | translate }}"
+           class="la-filter__input" />
+  </div>
+
+  <!-- Video Codec multi-select -->
+  <div class="la-filter">
+    <label class="la-filter__label">{{ 'library.filters.videoCodec' | translate }}</label>
+    <div class="la-filter__pills">
+      @for (codec of VIDEO_CODECS; track codec) {
+        <button class="la-filter__pill"
+                [class.la-filter__pill--active]="filterVideoCodec().includes(codec)"
+                (click)="toggleFilter(filterVideoCodec, codec)">
+          {{ codec }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Audio Codec multi-select -->
+  <div class="la-filter">
+    <label class="la-filter__label">{{ 'library.filters.audioCodec' | translate }}</label>
+    <div class="la-filter__pills">
+      @for (codec of AUDIO_CODECS; track codec) {
+        <button class="la-filter__pill"
+                [class.la-filter__pill--active]="filterAudioCodec().includes(codec)"
+                (click)="toggleFilter(filterAudioCodec, codec)">
+          {{ codec }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Resolution multi-select -->
+  <div class="la-filter">
+    <label class="la-filter__label">{{ 'library.filters.resolution' | translate }}</label>
+    <div class="la-filter__pills">
+      @for (res of RESOLUTIONS; track res) {
+        <button class="la-filter__pill"
+                [class.la-filter__pill--active]="filterResolution().includes(res)"
+                (click)="toggleFilter(filterResolution, res)">
+          {{ res }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Avg Ep Size select -->
+  <div class="la-filter">
+    <label class="la-filter__label">{{ 'library.filters.avgEpSize' | translate }}</label>
+    <select class="la-filter__select" (change)="filterAvgEpSize.set($any($event.target).value)">
+      <option value="">{{ 'library.filters.all' | translate }}</option>
+      @for (opt of AVG_EP_SIZES; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- GiB/h select -->
+  <div class="la-filter">
+    <label class="la-filter__label">{{ 'library.filters.gibPerHour' | translate }}</label>
+    <select class="la-filter__select" (change)="filterGibPerHour.set($any($event.target).value)">
+      <option value="">{{ 'library.filters.all' | translate }}</option>
+      @for (opt of GIB_PER_HOUR_THRESHOLDS; track opt.value) {
+        <option [value]="opt.value">{{ opt.label }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Status select -->
+  <div class="la-filter">
+    <label class="la-filter__label">{{ 'library.filters.status' | translate }}</label>
+    <select class="la-filter__select" (change)="filterStatus.set($any($event.target).value)">
+      <option value="">{{ 'library.filters.all' | translate }}</option>
+      <option value="ended">{{ 'library.filters.ended' | translate }}</option>
+      <option value="continuing">{{ 'library.filters.continuing' | translate }}</option>
+    </select>
+  </div>
+
+  <!-- Download % select -->
+  <div class="la-filter">
+    <label class="la-filter__label">{{ 'library.filters.downloadPct' | translate }}</label>
+    <select class="la-filter__select" (change)="filterDownload.set($any($event.target).value)">
+      <option value="">{{ 'library.filters.all' | translate }}</option>
+      <option value="100">100%</option>
+      <option value="partial">{{ 'library.filters.partial' | translate }}</option>
+    </select>
+  </div>
+
+  <!-- Bit Depth select -->
+  <div class="la-filter">
+    <label class="la-filter__label">{{ 'library.filters.bitDepth' | translate }}</label>
+    <select class="la-filter__select" (change)="filterBitDepth.set($any($event.target).value)">
+      <option value="">{{ 'library.filters.all' | translate }}</option>
+      <option value="8">8-bit</option>
+      <option value="10">10-bit</option>
+    </select>
+  </div>
+
+  <!-- With Files select -->
+  <div class="la-filter">
+    <label class="la-filter__label">{{ 'library.filters.withFiles' | translate }}</label>
+    <select class="la-filter__select" [value]="filterHasFiles()" (change)="filterHasFiles.set($any($event.target).value)">
+      <option value="all">{{ 'library.filters.all' | translate }}</option>
+      <option value="yes">{{ 'library.filters.withFilesYes' | translate }}</option>
+      <option value="no">{{ 'library.filters.withFilesNo' | translate }}</option>
+    </select>
+  </div>
+
+  <!-- Clear all filters -->
+  @if (activeFilterCount() > 0) {
+    <button class="la-filter__clear" (click)="clearFilters()">
+      {{ 'library.filters.clearAll' | translate }}
+      <span class="la-filter__clear-count">{{ activeFilterCount() }}</span>
+    </button>
+  }
+</div>
+
+<!-- ─── Table toolbar ──────────────────────────────────────────────────────── -->
+<div class="la-table-toolbar">
+  <span class="la-table-toolbar__count">
+    {{ filteredRows().length }} {{ 'library.table.series' | translate }}
+  </span>
+  <div class="la-table-toolbar__controls">
+    <div class="la-table-toolbar__rpp">
+      <span class="la-rpp-label">{{ 'library.table.rowsPerPage' | translate }}</span>
+      <select class="la-rpp-select" (change)="pageSize.set(+$any($event.target).value); page.set(1)">
+        @for (opt of pageSizeOptions; track opt) {
+          <option [value]="opt" [selected]="pageSize() === opt">{{ opt }}</option>
+        }
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Table ──────────────────────────────────────────────────────────────── -->
+<div class="la-table-wrap">
+  <table class="la-table">
+    <thead>
+      <tr>
+        @for (col of tableColumns; track col.key) {
+          <th [class]="'la-th--' + col.key"
+              [class.la-th--sortable]="col.sortable"
+              [class.la-th--sorted]="sortCol() === col.key"
+              (click)="col.sortable && toggleSort(col.key)">
+            {{ col.label | translate }}
+            @if (sortCol() === col.key) {
+              <span class="la-sort-arrow">{{ sortDir() === 'asc' ? '▲' : '▼' }}</span>
+            }
+          </th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of pagedRows(); track row.sonarrId) {
+        <tr class="la-row" (click)="rowClicked.emit(row)">
+          <!-- Title -->
+          <td class="la-td--title">{{ row.title }}</td>
+
+          <!-- Video Codec -->
+          <td class="la-td--video-codec">
+            <div class="la-codec-pills-wrap">
+            @if (row.videoCodecDistribution && getCodecPills(row.videoCodecDistribution).length > 0 && !isEnriching()) {
+              @for (pill of getCodecPills(row.videoCodecDistribution); track pill.label) {
+                <span class="la-codec-pill" [ngClass]="'la-codec-pill--' + pill.label.toLowerCase()">
+                  {{ pill.label }} <span class="la-pill-pct">{{ pill.pct }}%</span>
+                </span>
+              }
+            } @else if (isEnriching()) {
+              <span class="la-shimmer-inline"></span>
+            } @else {
+              <span class="la-na">—</span>
+            }
+            </div>
+          </td>
+
+          <!-- Audio Codec -->
+          <td class="la-td--audio-codec">
+            <div class="la-codec-pills-wrap">
+            @if (row.audioCodecDistribution && getCodecPills(row.audioCodecDistribution).length > 0 && !isEnriching()) {
+              @for (pill of getCodecPills(row.audioCodecDistribution); track pill.label) {
+                <span class="la-codec-pill la-codec-pill--audio" [ngClass]="'la-codec-pill--' + pill.label.toLowerCase()">
+                  {{ pill.label }} <span class="la-pill-pct">{{ pill.pct }}%</span>
+                </span>
+              }
+            } @else if (isEnriching()) {
+              <span class="la-shimmer-inline"></span>
+            } @else {
+              <span class="la-na">—</span>
+            }
+            </div>
+          </td>
+
+          <!-- Resolution -->
+          <td>
+            @if (row.primaryResolution) {
+              <span class="la-res-badge">{{ row.primaryResolution }}</span>
+            } @else if (isEnriching()) {
+              <span class="la-shimmer-inline"></span>
+            } @else {
+              <span class="la-na">—</span>
+            }
+          </td>
+
+          <!-- File Count -->
+          <td class="la-td--num">{{ row.fileCount }}</td>
+
+          <!-- Total Size -->
+          <td class="la-td--num">{{ formatSize(row.totalSizeBytes) }}</td>
+
+          <!-- Avg Ep Size -->
+          <td class="la-td--num" [class.la-td--bloated]="row.avgEpisodeSizeBytes > avgEpSizeThresholdBytes()">
+            {{ formatSize(row.avgEpisodeSizeBytes) }}
+          </td>
+
+          <!-- GiB/h -->
+          <td class="la-td--num" [class.la-td--bloated]="row.gibPerHour > avgGibPerHourThreshold()">
+            @if (row.gibPerHour > 0) {
+              {{ row.gibPerHour | number:'1.2-2' }} <span class="la-unit">GiB/h</span>
+            } @else if (isEnriching()) {
+              <span class="la-shimmer-inline"></span>
+            } @else {
+              <span class="la-na">—</span>
+            }
+          </td>
+
+          <!-- Bit Depth -->
+          <td>
+            @if (row.primaryBitDepth) {
+              {{ row.primaryBitDepth }}-bit
+            } @else if (isEnriching()) {
+              <span class="la-shimmer-inline"></span>
+            }
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td [attr.colspan]="tableColumns.length" class="la-empty">
+            {{ 'library.table.noResults' | translate }}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<!-- ─── Pagination ─────────────────────────────────────────────────────────── -->
+@if (totalPages() > 1) {
+  <nav class="la-pagination" aria-label="Table pagination">
+    <button class="la-page-btn"
+            [disabled]="page() <= 1"
+            (click)="goToPage(page() - 1)"
+            aria-label="Previous page">
+      ‹
+    </button>
+
+    @for (p of pageRange(); track $index) {
+      @if (p === '...') {
+        <span class="la-page-ellipsis">…</span>
+      } @else {
+        <button class="la-page-btn"
+                [class.la-page-btn--active]="page() === p"
+                (click)="goToPage(p)">
+          {{ p }}
+        </button>
+      }
+    }
+
+    <button class="la-page-btn"
+            [disabled]="page() >= totalPages()"
+            (click)="goToPage(page() + 1)"
+            aria-label="Next page">
+      ›
+    </button>
+  </nav>
+}

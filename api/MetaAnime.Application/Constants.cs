@@ -41,6 +41,9 @@ public static class Constants
         public const string SyncAllAsync = "Error.SyncAllAsync";
         public const string UpdateAsync = "Error.UpdateAsync";
         public const string UpsertPropertyBag = "Error.UpsertPropertyBag";
+        public const string GetLibraryAnalysisAsync = "Error.GetLibraryAnalysisAsync";
+        public const string EnrichLibrarySeriesAsync = "Error.EnrichLibrarySeriesAsync";
+        public const string GetEpisodeFilesAsync = "Error.GetEpisodeFilesAsync";
     }
 
     public static class JobNames

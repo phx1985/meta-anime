@@ -945,6 +945,46 @@
   height: 14px;
 }
 
+// ── Number input with overlay status indicator ────────────────────────────────
+.number-input-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 8rem;
+  flex-shrink: 0;
+}
+
+.setting-input--number {
+  width: 100%;
+  padding-right: 1.8rem; // space for the overlay status icon
+  -moz-appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+.number-input-status {
+  position: absolute;
+  right: 0.5rem;
+  pointer-events: none;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+
+  &--saved {
+    width: auto;
+    height: auto;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #22c55e;
+    line-height: 1;
+    animation: fadeIn 0.3s ease both;
+  }
+}
+
 .slider-row {
   display: flex;
   align-items: center;

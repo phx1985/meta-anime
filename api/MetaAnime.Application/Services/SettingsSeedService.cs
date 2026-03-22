@@ -97,7 +97,7 @@ public sealed class SettingsSeedService(
 
     /// <summary>
     /// Hardcoded defaults for app preferences and provider toggles.
-    /// Written once on first run; subsequent user changes via the UI are preserved.
+    /// Written once on first run; subsequent user changes made via the UI are preserved.
     /// </summary>
     private static Dictionary<string, string?> BuildDefaultSeeds() => new()
     {
@@ -113,5 +113,8 @@ public sealed class SettingsSeedService(
         [SettingsKeys.BotKunBaseUrl]  = string.Empty,
         [SettingsKeys.BotKunApiKey]   = string.Empty,
         [SettingsKeys.BotKunModel]    = string.Empty,
+        // Library analysis alert thresholds
+        [SettingsKeys.LibraryAnalysisAvgEpSizeMb] = "1200",
+        [SettingsKeys.LibraryAnalysisAvgGibPerHour] = "1.2",
     };
 }
