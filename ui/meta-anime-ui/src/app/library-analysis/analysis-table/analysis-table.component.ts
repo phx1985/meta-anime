@@ -98,22 +98,38 @@ export class AnalysisTableComponent {
       result = result.filter(r => r.title.toLowerCase().includes(title));
     }
 
-    // Video codec filter
+    // Video codec filter — match any series whose distribution contains one of the selected codecs.
+    // Falls back to primaryVideoCodec for un-enriched rows (distribution not yet loaded).
     const vCodecs = this.filterVideoCodec();
     if (vCodecs.length) {
-      result = result.filter(r => r.primaryVideoCodec != null && vCodecs.includes(r.primaryVideoCodec));
+      result = result.filter(r => {
+        if (r.videoCodecDistribution) {
+          return vCodecs.some(c => Object.keys(r.videoCodecDistribution!).some(k => k.toUpperCase() === c));
+        }
+        return r.primaryVideoCodec != null && vCodecs.includes(r.primaryVideoCodec);
+      });
     }
 
-    // Audio codec filter
+    // Audio codec filter — same distribution-aware logic.
     const aCodecs = this.filterAudioCodec();
     if (aCodecs.length) {
-      result = result.filter(r => r.primaryAudioCodec != null && aCodecs.includes(r.primaryAudioCodec));
+      result = result.filter(r => {
+        if (r.audioCodecDistribution) {
+          return aCodecs.some(c => Object.keys(r.audioCodecDistribution!).some(k => k.toUpperCase() === c));
+        }
+        return r.primaryAudioCodec != null && aCodecs.includes(r.primaryAudioCodec);
+      });
     }
 
-    // Resolution filter
+    // Resolution filter — same distribution-aware logic.
     const res = this.filterResolution();
     if (res.length) {
-      result = result.filter(r => r.primaryResolution != null && res.includes(r.primaryResolution));
+      result = result.filter(r => {
+        if (r.resolutionDistribution) {
+          return res.some(rv => Object.keys(r.resolutionDistribution!).some(k => k.toUpperCase() === rv.toUpperCase()));
+        }
+        return r.primaryResolution != null && res.includes(r.primaryResolution);
+      });
     }
 
     // Avg episode size filter
@@ -198,9 +214,9 @@ export class AnalysisTableComponent {
   readonly activeFilterCount = computed(() => {
     let count = 0;
     if (this.filterTitle().trim()) count++;
-    if (this.filterVideoCodec().length) count++;
-    if (this.filterAudioCodec().length) count++;
-    if (this.filterResolution().length) count++;
+    count += this.filterVideoCodec().length;
+    count += this.filterAudioCodec().length;
+    count += this.filterResolution().length;
     if (this.filterAvgEpSize()) count++;
     if (this.filterGibPerHour()) count++;
     if (this.filterStatus()) count++;
