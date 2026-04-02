@@ -57,7 +57,7 @@
   <!-- Avg Ep Size select -->
   <div class="la-filter">
     <label class="la-filter__label">{{ 'library.filters.avgEpSize' | translate }}</label>
-    <select class="la-filter__select" (change)="filterAvgEpSize.set($any($event.target).value)">
+    <select class="la-filter__select" [value]="filterAvgEpSize()" (change)="filterAvgEpSize.set($any($event.target).value)">
       <option value="">{{ 'library.filters.all' | translate }}</option>
       @for (opt of AVG_EP_SIZES; track opt.value) {
         <option [value]="opt.value">{{ opt.label }}</option>
@@ -68,7 +68,7 @@
   <!-- GiB/h select -->
   <div class="la-filter">
     <label class="la-filter__label">{{ 'library.filters.gibPerHour' | translate }}</label>
-    <select class="la-filter__select" (change)="filterGibPerHour.set($any($event.target).value)">
+    <select class="la-filter__select" [value]="filterGibPerHour()" (change)="filterGibPerHour.set($any($event.target).value)">
       <option value="">{{ 'library.filters.all' | translate }}</option>
       @for (opt of GIB_PER_HOUR_THRESHOLDS; track opt.value) {
         <option [value]="opt.value">{{ opt.label }}</option>
@@ -79,7 +79,7 @@
   <!-- Status select -->
   <div class="la-filter">
     <label class="la-filter__label">{{ 'library.filters.status' | translate }}</label>
-    <select class="la-filter__select" (change)="filterStatus.set($any($event.target).value)">
+    <select class="la-filter__select" [value]="filterStatus()" (change)="filterStatus.set($any($event.target).value)">
       <option value="">{{ 'library.filters.all' | translate }}</option>
       <option value="ended">{{ 'library.filters.ended' | translate }}</option>
       <option value="continuing">{{ 'library.filters.continuing' | translate }}</option>
@@ -89,7 +89,7 @@
   <!-- Download % select -->
   <div class="la-filter">
     <label class="la-filter__label">{{ 'library.filters.downloadPct' | translate }}</label>
-    <select class="la-filter__select" (change)="filterDownload.set($any($event.target).value)">
+    <select class="la-filter__select" [value]="filterDownload()" (change)="filterDownload.set($any($event.target).value)">
       <option value="">{{ 'library.filters.all' | translate }}</option>
       <option value="100">100%</option>
       <option value="partial">{{ 'library.filters.partial' | translate }}</option>
@@ -99,7 +99,7 @@
   <!-- Bit Depth select -->
   <div class="la-filter">
     <label class="la-filter__label">{{ 'library.filters.bitDepth' | translate }}</label>
-    <select class="la-filter__select" (change)="filterBitDepth.set($any($event.target).value)">
+    <select class="la-filter__select" [value]="filterBitDepth()" (change)="filterBitDepth.set($any($event.target).value)">
       <option value="">{{ 'library.filters.all' | translate }}</option>
       <option value="8">8-bit</option>
       <option value="10">10-bit</option>
