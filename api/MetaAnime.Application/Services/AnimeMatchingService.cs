@@ -145,6 +145,8 @@ public sealed class AnimeMatchingService(
         // Re-apply user-confirmed cross-links so bridges survive the full sync wipe.
         // Each cross-link maps a Sonarr/Plex AniDbId to a MAL anime; we create
         // an AnimeMapping for the MAL anime row using the Sonarr AniDbId.
+        // If Kometa now natively covers a cross-link, the bridge is redundant —
+        // prune it so the system falls back to the normal Kometa path.
         var crossLinks = await crossLinkService.GetAllAsync();
         if (crossLinks.Count > 0)
         {
@@ -158,8 +160,15 @@ public sealed class AnimeMatchingService(
 
             foreach (var link in crossLinks)
             {
-                if (malAnimeLookup.TryGetValue(link.MalId, out var malAnime)
-                    && !existingPairs.Contains((malAnime.Id, link.SourceAniDbId)))
+                if (!malAnimeLookup.TryGetValue(link.MalId, out var malAnime))
+                    continue;
+
+                if (existingPairs.Contains((malAnime.Id, link.SourceAniDbId)))
+                {
+                    // Kometa now produces this mapping natively — cross-link is obsolete.
+                    await crossLinkService.RemoveAsync(link.SourceAniDbId, link.MalId);
+                }
+                else
                 {
                     animeMappings.Add(new AnimeMapping { AnimeId = malAnime.Id, AniDbId = link.SourceAniDbId });
                 }
