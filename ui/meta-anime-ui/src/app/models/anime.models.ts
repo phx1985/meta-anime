@@ -131,6 +131,12 @@ export interface ConfirmTarget {
   mediaType?: string;
 }
 
+/** User-confirmed AniDbId cross-link stored in PropertyBag. */
+export interface CrossLinkEntry {
+  sourceAniDbId: string;
+  malId: string;
+}
+
 export interface AnimeStatisticsResponse {
   plexAnime: number;
   myAnimeListAnime: number;

@@ -34,4 +34,9 @@ public interface IAnimeMappingRepository
     Task BulkDeleteAllAsync();
     Task BulkInsertAsync(IEnumerable<AnimeMapping> mappings);
     Task AddAsync(AnimeMapping mapping);
+    /// <summary>
+    /// Removes bridge AnimeMapping rows where AniDbId matches and the Anime is a MAL entry with the given SourceId.
+    /// Used when undoing a user-confirmed cross-link.
+    /// </summary>
+    Task DeleteByAniDbIdAsync(string aniDbId, string malId);
 }

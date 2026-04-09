@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using MetaAnime.Application.Interfaces;
+using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Infrastructure.MyAnimeList;
 using Microsoft.AspNetCore.Authorization;
@@ -14,6 +15,8 @@ namespace MetaAnime.Controllers;
 [Route("api/v1/mal")]
 public sealed class MalController(
     IAnimeMediatorService animeMediatorService,
+    ICrossLinkService crossLinkService,
+    IAnimeMappingRepository animeMappingRepository,
     IMalTokenService malTokenService,
     ILogger<MalController> logger) : ControllerBase
 {
@@ -120,6 +123,29 @@ public sealed class MalController(
             logger.LogWarning("MAL authentication failure when searching for '{Query}': {Message}", q, ex.Message);
             return Unauthorized(new { code = "MAL.AuthenticationFailed", message = ex.Message });
         }
+    }
+    /// <summary>Returns all user-confirmed AniDbId cross-links.</summary>
+    [HttpGet("crosslinks")]
+    [Authorize]
+    public async Task<ActionResult> GetCrossLinks()
+    {
+        var entries = await crossLinkService.GetAllAsync();
+        return Ok(entries);
+    }
+
+    /// <summary>Removes a user-confirmed AniDbId cross-link and its bridge mapping.</summary>
+    [HttpDelete("crosslink")]
+    [Authorize]
+    public async Task<ActionResult> RemoveCrossLink(
+        [FromQuery] string sourceAniDbId,
+        [FromQuery] string malId)
+    {
+        if (string.IsNullOrWhiteSpace(sourceAniDbId) || string.IsNullOrWhiteSpace(malId))
+            return BadRequest("Both sourceAniDbId and malId are required.");
+
+        await crossLinkService.RemoveAsync(sourceAniDbId, malId);
+        await animeMappingRepository.DeleteByAniDbIdAsync(sourceAniDbId, malId);
+        return NoContent();
     }
 }
 

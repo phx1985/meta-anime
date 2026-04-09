@@ -28,6 +28,7 @@ public sealed class AnimeMediatorService(
     IAnimeMatchingService animeMatchingService,
     IAnimeService animeService,
     ICacheEntryService cacheEntryService,
+    ICrossLinkService crossLinkService,
     IPropertyBagRepository propertyBagRepository,
     IKometaAnimeMappingRepository kometaAnimeMappingRepository,
     IAnimeRepository animeRepository,
@@ -1445,6 +1446,17 @@ public sealed class AnimeMediatorService(
                     foreach (var aniDbId in aniDbIds)
                         await animeMappingRepository.AddAsync(new AnimeMapping { AniDbId = aniDbId, AnimeId = animeForDb.Id });
                 }
+                else if (sourceAniDbId != null)
+                {
+                    // MAL anime already exists (synced from user's list) but the gap-confirm
+                    // flow supplied a sourceAniDbId — create a bridge AnimeMapping so the
+                    // coverage gap resolver sees the overlap immediately.
+                    await animeMappingRepository.AddAsync(new AnimeMapping { AniDbId = sourceAniDbId, AnimeId = existingAnime.Id });
+                }
+
+                // Persist the cross-link so it survives the full delete-and-recreate sync cycle.
+                if (sourceAniDbId != null)
+                    await crossLinkService.AddAsync(sourceAniDbId, malId);
             }
             else
             {

@@ -47,6 +47,11 @@ export class GapDetailModalComponent implements OnInit {
   readonly confirmItem      = signal<CoverageGapItem | null>(null);
   readonly confirmTarget    = signal<ConfirmTarget | null>(null);
 
+  readonly crossLinksOpen = signal(false);
+  readonly crossLinks = signal<{ sourceAniDbId: string; malId: string }[]>([]);
+  readonly crossLinksLoading = signal(false);
+  readonly removingCrossLink = signal<string | null>(null);
+
   readonly isMappable = computed(() => {
     const t = this.gapType().toLowerCase();
     return t === 'plexnotinmal' || t === 'sonarrnotinmal';
@@ -101,6 +106,39 @@ export class GapDetailModalComponent implements OnInit {
     this.onCancelled();
     this.searchModalItem.set(null);
     this.gapItemResolved.emit(this.gapType());
+  }
+
+  toggleCrossLinks(): void {
+    const opening = !this.crossLinksOpen();
+    this.crossLinksOpen.set(opening);
+    if (opening && this.crossLinks().length === 0) {
+      this.crossLinksLoading.set(true);
+      this.animeService.getCrossLinks()
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (links) => {
+            this.crossLinks.set(links);
+            this.crossLinksLoading.set(false);
+          },
+          error: () => this.crossLinksLoading.set(false),
+        });
+    }
+  }
+
+  removeCrossLink(link: { sourceAniDbId: string; malId: string }): void {
+    const key = `${link.sourceAniDbId}:${link.malId}`;
+    if (this.removingCrossLink() === key) return;
+    this.removingCrossLink.set(key);
+    this.animeService.removeCrossLink(link.sourceAniDbId, link.malId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.crossLinks.update(list =>
+            list.filter(l => !(l.sourceAniDbId === link.sourceAniDbId && l.malId === link.malId)));
+          this.removingCrossLink.set(null);
+        },
+        error: () => this.removingCrossLink.set(null),
+      });
   }
 
   @HostListener('document:keydown.escape')

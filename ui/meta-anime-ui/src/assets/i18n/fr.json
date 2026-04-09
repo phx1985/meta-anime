@@ -75,7 +75,14 @@
         "confirmSeeDetails": "Voir les détails",
         "confirmLocalLabel": "Élément local",
         "confirmMalLabel": "Entrée MAL",
-        "addMalError": "Échec de l'ajout à MAL. Veuillez réessayer."
+        "addMalError": "Échec de l'ajout à MAL. Veuillez réessayer.",
+        "crossLinks": "Liens croisés",
+        "crossLinksDesc": "Ponts confirmés entre identifiants AniDB différents. Supprimez pour refaire apparaître un écart.",
+        "crossLinksEmpty": "Aucun lien croisé.",
+        "crossLinkRemove": "Supprimer",
+        "crossLinkRemoving": "Suppression…",
+        "crossLinkAniDbId": "AniDbId",
+        "crossLinkMalId": "MAL ID"
       },
       "noProviders": {
         "title": "Aucun fournisseur configuré pour l'instant.",
