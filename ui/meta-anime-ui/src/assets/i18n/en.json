@@ -76,7 +76,14 @@
         "confirmSeeDetails": "See details",
         "confirmLocalLabel": "Local item",
         "confirmMalLabel": "MAL entry",
-        "addMalError": "Failed to add to MAL. Please try again."
+        "addMalError": "Failed to add to MAL. Please try again.",
+        "crossLinks": "Cross-links",
+        "crossLinksDesc": "User-confirmed bridges between mismatched AniDB IDs. Remove to let a gap reappear.",
+        "crossLinksEmpty": "No cross-links yet.",
+        "crossLinkRemove": "Remove",
+        "crossLinkRemoving": "Removing…",
+        "crossLinkAniDbId": "AniDbId",
+        "crossLinkMalId": "MAL ID"
       },
       "noProviders": {
         "title": "No providers configured yet.",
@@ -726,7 +733,10 @@
       "successDisabled": "Password protection disabled.",
       "successChanged": "Password updated successfully.",
       "errorWrong": "Current password is incorrect.",
-      "errorGeneric": "An error occurred. Please try again."
+      "errorGeneric": "An error occurred. Please try again.",
+      "sessionLifetimeLabel": "Session lifetime",
+      "sessionLifetimeDesc": "How many days a login session stays valid before requiring re-authentication.",
+      "sessionLifetimeDaysUnit": "days"
     },
     "manualMappings": {
       "empty": "No manual mappings yet. Use the Coverage Gap modal to create one.",

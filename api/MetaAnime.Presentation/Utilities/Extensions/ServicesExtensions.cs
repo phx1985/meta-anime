@@ -86,6 +86,7 @@ public static class ServicesExtensions
         services.AddScoped<ICacheEntryService, CacheEntryService>();
         services.AddScoped<IAnimeService, AnimeService>();
         services.AddScoped<IAnimeMappingService, AnimeMappingService>();
+        services.AddScoped<ICrossLinkService, CrossLinkService>();
         services.AddScoped<IAnimeMatchingService, AnimeMatchingService>();
         services.AddScoped<IAnimeMediatorService, AnimeMediatorService>();
         services.AddScoped<ILibraryAnalysisService, LibraryAnalysisService>();

@@ -70,6 +70,10 @@ public static class SettingsKeys
     // Admin authentication (stored as hashed value; absent = public mode)
     public const string AdminPasswordHash = "System:AdminPasswordHash";
     public const string JwtSecret = "System:JwtSecret";
+    public const string SessionLifetimeDays = "System:SessionLifetimeDays";
+
+    // Cross-link mappings (user-confirmed AniDbId bridges, persisted as JSON array)
+    public const string CrossLinks = "CrossLinks";
 
     // Internal OAuth state (temporary keys used during enrollment flows)
     public const string MalOAuthState = "System:MalOAuthState";

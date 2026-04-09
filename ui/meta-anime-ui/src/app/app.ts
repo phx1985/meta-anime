@@ -190,6 +190,15 @@ export class App implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+    // Immediately log out if stored JWT has expired, then check every 60 s
+    this.authService.checkAndLogoutIfExpired();
+    const expiryCheckId = setInterval(() => {
+      if (this.authService.checkAndLogoutIfExpired()) {
+        this.router.navigate(['/login']);
+      }
+    }, 60_000);
+    this.destroyRef.onDestroy(() => clearInterval(expiryCheckId));
+
     // Connect to SignalR hub globally so sync done/error notifications work on any page
     this.syncSignalR.connect();
 
@@ -228,8 +237,8 @@ export class App implements OnInit, AfterViewInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(() => {
-        this.notifService.push({
-          id: `sync-done-${Date.now()}`,
+        this.notifService.pushOrReplace({
+          id: 'sync-done',
           severity: 'success',
           titleKey: 'notifications.sync.doneTitle',
           messageKey: 'notifications.sync.doneMessage',

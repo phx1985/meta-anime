@@ -16,6 +16,7 @@ import { AnimeService } from '../services/anime.service';
 import {
   ConfirmTarget,
   CoverageGapItem,
+  CrossLinkEntry,
 } from '../models/anime.models';
 import { GapSearchModalComponent } from '../gap-search-modal/gap-search-modal.component';
 import { GapConfirmModalComponent } from '../gap-confirm-modal/gap-confirm-modal.component';
@@ -46,6 +47,11 @@ export class GapDetailModalComponent implements OnInit {
   readonly searchModalItem  = signal<CoverageGapItem | null>(null);
   readonly confirmItem      = signal<CoverageGapItem | null>(null);
   readonly confirmTarget    = signal<ConfirmTarget | null>(null);
+
+  readonly crossLinksOpen = signal(false);
+  readonly crossLinks = signal<CrossLinkEntry[]>([]);
+  readonly crossLinksLoading = signal(false);
+  readonly removingCrossLink = signal<string | null>(null);
 
   readonly isMappable = computed(() => {
     const t = this.gapType().toLowerCase();
@@ -101,6 +107,39 @@ export class GapDetailModalComponent implements OnInit {
     this.onCancelled();
     this.searchModalItem.set(null);
     this.gapItemResolved.emit(this.gapType());
+  }
+
+  toggleCrossLinks(): void {
+    const opening = !this.crossLinksOpen();
+    this.crossLinksOpen.set(opening);
+    if (opening && this.crossLinks().length === 0) {
+      this.crossLinksLoading.set(true);
+      this.animeService.getCrossLinks()
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (links) => {
+            this.crossLinks.set(links);
+            this.crossLinksLoading.set(false);
+          },
+          error: () => this.crossLinksLoading.set(false),
+        });
+    }
+  }
+
+  removeCrossLink(link: CrossLinkEntry): void {
+    const key = `${link.sourceAniDbId}:${link.malId}`;
+    if (this.removingCrossLink() === key) return;
+    this.removingCrossLink.set(key);
+    this.animeService.removeCrossLink(link.sourceAniDbId, link.malId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.crossLinks.update(list =>
+            list.filter(l => !(l.sourceAniDbId === link.sourceAniDbId && l.malId === link.malId)));
+          this.removingCrossLink.set(null);
+        },
+        error: () => this.removingCrossLink.set(null),
+      });
   }
 
   @HostListener('document:keydown.escape')

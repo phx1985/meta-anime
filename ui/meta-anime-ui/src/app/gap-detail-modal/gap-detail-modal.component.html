@@ -4,17 +4,89 @@
     <!-- Header -->
     <div class="gap-modal-header">
       <h2 class="gap-modal-title">{{ gapLabel() | translate }}</h2>
-      <button
-        type="button"
-        class="gap-modal-close"
-        (click)="closeModal.emit()"
-        [attr.aria-label]="'home.missing.modal.close' | translate"
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
-        </svg>
-      </button>
+      <div class="gap-modal-header-actions">
+        @if (isMappable()) {
+          <button type="button" class="gap-crosslinks-toggle" (click)="toggleCrossLinks()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+            </svg>
+            {{ 'home.missing.modal.crossLinks' | translate }}
+            @if (crossLinks().length > 0) {
+              <span class="gap-crosslinks-badge">{{ crossLinks().length }}</span>
+            }
+          </button>
+        }
+        <button
+          type="button"
+          class="gap-modal-close"
+          (click)="closeModal.emit()"
+          [attr.aria-label]="'home.missing.modal.close' | translate"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
     </div>
+
+    <!-- Cross-links panel -->
+    @if (crossLinksOpen()) {
+      <div class="gap-crosslinks-panel">
+        <p class="gap-crosslinks-desc">{{ 'home.missing.modal.crossLinksDesc' | translate }}</p>
+        @if (crossLinksLoading()) {
+          <div class="gap-crosslinks-spinner">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+          </div>
+        } @else if (crossLinks().length === 0) {
+          <p class="gap-crosslinks-empty">{{ 'home.missing.modal.crossLinksEmpty' | translate }}</p>
+        } @else {
+          <div class="gap-crosslinks-list">
+            @for (link of crossLinks(); track link.sourceAniDbId + ':' + link.malId) {
+              <div class="gap-crosslink-row">
+                <div class="gap-crosslink-info">
+                  <span class="gap-crosslink-side">
+                    <span class="gap-crosslink-tag gap-crosslink-tag--anidb">AniDB</span>
+                    @if (link.aniDbTitle) {
+                      <span class="gap-crosslink-title" [title]="link.aniDbTitle">{{ link.aniDbTitle }}</span>
+                    }
+                    <a class="gap-crosslink-id"
+                       [href]="'https://anidb.net/anime/' + link.sourceAniDbId"
+                       target="_blank" rel="noopener noreferrer"
+                       (click)="$event.stopPropagation()">#{{ link.sourceAniDbId }}</a>
+                  </span>
+                  <svg class="gap-crosslink-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                  <span class="gap-crosslink-side">
+                    <span class="gap-crosslink-tag gap-crosslink-tag--mal">MAL</span>
+                    @if (link.malTitle) {
+                      <span class="gap-crosslink-title" [title]="link.malTitle">{{ link.malTitle }}</span>
+                    }
+                    <a class="gap-crosslink-id"
+                       [href]="'https://myanimelist.net/anime/' + link.malId"
+                       target="_blank" rel="noopener noreferrer"
+                       (click)="$event.stopPropagation()">#{{ link.malId }}</a>
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  class="gap-crosslink-remove"
+                  [disabled]="removingCrossLink() === link.sourceAniDbId + ':' + link.malId"
+                  (click)="removeCrossLink(link)"
+                >
+                  @if (removingCrossLink() === link.sourceAniDbId + ':' + link.malId) {
+                    {{ 'home.missing.modal.crossLinkRemoving' | translate }}
+                  } @else {
+                    {{ 'home.missing.modal.crossLinkRemove' | translate }}
+                  }
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
 
     <!-- Body -->
     <div class="gap-modal-body">

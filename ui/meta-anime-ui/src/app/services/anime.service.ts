@@ -12,6 +12,7 @@ import {
   SeasonalAnimeItem,
   FranchiseConstellationData,
   CoverageGapItem,
+  CrossLinkEntry,
   MalSearchResult,
 } from '../models/anime.models';
 import { MalListStatusRequest } from '../models/sonarr.models';
@@ -117,5 +118,16 @@ export class AnimeService {
   searchMalAnime(query: string): Observable<MalSearchResult[]> {
     const params = new HttpParams().set('q', query);
     return this.http.get<MalSearchResult[]>(`${this.malBase}/search`, { params });
+  }
+
+  getCrossLinks(): Observable<CrossLinkEntry[]> {
+    return this.http.get<CrossLinkEntry[]>(`${this.malBase}/crosslinks`);
+  }
+
+  removeCrossLink(sourceAniDbId: string, malId: string): Observable<void> {
+    const params = new HttpParams()
+      .set('sourceAniDbId', sourceAniDbId)
+      .set('malId', malId);
+    return this.http.delete<void>(`${this.malBase}/crosslink`, { params });
   }
 }

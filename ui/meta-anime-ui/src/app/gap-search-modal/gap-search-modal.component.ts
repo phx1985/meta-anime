@@ -50,7 +50,11 @@ export class GapSearchModalComponent implements OnInit {
 
   ngOnInit(): void {
     const item = this.sourceItem();
-    this.searchQuery.set(item.originalTitle?.trim() || item.title);
+    const raw = item.originalTitle?.trim() || item.title;
+    // Strip common special chars that degrade MAL search quality (e.g. colons in
+    // "Dragon Ball Super: The Galactic Patrol Prisoner" can confuse the API query).
+    const sanitized = raw.replace(/[:\?!]/g, ' ').replace(/\s{2,}/g, ' ').trim();
+    this.searchQuery.set(sanitized);
     this.doSearch();
   }
 

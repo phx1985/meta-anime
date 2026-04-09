@@ -78,6 +78,18 @@ export class NotificationService {
     }
   }
 
+  /** Push a notification, replacing any existing entry with the same id (upsert). */
+  pushOrReplace(notif: Omit<AppNotification, 'timestamp' | 'acknowledged'>): void {
+    const full: AppNotification = { ...notif, timestamp: Date.now(), acknowledged: false };
+    this.notifications.update((list) => [full, ...list.filter((n) => n.id !== notif.id)].slice(0, MAX_STORED));
+    this._save();
+    const inWizard = this._wizardActive() || window.location.pathname === '/welcome';
+    if (!inWizard) {
+      this.activeToasts.update((t) => [...t, full]);
+      setTimeout(() => this.dismissToast(full.id), TOAST_TTL_MS);
+    }
+  }
+
   acknowledge(id: string): void {
     this.notifications.update((list) =>
       list.map((n) => (n.id === id ? { ...n, acknowledged: true } : n)),

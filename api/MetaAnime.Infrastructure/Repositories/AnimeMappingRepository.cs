@@ -114,4 +114,13 @@ public sealed class AnimeMappingRepository(MetaAnimeDbContext dbContext) : IAnim
             .Select(am => am.AniDbId)
             .FirstOrDefaultAsync();
     }
+
+    public async Task DeleteByAniDbIdAsync(string aniDbId, string malId)
+    {
+        await dbContext.AnimeMappings
+            .Where(am => am.AniDbId == aniDbId
+                && am.Anime!.AnimeSource == AnimeSource.MyAnimeList
+                && am.Anime.SourceId == malId)
+            .ExecuteDeleteAsync();
+    }
 }
