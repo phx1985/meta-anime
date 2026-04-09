@@ -16,6 +16,7 @@ import { AnimeService } from '../services/anime.service';
 import {
   ConfirmTarget,
   CoverageGapItem,
+  CrossLinkEntry,
 } from '../models/anime.models';
 import { GapSearchModalComponent } from '../gap-search-modal/gap-search-modal.component';
 import { GapConfirmModalComponent } from '../gap-confirm-modal/gap-confirm-modal.component';
@@ -48,7 +49,7 @@ export class GapDetailModalComponent implements OnInit {
   readonly confirmTarget    = signal<ConfirmTarget | null>(null);
 
   readonly crossLinksOpen = signal(false);
-  readonly crossLinks = signal<{ sourceAniDbId: string; malId: string }[]>([]);
+  readonly crossLinks = signal<CrossLinkEntry[]>([]);
   readonly crossLinksLoading = signal(false);
   readonly removingCrossLink = signal<string | null>(null);
 
@@ -125,7 +126,7 @@ export class GapDetailModalComponent implements OnInit {
     }
   }
 
-  removeCrossLink(link: { sourceAniDbId: string; malId: string }): void {
+  removeCrossLink(link: CrossLinkEntry): void {
     const key = `${link.sourceAniDbId}:${link.malId}`;
     if (this.removingCrossLink() === key) return;
     this.removingCrossLink.set(key);

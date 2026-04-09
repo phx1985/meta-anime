@@ -134,7 +134,9 @@ export interface ConfirmTarget {
 /** User-confirmed AniDbId cross-link stored in PropertyBag. */
 export interface CrossLinkEntry {
   sourceAniDbId: string;
+  aniDbTitle?: string;
   malId: string;
+  malTitle?: string;
 }
 
 export interface AnimeStatisticsResponse {

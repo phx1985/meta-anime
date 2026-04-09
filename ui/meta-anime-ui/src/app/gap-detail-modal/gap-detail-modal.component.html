@@ -44,10 +44,31 @@
           <div class="gap-crosslinks-list">
             @for (link of crossLinks(); track link.sourceAniDbId + ':' + link.malId) {
               <div class="gap-crosslink-row">
-                <span class="gap-crosslink-label">
-                  {{ 'home.missing.modal.crossLinkAniDbId' | translate }}: <strong>{{ link.sourceAniDbId }}</strong>
-                  → {{ 'home.missing.modal.crossLinkMalId' | translate }}: <strong>{{ link.malId }}</strong>
-                </span>
+                <div class="gap-crosslink-info">
+                  <span class="gap-crosslink-side">
+                    <span class="gap-crosslink-tag gap-crosslink-tag--anidb">AniDB</span>
+                    @if (link.aniDbTitle) {
+                      <span class="gap-crosslink-title" [title]="link.aniDbTitle">{{ link.aniDbTitle }}</span>
+                    }
+                    <a class="gap-crosslink-id"
+                       [href]="'https://anidb.net/anime/' + link.sourceAniDbId"
+                       target="_blank" rel="noopener noreferrer"
+                       (click)="$event.stopPropagation()">#{{ link.sourceAniDbId }}</a>
+                  </span>
+                  <svg class="gap-crosslink-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                  <span class="gap-crosslink-side">
+                    <span class="gap-crosslink-tag gap-crosslink-tag--mal">MAL</span>
+                    @if (link.malTitle) {
+                      <span class="gap-crosslink-title" [title]="link.malTitle">{{ link.malTitle }}</span>
+                    }
+                    <a class="gap-crosslink-id"
+                       [href]="'https://myanimelist.net/anime/' + link.malId"
+                       target="_blank" rel="noopener noreferrer"
+                       (click)="$event.stopPropagation()">#{{ link.malId }}</a>
+                  </span>
+                </div>
                 <button
                   type="button"
                   class="gap-crosslink-remove"

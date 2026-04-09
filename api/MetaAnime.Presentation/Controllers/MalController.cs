@@ -2,6 +2,7 @@ using Asp.Versioning;
 using MetaAnime.Application.Interfaces;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
+using MetaAnime.Domain.Enums;
 using MetaAnime.Infrastructure.MyAnimeList;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,7 @@ public sealed class MalController(
     IAnimeMediatorService animeMediatorService,
     ICrossLinkService crossLinkService,
     IAnimeMappingRepository animeMappingRepository,
+    IAnimeRepository animeRepository,
     IMalTokenService malTokenService,
     ILogger<MalController> logger) : ControllerBase
 {
@@ -124,13 +126,31 @@ public sealed class MalController(
             return Unauthorized(new { code = "MAL.AuthenticationFailed", message = ex.Message });
         }
     }
-    /// <summary>Returns all user-confirmed AniDbId cross-links.</summary>
+    /// <summary>Returns all user-confirmed AniDbId cross-links, enriched with titles.</summary>
     [HttpGet("crosslinks")]
     [Authorize]
     public async Task<ActionResult> GetCrossLinks()
     {
         var entries = await crossLinkService.GetAllAsync();
-        return Ok(entries);
+        if (entries.Count == 0)
+            return Ok(Array.Empty<CrossLinkDto>());
+
+        var aniDbIds = entries.Select(e => e.SourceAniDbId).Distinct().ToList();
+        var aniDbMappings = await animeMappingRepository.GetByAniDbIdsAsync(aniDbIds);
+        var aniDbTitleMap = aniDbMappings
+            .Where(m => m.Anime?.AnimeSource != AnimeSource.MyAnimeList && m.Anime?.Title != null)
+            .GroupBy(m => m.AniDbId)
+            .ToDictionary(g => g.Key, g => g.First().Anime!.Title);
+
+        var dtos = new List<CrossLinkDto>(entries.Count);
+        foreach (var e in entries)
+        {
+            var malAnime = await animeRepository.GetAnimeAsync(AnimeSource.MyAnimeList, e.MalId);
+            aniDbTitleMap.TryGetValue(e.SourceAniDbId, out var aniDbTitle);
+            dtos.Add(new CrossLinkDto(e.SourceAniDbId, aniDbTitle, e.MalId, malAnime?.Title));
+        }
+
+        return Ok(dtos);
     }
 
     /// <summary>Removes a user-confirmed AniDbId cross-link and its bridge mapping.</summary>
@@ -150,3 +170,10 @@ public sealed class MalController(
 }
 
 public sealed record MalListStatusRequest(string Status, int NumWatchedEpisodes, int Score);
+
+/// <summary>Cross-link entry enriched with human-readable titles for display.</summary>
+public sealed record CrossLinkDto(
+    string SourceAniDbId,
+    string? AniDbTitle,
+    string MalId,
+    string? MalTitle);
