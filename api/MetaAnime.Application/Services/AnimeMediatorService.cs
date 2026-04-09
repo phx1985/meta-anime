@@ -67,6 +67,8 @@ public sealed class AnimeMediatorService(
     {
         if (_plexBaseUrl is not null) return _plexBaseUrl;
         var idResult = await plexAnimeSource.GetMachineIdentifierAsync();
+        if (!idResult.IsSuccess || string.IsNullOrWhiteSpace(idResult.Value))
+            return _plexBaseUrl = string.Empty;
         _plexBaseUrl = $"https://app.plex.tv/desktop/#!/server/{idResult.Value}/details?key=%2Flibrary%2Fmetadata%2F";
         return _plexBaseUrl;
     }
@@ -1427,16 +1429,20 @@ public sealed class AnimeMediatorService(
                 if (existingAnime == null)
                 {
                     // Look up AniDbId via Kometa (malId → AniDbId).
-                    // Fall back to sourceAniDbId (passed from the gap-confirm flow) when the
-                    // anime isn't catalogued in Kometa — this covers niche entries like DBS films.
+                    // Use ALL Kometa AniDbIds for this MAL entry, plus the sourceAniDbId
+                    // (passed from the gap-confirm flow). This ensures the link is created
+                    // even when Kometa's MAL mapping uses a different AniDbId than the
+                    // Sonarr entry (which is mapped via TVDB).
                     var malMappings = await kometaAnimeMappingRepository.GetByPlatformIdsAsync(
                         MetaAnime.Domain.Enums.KometaAnimePlatform.Mal, new[] { malId });
-                    var aniDbId = malMappings.FirstOrDefault()?.AniDbId ?? sourceAniDbId;
+                    var aniDbIds = malMappings.Select(m => m.AniDbId).ToHashSet();
+                    if (sourceAniDbId != null)
+                        aniDbIds.Add(sourceAniDbId);
 
                     var animeForDb = malAnime.ToAnime();
                     await animeRepository.AddAsync(animeForDb);
 
-                    if (aniDbId != null)
+                    foreach (var aniDbId in aniDbIds)
                         await animeMappingRepository.AddAsync(new AnimeMapping { AniDbId = aniDbId, AnimeId = animeForDb.Id });
                 }
             }

@@ -112,6 +112,11 @@ export class SettingsComponent {
     confirmPassword: ['', Validators.required],
   }, { validators: this.passwordsMatchValidator });
 
+  sessionLifetimeDays = signal<number>(7);
+  sessionLifetimeSaving = signal(false);
+  sessionLifetimeSaved = signal(false);
+  private sessionLifetimeSavedTimer: ReturnType<typeof setTimeout> | null = null;
+
   private securitySuccessTimer: ReturnType<typeof setTimeout> | null = null;
 
   syncing = signal(false);
@@ -428,6 +433,7 @@ export class SettingsComponent {
     // Load enrollment status
     this.loadEnrollmentStatus();
     this.loadSecurityStatus();
+    this.loadSessionLifetime();
 
     this.settingsService
       .getAll()
@@ -1445,6 +1451,37 @@ export class SettingsComponent {
           this.securityError.set(
             this.translate.instant(status === 401 ? 'settings.security.errorWrong' : 'settings.security.errorGeneric')
           );
+        },
+      });
+  }
+
+  loadSessionLifetime(): void {
+    this.propertyBagService.get('System:SessionLifetimeDays')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (entry) => {
+          const val = parseInt(entry?.value ?? '7', 10);
+          this.sessionLifetimeDays.set(isNaN(val) ? 7 : Math.min(365, Math.max(1, val)));
+        },
+        error: () => { /* default 7 already set */ },
+      });
+  }
+
+  saveSessionLifetime(event: Event): void {
+    const raw = (event.target as HTMLInputElement).value;
+    const days = Math.min(365, Math.max(1, parseInt(raw, 10) || 7));
+    this.sessionLifetimeSaving.set(true);
+    forkJoin([this.settingsService.update('System:SessionLifetimeDays', { value: String(days) }), timer(400)])
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.sessionLifetimeSaving.set(false)),
+      )
+      .subscribe({
+        next: () => {
+          this.sessionLifetimeDays.set(days);
+          if (this.sessionLifetimeSavedTimer) clearTimeout(this.sessionLifetimeSavedTimer);
+          this.sessionLifetimeSaved.set(true);
+          this.sessionLifetimeSavedTimer = setTimeout(() => this.sessionLifetimeSaved.set(false), 2000);
         },
       });
   }

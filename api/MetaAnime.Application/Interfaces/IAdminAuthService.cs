@@ -12,7 +12,8 @@ public interface IAdminAuthService
     /// Generates a signed JWT for the admin user.
     /// </summary>
     /// <param name="secret">The HMAC-SHA256 signing secret.</param>
-    string GenerateJwt(string secret);
+    /// <param name="lifetime">Token validity duration.</param>
+    string GenerateJwt(string secret, TimeSpan lifetime);
 
     /// <summary>Validates a JWT and returns true if it is valid and not expired.</summary>
     bool ValidateJwt(string token, string secret);

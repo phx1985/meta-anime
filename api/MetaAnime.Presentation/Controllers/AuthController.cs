@@ -43,7 +43,8 @@ public sealed class AuthController(
             return Unauthorized("Invalid password.");
 
         var secret = await GetOrCreateJwtSecretAsync();
-        var token = authService.GenerateJwt(secret);
+        var lifetime = await GetSessionLifetimeAsync();
+        var token = authService.GenerateJwt(secret, lifetime);
         return Ok(new LoginResponse(token));
     }
 
@@ -95,7 +96,8 @@ public sealed class AuthController(
         await repo.UpsertAsync(SettingsKeys.AdminPasswordHash, hash);
 
         var secret = await GetOrCreateJwtSecretAsync();
-        var token = authService.GenerateJwt(secret);
+        var lifetime = await GetSessionLifetimeAsync();
+        var token = authService.GenerateJwt(secret, lifetime);
         return Ok(new LoginResponse(token));
     }
 
@@ -131,5 +133,13 @@ public sealed class AuthController(
         var secret = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
         await repo.UpsertAsync(SettingsKeys.JwtSecret, secret);
         return secret;
+    }
+
+    private async Task<TimeSpan> GetSessionLifetimeAsync()
+    {
+        var entry = await repo.GetByKeyAsync(SettingsKeys.SessionLifetimeDays);
+        if (int.TryParse(entry?.Value, out var days) && days >= 1 && days <= 365)
+            return TimeSpan.FromDays(days);
+        return TimeSpan.FromDays(7);
     }
 }

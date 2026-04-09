@@ -10,7 +10,6 @@ public sealed class AdminAuthService : IAdminAuthService
 {
     private const string Issuer = "MetaAnime";
     private const string Audience = "MetaAnime";
-    private static readonly TimeSpan TokenLifetime = TimeSpan.FromDays(30);
 
     public string HashPassword(string password) =>
         BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
@@ -18,7 +17,7 @@ public sealed class AdminAuthService : IAdminAuthService
     public bool VerifyPassword(string password, string hash) =>
         BCrypt.Net.BCrypt.Verify(password, hash);
 
-    public string GenerateJwt(string secret)
+    public string GenerateJwt(string secret, TimeSpan lifetime)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -27,7 +26,7 @@ public sealed class AdminAuthService : IAdminAuthService
             issuer: Issuer,
             audience: Audience,
             claims: [new Claim(ClaimTypes.Name, "admin")],
-            expires: DateTime.UtcNow.Add(TokenLifetime),
+            expires: DateTime.UtcNow.Add(lifetime),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

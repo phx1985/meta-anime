@@ -726,7 +726,10 @@
       "successDisabled": "Password protection disabled.",
       "successChanged": "Password updated successfully.",
       "errorWrong": "Current password is incorrect.",
-      "errorGeneric": "An error occurred. Please try again."
+      "errorGeneric": "An error occurred. Please try again.",
+      "sessionLifetimeLabel": "Session lifetime",
+      "sessionLifetimeDesc": "How many days a login session stays valid before requiring re-authentication.",
+      "sessionLifetimeDaysUnit": "days"
     },
     "manualMappings": {
       "empty": "No manual mappings yet. Use the Coverage Gap modal to create one.",

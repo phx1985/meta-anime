@@ -388,7 +388,7 @@
     },
     "sizeUnit": "Go",
     "seeMore": "Voir plus",
-    "aka": "Aussi connu sous",
+    "aka": "Alias",
     "addToMal": "Ajouter à MAL",
     "addToSonarr": "Ajouter à Sonarr",
     "sonarrAdd": {
@@ -717,7 +717,10 @@
       "successDisabled": "Protection par mot de passe désactivée.",
       "successChanged": "Mot de passe mis à jour avec succès.",
       "errorWrong": "Le mot de passe actuel est incorrect.",
-      "errorGeneric": "Une erreur est survenue. Veuillez réessayer."
+      "errorGeneric": "Une erreur est survenue. Veuillez réessayer.",
+      "sessionLifetimeLabel": "Durée de session",
+      "sessionLifetimeDesc": "Nombre de jours pendant lesquels une session reste valide avant de nécessiter une nouvelle authentification.",
+      "sessionLifetimeDaysUnit": "jours"
     },
     "manualMappings": {
       "deleteBtn": "Supprimer",

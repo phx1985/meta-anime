@@ -244,7 +244,12 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
                 ? Result.Failure<IList<MalSearchResultItem>>(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."))
                 : Result.Failure<IList<MalSearchResultItem>>(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
 
-        var encodedQuery = Uri.EscapeDataString(query);
+        // Normalise the query: strip characters that MAL's search API doesn't handle
+        // well (e.g. colons from titles like "Dragon Ball Super: Galactic Patrol").
+        var normalised = System.Text.RegularExpressions.Regex.Replace(query, @"[:\?!]", " ")
+                                                             .Trim();
+        normalised = System.Text.RegularExpressions.Regex.Replace(normalised, @"\s{2,}", " ");
+        var encodedQuery = Uri.EscapeDataString(normalised);
         var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
         {
             var uri = new Uri($"{baseUrl}/anime?q={encodedQuery}&limit={limit}&fields=id,title,main_picture,start_date,media_type");
