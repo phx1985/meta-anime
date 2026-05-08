@@ -131,7 +131,7 @@
                   <app-score-badge [score]="myScore" [mine]="true" [label]="'animeCard.myScore' | translate" [titleKey]="'animeCard.myScore'" />
                 </div>
               }
-              @if (mal?.id) {
+              @if (mal?.id && (malViewState || !showAddButton)) {
                 <button
                   #malUpdateBtn
                   type="button"
@@ -220,7 +220,7 @@
                 <img src="assets/images/sonarr.svg" alt="" width="20" height="20" aria-hidden="true" />
               </a>
             }
-            @if (sonarrEnabled() && (!sonarr || !sonarr.exists)) {
+            @if (sonarrEnabled() && (!sonarr || !sonarr.exists) && !showAddButton) {
               <button
                 type="button"
                 class="panel__action-btn panel__action-btn--add panel__action-btn--add-sonarr"

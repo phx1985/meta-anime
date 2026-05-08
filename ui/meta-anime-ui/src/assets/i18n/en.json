@@ -73,6 +73,7 @@
         "confirmSubtitle": "Does this look right?",
         "confirmCancel": "Cancel",
         "confirmButton": "Confirm",
+        "confirmMappingButton": "Confirm Mapping",
         "confirmSeeDetails": "See details",
         "confirmLocalLabel": "Local item",
         "confirmMalLabel": "MAL entry",

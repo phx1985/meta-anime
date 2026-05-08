@@ -3,7 +3,7 @@
   <!-- MAL — always shown if client ID is configured -->
   @if (malConfigured()) {
     <div class="ph-item">
-      <a class="provider-link" [href]="malHomeUrl" target="_blank" rel="noopener noreferrer" title="MyAnimeList">
+      <a class="provider-link" [href]="malHomeUrl" target="_blank" rel="noopener noreferrer">
         <img src="assets/images/mal.svg" alt="MAL" width="22" height="22" />
       </a>
       @if (malHealth()) {
@@ -16,7 +16,7 @@
   <!-- Sonarr — only if configured and enabled -->
   @if (sonarrConfigured() && sonarrEnabled()) {
     <div class="ph-item">
-      <a class="provider-link" [href]="sonarrHomeUrl()" target="_blank" rel="noopener noreferrer" title="Sonarr">
+      <a class="provider-link" [href]="sonarrHomeUrl()" target="_blank" rel="noopener noreferrer">
         <img src="assets/images/sonarr.svg" alt="Sonarr" width="22" height="22" />
       </a>
       @if (sonarrHealth()) {
@@ -29,7 +29,7 @@
   <!-- Plex — only if configured and enabled -->
   @if (plexConfigured() && plexEnabled()) {
     <div class="ph-item">
-      <a class="provider-link" href="javascript:void(0)" (click)="openPlexHomeLink($event)" title="Plex">
+      <a class="provider-link" href="javascript:void(0)" (click)="openPlexHomeLink($event)">
         <img src="assets/images/plex.svg" alt="Plex" width="22" height="22" />
       </a>
       @if (plexHealth()) {
