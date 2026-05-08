@@ -78,6 +78,19 @@ export class GapDetailModalComponent implements OnInit {
           this.loading.set(false);
         },
       });
+
+    if (this.isMappable()) {
+      this.crossLinksLoading.set(true);
+      this.animeService.getCrossLinks()
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (links) => {
+            this.crossLinks.set(links);
+            this.crossLinksLoading.set(false);
+          },
+          error: () => this.crossLinksLoading.set(false),
+        });
+    }
   }
 
   openSearchModal(item: CoverageGapItem): void {
@@ -112,7 +125,7 @@ export class GapDetailModalComponent implements OnInit {
   toggleCrossLinks(): void {
     const opening = !this.crossLinksOpen();
     this.crossLinksOpen.set(opening);
-    if (opening && this.crossLinks().length === 0) {
+    if (opening && this.crossLinks().length === 0 && !this.crossLinksLoading()) {
       this.crossLinksLoading.set(true);
       this.animeService.getCrossLinks()
         .pipe(takeUntilDestroyed(this.destroyRef))

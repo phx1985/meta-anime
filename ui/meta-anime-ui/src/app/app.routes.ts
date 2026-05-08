@@ -6,6 +6,7 @@ import { HomeComponent } from './home/home.component';
 import { AnimeListComponent } from './anime-list/anime-list.component';
 import { SettingsComponent } from './settings/settings.component';
 import { SeasonalComponent } from './seasonal/seasonal.component';
+import { MalSearchComponent } from './mal-search/mal-search.component';
 import { NotFoundComponent } from './not-found/not-found.component';
 import { MalCallbackComponent } from './mal-callback/mal-callback.component';
 import { SetupWizardComponent } from './setup-wizard/setup-wizard.component';
@@ -48,6 +49,7 @@ export const routes: Routes = [
   { path: 'welcome', component: SetupWizardComponent },
   { path: 'animes', component: AnimeListComponent, canActivate: [authGuard] },
   { path: 'seasonal', component: SeasonalComponent, canActivate: [authGuard] },
+  { path: 'mal-search', component: MalSearchComponent, canActivate: [authGuard] },
   { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
   { path: 'library', component: LibraryAnalysisComponent, canActivate: [authGuard] },
   { path: 'auth/mal/callback', component: MalCallbackComponent },

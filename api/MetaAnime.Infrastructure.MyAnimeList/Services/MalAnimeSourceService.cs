@@ -290,6 +290,38 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
         var malError = JsonSerializer.Deserialize<MalError>(response.Content!)!;
         return Result.Failure<IList<MalSearchResultItem>>(new Error(malError.Message));
     }
+
+    public async Task<Result<IList<MalAnime>>> SearchByTitleRichAsync(string query, int limit = 100)
+    {
+        var (ok, baseUrl, token) = await ValidateCredentialsAsync();
+        if (!ok)
+            return string.IsNullOrWhiteSpace(baseUrl)
+                ? Result.Failure<IList<MalAnime>>(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."))
+                : Result.Failure<IList<MalAnime>>(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
+
+        var normalised = System.Text.RegularExpressions.Regex.Replace(query, @"[:\?!]", " ").Trim();
+        normalised = System.Text.RegularExpressions.Regex.Replace(normalised, @"\s{2,}", " ");
+        var encodedQuery = Uri.EscapeDataString(normalised);
+
+        var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
+        {
+            var uri = new Uri($"{baseUrl}/anime?q={encodedQuery}&limit={limit}&nsfw=true&fields={SEASONAL_FIELDS}");
+            var restClient = new RestClient(uri);
+            var restRequest = new RestRequest { Method = Method.Get };
+            restRequest.AddHeader("Authorization", $"Bearer {t}");
+            return ExecuteRequestAsync(restClient, restRequest);
+        });
+
+        if (response.IsSuccessful)
+        {
+            var result = JsonSerializer.Deserialize<MalResult>(response.Content!)!;
+            var items = result.Data.Select(d => d.Node).ToList();
+            return Result.Success<IList<MalAnime>>(items);
+        }
+
+        var malError = JsonSerializer.Deserialize<MalError>(response.Content!)!;
+        return Result.Failure<IList<MalAnime>>(new Error(malError.Message));
+    }
     #endregion
 
     #region Private

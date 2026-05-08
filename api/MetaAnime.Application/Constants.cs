@@ -38,6 +38,7 @@ public static class Constants
         public const string NotFound = "Error.NotFound";
         public const string RefreshData = "Error.RefreshData";
         public const string RemoveAsync = "Error.RemoveAsync";
+        public const string SearchMalAnimeWithDetailsAsync = "Error.SearchMalAnimeWithDetailsAsync";
         public const string SyncAllAsync = "Error.SyncAllAsync";
         public const string UpdateAsync = "Error.UpdateAsync";
         public const string UpsertPropertyBag = "Error.UpsertPropertyBag";

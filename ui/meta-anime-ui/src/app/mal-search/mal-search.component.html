@@ -1,0 +1,1064 @@
+<div class="mal-search-page">
+
+  <div class="container py-5">
+    <!-- Page header -->
+    <div class="mal-search-header mb-4">
+      <h1 class="mal-search-title">{{ 'malSearch.title' | translate }}</h1>
+      <p class="mal-search-subtitle">{{ 'malSearch.subtitle' | translate }}</p>
+    </div>
+
+    <!-- ── Filter card ──────────────────────────────────────────────────── -->
+    <div class="filter-card mb-4">
+        <!-- Card header — always visible, toggles body -->
+        <div
+          class="filter-card__header"
+          (click)="toggleFilterPanel()"
+          role="button"
+          [attr.aria-expanded]="filterOpen()"
+          [attr.aria-label]="
+            (filterOpen() ? 'seasonal.filter.collapseFilters' : 'seasonal.filter.expandFilters')
+              | translate
+          "
+          tabindex="0"
+          (keydown.enter)="toggleFilterPanel()"
+          (keydown.space)="$event.preventDefault(); toggleFilterPanel()"
+        >
+          <div class="filter-card__header-left">
+            <svg
+              class="filter-header-icon"
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+            </svg>
+            <div class="filter-header-text">
+              <span class="filter-header-title">{{ 'seasonal.filter.title' | translate }}</span>
+              @if (activePresetName()) {
+                <span class="filter-header-preset-name" [title]="activePresetName()!">{{ activePresetName() }}</span>
+              } @else {
+                <span class="filter-header-summary" [title]="filterSummary">{{ filterSummary }}</span>
+              }
+            </div>
+            @if (activeFilterCount > 0) {
+              <span class="filter-badge">{{ activeFilterCount }}</span>
+            }
+          </div>
+          <svg
+            class="filter-chevron"
+            [class.filter-chevron--open]="filterOpen()"
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d="M4 6l4 4 4-4" />
+          </svg>
+        </div>
+
+        <!-- Collapsible body (desktop accordion; hidden on mobile via CSS) -->
+        <div class="filter-card__body-wrapper" [class.open]="filterOpen()">
+          <div class="filter-card__body">
+            <ng-container *ngTemplateOutlet="filterBodyTpl"></ng-container>
+          </div>
+        </div>
+      </div>
+
+    @if (lastSearchedQuery() && !loading()) {
+      <p class="mal-search-result-count mb-2">
+        {{ 'malSearch.resultCount' | translate : { count: filteredAnimes().length, query: lastSearchedQuery() } }}
+      </p>
+    }
+
+<!-- Filter content template (shared by desktop accordion and mobile sheet) -->
+<ng-template #filterBodyTpl>
+          <div class="filter-card__inner">
+            <!-- ── Search input row ────────────────────────────────────── -->
+            <div class="search-row">
+              <div class="mal-search-bar">
+                <input
+                  type="text"
+                  class="form-control search-input"
+                  [ngModel]="searchQuery()"
+                  (ngModelChange)="searchQuery.set($event)"
+                  [placeholder]="'malSearch.searchPlaceholder' | translate"
+                  (keyup.enter)="applyFilters()"
+                  autocomplete="off"
+                />
+              </div>
+              @if (searchQuery().trim().length > 0 && searchQuery().trim().length < 3) {
+                <p class="search-hint">{{ 'malSearch.searchHint' | translate }}</p>
+              }
+            </div>
+            <!-- ── Preset bar ──────────────────────────────────────────── -->
+            <div class="seasonal-presets-bar">
+              <!-- Mobile: single "Presets" button replacing the inline chips -->
+              <button
+                type="button"
+                class="btn-presets-mobile"
+                (click)="presetsSheetOpen.set(true)"
+                [attr.aria-label]="'seasonal.filter.presets.label' | translate"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                {{ 'seasonal.filter.presets.label' | translate }}
+                @if (savedPresets().length > 0) {
+                  <span class="btn-presets-mobile__count">{{ savedPresets().length }}</span>
+                }
+              </button>
+              <div class="presets-chips">
+                @for (p of savedPresets(); track p.id) {
+                  <button
+                    type="button"
+                    class="preset-chip preset-chip--saved"
+                    (click)="applyPreset(p)"
+                  >
+                    {{ p.label }}
+                    <span
+                      class="preset-chip__delete"
+                      role="button"
+                      [attr.aria-label]="'seasonal.filter.presets.delete' | translate"
+                      (click)="deletePreset(p.id, $event)"
+                    >
+                      <svg
+                        width="8"
+                        height="8"
+                        viewBox="0 0 16 16"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M2 2l12 12M14 2L2 14"
+                          stroke="currentColor"
+                          stroke-width="2.5"
+                          stroke-linecap="round"
+                        />
+                      </svg>
+                    </span>
+                  </button>
+                }
+                @if (savedPresets().length === 0 && !showSavePreset) {
+                  <span class="presets-empty-hint">{{
+                    'seasonal.filter.presets.noPresets' | translate
+                  }}</span>
+                }
+              </div>
+              <button type="button" class="btn-save-preset" (click)="openSavePreset()">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M8 2v12M2 8h12"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    fill="none"
+                  />
+                </svg>
+                {{ 'seasonal.filter.presets.saveAs' | translate }}
+              </button>
+            </div>
+
+            @if (showSavePreset) {
+              <div class="preset-save-form">
+                <input
+                  class="preset-name-input"
+                  type="text"
+                  [(ngModel)]="newPresetName"
+                  [placeholder]="'seasonal.filter.presets.namePlaceholder' | translate"
+                  (keydown.enter)="confirmSavePreset()"
+                  (keydown.escape)="cancelSavePreset()"
+                  autofocus
+                />
+                <button
+                  type="button"
+                  class="btn-preset-confirm"
+                  (click)="confirmSavePreset()"
+                  [disabled]="!newPresetName.trim()"
+                >
+                  {{ 'seasonal.filter.presets.save' | translate }}
+                </button>
+                <button type="button" class="btn-preset-cancel" (click)="cancelSavePreset()">
+                  {{ 'seasonal.filter.presets.cancel' | translate }}
+                </button>
+              </div>
+            }
+
+            <!-- Filter grid -->
+            <div class="filter-grid">
+              <!-- Genre -->
+              <div class="filter-field">
+                <div class="filter-label-row">
+                  <span class="filter-label">{{ 'seasonal.filter.genre' | translate }}</span>
+                  @if (filterGenre().length > 1) {
+                    <div class="operator-toggle" role="radiogroup">
+                      <button
+                        type="button"
+                        class="op-btn"
+                        [class.op-btn--active]="genreOperator() === 'or'"
+                        (click)="setGenreOperator('or', $event)"
+                      >
+                        OR
+                      </button>
+                      <button
+                        type="button"
+                        class="op-btn"
+                        [class.op-btn--active]="genreOperator() === 'and'"
+                        (click)="setGenreOperator('and', $event)"
+                      >
+                        AND
+                      </button>
+                    </div>
+                  }
+                </div>
+                <button
+                  type="button"
+                  class="fp-trigger"
+                  [class.fp-trigger--has-value]="filterGenre().length > 0"
+                  [class.fp-trigger--open]="genreDropdownOpen"
+                  (click)="toggleGenreDropdown($event)"
+                >
+                  <span class="fp-trigger__text">
+                    @if (genreLabel()) {
+                      {{ genreLabel() }}
+                    } @else {
+                      {{ 'seasonal.filter.any' | translate }}
+                    }
+                  </span>
+                  @if (filterGenre().length > 0) {
+                    <button type="button" class="fp-trigger__clear" (click)="clearGenres($event)">
+                      <svg
+                        width="9"
+                        height="9"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M2 2l12 12M14 2L2 14" />
+                      </svg>
+                    </button>
+                  }
+                  <svg
+                    class="fp-trigger__chevron"
+                    [class.fp-trigger__chevron--open]="genreDropdownOpen"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M4 6l4 4 4-4"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Theme -->
+              <div class="filter-field">
+                <div class="filter-label-row">
+                  <span class="filter-label">{{ 'seasonal.filter.theme' | translate }}</span>
+                  @if (filterTheme().length > 1) {
+                    <div class="operator-toggle" role="radiogroup">
+                      <button
+                        type="button"
+                        class="op-btn"
+                        [class.op-btn--active]="themeOperator() === 'or'"
+                        (click)="setThemeOperator('or', $event)"
+                      >
+                        OR
+                      </button>
+                      <button
+                        type="button"
+                        class="op-btn"
+                        [class.op-btn--active]="themeOperator() === 'and'"
+                        (click)="setThemeOperator('and', $event)"
+                      >
+                        AND
+                      </button>
+                    </div>
+                  }
+                </div>
+                <button
+                  type="button"
+                  class="fp-trigger"
+                  [class.fp-trigger--has-value]="filterTheme().length > 0"
+                  [class.fp-trigger--open]="themeDropdownOpen"
+                  (click)="toggleThemeDropdown($event)"
+                >
+                  <span class="fp-trigger__text">
+                    @if (themeLabel()) {
+                      {{ themeLabel() }}
+                    } @else {
+                      {{ 'seasonal.filter.any' | translate }}
+                    }
+                  </span>
+                  @if (filterTheme().length > 0) {
+                    <button type="button" class="fp-trigger__clear" (click)="clearThemes($event)">
+                      <svg
+                        width="9"
+                        height="9"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M2 2l12 12M14 2L2 14" />
+                      </svg>
+                    </button>
+                  }
+                  <svg
+                    class="fp-trigger__chevron"
+                    [class.fp-trigger__chevron--open]="themeDropdownOpen"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M4 6l4 4 4-4"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Demographic -->
+              <div class="filter-field">
+                <div class="filter-label-row">
+                  <span class="filter-label">{{ 'seasonal.filter.demographic' | translate }}</span>
+                  @if (filterDemographic().length > 1) {
+                    <div class="operator-toggle" role="radiogroup">
+                      <button
+                        type="button"
+                        class="op-btn"
+                        [class.op-btn--active]="demographicOperator() === 'or'"
+                        (click)="setDemographicOperator('or', $event)"
+                      >
+                        OR
+                      </button>
+                      <button
+                        type="button"
+                        class="op-btn"
+                        [class.op-btn--active]="demographicOperator() === 'and'"
+                        (click)="setDemographicOperator('and', $event)"
+                      >
+                        AND
+                      </button>
+                    </div>
+                  }
+                </div>
+                <button
+                  type="button"
+                  class="fp-trigger"
+                  [class.fp-trigger--has-value]="filterDemographic().length > 0"
+                  [class.fp-trigger--open]="demographicDropdownOpen"
+                  (click)="toggleDemographicDropdown($event)"
+                >
+                  <span class="fp-trigger__text">
+                    @if (demographicLabel()) {
+                      {{ demographicLabel() }}
+                    } @else {
+                      {{ 'seasonal.filter.any' | translate }}
+                    }
+                  </span>
+                  @if (filterDemographic().length > 0) {
+                    <button
+                      type="button"
+                      class="fp-trigger__clear"
+                      (click)="clearDemographics($event)"
+                    >
+                      <svg
+                        width="9"
+                        height="9"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M2 2l12 12M14 2L2 14" />
+                      </svg>
+                    </button>
+                  }
+                  <svg
+                    class="fp-trigger__chevron"
+                    [class.fp-trigger__chevron--open]="demographicDropdownOpen"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M4 6l4 4 4-4"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- MAL status -->
+              <div class="filter-field filter-field--pills">
+                <span class="filter-label">{{
+                  'seasonal.filter.malStatus.label' | translate
+                }}</span>
+                <div class="filter-pills">
+                  @for (s of malStates; track s.value) {
+                    @if (s.value === 'watching') {
+                      <span class="filter-pills__sep" aria-hidden="true"></span>
+                    }
+                    <button
+                      type="button"
+                      class="filter-pill"
+                      [class.filter-pill--active]="filterMalStatus().includes(s.value)"
+                      [class.filter-pill--muted]="isMalStatusMuted(s.value)"
+                      (click)="toggleMalStatus(s.value)"
+                    >
+                      {{ s.labelKey | translate }}
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Media type -->
+              <div class="filter-field filter-field--pills">
+                <span class="filter-label">{{ 'seasonal.filter.mediaType' | translate }}</span>
+                <div class="filter-pills">
+                  @for (t of mediaTypeOptions; track t.value) {
+                    <button
+                      type="button"
+                      class="filter-pill"
+                      [class.filter-pill--active]="filterMediaType().includes(t.value)"
+                      (click)="toggleMediaType(t.value)"
+                    >
+                      {{ t.labelKey | translate }}
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Age rating -->
+              <div class="filter-field filter-field--pills">
+                <span class="filter-label">{{ 'animeList.filter.ageRating' | translate }}</span>
+                <div class="filter-pills">
+                  @for (r of ratingOptions; track r.value) {
+                    <button
+                      type="button"
+                      class="filter-pill"
+                      [class.filter-pill--active]="filterAgeRating().includes(r.value)"
+                      (click)="toggleAgeRating(r.value)"
+                    >
+                      {{ r.labelKey | translate }}
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer: Sort + Reset -->
+            <div class="filter-footer">
+              <div class="filter-footer__left">
+                <div class="filter-field filter-field--compact">
+                  <span class="filter-label">{{ 'seasonal.filter.sort.by' | translate }}</span>
+                  <div class="d-flex align-items-center gap-2">
+                    <select
+                      class="sort-select"
+                      [ngModel]="sortBy()"
+                      (ngModelChange)="setSortBy($event)"
+                      [attr.aria-label]="'seasonal.filter.sort.by' | translate"
+                    >
+                      @for (opt of sortOptions; track opt.value) {
+                        <option [value]="opt.value">{{ opt.labelKey | translate }}</option>
+                      }
+                    </select>
+                    <button
+                      type="button"
+                      class="mode-btn sort-dir-btn"
+                      (click)="toggleSortOrder()"
+                      [attr.aria-label]="'seasonal.filter.sort.order' | translate"
+                      [attr.aria-pressed]="sortOrder() === 'desc'"
+                    >
+                      @if (sortOrder() === 'asc') {
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path d="M3 12l5-8 5 8H3z" />
+                        </svg>
+                      } @else {
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 16 16"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path d="M3 4l5 8 5-8H3z" />
+                        </svg>
+                      }
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="filter-footer__actions">
+                <button type="button" class="btn-reset" (click)="resetFilters()">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M13.5 2.5A7 7 0 1 0 15 8"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      fill="none"
+                    />
+                    <path
+                      d="M11 1l2.5 1.5L12 5"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      fill="none"
+                    />
+                  </svg>
+                  {{ 'seasonal.filter.reset' | translate }}
+                </button>
+                <button type="button" class="btn-apply" (click)="applyFilters()">
+                  {{ 'seasonal.filter.apply' | translate }}
+                </button>
+              </div>
+            </div>
+          </div>
+</ng-template>
+    <!-- ── /Filter card ─────────────────────────────────────────────────── -->
+
+    <!-- Error state -->
+    @if (error()) {
+      <div class="mal-search-error">{{ 'malSearch.error' | translate }}</div>
+    }
+
+    <!-- Loading state -->
+    @if (loading()) {
+      <div class="mal-search-loading">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <span>{{ 'malSearch.loading' | translate }}</span>
+      </div>
+    }
+
+    <!-- Anime grid -->
+    @if (!loading() && filteredAnimes().length > 0) {
+      <div class="results-bar mb-2">
+        <div class="provider-legend" aria-hidden="true">
+          <span class="legend-item">
+            <span class="legend-dot legend-dot--mal"></span>
+            <span class="legend-label">{{ 'providers.malShort' | translate }}</span>
+          </span>
+          <span class="legend-item">
+            <span class="legend-dot legend-dot--plex"></span>
+            <span class="legend-label">{{ 'providers.plex' | translate }}</span>
+          </span>
+          <span class="legend-item">
+            <span class="legend-dot legend-dot--sonarr"></span>
+            <span class="legend-label">{{ 'providers.sonarr' | translate }}</span>
+          </span>
+        </div>
+      </div>
+      <div class="mal-search-grid">
+        @for (anime of displayedAnimes(); track anime.malId; let i = $index) {
+          <app-anime-card
+            [anime]="searchItemToAnimeDetails(anime)"
+            [seasonalItem]="anime"
+            [glowSuccess]="anime.malId === lastAddedMalId()"
+            (openDetails)="openAnimeDetails($event)"
+            (openDetailsByMalId)="openDetailsByMalId($event)"
+            [style.--i]="i"
+          />
+        }
+      </div>
+    }
+
+    <!-- No results after filtering -->
+    @if (!loading() && !error() && animes().length > 0 && filteredAnimes().length === 0) {
+      <div class="mal-search-empty">{{ 'seasonal.filter.noResults' | translate }}</div>
+    }
+
+    <!-- Empty state (no query yet or no data from API) -->
+    @if (!loading() && !error() && animes().length === 0 && lastSearchedQuery()) {
+      <div class="mal-search-empty">{{ 'malSearch.noResults' | translate : { query: lastSearchedQuery() } }}</div>
+    }
+  </div>
+</div>
+
+<!-- ── Mobile filter sheet (dedicated overlay — avoids backdrop-filter stacking context trap) -->
+@if (filterOpen()) {
+  <div class="mobile-filter-backdrop" (click)="filterOpen.set(false)" aria-hidden="true"></div>
+  <div
+    class="mobile-filter-sheet"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'seasonal.filter.title' | translate"
+  >
+    <div class="mobile-filter-sheet__handle" aria-hidden="true"></div>
+    <div class="mobile-filter-sheet__header">
+      <button type="button" class="mobile-filter-sheet__reset" (click)="resetFilters()"
+        [attr.aria-label]="'seasonal.filter.reset' | translate">
+        {{ 'seasonal.filter.reset' | translate }}
+      </button>
+      <span class="mobile-filter-sheet__title">{{ 'seasonal.filter.title' | translate }}</span>
+      <button type="button" class="mobile-filter-sheet__apply" (click)="applyFilters(); filterOpen.set(false)"
+        [attr.aria-label]="'seasonal.filter.apply' | translate">
+        {{ 'seasonal.filter.apply' | translate }}
+      </button>
+    </div>
+    <ng-container *ngTemplateOutlet="filterBodyTpl"></ng-container>
+  </div>
+}
+
+<!-- ── Presets bottom sheet (mobile) ───────────────────────────────────── -->
+@if (presetsSheetOpen()) {
+  <div class="presets-sheet-backdrop" (click)="presetsSheetOpen.set(false)" role="dialog" aria-modal="true" [attr.aria-label]="'seasonal.filter.presets.label' | translate">
+    <div class="presets-sheet" (click)="$event.stopPropagation()">
+      <div class="presets-sheet__handle" aria-hidden="true"></div>
+      <div class="presets-sheet__header">
+        <span class="presets-sheet__title">{{ 'seasonal.filter.presets.label' | translate }}</span>
+        <button type="button" class="presets-sheet__close" (click)="presetsSheetOpen.set(false)" [attr.aria-label]="'common.close' | translate">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
+        </button>
+      </div>
+
+      <!-- Custom presets -->
+      <div class="presets-sheet__section">
+        <span class="presets-sheet__section-label">{{ 'seasonal.filter.presets.myPresets' | translate }}</span>
+        @if (savedPresets().length === 0) {
+          <p class="presets-sheet__empty">{{ 'seasonal.filter.presets.noPresets' | translate }}</p>
+        }
+        @for (p of savedPresets(); track p.id) {
+          <button type="button" class="presets-sheet__item" (click)="applyPreset(p)">
+            <span class="presets-sheet__item-name">{{ p.label }}</span>
+            @if (activePresetName() === p.label) {
+              <svg class="presets-sheet__item-check" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M2 8l4 4 8-8"/></svg>
+            }
+            <button type="button" class="presets-sheet__item-delete" (click)="deletePreset(p.id, $event)" [attr.aria-label]="'seasonal.filter.presets.delete' | translate">
+              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
+            </button>
+          </button>
+        }
+      </div>
+
+      <!-- Save current filters as preset -->
+      <div class="presets-sheet__footer">
+        <button type="button" class="presets-sheet__save-btn" (click)="openSavePreset()">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg>
+          {{ 'seasonal.filter.presets.saveAs' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Genre / Theme / Demographic filter popups (fixed overlay) ─────────── -->
+
+@if (genreDropdownOpen) {
+  <div class="fp-backdrop" (click)="genreDropdownOpen = false" role="dialog" aria-modal="true">
+    <div class="fp-popup" (click)="$event.stopPropagation()">
+      <div class="fp-popup__header">
+        <span class="fp-popup__title">{{ 'seasonal.filter.genre' | translate }}</span>
+        @if (filterGenre().length > 1) {
+          <div class="fp-popup__ops">
+            <button
+              type="button"
+              class="op-btn"
+              [class.op-btn--active]="genreOperator() === 'or'"
+              (click)="setGenreOperator('or', $event)"
+            >
+              OR
+            </button>
+            <button
+              type="button"
+              class="op-btn"
+              [class.op-btn--active]="genreOperator() === 'and'"
+              (click)="setGenreOperator('and', $event)"
+            >
+              AND
+            </button>
+          </div>
+        }
+        <button
+          type="button"
+          class="fp-popup__close"
+          (click)="genreDropdownOpen = false"
+          [attr.aria-label]="'common.close' | translate"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M2 2l12 12M14 2L2 14" />
+          </svg>
+        </button>
+      </div>
+      <div class="fp-popup__search">
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          aria-hidden="true"
+        >
+          <circle cx="6.5" cy="6.5" r="4.5" />
+          <path d="M10 10l3 3" stroke-linecap="round" />
+        </svg>
+        <input
+          class="fp-popup__search-input"
+          type="search"
+          [(ngModel)]="genreSearch"
+          placeholder="Filter..."
+          autocomplete="off"
+        />
+        @if (genreSearch) {
+          <button type="button" class="fp-popup__search-clear" (click)="genreSearch = ''">
+            <svg
+              width="9"
+              height="9"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <path d="M2 2l12 12M14 2L2 14" />
+            </svg>
+          </button>
+        }
+      </div>
+      <div class="fp-popup__body" role="listbox" aria-multiselectable="true">
+        @for (item of sortedGenreList(); track item.key) {
+          @if (
+            !genreSearch ||
+            item.label.toLowerCase().includes(genreSearch.toLowerCase()) ||
+            item.key.toLowerCase().includes(genreSearch.toLowerCase())
+          ) {
+            <button
+              type="button"
+              class="fp-option"
+              [class.fp-option--selected]="filterGenre().includes(item.key)"
+              [class.fp-option--nsfw]="item.nsfw"
+              role="option"
+              [attr.aria-selected]="filterGenre().includes(item.key)"
+              (click)="toggleGenre(item.key, $event)"
+            >
+              {{ item.label }}
+            </button>
+          }
+        }
+      </div>
+      <div class="fp-popup__footer">
+        @if (filterGenre().length > 0) {
+          <button type="button" class="fp-popup__clear-all" (click)="clearGenres($event)">
+            {{ 'seasonal.filter.clear' | translate }} ({{ filterGenre().length }})
+          </button>
+        }
+        <button type="button" class="fp-popup__done" (click)="genreDropdownOpen = false">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (themeDropdownOpen) {
+  <div class="fp-backdrop" (click)="themeDropdownOpen = false" role="dialog" aria-modal="true">
+    <div class="fp-popup fp-popup--theme" (click)="$event.stopPropagation()">
+      <div class="fp-popup__header">
+        <span class="fp-popup__title">{{ 'seasonal.filter.theme' | translate }}</span>
+        @if (filterTheme().length > 1) {
+          <div class="fp-popup__ops">
+            <button
+              type="button"
+              class="op-btn"
+              [class.op-btn--active]="themeOperator() === 'or'"
+              (click)="setThemeOperator('or', $event)"
+            >
+              OR
+            </button>
+            <button
+              type="button"
+              class="op-btn"
+              [class.op-btn--active]="themeOperator() === 'and'"
+              (click)="setThemeOperator('and', $event)"
+            >
+              AND
+            </button>
+          </div>
+        }
+        <button
+          type="button"
+          class="fp-popup__close"
+          (click)="themeDropdownOpen = false"
+          [attr.aria-label]="'common.close' | translate"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M2 2l12 12M14 2L2 14" />
+          </svg>
+        </button>
+      </div>
+      <div class="fp-popup__search">
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          aria-hidden="true"
+        >
+          <circle cx="6.5" cy="6.5" r="4.5" />
+          <path d="M10 10l3 3" stroke-linecap="round" />
+        </svg>
+        <input
+          class="fp-popup__search-input"
+          type="search"
+          [(ngModel)]="themeSearch"
+          placeholder="Filter..."
+          autocomplete="off"
+        />
+        @if (themeSearch) {
+          <button type="button" class="fp-popup__search-clear" (click)="themeSearch = ''">
+            <svg
+              width="9"
+              height="9"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <path d="M2 2l12 12M14 2L2 14" />
+            </svg>
+          </button>
+        }
+      </div>
+      <div class="fp-popup__body" role="listbox" aria-multiselectable="true">
+        @for (item of sortedThemeList(); track item.key) {
+          @if (
+            !themeSearch ||
+            item.label.toLowerCase().includes(themeSearch.toLowerCase()) ||
+            item.key.toLowerCase().includes(themeSearch.toLowerCase())
+          ) {
+            <button
+              type="button"
+              class="fp-option"
+              [class.fp-option--selected]="filterTheme().includes(item.key)"
+              [class.fp-option--nsfw]="item.nsfw"
+              role="option"
+              [attr.aria-selected]="filterTheme().includes(item.key)"
+              (click)="toggleTheme(item.key, $event)"
+            >
+              {{ item.label }}
+            </button>
+          }
+        }
+      </div>
+      <div class="fp-popup__footer">
+        @if (filterTheme().length > 0) {
+          <button type="button" class="fp-popup__clear-all" (click)="clearThemes($event)">
+            {{ 'seasonal.filter.clear' | translate }} ({{ filterTheme().length }})
+          </button>
+        }
+        <button type="button" class="fp-popup__done" (click)="themeDropdownOpen = false">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (demographicDropdownOpen) {
+  <div
+    class="fp-backdrop"
+    (click)="demographicDropdownOpen = false"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="fp-popup fp-popup--demographic" (click)="$event.stopPropagation()">
+      <div class="fp-popup__header">
+        <span class="fp-popup__title">{{ 'seasonal.filter.demographic' | translate }}</span>
+        @if (filterDemographic().length > 1) {
+          <div class="fp-popup__ops">
+            <button
+              type="button"
+              class="op-btn"
+              [class.op-btn--active]="demographicOperator() === 'or'"
+              (click)="setDemographicOperator('or', $event)"
+            >
+              OR
+            </button>
+            <button
+              type="button"
+              class="op-btn"
+              [class.op-btn--active]="demographicOperator() === 'and'"
+              (click)="setDemographicOperator('and', $event)"
+            >
+              AND
+            </button>
+          </div>
+        }
+        <button
+          type="button"
+          class="fp-popup__close"
+          (click)="demographicDropdownOpen = false"
+          [attr.aria-label]="'common.close' | translate"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <path d="M2 2l12 12M14 2L2 14" />
+          </svg>
+        </button>
+      </div>
+      <div
+        class="fp-popup__body fp-popup__body--no-search"
+        role="listbox"
+        aria-multiselectable="true"
+      >
+        @for (item of sortedDemographicList(); track item.key) {
+          <button
+            type="button"
+            class="fp-option"
+            [class.fp-option--selected]="filterDemographic().includes(item.key)"
+            role="option"
+            [attr.aria-selected]="filterDemographic().includes(item.key)"
+            (click)="toggleDemographic(item.key, $event)"
+          >
+            {{ item.label }}
+          </button>
+        }
+      </div>
+      <div class="fp-popup__footer">
+        @if (filterDemographic().length > 0) {
+          <button type="button" class="fp-popup__clear-all" (click)="clearDemographics($event)">
+            {{ 'seasonal.filter.clear' | translate }} ({{ filterDemographic().length }})
+          </button>
+        }
+        <button type="button" class="fp-popup__done" (click)="demographicDropdownOpen = false">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<app-anime-detail-panel
+  [animeId]="selectedAnimeId()"
+  [malId]="selectedMalId()"
+  [seasonalItem]="selectedSeasonalItem()"
+  (closed)="closeAnimeDetails()"
+  (addRequested)="onDetailPanelAddRequested()"
+/>
+
+<!-- ── "Add to providers" wizard ── -->
+@if (showAddModal()) {
+  <app-add-series-wizard
+    [showAddModal]="showAddModal()"
+    [addModalItem]="addModalItem()"
+    [addBusy]="addBusy()"
+    [addError]="addError()"
+    [addSuccess]="addSuccess()"
+    [addSonarr]="addSonarr()"
+    [addMal]="addMal()"
+    [expandedProvider]="expandedProvider()"
+    [sonarrRootFolders]="sonarrRootFolders()"
+    [sonarrQualityProfiles]="sonarrQualityProfiles()"
+    [sonarrLoadingOptions]="sonarrLoadingOptions()"
+    [sonarrSearchTerm]="sonarrSearchTerm()"
+    [sonarrSearchResults]="sonarrSearchResults()"
+    [sonarrSearching]="sonarrSearching()"
+    [sonarrSearchError]="sonarrSearchError()"
+    [sonarrSelected]="sonarrSelected()"
+    [sonarrRootFolder]="sonarrRootFolder()"
+    [sonarrProfileId]="sonarrProfileId()"
+    [sonarrMonitor]="sonarrMonitor()"
+    [sonarrSeasonFolder]="sonarrSeasonFolder()"
+    [addMalStatus]="addMalStatus()"
+    [addMalEpisodes]="addMalEpisodes()"
+    [addMalScore]="addMalScore()"
+    [sonarrEnabled]="providerState.sonarrEnabled()"
+    [addModalInSonarr]="addModalInSonarr"
+    [addModalInMal]="addModalInMal"
+    [addModalAnythingSelected]="addModalAnythingSelected"
+    (closeRequested)="closeAddModal()"
+    (confirmAddRequested)="confirmAdd()"
+    (toggleProviderRequested)="toggleProvider($event)"
+    (toggleAccordionRequested)="toggleAccordion($event)"
+    (sonarrSearchInputChanged)="onSonarrSearchInput($event)"
+    (sonarrResultSelected)="selectSonarrResult($event)"
+    (sonarrRootFolderChanged)="sonarrRootFolder.set($event)"
+    (sonarrProfileIdChanged)="sonarrProfileId.set($event)"
+    (sonarrMonitorChanged)="sonarrMonitor.set($any($event))"
+    (sonarrSeasonFolderChanged)="sonarrSeasonFolder.set($event)"
+    (malStatusChanged)="addMalStatus.set($event)"
+    (malEpisodesChanged)="addMalEpisodes.set($event)"
+    (malScoreChanged)="addMalScore.set($event)"
+  />
+}
+
+<app-anime-image-gallery />
