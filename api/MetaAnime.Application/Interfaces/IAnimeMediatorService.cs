@@ -30,4 +30,5 @@ public interface IAnimeMediatorService
     Task<Result<SonarrTagInfo>> CreateSonarrTagAsync(string label);
     // MAL search
     Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query);
+    Task<Result<IEnumerable<SeasonalAnimeResponse>>> SearchMalAnimeWithDetailsAsync(string query, int limit = 100);
 }

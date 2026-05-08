@@ -120,6 +120,11 @@ export class AnimeService {
     return this.http.get<MalSearchResult[]>(`${this.malBase}/search`, { params });
   }
 
+  searchMalAnimeWithDetails(query: string, limit = 100): Observable<SeasonalAnimeItem[]> {
+    const params = new HttpParams().set('q', query).set('limit', limit);
+    return this.http.get<SeasonalAnimeItem[]>(`${this.malBase}/anime-search`, { params });
+  }
+
   getCrossLinks(): Observable<CrossLinkEntry[]> {
     return this.http.get<CrossLinkEntry[]>(`${this.malBase}/crosslinks`);
   }

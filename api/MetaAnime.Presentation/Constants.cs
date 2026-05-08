@@ -14,5 +14,6 @@ public static class Constants
         public const string SeasonRequired = "The 'season' query parameter is required (winter, spring, summer, fall).";
         public const string SeasonInvalid = "The 'season' must be one of: winter, spring, summer, fall.";
         public const string YearInvalid = "The 'year' must be between 1917 and the current year + 1.";
+        public const string MalSearchQueryTooShort = "The search query must be at least 3 characters (MAL API requirement).";
     }
 }

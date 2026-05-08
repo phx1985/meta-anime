@@ -1076,157 +1076,160 @@ public sealed class AnimeMediatorService(
             if (seasonalResult.IsFailure)
                 return Result.Failure<IEnumerable<SeasonalAnimeResponse>>(seasonalResult.Error);
 
-            var items = seasonalResult.Value;
-            var seasonalMalIds = items.Select(a => a.Id.ToString()).ToList();
-
-            // ── Kometa lookup: seasonal malIds → aniDbId + tvdbId ────────────────────────
-            // Single self-join query treats the Kometa mapping as the sole source of truth.
-            // TvdbId drives the exact `tvdb:XXXXX` Sonarr lookup; AniDbId drives provider state.
-            var malToAniDb = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            var aniDbToTvdb = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            if (seasonalMalIds.Count > 0)
-            {
-                var kometaMappings = await kometaAnimeMappingRepository.GetMalMappingsWithTvdbAsync(seasonalMalIds);
-                foreach (var (malId, aniDbId, tvdbId) in kometaMappings)
-                {
-                    malToAniDb[malId] = aniDbId;
-                    if (tvdbId != null)
-                        aniDbToTvdb[aniDbId] = tvdbId;
-                }
-            }
-
-            // ── Build aniDbId → sources from AnimeMapping ──────────────────────────────
-            // Includes both full-sync entries and mini-sync entries written by
-            // AddSonarrSeriesAsync / UpdateMalListStatusAsync, so no property bag needed.
-            var aniDbToSources = new Dictionary<string, (bool HasPlex, string? PlexId, bool HasSonarr, string? SonarrId, bool HasMal, string? MalId)>(StringComparer.OrdinalIgnoreCase);
-            bool anyInPlex = false;
-            var mappingsResult = await animeMappingService.GetAllAsync(includeAnime: true);
-            if (mappingsResult.IsSuccess)
-            {
-                foreach (var aniDbGroup in mappingsResult.Value.Where(m => m.Anime != null).GroupBy(m => m.AniDbId))
-                {
-                    var animes = aniDbGroup.Select(m => m.Anime!).ToList();
-                    var plexEntry = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.Plex);
-                    var sonarrEntry = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.Sonarr);
-                    var malEntry = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.MyAnimeList);
-                    bool hasPlex = plexEntry != null;
-                    if (hasPlex) anyInPlex = true;
-                    aniDbToSources[aniDbGroup.Key] = (hasPlex, plexEntry?.SourceId, sonarrEntry != null, sonarrEntry?.SourceId, malEntry != null, malEntry?.SourceId);
-                }
-            }
-
-            // Resolve Plex base URL only if needed
-            string? plexBaseUrl = anyInPlex ? await GetPlexBaseUrlAsync() : null;
-            var sonarrSeriesBaseUrl = await GetSonarrSeriesBaseUrlAsync();
-
-            // ── Sonarr TitleSlug lookup (for building correct Sonarr web UI URLs) ───────
-            var sonarrIds = aniDbToSources.Values
-                .Where(s => s.HasSonarr && s.SonarrId != null)
-                .Select(s => s.SonarrId!)
-                .Distinct()
-                .ToList();
-            var sonarrSlugById = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            if (sonarrIds.Count > 0)
-            {
-                var cacheResult = await cacheEntryService.GetBySourceIdsAsync(sonarrIds);
-                if (cacheResult.IsSuccess)
-                {
-                    foreach (var entry in cacheResult.Value.Where(e => e.AnimeSource == AnimeSource.Sonarr))
-                    {
-                        try
-                        {
-                            var series = JsonSerializer.Deserialize<SonarrSeries>(entry.RawData, JsonOptions);
-                            if (series?.TitleSlug != null)
-                                sonarrSlugById[entry.SourceId] = series.TitleSlug;
-                        }
-                        catch (JsonException ex)
-                        {
-                            logger.LogWarning(ex, Constants.LogMessages.AnimeMediatorService.SonarrCacheDeserializeFailed, entry.SourceId);
-                        }
-                    }
-                }
-            }
-
-            // ── MAL view-state lookup (watching / completed / on_hold / dropped / plan_to_watch) ──
-            var malIdsInLibrary = aniDbToSources.Values
-                .Where(s => s.HasMal && s.MalId != null)
-                .Select(s => s.MalId!)
-                .Distinct()
-                .ToList();
-            var malViewStateById = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            if (malIdsInLibrary.Count > 0)
-            {
-                var malCacheResult = await cacheEntryService.GetBySourceIdsAsync(malIdsInLibrary);
-                if (malCacheResult.IsSuccess)
-                {
-                    foreach (var entry in malCacheResult.Value.Where(e => e.AnimeSource == AnimeSource.MyAnimeList))
-                    {
-                        try
-                        {
-                            var malAnime = JsonSerializer.Deserialize<MalAnime>(entry.RawData, JsonOptions);
-                            if (malAnime?.MyListStatus?.Status != null)
-                                malViewStateById[entry.SourceId] = malAnime.MyListStatus.Status;
-                        }
-                        catch (JsonException ex)
-                        {
-                            logger.LogWarning(ex, Constants.LogMessages.AnimeMediatorService.MalCacheDeserializeFailed, entry.SourceId);
-                        }
-                    }
-                }
-            }
-
-            // ── NSFW filtering ──────────────────────────────────────────────────────────
-            var filteredItems = showNsfw ? items : items.Where(anime => !IsNsfwAnime(anime)).ToList();
-
-            var responses = filteredItems.Select(anime =>
-            {
-                var malId = anime.Id.ToString();
-                malToAniDb.TryGetValue(malId, out var aniDbId);
-                var sources = aniDbId != null && aniDbToSources.TryGetValue(aniDbId, out var s) ? s : default;
-                var inMal = sources.HasMal;
-                var inSonarr = sources.HasSonarr;
-                var inPlex = sources.HasPlex;
-                // plexBaseUrl ends with %2F (URL-encoded "/"), so appending source ID
-                // directly produces the correct path: .../metadata/{ratingKey}
-                string? plexUrl = inPlex && plexBaseUrl != null && sources.PlexId != null
-                    ? $"{plexBaseUrl}{sources.PlexId}" : null;
-                // Use TitleSlug from cache (same as regular anime card); fall back to numeric ID
-                var sonarrSlug = sources.SonarrId != null && sonarrSlugById.TryGetValue(sources.SonarrId, out var slug)
-                    ? slug : sources.SonarrId;
-                string? sonarrUrl = inSonarr && sonarrSlug != null && !string.IsNullOrWhiteSpace(sonarrSeriesBaseUrl)
-                    ? $"{sonarrSeriesBaseUrl.TrimEnd('/')}/series/{sonarrSlug}" : null;
-                var tvdbId = aniDbId != null && aniDbToTvdb.TryGetValue(aniDbId, out var tId) ? tId : null;
-                string? malViewState = sources.MalId != null && malViewStateById.TryGetValue(sources.MalId, out var vs) ? vs : null;
-                return new SeasonalAnimeResponse(
-                    MalId: malId,
-                    Title: anime.Title ?? string.Empty,
-                    Synopsis: anime.Synopsis,
-                    Genres: anime.Genres?.Select(g => g.Name).ToArray(),
-                    CoverImageUrl: anime.MainPicture?.Large ?? anime.MainPicture?.Medium,
-                    MalScore: anime.Mean,
-                    StartDate: anime.StartDate,
-                    MediaType: anime.MediaType,
-                    Status: anime.Status,
-                    MalUrl: $"{myAnimeListHost}/anime/{malId}",
-                    InMal: inMal,
-                    InPlex: inPlex,
-                    PlexUrl: plexUrl,
-                    InSonarr: inSonarr,
-                    SonarrUrl: sonarrUrl,
-                    TvdbId: tvdbId,
-                    EnglishTitle: anime.AlternativeTitles?.En,
-                    MalViewState: malViewState,
-                    AniDbId: aniDbId,
-                    AgeRating: anime.Rating
-                );
-            });
-
-            return Result.Success(responses.AsEnumerable());
+            var enriched = await EnrichMalItemsAsync(seasonalResult.Value, showNsfw);
+            return Result.Success(enriched);
         }
         catch (Exception ex)
         {
             return Result.Failure<IEnumerable<SeasonalAnimeResponse>>(new(Constants.Errors.GetAllAsync, ex.Message));
         }
+    }
+
+    private async Task<IEnumerable<SeasonalAnimeResponse>> EnrichMalItemsAsync(IList<MalAnime> items, bool showNsfw)
+    {
+        var seasonalMalIds = items.Select(a => a.Id.ToString()).ToList();
+
+        // ── Kometa lookup: malIds → aniDbId + tvdbId ─────────────────────────────────
+        // Single self-join query treats the Kometa mapping as the sole source of truth.
+        // TvdbId drives the exact `tvdb:XXXXX` Sonarr lookup; AniDbId drives provider state.
+        var malToAniDb = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var aniDbToTvdb = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (seasonalMalIds.Count > 0)
+        {
+            var kometaMappings = await kometaAnimeMappingRepository.GetMalMappingsWithTvdbAsync(seasonalMalIds);
+            foreach (var (malId, aniDbId, tvdbId) in kometaMappings)
+            {
+                malToAniDb[malId] = aniDbId;
+                if (tvdbId != null)
+                    aniDbToTvdb[aniDbId] = tvdbId;
+            }
+        }
+
+        // ── Build aniDbId → sources from AnimeMapping ──────────────────────────────
+        // Includes both full-sync entries and mini-sync entries written by
+        // AddSonarrSeriesAsync / UpdateMalListStatusAsync, so no property bag needed.
+        var aniDbToSources = new Dictionary<string, (bool HasPlex, string? PlexId, bool HasSonarr, string? SonarrId, bool HasMal, string? MalId)>(StringComparer.OrdinalIgnoreCase);
+        bool anyInPlex = false;
+        var mappingsResult = await animeMappingService.GetAllAsync(includeAnime: true);
+        if (mappingsResult.IsSuccess)
+        {
+            foreach (var aniDbGroup in mappingsResult.Value.Where(m => m.Anime != null).GroupBy(m => m.AniDbId))
+            {
+                var animes = aniDbGroup.Select(m => m.Anime!).ToList();
+                var plexEntry = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.Plex);
+                var sonarrEntry = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.Sonarr);
+                var malEntry = animes.FirstOrDefault(a => a.AnimeSource == AnimeSource.MyAnimeList);
+                bool hasPlex = plexEntry != null;
+                if (hasPlex) anyInPlex = true;
+                aniDbToSources[aniDbGroup.Key] = (hasPlex, plexEntry?.SourceId, sonarrEntry != null, sonarrEntry?.SourceId, malEntry != null, malEntry?.SourceId);
+            }
+        }
+
+        // Resolve Plex base URL only if needed
+        string? plexBaseUrl = anyInPlex ? await GetPlexBaseUrlAsync() : null;
+        var sonarrSeriesBaseUrl = await GetSonarrSeriesBaseUrlAsync();
+
+        // ── Sonarr TitleSlug lookup (for building correct Sonarr web UI URLs) ───────
+        var sonarrIds = aniDbToSources.Values
+            .Where(s => s.HasSonarr && s.SonarrId != null)
+            .Select(s => s.SonarrId!)
+            .Distinct()
+            .ToList();
+        var sonarrSlugById = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (sonarrIds.Count > 0)
+        {
+            var cacheResult = await cacheEntryService.GetBySourceIdsAsync(sonarrIds);
+            if (cacheResult.IsSuccess)
+            {
+                foreach (var entry in cacheResult.Value.Where(e => e.AnimeSource == AnimeSource.Sonarr))
+                {
+                    try
+                    {
+                        var series = JsonSerializer.Deserialize<SonarrSeries>(entry.RawData, JsonOptions);
+                        if (series?.TitleSlug != null)
+                            sonarrSlugById[entry.SourceId] = series.TitleSlug;
+                    }
+                    catch (JsonException ex)
+                    {
+                        logger.LogWarning(ex, Constants.LogMessages.AnimeMediatorService.SonarrCacheDeserializeFailed, entry.SourceId);
+                    }
+                }
+            }
+        }
+
+        // ── MAL view-state lookup (watching / completed / on_hold / dropped / plan_to_watch) ──
+        var malIdsInLibrary = aniDbToSources.Values
+            .Where(s => s.HasMal && s.MalId != null)
+            .Select(s => s.MalId!)
+            .Distinct()
+            .ToList();
+        var malViewStateById = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (malIdsInLibrary.Count > 0)
+        {
+            var malCacheResult = await cacheEntryService.GetBySourceIdsAsync(malIdsInLibrary);
+            if (malCacheResult.IsSuccess)
+            {
+                foreach (var entry in malCacheResult.Value.Where(e => e.AnimeSource == AnimeSource.MyAnimeList))
+                {
+                    try
+                    {
+                        var malAnime = JsonSerializer.Deserialize<MalAnime>(entry.RawData, JsonOptions);
+                        if (malAnime?.MyListStatus?.Status != null)
+                            malViewStateById[entry.SourceId] = malAnime.MyListStatus.Status;
+                    }
+                    catch (JsonException ex)
+                    {
+                        logger.LogWarning(ex, Constants.LogMessages.AnimeMediatorService.MalCacheDeserializeFailed, entry.SourceId);
+                    }
+                }
+            }
+        }
+
+        // ── NSFW filtering ──────────────────────────────────────────────────────────
+        var filteredItems = showNsfw ? items : items.Where(anime => !IsNsfwAnime(anime)).ToList();
+
+        return filteredItems.Select(anime =>
+        {
+            var malId = anime.Id.ToString();
+            malToAniDb.TryGetValue(malId, out var aniDbId);
+            var sources = aniDbId != null && aniDbToSources.TryGetValue(aniDbId, out var s) ? s : default;
+            var inMal = sources.HasMal;
+            var inSonarr = sources.HasSonarr;
+            var inPlex = sources.HasPlex;
+            // plexBaseUrl ends with %2F (URL-encoded "/"), so appending source ID
+            // directly produces the correct path: .../metadata/{ratingKey}
+            string? plexUrl = inPlex && plexBaseUrl != null && sources.PlexId != null
+                ? $"{plexBaseUrl}{sources.PlexId}" : null;
+            // Use TitleSlug from cache (same as regular anime card); fall back to numeric ID
+            var sonarrSlug = sources.SonarrId != null && sonarrSlugById.TryGetValue(sources.SonarrId, out var slug)
+                ? slug : sources.SonarrId;
+            string? sonarrUrl = inSonarr && sonarrSlug != null && !string.IsNullOrWhiteSpace(sonarrSeriesBaseUrl)
+                ? $"{sonarrSeriesBaseUrl.TrimEnd('/')}/series/{sonarrSlug}" : null;
+            var tvdbId = aniDbId != null && aniDbToTvdb.TryGetValue(aniDbId, out var tId) ? tId : null;
+            string? malViewState = sources.MalId != null && malViewStateById.TryGetValue(sources.MalId, out var vs) ? vs : null;
+            return new SeasonalAnimeResponse(
+                MalId: malId,
+                Title: anime.Title ?? string.Empty,
+                Synopsis: anime.Synopsis,
+                Genres: anime.Genres?.Select(g => g.Name).ToArray(),
+                CoverImageUrl: anime.MainPicture?.Large ?? anime.MainPicture?.Medium,
+                MalScore: anime.Mean,
+                StartDate: anime.StartDate,
+                MediaType: anime.MediaType,
+                Status: anime.Status,
+                MalUrl: $"{myAnimeListHost}/anime/{malId}",
+                InMal: inMal,
+                InPlex: inPlex,
+                PlexUrl: plexUrl,
+                InSonarr: inSonarr,
+                SonarrUrl: sonarrUrl,
+                TvdbId: tvdbId,
+                EnglishTitle: anime.AlternativeTitles?.En,
+                MalViewState: malViewState,
+                AniDbId: aniDbId,
+                AgeRating: anime.Rating
+            );
+        });
     }
 
     public async Task<Result<SonarrOptionsResponse>> GetSonarrOptionsAsync()
@@ -1765,6 +1768,24 @@ public sealed class AnimeMediatorService(
             .ToList();
 
         return Result.Success<IList<MalSearchResultItem>>(enriched);
+    }
+
+    public async Task<Result<IEnumerable<SeasonalAnimeResponse>>> SearchMalAnimeWithDetailsAsync(string query, int limit = 100)
+    {
+        try
+        {
+            bool showNsfw = await IsNsfwAllowedAsync();
+            var searchResult = await malAnimeSource.SearchByTitleRichAsync(query, limit);
+            if (searchResult.IsFailure)
+                return Result.Failure<IEnumerable<SeasonalAnimeResponse>>(searchResult.Error);
+
+            var enriched = await EnrichMalItemsAsync(searchResult.Value, showNsfw);
+            return Result.Success(enriched);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<IEnumerable<SeasonalAnimeResponse>>(new(Constants.Errors.SearchMalAnimeWithDetailsAsync, ex.Message));
+        }
     }
 
     private async Task<bool> IsPlexEnabledAsync()

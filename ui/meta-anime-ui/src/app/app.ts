@@ -172,6 +172,7 @@ export class App implements OnInit, AfterViewInit {
   private static readonly PAGE_KEYS: Record<string, string> = {
     '/animes': 'nav.animes',
     '/seasonal': 'nav.seasonal',
+    '/mal-search': 'nav.malSearch',
     '/settings': 'nav.settings',
     '/library': 'nav.library',
   };

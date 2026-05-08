@@ -126,6 +126,34 @@ public sealed class MalController(
             return Unauthorized(new { code = "MAL.AuthenticationFailed", message = ex.Message });
         }
     }
+
+    /// <summary>Searches MAL for anime by title with full fields — returns SeasonalAnimeResponse suitable for the search page.</summary>
+    [HttpGet("anime-search")]
+    [Authorize]
+    public async Task<ActionResult> SearchAnimeWithDetails([FromQuery] string q, [FromQuery] int limit = 100)
+    {
+        if (string.IsNullOrWhiteSpace(q))
+            return BadRequest("Query parameter 'q' is required.");
+
+        if (q.Trim().Length < 3)
+            return BadRequest(PresentationConstants.Messages.MalSearchQueryTooShort);
+
+        try
+        {
+            var result = await animeMediatorService.SearchMalAnimeWithDetailsAsync(q.Trim(), limit);
+            if (result.IsFailure)
+            {
+                logger.LogError("MAL anime search (details) failed for query '{Query}': {Error}", q, result.Error.Message);
+                return StatusCode(500, result.Error.Message);
+            }
+            return Ok(result.Value);
+        }
+        catch (MalAuthenticationException ex)
+        {
+            logger.LogWarning("MAL authentication failure when searching (details) for '{Query}': {Message}", q, ex.Message);
+            return Unauthorized(new { code = "MAL.AuthenticationFailed", message = ex.Message });
+        }
+    }
     /// <summary>Returns all user-confirmed AniDbId cross-links, enriched with titles.</summary>
     [HttpGet("crosslinks")]
     [Authorize]
