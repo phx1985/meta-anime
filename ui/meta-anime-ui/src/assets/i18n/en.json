@@ -509,6 +509,7 @@
     "sizeUnit": "GB",
     "seeMore": "See more",
     "aka": "AKA",
+    "copyTitle": "Copy title",
     "addToMal": "Add to MAL",
     "addToSonarr": "Add to Sonarr",
     "sonarrAdd": {

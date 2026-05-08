@@ -509,6 +509,7 @@
     "sizeUnit": "Go",
     "seeMore": "Voir plus",
     "aka": "Alias",
+    "copyTitle": "Copier le titre",
     "addToMal": "Ajouter à MAL",
     "addToSonarr": "Ajouter à Sonarr",
     "sonarrAdd": {

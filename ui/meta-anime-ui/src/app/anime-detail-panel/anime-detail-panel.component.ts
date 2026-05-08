@@ -97,6 +97,16 @@ export class AnimeDetailPanelComponent {
   showAkaPopover = signal(false);
   toggleAkaPopover(): void { this.showAkaPopover.update(v => !v); }
 
+  titleCopied = signal(false);
+  copyTitle(): void {
+    navigator.clipboard.writeText(this.displayTitle).then(() => {
+      this.titleCopied.set(true);
+      setTimeout(() => this.titleCopied.set(false), 3000);
+    }).catch(() => {
+      // Clipboard API unavailable in non-secure contexts; fail silently
+    });
+  }
+
   // Sonarr Add flow
   readonly sonarrAddOpen = signal(false);
   readonly sonarrLookupResults = signal<SonarrLookupResult[]>([]);
