@@ -21,6 +21,18 @@ export class BotKunService {
   // Non-empty only during DB-path responses; used by the component to validate [anime:ID] tags.
   readonly permittedMalIds = signal<ReadonlySet<string>>(new Set());
 
+  /** Prompt queued by the anime detail panel's "Ask Bot-kun" button. */
+  private readonly _pendingPrompt = signal<string | null>(null);
+  readonly pendingPrompt = this._pendingPrompt.asReadonly();
+
+  requestPrompt(text: string): void {
+    this._pendingPrompt.set(text);
+  }
+
+  consumePrompt(): void {
+    this._pendingPrompt.set(null);
+  }
+
   sendMessage(
     userMessage: string,
     history: BotKunHistoryMessage[],

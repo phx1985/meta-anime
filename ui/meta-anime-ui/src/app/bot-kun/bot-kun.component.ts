@@ -10,6 +10,7 @@ import {
   OnDestroy,
   output,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -107,6 +108,27 @@ export class BotKunComponent implements OnDestroy {
         clearTimeout(this._scrollDebounceHandle ?? undefined);
         this._scrollDebounceHandle = setTimeout(() => this.scrollToBottom('smooth'), 100);
       }
+    });
+
+    // Open drawer and send a prompt queued from outside (e.g. anime detail panel "Ask Bot-kun" button)
+    effect(() => {
+      const prompt = this.botKunService.pendingPrompt();
+      if (prompt === null) return;
+      untracked(() => {
+        this.botKunService.consumePrompt();
+        if (!this.isOpen()) {
+          this.isOpen.set(true);
+          this.hasUnread.set(false);
+        }
+        this.inputText.set(prompt);
+        // Send after a short tick; if Bot-kun is busy, the text stays in the input box.
+        setTimeout(() => {
+          if (!this.isStreaming() && !this.hasTypingMessage()) {
+            this.send();
+          }
+          // else: text remains pre-filled — user sends manually when ready
+        }, 50);
+      });
     });
 
     // Open/close drawer automatically when bot-kun is enabled or disabled

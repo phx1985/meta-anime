@@ -510,6 +510,8 @@
     "seeMore": "Voir plus",
     "aka": "Alias",
     "copyTitle": "Copier le titre",
+    "askBotKun": "Demander à Bot-kun",
+    "askBotKunInstruction": "Voici les données d'un anime. Donne une présentation courte et engageante basée uniquement sur les informations ci-dessous — n'ajoute rien d'extérieur :",
     "addToMal": "Ajouter à MAL",
     "addToSonarr": "Ajouter à Sonarr",
     "sonarrAdd": {
@@ -532,6 +534,7 @@
     "addedOn": "Ajouté",
     "openPlex": "Ouvrir dans Plex",
     "openSonarr": "Ouvrir dans Sonarr",
+    "askBotKunInstruction": "Voici les données d'un anime. Donne une présentation courte et engageante basée uniquement sur les informations ci-dessous — n'ajoute rien d'extérieur :",
     "onboarding": {
       "bodyHint": "Voir les Détails"
     },
