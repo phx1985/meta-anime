@@ -80,9 +80,8 @@
   <!-- Messages -->
   <div class="bot-kun__messages">
     @for (msg of messages(); track $index) {
-    <div class="bot-kun__msg" [class.bot-kun__msg--user]="msg.role === 'user'"
-      [class.bot-kun__msg--bot]="msg.role === 'assistant'">
-      @if (msg.role === 'assistant') {
+    @if (msg.role === 'assistant') {
+    <div class="bot-kun__msg bot-kun__msg--bot">
       <div class="bot-kun__msg-avatar" aria-hidden="true">
         @if (msg.typing) {
           <div class="bot-kun__avatar-dots">
@@ -97,14 +96,13 @@
           </svg>
         }
       </div>
-      }
       <div class="bot-kun__bubble">
-        @if (msg.role === 'assistant' && msg.typing && msg.typedContent === '') {
+        @if (msg.typing && msg.typedContent === '') {
         <!-- Typing animation -->
         <div class="bot-kun__typing" [attr.aria-label]="'botKun.typingIndicator' | translate">
           <span></span><span></span><span></span>
         </div>
-        } @else if (msg.role === 'assistant') {
+        } @else {
         <!-- Segment-based rendering: text runs as markdown HTML, anime tags as real cards -->
         <div class="bot-kun__md">
           @for (seg of parseSegments(msg.typedContent, false, msg.permittedIds ?? botKunService.permittedMalIds()); track segmentTrackKey($index, seg)) {
@@ -124,11 +122,10 @@
             }
           }
         </div>
-        } @else {
-        <span class="bot-kun__user-text">{{ msg.content }}</span>
         }
       </div>
     </div>
+    }
     }
     <div #messagesEnd></div>
   </div>
