@@ -1237,7 +1237,10 @@
     "close": "Fermer Bot-kun",
     "typingIndicator": "Bot-kun est en train d'écrire",
     "inputLabel": "Écrire à Bot-kun",
-    "sendMessage": "Envoyer le message"
+    "sendMessage": "Envoyer le message",
+    "readAloud": "Lire à voix haute",
+    "stopReading": "Arrêter la lecture",
+    "speaking": "Je lis..."
   },
   "luckyPick": {
     "buttonLabel": "J'ai de la chance!",

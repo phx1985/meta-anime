@@ -167,6 +167,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
+  min-width: 0;
 }
 
 .bot-kun__avatar {
@@ -179,6 +181,13 @@
   justify-content: center;
   color: #fff;
   flex-shrink: 0;
+}
+
+.bot-kun__header-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
 }
 
 .bot-kun__title {
@@ -227,7 +236,7 @@
 .bot-kun__messages {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 14px;
+  padding: 20px 18px 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -391,6 +400,111 @@
       opacity: 0.9;
     }
   }
+}
+
+// ── Speaking visualizer — single glowing wave line ───────────────────────────
+
+.bot-kun__viz {
+  flex: 1;
+  min-width: 0;
+  height: 3px;
+  margin-top: 4px;
+  border-radius: 100px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(139, 92, 246, 0.3) 15%,
+    rgba(167, 139, 250, 0.9) 50%,
+    rgba(139, 92, 246, 0.3) 85%,
+    transparent 100%
+  );
+  animation: botKunWaveLine 2.2s ease-in-out infinite;
+  transform-origin: center;
+  transition: filter 0.12s ease;
+
+  &--pulse {
+    filter: brightness(2.8) drop-shadow(0 0 5px rgba(167, 139, 250, 0.95));
+  }
+}
+
+@keyframes botKunWaveLine {
+  0%, 100% {
+    transform: scaleY(1);
+    opacity: 0.65;
+    box-shadow: 0 0 6px 1px rgba(139, 92, 246, 0.2);
+  }
+  50% {
+    transform: scaleY(2.5);
+    opacity: 1;
+    box-shadow: 0 0 14px 4px rgba(139, 92, 246, 0.5);
+  }
+}
+
+// ── Avatar speaking glow ──────────────────────────────────────────────────────
+
+.bot-kun__avatar--speaking {
+  animation: botKunAvatarPulse 2s ease-in-out infinite;
+}
+
+@keyframes botKunAvatarPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(157, 148, 255, 0.45); transform: scale(1);    }
+  50%       { box-shadow: 0 0 22px rgba(157, 148, 255, 0.9);  transform: scale(1.05); }
+}
+
+// ── Speak button ──────────────────────────────────────────────────────────────
+
+.bot-kun__bubble-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+  position: relative;
+}
+
+.bot-kun__speak-btn {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(18, 16, 40, 0.8);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--text-secondary, #a8a8c0);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  z-index: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: color 0.15s, background 0.15s, transform 0.15s;
+
+  &:hover {
+    color: var(--text-primary, #e8e8f0);
+    background: rgba(30, 26, 60, 0.92);
+    transform: scale(1.08);
+  }
+
+  &--active {
+    color: var(--accent-primary, #9d94ff);
+    background: rgba(108, 99, 255, 0.25);
+
+    svg { animation: botKunPulse 1.4s ease-in-out infinite; }
+
+    &:hover {
+      color: #fff;
+      background: rgba(108, 99, 255, 0.4);
+    }
+  }
+}
+
+@keyframes botKunPulse {
+  0%, 100% { transform: scale(1);   opacity: 1;    }
+  50%       { transform: scale(1.2); opacity: 0.75; }
 }
 
 // ── Typing animation ─────────────────────────────────────────────────────────

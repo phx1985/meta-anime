@@ -36,7 +36,7 @@
   <!-- Header -->
   <div class="bot-kun__header">
     <div class="bot-kun__header-info">
-      <div class="bot-kun__avatar" aria-hidden="true">
+      <div class="bot-kun__avatar" [class.bot-kun__avatar--speaking]="speakingIndex() !== -1" aria-hidden="true">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
           stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="18" height="12" rx="2" ry="2" />
@@ -48,9 +48,14 @@
           <path d="M16 19l2 3" />
         </svg>
       </div>
-      <div>
+      <div class="bot-kun__header-text">
         <span class="bot-kun__title">{{ 'botKun.title' | translate }}</span>
-        <span class="bot-kun__subtitle">{{ 'botKun.subtitle' | translate }}</span>
+        @if (speakingIndex() !== -1) {
+          <div class="bot-kun__viz" [class.bot-kun__viz--pulse]="speakingPulse()"
+               [attr.aria-label]="'botKun.speaking' | translate" aria-live="polite"></div>
+        } @else {
+          <span class="bot-kun__subtitle">{{ 'botKun.subtitle' | translate }}</span>
+        }
       </div>
     </div>
     <div class="bot-kun__header-actions">
@@ -96,6 +101,7 @@
           </svg>
         }
       </div>
+      <div class="bot-kun__bubble-wrap">
       <div class="bot-kun__bubble">
         @if (msg.typing && msg.typedContent === '') {
         <!-- Typing animation -->
@@ -123,6 +129,27 @@
           }
         </div>
         }
+      </div>
+      @if (!msg.typing && !msg.streaming) {
+      <button class="bot-kun__speak-btn"
+        [class.bot-kun__speak-btn--active]="speakingIndex() === $index"
+        (click)="toggleSpeak($index, msg.content)"
+        [attr.title]="(speakingIndex() === $index ? 'botKun.stopReading' : 'botKun.readAloud') | translate"
+        [attr.aria-label]="(speakingIndex() === $index ? 'botKun.stopReading' : 'botKun.readAloud') | translate"
+        type="button">
+        @if (speakingIndex() === $index) {
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect x="4" y="4" width="16" height="16" rx="3" />
+          </svg>
+        } @else {
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+          </svg>
+        }
+      </button>
+      }
       </div>
     </div>
     }

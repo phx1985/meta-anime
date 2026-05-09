@@ -1245,7 +1245,10 @@
     "close": "Close Bot-kun",
     "typingIndicator": "Bot-kun is typing",
     "inputLabel": "Message Bot-kun",
-    "sendMessage": "Send message"
+    "sendMessage": "Send message",
+    "readAloud": "Read aloud",
+    "stopReading": "Stop reading",
+    "speaking": "Reading..."
   },
   "luckyPick": {
     "buttonLabel": "I'm Feeling Lucky",
