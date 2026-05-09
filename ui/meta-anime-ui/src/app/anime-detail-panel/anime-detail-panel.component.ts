@@ -31,6 +31,7 @@ import { AnimeImageGalleryService } from '../services/anime-image-gallery.servic
 import { ProviderStateService } from '../services/provider-state.service';
 import { SonarrService } from '../services/sonarr.service';
 import { SonarrLookupResult, SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
+import { BotKunService } from '../services/bot-kun.service';
 
 @Component({
   selector: 'app-anime-detail-panel',
@@ -85,10 +86,13 @@ export class AnimeDetailPanelComponent {
   private gallery = inject(AnimeImageGalleryService);
   private providerState = inject(ProviderStateService);
   private sonarrService = inject(SonarrService);
+  private botKunService = inject(BotKunService);
 
   /** Expose provider state for template conditional rendering. */
   readonly plexEnabled = this.providerState.plexEnabled;
   readonly sonarrEnabled = this.providerState.sonarrEnabled;
+  /** True when Bot-kun is both enabled and configured — shows the Ask Bot-kun button. */
+  readonly botkunAvailable = computed(() => this.providerState.botkunEnabled() && this.providerState.botkunConfigured());
 
   anime = signal<AnimeDetailsResponse | null>(null);
   isLoading = signal(false);
@@ -96,6 +100,43 @@ export class AnimeDetailPanelComponent {
 
   showAkaPopover = signal(false);
   toggleAkaPopover(): void { this.showAkaPopover.update(v => !v); }
+
+  titleCopied = signal(false);
+  copyTitle(): void {
+    navigator.clipboard.writeText(this.displayTitle).then(() => {
+      this.titleCopied.set(true);
+      setTimeout(() => this.titleCopied.set(false), 3000);
+    }).catch(() => {
+      // Clipboard API unavailable in non-secure contexts; fail silently
+    });
+  }
+
+  askBotKun(): void {
+    const m = this.mal;
+    const lines: string[] = [];
+
+    const typePart = m?.mediaType?.toUpperCase();
+    const statusPart = m?.status?.replace(/_/g, ' ');
+    const typeStatus = [typePart, statusPart].filter(Boolean).join(' · ');
+
+    lines.push(`Title: ${this.displayTitle}`);
+    if (typeStatus) lines.push(`Type: ${typeStatus}`);
+
+    const dateParts = [m?.startDate, m?.endDate].filter(Boolean);
+    if (dateParts.length > 0) lines.push(`Release: ${dateParts.join(' → ')}`);
+
+    const genres = m?.genres ?? [];
+    if (genres.length > 0) lines.push(`Genres: ${genres.join(', ')}`);
+
+    const score = m?.rating?.malMean;
+    if (score && score > 0) lines.push(`Score: ${score}/10`);
+    if (m?.ageRating) lines.push(`Age Rating: ${m.ageRating.toUpperCase()}`);
+
+    if (m?.synopsis) lines.push(`\nSynopsis:\n${m.synopsis}`);
+
+    const instruction = this.translate.instant('animeDetailPanel.askBotKunInstruction');
+    this.botKunService.requestPrompt(`${instruction}\n\n${lines.join('\n')}`);
+  }
 
   // Sonarr Add flow
   readonly sonarrAddOpen = signal(false);

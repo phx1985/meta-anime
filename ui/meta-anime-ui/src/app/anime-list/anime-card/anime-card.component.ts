@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   HostListener,
   input,
   output,
@@ -13,6 +14,8 @@ import { trigger, style, animate, transition } from '@angular/animations';
 import { AnimeDetailsResponse, MalAnimeInfo, SeasonalAnimeItem, SonarrAnimeInfo } from '../../models/anime.models';
 import { ScoreBadgeComponent } from './score-badge/score-badge.component';
 import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../../constants/genre-lists';
+import { ProviderStateService } from '../../services/provider-state.service';
+import { BotKunService } from '../../services/bot-kun.service';
 
 @Component({
   selector: 'app-anime-card',
@@ -53,6 +56,10 @@ export class AnimeCardComponent {
   readonly glowSuccess = input<boolean>(false);
 
   private translate = inject(TranslateService);
+  private providerState = inject(ProviderStateService);
+  private botKunService = inject(BotKunService);
+
+  readonly botkunAvailable = computed(() => this.providerState.botkunEnabled() && this.providerState.botkunConfigured());
 
   showAltTitles = signal(false);
   showLightbox = signal(false);
@@ -287,5 +294,32 @@ export class AnimeCardComponent {
   toggleTooltip(provider: string, event: Event): void {
     event.stopPropagation();
     this.activeProviderTooltip.update((current) => (current === provider ? null : provider));
+  }
+
+  askBotKun(event: Event): void {
+    event.stopPropagation();
+
+    const lines: string[] = [];
+
+    const typePart = this.mediaType ? this.mediaTypeLabel(this.mediaType) : null;
+    const statusPart = this.seriesStatus ? this.seriesStatusLabel(this.seriesStatus) : null;
+    const typeStatus = [typePart, statusPart].filter(Boolean).join(' · ');
+
+    lines.push(`Title: ${this.displayTitle}`);
+    if (typeStatus) lines.push(`Type: ${typeStatus}`);
+
+    const dateParts = [this.startDate, this.endDate].filter(Boolean);
+    if (dateParts.length > 0) lines.push(`Release: ${dateParts.join(' → ')}`);
+
+    const genres = [...this.pureGenres, ...this.themes];
+    if (genres.length > 0) lines.push(`Genres: ${genres.join(', ')}`);
+
+    if (this.malScore > 0) lines.push(`Score: ${this.malScore}/10`);
+    if (this.ageRating) lines.push(`Age Rating: ${this.ageRatingLabel(this.ageRating)}`);
+
+    if (this.description) lines.push(`\nSynopsis:\n${this.description}`);
+
+    const instruction = this.translate.instant('animeCard.askBotKunInstruction');
+    this.botKunService.requestPrompt(`${instruction}\n\n${lines.join('\n')}`);
   }
 }

@@ -299,6 +299,28 @@
   text-overflow: ellipsis;
 }
 
+// Bot-kun face button — top-right of the card header, stops card click propagation
+.card-ask-bot-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, #a78bfa 35%, transparent);
+  background: color-mix(in srgb, #a78bfa 12%, transparent);
+  color: #a78bfa;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, #a78bfa 26%, transparent);
+    border-color: #a78bfa;
+    box-shadow: 0 0 0 3px color-mix(in srgb, #a78bfa 16%, transparent);
+  }
+}
+
 // ─── Status pills ─────────────────────────────────────────────────────────────
 
 .status-pills {

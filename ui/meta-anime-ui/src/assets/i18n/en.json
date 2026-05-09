@@ -509,6 +509,9 @@
     "sizeUnit": "GB",
     "seeMore": "See more",
     "aka": "AKA",
+    "copyTitle": "Copy title",
+    "askBotKun": "Ask Bot-kun",
+    "askBotKunInstruction": "Here is data about an anime. Please give a short, engaging summary based only on the information provided below — do not add anything from outside:",
     "addToMal": "Add to MAL",
     "addToSonarr": "Add to Sonarr",
     "sonarrAdd": {
@@ -531,6 +534,7 @@
     "addedOn": "Added",
     "openPlex": "Open in Plex",
     "openSonarr": "Open in Sonarr",
+    "askBotKunInstruction": "Here is data about an anime. Please give a short, engaging summary based only on the information provided below — do not add anything from outside:",
     "onboarding": {
       "bodyHint": "Click for Details"
     },

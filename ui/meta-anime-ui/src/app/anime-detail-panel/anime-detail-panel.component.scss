@@ -212,7 +212,51 @@
   min-width: 0;
 }
 
-// AKA badge — small pill button; click opens a popover with all alt titles (works on mobile)
+// Copy-title icon button — sits next to the title h2 in panel__title-row
+@keyframes copy-check-pop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  60%  { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.panel__copy-title-btn {
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+    color: var(--accent-primary);
+    border-color: color-mix(in srgb, var(--accent-primary) 30%, transparent);
+  }
+
+  &--copied {
+    color: #22c55e;
+    background: color-mix(in srgb, #22c55e 14%, transparent);
+    border-color: color-mix(in srgb, #22c55e 40%, transparent);
+
+    &:hover {
+      color: #22c55e;
+      background: color-mix(in srgb, #22c55e 22%, transparent);
+      border-color: color-mix(in srgb, #22c55e 55%, transparent);
+    }
+  }
+}
+
+.panel__copy-title-check {
+  animation: copy-check-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
 .panel__aka-wrap {
   position: relative;
   flex-shrink: 0;
