@@ -92,7 +92,16 @@
         "sub": "Enable Plex or Sonarr in Settings to see your coverage gaps here."
       }
     },
-    "welcome": "Welcome to Meta Anime"
+    "welcome": "Welcome to Meta Anime",
+    "activityStats": {
+      "title": "Activity",
+      "today": "Today",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "thisYear": "This Year",
+      "downloads": "Episodes Downloaded",
+      "storage": "Storage Added"
+    }
   },
   "seasonal": {
     "title": "Seasonal Anime",

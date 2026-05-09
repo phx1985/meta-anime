@@ -34,6 +34,7 @@ public static class Constants
         public const string GetPropertyBagByKey = "Error.GetPropertyBagByKey";
         public const string GetSonarrSeriesByCodecAsync = "Error.GetSonarrSeriesByCodecAsync";
         public const string GetStatisticsAsync = "Error.GetStatisticsAsync";
+        public const string GetActivityStatsAsync = "Error.GetActivityStatsAsync";
         public const string GetSyncStatus = "Error.GetSyncStatus";
         public const string NotFound = "Error.NotFound";
         public const string RefreshData = "Error.RefreshData";

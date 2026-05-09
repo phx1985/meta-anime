@@ -92,7 +92,16 @@
         "sub": "Activez Plex ou Sonarr dans les Paramètres pour voir vos lacunes de couverture ici."
       }
     },
-    "welcome": "Bienvenue sur Meta Anime"
+    "welcome": "Bienvenue sur Meta Anime",
+    "activityStats": {
+      "title": "Activité",
+      "today": "Aujourd'hui",
+      "thisWeek": "Cette semaine",
+      "thisMonth": "Ce mois",
+      "thisYear": "Cette année",
+      "downloads": "Épisodes téléchargés",
+      "storage": "Stockage ajouté"
+    }
   },
   "seasonal": {
     "title": "Anime Saisonniers",

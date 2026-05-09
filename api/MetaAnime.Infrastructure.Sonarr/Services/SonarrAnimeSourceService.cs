@@ -382,6 +382,62 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
 
         return Result.Success(new SonarrTagInfo(created.Id, created.Label));
     }
+
+    public async Task<Result<IList<SonarrDownloadEvent>>> GetDownloadHistoryAsync(int pageSize = 1000)
+    {
+        var (host, apiKey, _, isConfigured) = await GetSettingsAsync();
+        if (!isConfigured)
+            return Result.Success<IList<SonarrDownloadEvent>>([]);
+
+        // Fetch all downloadFolderImported records going back to the start of the current year.
+        // We paginate until the oldest record in a page is before yearStart, so we never cap
+        // stats at a fixed round number like 1000.
+        var yearStart = new DateTime(DateTime.UtcNow.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        // 2 000 records/page reduces round-trips by ~8× vs the old 250 default.
+        // Most libraries need only 1-2 calls to cover an entire year.
+        const int fetchPageSize = 2000;
+        var client = new RestClient(host);
+        var allEvents = new List<SonarrDownloadEvent>();
+        var page = 1;
+
+        while (true)
+        {
+            var req = new RestRequest("api/v3/history");
+            req.AddParameter("apikey", apiKey);
+            req.AddParameter("page", page);
+            req.AddParameter("pageSize", fetchPageSize);
+            req.AddParameter("sortKey", "date");
+            req.AddParameter("sortDirection", "descending");
+            // Sonarr expects the numeric enum value: 3 = DownloadFolderImported
+            req.AddParameter("eventType", 3);
+
+            var resp = await client.ExecuteAsync(req);
+            if (!resp.IsSuccessful || string.IsNullOrEmpty(resp.Content))
+                break;
+
+            var historyResponse = JsonSerializer.Deserialize<SonarrHistoryResponse>(resp.Content, jsonOptions);
+            var records = historyResponse?.Records;
+            if (records == null || records.Count == 0)
+                break;
+
+            allEvents.AddRange(records
+                .Where(r => r.EventType.Equals("downloadFolderImported", StringComparison.OrdinalIgnoreCase))
+                .Select(r => new SonarrDownloadEvent(r.Date, r.Data?.GetSizeBytes() ?? 0L)));
+
+            // Stop once the oldest record on this page pre-dates the year start —
+            // everything further back is outside the stats window we need.
+            if (records.Min(r => r.Date) < yearStart)
+                break;
+
+            // Stop if Sonarr returned fewer records than requested (last page).
+            if (records.Count < fetchPageSize)
+                break;
+
+            page++;
+        }
+
+        return Result.Success<IList<SonarrDownloadEvent>>(allEvents);
+    }
     #endregion
 
     #region Private Methods
