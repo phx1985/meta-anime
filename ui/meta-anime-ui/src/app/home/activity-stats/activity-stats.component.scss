@@ -1,0 +1,205 @@
+:host {
+  display: block;
+}
+
+// ── Entry animation (matches genre-chart / missing-stats pattern) ─────────────
+@keyframes popFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// ── Floating card ────────────────────────────────────────────────────────────
+.activity-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px var(--card-shadow);
+  padding: 24px 28px 28px;
+  animation: popFadeIn 0.6s cubic-bezier(0.34, 1.4, 0.64, 1) 0.55s both;
+}
+
+// ── Header ───────────────────────────────────────────────────────────────────
+.activity-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.activity-card__title {
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+// ── Period pill tabs ─────────────────────────────────────────────────────────
+.period-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 3px;
+  flex-wrap: wrap;
+}
+
+.period-tab {
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .03em;
+  padding: 5px 14px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: background 150ms ease, color 150ms ease;
+
+  &:hover:not(.period-tab--active) {
+    background: var(--card-bg);
+    color: var(--text-primary);
+  }
+
+  &--active {
+    background: var(--accent-primary);
+    color: #fff;
+  }
+}
+
+// ── Stat tile grid ────────────────────────────────────────────────────────────
+.activity-card__tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+// ── Individual tile ───────────────────────────────────────────────────────────
+.stat-tile {
+  background: var(--bg-secondary);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 20px 18px;
+  min-height: 110px;
+  display: flex;
+  align-items: stretch;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px var(--card-shadow);
+  }
+}
+
+.stat-tile__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+}
+
+.stat-tile__icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  opacity: .6;
+  color: var(--text-secondary);
+}
+
+.stat-tile__value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -.02em;
+  color: var(--accent-primary);
+  margin-top: 4px;
+
+  &--empty {
+    color: var(--text-muted);
+    opacity: .55;
+  }
+}
+
+.stat-tile__label {
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+// ── Skeleton pulse ────────────────────────────────────────────────────────────
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: .5; }
+  50%       { opacity: .25; }
+}
+
+.stat-tile__skeleton {
+  width: 100%;
+  height: 100%;
+  min-height: 70px;
+  border-radius: 8px;
+  background: var(--card-border);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+// ── Chart section ─────────────────────────────────────────────────────────────
+.activity-card__chart {
+  margin-top: 24px;
+  border-top: 1px solid var(--card-border);
+  padding-top: 20px;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.chart-legend__item {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  &--downloads {
+    color: #00aae0;
+    &::before { background: #00aae0; }
+  }
+
+  &--watching {
+    color: #e5a00d;
+    &::before { background: #e5a00d; }
+  }
+}
+
+.chart-wrap {
+  position: relative;
+  height: 180px;
+  width: 100%;
+
+  canvas {
+    display: block;
+  }
+}

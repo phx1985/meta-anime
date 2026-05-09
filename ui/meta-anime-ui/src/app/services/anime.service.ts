@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   AnimeStatisticsResponse,
+  ActivityStatsResponse,
   AnimeResponse,
   AnimeDetailsResponse,
   PagedResponse,
@@ -27,6 +28,12 @@ export class AnimeService {
 
   getStatistics(): Observable<AnimeStatisticsResponse> {
     return this.http.get<AnimeStatisticsResponse>(`${this.base}/statistics`);
+  }
+
+  getActivityStats(tzOffset: number): Observable<ActivityStatsResponse> {
+    return this.http.get<ActivityStatsResponse>(`${this.base}/activity-stats`, {
+      params: { tzOffset: tzOffset.toString() },
+    });
   }
 
   getAnimes(

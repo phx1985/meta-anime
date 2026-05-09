@@ -165,7 +165,7 @@ export class BotKunService {
             if (parsed.c) {
               // R17b: intercept PI metadata chunk (permitted MAL IDs); don't forward as content
               if (parsed.c.startsWith('[PI:') && parsed.c.endsWith(']')) {
-                const ids = parsed.c.slice(4, -1).split(',').filter(Boolean);
+                const ids = parsed.c.slice(4, -1).split(',').map(id => id.trim()).filter(Boolean);
                 if (ids.length > 0) this.permittedMalIds.set(new Set(ids));
                 continue;
               }

@@ -37,7 +37,13 @@ public interface ISonarrAnimeSourceService<T> : IAnimeSourceService<T>
 
     /// <summary>Creates a new tag in the Sonarr instance and returns the created tag.</summary>
     Task<Result<SonarrTagInfo>> CreateTagAsync(string label);
+
+    /// <summary>Returns recent downloaded episode events from Sonarr, ordered most-recent first.</summary>
+    Task<Result<IList<SonarrDownloadEvent>>> GetDownloadHistoryAsync(int pageSize = 1000);
 }
+
+/// <summary>Lightweight projection of a Sonarr history download event.</summary>
+public sealed record SonarrDownloadEvent(DateTime Date, long SizeBytes);
 
 /// <summary>Light-weight projection returned by GetSeriesByCodecAsync.</summary>
 public sealed record SonarrSeriesCodecResult(

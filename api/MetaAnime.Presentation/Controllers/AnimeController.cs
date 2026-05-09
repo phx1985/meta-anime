@@ -31,6 +31,20 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
         return Ok(result.Value);
     }
 
+    [HttpGet("activity-stats")]
+    [Authorize]
+    public async Task<ActionResult<ActivityStatsResponse>> GetActivityStats([FromQuery] int tzOffset = 0)
+    {
+        var result = await mediator.Send(new GetActivityStatsQuery(tzOffset));
+
+        if (result.IsFailure)
+        {
+            return StatusCode(500, result.Error.Message);
+        }
+
+        return Ok(result.Value);
+    }
+
     [HttpGet("plex-thumb/{ratingKey}")]
     [Authorize]
     public async Task<IActionResult> GetPlexThumb(string ratingKey)

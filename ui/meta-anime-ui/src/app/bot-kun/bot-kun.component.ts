@@ -78,6 +78,10 @@ export class BotKunComponent implements OnDestroy {
   /** True when Bot-kun has a new response and the drawer is currently closed */
   readonly hasUnread = signal(false);
 
+  readonly speakingIndex = signal<number>(-1);
+  /** True for ~300 ms on each word boundary — drives the CSS pulse class on the visualizer */
+  readonly speakingPulse = signal<boolean>(false);
+
   readonly hasMessages = computed(() => this.messages().length > 0);
   readonly hasTypingMessage = computed(() => this.messages().some(m => m.typing));
   private readonly _msgCount = computed(() => this.messages().length);
@@ -94,6 +98,8 @@ export class BotKunComponent implements OnDestroy {
   private _incompleteTagWaitMs = 0;
   // Debounce handle for scroll-to-bottom effect
   private _scrollDebounceHandle: ReturnType<typeof setTimeout> | null = null;
+  // Waveform pulse timer handle
+  private _waveformDecayHandle: ReturnType<typeof setTimeout> | null = null;
   // Cache for parseSegments results (non-streaming only)
   private readonly _segmentCache = new Map<string, MessageSegment[]>();
 
@@ -162,11 +168,11 @@ export class BotKunComponent implements OnDestroy {
     this.greetingSub?.unsubscribe();
     this.botKunService.cancel();
     this.botKunService.cancelGreeting();
-    // Cancel any in-flight typewriter tick
     clearTimeout(this._typewriterHandle ?? undefined);
     this._typewriterHandle = null;
-    // Cancel any pending scroll debounce
     clearTimeout(this._scrollDebounceHandle ?? undefined);
+    clearTimeout(this._waveformDecayHandle ?? undefined);
+    this.stopSpeech();
   }
 
   open(): void {
@@ -184,6 +190,7 @@ export class BotKunComponent implements OnDestroy {
 
   close(): void {
     if (this.isClosing()) return;
+    this.stopSpeech();
     this.isClosing.set(true);
     setTimeout(() => {
       this.isOpen.set(false);
@@ -270,6 +277,69 @@ export class BotKunComponent implements OnDestroy {
   }
 
   /**
+   * Rewrites `content` so that card tags ([anime:ID] / [lucky:ID]) that appear mid-sentence
+   * are moved to the next sentence boundary (after `.`, `!`, or `?` followed by whitespace/end).
+   * This prevents visual anime cards from breaking the flow of a sentence.
+   * Tags already at a boundary (after punctuation, newline, or at start) are left in place.
+   * Tags with no following boundary are moved to the end of the content.
+   */
+  private pushCardsToSentenceBoundaries(content: string): string {
+    // Split into alternating text / tag pieces while preserving the tag strings.
+    const TAG_SPLIT_RE = /(\[(anime|lucky):\s*\d+\s*\])/g;
+    const pieces = content.split(TAG_SPLIT_RE).filter((_, i) => i % 3 !== 2); // drop the inner capture group
+    // After split with one capturing group: [text, tag, text, tag, ...]
+
+    // First sentence-ending punctuation followed by whitespace or end-of-string
+    const SENTENCE_END_RE = /[.!?](?=\s|$)/;
+    // Trailing boundary check: text that ends with . ! ? \n (trimmed)
+    const ENDS_WITH_BOUNDARY_RE = /[.!?\n]\s*$/;
+
+    const out: string[] = [];
+    const pending: string[] = []; // deferred card tags waiting for a sentence boundary
+
+    for (const piece of pieces) {
+      if (TAG_SPLIT_RE.test(piece)) {
+        // Reset lastIndex after the sticky test
+        TAG_SPLIT_RE.lastIndex = 0;
+        // It's a card tag — check if preceding output ends at a sentence boundary
+        const preceding = out.join('');
+        if (preceding.trim() === '' || ENDS_WITH_BOUNDARY_RE.test(preceding)) {
+          out.push(piece); // already at a boundary — place immediately
+        } else {
+          pending.push(piece); // mid-sentence — defer
+        }
+      } else {
+        // It's a text piece
+        TAG_SPLIT_RE.lastIndex = 0;
+        if (pending.length === 0) {
+          out.push(piece);
+        } else {
+          // Find the first sentence boundary in this text piece
+          const m = SENTENCE_END_RE.exec(piece);
+          if (m !== null) {
+            // Split: text up to (and including) boundary punctuation → deferred tags → remainder
+            const splitAt = m.index + 1;
+            out.push(piece.slice(0, splitAt));
+            out.push(...pending);
+            pending.length = 0;
+            out.push(piece.slice(splitAt));
+          } else {
+            // No boundary in this piece — keep accumulating text, stay deferred
+            out.push(piece);
+          }
+        }
+      }
+    }
+
+    // Any tags still pending go at the very end
+    if (pending.length > 0) {
+      out.push(...pending);
+    }
+
+    return out.join('');
+  }
+
+  /**
    * Parse a finished bot message into display segments.
    * While still streaming, returns a single text segment so cards don't flash/reload on each chunk.
    * Deduplicates by malId — if the AI emits the same [anime:ID] tag more than once,
@@ -290,6 +360,9 @@ export class BotKunComponent implements OnDestroy {
     const cached = this._segmentCache.get(cacheKey);
     if (cached) return cached;
 
+    // Move any card tags that appear mid-sentence to the next sentence boundary for readability.
+    const processedContent = this.pushCardsToSentenceBoundaries(content);
+
     // Per-call local set — deduplicates within a single message without persisting
     // across cache-miss re-parses (which happen each time the typewriter adds a char).
     const seenMalIds = new Set<string>();
@@ -297,12 +370,12 @@ export class BotKunComponent implements OnDestroy {
     let lastIndex = 0;
     let prevWasCard = false;
 
-    // ID-only tag format: [anime:digits] or [lucky:digits]
-    for (const match of content.matchAll(/\[(anime|lucky):(\d+)\]/g)) {
+    // ID-only tag format: [anime:digits] or [lucky:digits]; allow optional whitespace around the ID
+    for (const match of processedContent.matchAll(/\[(anime|lucky):\s*(\d+)\s*\]/g)) {
       const matchIndex = match.index ?? 0;
 
       if (matchIndex > lastIndex) {
-        let textChunk = content.slice(lastIndex, matchIndex);
+        let textChunk = processedContent.slice(lastIndex, matchIndex);
         if (prevWasCard) textChunk = this.stripLeadingTitleLine(textChunk);
         textChunk = this.stripTrailingTitleLine(textChunk);
         segments.push({ type: 'text', html: this.toSafeHtml(textChunk) });
@@ -332,13 +405,13 @@ export class BotKunComponent implements OnDestroy {
       lastIndex = matchIndex + match[0].length;
     }
 
-    if (lastIndex < content.length) {
-      let tail = content.slice(lastIndex);
+    if (lastIndex < processedContent.length) {
+      let tail = processedContent.slice(lastIndex);
       if (prevWasCard) tail = this.stripLeadingTitleLine(tail);
       segments.push({ type: 'text', html: this.toSafeHtml(tail) });
     }
 
-    const result: MessageSegment[] = segments.length > 0 ? segments : [{ type: 'text', html: this.toSafeHtml(content) }];
+    const result: MessageSegment[] = segments.length > 0 ? segments : [{ type: 'text', html: this.toSafeHtml(processedContent) }];
     this._segmentCache.set(cacheKey, result);
     return result;
   }
@@ -351,6 +424,7 @@ export class BotKunComponent implements OnDestroy {
   }
 
   clearHistory(): void {
+    this.stopSpeech();
     this.typewriterVersion++; // cancel any running typewriter
     this.messages.set([]);
     this.botKunService.cancel();
@@ -363,6 +437,89 @@ export class BotKunComponent implements OnDestroy {
   onLuckyCardReady(): void {
     this.luckyCardResume?.();
     this.luckyCardResume = null;
+  }
+
+  toggleSpeak(index: number, content: string): void {
+    if (this.speakingIndex() === index) {
+      this.stopSpeech();
+      return;
+    }
+    this.stopSpeech();
+    const text = this.toPlainText(content);
+    if (!text.trim() || !('speechSynthesis' in window)) return;
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = this.currentLang() === 'fr' ? 'fr-FR' : 'en-US';
+    utterance.rate = 0.92;
+    utterance.pitch = 1.05;
+
+    // Attempt to set a voice; if voices aren't loaded yet, retry once after voiceschanged
+    const trySetVoice = () => {
+      const voice = this.bestVoice(utterance.lang);
+      if (voice) utterance.voice = voice;
+    };
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.onvoiceschanged = null;
+        trySetVoice();
+        window.speechSynthesis.speak(utterance);
+      };
+      this.speakingIndex.set(index);
+      return;
+    }
+    trySetVoice();
+
+    utterance.onboundary = (e) => {
+      if (e.name !== 'word') return;
+      this.speakingPulse.set(true);
+      clearTimeout(this._waveformDecayHandle ?? undefined);
+      this._waveformDecayHandle = setTimeout(() => {
+        this.speakingPulse.set(false);
+      }, 300);
+    };
+    utterance.onend = () => { this.speakingIndex.set(-1); this.speakingPulse.set(false); };
+    utterance.onerror = () => { this.speakingIndex.set(-1); this.speakingPulse.set(false); };
+    this.speakingIndex.set(index);
+    window.speechSynthesis.speak(utterance);
+  }
+
+  stopSpeech(): void {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = null;
+      window.speechSynthesis.cancel();
+    }
+    clearTimeout(this._waveformDecayHandle ?? undefined);
+    this._waveformDecayHandle = null;
+    this.speakingIndex.set(-1);
+    this.speakingPulse.set(false);
+  }
+
+  private bestVoice(lang: string): SpeechSynthesisVoice | null {
+    if (!('speechSynthesis' in window)) return null;
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices.length) return null;
+    const base = lang.split('-')[0];
+
+    // Priority: Azure Neural (Edge) > any "Neural" branded > Google > Microsoft > lang match
+    return (
+      voices.find(v => v.lang === lang   && v.name.includes('Online (Natural)')) ??
+      voices.find(v => v.lang === lang   && v.name.toLowerCase().includes('neural')) ??
+      voices.find(v => v.lang === lang   && v.name.includes('Google')) ??
+      voices.find(v => v.lang.startsWith(base) && v.name.includes('Online (Natural)')) ??
+      voices.find(v => v.lang.startsWith(base) && v.name.toLowerCase().includes('neural')) ??
+      voices.find(v => v.lang.startsWith(base) && v.name.includes('Google')) ??
+      voices.find(v => v.lang.startsWith(base) && v.name.includes('Microsoft')) ??
+      voices.find(v => v.lang.startsWith(base)) ??
+      null
+    );
+  }
+
+  private toPlainText(content: string): string {
+    const withoutTags = content.replace(/\[(anime|lucky):\d+\]/g, '');
+    const div = document.createElement('div');
+    div.innerHTML = withoutTags;
+    return div.textContent ?? '';
   }
 
   private streamGreeting(): void {
@@ -423,7 +580,7 @@ export class BotKunComponent implements OnDestroy {
    * S5: incomplete-tag wait has a 5 s safety timeout so a malformed tag can't block the typewriter.
    */
   private startTypewriter(msgIndex: number, version: number): void {
-    const COMPLETE_TAG_RE = /^\[(anime|lucky):\d+\]/;
+    const COMPLETE_TAG_RE = /^\[(anime|lucky):\s*\d+\s*\]/;
     const MIN_DELAY = 5;
     const VAR_DELAY = 5;
 

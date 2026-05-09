@@ -654,6 +654,83 @@ public sealed class AnimeMediatorService(
         }
     }
 
+    public async Task<Result<ActivityStatsResponse>> GetActivityStatsAsync(int tzOffsetMinutes = 0)
+    {
+        try
+        {
+            // Shift UTC to the caller's local clock so day/week/month/year
+            // boundaries match what the user sees on their calendar.
+            // JavaScript's Date.getTimezoneOffset() returns (UTC − local) in minutes,
+            // so UTC-4 → tzOffsetMinutes = +240; subtracting 240 min from UTC = local time.
+            var nowLocal = DateTime.UtcNow.AddMinutes(-tzOffsetMinutes);
+
+            var todayStart = nowLocal.Date;
+            var weekStart  = todayStart.AddDays(-(int)nowLocal.DayOfWeek);
+            var monthStart = new DateTime(nowLocal.Year, nowLocal.Month, 1);
+            var yearStart  = new DateTime(nowLocal.Year, 1, 1);
+
+            // Convert a UTC datetime to the caller's local time before comparing.
+            DateTime ToLocal(DateTime utcDt) => utcDt.AddMinutes(-tzOffsetMinutes);
+
+            var dlTask    = await sonarrAnimeSource.GetDownloadHistoryAsync();
+            var dlRecords = dlTask.IsSuccess ? dlTask.Value : [];
+
+            // ── Period totals ──────────────────────────────────────────────────
+            var dlToday  = dlRecords.Count(r => ToLocal(r.Date) >= todayStart);
+            var dlWeek   = dlRecords.Count(r => ToLocal(r.Date) >= weekStart);
+            var dlMonth  = dlRecords.Count(r => ToLocal(r.Date) >= monthStart);
+            var dlYear   = dlRecords.Count(r => ToLocal(r.Date) >= yearStart);
+
+            var storToday = dlRecords.Where(r => ToLocal(r.Date) >= todayStart).Sum(r => r.SizeBytes);
+            var storWeek  = dlRecords.Where(r => ToLocal(r.Date) >= weekStart).Sum(r => r.SizeBytes);
+            var storMonth = dlRecords.Where(r => ToLocal(r.Date) >= monthStart).Sum(r => r.SizeBytes);
+            var storYear  = dlRecords.Where(r => ToLocal(r.Date) >= yearStart).Sum(r => r.SizeBytes);
+
+            // ── Chart series ───────────────────────────────────────────────────
+            string[] shortDays   = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            string[] shortMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+            // Week: past 7 days (day-6 … today), one point per day
+            var weekPoints = Enumerable.Range(0, 7).Select(i =>
+            {
+                var day     = todayStart.AddDays(i - 6);
+                var dls     = dlRecords.Count(r => ToLocal(r.Date).Date == day);
+                var storage = dlRecords.Where(r => ToLocal(r.Date).Date == day).Sum(r => r.SizeBytes);
+                return new ActivityChartPoint(shortDays[(int)day.DayOfWeek], dls, storage);
+            }).ToList();
+
+            // Month: ALL days in the current month (future days show 0), one point per day
+            var daysInMonth = DateTime.DaysInMonth(nowLocal.Year, nowLocal.Month);
+            var monthPoints = Enumerable.Range(1, daysInMonth).Select(d =>
+            {
+                var day     = new DateTime(nowLocal.Year, nowLocal.Month, d);
+                var dls     = dlRecords.Count(r => ToLocal(r.Date).Date == day);
+                var storage = dlRecords.Where(r => ToLocal(r.Date).Date == day).Sum(r => r.SizeBytes);
+                return new ActivityChartPoint(d.ToString(), dls, storage);
+            }).ToList();
+
+            // Year: ALL 12 months (future months show 0), one point per month
+            var yearPoints = Enumerable.Range(1, 12).Select(m =>
+            {
+                var mStart = new DateTime(nowLocal.Year, m, 1);
+                var mEnd   = mStart.AddMonths(1);
+                var dls     = dlRecords.Count(r => ToLocal(r.Date) >= mStart && ToLocal(r.Date) < mEnd);
+                var storage = dlRecords.Where(r => ToLocal(r.Date) >= mStart && ToLocal(r.Date) < mEnd).Sum(r => r.SizeBytes);
+                return new ActivityChartPoint(shortMonths[m - 1], dls, storage);
+            }).ToList();
+
+            return Result.Success(new ActivityStatsResponse(
+                new ActivityPeriodStats(dlToday, dlWeek, dlMonth, dlYear),
+                new StoragePeriodStats(storToday, storWeek, storMonth, storYear),
+                new ActivityChartData(weekPoints, monthPoints, yearPoints)));
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<ActivityStatsResponse>(new(Constants.Errors.GetActivityStatsAsync, ex.Message));
+        }
+    }
+
     public async Task<Result<IEnumerable<CoverageGapItemResponse>>> GetCoverageGapAsync(string gapType)
     {
         try

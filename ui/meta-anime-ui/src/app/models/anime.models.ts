@@ -150,6 +150,38 @@ export interface AnimeStatisticsResponse {
   viewingProgress: ViewingProgressStats;
 }
 
+export interface ActivityPeriodStats {
+  today: number;
+  thisWeek: number;
+  thisMonth: number;
+  thisYear: number;
+}
+
+export interface StoragePeriodStats {
+  today: number;
+  thisWeek: number;
+  thisMonth: number;
+  thisYear: number;
+}
+
+export interface ActivityChartPoint {
+  label: string;
+  downloads: number;
+  storageBytes: number;
+}
+
+export interface ActivityChartData {
+  week: ActivityChartPoint[];
+  month: ActivityChartPoint[];
+  year: ActivityChartPoint[];
+}
+
+export interface ActivityStatsResponse {
+  downloads: ActivityPeriodStats;
+  storage: StoragePeriodStats;
+  chart: ActivityChartData;
+}
+
 export interface PagedResponse<T> {
   data: T[];
   page: number;

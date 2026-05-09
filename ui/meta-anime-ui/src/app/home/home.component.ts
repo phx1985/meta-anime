@@ -9,12 +9,13 @@ import { MissingStatsComponent } from '../missing-stats/missing-stats.component'
 import { CountUpDirective } from '../directives/count-up.directive';
 import { ProviderStateService } from '../services/provider-state.service';
 import { AnimeImageGalleryComponent } from '../anime-image-gallery/anime-image-gallery.component';
+import { ActivityStatsComponent } from './activity-stats/activity-stats.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, GenreChartComponent, MissingStatsComponent, CountUpDirective, AnimeImageGalleryComponent],
+  imports: [TranslatePipe, GenreChartComponent, MissingStatsComponent, CountUpDirective, AnimeImageGalleryComponent, ActivityStatsComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
