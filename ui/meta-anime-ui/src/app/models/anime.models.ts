@@ -180,6 +180,7 @@ export interface ActivityStatsResponse {
   downloads: ActivityPeriodStats;
   storage: StoragePeriodStats;
   chart: ActivityChartData;
+  lastUpdated?: string | null;
 }
 
 export interface PagedResponse<T> {

@@ -109,6 +109,7 @@ public sealed class SettingsSeedService(
         [SettingsKeys.AppShowNsfw] = "false",
         [SettingsKeys.AppSyncInterval] = "daily",
         [SettingsKeys.AppTitleSimilarityThreshold] = "80",
+        [SettingsKeys.DownloadStatsCacheInterval] = "1h",
         [SettingsKeys.BotKunEnabled]  = "false",
         [SettingsKeys.BotKunBaseUrl]  = string.Empty,
         [SettingsKeys.BotKunApiKey]   = string.Empty,

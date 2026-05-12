@@ -116,6 +116,7 @@ app.UseStaticFiles();
 var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>();
 await AnimeSyncJob.ScheduleAsync(recurringJobManager, app.Services);
 MalTokenRefreshJob.Schedule(recurringJobManager);
+await DownloadStatsCacheJob.ScheduleAsync(recurringJobManager, app.Services);
 
 app.UseCors();
 app.UseResponseCaching();

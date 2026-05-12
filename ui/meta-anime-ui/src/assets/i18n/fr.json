@@ -100,7 +100,10 @@
       "thisMonth": "Ce mois",
       "thisYear": "Cette année",
       "downloads": "Épisodes téléchargés",
-      "storage": "Stockage ajouté"
+      "storage": "Stockage ajouté",
+      "forceRefresh": "Actualiser",
+      "refreshing": "Actualisation…",
+      "lastUpdated": "Dernière mise à jour : {{value}}"
     }
   },
   "seasonal": {
@@ -704,6 +707,20 @@
       "App_TitleSimilarityThreshold": {
         "name": "Similarité de recherche (%)",
         "desc": "Pourcentage minimal de similarité (1–100) pour la recherche floue par titre via pg_trgm. Défaut : 80."
+      },
+      "App_DownloadStatsCacheInterval": {
+        "name": "Intervalle de rafraîchissement",
+        "desc": "Fréquence à laquelle la tâche récupère les stats de téléchargement depuis Sonarr.",
+        "option": {
+          "1h": "Toutes les heures",
+          "3h": "Toutes les 3 heures",
+          "6h": "Toutes les 6 heures",
+          "12h": "Toutes les 12 heures"
+        }
+      },
+      "Cache_DownloadStatsLastUpdated": {
+        "name": "Stats mis à jour le",
+        "desc": "Horodatage du dernier rafraîchissement réussi du cache des statistiques."
       },
       "Sonarr_DefaultRootFolder": {
         "name": "Dossier racine par défaut",

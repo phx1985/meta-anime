@@ -3,18 +3,37 @@
     <!-- Header row -->
     <div class="activity-card__header">
       <span class="activity-card__title">{{ 'home.activityStats.title' | translate }}</span>
-      <div class="period-tabs" role="tablist">
-        @for (p of periods; track p.key) {
-          <button
-            class="period-tab"
-            [class.period-tab--active]="selectedPeriod() === p.key"
-            (click)="selectPeriod(p.key)"
-            role="tab"
-            [attr.aria-selected]="selectedPeriod() === p.key"
-          >
-            {{ p.labelKey | translate }}
-          </button>
-        }
+      <div class="activity-card__controls">
+        <div class="period-tabs" role="tablist">
+          @for (p of periods; track p.key) {
+            <button
+              class="period-tab"
+              [class.period-tab--active]="selectedPeriod() === p.key"
+              (click)="selectPeriod(p.key)"
+              role="tab"
+              [attr.aria-selected]="selectedPeriod() === p.key"
+            >
+              {{ p.labelKey | translate }}
+            </button>
+          }
+        </div>
+        <button
+          class="refresh-btn"
+          [class.refresh-btn--spinning]="refreshing()"
+          [disabled]="refreshing()"
+          (click)="forceRefresh()"
+          [attr.aria-label]="'home.activityStats.forceRefresh' | translate"
+        >
+          <svg class="refresh-btn__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+          @if (refreshing()) {
+            {{ 'home.activityStats.refreshing' | translate }}
+          } @else {
+            {{ 'home.activityStats.forceRefresh' | translate }}
+          }
+        </button>
       </div>
     </div>
 
@@ -60,6 +79,15 @@
         </div>
       }
 
+    </div>
+
+    <!-- Last updated timestamp (always shown once data is loaded) -->
+    <div class="activity-card__last-updated">
+      @if (lastUpdated()) {
+        {{ 'home.activityStats.lastUpdated' | translate: { value: lastUpdated() } }}
+      } @else {
+        {{ 'home.activityStats.lastUpdated' | translate: { value: '—' } }}
+      }
     </div>
 
     <!-- Progress chart (hidden for "today" — single-point charts are meaningless) -->

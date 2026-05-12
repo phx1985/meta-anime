@@ -67,6 +67,10 @@ public sealed class SettingsController(IMediator mediator, IRecurringJobManager 
         {
             await AnimeSyncJob.ScheduleAsync(recurringJobManager, HttpContext.RequestServices);
         }
+        else if (key == SettingsKeys.DownloadStatsCacheInterval)
+        {
+            await DownloadStatsCacheJob.ScheduleAsync(recurringJobManager, HttpContext.RequestServices);
+        }
 
         return Ok(result.Value);
     }

@@ -63,6 +63,7 @@ export class ActivityStatsComponent implements OnInit, AfterViewInit, OnDestroy 
   readonly activityStats = signal<ActivityStatsResponse | null>(null);
   readonly loading = signal(true);
   readonly loadError = signal(false);
+  readonly refreshing = signal(false);
   readonly selectedPeriod = signal<Period>('thisMonth');
   private viewInit = signal(false);
 
@@ -89,6 +90,11 @@ export class ActivityStatsComponent implements OnInit, AfterViewInit, OnDestroy 
 
   readonly storageFormatted = computed(() => this.formatBytes(this.storageBytes()));
 
+  readonly lastUpdated = computed(() => {
+    const raw = this.activityStats()?.lastUpdated;
+    return raw ? this.formatLocalDate(raw) : null;
+  });
+
   /** True when the activity stats card should be shown (requires Sonarr). */
   readonly isVisible = computed(() => this.providerState.sonarrEnabled());
 
@@ -114,20 +120,7 @@ export class ActivityStatsComponent implements OnInit, AfterViewInit, OnDestroy 
   }
 
   ngOnInit(): void {
-    const tzOffset = new Date().getTimezoneOffset();
-    this.animeService
-      .getActivityStats(tzOffset)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (data) => {
-          this.activityStats.set(data);
-          this.loading.set(false);
-        },
-        error: () => {
-          this.loadError.set(true);
-          this.loading.set(false);
-        },
-      });
+    this.fetchStats();
   }
 
   ngAfterViewInit(): void {
@@ -140,6 +133,68 @@ export class ActivityStatsComponent implements OnInit, AfterViewInit, OnDestroy 
 
   selectPeriod(period: Period): void {
     this.selectedPeriod.set(period);
+  }
+
+  forceRefresh(): void {
+    if (this.refreshing()) return;
+    this.refreshing.set(true);
+    // Capture the raw ISO string BEFORE the refresh so we can detect when it changes.
+    const prevLastUpdated = this.activityStats()?.lastUpdated ?? null;
+
+    this.animeService
+      .refreshActivityStats()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.pollUntilUpdated(prevLastUpdated, 0),
+        error: () => this.refreshing.set(false),
+      });
+  }
+
+  /** Polls getActivityStats every second until lastUpdated changes (max 30 attempts). */
+  private pollUntilUpdated(prevLastUpdated: string | null, attempt: number): void {
+    if (attempt >= 30) {
+      this.refreshing.set(false);
+      return;
+    }
+    setTimeout(() => {
+      this.animeService
+        .getActivityStats(new Date().getTimezoneOffset())
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (data) => {
+            if (data.lastUpdated !== prevLastUpdated) {
+              this.activityStats.set(data);
+              this.loading.set(false);
+              this.refreshing.set(false);
+            } else {
+              this.pollUntilUpdated(prevLastUpdated, attempt + 1);
+            }
+          },
+          error: () => this.refreshing.set(false),
+        });
+    }, 1000);
+  }
+
+  private fetchStats(isRefresh = false): void {
+    if (!isRefresh) {
+      this.loading.set(true);
+    }
+    const tzOffset = new Date().getTimezoneOffset();
+    this.animeService
+      .getActivityStats(tzOffset)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          this.activityStats.set(data);
+          this.loading.set(false);
+          this.refreshing.set(false);
+        },
+        error: () => {
+          this.loadError.set(true);
+          this.loading.set(false);
+          this.refreshing.set(false);
+        },
+      });
   }
 
   private destroyChart(): void {
@@ -228,6 +283,13 @@ export class ActivityStatsComponent implements OnInit, AfterViewInit, OnDestroy 
         },
       },
     });
+  }
+
+  private formatLocalDate(isoUtc: string): string {
+    const d = new Date(isoUtc);
+    if (isNaN(d.getTime())) return isoUtc;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
   private formatBytes(bytes: number): string {

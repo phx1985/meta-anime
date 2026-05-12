@@ -35,6 +35,12 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
     [Authorize]
     public async Task<ActionResult<ActivityStatsResponse>> GetActivityStats([FromQuery] int tzOffset = 0)
     {
+        // Try to serve from the pre-populated cache first (fast path).
+        var cached = await mediator.Send(new GetCachedActivityStatsQuery());
+        if (cached.IsSuccess && cached.Value is not null)
+            return Ok(cached.Value);
+
+        // Cache is empty (cold start) — fall back to live computation.
         var result = await mediator.Send(new GetActivityStatsQuery(tzOffset));
 
         if (result.IsFailure)
@@ -43,6 +49,17 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
         }
 
         return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Enqueues an immediate download stats cache refresh via Hangfire.
+    /// </summary>
+    [HttpPost("activity-stats/refresh")]
+    [Authorize]
+    public IActionResult RefreshActivityStats()
+    {
+        backgroundJobClient.Enqueue<DownloadStatsCacheJob>(job => job.CacheDownloadStatsAsync());
+        return Accepted(new { message = "Download stats refresh started" });
     }
 
     [HttpGet("plex-thumb/{ratingKey}")]
