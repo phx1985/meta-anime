@@ -35,6 +35,8 @@ public static class Constants
         public const string GetSonarrSeriesByCodecAsync = "Error.GetSonarrSeriesByCodecAsync";
         public const string GetStatisticsAsync = "Error.GetStatisticsAsync";
         public const string GetActivityStatsAsync = "Error.GetActivityStatsAsync";
+        public const string GetCachedActivityStatsAsync = "Error.GetCachedActivityStatsAsync";
+        public const string CacheDownloadStatsAsync = "Error.CacheDownloadStatsAsync";
         public const string GetSyncStatus = "Error.GetSyncStatus";
         public const string NotFound = "Error.NotFound";
         public const string RefreshData = "Error.RefreshData";
@@ -52,6 +54,7 @@ public static class Constants
     {
         public const string AnimeMetadataSync = "anime-metadata-sync";
         public const string MalTokenRefresh = "mal-token-refresh";
+        public const string DownloadStatsCache = "download-stats-cache";
     }
 
     public static class LogMessages
@@ -71,6 +74,13 @@ public static class Constants
             public const string Succeeded = "Successfully refreshed MAL token at {Time}";
             public const string Failed = "Failed to refresh MAL token: {ErrorMessage}";
             public const string Error = "Error during MAL token refresh";
+        }
+
+        public static class DownloadStatsCacheJob
+        {
+            public const string Starting = "Starting download stats cache refresh at {Time}";
+            public const string Succeeded = "Successfully cached download stats at {Time}";
+            public const string Error = "Error during download stats cache refresh";
         }
 
         public static class AnimeMediatorService

@@ -82,6 +82,9 @@ public sealed class GetSettingsQueryHandler(
             new(SettingsKeys.AppSyncInterval, "app", false, false, Get(SettingsKeys.AppSyncInterval), "select",
                 SelectOptions: ["hourly", "every6h", "every12h", "daily", "weekly"]),
             new(SettingsKeys.AppTitleSimilarityThreshold, "app", false, false, Get(SettingsKeys.AppTitleSimilarityThreshold), "number"),
+            new(SettingsKeys.DownloadStatsCacheInterval, "app", false, false, Get(SettingsKeys.DownloadStatsCacheInterval), "select",
+                SelectOptions: ["1h", "3h", "6h", "12h"]),
+            new(SettingsKeys.DownloadStatsCacheLastUpdated, "app", false, false, Get(SettingsKeys.DownloadStatsCacheLastUpdated), "info"),
 
             // ── Bot-kun AI (OpenAI-compatible provider) ───────────────────────
             new(SettingsKeys.BotKunEnabled, "botkun", false, false, Get(SettingsKeys.BotKunEnabled), "boolean"),

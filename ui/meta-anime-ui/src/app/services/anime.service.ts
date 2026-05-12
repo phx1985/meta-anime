@@ -36,6 +36,10 @@ export class AnimeService {
     });
   }
 
+  refreshActivityStats(): Observable<void> {
+    return this.http.post<void>(`${this.base}/activity-stats/refresh`, null);
+  }
+
   getAnimes(
     page = 1,
     pageSize = 20,

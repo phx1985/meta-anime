@@ -100,7 +100,10 @@
       "thisMonth": "This Month",
       "thisYear": "This Year",
       "downloads": "Episodes Downloaded",
-      "storage": "Storage Added"
+      "storage": "Storage Added",
+      "forceRefresh": "Refresh",
+      "refreshing": "Refreshing…",
+      "lastUpdated": "Last updated: {{value}}"
     }
   },
   "seasonal": {
@@ -704,6 +707,20 @@
       "App_TitleSimilarityThreshold": {
         "name": "Title Search Similarity (%)",
         "desc": "Minimum similarity percentage (1–100) for fuzzy title search using pg_trgm. Default: 80."
+      },
+      "App_DownloadStatsCacheInterval": {
+        "name": "Stats Refresh Interval",
+        "desc": "How often the background job pre-fetches download stats from Sonarr.",
+        "option": {
+          "1h": "Every Hour",
+          "3h": "Every 3 Hours",
+          "6h": "Every 6 Hours",
+          "12h": "Every 12 Hours"
+        }
+      },
+      "Cache_DownloadStatsLastUpdated": {
+        "name": "Stats Last Refreshed",
+        "desc": "Timestamp of the last successful download stats cache refresh."
       },
       "Sonarr_DefaultRootFolder": {
         "name": "Default Root Folder",

@@ -3,7 +3,8 @@ namespace MetaAnime.Application.Contracts;
 public sealed record ActivityStatsResponse(
     ActivityPeriodStats Downloads,
     StoragePeriodStats Storage,
-    ActivityChartData Chart);
+    ActivityChartData Chart,
+    string? LastUpdated = null);
 
 public sealed record ActivityPeriodStats(
     int Today,

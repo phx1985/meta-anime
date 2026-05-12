@@ -46,6 +46,11 @@ public static class SettingsKeys
     public const string AppShowNsfw = "App:ShowNsfw";
     public const string AppSyncInterval = "App:SyncInterval";
     public const string AppTitleSimilarityThreshold = "App:TitleSimilarityThreshold";
+    public const string DownloadStatsCacheInterval = "App:DownloadStatsCacheInterval";
+
+    // Download stats cache (populated by DownloadStatsCacheJob; not user-configurable)
+    public const string DownloadStatsCache = "Cache:DownloadStats";
+    public const string DownloadStatsCacheLastUpdated = "Cache:DownloadStatsLastUpdated";
     public const string LuckyOnlyFinished = "meta-anime:luckyOnlyFinished";
     public const string LuckyOnlyPlanToWatch = "meta-anime:luckyOnlyPlanToWatch";
     public const string LuckyOnlyWithFiles = "meta-anime:luckyOnlyWithFiles";
