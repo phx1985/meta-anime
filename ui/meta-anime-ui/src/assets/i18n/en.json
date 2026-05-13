@@ -1841,6 +1841,13 @@
     "hint": "Click a voice actor node to see their profile.",
     "lastUpdated": "Last updated",
     "close": "Close Seiyuu Nexus",
+    "chars": "chars",
+    "vas": "VAs",
+    "filter": {
+      "Japanese": "Japanese",
+      "English": "English",
+      "all": "All"
+    },
     "vaProfile": {
       "age": "Age",
       "bloodType": "Blood type",

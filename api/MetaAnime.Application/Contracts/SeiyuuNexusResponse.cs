@@ -4,8 +4,8 @@ namespace MetaAnime.Application.Contracts;
 public sealed record NexusNodeDto(
     /// <summary>Unique identifier within the graph. Format: "anime:{malId}", "char:{charId}", "va:{personId}".</summary>
     string Id,
-    /// <summary>anime | character | voiceActor</summary>
-    string NodeType,
+    /// <summary>anime | character | va</summary>
+    string Type,
     string Label,
     string? ImageUrl,
     /// <summary>True only for the starting anime node.</summary>
@@ -23,12 +23,12 @@ public sealed record NexusEdgeDto(
     string FromId,
     string ToId,
     /// <summary>voices | appearsIn | hasCharacter</summary>
-    string EdgeType
+    string Relation
 );
 
 /// <summary>Full response for the Seiyuu Nexus graph.</summary>
 public sealed record SeiyuuNexusResponse(
-    string RootAnimeMalId,
+    string RootMalId,
     string RootAnimeTitle,
     IEnumerable<NexusNodeDto> Nodes,
     IEnumerable<NexusEdgeDto> Edges,

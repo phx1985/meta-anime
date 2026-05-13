@@ -1833,6 +1833,13 @@
     "hint": "Cliquez sur un nœud de doubleur pour voir son profil.",
     "lastUpdated": "Dernière mise à jour",
     "close": "Fermer le Nexus Seiyuu",
+    "chars": "personnages",
+    "vas": "doubleurs",
+    "filter": {
+      "Japanese": "Japonais",
+      "English": "Anglais",
+      "all": "Tous"
+    },
     "vaProfile": {
       "age": "Âge",
       "bloodType": "Groupe sanguin",

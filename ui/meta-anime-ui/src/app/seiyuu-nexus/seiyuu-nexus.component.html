@@ -7,6 +7,26 @@
   <!-- Header -->
   <div class="nexus__header">
     <span class="nexus__title">{{ 'seiyuuNexus.title' | translate }}</span>
+
+    <!-- Language filter -->
+    <div class="nexus__lang-filter" (mousedown)="$event.stopPropagation()">
+      @for (opt of langOptions; track opt) {
+        <button
+          type="button"
+          class="nexus__lang-pill"
+          [class.nexus__lang-pill--active]="langFilter() === opt"
+          (click)="setLangFilter(opt)"
+        >{{ 'seiyuuNexus.filter.' + opt | translate }}</button>
+      }
+    </div>
+
+    <!-- Node count badge -->
+    @if (nodeCount().chars > 0) {
+      <span class="nexus__count-badge">
+        {{ nodeCount().chars }} {{ 'seiyuuNexus.chars' | translate }} · {{ nodeCount().vas }} {{ 'seiyuuNexus.vas' | translate }}
+      </span>
+    }
+
     @if (lastUpdatedLocal()) {
       <span class="nexus__last-updated">{{ 'seiyuuNexus.lastUpdated' | translate }}: {{ lastUpdatedLocal() }}</span>
     }
@@ -41,7 +61,7 @@
         [style.width.px]="canvasSize"
         [style.height.px]="canvasSize"
       >
-        <!-- SVG edges -->
+        <!-- SVG edges (bezier curves) -->
         <svg
           class="nexus__edges"
           [attr.width]="canvasSize"
@@ -49,11 +69,11 @@
           [attr.viewBox]="'0 0 ' + canvasSize + ' ' + canvasSize"
         >
           @for (e of positionedEdges(); track e.edge.fromId + '-' + e.edge.toId) {
-            <line
+            <path
               class="nexus__edge"
               [class.nexus__edge--dashed]="e.dashed"
-              [attr.x1]="e.x1" [attr.y1]="e.y1"
-              [attr.x2]="e.x2" [attr.y2]="e.y2"
+              [attr.d]="e.path"
+              fill="none"
             />
           }
         </svg>
