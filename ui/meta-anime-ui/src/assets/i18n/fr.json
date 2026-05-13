@@ -1830,7 +1830,7 @@
     "loading": "Construction du nexus…",
     "empty": "Aucune donnée de distribution disponible. Lancez une synchronisation pour remplir.",
     "error": "Échec du chargement du nexus. Veuillez réessayer.",
-    "hint": "Cliquez sur un nœud de doubleur pour voir son profil.",
+    "hint": "Cliquez sur une carte de doubleur pour voir son profil.",
     "lastUpdated": "Dernière mise à jour",
     "close": "Fermer le Nexus Seiyuu",
     "chars": "personnages",

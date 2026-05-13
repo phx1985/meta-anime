@@ -19,7 +19,7 @@
           class="nexus__lang-pill"
           [class.nexus__lang-pill--active]="langFilter() === lang"
           (click)="setLangFilter(lang)"
-        >{{ lang }}</button>
+        >{{ getFlag(lang) }} {{ lang }}</button>
       }
     </div>
 
@@ -49,7 +49,7 @@
       </div>
     } @else if (svc.error()) {
       <div class="nexus__error">{{ 'seiyuuNexus.error' | translate }}</div>
-    } @else if (tableRows().length === 0) {
+    } @else if (charRows().length === 0) {
       <div class="nexus__empty">{{ 'seiyuuNexus.empty' | translate }}</div>
     } @else {
 
@@ -58,46 +58,63 @@
         <table class="nexus__table">
           <thead>
             <tr>
-              <th class="nexus__th" colspan="2">{{ 'seiyuuNexus.table.character' | translate }}</th>
+              <th class="nexus__th nexus__th--img" aria-hidden="true"></th>
+              <th class="nexus__th">{{ 'seiyuuNexus.table.character' | translate }}</th>
               <th class="nexus__th nexus__th--role">{{ 'seiyuuNexus.table.role' | translate }}</th>
-              <th></th>
-              <th class="nexus__th" colspan="2">{{ 'seiyuuNexus.table.voiceActor' | translate }}</th>
+              <th class="nexus__th">{{ 'seiyuuNexus.table.voiceActor' | translate }}</th>
             </tr>
           </thead>
           <tbody>
-            @for (row of tableRows(); track row.char.id + '-' + row.va.id) {
-              <tr
-                class="nexus__row"
-                [class.nexus__row--focused]="focusedVaId() === row.va.id"
-                (click)="selectVa(row.va)"
-              >
+            @for (entry of charRows(); track entry.char.id) {
+              <tr class="nexus__row">
+                <!-- Character image -->
                 <td class="nexus__td nexus__td--img">
-                  @if (row.char.imageUrl) {
-                    <img [src]="row.char.imageUrl" [alt]="row.char.label" class="nexus__avatar" loading="lazy" />
+                  @if (entry.char.imageUrl) {
+                    <img [src]="entry.char.imageUrl" [alt]="entry.char.label" class="nexus__char-avatar" loading="lazy" />
                   } @else {
-                    <div class="nexus__avatar nexus__avatar--placeholder" aria-hidden="true"></div>
+                    <div class="nexus__char-avatar nexus__avatar--placeholder" aria-hidden="true"></div>
                   }
                 </td>
-                <td class="nexus__td nexus__td--name">{{ row.char.label }}</td>
+
+                <!-- Character name -->
+                <td class="nexus__td nexus__td--name">{{ entry.char.label }}</td>
+
+                <!-- Role badge -->
                 <td class="nexus__td nexus__td--role">
-                  @if (row.char.role) {
+                  @if (entry.char.role) {
                     <span
                       class="nexus__role-badge"
-                      [class.nexus__role-badge--main]="row.char.role.toLowerCase() === 'main'"
-                    >{{ row.char.role.toLowerCase() === 'main'
+                      [class.nexus__role-badge--main]="entry.char.role.toLowerCase() === 'main'"
+                    >{{ entry.char.role.toLowerCase() === 'main'
                         ? ('seiyuuNexus.role.main' | translate)
                         : ('seiyuuNexus.role.supporting' | translate) }}</span>
                   }
                 </td>
-                <td class="nexus__td nexus__td--arrow" aria-hidden="true">→</td>
-                <td class="nexus__td nexus__td--img">
-                  @if (row.va.imageUrl) {
-                    <img [src]="row.va.imageUrl" [alt]="row.va.label" class="nexus__avatar" loading="lazy" />
-                  } @else {
-                    <div class="nexus__avatar nexus__avatar--placeholder" aria-hidden="true"></div>
-                  }
+
+                <!-- VA group (one card per dub) -->
+                <td class="nexus__td nexus__td--dubs">
+                  <div class="nexus__dubs">
+                    @for (dub of entry.dubs; track dub.va.id) {
+                      <button
+                        type="button"
+                        class="nexus__dub-card"
+                        [class.nexus__dub-card--focused]="focusedVaId() === dub.va.id"
+                        (click)="selectVa(dub.va)"
+                        [title]="dub.va.label + ' (' + dub.language + ')'"
+                      >
+                        <div class="nexus__dub-img-wrap">
+                          @if (dub.va.imageUrl) {
+                            <img [src]="dub.va.imageUrl" [alt]="dub.va.label" class="nexus__va-avatar" loading="lazy" />
+                          } @else {
+                            <div class="nexus__va-avatar nexus__avatar--placeholder" aria-hidden="true"></div>
+                          }
+                          <span class="nexus__lang-flag" aria-label="{{ dub.language }}">{{ dub.flag }}</span>
+                        </div>
+                        <span class="nexus__dub-name">{{ dub.va.label }}</span>
+                      </button>
+                    }
+                  </div>
                 </td>
-                <td class="nexus__td nexus__td--name">{{ row.va.label }}</td>
               </tr>
             }
           </tbody>
@@ -117,7 +134,7 @@
         } @else if (svc.focusedVa()) {
           <div class="nexus__va-profile">
             @if (svc.focusedVa()!.imageUrl) {
-              <img [src]="svc.focusedVa()!.imageUrl" [alt]="svc.focusedVa()!.name" class="nexus__va-avatar" loading="lazy" />
+              <img [src]="svc.focusedVa()!.imageUrl" [alt]="svc.focusedVa()!.name" class="nexus__va-avatar-lg" loading="lazy" />
             }
             <div class="nexus__va-info">
               <span class="nexus__va-name">{{ svc.focusedVa()!.name }}</span>
@@ -146,4 +163,5 @@
 
 </div>
 }
+
 

@@ -12,10 +12,27 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { SeiyuuNexusService } from './seiyuu-nexus.service';
 import { NexusNode } from '../models/anime.models';
 
-export interface CastRow {
-  char: NexusNode;
-  va:   NexusNode;
+const LANG_FLAGS: Record<string, string> = {
+  japanese:   '🇯🇵',
+  english:    '🇺🇸',
+  french:     '🇫🇷',
+  german:     '🇩🇪',
+  spanish:    '🇪🇸',
+  portuguese: '🇧🇷',
+  italian:    '🇮🇹',
+  korean:     '🇰🇷',
+  chinese:    '🇨🇳',
+};
+
+export interface DubEntry {
+  va:       NexusNode;
   language: string;
+  flag:     string;
+}
+
+export interface CharacterEntry {
+  char: NexusNode;
+  dubs: DubEntry[];
 }
 
 @Component({
@@ -51,26 +68,45 @@ export class SeiyuuNexusComponent {
     }
   });
 
-  /** Rows for the cast table, filtered by language and sorted Main → Supporting → name. */
-  protected readonly tableRows = computed<CastRow[]>(() => {
+  /** Returns the emoji flag for a language name, or a short 2-letter fallback. */
+  protected getFlag(language: string): string {
+    return LANG_FLAGS[language.toLowerCase()] ?? language.slice(0, 2).toUpperCase();
+  }
+
+  /**
+   * Cast table rows grouped by character.
+   * Each entry has one character + all their VAs that match the active language filter.
+   * Sorted: Main characters first, then alphabetical by character name.
+   */
+  protected readonly charRows = computed<CharacterEntry[]>(() => {
     const nexus = this.svc.nexus();
     if (!nexus) return [];
 
     const lang    = this.langFilter();
     const nodeMap = new Map(nexus.nodes.map(n => [n.id, n]));
 
-    const rows = nexus.edges
+    // Build a map: charId → DubEntry[]
+    const charMap = new Map<string, { char: NexusNode; dubs: DubEntry[] }>();
+
+    nexus.edges
       .filter(e => e.relation === 'voices' && (lang === '' || e.language === lang))
-      .map(e => {
+      .forEach(e => {
         const char = nodeMap.get(e.toId);
         const va   = nodeMap.get(e.fromId);
-        if (!char || !va) return null;
-        return { char, va, language: e.language ?? '' } satisfies CastRow;
-      })
-      .filter((r): r is CastRow => r !== null);
+        if (!char || !va) return;
 
-    return rows.sort((a, b) => {
-      const roleOrder = (r: CastRow) => r.char.role?.toLowerCase() === 'main' ? 0 : 1;
+        if (!charMap.has(char.id)) {
+          charMap.set(char.id, { char, dubs: [] });
+        }
+        charMap.get(char.id)!.dubs.push({
+          va,
+          language: e.language ?? '',
+          flag:     this.getFlag(e.language ?? ''),
+        });
+      });
+
+    return [...charMap.values()].sort((a, b) => {
+      const roleOrder = (e: CharacterEntry) => e.char.role?.toLowerCase() === 'main' ? 0 : 1;
       return roleOrder(a) - roleOrder(b) || a.char.label.localeCompare(b.char.label);
     });
   });
@@ -82,8 +118,6 @@ export class SeiyuuNexusComponent {
     const pad = (n: number) => String(n).padStart(2, '0');
     return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   });
-
-  protected readonly rowCount = computed(() => this.tableRows().length);
 
   protected setLangFilter(lang: string): void {
     this.langFilter.set(lang);
@@ -106,3 +140,4 @@ export class SeiyuuNexusComponent {
     this.svc.close();
   }
 }
+

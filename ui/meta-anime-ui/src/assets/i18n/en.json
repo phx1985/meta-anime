@@ -1838,7 +1838,7 @@
     "loading": "Building nexus…",
     "empty": "No cast data available. Run a sync to populate.",
     "error": "Failed to load nexus data. Please try again.",
-    "hint": "Click a voice actor node to see their profile.",
+    "hint": "Click a voice actor card to see their profile.",
     "lastUpdated": "Last updated",
     "close": "Close Seiyuu Nexus",
     "chars": "chars",
