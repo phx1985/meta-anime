@@ -1846,6 +1846,15 @@
     "filter": {
       "all": "All"
     },
+    "table": {
+      "character": "Character",
+      "role": "Role",
+      "voiceActor": "Voice Actor"
+    },
+    "role": {
+      "main": "Main",
+      "supporting": "Supporting"
+    },
     "vaProfile": {
       "age": "Age",
       "bloodType": "Blood type",

@@ -371,6 +371,8 @@ export interface NexusNode {
   personId?: number;
   /** Only on character nodes. */
   characterId?: number;
+  /** Only on character nodes: 'Main' | 'Supporting'. */
+  role?: string;
   /** True if this is the root/starting anime. */
   isRoot?: boolean;
   /** True if anime node is in the local library. */

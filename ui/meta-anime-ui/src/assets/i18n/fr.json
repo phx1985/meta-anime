@@ -1838,6 +1838,15 @@
     "filter": {
       "all": "Tous"
     },
+    "table": {
+      "character": "Personnage",
+      "role": "Rôle",
+      "voiceActor": "Doubleur"
+    },
+    "role": {
+      "main": "Principal",
+      "supporting": "Secondaire"
+    },
     "vaProfile": {
       "age": "Âge",
       "bloodType": "Groupe sanguin",
