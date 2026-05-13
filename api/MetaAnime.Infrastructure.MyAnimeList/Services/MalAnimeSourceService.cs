@@ -322,6 +322,50 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
         var malError = JsonSerializer.Deserialize<MalError>(response.Content!)!;
         return Result.Failure<IList<MalAnime>>(new Error(malError.Message));
     }
+
+    public async Task<Result<MalAnimeCharactersResult>> GetAnimeCharactersAsync(string animeId)
+    {
+        var (ok, baseUrl, token) = await ValidateCredentialsAsync();
+        if (!ok)
+            return string.IsNullOrWhiteSpace(baseUrl)
+                ? Result.Failure<MalAnimeCharactersResult>(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."))
+                : Result.Failure<MalAnimeCharactersResult>(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
+
+        const string fields = "characters{role,node{id,first_name,last_name,main_picture},voice_actors{language,node{id,first_name,last_name,main_picture}}}";
+        var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
+        {
+            var uri = new Uri($"{baseUrl}/anime/{animeId}?fields={fields}");
+            var restClient = new RestClient(uri);
+            var restRequest = new RestRequest { Method = Method.Get };
+            restRequest.AddHeader("Authorization", $"Bearer {t}");
+            return ExecuteRequestAsync(restClient, restRequest);
+        });
+
+        if (!response.IsSuccessful)
+        {
+            MalError? malErr = null;
+            try { malErr = JsonSerializer.Deserialize<MalError>(response.Content!); } catch { }
+            return Result.Failure<MalAnimeCharactersResult>(new Error(malErr?.Message ?? response.StatusCode.ToString()));
+        }
+
+        var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var raw = JsonSerializer.Deserialize<MalAnimeCharactersResponse>(response.Content!, opts);
+        if (raw is null)
+            return Result.Success(new MalAnimeCharactersResult(animeId, []));
+
+        var characters = raw.Characters.Select(c =>
+        {
+            var charName = string.Join(" ", new[] { c.Node?.FirstName, c.Node?.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
+            var vas = c.VoiceActors.Select(va =>
+            {
+                var vaName = string.Join(" ", new[] { va.Node?.FirstName, va.Node?.LastName }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                return new MalVoiceActorInfo(va.Node?.Id ?? 0, vaName, va.Node?.MainPicture?.Medium, va.Language ?? "Japanese");
+            }).ToList();
+            return new MalCharacterInfo(c.Node?.Id ?? 0, charName, c.Node?.MainPicture?.Medium, c.Role ?? "Supporting", vas);
+        }).Where(c => c.CharacterId > 0).ToList();
+
+        return Result.Success(new MalAnimeCharactersResult(animeId, characters));
+    }
     #endregion
 
     #region Private

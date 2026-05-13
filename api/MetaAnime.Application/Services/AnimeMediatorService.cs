@@ -1,4 +1,4 @@
-﻿using MetaAnime.Application.Contracts;
+using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Interfaces;
 using MetaAnime.Application.Queries;
 using MetaAnime.Domain.Enums;
@@ -33,6 +33,7 @@ public sealed class AnimeMediatorService(
     IKometaAnimeMappingRepository kometaAnimeMappingRepository,
     IAnimeRepository animeRepository,
     IAnimeMappingRepository animeMappingRepository,
+    JikanCastService jikanCastService,
     IOptions<MalSettings> malOptions,
     ILogger<AnimeMediatorService> logger)
     : IAnimeMediatorService
@@ -1911,6 +1912,16 @@ public sealed class AnimeMediatorService(
         Dictionary<string, HashSet<AnimeSource>> AniDbIdSources,
         List<AnimeEntityCoverage>                AnimeEntityGroups
     );
+
+    // ── On-demand cast fetch (lazy, per-anime) ────────────────────────────────────
+
+    public async Task<Result> EnsureAnimeCastForAnimeAsync(string malId)
+    {
+        var ok = await jikanCastService.EnsureAsync(malId);
+        return ok
+            ? Result.Success()
+            : Result.Failure(new(Constants.Errors.GetSeiyuuNexusAsync, $"Failed to fetch cast for anime {malId}"));
+    }
 
 }
 

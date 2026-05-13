@@ -238,4 +238,31 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
 
         return Accepted(new { message = "Sync started" });
     }
+
+    [HttpGet("{malId}/seiyuu-nexus")]
+    [Authorize]
+    public async Task<ActionResult<SeiyuuNexusResponse>> GetSeiyuuNexus(string malId)
+    {
+        var result = await mediator.Send(new GetSeiyuuNexusQuery(malId));
+
+        if (result.IsFailure)
+            return StatusCode(500, result.Error.Message);
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("va/{personId:int}/profile")]
+    [Authorize]
+    public async Task<ActionResult<VoiceActorProfileResponse>> GetVoiceActorProfile(int personId)
+    {
+        var result = await mediator.Send(new GetVoiceActorProfileQuery(personId));
+
+        if (result.IsFailure)
+            return StatusCode(500, result.Error.Message);
+
+        if (result.Value is null)
+            return NotFound();
+
+        return Ok(result.Value);
+    }
 }

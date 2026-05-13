@@ -16,4 +16,5 @@ public interface IAnimeRepository
     Task DeleteAsync(Guid id);
     Task<IEnumerable<Anime>> GetAllBySourceAsync(AnimeSource source);
     Task<IEnumerable<Anime>> GetAllAsync();
+    Task<IEnumerable<Anime>> GetManyBySourceIdsAsync(AnimeSource source, IEnumerable<string> sourceIds);
 }

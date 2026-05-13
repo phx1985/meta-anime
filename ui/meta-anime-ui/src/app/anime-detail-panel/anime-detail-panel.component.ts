@@ -27,6 +27,7 @@ import { GENRE_LIST, THEME_LIST, DEMOGRAPHIC_LIST } from '../constants/genre-lis
 import { PopupService } from '../services/popup.service';
 import { PlexDeepLinkService } from '../services/plex-deep-link.service';
 import { FranchiseConstellationService } from '../services/franchise-constellation.service';
+import { SeiyuuNexusService } from '../seiyuu-nexus/seiyuu-nexus.service';
 import { AnimeImageGalleryService } from '../services/anime-image-gallery.service';
 import { ProviderStateService } from '../services/provider-state.service';
 import { SonarrService } from '../services/sonarr.service';
@@ -83,6 +84,7 @@ export class AnimeDetailPanelComponent {
   private popupService = inject(PopupService);
   private plexDeepLink = inject(PlexDeepLinkService);
   private franchiseConstellation = inject(FranchiseConstellationService);
+  private seiyuuNexus = inject(SeiyuuNexusService);
   private gallery = inject(AnimeImageGalleryService);
   private providerState = inject(ProviderStateService);
   private sonarrService = inject(SonarrService);
@@ -668,6 +670,12 @@ export class AnimeDetailPanelComponent {
     const malId = this.mal?.id;
     if (!malId) return;
     this.franchiseConstellation.open(malId, this.displayTitle, this.coverImageUrl, this.zIndexBase() + 2);
+  }
+
+  openSeiyuuNexus(): void {
+    const malId = this.mal?.id;
+    if (!malId) return;
+    this.seiyuuNexus.open(malId, this.zIndexBase() + 2);
   }
 
   openPosterGallery(): void {

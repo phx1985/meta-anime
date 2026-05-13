@@ -355,3 +355,53 @@ export interface SeasonalFilterPreset {
   label: string;
   filters: SeasonalSavedFilterState;
 }
+
+// ── Seiyuu Nexus ─────────────────────────────────────────────────────────────
+
+export type NexusNodeType = 'anime' | 'character' | 'va';
+
+export interface NexusNode {
+  id: string;
+  type: NexusNodeType;
+  label: string;
+  imageUrl?: string;
+  /** Only on anime nodes. */
+  malId?: string;
+  /** Only on VA nodes. */
+  personId?: number;
+  /** Only on character nodes. */
+  characterId?: number;
+  /** True if this is the root/starting anime. */
+  isRoot?: boolean;
+  /** True if anime node is in the local library. */
+  inLibrary?: boolean;
+}
+
+export interface NexusEdge {
+  fromId: string;
+  toId: string;
+  /** e.g. 'hasCharacter', 'voicedBy', 'appearsIn' */
+  relation: string;
+}
+
+export interface SeiyuuNexusResponse {
+  rootMalId: string;
+  rootAnimeTitle: string;
+  nodes: NexusNode[];
+  edges: NexusEdge[];
+  /** ISO timestamp of when this cast data was last synced. */
+  lastUpdated?: string;
+}
+
+export interface VoiceActorProfileResponse {
+  personId: number;
+  name: string;
+  familyName?: string;
+  givenName?: string;
+  imageUrl?: string;
+  age?: number;
+  bloodType?: string;
+  heightCm?: number;
+  weightKg?: number;
+  birthday?: string;
+}

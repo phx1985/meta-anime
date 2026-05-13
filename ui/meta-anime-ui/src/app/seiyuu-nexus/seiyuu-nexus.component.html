@@ -1,0 +1,126 @@
+@if (svc.isOpen()) {
+<div
+  class="nexus__overlay"
+  [style.z-index]="svc.zIndexBase()"
+  (mousedown)="onMouseDown($event)"
+>
+  <!-- Header -->
+  <div class="nexus__header">
+    <span class="nexus__title">{{ 'seiyuuNexus.title' | translate }}</span>
+    @if (lastUpdatedLocal()) {
+      <span class="nexus__last-updated">{{ 'seiyuuNexus.lastUpdated' | translate }}: {{ lastUpdatedLocal() }}</span>
+    }
+    <button
+      class="nexus__close"
+      type="button"
+      (click)="close()"
+      [title]="'seiyuuNexus.close' | translate"
+      [attr.aria-label]="'seiyuuNexus.close' | translate"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Canvas -->
+  <div class="nexus__canvas-wrap">
+    @if (svc.loading()) {
+      <div class="nexus__loading" role="status">
+        <div class="nexus__spinner" aria-hidden="true"></div>
+        <span>{{ 'seiyuuNexus.loading' | translate }}</span>
+      </div>
+    } @else if (svc.error()) {
+      <div class="nexus__error">{{ 'seiyuuNexus.error' | translate }}</div>
+    } @else if (!svc.nexus() || svc.nexus()!.nodes.length === 0) {
+      <div class="nexus__empty">{{ 'seiyuuNexus.empty' | translate }}</div>
+    } @else {
+      <div
+        class="nexus__canvas"
+        [style.transform]="canvasTransform"
+        [style.width.px]="canvasSize"
+        [style.height.px]="canvasSize"
+      >
+        <!-- SVG edges -->
+        <svg
+          class="nexus__edges"
+          [attr.width]="canvasSize"
+          [attr.height]="canvasSize"
+          [attr.viewBox]="'0 0 ' + canvasSize + ' ' + canvasSize"
+        >
+          @for (e of positionedEdges(); track e.edge.fromId + '-' + e.edge.toId) {
+            <line
+              class="nexus__edge"
+              [class.nexus__edge--dashed]="e.dashed"
+              [attr.x1]="e.x1" [attr.y1]="e.y1"
+              [attr.x2]="e.x2" [attr.y2]="e.y2"
+            />
+          }
+        </svg>
+
+        <!-- Nodes -->
+        @for (node of positionedNodes(); track node.id) {
+          <div
+            class="nexus__node"
+            [class.nexus__node--anime]="node.type === 'anime'"
+            [class.nexus__node--character]="node.type === 'character'"
+            [class.nexus__node--va]="node.type === 'va'"
+            [class.nexus__node--root]="node.isRoot"
+            [class.nexus__node--in-library]="node.inLibrary"
+            [class.nexus__node--focused]="focusedNodeId() === node.id"
+            [style.left.px]="node.x - 44"
+            [style.top.px]="node.y - 44"
+            (click)="onNodeClick(node)"
+            [title]="node.label"
+          >
+            @if (node.imageUrl) {
+              <img [src]="node.imageUrl" [alt]="node.label" class="nexus__node-img" loading="lazy" />
+            } @else {
+              <div class="nexus__node-placeholder" aria-hidden="true"></div>
+            }
+            <span class="nexus__node-label">{{ node.label }}</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Info panel -->
+  <div class="nexus__info-panel">
+    @if (svc.vaLoading()) {
+      <div class="nexus__va-skeleton">
+        <div class="nexus__va-skeleton-avatar"></div>
+        <div class="nexus__va-skeleton-lines">
+          <div class="nexus__va-skeleton-line nexus__va-skeleton-line--wide"></div>
+          <div class="nexus__va-skeleton-line nexus__va-skeleton-line--narrow"></div>
+        </div>
+      </div>
+    } @else if (svc.focusedVa()) {
+      <div class="nexus__va-profile">
+        @if (svc.focusedVa()!.imageUrl) {
+          <img [src]="svc.focusedVa()!.imageUrl" [alt]="svc.focusedVa()!.name" class="nexus__va-avatar" loading="lazy" />
+        }
+        <div class="nexus__va-info">
+          <span class="nexus__va-name">{{ svc.focusedVa()!.name }}</span>
+          <div class="nexus__va-chips">
+            @if (svc.focusedVa()!.age != null) {
+              <span class="nexus__va-chip">{{ 'seiyuuNexus.vaProfile.age' | translate }}: {{ svc.focusedVa()!.age }}</span>
+            }
+            @if (svc.focusedVa()!.bloodType) {
+              <span class="nexus__va-chip">{{ 'seiyuuNexus.vaProfile.bloodType' | translate }}: {{ svc.focusedVa()!.bloodType }}</span>
+            }
+            @if (svc.focusedVa()!.heightCm != null) {
+              <span class="nexus__va-chip">{{ 'seiyuuNexus.vaProfile.height' | translate }}: {{ svc.focusedVa()!.heightCm }} cm</span>
+            }
+            @if (svc.focusedVa()!.weightKg != null) {
+              <span class="nexus__va-chip">{{ 'seiyuuNexus.vaProfile.weight' | translate }}: {{ svc.focusedVa()!.weightKg }} kg</span>
+            }
+          </div>
+        </div>
+      </div>
+    } @else {
+      <span class="nexus__hint">{{ 'seiyuuNexus.hint' | translate }}</span>
+    }
+  </div>
+</div>
+}

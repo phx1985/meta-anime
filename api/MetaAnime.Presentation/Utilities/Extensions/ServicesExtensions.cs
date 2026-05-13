@@ -107,6 +107,15 @@ public static class ServicesExtensions
         services.AddScoped<IAnimeRepository, AnimeRepository>();
         services.AddScoped<IAnimeMappingRepository, AnimeMappingRepository>();
         services.AddScoped<IPropertyBagRepository, PropertyBagRepository>();
+        services.AddScoped<IAnimeCastRepository, AnimeCastRepository>();
+        services.AddScoped<IVoiceActorRepository, VoiceActorRepository>();
+        services.AddScoped<JikanPersonService>();
+        services.AddScoped<JikanCastService>();
+        services.AddHttpClient("Jikan", client =>
+        {
+            client.BaseAddress = new Uri("https://api.jikan.moe/v4/");
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+        });
 
         services.AddScoped<ISyncProgressNotifier, SyncProgressNotifier>();
         services.AddSingleton<ISyncStateTracker, InMemorySyncStateTracker>();

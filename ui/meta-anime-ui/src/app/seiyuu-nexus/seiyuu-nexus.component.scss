@@ -1,0 +1,335 @@
+:host {
+  display: contents;
+}
+
+.nexus__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 6, 18, 0.96);
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+
+.nexus__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.nexus__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent, #a78bfa);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nexus__last-updated {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-left: auto;
+}
+
+.nexus__close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s, background 0.15s;
+
+  &:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+// ── Canvas ────────────────────────────────────────────────────────────────────
+
+.nexus__canvas-wrap {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.nexus__canvas {
+  position: absolute;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.nexus__edges {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.nexus__edge {
+  stroke: rgba(167, 139, 250, 0.25);
+  stroke-width: 1;
+
+  &--dashed {
+    stroke-dasharray: 6 4;
+    stroke: rgba(167, 139, 250, 0.15);
+  }
+}
+
+// ── Nodes ─────────────────────────────────────────────────────────────────────
+
+.nexus__node {
+  position: absolute;
+  width: 88px;
+  height: 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: transform 0.15s;
+
+  &:hover {
+    transform: scale(1.08);
+  }
+
+  // Anime node — portrait card shape
+  &--anime {
+    .nexus__node-img,
+    .nexus__node-placeholder {
+      width: 54px;
+      height: 76px;
+      border-radius: 6px;
+      object-fit: cover;
+      border: 2px solid rgba(167, 139, 250, 0.3);
+    }
+
+    .nexus__node-placeholder {
+      background: rgba(167, 139, 250, 0.1);
+    }
+  }
+
+  // Root anime — glowing accent border
+  &--root {
+    .nexus__node-img,
+    .nexus__node-placeholder {
+      border-color: var(--accent, #a78bfa);
+      box-shadow: 0 0 16px rgba(167, 139, 250, 0.5);
+    }
+  }
+
+  // Character node — circle
+  &--character {
+    .nexus__node-img,
+    .nexus__node-placeholder {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(100, 200, 255, 0.3);
+    }
+
+    .nexus__node-placeholder {
+      background: rgba(100, 200, 255, 0.1);
+    }
+  }
+
+  // Voice actor node — diamond via clip-path
+  &--va {
+    .nexus__node-img,
+    .nexus__node-placeholder {
+      width: 56px;
+      height: 56px;
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      object-fit: cover;
+    }
+
+    .nexus__node-placeholder {
+      background: rgba(250, 200, 100, 0.15);
+    }
+  }
+
+  // Focused VA node — golden glow
+  &--focused {
+    .nexus__node-img,
+    .nexus__node-placeholder {
+      filter: drop-shadow(0 0 10px rgba(250, 200, 100, 0.7));
+    }
+  }
+}
+
+.nexus__node-img {
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.nexus__node-placeholder {
+  flex-shrink: 0;
+}
+
+.nexus__node-label {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  max-width: 86px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  line-height: 1.2;
+}
+
+// ── Loading / Error / Empty ───────────────────────────────────────────────────
+
+.nexus__loading,
+.nexus__error,
+.nexus__empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.88rem;
+}
+
+.nexus__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(167, 139, 250, 0.15);
+  border-top-color: #a78bfa;
+  border-radius: 50%;
+  animation: nexus-spin 0.8s linear infinite;
+}
+
+@keyframes nexus-spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── Info panel (always at bottom, never a horizontal split) ───────────────────
+
+.nexus__info-panel {
+  height: 160px;
+  flex-shrink: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.nexus__hint {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.3);
+  font-style: italic;
+}
+
+// VA profile
+
+.nexus__va-profile {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  animation: nexus-fade-in 0.2s ease;
+}
+
+@keyframes nexus-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.nexus__va-avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(250, 200, 100, 0.4);
+  flex-shrink: 0;
+}
+
+.nexus__va-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nexus__va-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.nexus__va-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nexus__va-chip {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(250, 200, 100, 0.1);
+  border: 1px solid rgba(250, 200, 100, 0.25);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+// Skeleton loader
+
+.nexus__va-skeleton {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  width: 300px;
+}
+
+.nexus__va-skeleton-avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+  animation: nexus-shimmer 1.2s ease-in-out infinite;
+}
+
+.nexus__va-skeleton-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  padding-top: 10px;
+}
+
+.nexus__va-skeleton-line {
+  height: 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  animation: nexus-shimmer 1.2s ease-in-out infinite;
+
+  &--wide   { width: 80%; }
+  &--narrow { width: 50%; }
+}
+
+@keyframes nexus-shimmer {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}

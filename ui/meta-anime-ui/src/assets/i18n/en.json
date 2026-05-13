@@ -1831,5 +1831,22 @@
       "sortAsc": "Ascending",
       "sortDesc": "Descending"
     }
+  },
+  "seiyuuNexus": {
+    "title": "Seiyuu Nexus",
+    "button": "Seiyuu Nexus",
+    "loading": "Building nexus…",
+    "empty": "No cast data available. Run a sync to populate.",
+    "error": "Failed to load nexus data. Please try again.",
+    "hint": "Click a voice actor node to see their profile.",
+    "lastUpdated": "Last updated",
+    "close": "Close Seiyuu Nexus",
+    "vaProfile": {
+      "age": "Age",
+      "bloodType": "Blood type",
+      "height": "Height",
+      "weight": "Weight",
+      "roles": "Roles"
+    }
   }
 }
