@@ -72,7 +72,7 @@ public sealed class GetSeiyuuNexusQueryHandler(
                 {
                     var charNodeId = $"char:{cast.CharacterId}";
                     nodes.Add(new NexusNodeDto(charNodeId, "character", cast.CharacterName, cast.CharacterImageUrl, false, null, null, cast.CharacterRole));
-                    edges.Add(new NexusEdgeDto(animeNodeId, charNodeId, "hasCharacter"));
+                    edges.Add(new NexusEdgeDto(animeNodeId, charNodeId, "hasCharacter", null));
                 }
 
                 // VA node
@@ -82,7 +82,7 @@ public sealed class GetSeiyuuNexusQueryHandler(
                     nodes.Add(new NexusNodeDto(vaNodeId, "va", cast.VaName, cast.VaImageUrl, false, null, cast.VaPersonId, null));
                 }
 
-                edges.Add(new NexusEdgeDto($"va:{cast.VaPersonId}", $"char:{cast.CharacterId}", "voices"));
+                edges.Add(new NexusEdgeDto($"va:{cast.VaPersonId}", $"char:{cast.CharacterId}", "voices", cast.Language));
             }
 
             // Add cross-library anime nodes and edges
@@ -97,7 +97,7 @@ public sealed class GetSeiyuuNexusQueryHandler(
                         var otherTitle = crossAnimeTitles.GetValueOrDefault(otherId, otherId);
                         nodes.Add(new NexusNodeDto(otherAnimeNodeId, "anime", otherTitle, null, false, otherId, null, null));
                     }
-                    edges.Add(new NexusEdgeDto($"va:{vaId}", otherAnimeNodeId, "appearsIn"));
+                    edges.Add(new NexusEdgeDto($"va:{vaId}", otherAnimeNodeId, "appearsIn", null));
                 }
             }
 

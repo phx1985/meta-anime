@@ -8,15 +8,21 @@
   <div class="nexus__header">
     <span class="nexus__title">{{ 'seiyuuNexus.title' | translate }}</span>
 
-    <!-- Language filter -->
+    <!-- Language filter — dynamically derived from the actual edge data -->
     <div class="nexus__lang-filter" (mousedown)="$event.stopPropagation()">
-      @for (opt of langOptions; track opt) {
+      <button
+        type="button"
+        class="nexus__lang-pill"
+        [class.nexus__lang-pill--active]="langFilter() === ''"
+        (click)="setLangFilter('')"
+      >{{ 'seiyuuNexus.filter.all' | translate }}</button>
+      @for (lang of availableLangs(); track lang) {
         <button
           type="button"
           class="nexus__lang-pill"
-          [class.nexus__lang-pill--active]="langFilter() === opt"
-          (click)="setLangFilter(opt)"
-        >{{ 'seiyuuNexus.filter.' + opt | translate }}</button>
+          [class.nexus__lang-pill--active]="langFilter() === lang"
+          (click)="setLangFilter(lang)"
+        >{{ lang }}</button>
       }
     </div>
 
@@ -99,6 +105,9 @@
               <div class="nexus__node-placeholder" aria-hidden="true"></div>
             }
             <span class="nexus__node-label">{{ node.label }}</span>
+            @if (node.type === 'va') {
+              <span class="nexus__va-click-hint" aria-hidden="true">▶</span>
+            }
           </div>
         }
       </div>

@@ -23,7 +23,9 @@ public sealed record NexusEdgeDto(
     string FromId,
     string ToId,
     /// <summary>voices | appearsIn | hasCharacter</summary>
-    string Relation
+    string Relation,
+    /// <summary>The dub language for "voices" edges (e.g. "Japanese", "English"). Null for other edge types.</summary>
+    string? Language
 );
 
 /// <summary>Full response for the Seiyuu Nexus graph.</summary>

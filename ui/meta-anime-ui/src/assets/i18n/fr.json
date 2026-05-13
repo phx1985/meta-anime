@@ -1836,8 +1836,6 @@
     "chars": "personnages",
     "vas": "doubleurs",
     "filter": {
-      "Japanese": "Japonais",
-      "English": "Anglais",
       "all": "Tous"
     },
     "vaProfile": {

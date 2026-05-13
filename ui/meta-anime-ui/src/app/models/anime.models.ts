@@ -380,8 +380,10 @@ export interface NexusNode {
 export interface NexusEdge {
   fromId: string;
   toId: string;
-  /** e.g. 'hasCharacter', 'voicedBy', 'appearsIn' */
+  /** e.g. 'hasCharacter', 'voices', 'appearsIn' */
   relation: string;
+  /** Dub language for 'voices' edges (e.g. 'Japanese', 'English'). Null for other edge types. */
+  language?: string;
 }
 
 export interface SeiyuuNexusResponse {

@@ -222,7 +222,7 @@
 
 .nexus__node-label {
   font-size: 0.6rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.75);
   text-align: center;
   max-width: 86px;
   overflow: hidden;
@@ -230,6 +230,13 @@
   white-space: nowrap;
   pointer-events: none;
   line-height: 1.2;
+}
+
+.nexus__va-click-hint {
+  font-size: 0.5rem;
+  color: rgba(250, 200, 100, 0.5);
+  pointer-events: none;
+  line-height: 1;
 }
 
 // ── Loading / Error / Empty ───────────────────────────────────────────────────

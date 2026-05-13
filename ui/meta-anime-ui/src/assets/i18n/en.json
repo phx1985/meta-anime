@@ -1844,8 +1844,6 @@
     "chars": "chars",
     "vas": "VAs",
     "filter": {
-      "Japanese": "Japanese",
-      "English": "English",
       "all": "All"
     },
     "vaProfile": {
