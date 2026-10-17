@@ -60,6 +60,15 @@ public sealed class AnimeRepository(MetaAnimeDbContext dbContext) : IAnimeReposi
                                     .ToListAsync();
     }
 
+    public async Task<IEnumerable<Anime>> GetManyBySourceIdsAsync(AnimeSource source, IEnumerable<string> sourceIds)
+    {
+        var ids = sourceIds.ToList();
+        return await dbContext.Anime
+            .AsNoTracking()
+            .Where(a => a.AnimeSource == source && ids.Contains(a.SourceId))
+            .ToListAsync();
+    }
+
     public async Task<Anime?> GetAnimeAsync(AnimeSource source, string sourceId)
     {
         return await dbContext.Anime.AsNoTracking().FirstOrDefaultAsync(a => a.SourceId == sourceId && a.AnimeSource == source);

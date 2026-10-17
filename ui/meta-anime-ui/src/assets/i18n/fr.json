@@ -1823,5 +1823,36 @@
       "sortAsc": "Croissant",
       "sortDesc": "Décroissant"
     }
+  },
+  "seiyuuNexus": {
+    "title": "Nexus Seiyuu",
+    "button": "Nexus Seiyuu",
+    "loading": "Construction du nexus…",
+    "empty": "Aucune donnée de distribution disponible. Lancez une synchronisation pour remplir.",
+    "error": "Échec du chargement du nexus. Veuillez réessayer.",
+    "hint": "Cliquez sur une carte de doubleur pour voir son profil.",
+    "lastUpdated": "Dernière mise à jour",
+    "close": "Fermer le Nexus Seiyuu",
+    "chars": "personnages",
+    "vas": "doubleurs",
+    "filter": {
+      "all": "Tous"
+    },
+    "table": {
+      "character": "Personnage",
+      "role": "Rôle",
+      "voiceActor": "Doubleur"
+    },
+    "role": {
+      "main": "Principal",
+      "supporting": "Secondaire"
+    },
+    "vaProfile": {
+      "age": "Âge",
+      "bloodType": "Groupe sanguin",
+      "height": "Taille",
+      "weight": "Poids",
+      "roles": "Rôles"
+    }
   }
 }

@@ -1,0 +1,167 @@
+@if (svc.isOpen()) {
+<div class="nexus__overlay" [style.z-index]="svc.zIndexBase()">
+
+  <!-- Header -->
+  <div class="nexus__header">
+    <span class="nexus__title">{{ 'seiyuuNexus.title' | translate }}</span>
+
+    <!-- Language filter pills -->
+    <div class="nexus__lang-filter">
+      <button
+        type="button"
+        class="nexus__lang-pill"
+        [class.nexus__lang-pill--active]="langFilter() === ''"
+        (click)="setLangFilter('')"
+      >{{ 'seiyuuNexus.filter.all' | translate }}</button>
+      @for (lang of availableLangs(); track lang) {
+        <button
+          type="button"
+          class="nexus__lang-pill"
+          [class.nexus__lang-pill--active]="langFilter() === lang"
+          (click)="setLangFilter(lang)"
+        >{{ getFlag(lang) }} {{ lang }}</button>
+      }
+    </div>
+
+    @if (lastUpdatedLocal()) {
+      <span class="nexus__last-updated">{{ 'seiyuuNexus.lastUpdated' | translate }}: {{ lastUpdatedLocal() }}</span>
+    }
+
+    <button
+      class="nexus__close"
+      type="button"
+      (click)="close()"
+      [title]="'seiyuuNexus.close' | translate"
+      [attr.aria-label]="'seiyuuNexus.close' | translate"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="nexus__body">
+    @if (svc.loading()) {
+      <div class="nexus__loading" role="status">
+        <div class="nexus__spinner" aria-hidden="true"></div>
+        <span>{{ 'seiyuuNexus.loading' | translate }}</span>
+      </div>
+    } @else if (svc.error()) {
+      <div class="nexus__error">{{ 'seiyuuNexus.error' | translate }}</div>
+    } @else if (charRows().length === 0) {
+      <div class="nexus__empty">{{ 'seiyuuNexus.empty' | translate }}</div>
+    } @else {
+
+      <!-- Cast table -->
+      <div class="nexus__table-wrap">
+        <table class="nexus__table">
+          <thead>
+            <tr>
+              <th class="nexus__th nexus__th--img" aria-hidden="true"></th>
+              <th class="nexus__th">{{ 'seiyuuNexus.table.character' | translate }}</th>
+              <th class="nexus__th nexus__th--role">{{ 'seiyuuNexus.table.role' | translate }}</th>
+              <th class="nexus__th">{{ 'seiyuuNexus.table.voiceActor' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (entry of charRows(); track entry.char.id) {
+              <tr class="nexus__row">
+                <!-- Character image -->
+                <td class="nexus__td nexus__td--img">
+                  @if (entry.char.imageUrl) {
+                    <img [src]="entry.char.imageUrl" [alt]="entry.char.label" class="nexus__char-avatar" loading="lazy" />
+                  } @else {
+                    <div class="nexus__char-avatar nexus__avatar--placeholder" aria-hidden="true"></div>
+                  }
+                </td>
+
+                <!-- Character name -->
+                <td class="nexus__td nexus__td--name">{{ entry.char.label }}</td>
+
+                <!-- Role badge -->
+                <td class="nexus__td nexus__td--role">
+                  @if (entry.char.role) {
+                    <span
+                      class="nexus__role-badge"
+                      [class.nexus__role-badge--main]="entry.char.role.toLowerCase() === 'main'"
+                    >{{ entry.char.role.toLowerCase() === 'main'
+                        ? ('seiyuuNexus.role.main' | translate)
+                        : ('seiyuuNexus.role.supporting' | translate) }}</span>
+                  }
+                </td>
+
+                <!-- VA group (one card per dub) -->
+                <td class="nexus__td nexus__td--dubs">
+                  <div class="nexus__dubs">
+                    @for (dub of entry.dubs; track dub.va.id) {
+                      <button
+                        type="button"
+                        class="nexus__dub-card"
+                        [class.nexus__dub-card--focused]="focusedVaId() === dub.va.id"
+                        (click)="selectVa(dub.va)"
+                        [title]="dub.va.label + ' (' + dub.language + ')'"
+                      >
+                        <div class="nexus__dub-img-wrap">
+                          @if (dub.va.imageUrl) {
+                            <img [src]="dub.va.imageUrl" [alt]="dub.va.label" class="nexus__va-avatar" loading="lazy" />
+                          } @else {
+                            <div class="nexus__va-avatar nexus__avatar--placeholder" aria-hidden="true"></div>
+                          }
+                          <span class="nexus__lang-flag" aria-label="{{ dub.language }}">{{ dub.flag }}</span>
+                        </div>
+                        <span class="nexus__dub-name">{{ dub.va.label }}</span>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- VA profile panel -->
+      <div class="nexus__info-panel">
+        @if (svc.vaLoading()) {
+          <div class="nexus__va-skeleton">
+            <div class="nexus__va-skeleton-avatar"></div>
+            <div class="nexus__va-skeleton-lines">
+              <div class="nexus__va-skeleton-line nexus__va-skeleton-line--wide"></div>
+              <div class="nexus__va-skeleton-line nexus__va-skeleton-line--narrow"></div>
+            </div>
+          </div>
+        } @else if (svc.focusedVa()) {
+          <div class="nexus__va-profile">
+            @if (svc.focusedVa()!.imageUrl) {
+              <img [src]="svc.focusedVa()!.imageUrl" [alt]="svc.focusedVa()!.name" class="nexus__va-avatar-lg" loading="lazy" />
+            }
+            <div class="nexus__va-info">
+              <span class="nexus__va-name">{{ svc.focusedVa()!.name }}</span>
+              <div class="nexus__va-chips">
+                @if (svc.focusedVa()!.age != null) {
+                  <span class="nexus__va-chip">{{ 'seiyuuNexus.vaProfile.age' | translate }}: {{ svc.focusedVa()!.age }}</span>
+                }
+                @if (svc.focusedVa()!.bloodType) {
+                  <span class="nexus__va-chip">{{ 'seiyuuNexus.vaProfile.bloodType' | translate }}: {{ svc.focusedVa()!.bloodType }}</span>
+                }
+                @if (svc.focusedVa()!.heightCm != null) {
+                  <span class="nexus__va-chip">{{ 'seiyuuNexus.vaProfile.height' | translate }}: {{ svc.focusedVa()!.heightCm }} cm</span>
+                }
+                @if (svc.focusedVa()!.weightKg != null) {
+                  <span class="nexus__va-chip">{{ 'seiyuuNexus.vaProfile.weight' | translate }}: {{ svc.focusedVa()!.weightKg }} kg</span>
+                }
+              </div>
+            </div>
+          </div>
+        } @else {
+          <span class="nexus__hint">{{ 'seiyuuNexus.hint' | translate }}</span>
+        }
+      </div>
+    }
+  </div>
+
+</div>
+}
+
+

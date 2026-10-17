@@ -15,6 +15,8 @@ import {
   CoverageGapItem,
   CrossLinkEntry,
   MalSearchResult,
+  SeiyuuNexusResponse,
+  VoiceActorProfileResponse,
 } from '../models/anime.models';
 import { MalListStatusRequest } from '../models/sonarr.models';
 
@@ -145,5 +147,13 @@ export class AnimeService {
       .set('sourceAniDbId', sourceAniDbId)
       .set('malId', malId);
     return this.http.delete<void>(`${this.malBase}/crosslink`, { params });
+  }
+
+  getSeiyuuNexus(malId: string): Observable<SeiyuuNexusResponse> {
+    return this.http.get<SeiyuuNexusResponse>(`${this.base}/${malId}/seiyuu-nexus`);
+  }
+
+  getVoiceActorProfile(personId: number): Observable<VoiceActorProfileResponse> {
+    return this.http.get<VoiceActorProfileResponse>(`${this.base}/va/${personId}/profile`);
   }
 }

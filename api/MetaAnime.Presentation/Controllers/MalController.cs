@@ -7,6 +7,7 @@ using MetaAnime.Infrastructure.MyAnimeList;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using MalConstants = MetaAnime.Infrastructure.MyAnimeList.Constants;
 using PresentationConstants = MetaAnime.Presentation.Constants;
 
 namespace MetaAnime.Controllers;
@@ -112,9 +113,12 @@ public sealed class MalController(
 
         try
         {
-            var result = await animeMediatorService.SearchMalAnimeAsync(q);
+            var result = await animeMediatorService.SearchMalAnimeAsync(q, limit);
             if (result.IsFailure)
             {
+                if (result.Error.Code == MalConstants.Errors.InvalidSearchQuery)
+                    return BadRequest(result.Error.Message);
+
                 logger.LogError("MAL anime search failed for query '{Query}': {Error}", q, result.Error.Message);
                 return StatusCode(500, result.Error.Message);
             }
@@ -143,6 +147,10 @@ public sealed class MalController(
             var result = await animeMediatorService.SearchMalAnimeWithDetailsAsync(q.Trim(), limit);
             if (result.IsFailure)
             {
+                // The raw query can be long enough but still too short once MAL-hostile characters are stripped.
+                if (result.Error.Code == MalConstants.Errors.InvalidSearchQuery)
+                    return BadRequest(result.Error.Message);
+
                 logger.LogError("MAL anime search (details) failed for query '{Query}': {Error}", q, result.Error.Message);
                 return StatusCode(500, result.Error.Message);
             }

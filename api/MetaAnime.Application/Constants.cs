@@ -41,6 +41,7 @@ public static class Constants
         public const string NotFound = "Error.NotFound";
         public const string RefreshData = "Error.RefreshData";
         public const string RemoveAsync = "Error.RemoveAsync";
+        public const string SearchMalAnimeAsync = "Error.SearchMalAnimeAsync";
         public const string SearchMalAnimeWithDetailsAsync = "Error.SearchMalAnimeWithDetailsAsync";
         public const string SyncAllAsync = "Error.SyncAllAsync";
         public const string UpdateAsync = "Error.UpdateAsync";
@@ -48,6 +49,9 @@ public static class Constants
         public const string GetLibraryAnalysisAsync = "Error.GetLibraryAnalysisAsync";
         public const string EnrichLibrarySeriesAsync = "Error.EnrichLibrarySeriesAsync";
         public const string GetEpisodeFilesAsync = "Error.GetEpisodeFilesAsync";
+        public const string GetSeiyuuNexusAsync = "Error.GetSeiyuuNexusAsync";
+        public const string GetVoiceActorProfileAsync = "Error.GetVoiceActorProfileAsync";
+        public const string SyncAnimeCastAsync = "Error.SyncAnimeCastAsync";
     }
 
     public static class JobNames
@@ -81,6 +85,20 @@ public static class Constants
             public const string Starting = "Starting download stats cache refresh at {Time}";
             public const string Succeeded = "Successfully cached download stats at {Time}";
             public const string Error = "Error during download stats cache refresh";
+        }
+
+        public static class CastSyncJob
+        {
+            public const string Starting  = "Starting cast sync for anime {MalId}";
+            public const string Succeeded = "Cast sync complete for anime {MalId}: {Count} entries";
+            public const string Skipped   = "Skipping cast sync for anime {MalId}: MAL credentials not configured";
+            public const string Error     = "Error during cast sync for anime {MalId}";
+        }
+
+        public static class JikanPersonService
+        {
+            public const string Fetching = "Fetching Jikan profile for person {PersonId}";
+            public const string FetchFailed = "Jikan fetch failed for person {PersonId}";
         }
 
         public static class AnimeMediatorService

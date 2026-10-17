@@ -1,4 +1,4 @@
-﻿using MetaAnime.Core.Interfaces.Mappers;
+using MetaAnime.Core.Interfaces.Mappers;
 using MetaAnime.Core.Interfaces.Shared;
 using MetaAnime.Core.Interfaces.Shared.Results;
 using MetaAnime.Core.Models;
@@ -13,4 +13,5 @@ public interface IMalAnimeSourceService<T> : IAnimeSourceService<T>
     Task<Result<T>> GetWithRelatedAnimeAsync(string animeId);
     Task<Result<IList<MalSearchResultItem>>> SearchByTitleAsync(string query, int limit = 10);
     Task<Result<IList<T>>> SearchByTitleRichAsync(string query, int limit = 100);
+    Task<Result<MalAnimeCharactersResult>> GetAnimeCharactersAsync(string animeId);
 }

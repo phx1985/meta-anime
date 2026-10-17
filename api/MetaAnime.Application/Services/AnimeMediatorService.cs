@@ -1,4 +1,4 @@
-﻿using MetaAnime.Application.Contracts;
+using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Interfaces;
 using MetaAnime.Application.Queries;
 using MetaAnime.Domain.Enums;
@@ -17,6 +17,7 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MalSearchResultItem = MetaAnime.Core.Models.MalSearchResultItem;
+using MalAuthenticationException = MetaAnime.Infrastructure.MyAnimeList.MalAuthenticationException;
 
 namespace MetaAnime.Application.Services;
 
@@ -33,6 +34,7 @@ public sealed class AnimeMediatorService(
     IKometaAnimeMappingRepository kometaAnimeMappingRepository,
     IAnimeRepository animeRepository,
     IAnimeMappingRepository animeMappingRepository,
+    JikanCastService jikanCastService,
     IOptions<MalSettings> malOptions,
     ILogger<AnimeMediatorService> logger)
     : IAnimeMediatorService
@@ -1827,24 +1829,33 @@ public sealed class AnimeMediatorService(
     public Task<Result<SonarrTagInfo>> CreateSonarrTagAsync(string label)
         => sonarrAnimeSource.CreateTagAsync(label);
 
-    public async Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query)
+    public async Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query, int limit = 10)
     {
-        var searchResult = await malAnimeSource.SearchByTitleAsync(query);
-        if (searchResult.IsFailure)
-            return searchResult;
+        try
+        {
+            var searchResult = await malAnimeSource.SearchByTitleAsync(query, limit);
+            if (searchResult.IsFailure)
+                return searchResult;
 
-        // Enrich each result with IsAlreadyInLibrary — true when that MAL ID is already
-        // linked to a unified Anime entity in our DB (so the user knows it's already mapped).
-        var existingMalAnimesResult = await animeService.GetAllBySourceAsync(AnimeSource.MyAnimeList);
-        var existingMalIds = existingMalAnimesResult.IsSuccess
-            ? existingMalAnimesResult.Value.Select(a => a.SourceId).ToHashSet(StringComparer.OrdinalIgnoreCase)
-            : [];
+            // Enrich each result with IsAlreadyInLibrary — true when that MAL ID is already
+            // linked to a unified Anime entity in our DB (so the user knows it's already mapped).
+            var existingMalAnimesResult = await animeService.GetAllBySourceAsync(AnimeSource.MyAnimeList);
+            var existingMalIds = existingMalAnimesResult.IsSuccess
+                ? existingMalAnimesResult.Value.Select(a => a.SourceId).ToHashSet(StringComparer.OrdinalIgnoreCase)
+                : [];
 
-        var enriched = searchResult.Value
-            .Select(r => r with { IsAlreadyInLibrary = existingMalIds.Contains(r.Id) })
-            .ToList();
+            var enriched = searchResult.Value
+                .Select(r => r with { IsAlreadyInLibrary = existingMalIds.Contains(r.Id) })
+                .ToList();
 
-        return Result.Success<IList<MalSearchResultItem>>(enriched);
+            return Result.Success<IList<MalSearchResultItem>>(enriched);
+        }
+        // MalAuthenticationException is surfaced by MalController as a 401 (MAL.AuthenticationFailed).
+        catch (Exception ex) when (ex is not MalAuthenticationException)
+        {
+            logger.LogError(ex, "MAL search failed for query '{Query}'", query);
+            return Result.Failure<IList<MalSearchResultItem>>(new(Constants.Errors.SearchMalAnimeAsync, ex.Message));
+        }
     }
 
     public async Task<Result<IEnumerable<SeasonalAnimeResponse>>> SearchMalAnimeWithDetailsAsync(string query, int limit = 100)
@@ -1861,6 +1872,7 @@ public sealed class AnimeMediatorService(
         }
         catch (Exception ex)
         {
+            logger.LogError(ex, "MAL search (details) failed for query '{Query}'", query);
             return Result.Failure<IEnumerable<SeasonalAnimeResponse>>(new(Constants.Errors.SearchMalAnimeWithDetailsAsync, ex.Message));
         }
     }
@@ -1911,6 +1923,16 @@ public sealed class AnimeMediatorService(
         Dictionary<string, HashSet<AnimeSource>> AniDbIdSources,
         List<AnimeEntityCoverage>                AnimeEntityGroups
     );
+
+    // ── On-demand cast fetch (lazy, per-anime) ────────────────────────────────────
+
+    public async Task<Result> EnsureAnimeCastForAnimeAsync(string malId)
+    {
+        var ok = await jikanCastService.EnsureAsync(malId);
+        return ok
+            ? Result.Success()
+            : Result.Failure(new(Constants.Errors.GetSeiyuuNexusAsync, $"Failed to fetch cast for anime {malId}"));
+    }
 
 }
 

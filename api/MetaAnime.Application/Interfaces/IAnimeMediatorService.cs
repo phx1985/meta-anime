@@ -1,9 +1,9 @@
-﻿using MetaAnime.Application.Contracts;
+using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Queries;
 using MetaAnime.Core.Models;
 using MetaAnime.Domain.Enums;
-using MetaAnime.Core.Interfaces.Shared.Results;
 using MetaAnime.Core.Interfaces.Services;
+using MetaAnime.Core.Interfaces.Shared.Results;
 namespace MetaAnime.Application.Interfaces;
 
 public interface IAnimeMediatorService
@@ -28,7 +28,8 @@ public interface IAnimeMediatorService
     Task<Result<IList<SonarrTagInfo>>> GetAllSonarrTagsAsync();
     Task<Result<SonarrTagInfo>> CreateSonarrTagAsync(string label);
     // MAL search
-    Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query);
+    Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query, int limit = 10);
     Task<Result<IEnumerable<SeasonalAnimeResponse>>> SearchMalAnimeWithDetailsAsync(string query, int limit = 100);
     Task<Result<ActivityStatsResponse>> GetActivityStatsAsync(int tzOffsetMinutes = 0);
+    Task<Result> EnsureAnimeCastForAnimeAsync(string malId);
 }

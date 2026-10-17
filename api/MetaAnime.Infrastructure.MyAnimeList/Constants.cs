@@ -12,5 +12,8 @@ public static class Constants
         public const string NotConfigured = "MAL.NotConfigured";
         public const string NoToken = "MAL.NoToken";
         public const string AuthenticationFailed = "MAL.AuthenticationFailed";
+        public const string InvalidSearchQuery = "MAL.InvalidSearchQuery";
+        public const string SearchByTitleFailed = "MAL.SearchByTitleFailed";
+        public const string SearchByTitleRichFailed = "MAL.SearchByTitleRichFailed";
     }
 }
