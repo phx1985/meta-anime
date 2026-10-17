@@ -26,7 +26,7 @@ export class LoginComponent {
   submitting = signal(false);
   errorMessage = signal<string | null>(null);
   showPassword = signal(false);
-  currentLang = signal<string>(this.translate.currentLang ?? 'en');
+  currentLang = signal<string>(this.translate.getCurrentLang() ?? 'en');
 
   readonly availableLanguages: ReadonlyArray<{ code: string; label: string }> = [
     { code: 'en', label: 'English' },

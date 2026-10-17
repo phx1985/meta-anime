@@ -281,7 +281,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   /** Reactive language tag — changes when the user switches language. */
   private readonly langSignal = signal(
-    this.translateService.currentLang || this.translateService.defaultLang || 'en',
+    this.translateService.getCurrentLang() || this.translateService.getFallbackLang() || 'en',
   );
 
   /** Genre list: NSFW-filtered + sorted alphabetically (NSFW items last). */

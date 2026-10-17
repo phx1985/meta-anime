@@ -103,7 +103,7 @@ export class AnimeCardComponent {
   get displayTitle(): string {
     const seasonal = this.seasonalItem();
     if (seasonal) return seasonal.title;
-    const lang = this.translate.currentLang ?? 'en';
+    const lang = this.translate.getCurrentLang() ?? 'en';
     const alt = this.mal?.alternativeTitles;
     if (alt) {
       if (lang === 'ja' && alt.ja) return alt.ja;
