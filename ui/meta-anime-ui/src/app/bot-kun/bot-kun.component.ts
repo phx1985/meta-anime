@@ -62,7 +62,7 @@ export class BotKunComponent implements OnDestroy {
 
   private luckyCardResume: (() => void) | null = null;
 
-  readonly currentLang = signal(this.translate.currentLang ?? 'en');
+  readonly currentLang = signal(this.translate.getCurrentLang() ?? 'en');
 
   /** Emits the MAL ID of an anime the user clicked */
   readonly animeSelected = output<string>();

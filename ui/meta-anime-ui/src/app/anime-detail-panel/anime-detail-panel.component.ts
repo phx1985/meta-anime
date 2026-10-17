@@ -462,7 +462,7 @@ export class AnimeDetailPanelComponent {
   }
 
   get displayTitle(): string {
-    const lang = this.translate.currentLang ?? 'en';
+    const lang = this.translate.getCurrentLang() ?? 'en';
     const alt = this.mal?.alternativeTitles;
     if (alt) {
       if (lang === 'ja' && alt.ja) return alt.ja;

@@ -992,10 +992,10 @@
                   <!-- Codecs with percentage -->
                   <td class="tbl-td--codecs">
                     <div class="tbl-codecs-wrap">
-                      @for (pill of getCodecPills(anime.sonarrAnimes?.[0]?.codecDistribution); track pill.label) {
+                      @for (pill of getCodecPills($safeNavigationMigration(anime.sonarrAnimes?.[0]?.codecDistribution)); track pill.label) {
                         <span class="tbl-pill tbl-pill--codec">{{ pill.label }} ({{ pill.pct }}%)</span>
                       }
-                      @if (!getCodecPills(anime.sonarrAnimes?.[0]?.codecDistribution).length) {
+                      @if (!getCodecPills($safeNavigationMigration(anime.sonarrAnimes?.[0]?.codecDistribution)).length) {
                         <span class="tbl-empty">—</span>
                       }
                     </div>
@@ -1007,7 +1007,7 @@
                   </td>
 
                   <!-- Size on disk -->
-                  <td class="tbl-td--num">{{ formatTableSize(anime.sonarrAnimes?.[0]?.sizeOnDisk) }}</td>
+                  <td class="tbl-td--num">{{ formatTableSize($safeNavigationMigration(anime.sonarrAnimes?.[0]?.sizeOnDisk)) }}</td>
 
                   <!-- Average episode size -->
                   <td class="tbl-td--num">{{ formatAvgEpSize(anime) }}</td>

@@ -1,7 +1,7 @@
 # =============================================================================
 # Stage 1: Build Angular UI
 # =============================================================================
-FROM --platform=$BUILDPLATFORM node:22-alpine AS ui-builder
+FROM --platform=$BUILDPLATFORM node:24-alpine AS ui-builder
 
 WORKDIR /src
 COPY ui/meta-anime-ui/package*.json ./
@@ -29,7 +29,7 @@ RUN dotnet publish MetaAnime.Presentation/MetaAnime.Presentation.csproj \
 # =============================================================================
 # Stage 3: Final production image (Alpine + linuxserver s6-overlay base)
 # =============================================================================
-FROM ghcr.io/linuxserver/baseimage-alpine:3.21
+FROM ghcr.io/linuxserver/baseimage-alpine:3.24
 
 # Install PostgreSQL server + client, openssl (for key generation), and jq (for JSON parsing)
 RUN apk add --no-cache \

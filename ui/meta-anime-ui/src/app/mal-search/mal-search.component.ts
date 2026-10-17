@@ -263,7 +263,7 @@ export class MalSearchComponent {
 
   /** Reactive language tag — changes when the user switches language. */
   private readonly langSignal = signal(
-    this.translateService.currentLang || this.translateService.defaultLang || 'en',
+    this.translateService.getCurrentLang() || this.translateService.getFallbackLang() || 'en',
   );
 
   /** Genre list: NSFW-filtered + sorted alphabetically (NSFW items last). */
@@ -478,6 +478,15 @@ export class MalSearchComponent {
       .pipe(
         debounceTime(0),
         switchMap((query) => {
+          if (!query) {
+            // Empty sentinel from resetFilters(): drop the search state and any in-flight request.
+            this.loading.set(false);
+            this.error.set(false);
+            this.animes.set([]);
+            this.displayedAnimes.set([]);
+            this.lastSearchedQuery.set('');
+            return of([]);
+          }
           this.loading.set(true);
           this.error.set(false);
           this.animes.set([]);
@@ -719,6 +728,8 @@ export class MalSearchComponent {
   // ── Reset ─────────────────────────────────────────────────────────────────
 
   resetFilters(): void {
+    this.searchQuery.set('');
+    this.lastSearchedQuery.set('');
     this.filterGenre.set([]);
     this.genreOperator.set('or');
     this.filterTheme.set([]);
@@ -734,7 +745,11 @@ export class MalSearchComponent {
     this.themeDropdownOpen = false;
     this.demographicDropdownOpen = false;
     this.activePresetName.set(null);
+    this.animes.set([]);
+    this.error.set(false);
     this._applyFilteredResults();
+    // Empty sentinel: cancels any in-flight search request (switchMap) and clears its loading state.
+    this.search$.next('');
   }
 
   /** Apply the current filter state and close the filter sheet. */

@@ -122,7 +122,7 @@ export class SettingsComponent {
   syncing = signal(false);
   lastSyncDate = signal<string | null>(null);
   syncHttpError = signal<string | null>(null);
-  currentLang = signal(this.translate.currentLang ?? this.translate.defaultLang ?? 'en');
+  currentLang = signal(this.translate.getCurrentLang() ?? this.translate.getFallbackLang() ?? 'en');
 
   // ── Enrollment state ──────────────────────────────────────────────────────
   malConnected = signal(false);
