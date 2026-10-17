@@ -7,6 +7,7 @@ using MetaAnime.Infrastructure.MyAnimeList.Models;
 using Microsoft.Extensions.Logging;
 using RestSharp;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace MetaAnime.Infrastructure.MyAnimeList.Services;
 
@@ -14,6 +15,12 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
 {
     #region Fields
     private const int MalPageLimit = 500;
+    // MAL rejects GET /anime?q= with 400 "invalid q" below 3 characters and caps limit at 100.
+    private const int MalMinSearchQueryLength = 3;
+    private const int MalMaxSearchLimit = 100;
+    private const string UnreadableSearchResponseMessage = "MyAnimeList returned a search response that could not be read.";
+    private static readonly Regex SearchNoiseRegex = new(@"[:\?!]", RegexOptions.Compiled);
+    private static readonly Regex WhitespaceRunRegex = new(@"\s+", RegexOptions.Compiled);
     private const string REQUEST_FIELDS = "synopsis, ";
     private const string EXTENDED_REQUEST_FIELDS = REQUEST_FIELDS + "alternative_titles{en,ja,synonyms}, " +
                                                                     "genres{id,name}, " +
@@ -238,21 +245,21 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
 
     public async Task<Result<IList<MalSearchResultItem>>> SearchByTitleAsync(string query, int limit = 10)
     {
+        var normalised = NormaliseSearchQuery(query);
+        if (normalised.Length < MalMinSearchQueryLength)
+            return Result.Failure<IList<MalSearchResultItem>>(InvalidSearchQueryError());
+
         var (ok, baseUrl, token) = await ValidateCredentialsAsync();
         if (!ok)
             return string.IsNullOrWhiteSpace(baseUrl)
                 ? Result.Failure<IList<MalSearchResultItem>>(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."))
                 : Result.Failure<IList<MalSearchResultItem>>(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
 
-        // Normalise the query: strip characters that MAL's search API doesn't handle
-        // well (e.g. colons from titles like "Dragon Ball Super: Galactic Patrol").
-        var normalised = System.Text.RegularExpressions.Regex.Replace(query, @"[:\?!]", " ")
-                                                             .Trim();
-        normalised = System.Text.RegularExpressions.Regex.Replace(normalised, @"\s{2,}", " ");
         var encodedQuery = Uri.EscapeDataString(normalised);
+        var effectiveLimit = Math.Clamp(limit, 1, MalMaxSearchLimit);
         var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
         {
-            var uri = new Uri($"{baseUrl}/anime?q={encodedQuery}&limit={limit}&fields=id,title,main_picture,start_date,media_type");
+            var uri = new Uri($"{baseUrl}/anime?q={encodedQuery}&limit={effectiveLimit}&fields=id,title,main_picture,start_date,media_type");
             var restClient = new RestClient(uri);
             var restRequest = new RestRequest { Method = Method.Get };
             restRequest.AddHeader("Authorization", $"Bearer {t}");
@@ -261,8 +268,11 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
 
         if (response.IsSuccessful)
         {
-            var result = JsonSerializer.Deserialize<MalResult>(response.Content!)!;
-            var items = result.Data
+            var result = TryDeserialize<MalResult>(response.Content);
+            if (result is null)
+                return Result.Failure<IList<MalSearchResultItem>>(new(Constants.Errors.SearchByTitleFailed, UnreadableSearchResponseMessage));
+
+            var items = (result.Data ?? [])
                 .Select(d =>
                 {
                     // Parse year from "YYYY-MM-DD" start_date — null/empty → null year
@@ -287,25 +297,27 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
             return Result.Success<IList<MalSearchResultItem>>(items);
         }
 
-        var malError = JsonSerializer.Deserialize<MalError>(response.Content!)!;
-        return Result.Failure<IList<MalSearchResultItem>>(new Error(malError.Message));
+        return Result.Failure<IList<MalSearchResultItem>>(new(Constants.Errors.SearchByTitleFailed, DescribeSearchFailure(response)));
     }
 
     public async Task<Result<IList<MalAnime>>> SearchByTitleRichAsync(string query, int limit = 100)
     {
+        var normalised = NormaliseSearchQuery(query);
+        if (normalised.Length < MalMinSearchQueryLength)
+            return Result.Failure<IList<MalAnime>>(InvalidSearchQueryError());
+
         var (ok, baseUrl, token) = await ValidateCredentialsAsync();
         if (!ok)
             return string.IsNullOrWhiteSpace(baseUrl)
                 ? Result.Failure<IList<MalAnime>>(new(Constants.Errors.NotConfigured, $"MyAnimeList is not configured: '{SettingsKeys.MalApiBaseUrl}' is blank."))
                 : Result.Failure<IList<MalAnime>>(new(Constants.Errors.NoToken, "MyAnimeList access token is not available"));
 
-        var normalised = System.Text.RegularExpressions.Regex.Replace(query, @"[:\?!]", " ").Trim();
-        normalised = System.Text.RegularExpressions.Regex.Replace(normalised, @"\s{2,}", " ");
         var encodedQuery = Uri.EscapeDataString(normalised);
+        var effectiveLimit = Math.Clamp(limit, 1, MalMaxSearchLimit);
 
         var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
         {
-            var uri = new Uri($"{baseUrl}/anime?q={encodedQuery}&limit={limit}&nsfw=true&fields={SEASONAL_FIELDS}");
+            var uri = new Uri($"{baseUrl}/anime?q={encodedQuery}&limit={effectiveLimit}&nsfw=true&fields={SEASONAL_FIELDS}");
             var restClient = new RestClient(uri);
             var restRequest = new RestRequest { Method = Method.Get };
             restRequest.AddHeader("Authorization", $"Bearer {t}");
@@ -314,13 +326,15 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
 
         if (response.IsSuccessful)
         {
-            var result = JsonSerializer.Deserialize<MalResult>(response.Content!)!;
-            var items = result.Data.Select(d => d.Node).ToList();
+            var result = TryDeserialize<MalResult>(response.Content);
+            if (result is null)
+                return Result.Failure<IList<MalAnime>>(new(Constants.Errors.SearchByTitleRichFailed, UnreadableSearchResponseMessage));
+
+            var items = (result.Data ?? []).Select(d => d.Node).ToList();
             return Result.Success<IList<MalAnime>>(items);
         }
 
-        var malError = JsonSerializer.Deserialize<MalError>(response.Content!)!;
-        return Result.Failure<IList<MalAnime>>(new Error(malError.Message));
+        return Result.Failure<IList<MalAnime>>(new(Constants.Errors.SearchByTitleRichFailed, DescribeSearchFailure(response)));
     }
 
     public async Task<Result<MalAnimeCharactersResult>> GetAnimeCharactersAsync(string animeId)
@@ -386,6 +400,58 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
 
     private async Task<string?> GetBaseUrlAsync()
         => (await propertyBagRepository.GetByKeyAsync(SettingsKeys.MalApiBaseUrl))?.Value;
+
+    /// <summary>
+    /// Strips characters MAL's <c>q</c> parameter handles poorly (e.g. the colon in
+    /// "Dragon Ball Super: Galactic Patrol") and collapses whitespace.
+    /// </summary>
+    private static string NormaliseSearchQuery(string? query)
+        => WhitespaceRunRegex.Replace(SearchNoiseRegex.Replace(query ?? string.Empty, " "), " ").Trim();
+
+    private static Error InvalidSearchQueryError()
+        => new(Constants.Errors.InvalidSearchQuery,
+               $"The search query must be at least {MalMinSearchQueryLength} characters long once special characters (: ? !) are removed (MAL API requirement).");
+
+    /// <summary>
+    /// Deserialises MAL JSON without throwing: returns <c>null</c> for an empty or malformed body
+    /// (e.g. an HTML error page returned by a gateway).
+    /// </summary>
+    private static T? TryDeserialize<T>(string? content) where T : class
+    {
+        if (string.IsNullOrWhiteSpace(content))
+            return null;
+
+        try
+        {
+            return JsonSerializer.Deserialize<T>(content);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Builds a readable message for a failed MAL search. MAL normally answers with
+    /// <c>{"message":"invalid q","error":"bad_request"}</c>, but a 403 ("DoS detected"), a gateway
+    /// failure or a network error may carry an HTML/empty body — or no HTTP status at all.
+    /// </summary>
+    private static string DescribeSearchFailure(RestResponse response)
+    {
+        if (response.StatusCode == 0)
+            return $"Could not reach MyAnimeList: {response.ErrorMessage ?? "no response received"}";
+
+        var malError = TryDeserialize<MalError>(response.Content);
+        var detail = string.Join(" / ", new[] { malError?.Detail, malError?.Message }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
+        var message = $"MyAnimeList search failed (HTTP {(int)response.StatusCode} {response.StatusCode})";
+        if (detail.Length > 0)
+            message += $": {detail}";
+        if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            message += ". MAL may be rate limiting this server; retry in a moment";
+
+        return message;
+    }
 
     private async Task<RestResponse> FetchAnimeListAsync(string baseUrl, Paging paging, string token)
     {
