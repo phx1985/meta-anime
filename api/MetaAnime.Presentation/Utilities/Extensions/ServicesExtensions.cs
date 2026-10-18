@@ -72,6 +72,7 @@ public static class ServicesExtensions
         services.AddScoped<ISonarrAnimeSourceService<SonarrSeries>, SonarrAnimeSourceService>();
         services.AddScoped<IPlexAnimeSourceService<PlexMedia>, PlexAnimeSourceService>();
         services.AddScoped<IPlexAuthService, PlexAuthService>();
+        services.AddScoped<ICastService, GoogleCastService>();
         services.AddScoped<IMalAnimeSourceService<MalAnime>, MalAnimeSourceService>();
         services.AddScoped<IMalTokenService, MalTokenService>();
         services.AddScoped<IMalOAuthService, MalOAuthService>();

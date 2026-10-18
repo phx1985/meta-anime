@@ -451,8 +451,21 @@
       "avgEpSize": "Taille moy. épisode"
     }
   },
+  "plexPlayerPicker": {
+    "title": "Lire sur un appareil",
+    "subtitle": "Choisir où lire :",
+    "loading": "Recherche de lecteurs…",
+    "loadFailed": "Impossible de charger les lecteurs.",
+    "retry": "Réessayer",
+    "refresh": "Actualiser",
+    "noPlayers": "Aucun appareil de cast trouvé sur votre réseau. Vérifiez que votre Chromecast / Google TV est allumé et sur le même réseau.",
+    "noEndpoint": "sans point de contrôle",
+    "playStarted": "Lecture en cours sur",
+    "playFailedMsg": "Impossible de démarrer la lecture sur ce lecteur. Vérifiez que l'app Plex est ouverte sur l'appareil et réessayez."
+  },
   "animeDetailPanel": {
     "close": "Fermer",
+    "playOnDevice": "Lire sur un appareil",
     "viewDetails": "Détails",
     "loading": "Chargement…",
     "synopsis": "Synopsis",

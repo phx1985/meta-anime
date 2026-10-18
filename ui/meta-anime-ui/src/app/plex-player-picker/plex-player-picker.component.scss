@@ -1,0 +1,355 @@
+// ── Plex player-picker modal ─────────────────────────────────────────────────
+
+.pp-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: ppBackdropIn 0.22s ease both;
+
+  &--leaving {
+    animation: ppBackdropOut 0.2s ease both;
+
+    .pp-modal {
+      animation: ppModalOut 0.2s cubic-bezier(0.4, 0, 1, 1) both;
+    }
+  }
+}
+
+.pp-modal {
+  position: relative;
+  background: var(--bg-primary);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+  padding: 1.4rem 1.4rem 1.25rem;
+  width: min(420px, 96vw);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  animation: ppModalIn 0.28s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pp-close {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--text-muted) 10%, transparent);
+  border: 1px solid var(--card-border);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: color-mix(in srgb, var(--text-muted) 20%, transparent);
+    color: var(--text-primary);
+  }
+}
+
+// ── Header ──────────────────────────────────────────────────────────────────
+
+.pp-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-right: 2rem;
+}
+
+.pp-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.pp-subtitle {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+
+  strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+}
+
+// ── Body states ─────────────────────────────────────────────────────────────
+
+.pp-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pp-loading {
+  padding: 1.5rem 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.pp-empty {
+  padding: 1.25rem 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  align-items: center;
+
+  p {
+    margin: 0;
+  }
+}
+
+.pp-error {
+  background: color-mix(in srgb, #ef4444 12%, transparent);
+  border: 1px solid color-mix(in srgb, #ef4444 32%, transparent);
+  color: #f87171;
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+// ── Success state ───────────────────────────────────────────────────────────
+
+.pp-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.5rem 0 0.5rem;
+  text-align: center;
+}
+
+.pp-success-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #22c55e;
+  background: color-mix(in srgb, #22c55e 16%, transparent);
+  border: 1px solid color-mix(in srgb, #22c55e 40%, transparent);
+}
+
+.pp-success-text {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+
+  strong {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+}
+
+// ── Player list ─────────────────────────────────────────────────────────────
+
+.pp-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pp-player {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--text-muted) 7%, transparent);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, #e5a00d 14%, transparent);
+    border-color: color-mix(in srgb, #e5a00d 45%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, #e5a00d 12%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+.pp-player--offline .pp-player-action {
+  color: var(--text-muted);
+}
+
+.pp-player-warn {
+  align-self: flex-start;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #f59e0b;
+}
+
+.pp-player-icon {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e5a00d;
+  background: color-mix(in srgb, #e5a00d 14%, transparent);
+}
+
+.pp-player-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.pp-player-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pp-player-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pp-player-action {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e5a00d;
+}
+
+.pp-spinner {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, #e5a00d 30%, transparent);
+  border-top-color: #e5a00d;
+  animation: ppSpin 0.7s linear infinite;
+}
+
+.pp-refresh {
+  align-self: center;
+  margin-top: 0.25rem;
+}
+
+// ── Buttons ─────────────────────────────────────────────────────────────────
+
+.pp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1.15rem;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+
+  &--primary {
+    background: #e5a00d;
+    color: #1a1200;
+
+    &:hover {
+      background: #f0ad24;
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    border-color: var(--card-border);
+    color: var(--text-muted);
+
+    &:hover {
+      background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+      color: var(--text-primary);
+    }
+  }
+}
+
+// ── Animations ──────────────────────────────────────────────────────────────
+
+@keyframes ppBackdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ppBackdropOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes ppModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ppModalOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+
+@keyframes ppSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

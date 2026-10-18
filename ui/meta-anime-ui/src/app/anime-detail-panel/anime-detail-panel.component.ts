@@ -505,6 +505,17 @@ export class AnimeDetailPanelComponent {
     return this.plex?.url ?? null;
   }
 
+  /** Plex rating key for this show — needed to start playback on a selected player. */
+  get plexRatingKey(): string | null {
+    const id = this.plex?.id;
+    if (id) return id;
+    // Fall back to parsing the key from the deep-link URL (…/metadata/{ratingKey}).
+    const url = this.plexUrl;
+    if (!url) return null;
+    const m = url.match(/metadata%2F([^&/?#]+)/i) ?? url.match(/metadata\/([^&/?#]+)/i);
+    return m?.[1] ?? null;
+  }
+
   get malScore(): number {
     return this.mal?.rating?.malMean ?? 0;
   }
@@ -664,6 +675,16 @@ export class AnimeDetailPanelComponent {
   openPlexLink(): void {
     if (!this.plexUrl) return;
     this.plexDeepLink.openLink(this.plexUrl, this.anime()?.title ?? '');
+  }
+
+  /** Opens the remote player picker to cast this show to a Plex device. */
+  openPlayerPicker(): void {
+    const ratingKey = this.plexRatingKey;
+    if (!ratingKey) return;
+    this.popupService.openPlexPlayerPicker({
+      ratingKey,
+      title: this.anime()?.title ?? '',
+    });
   }
 
   openFranchiseConstellation(): void {

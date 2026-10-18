@@ -31,6 +31,22 @@ export interface SonarrSeasonInfo {
   totalEpisodes: number;
 }
 
+export interface CastDevice {
+  id: string;
+  name: string;
+  type: string;
+  host: string;
+  port: number;
+  model?: string;
+}
+
+export interface CastPlayResponse {
+  deviceName: string;
+  title: string;
+  subTitle: string;
+  streamUrl: string;
+}
+
 export interface PlexAnimeInfo {
   title: string;
   id?: string;

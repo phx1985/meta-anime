@@ -1,0 +1,109 @@
+<div
+  class="pp-backdrop"
+  [class.pp-backdrop--leaving]="leaving()"
+  (click)="dismiss()"
+  role="dialog"
+  aria-modal="true"
+  [attr.aria-label]="'plexPlayerPicker.title' | translate"
+>
+  <div class="pp-modal" [class.pp-modal--leaving]="leaving()" (click)="$event.stopPropagation()">
+    <!-- Close button -->
+    <button
+      type="button"
+      class="pp-close"
+      (click)="dismiss()"
+      [attr.aria-label]="'common.close' | translate"
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    </button>
+
+    <!-- ── Header ── -->
+    <div class="pp-header">
+      <h3 class="pp-title">{{ 'plexPlayerPicker.title' | translate }}</h3>
+      @if (ctx()?.title) {
+        <p class="pp-subtitle">
+          {{ 'plexPlayerPicker.subtitle' | translate }} &nbsp;<strong>{{ ctx()!.title }}</strong>
+        </p>
+      }
+    </div>
+
+    <!-- ── Body ── -->
+    <div class="pp-body">
+      @if (launchedOn(); as name) {
+        <!-- Success state -->
+        <div class="pp-success">
+          <span class="pp-success-icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          </span>
+          <p class="pp-success-text">
+            {{ 'plexPlayerPicker.playStarted' | translate }} &nbsp;<strong>{{ name }}</strong>
+          </p>
+          <button type="button" class="pp-btn pp-btn--primary" (click)="dismiss()">
+            {{ 'common.close' | translate }}
+          </button>
+        </div>
+      } @else if (loading()) {
+        <div class="pp-loading">{{ 'plexPlayerPicker.loading' | translate }}</div>
+      } @else if (loadError()) {
+        <div class="pp-empty">
+          <p>{{ 'plexPlayerPicker.loadFailed' | translate }}</p>
+          <button type="button" class="pp-btn pp-btn--ghost" (click)="loadDevices()">
+            {{ 'plexPlayerPicker.retry' | translate }}
+          </button>
+        </div>
+      } @else if (devices().length === 0) {
+        <div class="pp-empty">
+          <p>{{ 'plexPlayerPicker.noPlayers' | translate }}</p>
+          <button type="button" class="pp-btn pp-btn--ghost" (click)="loadDevices()">
+            {{ 'plexPlayerPicker.refresh' | translate }}
+          </button>
+        </div>
+      } @else {
+        @if (playError(); as msg) {
+          <div class="pp-error">{{ msg || ('plexPlayerPicker.playFailedMsg' | translate) }}</div>
+        }
+        <ul class="pp-list">
+          @for (p of devices(); track p.id) {
+            <li>
+              <button
+                type="button"
+                class="pp-player"
+                [disabled]="playing() !== null"
+                (click)="play(p)"
+              >
+                <span class="pp-player-icon" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="13" rx="2" />
+                    <path d="M8 21h8" />
+                    <path d="M12 17v4" />
+                  </svg>
+                </span>
+                <span class="pp-player-meta">
+                  <span class="pp-player-name">{{ p.name }}</span>
+                  <span class="pp-player-sub">{{ p.model || p.type }}</span>
+                </span>
+                <span class="pp-player-action" aria-hidden="true">
+                  @if (playing() === p.id) {
+                    <span class="pp-spinner"></span>
+                  } @else {
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  }
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+        <button type="button" class="pp-btn pp-btn--ghost pp-refresh" (click)="loadDevices()">
+          {{ 'plexPlayerPicker.refresh' | translate }}
+        </button>
+      }
+    </div>
+  </div>
+</div>

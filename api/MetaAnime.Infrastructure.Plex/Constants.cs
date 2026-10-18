@@ -11,5 +11,9 @@ public static class Constants
         public const string MachineIdentifierNotFound = "Plex.MachineIdentifierNotFound";
         public const string PlexPinFailed = "Plex.PinFailed";
         public const string ThumbNotFound = "Plex.ThumbNotFound";
+        public const string PlayerDiscoveryFailed = "Plex.PlayerDiscoveryFailed";
+        public const string PlaybackFailed = "Plex.PlaybackFailed";
+        public const string CastDiscoveryFailed = "Plex.CastDiscoveryFailed";
+        public const string CastFailed = "Plex.CastFailed";
     }
 }

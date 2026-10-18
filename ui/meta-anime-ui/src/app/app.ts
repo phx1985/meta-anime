@@ -28,6 +28,7 @@ import { FranchiseConstellationComponent } from './franchise-constellation/franc
 import { FranchiseConstellationService } from './services/franchise-constellation.service';
 import { SeiyuuNexusComponent } from './seiyuu-nexus/seiyuu-nexus.component';
 import { MalQuickUpdateModalComponent } from './mal-quick-update/mal-quick-update-modal.component';
+import { PlexPlayerPickerComponent } from './plex-player-picker/plex-player-picker.component';
 import { ProviderHealthComponent } from './provider-health/provider-health.component';
 import { AuthService } from './services/auth.service';
 import { StorageKeys } from './constants/storage-keys';
@@ -40,7 +41,7 @@ import { AnimeDetailPanelComponent } from './anime-detail-panel/anime-detail-pan
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent, UpperCasePipe, FranchiseConstellationComponent, SeiyuuNexusComponent, MalQuickUpdateModalComponent, ProviderHealthComponent, BotKunComponent, AnimeDetailPanelComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent, UpperCasePipe, FranchiseConstellationComponent, SeiyuuNexusComponent, MalQuickUpdateModalComponent, ProviderHealthComponent, BotKunComponent, AnimeDetailPanelComponent, PlexPlayerPickerComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

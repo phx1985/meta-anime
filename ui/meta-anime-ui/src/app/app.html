@@ -618,6 +618,11 @@
   <app-mal-quick-update-modal />
 }
 
+<!-- ── Plex Player-Picker Modal ───────────────────────────────────────── -->
+@if (popupService.plexPlayerPicker()) {
+  <app-plex-player-picker />
+}
+
 <!-- ── Franchise Constellation Overlay ──────────────────────────────────── -->
 @if (franchiseConstellationSvc.isOpen()) {
   <app-franchise-constellation

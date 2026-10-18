@@ -451,8 +451,21 @@
       "avgEpSize": "Avg. Ep. Size"
     }
   },
+  "plexPlayerPicker": {
+    "title": "Play on device",
+    "subtitle": "Choose where to play:",
+    "loading": "Looking for players…",
+    "loadFailed": "Couldn't load players.",
+    "retry": "Retry",
+    "refresh": "Refresh",
+    "noPlayers": "No cast devices found on your network. Make sure your Chromecast / Google TV is powered on and on the same network.",
+    "noEndpoint": "no cast endpoint",
+    "playStarted": "Now playing on",
+    "playFailedMsg": "Couldn't start playback on that player. Check that the Plex app is open on the device and try again."
+  },
   "animeDetailPanel": {
     "close": "Close",
+    "playOnDevice": "Play on device",
     "viewDetails": "Details",
     "loading": "Loading details…",
     "synopsis": "Synopsis",

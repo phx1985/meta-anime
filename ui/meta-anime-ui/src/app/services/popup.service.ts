@@ -15,6 +15,13 @@ export interface MalQuickUpdateContext {
   onSaveSuccess?: (status: string, episodes: number, score: number) => void;
 }
 
+export interface PlexPlayerPickerContext {
+  /** Plex rating key of the show / season / episode to play. */
+  ratingKey: string;
+  /** Display title, shown in the picker header. */
+  title: string;
+}
+
 /**
  * Central service for all application modal/popup state.
  * Components must not manage their own modal signals; delegate here instead.
@@ -113,6 +120,22 @@ export class PopupService {
 
   dismissMalQuickUpdate(): void {
     this._animateOut(this.malQuickUpdateLeaving, () => this.malQuickUpdate.set(null));
+  }
+
+  // ── Plex player-picker modal ────────────────────────────────────────────────
+
+  /** Context of the item being cast; `null` means the modal is closed. */
+  readonly plexPlayerPicker = signal<PlexPlayerPickerContext | null>(null);
+  /** `true` while the exit animation is playing. */
+  readonly plexPlayerPickerLeaving = signal(false);
+
+  openPlexPlayerPicker(ctx: PlexPlayerPickerContext): void {
+    this.plexPlayerPicker.set(ctx);
+    this.plexPlayerPickerLeaving.set(false);
+  }
+
+  dismissPlexPlayerPicker(): void {
+    this._animateOut(this.plexPlayerPickerLeaving, () => this.plexPlayerPicker.set(null));
   }
 
   // ── Shared helpers ────────────────────────────────────────────────────────────
