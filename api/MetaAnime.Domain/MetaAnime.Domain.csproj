@@ -8,9 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="ValueObjects\**" />
-    <EmbeddedResource Remove="ValueObjects\**" />
-    <None Remove="ValueObjects\**" />
+    <Compile Remove="ValueObjects/**" />
+    <EmbeddedResource Remove="ValueObjects/**" />
+    <None Remove="ValueObjects/**" />
   </ItemGroup>
 
 </Project>

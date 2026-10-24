@@ -9,12 +9,14 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.13" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MetaAnime.Core\MetaAnime.Core.csproj" />
-    <ProjectReference Include="..\MetaAnime.Infrastructure\MetaAnime.Infrastructure.csproj" />
+    <ProjectReference Include="../MetaAnime.Core/MetaAnime.Core.csproj" />
+    <ProjectReference Include="../MetaAnime.Domain/MetaAnime.Domain.csproj" />
+    <ProjectReference Include="../MetaAnime.Infrastructure/MetaAnime.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

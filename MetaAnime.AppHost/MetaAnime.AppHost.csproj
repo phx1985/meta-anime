@@ -7,6 +7,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsAspireHost>true</IsAspireHost>
+    <!-- AspireUseCliBundle=false (the SDK default) is intentional: this AppHost runs on the
+         classic DCP orchestration via `dotnet run`, and the Aspire CLI bundle is not used.
+         ASPIRE010 is suppressed per https://aka.ms/aspire/diagnostics/aspire010. -->
+    <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
     <UserSecretsId>f8e6b2c0-1234-5678-abcd-ef0123456789</UserSecretsId>
   </PropertyGroup>
 
@@ -18,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\api\MetaAnime.Presentation\MetaAnime.Presentation.csproj" />
+    <ProjectReference Include="../api/MetaAnime.Presentation/MetaAnime.Presentation.csproj" />
   </ItemGroup>
 
 </Project>

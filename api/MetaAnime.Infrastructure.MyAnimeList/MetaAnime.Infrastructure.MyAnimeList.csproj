@@ -14,7 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MetaAnime.Core\MetaAnime.Core.csproj" />
+    <ProjectReference Include="../MetaAnime.Core/MetaAnime.Core.csproj" />
+    <ProjectReference Include="../MetaAnime.Domain/MetaAnime.Domain.csproj" />
   </ItemGroup>
 
 </Project>
