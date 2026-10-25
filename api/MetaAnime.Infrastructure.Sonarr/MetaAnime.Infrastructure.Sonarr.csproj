@@ -8,12 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="RestSharp" Version="114.0.0" />
+    <PackageReference Include="RestSharp" Version="114.1.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.13" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MetaAnime.Core\MetaAnime.Core.csproj" />
+    <ProjectReference Include="../MetaAnime.Core/MetaAnime.Core.csproj" />
+    <ProjectReference Include="../MetaAnime.Domain/MetaAnime.Domain.csproj" />
   </ItemGroup>
 
 </Project>

@@ -5,13 +5,34 @@ using MetaAnime.Core.Settings;
 using MetaAnime.Hubs;
 using MetaAnime.Utilities.Extensions;
 using MetaAnime.Utilities.Hangfire;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
+
+// Writable-path contract for containers with a read-only root filesystem:
+// the app directory (/app) is never written to. Deployments point the writable
+// locations at mounted volumes/tmpfs via these optional environment variables;
+// the container's s6 run script sets them to /config and /tmp.
+// NOTE: ASP.NET's HostingEnvironmentExtensions.Initialize() CREATES the web root
+// (Directory.CreateDirectory) when it is missing — so a /app/wwwroot default would
+// try mkdir("/app") and crash on hosts with an immutable root filesystem (Bazzite).
+// Resolution order: METAANIME_WEBROOT -> /app/wwwroot when it exists (container) ->
+// a local-safe path next to the binary.
+var webRootPath = Environment.GetEnvironmentVariable("METAANIME_WEBROOT");
+if (string.IsNullOrEmpty(webRootPath))
+{
+    webRootPath = Directory.Exists("/app/wwwroot")
+        ? "/app/wwwroot"
+        : Path.Combine(AppContext.BaseDirectory, "wwwroot");
+}
+var dataProtectionKeysDir = Environment.GetEnvironmentVariable("METAANIME_KEYS_DIR");
+var assetConfigDir = Environment.GetEnvironmentVariable("METAANIME_ASSET_CONFIG_DIR") ?? "/config/wwwroot-assets";
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args,
-    WebRootPath = "/app/wwwroot"
+    WebRootPath = webRootPath
 });
 
 // Read container-generated secrets (written by the s6 init script on first boot).
@@ -90,6 +111,24 @@ builder.Services.AddSwaggerGenWithApiKey();
 builder.Services.AddCustomServices(builder.Configuration);
 builder.Services.SetupDatabase(builder.Configuration);
 builder.Services.SetupAuthentication();
+
+// Persist Data Protection keys to the configured writable directory so they
+// survive restarts. On failure (e.g. misconfigured read-only path) fall back to
+// the ephemeral repository instead of crashing startup.
+if (!string.IsNullOrWhiteSpace(dataProtectionKeysDir))
+{
+    try
+    {
+        builder.Services.AddDataProtection()
+            .PersistKeysToFileSystem(Directory.CreateDirectory(dataProtectionKeysDir));
+    }
+    catch (IOException ex)
+    {
+        Console.Error.WriteLine(
+            $"Data Protection keys directory '{dataProtectionKeysDir}' is not writable ({ex.Message}); " +
+            "using an ephemeral key repository. Keys will not survive restarts.");
+    }
+}
 var app = builder.Build();
 await app.Services.MigrateDatabaseAsync();
 
@@ -107,6 +146,19 @@ app.MapDefaultEndpoints();
 
 // Health check endpoint — available in all environments for Docker HEALTHCHECK probe
 app.MapHealthChecks("/api/health");
+
+// Serve the Angular runtime config written by the container init script from the
+// writable directory (see METAANIME_ASSET_CONFIG_DIR) as an overlay at /assets.
+// A request that the overlay cannot satisfy falls through to the wwwroot static
+// files below, so the rest of /assets/* keeps working unchanged.
+if (Directory.Exists(assetConfigDir))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(assetConfigDir),
+        RequestPath = "/assets"
+    });
+}
 
 // Serve Angular static files from wwwroot (populated during Docker build)
 app.UseDefaultFiles();

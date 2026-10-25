@@ -27,8 +27,83 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MetaAnime.Presentation\MetaAnime.Presentation.csproj" />
-    <ProjectReference Include="..\MetaAnime.Infrastructure\MetaAnime.Infrastructure.csproj" />
+    <!-- Explicit runtime closure: packages that otherwise flow only through
+         ProjectReferences. Truncated restores (Rider's in-process NuGet) drop
+         that layer from project.assets.json, which breaks .deps.json at runtime
+         (FileNotFoundException) even when compilation succeeds. -->
+    <PackageReference Include="asp.versioning.abstractions" Version="10.2.1" />
+    <PackageReference Include="asp.versioning.http" Version="10.2.3" />
+    <PackageReference Include="asp.versioning.mvc" Version="10.2.1" />
+    <PackageReference Include="bcrypt.net-next" Version="4.2.0" />
+    <PackageReference Include="dapper" Version="2.1.89" />
+    <PackageReference Include="dapper.aot" Version="1.1.0" />
+    <PackageReference Include="google.protobuf" Version="3.36.2" />
+    <PackageReference Include="hangfire.aspnetcore" Version="1.8.25" />
+    <PackageReference Include="hangfire.core" Version="1.8.25" />
+    <PackageReference Include="hangfire.netcore" Version="1.8.25" />
+    <PackageReference Include="hangfire.postgresql" Version="1.21.1" />
+    <PackageReference Include="linq2db" Version="6.5.1" />
+    <PackageReference Include="linq2db.entityframeworkcore" Version="10.7.0" />
+    <PackageReference Include="lukehagar.plexapi.sdk" Version="0.22.3" />
+    <PackageReference Include="mediator.abstractions" Version="3.0.2" />
+    <PackageReference Include="microsoft.aspnetcore.authentication.jwtbearer" Version="10.0.13" />
+    <PackageReference Include="microsoft.aspnetcore.openapi" Version="10.0.13" />
+    <PackageReference Include="microsoft.bcl.cryptography" Version="10.0.13" />
+    <PackageReference Include="microsoft.entityframeworkcore" Version="10.0.13" />
+    <PackageReference Include="microsoft.entityframeworkcore.abstractions" Version="10.0.13" />
+    <PackageReference Include="microsoft.entityframeworkcore.relational" Version="10.0.13" />
+    <PackageReference Include="microsoft.extensions.ambientmetadata.application" Version="10.11.0" />
+    <PackageReference Include="microsoft.extensions.caching.abstractions" Version="10.0.13" />
+    <PackageReference Include="microsoft.extensions.caching.memory" Version="10.0.13" />
+    <PackageReference Include="microsoft.extensions.compliance.abstractions" Version="10.11.0" />
+    <PackageReference Include="microsoft.extensions.dependencyinjection.autoactivation" Version="10.11.0" />
+    <PackageReference Include="microsoft.extensions.diagnostics.exceptionsummarization" Version="10.11.0" />
+    <PackageReference Include="microsoft.extensions.features" Version="10.0.13" />
+    <PackageReference Include="microsoft.extensions.http" Version="10.0.13" />
+    <PackageReference Include="microsoft.extensions.http.diagnostics" Version="10.11.0" />
+    <PackageReference Include="microsoft.extensions.http.resilience" Version="10.11.0" />
+    <PackageReference Include="microsoft.extensions.objectpool" Version="10.0.13" />
+    <PackageReference Include="microsoft.extensions.resilience" Version="10.11.0" />
+    <PackageReference Include="microsoft.extensions.servicediscovery" Version="10.11.0" />
+    <PackageReference Include="microsoft.extensions.servicediscovery.abstractions" Version="10.11.0" />
+    <PackageReference Include="microsoft.extensions.telemetry" Version="10.11.0" />
+    <PackageReference Include="microsoft.extensions.telemetry.abstractions" Version="10.11.0" />
+    <PackageReference Include="microsoft.identitymodel.abstractions" Version="8.23.0" />
+    <PackageReference Include="microsoft.identitymodel.jsonwebtokens" Version="8.23.0" />
+    <PackageReference Include="microsoft.identitymodel.logging" Version="8.23.0" />
+    <PackageReference Include="microsoft.identitymodel.protocols" Version="8.23.0" />
+    <PackageReference Include="microsoft.identitymodel.protocols.openidconnect" Version="8.23.0" />
+    <PackageReference Include="microsoft.identitymodel.tokens" Version="8.23.0" />
+    <PackageReference Include="microsoft.net.stringtools" Version="18.9.6" />
+    <PackageReference Include="microsoft.openapi" Version="2.13.0" />
+    <PackageReference Include="newtonsoft.json" Version="13.0.4" />
+    <PackageReference Include="nodatime" Version="3.3.6" />
+    <PackageReference Include="npgsql" Version="10.0.3" />
+    <PackageReference Include="npgsql.entityframeworkcore.postgresql" Version="10.0.3" />
+    <PackageReference Include="opentelemetry" Version="1.20.1" />
+    <PackageReference Include="opentelemetry.api" Version="1.20.1" />
+    <PackageReference Include="opentelemetry.api.providerbuilderextensions" Version="1.20.1" />
+    <PackageReference Include="opentelemetry.exporter.opentelemetryprotocol" Version="1.20.1" />
+    <PackageReference Include="opentelemetry.extensions.hosting" Version="1.20.1" />
+    <PackageReference Include="opentelemetry.instrumentation.aspnetcore" Version="1.20.1" />
+    <PackageReference Include="opentelemetry.instrumentation.http" Version="1.20.1" />
+    <PackageReference Include="opentelemetry.instrumentation.runtime" Version="1.20.1" />
+    <PackageReference Include="polly.core" Version="8.8.0" />
+    <PackageReference Include="polly.extensions" Version="8.8.0" />
+    <PackageReference Include="polly.ratelimiting" Version="8.8.0" />
+    <PackageReference Include="restsharp" Version="114.1.0" />
+    <PackageReference Include="scalar.aspnetcore" Version="2.18.3" />
+    <PackageReference Include="sharpcaster" Version="3.0.0" />
+    <PackageReference Include="system.identitymodel.tokens.jwt" Version="8.23.0" />
+    <PackageReference Include="system.reactive" Version="7.0.0" />
+    <PackageReference Include="system.threading.ratelimiting" Version="10.0.13" />
+    <PackageReference Include="zeroconf" Version="3.7.16" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../MetaAnime.Application/MetaAnime.Application.csproj" />
+    <ProjectReference Include="../MetaAnime.Presentation/MetaAnime.Presentation.csproj" />
+    <ProjectReference Include="../MetaAnime.Infrastructure/MetaAnime.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

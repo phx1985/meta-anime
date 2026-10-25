@@ -9,7 +9,14 @@
     <UserSecretsId>4455767a-84f8-450d-b45f-1feee59978e5</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileContext>.</DockerfileContext>
-    <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
+    <DockerComposeProjectPath>../../docker-compose.dcproj</DockerComposeProjectPath>
+    <!-- AV0013/AV0015/AV0016 are advisory diagnostics about the API-versioning configuration,
+         which is intentionally shaped as documented in Program.cs (AddApiExplorer() omitted due
+         to the .NET 10 ApiParameterDescription ModelMetadata crash; OpenAPI version substitution
+         is done in the document transformer). Applying the suggestions would change version
+         resolution behavior (e.g. QueryStringApiVersionReader would drop route-segment
+         versioning), so the advisories are suppressed instead. -->
+    <NoWarn>$(NoWarn);AV0013;AV0015;AV0016</NoWarn>
     <!-- PublishTrimmed intentionally omitted: MVC does not support trimming (IL2026).
          The trimmer sets AppContext switch IsEnhancedModelMetadataSupported=false which
          prevents ModelMetadata.InitializeDynamicTypeInformation() from running, causing
@@ -37,8 +44,17 @@
     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.25" />
     <PackageReference Include="Hangfire.Core" Version="1.8.25" />
     <PackageReference Include="Hangfire.PostgreSql" Version="1.21.1" />
+    <PackageReference Include="Mediator.Abstractions" Version="3.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="18.9.6" />
+    <!-- Compile-time direct references for extension methods that otherwise arrive only
+         through project references (Rider's restore drops those transitives): -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="10.11.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.23.0" />
+    <PackageReference Include="Microsoft.OpenApi" Version="2.13.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.13">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -46,13 +62,45 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.13" />
-    <PackageReference Include="Scalar.AspNetCore" Version="2.18.0" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.18.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MetaAnime.Application\MetaAnime.Application.csproj" />
-    <ProjectReference Include="..\MetaAnime.Infrastructure\MetaAnime.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\MetaAnime.ServiceDefaults\MetaAnime.ServiceDefaults.csproj" />
+    <!-- Explicit runtime closure: packages that otherwise flow only through
+         ProjectReferences. Truncated restores (Rider's in-process NuGet) drop
+         that layer from project.assets.json, which breaks .deps.json at runtime
+         (FileNotFoundException) even when compilation succeeds. -->
+    <PackageReference Include="google.protobuf" Version="3.36.2" />
+    <PackageReference Include="linq2db" Version="6.5.1" />
+    <PackageReference Include="linq2db.entityframeworkcore" Version="10.7.0" />
+    <PackageReference Include="lukehagar.plexapi.sdk" Version="0.22.3" />
+    <PackageReference Include="microsoft.extensions.servicediscovery" Version="10.11.0" />
+    <PackageReference Include="microsoft.extensions.servicediscovery.abstractions" Version="10.11.0" />
+    <PackageReference Include="nodatime" Version="3.3.6" />
+    <PackageReference Include="opentelemetry" Version="1.20.1" />
+    <PackageReference Include="opentelemetry.api" Version="1.20.1" />
+    <PackageReference Include="opentelemetry.api.providerbuilderextensions" Version="1.20.1" />
+    <PackageReference Include="opentelemetry.exporter.opentelemetryprotocol" Version="1.20.1" />
+    <PackageReference Include="opentelemetry.extensions.hosting" Version="1.20.1" />
+    <PackageReference Include="opentelemetry.instrumentation.aspnetcore" Version="1.20.1" />
+    <PackageReference Include="opentelemetry.instrumentation.http" Version="1.20.1" />
+    <PackageReference Include="opentelemetry.instrumentation.runtime" Version="1.20.1" />
+    <PackageReference Include="restsharp" Version="114.1.0" />
+    <PackageReference Include="sharpcaster" Version="3.0.0" />
+    <PackageReference Include="system.reactive" Version="7.0.0" />
+    <PackageReference Include="zeroconf" Version="3.7.16" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../MetaAnime.Application/MetaAnime.Application.csproj" />
+    <ProjectReference Include="../MetaAnime.Core/MetaAnime.Core.csproj" />
+    <ProjectReference Include="../MetaAnime.Domain/MetaAnime.Domain.csproj" />
+    <ProjectReference Include="../MetaAnime.Infrastructure.Kometa/MetaAnime.Infrastructure.Kometa.csproj" />
+    <ProjectReference Include="../MetaAnime.Infrastructure.MyAnimeList/MetaAnime.Infrastructure.MyAnimeList.csproj" />
+    <ProjectReference Include="../MetaAnime.Infrastructure.Plex/MetaAnime.Infrastructure.Plex.csproj" />
+    <ProjectReference Include="../MetaAnime.Infrastructure.Sonarr/MetaAnime.Infrastructure.Sonarr.csproj" />
+    <ProjectReference Include="../MetaAnime.Infrastructure/MetaAnime.Infrastructure.csproj" />
+    <ProjectReference Include="../../MetaAnime.ServiceDefaults/MetaAnime.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

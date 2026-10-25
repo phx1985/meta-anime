@@ -108,12 +108,16 @@ fi
 
 # ─── Always write Angular runtime config ─────────────────────────────────────
 # Extract the API key from the persisted appsettings and expose it to the
-# pre-built Angular front-end via /assets/config.json (served as a static file).
+# pre-built Angular front-end via /assets/config.json. The file is written to
+# /config (the persistent writable volume) — NEVER under /app: the container may
+# run with a read-only root filesystem. MetaAnime.Presentation serves this
+# directory at /assets (overlay above wwwroot) via METAANIME_ASSET_CONFIG_DIR.
 RUNTIME_API_KEY=$(jq -r '.Authentication.ApiKey // ""' /config/appsettings.json 2>/dev/null || true)
-mkdir -p /app/wwwroot/assets
-cat > /app/wwwroot/assets/config.json << EOF
+mkdir -p /config/wwwroot-assets
+cat > /config/wwwroot-assets/config.json << EOF
 {
   "apiKey": "${RUNTIME_API_KEY}"
 }
 EOF
-echo "[init] Angular runtime config written to /app/wwwroot/assets/config.json"
+chown abc:abc /config/wwwroot-assets/config.json
+echo "[init] Angular runtime config written to /config/wwwroot-assets/config.json"
