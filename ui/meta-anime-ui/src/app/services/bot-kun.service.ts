@@ -21,6 +21,10 @@ export class BotKunService {
   // Non-empty only during DB-path responses; used by the component to validate [anime:ID] tags.
   readonly permittedMalIds = signal<ReadonlySet<string>>(new Set());
 
+  // Signed next-page cursor emitted by the backend ([PC:…] chunk) on DB-path responses
+  // that have more pages. Sent back with action="more" for deterministic pagination.
+  readonly nextPageCursor = signal<string | null>(null);
+
   /** Prompt queued by the anime detail panel's "Ask Bot-kun" button. */
   private readonly _pendingPrompt = signal<string | null>(null);
   readonly pendingPrompt = this._pendingPrompt.asReadonly();
@@ -39,6 +43,8 @@ export class BotKunService {
     language = 'en',
     previousSearchPage?: number,
     previousSearchQuery?: string,
+    action?: 'lucky' | 'more',
+    nextPageCursor?: string,
   ): Observable<string> {
     return new Observable<string>(subscriber => {
       this.abortController = new AbortController();
@@ -46,6 +52,8 @@ export class BotKunService {
 
       // R17b: reset permitted IDs at the start of every new message
       this.permittedMalIds.set(new Set());
+      // The response carries a fresh cursor when more results exist
+      this.nextPageCursor.set(null);
 
       const token = this.authService.getToken();
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -54,6 +62,8 @@ export class BotKunService {
       const body: Record<string, unknown> = { userMessage, history, language };
       if (previousSearchPage !== undefined) body['previousSearchPage'] = previousSearchPage;
       if (previousSearchQuery)              body['previousSearchQuery'] = previousSearchQuery;
+      if (action)                           body['action'] = action;
+      if (nextPageCursor)                   body['nextPageCursor'] = nextPageCursor;
 
       fetch('/api/v1/bot-kun/chat', {
         method: 'POST',
@@ -167,6 +177,12 @@ export class BotKunService {
               if (parsed.c.startsWith('[PI:') && parsed.c.endsWith(']')) {
                 const ids = parsed.c.slice(4, -1).split(',').map(id => id.trim()).filter(Boolean);
                 if (ids.length > 0) this.permittedMalIds.set(new Set(ids));
+                continue;
+              }
+              // Signed next-page cursor metadata chunk ([PC:…])
+              if (parsed.c.startsWith('[PC:') && parsed.c.endsWith(']')) {
+                const cursor = parsed.c.slice(4, -1);
+                if (cursor) this.nextPageCursor.set(cursor);
                 continue;
               }
               subscriber.next(parsed.c);

@@ -1263,6 +1263,8 @@
     "typingIndicator": "Bot-kun is typing",
     "inputLabel": "Message Bot-kun",
     "sendMessage": "Send message",
+    "surpriseMe": "Surprise me",
+    "showMore": "Show more results",
     "readAloud": "Read aloud",
     "stopReading": "Stop reading",
     "speaking": "Reading..."

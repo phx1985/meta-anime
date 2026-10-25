@@ -4,12 +4,14 @@ using MetaAnime.Core.Models.BotKun;
 using MetaAnime.Presentation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Text.Json;
 namespace MetaAnime.Controllers;
 
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v1/bot-kun")]
+[EnableRateLimiting("botkun")]
 public sealed class BotKunController(IBotKunChatService botKunChatService) : ControllerBase
 {
     private static readonly JsonSerializerOptions JsonOptions = new()

@@ -216,6 +216,23 @@ export class BotKunComponent implements OnDestroy {
     if (!text || this.isStreaming() || this.hasTypingMessage()) return;
 
     this.inputText.set('');
+    this.dispatchMessage(text);
+  }
+
+  /** Fast-path: Feeling Lucky — skips LLM intent extraction entirely (action="lucky"). */
+  surpriseMe(): void {
+    if (this.isStreaming() || this.hasTypingMessage()) return;
+    this.dispatchMessage(this.translate.instant('botKun.surpriseMe'), 'lucky');
+  }
+
+  /** Fast-path: next page of the previous search via the signed cursor (action="more"). */
+  sendMore(): void {
+    const cursor = this.botKunService.nextPageCursor();
+    if (!cursor || this.isStreaming() || this.hasTypingMessage()) return;
+    this.dispatchMessage(this.translate.instant('botKun.showMore'), 'more', cursor);
+  }
+
+  private dispatchMessage(text: string, action?: 'lucky' | 'more', cursor?: string): void {
     this.appendMessage({ role: 'user', content: text, typedContent: text });
 
     const history: BotKunHistoryMessage[] = this.messages()
@@ -232,7 +249,7 @@ export class BotKunComponent implements OnDestroy {
     this.startTypewriter(msgIndex, version);
 
     this.streamSub?.unsubscribe();
-    this.streamSub = this.botKunService.sendMessage(text, history.slice(0, -1), this.currentLang()).subscribe({
+    this.streamSub = this.botKunService.sendMessage(text, history.slice(0, -1), this.currentLang(), undefined, undefined, action, cursor).subscribe({
       next: chunk => {
         this.messages.update(msgs => {
           const updated = [...msgs];

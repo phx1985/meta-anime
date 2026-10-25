@@ -102,6 +102,12 @@ public static class ServicesExtensions
             .ConfigureHttpClient(client => client.Timeout = TimeSpan.FromMinutes(3));
 #pragma warning restore EXTEXP0001
 
+        // Bot-kun: taste-profile cache + at-rest secret protection (DataProtection-backed
+        // — keys persist to the configured key ring, see AddDataProtection in Program.cs).
+        services.AddMemoryCache();
+        services.AddSingleton<MetaAnime.Application.Interfaces.ISecretProtector, MetaAnime.Utilities.Security.DataProtectionSecretProtector>();
+        services.AddScoped<IBotKunTasteProfileService, BotKunTasteProfileService>();
+
         services.AddScoped<IKometaAnimeMappingRepository, KometaAnimeMappingRepository>();
         services.AddScoped<ICacheEntryRepository, CacheEntryRepository>();
         services.AddScoped<IAnimeRepository, AnimeRepository>();

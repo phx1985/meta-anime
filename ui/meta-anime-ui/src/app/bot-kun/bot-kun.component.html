@@ -159,6 +159,20 @@
 
   <!-- Input area -->
   <div class="bot-kun__footer">
+    <div class="bot-kun__chips">
+      <button class="bot-kun__chip" type="button" (click)="surpriseMe()"
+        [disabled]="isStreaming() || hasTypingMessage()"
+        [attr.aria-label]="'botKun.surpriseMe' | translate">
+        🎲 {{ 'botKun.surpriseMe' | translate }}
+      </button>
+      @if (botKunService.nextPageCursor()) {
+      <button class="bot-kun__chip bot-kun__chip--more" type="button" (click)="sendMore()"
+        [disabled]="isStreaming() || hasTypingMessage()"
+        [attr.aria-label]="'botKun.showMore' | translate">
+        {{ 'botKun.showMore' | translate }}
+      </button>
+      }
+    </div>
     <textarea
       #chatInput
       class="bot-kun__input"

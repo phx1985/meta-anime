@@ -6,9 +6,11 @@ using MetaAnime.Hubs;
 using MetaAnime.Utilities.Extensions;
 using MetaAnime.Utilities.Hangfire;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
+using System.Threading.RateLimiting;
 
 // Writable-path contract for containers with a read-only root filesystem:
 // the app directory (/app) is never written to. Deployments point the writable
@@ -52,6 +54,25 @@ builder.AddServiceDefaults();
 
 // Add services to the container.
 builder.Services.AddResponseCaching();
+
+// Bot-kun AI endpoints: per-user rate limit (20 req/min) to protect free-tier
+// provider quotas and the server from runaway or looping clients.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy<string>("botkun", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.User.Identity?.Name
+                ?? context.Connection.RemoteIpAddress?.ToString()
+                ?? "anonymous",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+            }));
+});
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(
@@ -174,6 +195,7 @@ app.UseCors();
 app.UseResponseCaching();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 // Reset admin password if the flag is set (recovery mechanism).
 var authOptions = app.Services.GetRequiredService<IOptions<MetaAnime.Core.Settings.AuthenticationSettings>>();
