@@ -1,0 +1,14 @@
+<Project>
+
+  <!--
+    NuGet's restore can hold the same project under two path strings when /home is a symlink to
+    /var/home (Bazzite/Fedora Atomic): entries arrive as typed (/home/...) while NuGet's task layer
+    stores realpath forms (/var/home/...), so the restore graph contains both. Parallel restore then
+    writes the same obj/*.nuget.* and project.assets.json files twice and fails with "already exists".
+    Serializing the restore writes makes it deterministic; the per-project outputs are identical.
+  -->
+  <PropertyGroup>
+    <RestoreDisableParallel>true</RestoreDisableParallel>
+  </PropertyGroup>
+
+</Project>

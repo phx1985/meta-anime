@@ -1,0 +1,111 @@
+<Project>
+
+  <!--
+    Ref-assembly output location. SDK 10 compiles reference assemblies to obj/{cfg}/{tfm}/refint/
+    and copies them to obj/{cfg}/{tfm}/ref/ with CopyRefAssembly; builders that run CoreCompile but
+    skip that copy (Rider's "surface heuristics" builder) strand consumers with
+    CS0006 "Metadata file '.../obj/.../ref/X.dll' could not be found". The SDK's default include is
+    guarded on the item being empty, so overriding it here makes csc write ref/ directly at compile
+    time. Consumers resolve $(TargetRefPath) under ref/. Verified invariant after any build: every
+    project has obj/Debug/net10.0/ref/<Name>.dll.
+  -->
+  <ItemGroup>
+    <IntermediateRefAssembly Remove="@(IntermediateRefAssembly)" />
+    <IntermediateRefAssembly Include="$(IntermediateOutputPath)ref/$(TargetName)$(TargetExt)" />
+  </ItemGroup>
+
+  <!--
+    MetaAnime path safeguard. /home is a symlink to /var/home on this host (Bazzite/Fedora Atomic).
+    MSBuild resolves the symlink whenever a path goes through relative->absolute conversion (NuGet
+    restore walk's ConvertToAbsolutePath, project-path normalization in nested MSBuild calls) but
+    not when the path is already absolute. Mixing the two spellings lets one project enter the build
+    graph twice; MSBuild deduplicates graph nodes by exact path string - builds every project twice
+    in parallel, racing over obj/bin (MSB3026 locks, MSB3030 missing outputs) and producing mangled
+    '../'-traversal piles like '../../../../../../var/home/...' (MSB3202 / MSB9008).
+
+    Normalize EVERY @(ProjectReference) spec to the exact same root prefix as
+    $(MSBuildProjectFullPath) ('/home/phx/' or '/var/home/phx/'). Absolute same-root specs pass
+    through MSBuild unconverted (no symlink resolution), so all request strings of one session match
+    exactly and each project has a single graph node. Mangled '../'-traversal piles are cleaned
+    first. All custom ProjectReference metadata (IsAspireProjectResource, ReferenceOutputAssembly,
+    Project, Name, ...) is carried to the rewritten items via item transforms - losing it breaks
+    Aspire's _CreateAspireProjectResources and the generated Projects.* class. On Windows the home
+    regexes never match and specs are only made absolute.
+
+    Do NOT weaken this to "repair broken specs only" (leave healthy relative specs alone): measured
+    result is that /home sessions go back to double graph nodes and ref-file lock races
+    (CS0009/CS0246/MSB3026). Transitive-reference breakage (CS0234/CS0012/CS0246 on types from
+    referenced projects) is closed at the project level instead: every assembly whose types are used
+    in source has a DIRECT <ProjectReference>/<PackageReference>, which is root-agnostic and survives
+    mixed restore/build sessions.
+
+    MSBuild traps encoded below (all verified by experiment): guard every batching ItemGroup against
+    empty item lists (property functions reject empty strings), and evaluate per-item computed values
+    as child metadata (batches at runtime) consumed through a classic transform - property functions
+    inside item transforms evaluate at parse time and do NOT expand %() references. The re-root regex
+    MUST include 'phx/' or the replacement doubles the segment.
+  -->
+  <PropertyGroup>
+    <_MetaAnimeSessionRoot>/var/home/phx/</_MetaAnimeSessionRoot>
+    <_MetaAnimeSessionRoot Condition="$([System.String]::Copy('$(MSBuildProjectFullPath)').StartsWith('/home/phx/'))">/home/phx/</_MetaAnimeSessionRoot>
+  </PropertyGroup>
+
+  <Target Name="_MetaAnimeFixMangledProjectReferencePaths"
+          AfterTargets="ResolvePackageDependenciesForBuild;IncludeTransitiveProjectReferences"
+          BeforeTargets="_SplitProjectReferencesByFileExistence;PrepareProjectReferences;ResolveProjectReferences">
+    <ItemGroup>
+      <!-- traversal piles like '../../../../../../var/home/...' -> clean absolute -->
+      <_MangledProjectReference Include="@(ProjectReference)"
+        Condition="'@(ProjectReference)' != '' and $([System.Text.RegularExpressions.Regex]::IsMatch('%(ProjectReference.Identity)', '^(\.\./)+(var/)?home/'))">
+        <_NewSpec>$([System.Text.RegularExpressions.Regex]::Replace('%(ProjectReference.Identity)', '^(\.\./)+', '/'))</_NewSpec>
+      </_MangledProjectReference>
+      <!-- every other spec (relative or absolute) -> absolute against the project directory -->
+      <_OtherProjectReference Include="@(ProjectReference)"
+        Condition="'@(ProjectReference)' != '' and !$([System.Text.RegularExpressions.Regex]::IsMatch('%(ProjectReference.Identity)', '^(\.\./)+(var/)?home/'))">
+        <_NewSpec>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '%(ProjectReference.Identity)'))</_NewSpec>
+      </_OtherProjectReference>
+      <!-- re-root to the SAME prefix as $(MSBuildProjectFullPath) -->
+      <_MangledRooted Include="@(_MangledProjectReference)" Condition="'@(_MangledProjectReference)' != ''">
+        <_FinalSpec>$([System.Text.RegularExpressions.Regex]::Replace('%(_MangledProjectReference._NewSpec)', '^/(var/)?home/phx/', '$(_MetaAnimeSessionRoot)'))</_FinalSpec>
+      </_MangledRooted>
+      <_OtherRooted Include="@(_OtherProjectReference)" Condition="'@(_OtherProjectReference)' != ''">
+        <_FinalSpec>$([System.Text.RegularExpressions.Regex]::Replace('%(_OtherProjectReference._NewSpec)', '^/(var/)?home/phx/', '$(_MetaAnimeSessionRoot)'))</_FinalSpec>
+      </_OtherRooted>
+      <!-- transforms rewrite the spec and carry ALL custom metadata (IsAspireProjectResource,
+           ReferenceOutputAssembly, Project, Name, ...) to the new items -->
+      <_NormalizedProjectReference Include="@(_MangledRooted->'%(_FinalSpec)')" />
+      <_NormalizedProjectReference Include="@(_OtherRooted->'%(_FinalSpec)')" />
+      <ProjectReference Remove="@(_MangledProjectReference);@(_OtherProjectReference)" />
+      <ProjectReference Include="@(_NormalizedProjectReference)" />
+    </ItemGroup>
+    <Message Importance="high"
+             Text="MetaAnime path safeguard: normalized ProjectReference to '%(_NormalizedProjectReference.Identity)' (prefix of $(MSBuildProjectFullPath))"
+             Condition="'@(_NormalizedProjectReference)' != ''" />
+  </Target>
+
+  <!--
+    NuGet's restore walk (ConvertToAbsolutePath in _GenerateRestoreProjectPathItems) resolves the
+    /home -> /var/home symlink, so a /home-typed project walks its references as /var/home and the
+    restore graph holds both spellings: twin graph entries (restore fails with "already exists"),
+    plus broken msbuildProject values like '../../../../../../var/home/...' recorded in
+    project.assets.json. Re-root BOTH walk lists (_CurrentRestoreProjectPathItems is copied from
+    _RestoreProjectPathItems before any AfterTargets hook - missing it was the bug once) to the
+    session root right after NuGet produces them. On Windows the regex never matches.
+  -->
+  <Target Name="_MetaAnimeCanonicalizeRestoreWalkPaths"
+          AfterTargets="_GenerateRestoreProjectPathItemsPerFramework;_GenerateRestoreProjectPathItems">
+    <ItemGroup>
+      <_RWCurrent Include="@(_CurrentRestoreProjectPathItems)" Condition="'@(_CurrentRestoreProjectPathItems)' != ''">
+        <_R>$([System.Text.RegularExpressions.Regex]::Replace('%(_CurrentRestoreProjectPathItems.Identity)', '^/(var/)?home/phx/', '$(_MetaAnimeSessionRoot)'))</_R>
+      </_RWCurrent>
+      <_RWWalk Include="@(_RestoreProjectPathItems)" Condition="'@(_RestoreProjectPathItems)' != ''">
+        <_R>$([System.Text.RegularExpressions.Regex]::Replace('%(_RestoreProjectPathItems.Identity)', '^/(var/)?home/phx/', '$(_MetaAnimeSessionRoot)'))</_R>
+      </_RWWalk>
+      <_CurrentRestoreProjectPathItems Remove="@(_CurrentRestoreProjectPathItems)" />
+      <_CurrentRestoreProjectPathItems Include="@(_RWCurrent->'%(_R)')" />
+      <_RestoreProjectPathItems Remove="@(_RestoreProjectPathItems)" />
+      <_RestoreProjectPathItems Include="@(_RWWalk->'%(_R)')" />
+    </ItemGroup>
+  </Target>
+
+</Project>
