@@ -1,3 +1,8 @@
+using System;
+using System.IO;
+using System.Linq;
+using Aspire.Hosting;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres = builder.AddPostgres("postgres")
