@@ -18,6 +18,16 @@ until pg_isready -h 127.0.0.1 -U metaanime -d metaanime -q; do
 done
 echo "[metaanime] PostgreSQL is ready."
 
+# Writable locations for a read-only root filesystem: /config is the persistent
+# volume, /tmp is tmpfs. Nothing may be written under /app (the app directory).
+mkdir -p /config/dataprotection-keys /config/wwwroot-assets
+chown -R abc:abc /config/dataprotection-keys /config/wwwroot-assets
+
 exec s6-setuidgid abc \
+    env HOME=/config \
+        TMPDIR=/tmp \
+        ASPNETCORE_TEMP=/tmp \
+        METAANIME_KEYS_DIR=/config/dataprotection-keys \
+        METAANIME_ASSET_CONFIG_DIR=/config/wwwroot-assets \
     /app/MetaAnime.Presentation \
     --urls "http://0.0.0.0:8080"

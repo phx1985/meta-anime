@@ -55,7 +55,12 @@ RUN chmod +x /etc/cont-init.d/10-init-config \
     && chmod +x /etc/services.d/metaanime/run \
     && chmod +x /etc/services.d/metaanime/finish
 
-# Persistent data volume (PostgreSQL data + generated config)
+# Persistent data volume (PostgreSQL data + generated config). Under a read-only
+# root filesystem (e.g. docker run --read-only / readOnlyRootFilesystem), mount
+# this volume plus a writable tmpfs at /tmp for the app's temp files:
+#   docker run --read-only --tmpfs /tmp -v metaanime-config:/config meta-anime:local
+# The app never writes under /app; all writable paths are configurable via the
+# METAANIME_* environment variables set by /etc/services.d/metaanime/run.
 VOLUME ["/config"]
 
 # Health check — probes the .NET app via Alpine's built-in wget (no curl needed).

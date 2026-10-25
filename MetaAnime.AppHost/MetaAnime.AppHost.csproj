@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Sdk Name="Aspire.AppHost.Sdk" Version="13.6.1" />
+  <Sdk Name="Aspire.AppHost.Sdk" Version="13.6.4" />
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,18 +7,22 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsAspireHost>true</IsAspireHost>
+    <!-- AspireUseCliBundle=false (the SDK default) is intentional: this AppHost runs on the
+         classic DCP orchestration via `dotnet run`, and the Aspire CLI bundle is not used.
+         ASPIRE010 is suppressed per https://aka.ms/aspire/diagnostics/aspire010. -->
+    <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
     <UserSecretsId>f8e6b2c0-1234-5678-abcd-ef0123456789</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.6.1" />
-    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.6.1" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.6.4" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.6.4" />
     <!-- Direct ref pins transitive MessagePack past CVE-2026-92707 (GHSA-qhrr-8q5h-9q3h, fixed in 2.5.303); drop when Aspire/StreamJsonRpc move past 2.5.302 -->
     <PackageReference Include="MessagePack" Version="2.5.307" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\api\MetaAnime.Presentation\MetaAnime.Presentation.csproj" />
+    <ProjectReference Include="../api/MetaAnime.Presentation/MetaAnime.Presentation.csproj" />
   </ItemGroup>
 
 </Project>

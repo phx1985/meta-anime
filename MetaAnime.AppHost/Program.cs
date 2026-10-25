@@ -11,10 +11,25 @@ var api = builder.AddProject<Projects.MetaAnime_Presentation>("api")
         Path.GetDirectoryName(new Projects.MetaAnime_Presentation().ProjectPath)
             ?? throw new InvalidOperationException("Could not determine the MetaAnime.Presentation project directory."));
 
-builder.AddExecutable("ui", "npm", "../ui/meta-anime-ui", "run", "start")
+// On Bazzite/Homebrew hosts, GUI-launched IDEs (Rider -> Aspire DCP) do not put
+// Homebrew's bin directory on PATH, so "npm" cannot be resolved. Prepend the known
+// install directories when they exist and resolve npm to an absolute path so the
+// resource starts regardless of how DCP resolves bare command names.
+var brewBin = "/home/linuxbrew/.linuxbrew/bin";
+var uiPathEnv = string.Join(':', ((Environment.GetEnvironmentVariable("PATH") ?? string.Empty)
+        + ":" + string.Join(':', new[] { brewBin, "/usr/local/bin" }.Where(Directory.Exists)))
+    .Split(':', StringSplitOptions.RemoveEmptyEntries)
+    .Distinct());
+var npmExe = uiPathEnv.Split(':')
+    .Select(dir => Path.Combine(dir, "npm"))
+    .FirstOrDefault(File.Exists)
+    ?? "npm";
+
+builder.AddExecutable("ui", npmExe, "../ui/meta-anime-ui", "run", "start")
     .WithReference(api)
     .WaitFor(api)
     .WithHttpEndpoint(port: 4200, isProxied: false)
+    .WithEnvironment("PATH", uiPathEnv)
     .WithEnvironment("BROWSER", "none");
 
 builder.Build().Run();

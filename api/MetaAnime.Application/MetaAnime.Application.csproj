@@ -14,16 +14,26 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.13" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.13" />
+    <!-- Pin past Hangfire.Core's transitive Newtonsoft.Json 11.0.1 (NU1903 vulnerability);
+         13.0.4 matches the version MetaAnime.Presentation resolves. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="RestSharp" Version="114.1.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MetaAnime.Core\MetaAnime.Core.csproj" />
-    <ProjectReference Include="..\MetaAnime.Infrastructure.Kometa\MetaAnime.Infrastructure.Kometa.csproj" />
-    <ProjectReference Include="..\MetaAnime.Infrastructure.MyAnimeList\MetaAnime.Infrastructure.MyAnimeList.csproj" />
-    <ProjectReference Include="..\MetaAnime.Infrastructure.Plex\MetaAnime.Infrastructure.Plex.csproj" />
-    <ProjectReference Include="..\MetaAnime.Infrastructure.Sonarr\MetaAnime.Infrastructure.Sonarr.csproj" />
+    <ProjectReference Include="../MetaAnime.Core/MetaAnime.Core.csproj" />
+    <ProjectReference Include="../MetaAnime.Domain/MetaAnime.Domain.csproj" />
+    <ProjectReference Include="../MetaAnime.Infrastructure/MetaAnime.Infrastructure.csproj" />
+    <ProjectReference Include="../MetaAnime.Infrastructure.Kometa/MetaAnime.Infrastructure.Kometa.csproj" />
+    <ProjectReference Include="../MetaAnime.Infrastructure.MyAnimeList/MetaAnime.Infrastructure.MyAnimeList.csproj" />
+    <ProjectReference Include="../MetaAnime.Infrastructure.Plex/MetaAnime.Infrastructure.Plex.csproj" />
+    <ProjectReference Include="../MetaAnime.Infrastructure.Sonarr/MetaAnime.Infrastructure.Sonarr.csproj" />
   </ItemGroup>
 
 </Project>
