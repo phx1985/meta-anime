@@ -15,6 +15,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from '../../services/theme.service';
+import { AnimeService } from '../../services/anime.service';
 import { LibraryIntelStore } from '../../services/library-intel-store.service';
 import { LibrarySeriesRow } from '../../models/library-analysis.models';
 import {
@@ -74,6 +75,7 @@ export class AnalyticsChartsComponent implements OnDestroy {
   private readonly translate = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly store = inject(LibraryIntelStore);
+  private readonly animeService = inject(AnimeService);
 
   // ── Input signals ──────────────────────────────────────────────────────────
 
@@ -116,6 +118,63 @@ export class AnalyticsChartsComponent implements OnDestroy {
 
   readonly donutSlices = computed(() => buildCodecDonut(this.rows(), this.donutMode()));
   readonly leaderboard = computed(() => buildLeaderboard(this.rows(), this.leaderboardMode(), 5));
+
+  /** Mini poster URLs per leaderboard row (null = placeholder), fetched lazily. */
+  private readonly posterBySonarr = signal<Record<number, string | null>>({});
+
+  posterUrl(entry: LeaderboardEntry): string | null {
+    return this.posterBySonarr()[entry.sonarrId] ?? null;
+  }
+
+  /** Hover zoom preview for the mini posters (fixed-position, follows the row). */
+  readonly posterPreview = signal<{ url: string; x: number; y: number } | null>(null);
+
+  onPosterEnter(event: Event, entry: LeaderboardEntry): void {
+    const url = this.posterUrl(entry);
+    if (!url) return;
+    const me = event as MouseEvent;
+    this.posterPreview.set({ url, ...this.previewPosition(me.clientX, me.clientY) });
+  }
+
+  /** Keep the preview glued to the cursor while it moves within the tile. */
+  onPosterMove(event: Event): void {
+    const current = this.posterPreview();
+    if (!current) return;
+    const me = event as MouseEvent;
+    this.posterPreview.set({ url: current.url, ...this.previewPosition(me.clientX, me.clientY) });
+  }
+
+  /** Cursor-relative, viewport-clamped preview position (magnifier style). */
+  private previewPosition(cx: number, cy: number): { x: number; y: number } {
+    const w = 220;
+    const h = 320;
+    const x = Math.max(8, Math.min(cx + 18, window.innerWidth - w - 8));
+    const y = Math.max(8, Math.min(cy - h / 2, window.innerHeight - h - 8));
+    return { x, y };
+  }
+
+  onPosterLeave(): void {
+    this.posterPreview.set(null);
+  }
+
+  /** Loading (url lookup or image decode still in flight). */
+  isPosterPending(entry: LeaderboardEntry): boolean {
+    return !(entry.sonarrId in this.posterBySonarr());
+  }
+
+  onPosterImgLoad(id: number): void {
+    this.posterLoaded.update(m => ({ ...m, [id]: true }));
+  }
+
+  onPosterImgError(entry: LeaderboardEntry): void {
+    this.posterBySonarr.update(c => ({ ...c, [entry.sonarrId]: null }));
+  }
+
+  /** Initials fallback tile for series without a poster. */
+  initials(title: string): string {
+    const words = title.trim().split(/\s+/).slice(0, 2);
+    return words.map(w => w[0]?.toUpperCase() ?? '').join('') || '?';
+  }
   readonly avgGibPerHour = computed(() => libraryAvgGibPerHour(this.rows()));
   readonly footprintBytes = computed(
     () => this.rows().reduce((a, r) => a + (r.totalSizeBytes ?? 0), 0),
@@ -193,7 +252,38 @@ export class AnalyticsChartsComponent implements OnDestroy {
     '#10b981',
   ];
 
+  /** In-flight poster lookups (dedupe guard; not reactive). */
+  private readonly posterPending = new Set<number>();
+  /** True once the <img> has decoded — drives the fade-in. */
+  private readonly posterLoaded = signal<Record<number, boolean>>({});
+
   constructor() {
+    // Cache semantics: missing key = loading (shimmer tile), null = no poster
+    // (initials tile), string = url (fade-in image once decoded).
+    effect(() => {
+      const entries = this.leaderboard();
+      const cache = this.posterBySonarr();
+      const rows = this.rows();
+      for (const e of entries) {
+        if (e.sonarrId in cache || this.posterPending.has(e.sonarrId)) continue;
+        const localId = rows.find(r => r.sonarrId === e.sonarrId)?.localAnimeId;
+        if (!localId) {
+          this.posterBySonarr.update(c => ({ ...c, [e.sonarrId]: null }));
+          continue;
+        }
+        this.posterPending.add(e.sonarrId);
+        this.animeService.getAnime(localId).subscribe({
+          next: a => {
+            const url = a.malAnimes?.[0]?.coverImageUrl ?? null;
+            this.posterBySonarr.update(c => ({ ...c, [e.sonarrId]: url }));
+          },
+          error: () => {
+            this.posterBySonarr.update(c => ({ ...c, [e.sonarrId]: null }));
+          },
+        });
+      }
+    });
+
     // Rebuild the codec donut when rows, mode or canvas availability change
     effect(() => {
       const slices = this.donutSlices();

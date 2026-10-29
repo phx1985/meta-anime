@@ -109,16 +109,36 @@
         @for (entry of leaderboard(); track entry.sonarrId) {
           <button type="button"
                   class="la-lb__row"
-                  title="{{ entry.title }}"
+                  [attr.aria-label]="entry.title"
                   (click)="openSeries.emit(entry.sonarrId)">
             <span class="la-lb__rank">{{ entry.rank }}</span>
-            <span class="la-lb__title">{{ entry.title }}</span>
-            <span [class]="codecBadgeClass(entry.codecBadge)">{{ entry.codecBadge }}</span>
-            @if (isAnalyticsLoading()) {
-              <span class="la-skel la-skel--badge"></span>
-            } @else {
-              <span [class]="gibBadgeClass(entry.gibPerHour)">{{ entry.gibPerHour.toFixed(2) }} GiB/h</span>
-            }
+            <span class="la-lb__poster"
+                  (mouseenter)="onPosterEnter($event, entry)"
+                  (mousemove)="onPosterMove($event)"
+                  (mouseleave)="onPosterLeave()">
+              @if (posterUrl(entry); as url) {
+                <img class="la-lb__poster-img"
+                     [class.la-lb__poster-img--loaded]="posterLoaded()[entry.sonarrId]"
+                     [src]="url" [alt]="entry.title" loading="lazy"
+                     (load)="onPosterImgLoad(entry.sonarrId)"
+                     (error)="onPosterImgError(entry)" />
+              } @else if (isPosterPending(entry)) {
+                <span class="la-lb__poster-shimmer"></span>
+              } @else {
+                <span class="la-lb__poster-fallback">{{ initials(entry.title) }}</span>
+              }
+            </span>
+            <span class="la-lb__main">
+              <span class="la-lb__title">{{ entry.title }}</span>
+              <span class="la-lb__badges">
+                <span [class]="codecBadgeClass(entry.codecBadge)">{{ entry.codecBadge }}</span>
+                @if (isAnalyticsLoading()) {
+                  <span class="la-skel la-skel--badge"></span>
+                } @else {
+                  <span [class]="gibBadgeClass(entry.gibPerHour)">{{ entry.gibPerHour.toFixed(2) }} GiB/h</span>
+                }
+              </span>
+            </span>
             <span class="la-lb__size">
               @if (isAnalyticsLoading()) {
                 <span class="la-skel la-skel--size"></span>
@@ -204,3 +224,10 @@
     </div>
   </div>
 </div>
+
+<!-- Zoomed poster preview on mini-poster hover -->
+@if (posterPreview(); as p) {
+  <div class="la-poster-preview" [style.left.px]="p.x" [style.top.px]="p.y" aria-hidden="true">
+    <img [src]="p.url" alt="" />
+  </div>
+}

@@ -434,3 +434,156 @@
 @keyframes la-spin {
   to { transform: rotate(360deg); }
 }
+
+
+// ── Leaderboard row refinement: mini poster + uncrushed title ───────────────
+.la-chart-card__head {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+.la-lb__row {
+  display: grid;
+  grid-template-columns: 20px 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.la-lb__poster {
+  width: 38px;
+  height: 54px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex: none;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.la-lb__poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.la-lb__poster-fallback {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.55);
+  background: linear-gradient(135deg, rgba(124, 108, 240, 0.35), rgba(124, 108, 240, 0.12));
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.la-lb__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.la-lb__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.la-lb__badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.la-lb__size {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.la-lb__size-sub {
+  font-size: 0.66rem;
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+
+// ── Hover zoom preview for mini posters ─────────────────────────────────────
+.la-poster-preview {
+  position: fixed;
+  z-index: 80;
+  width: 220px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  animation: la-poster-pop 0.14s ease-out;
+
+  img {
+    width: 100%;
+    display: block;
+  }
+}
+
+@keyframes la-poster-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+// ── Hover hit-testing fix + poster loading states ───────────────────────────
+// The decorative width bar overlays the whole row — it must never swallow hover.
+.la-lb__bar {
+  pointer-events: none;
+}
+
+.la-lb__poster {
+  position: relative;
+  z-index: 1;
+}
+
+.la-lb__poster-shimmer {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.05) 30%,
+    rgba(255, 255, 255, 0.16) 50%,
+    rgba(255, 255, 255, 0.05) 70%
+  );
+  background-size: 200% 100%;
+  animation: la-poster-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes la-poster-shimmer {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+
+.la-lb__poster-img {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.la-lb__poster-img--loaded {
+  opacity: 1;
+}
