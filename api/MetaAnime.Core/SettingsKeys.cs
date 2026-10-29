@@ -79,6 +79,9 @@ public static class SettingsKeys
     public const string HandBrakeDestDir    = "HandBrake:DestDir";
     public const string HandBrakeDestMode   = "HandBrake:DestMode"; // "dir" | "transcoded"
 
+    // Transcode target preferences (Library batch export)
+    public const string TranscodeIncludeUnknown = "Transcode:IncludeUnknown"; // "true" | "false"
+
     // Known AI provider URLs (app-seeded reference list; not user-configurable)
     public const string KnownAiApiUrls = "App:KnownAiApiUrls";
 

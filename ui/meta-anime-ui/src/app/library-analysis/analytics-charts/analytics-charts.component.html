@@ -173,7 +173,15 @@
 
   <!-- Card 3 — Transcode Opportunity & Quick-Filter Action Chips -->
   <div class="la-chart-card">
-    <h3 class="la-chart-card__title">{{ 'libraryIntel.buddy.opportunityTitle' | translate }}</h3>
+    <div class="la-oppo__head">
+      <svg class="la-oppo__head-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/>
+        <circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/>
+        <path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/>
+      </svg>
+      <h3 class="la-oppo__head-title">{{ 'libraryIntel.buddy.opportunityTitle' | translate }}</h3>
+    </div>
 
     @if (isLoading()) {
       <div class="la-chart-skeleton"></div>
@@ -182,27 +190,174 @@
     } @else if (!hasData()) {
       <p class="la-nodata">{{ 'libraryIntel.buddy.noData' | translate }}</p>
     } @else {
-      <p class="la-savings">
+      <div class="la-oppo__hero">
         @if (isAnalyticsLoading()) {
           <span class="la-skel la-skel--savings"></span>
         } @else {
-          {{ 'libraryIntel.buddy.savings' | translate: { gb: savingsGb(), count: savingsCount() } }}
+          <div class="la-oppo__hero-left">
+            <span class="la-oppo__hero-value">~{{ savingsGb() }} {{ 'common.units.gb' | translate }}</span>
+            <span class="la-oppo__hero-label">{{ 'libraryIntel.buddy.savingsLabel' | translate }}</span>
+          </div>
+          <span class="la-oppo__hero-badge">
+            {{ 'libraryIntel.buddy.savingsSeries' | translate: { count: savingsCount() } }}
+          </span>
         }
-      </p>
-      <div class="la-chips">
+      </div>
+      <div class="la-oppo__presets">
         @for (preset of presets; track preset.id) {
           <button type="button"
-                  class="la-chip"
-                  [class.la-chip--prime]="preset.variant === 'prime'"
-                  [class.la-chip--unfinished]="preset.variant === 'unfinished'"
-                  [class.la-chip--complete]="preset.variant === 'complete'"
-                  [class.la-chip--active]="activePresetId() === preset.id"
+                  class="la-oppo__row"
+                  [class.la-oppo__row--active]="activePresetId() === preset.id"
+                  [class.la-oppo__row--prime]="preset.variant === 'prime'"
+                  [class.la-oppo__row--unfinished]="preset.variant === 'unfinished'"
+                  [class.la-oppo__row--complete]="preset.variant === 'complete'"
                   [attr.aria-pressed]="activePresetId() === preset.id"
                   (click)="applyPreset(preset)">
-            {{ preset.labelKey | translate }}
+            <span class="la-oppo__row-left">
+              @if (preset.variant === 'prime') {
+                <svg class="la-oppo__row-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+                </svg>
+              } @else if (preset.variant === 'unfinished') {
+                <svg class="la-oppo__row-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.23 8.77c.24-.24.581-.353.917-.303.515.077.877.528 1.073 1.01a2.5 2.5 0 1 0 3.259-3.259c-.482-.196-.933-.558-1.01-1.073-.05-.336.062-.676.303-.917l1.525-1.525A2.402 2.402 0 0 1 12 1.998c.617 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02z"/>
+                </svg>
+              } @else {
+                <svg class="la-oppo__row-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+                  <path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>
+                </svg>
+              }
+              <span class="la-oppo__row-label">{{ preset.labelKey | translate }}</span>
+            </span>
             @if (flashPresetId() === preset.id) {
-              <span class="la-chip__flash">{{ 'libraryIntel.buddy.presetApplied' | translate }}</span>
+              <span class="la-oppo__row-flash">{{ 'libraryIntel.buddy.presetApplied' | translate }}</span>
             }
+            <span class="la-oppo__row-clear" aria-hidden="true">&times;</span>
+            <span class="la-oppo__row-dot" [class.la-oppo__row-dot--on]="activePresetId() === preset.id"></span>
+          </button>
+        }
+      </div>
+
+      <!-- Global transcode batch: next N untranscoded episodes → one HandBrake queue.
+           Language-proof layout: numbers/units in view, localized copy in tooltips. -->
+      <div class="la-batch">
+        <div class="la-batch__header">
+          <svg class="la-batch__ico la-batch__ico--accent" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/>
+            <path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/>
+          </svg>
+          <span class="la-batch__title">{{ 'libraryIntel.buddy.batchTitle' | translate }}</span>
+          <span class="la-batch__count">{{ 'libraryIntel.buddy.batchFilesShort' | translate: { count: batchPool().length } }}</span>
+        </div>
+
+        <div class="la-batch__metrics">
+          <div class="la-batch__metric">
+            <span class="la-batch__metric-label">{{ 'libraryIntel.buddy.batchMetricSize' | translate }}</span>
+            <span class="la-batch__metric-value">
+              <svg class="la-batch__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="22" x2="2" y1="12" y2="12"/>
+                <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+                <line x1="6" x2="6.01" y1="16" y2="16"/><line x1="10" x2="10.01" y1="16" y2="16"/>
+              </svg>
+              {{ batchEstimateGb() }} {{ 'common.units.gb' | translate }}
+            </span>
+            <span class="la-batch__metric-sub">
+              &#8594; {{ batchFinalGb() }} {{ 'common.units.gb' | translate }}
+            </span>
+          </div>
+          <div class="la-batch__metric">
+            <span class="la-batch__metric-label">{{ 'libraryIntel.buddy.batchMetricSavings' | translate }}</span>
+            <span class="la-batch__metric-value la-batch__metric-value--savings">
+              <svg class="la-batch__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/>
+              </svg>
+              {{ batchFreedGb() }} {{ 'common.units.gb' | translate }} ({{ batchFreedPct() }}%)
+            </span>
+          </div>
+          <div class="la-batch__ratio" aria-hidden="true">
+            <span class="la-batch__ratio-saved" [style.width.%]="batchFreedPct()"></span>
+            <span class="la-batch__ratio-rest" [style.width.%]="100 - batchFreedPct()"></span>
+          </div>
+        </div>
+
+        <div class="la-batch__group">
+          <span class="la-batch__micro">{{ 'libraryIntel.buddy.batchLimitLabel' | translate }}</span>
+          <div class="la-batch__segmented">
+            @for (n of [10, 50, 100]; track n) {
+              <button type="button"
+                      class="la-batch__seg"
+                      [class.la-batch__seg--active]="batchCountChoice() === n"
+                      (click)="setBatchCount(n)">{{ n }}</button>
+            }
+            <button type="button"
+                    class="la-batch__seg"
+                    [class.la-batch__seg--active]="batchCountChoice() === 'all'"
+                    (click)="setBatchCount('all')">
+              {{ 'libraryIntel.buddy.batchAllShort' | translate }}
+            </button>
+            <span class="la-batch__nwrap" [class.la-batch__nwrap--active]="batchCountChoice() === 'custom'">
+              <input class="la-batch__n"
+                     type="number" min="1"
+                     [attr.max]="batchPool().length"
+                     [value]="batchN()"
+                     (input)="onBatchCustomChange($event)"
+                     (change)="onBatchCustomCommit($event)"
+                     (blur)="onBatchCustomCommit($event)" />
+              <span class="la-batch__suffix" aria-hidden="true">/ {{ batchPool().length }}</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="la-batch__group">
+          <span class="la-batch__micro">{{ 'libraryIntel.buddy.batchSortLabel' | translate }}</span>
+          <div class="la-batch__segmented la-batch__segmented--full">
+            <button type="button"
+                    class="la-batch__seg"
+                    [class.la-batch__seg--active]="batchOrder() === 'biggest'"
+                    [attr.data-tip]="'libraryIntel.buddy.batchOrderBiggest' | translate"
+                    (click)="setBatchOrder('biggest')">
+              {{ 'libraryIntel.buddy.batchSortBitrate' | translate }}
+            </button>
+            <button type="button"
+                    class="la-batch__seg"
+                    [class.la-batch__seg--active]="batchOrder() === 'series'"
+                    [attr.data-tip]="'libraryIntel.buddy.batchOrderSeries' | translate"
+                    (click)="setBatchOrder('series')">
+              {{ 'libraryIntel.buddy.batchSortAlpha' | translate }}
+            </button>
+          </div>
+        </div>
+
+        <button type="button"
+                class="la-batch__switchrow"
+                [class.la-batch__switchrow--on]="userPaths.includeUnknown()"
+                (click)="toggleIncludeUnknown()">
+          <span>{{ 'libraryIntel.buddy.batchIncludeUnknown' | translate }}</span>
+          <span class="la-batch__switch" [class.la-batch__switch--on]="userPaths.includeUnknown()" aria-hidden="true">
+            <span class="la-batch__knob"></span>
+          </span>
+        </button>
+
+        @if (batchPool().length === 0) {
+          <p class="la-batch__empty">{{ 'libraryIntel.buddy.batchEmpty' | translate }}</p>
+        } @else {
+          <button type="button" class="la-batch__export" (click)="exportBatch()"
+                  [disabled]="batchSelection().length === 0">
+            <svg class="la-batch__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/>
+              <line x1="12" x2="12" y1="15" y2="3"/>
+            </svg>
+            {{ 'libraryIntel.buddy.batchExport' | translate }}
+            <span class="la-batch__cta-count">{{ batchSelection().length }}</span>
           </button>
         }
       </div>

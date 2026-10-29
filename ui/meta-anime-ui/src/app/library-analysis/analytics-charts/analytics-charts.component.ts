@@ -16,6 +16,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from '../../services/theme.service';
 import { AnimeService } from '../../services/anime.service';
+import { UserPathService } from '../../services/user-path.service';
+import { buildHandBrakeQueue, serializeHandBrakeQueue } from '../../utils/user-path.utils';
 import { LibraryIntelStore } from '../../services/library-intel-store.service';
 import { LibrarySeriesRow } from '../../models/library-analysis.models';
 import {
@@ -29,6 +31,11 @@ import {
   buildLeaderboard,
   estimateTranscodeSavings,
   libraryAvgGibPerHour,
+  collectUntranscodedFiles,
+  sortBatchFiles,
+  batchQueueFileName,
+  estimateBatchFreedGb,
+  BatchOrder,
 } from '../../models/library-intel.models';
 import {
   Chart,
@@ -76,6 +83,7 @@ export class AnalyticsChartsComponent implements OnDestroy {
   private readonly destroyRef = inject(DestroyRef);
   private readonly store = inject(LibraryIntelStore);
   private readonly animeService = inject(AnimeService);
+  readonly userPaths = inject(UserPathService);
 
   // ── Input signals ──────────────────────────────────────────────────────────
 
@@ -117,7 +125,7 @@ export class AnalyticsChartsComponent implements OnDestroy {
   });
 
   readonly donutSlices = computed(() => buildCodecDonut(this.rows(), this.donutMode()));
-  readonly leaderboard = computed(() => buildLeaderboard(this.rows(), this.leaderboardMode(), 5));
+  readonly leaderboard = computed(() => buildLeaderboard(this.rows(), this.leaderboardMode(), 5, this.userPaths.includeUnknown()));
 
   /** Mini poster URLs per leaderboard row (null = placeholder), fetched lazily. */
   private readonly posterBySonarr = signal<Record<number, string | null>>({});
@@ -179,7 +187,7 @@ export class AnalyticsChartsComponent implements OnDestroy {
   readonly footprintBytes = computed(
     () => this.rows().reduce((a, r) => a + (r.totalSizeBytes ?? 0), 0),
   );
-  readonly savings = computed(() => estimateTranscodeSavings(this.rows()));
+  readonly savings = computed(() => estimateTranscodeSavings(this.rows(), this.userPaths.includeUnknown()));
   readonly savingsGb = computed(() => Math.round(this.savings().reclaimableBytes / GIB));
   readonly savingsCount = computed(() => this.savings().seriesCount);
 
@@ -284,6 +292,14 @@ export class AnalyticsChartsComponent implements OnDestroy {
       }
     });
 
+    // Keep the custom N inside the pool when it shrinks (e.g. unknown-codec toggle).
+    effect(() => {
+      const total = this.batchPool().length;
+      if (this.batchCustomN() > total) {
+        this.batchCustomN.set(Math.max(1, total));
+      }
+    });
+
     // Rebuild the codec donut when rows, mode or canvas availability change
     effect(() => {
       const slices = this.donutSlices();
@@ -314,6 +330,94 @@ export class AnalyticsChartsComponent implements OnDestroy {
 
   setDonutMode(mode: DonutMode): void {
     this.donutMode.set(mode);
+  }
+
+  // ── Global transcode batch (next N untranscoded episodes) ────────────────
+  readonly batchCountChoice = signal<number | 'all' | 'custom'>(10);
+  readonly batchCustomN = signal<number>(25);
+  readonly batchOrder = signal<BatchOrder>('biggest');
+
+  readonly batchN = computed(() => {
+    const choice = this.batchCountChoice();
+    const total = this.batchPool().length;
+    if (choice === 'all') return total;
+    return choice === 'custom'
+      ? Math.min(Math.max(1, Math.floor(this.batchCustomN()) || 1), total)
+      : choice;
+  });
+
+  /** Every transcode target in the library — no series/season state gating. */
+  readonly batchPool = computed(() =>
+    sortBatchFiles(
+      collectUntranscodedFiles(
+        this.rows(),
+        p => this.userPaths.resolve(p),
+        this.userPaths.includeUnknown()),
+      this.batchOrder()));
+
+  readonly batchSelection = computed(() => this.batchPool().slice(0, this.batchN()));
+
+  readonly batchEstimateGb = computed(() =>
+    (this.batchSelection().reduce((a, f) => a + f.sizeBytes, 0) / 1_073_741_824).toFixed(1));
+
+  /** Estimated space freed after transcoding the selection to H265. */
+  readonly batchFreedGb = computed(() => estimateBatchFreedGb(this.batchSelection()).toFixed(1));
+
+  /** Post-transcode target size (selection × HEVC_SIZE_FACTOR). */
+  readonly batchFinalGb = computed(() =>
+    (this.batchSelection().reduce((a, f) => a + f.sizeBytes, 0) * 0.45 / 1_073_741_824).toFixed(1));
+
+  /** Freed space as % of the selected originals. */
+  readonly batchFreedPct = computed(() => {
+    const sel = this.batchSelection();
+    const total = sel.reduce((a, f) => a + f.sizeBytes, 0);
+    return total > 0 ? Math.round((estimateBatchFreedGb(sel) * 1_073_741_824 / total) * 100) : 0;
+  });
+
+  setBatchCount(choice: number | 'all' | 'custom'): void {
+    this.batchCountChoice.set(choice);
+  }
+
+  /** Live typing: selection follows, clamping happens in batchN. */
+  onBatchCustomChange(event: Event): void {
+    this.batchCountChoice.set('custom');
+    const n = Math.floor(Number((event.target as HTMLInputElement).value)) || 1;
+    this.batchCustomN.set(n);
+  }
+
+  /** On blur/enter: strictly clamp into [1, total] and normalize the field. */
+  onBatchCustomCommit(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const total = Math.max(1, this.batchPool().length);
+    const n = Math.max(1, Math.min(Math.floor(Number(input.value)) || 1, total));
+    this.batchCustomN.set(n);
+    input.value = String(n);
+  }
+
+  setBatchOrder(order: BatchOrder): void {
+    this.batchOrder.set(order);
+  }
+
+  toggleIncludeUnknown(): void {
+    this.userPaths.saveTranscode({ includeUnknown: !this.userPaths.includeUnknown() }).subscribe();
+  }
+
+  /** Downloads one HandBrake queue.json for the selected batch. */
+  exportBatch(): void {
+    const files = this.batchSelection();
+    if (!files.length) return;
+    const queue = buildHandBrakeQueue(
+      files,
+      this.userPaths.destDir(),
+      this.userPaths.destMode(),
+      this.userPaths.presetName());
+    const blob = new Blob([serializeHandBrakeQueue(queue)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = batchQueueFileName();
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   setLeaderboardMode(mode: LeaderboardMode): void {

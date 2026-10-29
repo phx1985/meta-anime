@@ -1,4 +1,5 @@
 import { LibraryEpisodeFileInfo, LibrarySeriesRow } from './library-analysis.models';
+import type { HandBrakeQueueFile } from '../utils/user-path.utils';
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * Ultra Library Buddy — shared state model.
@@ -112,7 +113,7 @@ export function isTranscodeReady(row: LibrarySeriesRow): boolean {
 
 // ── 3. Codec composition math ────────────────────────────────────────────────
 
-const norm = (c: string): string => (c ?? '').trim().toUpperCase();
+const norm = (c: string): string => (c ?? '').trim().toUpperCase().replace('X264', 'H264');
 
 /** Total number of files in the series' video-codec distribution. */
 export function codecFileTotal(row: LibrarySeriesRow): number {
@@ -182,20 +183,29 @@ export function gibPerHourOf(sizeBytes: number, durationSeconds: number): number
   return (sizeBytes / 1_073_741_824) / (durationSeconds / 3600);
 }
 
-/** Estimated bytes reclaimable for one series (H264 files above the bloat rate). */
-export function estimateSeriesSavings(row: LibrarySeriesRow): number {
+/**
+ * Estimated bytes reclaimable for one series — every transcode target
+ * (anything but H265/HEVC; UNKNOWN per the toggle) transcoded to HEVC.
+ * No bloat gate: the KPI "reclaimable" and the batch "freed" must agree.
+ */
+export function estimateSeriesSavings(row: LibrarySeriesRow, includeUnknown = true): number {
   const files = row.episodeFiles;
   if (files?.length) {
     return files
-      .filter(f =>
-        norm(f.videoCodec) === 'H264' &&
-        gibPerHourOf(f.sizeBytes ?? 0, f.durationSeconds ?? 0) > BLOAT_GIB_PER_HOUR)
+      .filter(f => isTranscodeTarget(f.videoCodec, includeUnknown))
       .reduce((a, f) => a + (f.sizeBytes ?? 0) * (1 - HEVC_SIZE_FACTOR), 0);
   }
-  // No per-file data: approximate from the series-level H264 byte share + rate.
-  const h264Bytes = codecByteTotal(row, 'H264');
-  if (!h264Bytes || (row.gibPerHour ?? 0) <= BLOAT_GIB_PER_HOUR) return 0;
-  return h264Bytes * (1 - HEVC_SIZE_FACTOR);
+  // No per-file data: approximate from the series-level target byte shares.
+  const distKeys = Object.keys(row.videoCodecDistribution ?? {});
+  let targetBytes = 0;
+  if (distKeys.length) {
+    for (const k of distKeys) {
+      if (isTranscodeTarget(k, includeUnknown)) targetBytes += codecByteTotal(row, k);
+    }
+  } else {
+    targetBytes = codecByteTotal(row, 'H264') + (includeUnknown ? codecByteTotal(row, 'UNKNOWN') : 0);
+  }
+  return targetBytes * (1 - HEVC_SIZE_FACTOR);
 }
 
 export interface TranscodeSavings {
@@ -209,24 +219,28 @@ export interface TranscodeSavings {
   reclaimableBytes: number;
 }
 
-/** Library-wide estimated savings: H264 episodes with GiB/h > 1.5 → HEVC. */
-export function estimateTranscodeSavings(rows: LibrarySeriesRow[]): TranscodeSavings {
+/** Library-wide savings over the SAME transcode targets the batch export uses. */
+export function estimateTranscodeSavings(rows: LibrarySeriesRow[], includeUnknown = true): TranscodeSavings {
   let seriesCount = 0, targetFileCount = 0, h264Bytes = 0, reclaimableBytes = 0;
   for (const row of rows) {
-    const save = estimateSeriesSavings(row);
+    const save = estimateSeriesSavings(row, includeUnknown);
     if (save <= 0) continue;
     seriesCount++;
     reclaimableBytes += save;
     const files = row.episodeFiles;
     if (files?.length) {
-      const targets = files.filter(f =>
-        norm(f.videoCodec) === 'H264' &&
-        gibPerHourOf(f.sizeBytes ?? 0, f.durationSeconds ?? 0) > BLOAT_GIB_PER_HOUR);
+      const targets = files.filter(f => isTranscodeTarget(f.videoCodec, includeUnknown));
       targetFileCount += targets.length;
       h264Bytes += targets.reduce((a, f) => a + (f.sizeBytes ?? 0), 0);
     } else {
-      h264Bytes += codecByteTotal(row, 'H264');
-      targetFileCount += Math.round(codecFileTotal(row) * (codecFileShare(row, 'H264') / 100));
+      const distKeys = Object.keys(row.videoCodecDistribution ?? {});
+      const keys = distKeys.length
+        ? distKeys.filter(k => isTranscodeTarget(k, includeUnknown))
+        : ['H264', ...(includeUnknown ? ['UNKNOWN'] : [])];
+      for (const k of keys) {
+        h264Bytes += codecByteTotal(row, k);
+        targetFileCount += Math.round(codecFileTotal(row) * (codecFileShare(row, k) / 100));
+      }
     }
   }
   return { seriesCount, targetFileCount, h264Bytes, reclaimableBytes };
@@ -280,7 +294,7 @@ export interface LeaderboardEntry {
   reclaimableBytes: number;
 }
 
-export function buildLeaderboard(rows: LibrarySeriesRow[], mode: LeaderboardMode, limit = 5): LeaderboardEntry[] {
+export function buildLeaderboard(rows: LibrarySeriesRow[], mode: LeaderboardMode, limit = 5, includeUnknown = true): LeaderboardEntry[] {
   const entries = rows.map(r => ({
     sonarrId: r.sonarrId,
     title: r.title,
@@ -289,7 +303,7 @@ export function buildLeaderboard(rows: LibrarySeriesRow[], mode: LeaderboardMode
       : norm(r.primaryVideoCodec ?? '—'),
     gibPerHour: r.gibPerHour ?? 0,
     totalSizeBytes: r.totalSizeBytes ?? 0,
-    reclaimableBytes: estimateSeriesSavings(r),
+    reclaimableBytes: estimateSeriesSavings(r, includeUnknown),
   }));
 
   const sorted = [...entries].sort((a, b) => {
@@ -353,4 +367,78 @@ export function buildBotKunLibraryContext(
     top ? `Top bloat: ${top}.` : '',
     activeFilterSummary ? `Active table filters: ${activeFilterSummary}.` : '',
   ].filter(Boolean).join(' ');
+}
+
+// ── Global transcode batch ─────────────────────────────────────────────────
+
+export type BatchOrder = 'biggest' | 'series';
+
+export interface BatchFile extends HandBrakeQueueFile {
+  sonarrId: number;
+  gibPerHour: number;
+  sizeBytes: number;
+}
+
+/**
+ * A file is a transcode target when its codec is anything but H265/HEVC —
+ * H264, AV1, MPEG2… and optionally UNKNOWN (its real codec is unparsed, so
+ * re-encoding is a guess the user can opt into).
+ */
+export function isTranscodeTarget(codec: string | undefined, includeUnknown: boolean): boolean {
+  const c = norm(codec ?? '').replace('X265', 'H265');
+  if (c === 'H265' || c === 'HEVC') return false;
+  if (!c || c === 'UNKNOWN') return includeUnknown;
+  return true;
+}
+
+/**
+ * Collects every NOT-transcoded episode file across the WHOLE library —
+ * deliberately ignoring series/season state so regular batching works for
+ * currently-airing shows too. `toHostPath` maps container paths to host paths.
+ */
+export function collectUntranscodedFiles(
+  rows: LibrarySeriesRow[],
+  toHostPath: (containerPath: string) => string,
+  includeUnknown = true,
+): BatchFile[] {
+  const out: BatchFile[] = [];
+  for (const row of rows) {
+    for (const f of row.episodeFiles ?? []) {
+      if (!isTranscodeTarget(f.videoCodec, includeUnknown)) continue;
+      const size = f.sizeBytes ?? 0;
+      out.push({
+        sonarrId: row.sonarrId,
+        gibPerHour: gibPerHourOf(size, f.durationSeconds ?? 0),
+        sizeBytes: size,
+        hostSourcePath: toHostPath(`${row.path}/${f.relativePath}`),
+        sourceFileName: f.relativePath.split(/[/\\]/).pop() ?? f.relativePath,
+        durationSeconds: f.durationSeconds ?? 0,
+        resolution: f.resolution ?? '',
+      });
+    }
+  }
+  return out;
+}
+
+/** Sorts the batch: biggest rate first, or natural series order (title → path). */
+export function sortBatchFiles(files: BatchFile[], order: BatchOrder): BatchFile[] {
+  const sorted = [...files];
+  if (order === 'biggest') {
+    sorted.sort((a, b) => b.gibPerHour - a.gibPerHour || b.sizeBytes - a.sizeBytes);
+  } else {
+    sorted.sort((a, b) =>
+      a.hostSourcePath.localeCompare(b.hostSourcePath, undefined, { numeric: true }));
+  }
+  return sorted;
+}
+
+/** Estimated bytes freed by transcoding the selection to H265 (HEVC_SIZE_FACTOR). */
+export function estimateBatchFreedGb(files: { sizeBytes: number }[]): number {
+  const bytes = files.reduce((a, f) => a + f.sizeBytes, 0);
+  return (bytes * (1 - HEVC_SIZE_FACTOR)) / 1_073_741_824;
+}
+
+/** `meta-anime-handbrake-queue-2026-10-29.json` */
+export function batchQueueFileName(): string {
+  return `meta-anime-handbrake-queue-${new Date().toISOString().slice(0, 10)}.json`;
 }

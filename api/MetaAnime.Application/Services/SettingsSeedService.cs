@@ -124,5 +124,6 @@ public sealed class SettingsSeedService(
         [SettingsKeys.HandBrakePresetName] = "Anime 1080p NVENC VOSTFR (<500MB)",
         [SettingsKeys.HandBrakeDestDir] = string.Empty,
         [SettingsKeys.HandBrakeDestMode] = "transcoded",
+        [SettingsKeys.TranscodeIncludeUnknown] = "true",
     };
 }

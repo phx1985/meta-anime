@@ -72,7 +72,8 @@ public sealed record PathMapBackup(
 public sealed record HandBrakeBackup(
     string? PresetName,
     string? DestDir,
-    string? DestMode);
+    string? DestMode,
+    string? IncludeUnknown = null);
 
 public sealed record LibraryAnalysisBackup(
     string? AvgEpSizeMb,

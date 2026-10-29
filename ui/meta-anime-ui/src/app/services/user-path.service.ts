@@ -18,6 +18,7 @@ const KEYS = {
   handBrakePresetName: 'HandBrake:PresetName',
   handBrakeDestDir: 'HandBrake:DestDir',
   handBrakeDestMode: 'HandBrake:DestMode',
+  includeUnknown: 'Transcode:IncludeUnknown',
 } as const;
 
 /**
@@ -35,6 +36,8 @@ export class UserPathService {
   readonly destDir = signal<string>('');
   readonly destMode = signal<HandBrakeDestMode>('transcoded');
   readonly loaded = signal(false);
+  /** Include UNKNOWN-codec files as transcode targets (default: on). */
+  readonly includeUnknown = signal(true);
 
   constructor() {
     this.load();
@@ -48,6 +51,7 @@ export class UserPathService {
       presetName: this.propertyBag.get(KEYS.handBrakePresetName),
       destDir: this.propertyBag.get(KEYS.handBrakeDestDir),
       destMode: this.propertyBag.get(KEYS.handBrakeDestMode),
+      includeUnknown: this.propertyBag.get(KEYS.includeUnknown),
     }).subscribe({
       next: r => {
         this.mapping.set({
@@ -58,6 +62,7 @@ export class UserPathService {
         this.presetName.set(r.presetName?.value?.trim() || DEFAULT_HANDBRAKE_PRESET_NAME);
         this.destDir.set(r.destDir?.value?.trim() ?? '');
         this.destMode.set(r.destMode?.value === 'dir' ? 'dir' : 'transcoded');
+        this.includeUnknown.set(r.includeUnknown?.value !== 'false');
         this.loaded.set(true);
       },
       error: () => {
@@ -102,6 +107,13 @@ export class UserPathService {
       calls.push(this.propertyBag.upsert(KEYS.handBrakeDestMode, { value: this.destMode() }));
     }
     return calls.length ? forkJoin(calls) : new Observable(o => o.complete());
+  }
+
+  /** Persists the transcode-target preferences. */
+  saveTranscode(patch: { includeUnknown?: boolean }): Observable<unknown> {
+    if (patch.includeUnknown === undefined) return new Observable(o => o.complete());
+    this.includeUnknown.set(patch.includeUnknown);
+    return this.propertyBag.upsert(KEYS.includeUnknown, { value: String(patch.includeUnknown) });
   }
 
   /** Container path → local host path (identity when unmapped). */

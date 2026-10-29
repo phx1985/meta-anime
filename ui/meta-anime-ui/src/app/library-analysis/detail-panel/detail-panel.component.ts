@@ -197,7 +197,7 @@ export class DetailPanelComponent {
 
   protected readonly estSavingsGb = computed(() => {
     const r = this.row();
-    return r ? estimateSeriesSavings(r) / 1_073_741_824 : 0;
+    return r ? estimateSeriesSavings(r, this.userPath.includeUnknown()) / 1_073_741_824 : 0;
   });
 
   // ── Files filter tabs ────────────────────────────────────────────────────────

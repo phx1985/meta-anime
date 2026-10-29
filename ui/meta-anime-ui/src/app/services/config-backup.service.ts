@@ -56,6 +56,7 @@ export interface AppConfigBackup {
     presetName?: string;
     destDir?: string;
     destMode?: string;
+    includeUnknown?: string;
   };
   libraryAnalysis?: {
     avgEpSizeMb?: string;

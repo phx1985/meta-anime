@@ -102,10 +102,19 @@ export interface HandBrakeQueueFile {
 
 /** '.h264.mkv' or '.mkv' → '.h265.mkv'; other extensions fall back to a swap. */
 export function destFileNameOf(sourceFileName: string): string {
-  // Strip '.x264'/'.h264' (with optional '.mkv') so outputs never end in
-  // '.x264.h265.mkv'; then any residual '.mkv' before appending '.h265.mkv'.
-  const cleanName = sourceFileName.replace(/\.(x264|h264)(\.mkv)?$/i, '');
-  return `${cleanName.endsWith('.mkv') ? cleanName.slice(0, -4) : cleanName}.h265.mkv`;
+  // Canonical output: '<ep-name>.nvenc.h265.mkv'. Drop the container extension,
+  // then every trailing video-codec marker ('.h264', '-x265', '[AV1]', 'nvenc',
+  // lone '10bit'…) — possibly several — so old codec tags never leak into the
+  // destination name. Idempotent: re-exporting an output yields the same name.
+  const codecToken =
+    /[\s._-]*[([]?(?:(?:x264|h264|x265|h265|hevc|avc|av1|mpeg2|mpeg4|vp9|nvenc)(?:[\s._-]?(?:10|8)[\s._-]?bit)?|(?:10|8)[\s._-]?bit)[)\]]?\s*$/i;
+  let clean = sourceFileName.replace(/\.(mkv|mp4|avi|m4v|mov|ts)$/i, '');
+  let prev: string;
+  do {
+    prev = clean;
+    clean = clean.replace(codecToken, '');
+  } while (clean !== prev);
+  return `${clean}.nvenc.h265.mkv`;
 }
 
 /** Destination directory per the configured mode. */

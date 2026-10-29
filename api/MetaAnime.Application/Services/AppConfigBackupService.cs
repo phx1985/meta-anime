@@ -69,7 +69,8 @@ public sealed class AppConfigBackupService(
             HandBrake: new HandBrakeBackup(
                 Get(SettingsKeys.HandBrakePresetName),
                 Get(SettingsKeys.HandBrakeDestDir),
-                Get(SettingsKeys.HandBrakeDestMode)),
+                Get(SettingsKeys.HandBrakeDestMode),
+                Get(SettingsKeys.TranscodeIncludeUnknown)),
             LibraryAnalysis: new LibraryAnalysisBackup(
                 Get(SettingsKeys.LibraryAnalysisAvgEpSizeMb),
                 Get(SettingsKeys.LibraryAnalysisAvgGibPerHour)));
@@ -153,6 +154,10 @@ public sealed class AppConfigBackupService(
             await Set(SettingsKeys.HandBrakePresetName, handBrake.PresetName);
             await Set(SettingsKeys.HandBrakeDestDir, handBrake.DestDir);
             await Set(SettingsKeys.HandBrakeDestMode, handBrake.DestMode);
+            if (handBrake.IncludeUnknown is { } includeUnknown)
+            {
+                await Set(SettingsKeys.TranscodeIncludeUnknown, includeUnknown);
+            }
         }
 
         if (backup.LibraryAnalysis is { } library)
