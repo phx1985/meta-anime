@@ -1,9 +1,9 @@
 {
   "nav": {
     "home": "Accueil",
-    "animes": "Mes Animes",
+    "animes": "Mes animes",
     "seasonal": "Saisonnier",
-    "malSearch": "MAL Search",
+    "malSearch": "Recherche MAL",
     "settings": "Paramètres",
     "library": "Bibliothèque",
     "lucky": "Chance",
@@ -13,9 +13,9 @@
     "providerDisabled": "Ce fournisseur est actuellement désactivé",
     "disabledModal": {
       "title": "{{provider}} est désactivé",
-      "desc": "Ce fournisseur est actuellement inactif. Activez-le dans les Paramètres pour utiliser cette action.",
+      "desc": "Ce fournisseur est actuellement inactif. Activez-le dans les paramètres pour utiliser cette action.",
       "cancel": "Annuler",
-      "goToSettings": "Aller aux Paramètres",
+      "goToSettings": "Aller aux paramètres",
       "close": "Fermer"
     },
     "menu": "Menu",
@@ -23,16 +23,16 @@
   },
   "home": {
     "title": "Meta Anime",
-    "subtitle": "Votre hub centralisé de métadonnées anime",
+    "subtitle": "Votre centre unifié de métadonnées anime",
     "stats": {
       "plex": "Plex",
       "sonarr": "Sonarr",
       "mal": "MyAnimeList",
-      "description": "Agrégé depuis toutes vos sources",
+      "description": "Agrégé à partir de toutes vos sources",
       "tooltip": {
-        "plex": "Séries anime disponibles dans votre bibliothèque Plex.",
-        "sonarr": "Séries anime suivies par votre instance Sonarr.",
-        "mal": "Entrées anime issues de votre compte MyAnimeList."
+        "plex": "Séries d'animes disponibles dans votre bibliothèque de médias Plex.",
+        "sonarr": "Séries d'animes suivies par votre instance Sonarr.",
+        "mal": "Entrées d'animes issues de votre compte MyAnimeList."
       }
     },
     "chart": {
@@ -45,7 +45,7 @@
       "title": "Lacunes de couverture",
       "subtitle": "Séries présentes dans une source mais absentes d'une autre.",
       "sonarrNotInMalDesc": "Séries suivies par Sonarr sans entrée correspondante dans MyAnimeList.",
-      "malNotInPlexDesc": "Séries de votre liste MAL absentes de votre bibliothèque Plex.",
+      "malNotInPlexDesc": "Séries de votre liste de suivi MAL absentes de votre bibliothèque Plex.",
       "plexNotInMalDesc": "Séries dans votre bibliothèque Plex sans entrée correspondante dans MyAnimeList.",
       "plexNotInSonarr": "Plex absent de Sonarr",
       "plexNotInSonarrDesc": "Séries présentes dans votre bibliothèque Plex mais non suivies par Sonarr.",
@@ -55,10 +55,10 @@
       "modal": {
         "close": "Fermer",
         "loading": "Chargement de la liste…",
-        "error": "Échec du chargement. Veuillez réessayer.",
+        "error": "Le chargement a échoué. Veuillez réessayer.",
         "empty": "Aucun anime trouvé pour cette lacune.",
         "allClearTitle": "Impeccable ! Votre bibliothèque est parfaitement synchronisée.",
-        "allClearSub": "Il ne manque rien ici. Vos conteneurs se parlent. 🚀",
+        "allClearSub": "Il ne manque rien ici. Vos conteneurs communiquent bien entre eux. 🚀",
         "colTitle": "Titre",
         "colActions": "Actions",
         "colProgress": "Progression",
@@ -66,7 +66,7 @@
         "searchPlaceholder": "Rechercher sur MyAnimeList...",
         "searchButton": "Rechercher",
         "searchError": "La recherche a échoué. Veuillez réessayer.",
-        "matchSuccess": "Associé ! Suppression de la liste...",
+        "matchSuccess": "Associé ! Suppression de la liste des lacunes...",
         "alreadyMapped": "Déjà lié",
         "moreInfo": "Plus d'infos",
         "linkPanelHeading": "Liez cet élément à son entrée MAL pour résoudre l'écart",
@@ -78,10 +78,10 @@
         "confirmSeeDetails": "Voir les détails",
         "confirmLocalLabel": "Élément local",
         "confirmMalLabel": "Entrée MAL",
-        "addMalError": "Échec de l'ajout à MAL. Veuillez réessayer.",
+        "addMalError": "L'ajout à MAL a échoué. Veuillez réessayer.",
         "crossLinks": "Liens croisés",
-        "crossLinksDesc": "Ponts confirmés entre identifiants AniDB différents. Supprimez pour refaire apparaître un écart.",
-        "crossLinksEmpty": "Aucun lien croisé.",
+        "crossLinksDesc": "Ponts validés manuellement entre identifiants AniDB divergents. Supprimez-les pour laisser réapparaître un écart.",
+        "crossLinksEmpty": "Aucun lien croisé pour le moment.",
         "crossLinkRemove": "Supprimer",
         "crossLinkRemoving": "Suppression…",
         "crossLinkAniDbId": "AniDbId",
@@ -89,7 +89,7 @@
       },
       "noProviders": {
         "title": "Aucun fournisseur configuré pour l'instant.",
-        "sub": "Activez Plex ou Sonarr dans les Paramètres pour voir vos lacunes de couverture ici."
+        "sub": "Activez Plex ou Sonarr dans les paramètres pour voir vos lacunes de couverture ici."
       }
     },
     "welcome": "Bienvenue sur Meta Anime",
@@ -97,7 +97,7 @@
       "title": "Activité",
       "today": "Aujourd'hui",
       "thisWeek": "Cette semaine",
-      "thisMonth": "Ce mois",
+      "thisMonth": "Ce mois-ci",
       "thisYear": "Cette année",
       "downloads": "Épisodes téléchargés",
       "storage": "Stockage ajouté",
@@ -107,7 +107,7 @@
     }
   },
   "seasonal": {
-    "title": "Anime Saisonniers",
+    "title": "Animes saisonniers",
     "subtitle": "Parcourez les animes par saison depuis MyAnimeList",
     "seasonSelect": "Sélectionner une saison",
     "yearSelect": "Sélectionner une année",
@@ -118,17 +118,17 @@
     "openMal": "Ouvrir sur MyAnimeList",
     "loading": "Chargement des animes saisonniers…",
     "error": "Échec du chargement des animes saisonniers. Veuillez réessayer plus tard.",
-    "empty": "Aucun anime trouvé pour cette saison. Les données MAL peuvent ne pas encore être disponibles pour cette période.",
+    "empty": "Aucun anime trouvé pour cette saison. Les données MAL ne sont peut-être pas encore disponibles pour cette période.",
     "notInPlex": "Absent de votre bibliothèque Plex",
     "notInSonarr": "Non suivi par Sonarr",
-    "notInMal": "Non dans votre liste MAL",
+    "notInMal": "Absent de votre liste MAL",
     "addToSonarr": "Ajouter à Sonarr",
     "addToMal": "Ajouter à MAL",
     "addToProviders": "Ajouter aux fournisseurs",
     "chooseProviders": "Choisissez où ajouter cet anime",
     "wizard": {
       "stepChoose": "Choisir",
-      "stepMatch": "Correspondance",
+      "stepMatch": "Associer",
       "stepConfigure": "Configurer"
     },
     "allTracked": "Suivi dans Sonarr & MAL",
@@ -136,20 +136,20 @@
     "willAdd": "Sera ajouté",
     "notTracked": "Non suivi",
     "addSuccess": "Ajouté avec succès !",
-    "sonarrNoneSelected": "Veuillez sélectionner une série dans les résultats",
+    "sonarrNoneSelected": "Veuillez sélectionner une série dans les résultats de recherche",
     "enableToAdd": "Activez le commutateur ci-dessus pour configurer et ajouter ce fournisseur",
     "sonarrSearch": "Recherche Sonarr",
     "sonarrSearchPlaceholder": "Rechercher par titre…",
     "sonarrSearchError": "Échec de la recherche de séries Sonarr.",
     "rootFolder": "Dossier racine",
     "qualityProfile": "Profil qualité",
-    "sonarrAutoSettings": "Type : Anime/Absolu · Tags de la config",
+    "sonarrAutoSettings": "Type de série : Anime/Absolute · Tags de la configuration",
     "sonarrOptionsError": "Échec du chargement des options Sonarr.",
-    "sonarrAddError": "Échec de l'ajout à Sonarr.",
+    "sonarrAddError": "Impossible d'ajouter la série à Sonarr.",
     "sonarrAddSuccess": "Ajouté avec succès à Sonarr !",
     "malStatusLabel": "Statut",
     "episodesWatched": "Épisodes vus",
-    "score": "Score (0–10)",
+    "score": "Note (0–10)",
     "malAddError": "Échec de la mise à jour de la liste MAL.",
     "malAddSuccess": "Ajouté avec succès à votre liste MAL !",
     "malStatus": {
@@ -187,16 +187,16 @@
         "by": "Trier par",
         "order": "Ordre de tri",
         "title": "Titre",
-        "malScore": "Score MAL",
+        "malScore": "Note MAL",
         "startDate": "Date de début"
       },
       "presets": {
-        "saveAs": "Sauvegarder les filtres",
+        "saveAs": "Enregistrer les filtres en préréglage",
         "namePlaceholder": "Nom du préréglage…",
-        "save": "Sauvegarder",
+        "save": "Enregistrer",
         "cancel": "Annuler",
         "delete": "Supprimer le préréglage",
-        "noPresets": "Aucun préréglage sauvegardé",
+        "noPresets": "Aucun préréglage enregistré",
         "label": "Préréglages",
         "myPresets": "Mes préréglages"
       },
@@ -224,21 +224,21 @@
     }
   },
   "malSearch": {
-    "title": "Recherche d'Anime",
+    "title": "Recherche d'anime",
     "subtitle": "Recherchez n'importe quel anime sur MyAnimeList",
     "searchPlaceholder": "Rechercher un anime par titre…",
     "searchButton": "Rechercher",
     "search": "Rechercher",
     "searchHint": "Saisissez un titre et appuyez sur Rechercher ou Entrée",
-    "loading": "Recherche en cours…",
+    "loading": "Recherche d'anime en cours…",
     "error": "La recherche a échoué. Veuillez réessayer.",
-    "empty": "Aucun résultat trouvé. Essayez un autre titre.",
+    "empty": "Aucun résultat. Essayez un autre titre.",
     "noQuery": "Saisissez un titre ci-dessus pour commencer la recherche.",
     "resultCount": "{{count}} résultat(s) pour « {{query}} »",
     "openMal": "Ouvrir sur MyAnimeList",
     "notInPlex": "Absent de votre bibliothèque Plex",
     "notInSonarr": "Non suivi par Sonarr",
-    "notInMal": "Non dans votre liste MAL",
+    "notInMal": "Absent de votre liste MAL",
     "addToSonarr": "Ajouter à Sonarr",
     "addToMal": "Ajouter à MAL",
     "addToProviders": "Ajouter aux fournisseurs",
@@ -248,30 +248,30 @@
       "stepMatch": "Correspondance",
       "stepConfigure": "Configurer"
     },
-    "allTracked": "Suivi dans Sonarr & MAL",
+    "allTracked": "Suivi dans Sonarr et MAL",
     "alreadyTracked": "Déjà suivi ✓",
     "willAdd": "Sera ajouté",
     "notTracked": "Non suivi",
-    "addSuccess": "Ajouté avec succès !",
+    "addSuccess": "Ajout effectué !",
     "sonarrNoneSelected": "Veuillez sélectionner une série dans les résultats",
-    "enableToAdd": "Activez le commutateur ci-dessus pour configurer et ajouter ce fournisseur",
-    "sonarrSearch": "Recherche Sonarr",
+    "enableToAdd": "Activez l'interrupteur ci-dessus pour configurer et ajouter ce fournisseur",
+    "sonarrSearch": "Rechercher dans Sonarr",
     "sonarrSearchPlaceholder": "Rechercher par titre…",
-    "sonarrSearchError": "Échec de la recherche de séries Sonarr.",
+    "sonarrSearchError": "Impossible de rechercher des séries sur Sonarr.",
     "rootFolder": "Dossier racine",
     "qualityProfile": "Profil qualité",
-    "sonarrAutoSettings": "Type : Anime/Absolu · Tags de la config",
-    "sonarrOptionsError": "Échec du chargement des options Sonarr.",
-    "sonarrAddError": "Échec de l'ajout à Sonarr.",
-    "sonarrAddSuccess": "Ajouté avec succès à Sonarr !",
+    "sonarrAutoSettings": "Type de série : Anime/Absolute · Étiquettes de la configuration",
+    "sonarrOptionsError": "Impossible de charger les options Sonarr.",
+    "sonarrAddError": "Impossible d'ajouter la série à Sonarr.",
+    "sonarrAddSuccess": "Ajouté à Sonarr !",
     "malStatusLabel": "Statut",
     "episodesWatched": "Épisodes vus",
-    "score": "Score (0–10)",
-    "malAddError": "Échec de la mise à jour de la liste MAL.",
-    "malAddSuccess": "Ajouté avec succès à votre liste MAL !",
+    "score": "Note (0–10)",
+    "malAddError": "Impossible de mettre à jour votre liste MAL.",
+    "malAddSuccess": "Ajouté à votre liste MAL !",
     "malStatus": {
       "watching": "En cours",
-      "completed": "Vu",
+      "completed": "Terminé",
       "on_hold": "En pause",
       "dropped": "Abandonné",
       "plan_to_watch": "À regarder"
@@ -302,12 +302,12 @@
         "startDate": "Date de début"
       },
       "presets": {
-        "saveAs": "Sauvegarder les filtres",
+        "saveAs": "Sauvegarder les filtres en préréglage",
         "namePlaceholder": "Nom du préréglage…",
         "save": "Sauvegarder",
         "cancel": "Annuler",
         "delete": "Supprimer le préréglage",
-        "noPresets": "Aucun préréglage sauvegardé",
+        "noPresets": "Aucun préréglage enregistré pour le moment",
         "label": "Préréglages",
         "myPresets": "Mes préréglages"
       },
@@ -316,7 +316,7 @@
       "apply": "Appliquer"
     },
     "sonarrAlreadyInLibrary": "Déjà dans Sonarr",
-    "partiallyTracked": "Partiellement suivi — ajouter aux autres fournisseurs",
+    "partiallyTracked": "Partiellement suivi — ajoutez-le à d'autres fournisseurs",
     "monitor": "Surveiller",
     "seasonFolder": "Dossier de saison",
     "monitorTypes": {
@@ -341,11 +341,11 @@
     "alreadyTracked": "Déjà suivi"
   },
   "animeList": {
-    "title": "Liste des Animes",
-    "error": "Échec du chargement des animes. Veuillez réessayer plus tard.",
+    "title": "Liste des animes",
+    "error": "Le chargement des animes a échoué. Veuillez réessayer plus tard.",
     "empty": "Aucun anime trouvé.",
-    "totalCount": "{{count}} anime(s) trouvé(s)",
-    "loadingMore": "Chargement…",
+    "totalCount": "{{count}} animes trouvés",
+    "loadingMore": "Chargement de la suite…",
     "loadMore": "Charger plus",
     "endOfResults": "Vous avez atteint la fin de la liste",
     "displayMode": "Mode d'affichage",
@@ -365,7 +365,7 @@
         "episodes": "Ép.",
         "size": "Taille",
         "avgEpSize": "Taille moy./ép.",
-        "added": "Ajouté à Sonarr",
+        "added": "Ajouté sur Sonarr",
         "actions": "Actions"
       }
     },
@@ -374,7 +374,7 @@
       "titleSearch": "Titre",
       "titlePlaceholder": "Rechercher par titre…",
       "genre": "Genre",
-      "genreOperator": "Logique genre",
+      "genreOperator": "Logique des genres",
       "watchState": "Statut de visionnage",
       "airingStatus": "Statut de diffusion",
       "theme": "Thème",
@@ -399,16 +399,16 @@
       "clear": "Effacer la sélection",
       "search": "Rechercher",
       "reset": "Réinitialiser",
-      "expandFilters": "Développer les filtres",
-      "collapseFilters": "Réduire les filtres",
+      "expandFilters": "Déplier les filtres",
+      "collapseFilters": "Replier les filtres",
       "noFilterActive": "Aucun filtre sélectionné",
-      "prompt": "Définissez vos filtres et appuyez sur Rechercher pour explorer votre bibliothèque.",
+      "prompt": "Définissez vos filtres puis cliquez sur Rechercher pour explorer votre bibliothèque d'animes.",
       "advanced": "Filtres avancés",
-      "hideAdvanced": "Masquer les avancés",
-      "infoAriaLabel": "Infos sur les filtres",
-      "infoAutoApplyOn": "Réapplication automatique activée — vos derniers filtres de recherche sont restaurés automatiquement à chaque ouverture de cette page.",
-      "infoAutoApplyOff": "Réapplication automatique désactivée — les filtres repartent de zéro à chaque visite. Activez-la dans les Paramètres pour restaurer votre dernière recherche.",
-      "infoGoToSettings": "Aller aux Paramètres pour modifier",
+      "hideAdvanced": "Masquer les options avancées",
+      "infoAriaLabel": "Informations sur les filtres",
+      "infoAutoApplyOn": "Réapplication automatique activée — vos filtres de recherche précédents sont restaurés automatiquement à chaque ouverture de cette page.",
+      "infoAutoApplyOff": "Réapplication automatique désactivée — les filtres repartent de zéro à chaque visite. Activez-la dans les paramètres pour restaurer automatiquement votre dernière recherche.",
+      "infoGoToSettings": "Accédez aux paramètres pour modifier ce réglage",
       "codecs": {
         "hevc": "H.265 / HEVC",
         "h264": "H.264 / AVC",
@@ -421,7 +421,7 @@
       "label": "Présélections",
       "suggestions": "Suggestions",
       "myPresets": "Mes présélections",
-      "noPresets": "Aucune présélection sauvegardée",
+      "noPresets": "Aucune présélection enregistrée pour le moment",
       "saveAs": "Enregistrer comme présélection",
       "namePlaceholder": "Nom de la présélection…",
       "save": "Enregistrer",
@@ -440,42 +440,42 @@
       "by": "Trier par",
       "order": "Ordre de tri",
       "title": "Titre",
-      "malScore": "Score MAL",
-      "myScore": "Mon score",
+      "malScore": "Note MAL",
+      "myScore": "Ma note",
       "startDate": "Date de diffusion",
       "endDate": "Date de fin",
       "addedDate": "Ajouté sur Sonarr",
       "sizeOnDisk": "Taille sur disque",
       "totalSizeDisk": "Taille totale",
       "episodes": "Épisodes",
-      "avgEpSize": "Taille moy. épisode"
+      "avgEpSize": "Taille moy./ép."
     }
   },
   "animeDetailPanel": {
     "close": "Fermer",
     "viewDetails": "Détails",
-    "loading": "Chargement…",
+    "loading": "Chargement des détails…",
     "synopsis": "Synopsis",
     "trailer": "Bande-annonce",
-    "tags": "Genres & Thèmes",
-    "plexStatus": "Progression de Visionnage Plex",
+    "tags": "Genres et thèmes",
+    "plexStatus": "Progression du visionnage sur Plex",
     "sonarrStatus": "Sonarr",
     "popularity": "Popularité",
     "rank": "Classement",
     "aired": "Diffusion",
-    "episodes": "Nb. Épisodes",
+    "episodes": "Nb d'épisodes",
     "season": "Saison",
     "specials": "Spéciaux",
-    "diskSize": "Taille de la Série",
+    "diskSize": "Taille de la série",
     "added": "Ajouté à Sonarr",
     "onboarding": {
-      "posterHint": "Voir l'Artwork",
-      "bodyHint": "Voir les Détails"
+      "posterHint": "Cliquez pour voir l'illustration",
+      "bodyHint": "Cliquez pour voir les détails"
     },
     "more": "plus",
     "less": "moins",
     "malScore": "MAL",
-    "myScore": "Moi",
+    "myScore": "Ma note",
     "addedOn": "Ajouté",
     "plex": "Plex",
     "openPlex": "Ouvrir dans Plex",
@@ -483,7 +483,7 @@
     "openMal": "Ouvrir dans MyAnimeList",
     "malStatus": {
       "watching": "En cours",
-      "completed": "Vu",
+      "completed": "Terminé",
       "on_hold": "En pause",
       "dropped": "Abandonné",
       "plan_to_watch": "À regarder"
@@ -523,7 +523,7 @@
     "aka": "Alias",
     "copyTitle": "Copier le titre",
     "askBotKun": "Demander à Bot-kun",
-    "askBotKunInstruction": "Voici les données d'un anime. Donne une présentation courte et engageante basée uniquement sur les informations ci-dessous — n'ajoute rien d'extérieur :",
+    "askBotKunInstruction": "Voici les données concernant un anime. Veuillez rédiger un court résumé captivant en vous fondant uniquement sur les informations fournies ci-dessous — sans rien ajouter d'extérieur :",
     "addToMal": "Ajouter à MAL",
     "addToSonarr": "Ajouter à Sonarr",
     "sonarrAdd": {
@@ -531,8 +531,8 @@
       "searchPlaceholder": "Rechercher par titre…",
       "searching": "Recherche…",
       "noResults": "Aucun résultat",
-      "lookupError": "Échec de la recherche",
-      "addError": "Échec de l'ajout",
+      "lookupError": "La recherche a échoué",
+      "addError": "Impossible d'ajouter",
       "alreadyAdded": "Déjà dans la bibliothèque",
       "rootFolder": "Dossier racine",
       "quality": "Qualité",
@@ -541,14 +541,14 @@
     }
   },
   "animeCard": {
-    "malScore": "Score MAL",
-    "myScore": "Mon Score",
+    "malScore": "Note MAL",
+    "myScore": "Ma note",
     "addedOn": "Ajouté",
     "openPlex": "Ouvrir dans Plex",
     "openSonarr": "Ouvrir dans Sonarr",
-    "askBotKunInstruction": "Voici les données d'un anime. Donne une présentation courte et engageante basée uniquement sur les informations ci-dessous — n'ajoute rien d'extérieur :",
+    "askBotKunInstruction": "Voici les données concernant un anime. Veuillez rédiger un court résumé captivant en vous fondant uniquement sur les informations fournies ci-dessous — sans rien ajouter d'extérieur :",
     "onboarding": {
-      "bodyHint": "Voir les Détails"
+      "bodyHint": "Cliquez pour voir les détails"
     },
     "mediaType": {
       "tv": "Série TV",
@@ -578,44 +578,44 @@
     "reveal": "Afficher la valeur",
     "hide": "Masquer la valeur",
     "sync": {
-      "button": "Synchro manuelle",
+      "button": "Synchronisation manuelle",
       "inProgress": "Synchronisation…",
       "hub": {
         "title": "Synchronisation en cours",
         "done": "Synchronisation terminée",
-        "error": "Échec de la synchronisation — réessayez",
+        "error": "Échec de la synchronisation — veuillez réessayer",
         "dismiss": "Fermer",
-        "clearLog": "Effacer les logs"
+        "clearLog": "Effacer le journal"
       },
       "step": {
-        "init": "Initialisation",
-        "kometa": "Chargement des mappings Kometa",
-        "plex": "Récupération bibliothèque Plex",
-        "mal": "Récupération entrées MyAnimeList",
-        "sonarr": "Récupération séries Sonarr",
-        "matching": "Correspondance et indexation"
+        "init": "Initialisation de la synchronisation",
+        "kometa": "Chargement des correspondances Kometa",
+        "plex": "Récupération de la bibliothèque Plex",
+        "mal": "Récupération des entrées MyAnimeList",
+        "sonarr": "Récupération des séries Sonarr",
+        "matching": "Mise en correspondance et indexation"
       },
-      "lastSync": "Dernière sync",
+      "lastSync": "Dernière synchronisation",
       "neverSynced": "Jamais synchronisé",
       "card": {
         "title": "Synchronisation",
-        "desc": "Suivez la progression de la sync en arrière-plan et configurez le calendrier automatique."
+        "desc": "Suivez la progression de la synchronisation en arrière-plan et configurez la planification automatique."
       },
       "manual": {
-        "title": "Sync manuelle",
+        "title": "Synchronisation manuelle",
         "desc": "Déclenchez une synchronisation immédiate depuis toutes les sources (Plex, Sonarr, MyAnimeList)."
       }
     },
     "mal": {
-      "tokenRefreshed": "Token actualisé :",
-      "authRequired": "Les identifiants MAL sont configurés mais aucun jeton n’a été autorisé. Veuillez actualiser le jeton pour activer la synchronisation.",
+      "tokenRefreshed": "Jeton actualisé :",
+      "authRequired": "Les identifiants MAL sont configurés, mais aucun jeton n'a été autorisé. Veuillez actualiser le jeton pour activer la synchronisation.",
       "refreshToken": "Autoriser / Actualiser le jeton",
-      "refreshError": "Échec de l’actualisation du jeton MAL. Vérifiez vos identifiants."
+      "refreshError": "Échec de l'actualisation du jeton MAL. Vérifiez vos identifiants."
     },
     "category": {
       "plex": {
         "name": "Plex",
-        "desc": "Connectez-vous à votre Plex Media Server pour synchroniser votre bibliothèque anime."
+        "desc": "Connectez-vous à votre Plex Media Server pour synchroniser votre bibliothèque d'animes."
       },
       "sonarr": {
         "name": "Sonarr",
@@ -623,11 +623,11 @@
       },
       "mal": {
         "name": "MyAnimeList",
-        "desc": "Authentifiez-vous avec votre compte MyAnimeList pour les données de liste."
+        "desc": "Authentifiez-vous avec votre compte MyAnimeList pour accéder aux données de votre liste de suivi."
       },
       "kometa": {
         "name": "Kometa",
-        "desc": "Source du fichier de mapping AniDB ↔ TVDB / TMDB."
+        "desc": "Source du fichier de correspondances AniDB ↔ TVDB / TMDB."
       },
       "app": {
         "name": "Préférences",
@@ -635,17 +635,17 @@
       },
       "botkun": {
         "name": "Bot-kun IA",
-        "desc": "Configurez votre fournisseur d'IA via l'API compatible OpenAI. Fonctionne avec Groq, OpenAI, LM Studio ou Ollama local."
+        "desc": "Configurez votre fournisseur d'IA via l'API de chat compatible OpenAI. Fonctionne avec Groq, OpenAI, LM Studio ou un Ollama local."
       }
     },
     "fields": {
       "PathMap_ContainerRoot": {
         "name": "Racine média (conteneur)",
-        "desc": "Racine média telle qu'enregistrée par Sonarr dans le conteneur (défaut : /downloads_root). Les chemins sont remappés de ce préfixe vers la racine locale."
+        "desc": "Racine média telle qu'enregistrée par Sonarr dans le conteneur (défaut : /downloads_root). Les chemins sont convertis de ce préfixe vers la racine média de l'hôte local."
       },
       "PathMap_HostRoot": {
         "name": "Racine média (hôte local)",
-        "desc": "Où ce stockage est monté sur CETTE machine (ex. /mnt/media, /run/user/1000/gvfs/… ou Z:\\). Laisser vide pour désactiver le mappage."
+        "desc": "Emplacement où ce stockage est monté sur CETTE machine (p. ex. /mnt/media, /run/user/1000/gvfs/… ou Z:\\). Laissez vide pour désactiver le mappage des chemins."
       },
       "PathMap_Separator": {
         "name": "Séparateur de chemin (OS cible)",
@@ -653,24 +653,24 @@
       },
       "HandBrake_Preset": {
         "name": "Arguments de préréglage HandBrakeCLI",
-        "desc": "Paramètres utilisés par l'export HandBrake du tiroir (défaut : NVENC HEVC 10-bit qualité, CQ 22)."
+        "desc": "Paramètres utilisés par l'export HandBrake par lots du tiroir (défaut : qualité NVENC HEVC 10 bits, CQ 22)."
       },
       "Plex_Host": {
         "name": "URL du serveur",
-        "desc": "URL de base de votre Plex Media Server (ex. http://localhost:32400)."
+        "desc": "URL de base de votre Plex Media Server (p. ex. http://localhost:32400)."
       },
       "Plex_Token": {
         "name": "Jeton d'authentification",
         "desc": "Jeton d'authentification de votre compte Plex."
       },
       "Plex_AnimeSections": {
-        "name": "IDs des bibliothèques anime",
-        "desc": "IDs de sections de bibliothèque Plex contenant des animes, séparés par des virgules.",
+        "name": "IDs des bibliothèques d'animes",
+        "desc": "Identifiants des sections de bibliothèque Plex contenant des animes, séparés par des virgules.",
         "loadBtn": "Charger les bibliothèques"
       },
       "Sonarr_Host": {
         "name": "URL du serveur",
-        "desc": "URL de base de votre instance Sonarr (ex. http://localhost:8989)."
+        "desc": "URL de base de votre instance Sonarr (p. ex. http://localhost:8989)."
       },
       "Sonarr_ApiKey": {
         "name": "Clé API",
@@ -702,16 +702,16 @@
         "desc": "Jeton de rafraîchissement OAuth pour renouveler automatiquement le jeton d'accès."
       },
       "Kometa_AnimeIdsJsonUrl": {
-        "name": "URL JSON des IDs anime",
-        "desc": "URL du fichier anime_ids.json de Kometa Community pour le mapping AniDB."
+        "name": "URL JSON des IDs d'animes",
+        "desc": "URL du fichier anime_ids.json de Kometa Community pour la correspondance AniDB."
       },
       "App_ShowNsfw": {
         "name": "Afficher le contenu NSFW",
-        "desc": "Lorsqu'activé, le contenu adulte et explicite de MyAnimeList sera inclus dans les listes et statistiques."
+        "desc": "Lorsqu'elle est activée, cette option inclut le contenu adulte et explicite de MyAnimeList dans les listes et les statistiques."
       },
       "App_SyncInterval": {
         "name": "Intervalle de sync",
-        "desc": "Fréquence à laquelle la tâche de synchronisation récupère les données de toutes les sources.",
+        "desc": "Fréquence à laquelle la tâche de synchronisation en arrière-plan récupère les nouvelles données de toutes les sources.",
         "option": {
           "hourly": "Toutes les heures",
           "every6h": "Toutes les 6 heures",
@@ -721,12 +721,12 @@
         }
       },
       "App_TitleSimilarityThreshold": {
-        "name": "Similarité de recherche (%)",
+        "name": "Similarité de recherche par titre (%)",
         "desc": "Pourcentage minimal de similarité (1–100) pour la recherche floue par titre via pg_trgm. Défaut : 80."
       },
       "App_DownloadStatsCacheInterval": {
-        "name": "Intervalle de rafraîchissement",
-        "desc": "Fréquence à laquelle la tâche récupère les stats de téléchargement depuis Sonarr.",
+        "name": "Intervalle de rafraîchissement des statistiques",
+        "desc": "Fréquence à laquelle la tâche d'arrière-plan précharge les statistiques de téléchargement depuis Sonarr.",
         "option": {
           "1h": "Toutes les heures",
           "3h": "Toutes les 3 heures",
@@ -735,8 +735,8 @@
         }
       },
       "Cache_DownloadStatsLastUpdated": {
-        "name": "Stats mis à jour le",
-        "desc": "Horodatage du dernier rafraîchissement réussi du cache des statistiques."
+        "name": "Dernière mise à jour des statistiques",
+        "desc": "Horodatage du dernier rafraîchissement réussi des statistiques de téléchargement."
       },
       "Sonarr_DefaultRootFolder": {
         "name": "Dossier racine par défaut",
@@ -748,7 +748,7 @@
       },
       "Sonarr_DefaultSeasonFolder": {
         "name": "Dossier par saison par défaut",
-        "desc": "Organiser les épisodes en sous-dossiers par saison par défaut."
+        "desc": "Organiser les épisodes dans des sous-dossiers par saison par défaut."
       },
       "Sonarr_DefaultMonitor": {
         "name": "Surveillance par défaut",
@@ -781,11 +781,11 @@
       },
       "BotKun_ApiKey": {
         "name": "Clé API",
-        "desc": "Jeton Bearer pour votre fournisseur d'IA. Laissez vide si aucune authentification n'est requise (ex. LM Studio ou Ollama local sans authentification)."
+        "desc": "Jeton d'authentification Bearer pour votre fournisseur d'IA. Laissez vide si aucune authentification n'est requise (p. ex. LM Studio ou un Ollama local sans authentification)."
       },
       "BotKun_Model": {
         "name": "Modèle",
-        "desc": "Identifiant du modèle à utiliser (ex. llama-3.3-70b-versatile, gpt-4o-mini, qwen2.5:1.5b). Facultatif pour les configurations locales avec un seul modèle."
+        "desc": "Identifiant du modèle à utiliser pour le chat (p. ex. llama-3.3-70b-versatile, gpt-4o-mini, qwen2.5:1.5b). Facultatif pour les configurations locales n'exposant qu'un seul modèle."
       }
     },
     "toggle": {
@@ -793,18 +793,21 @@
       "off": "Désactivé"
     },
     "sonarr": {
-      "addDefaultsGroup": "Paramètres par défaut (ajout)",
-      "configureFirst": "Configurez l'URL du serveur Sonarr et la clé API ci-dessus pour débloquer ces paramètres.",
+      "addDefaultsGroup": "Valeurs par défaut pour l'ajout de séries",
+      "configureFirst": "Configurez l'URL du serveur Sonarr et la clé API ci-dessus pour débloquer ces valeurs par défaut.",
       "connectionError": "Impossible de se connecter à Sonarr. Vérifiez l'URL et la clé API.",
       "loadingOptions": "Chargement des options Sonarr…",
-      "createTagPlaceholder": "Nom du nouveau tag...",
+      "createTagPlaceholder": "Nom du nouveau tag…",
       "createTagBtn": "Créer",
+      "manageTags": "Ajouter/Gérer les tags",
+      "noTagsSelected": "Aucun tag sélectionné",
+      "noTagsLoaded": "Aucun tag chargé. Vérifiez votre connexion à Sonarr.",
       "library": {
         "title": "Analyse de bibliothèque",
-        "avgEpSizeThreshold": "Seuil taille moy. épisode (Mo)",
-        "avgEpSizeThresholdHint": "Les épisodes plus grands que ce seuil seront mis en évidence. Défaut : 1200",
-        "avgGibPerHourThreshold": "Alerte GiB/h moy.",
-        "avgGibPerHourThresholdHint": "Les séries avec un taux de stockage supérieur seront mises en évidence. Défaut : 1,2"
+        "avgEpSizeThreshold": "Alerte taille moyenne d'épisode (Mo)",
+        "avgEpSizeThresholdHint": "Les épisodes plus lourds que ce seuil seront mis en évidence comme surdimensionnés. Défaut : 1200",
+        "avgGibPerHourThreshold": "Alerte moyenne GiB/h",
+        "avgGibPerHourThresholdHint": "Les séries dont le taux de stockage dépasse ce seuil seront mises en évidence comme surdimensionnées. Défaut : 1,2"
       }
     },
     "botkun": {
@@ -818,20 +821,20 @@
     "provider": {
       "enabled": "Activé",
       "disabled": "Désactivé",
-      "enabledToggle": "Basculer l'état d'activation du fournisseur",
-      "disabledHint": "Activez Sonarr dans sa carte de paramètres pour utiliser cette fonctionnalité",
-      "configureFirstTooltip": "Configurez d’abord les paramètres de base pour activer."
+      "enabledToggle": "Activer ou désactiver le fournisseur",
+      "disabledHint": "Activez Sonarr dans sa carte de paramètres pour utiliser cette fonctionnalité.",
+      "configureFirstTooltip": "Configurez d'abord les paramètres de base pour l'activer."
     },
     "syncPrompt": {
-      "title": "Synchronisation Recommandée",
+      "title": "Synchronisation recommandée",
       "desc": "{{provider}} a été activé. Une synchronisation manuelle est recommandée pour charger ses données.",
       "dismiss": "Plus tard",
-      "goToSync": "Aller à la Synchronisation"
+      "goToSync": "Aller à la synchronisation"
     },
     "kometaWarn": {
-      "title": "Attention : Paramètre Sensible",
-      "body": "Modifier l'URL du fichier de correspondance Kometa peut rompre la connexion entre votre suivi d'animés et votre serveur multimédia. Ne continuez que si vous savez exactement ce que vous faites.",
-      "proceed": "Je comprends, Continuer"
+      "title": "Attention : paramètre sensible",
+      "body": "Modifier l'URL du fichier de correspondance Kometa peut rompre le lien entre votre suivi d'animes et votre serveur multimédia. Ne continuez que si vous savez exactement ce que vous faites.",
+      "proceed": "J'ai compris, continuer"
     },
     "providerEnableWarn": {
       "plexTitle": "Aucune bibliothèque sélectionnée",
@@ -849,18 +852,23 @@
         "desc": "Connectez votre compte MyAnimeList pour synchroniser votre liste de suivi.",
         "connect": "Connecter MyAnimeList",
         "connecting": "Finalisation de l'autorisation…",
-        "connectError": "Autorisation échouée. Veuillez réessayer."
+        "connectError": "Échec de l'autorisation. Veuillez réessayer de vous connecter."
       },
       "plex": {
         "title": "Compte Plex",
-        "desc": "Connectez-vous avec Plex pour synchroniser votre bibliothèque anime.",
+        "desc": "Connectez-vous avec Plex pour synchroniser votre bibliothèque d'animes.",
         "connect": "Se connecter avec Plex",
-        "waiting": "En attente de l'autorisation Plex dans l'onglet ouvert..."
+        "waiting": "En attente de l'autorisation Plex dans un nouvel onglet de navigateur…"
       }
+    },
+    "plex": {
+      "manageLibraries": "Ajouter/Gérer les bibliothèques",
+      "noSectionsSelected": "Aucune bibliothèque sélectionnée",
+      "noLibrariesLoaded": "Aucune bibliothèque chargée. Vérifiez votre connexion à Plex."
     },
     "security": {
       "title": "Sécurité",
-      "subtitle": "Gérez la protection par mot de passe administrateur.",
+      "subtitle": "Gérez la protection par mot de passe administrateur de MetaAnime.",
       "enabledLabel": "La protection par mot de passe est activée",
       "disabledLabel": "La protection par mot de passe est désactivée",
       "enableToggleLabel": "Activer le mot de passe administrateur",
@@ -869,15 +877,15 @@
       "enableBtn": "Activer la protection",
       "successEnabled": "Protection par mot de passe activée.",
       "disableConfirmLabel": "Mot de passe actuel (requis pour désactiver)",
-      "disableConfirmPlaceholder": "Entrez votre mot de passe actuel",
+      "disableConfirmPlaceholder": "Saisissez votre mot de passe actuel",
       "disableBtn": "Désactiver la protection",
       "changePasswordTitle": "Changer le mot de passe",
       "currentPasswordLabel": "Mot de passe actuel",
-      "currentPasswordPlaceholder": "Entrez le mot de passe actuel",
+      "currentPasswordPlaceholder": "Saisissez votre mot de passe actuel",
       "newPasswordLabel": "Nouveau mot de passe",
-      "newPasswordPlaceholder": "Entrez un nouveau mot de passe",
+      "newPasswordPlaceholder": "Saisissez un nouveau mot de passe",
       "confirmPasswordLabel": "Confirmer le nouveau mot de passe",
-      "confirmPasswordPlaceholder": "Ré-entrez le nouveau mot de passe",
+      "confirmPasswordPlaceholder": "Confirmez le nouveau mot de passe",
       "changeBtn": "Mettre à jour le mot de passe",
       "passwordMismatch": "Les mots de passe ne correspondent pas.",
       "successDisabled": "Protection par mot de passe désactivée.",
@@ -889,15 +897,15 @@
       "sessionLifetimeDaysUnit": "jours"
     },
     "manualMappings": {
-      "deleteBtn": "Supprimer",
-      "empty": "Aucune correspondance manuelle. Utilisez le modal de lacunes pour en créer une.",
-      "title": "Correspondances MAL manuelles",
+      "empty": "Aucune correspondance manuelle pour le moment. Utilisez la fenêtre « Coverage Gap » pour en créer une.",
       "deleteSuccess": "Correspondance supprimée.",
-      "subtitle": "Ce sont des correspondances permanentes Plex → MAL que vous avez créées manuellement.",
       "colMalTitle": "Titre MAL",
-      "colAniDbId": "ID AniDB",
       "colCreatedAt": "Créé le",
+      "subtitle": "Ce sont des correspondances permanentes Plex → MAL que vous avez créées manuellement.",
+      "title": "Correspondances MAL manuelles",
       "colPlexTitle": "Titre Plex",
+      "deleteBtn": "Supprimer",
+      "colAniDbId": "ID AniDB",
       "deleteConfirm": "Supprimer cette correspondance ?"
     }
   },
@@ -909,20 +917,20 @@
     "label": "Thème"
   },
   "franchise": {
-    "title": "Explorer l'Univers",
-    "loading": "Cartographie des données de franchise...",
+    "title": "Explorer l'univers",
+    "loading": "Cartographie de la franchise...",
     "loadingProgress": "Cartographie en cours... ({{count}} nœuds trouvés)",
-    "empty": "Aucun anime lié trouvé dans les données de franchise.",
+    "empty": "Aucun anime associé n'a été trouvé dans les données de la franchise.",
     "close": "Fermer",
-    "viewButton": "Voir la Constellation de Franchise",
-    "explorerButton": "Explorer l'Univers",
+    "viewButton": "Voir la constellation de la franchise",
+    "explorerButton": "Explorer l'univers",
     "openOnMal": "Ouvrir {{title}} sur MyAnimeList",
-    "mainStoryline": "Histoire Principale",
+    "mainStoryline": "Trame principale",
     "truncated": "Plus…",
     "legend": {
       "title": "Légende",
       "canonical": "Préquelle / Suite",
-      "indirect": "Dérivé / Récit secondaire",
+      "indirect": "Dérivé / Histoire parallèle",
       "mediaTypes": {
         "title": "Types de médias",
         "tv": "Série TV",
@@ -939,8 +947,8 @@
       "sequel": "Suite",
       "alternative_version": "Version alternative",
       "alternative_setting": "Contexte alternatif",
-      "parent_story": "Récit parent",
-      "side_story": "Récit secondaire",
+      "parent_story": "Œuvre d'origine",
+      "side_story": "Histoire parallèle",
       "summary": "Résumé",
       "spin_off": "Dérivé",
       "character": "Personnage",
@@ -948,7 +956,7 @@
     },
     "quickLook": {
       "unknownDate": "N/D",
-      "readMore": "Lire plus",
+      "readMore": "Lire la suite",
       "openInMal": "Ouvrir sur MAL"
     }
   },
@@ -983,7 +991,7 @@
     "Space": "Espace",
     "Military": "Militaire",
     "Historical": "Historique",
-    "Adult Cast": "Distribution adulte",
+    "Adult Cast": "Personnages adultes",
     "Anthropomorphic": "Anthropomorphique",
     "CGDCT": "CGDCT",
     "Childcare": "Garde d'enfants",
@@ -998,14 +1006,14 @@
     "Harem": "Harem",
     "Hentai": "Hentai",
     "High Stakes Game": "Jeux à enjeux élevés",
-    "Idols (Female)": "Idoles (Féminin)",
-    "Idols (Male)": "Idoles (Masculin)",
+    "Idols (Female)": "Idoles (féminin)",
+    "Idols (Male)": "Idoles (masculin)",
     "Iyashikei": "Iyashikei",
     "Josei": "Josei",
     "Kids": "Enfants",
     "Love Polygon": "Polygone amoureux",
     "Love Status Quo": "Statu quo amoureux",
-    "Magical Sex Shift": "Changement magique de genre",
+    "Magical Sex Shift": "Changement de sexe magique",
     "Mahou Shoujo": "Mahou Shoujo",
     "Medical": "Médical",
     "Mythology": "Mythologie",
@@ -1029,7 +1037,7 @@
     "Urban Fantasy": "Fantasy urbaine",
     "Vampire": "Vampire",
     "Video Game": "Jeu vidéo",
-    "Villainess": "Vilaine",
+    "Villainess": "Méchante",
     "Visual Arts": "Arts visuels",
     "Workplace": "Milieu professionnel"
   },
@@ -1042,44 +1050,44 @@
       "title": "Notifications",
       "empty": "Tout est à jour !",
       "markAllRead": "Tout marquer comme lu",
-      "dismiss": "Fermer"
+      "dismiss": "Ignorer"
     },
     "time": {
       "justNow": "à l'instant",
-      "minutesAgo": "il y a {{n}}m",
+      "minutesAgo": "il y a {{n}} min",
       "hoursAgo": "il y a {{n}}h",
-      "daysAgo": "il y a {{n}}j"
+      "daysAgo": "il y a {{n}} j"
     },
     "welcome": {
       "title": "Bienvenue sur MetaAnime 👋",
-      "message": "La configuration est terminée. MetaAnime agrège désormais votre bibliothèque anime depuis Plex, Sonarr et MyAnimeList — tout en un seul endroit. Profitez-en !"
+      "message": "La configuration est terminée. MetaAnime agrège désormais votre bibliothèque d'animes depuis Plex, Sonarr et MyAnimeList — tout en un seul endroit. Profitez-en !"
     },
     "noSync": {
-      "title": "Synchronisation requise",
-      "message": "Votre bibliothèque n'a pas encore été synchronisée. Lancez une sync pour peupler votre liste avec les métadonnées.",
-      "action": "Aller à la sync"
+      "title": "Première synchronisation requise",
+      "message": "Votre bibliothèque n'a pas encore été synchronisée. Lancez une synchronisation pour remplir votre liste d'animes avec les métadonnées.",
+      "action": "Aller à la synchronisation"
     },
     "sync": {
-      "startTitle": "Sync démarrée",
-      "startMessage": "La synchronisation manuelle a été déclenchée. Consultez le journal dans Paramètres.",
-      "doneTitle": "Sync terminée ✓",
+      "startTitle": "Synchronisation démarrée",
+      "startMessage": "Une synchronisation manuelle a été lancée. Consultez le journal de progression dans les paramètres.",
+      "doneTitle": "Synchronisation terminée ✓",
       "doneMessage": "Toutes les sources ont été synchronisées avec succès.",
-      "errorTitle": "Échec de la sync",
-      "errorMessage": "La synchronisation a rencontré une erreur. Consultez le journal pour plus de détails.",
+      "errorTitle": "Échec de la synchronisation",
+      "errorMessage": "La synchronisation a rencontré une erreur. Consultez le journal de synchronisation pour plus de détails.",
       "viewLog": "Voir le journal"
     },
     "malAuth": {
-      "title": "Erreur d’authentification MyAnimeList",
-      "message": "Le jeton MyAnimeList est invalide ou expiré. Veuillez vous autoriser dans les Paramètres.",
-      "action": "Aller aux Paramètres",
+      "title": "Erreur d'authentification MyAnimeList",
+      "message": "Le jeton MyAnimeList est invalide ou expiré. Veuillez autoriser la connexion depuis les paramètres.",
+      "action": "Aller aux paramètres",
       "reloadFailed": "Jeton actualisé, mais impossible de recharger les paramètres.",
-      "reloadFailedMessage": "Veuillez actualiser la page pour voir le statut du jeton mis à jour."
+      "reloadFailedMessage": "Veuillez actualiser la page pour afficher le statut mis à jour du jeton."
     },
     "malConnect": {
       "successTitle": "MyAnimeList connecté ✓",
       "successMessage": "MyAnimeList a été connecté avec succès.",
       "errorTitle": "Échec de la connexion MyAnimeList",
-      "errorMessage": "L'autorisation a échoué. Veuillez réessayer."
+      "errorMessage": "L'autorisation a échoué. Veuillez réessayer de vous connecter."
     },
     "health": {
       "plex": {
@@ -1103,7 +1111,7 @@
     },
     "botKun": {
       "discoverTitle": "Découvrez Bot-kun, votre concierge IA 🤖",
-      "discoverMessage": "Bot-kun est un assistant IA qui vous aide à découvrir, gérer et discuter de votre bibliothèque d'animés. Activez-le dans les paramètres Bot-kun pour commencer.",
+      "discoverMessage": "Bot-kun est un assistant IA qui vous aide à découvrir, gérer et discuter de votre bibliothèque d'animes. Activez-le dans les paramètres de Bot-kun pour commencer.",
       "configure": "Configurer Bot-kun"
     }
   },
@@ -1112,9 +1120,9 @@
   },
   "toast": {
     "noSync": {
-      "title": "Aucune synchronisation",
-      "message": "Votre bibliothèque n'a pas encore été synchronisée. Lancez une sync pour voir vos animés.",
-      "cta": "Aller à la sync",
+      "title": "Aucune synchronisation effectuée",
+      "message": "Votre bibliothèque n'a pas encore été synchronisée. Lancez une synchronisation pour remplir votre liste d'animes.",
+      "cta": "Aller à la synchronisation",
       "dismiss": "Fermer"
     }
   },
@@ -1134,7 +1142,7 @@
     "loading": "Chargement...",
     "previousPage": "Page précédente",
     "nextPage": "Page suivante",
-    "dismiss": "Ignorer"
+    "dismiss": "Masquer"
   },
   "providers": {
     "mal": "MyAnimeList",
@@ -1169,7 +1177,7 @@
     "toggleMal": "Activer/désactiver MAL",
     "alternativeTitles": "Titres alternatifs",
     "seeDetails": "Voir les détails",
-    "feelingLucky": "Feeling lucky, sélection de votre anime…"
+    "feelingLucky": "Sélection d'un anime au hasard…"
   },
   "app": {
     "title": "Meta Anime",
@@ -1178,32 +1186,32 @@
   },
   "notFound": {
     "ariaLabel": "404 – Page introuvable",
-    "title": "Oups — Cette page a totalement disparu de la carte !",
+    "title": "Oups — cette page a quitté le script !",
     "subtitle": {
       "dimension": "Cette page s'est égarée dans une autre dimension et, franchement, elle semble très à l'aise là-bas sans intention de revenir.",
-      "trainingArc": "Cette page est en arc d'entraînement — elle reviendra plus forte, plus sage, avec une nouvelle puissance que vous n'avez pas vue venir.",
+      "trainingArc": "Cette page est en plein arc d'entraînement — elle reviendra plus forte, plus sage, et avec un power-up que vous ne verrez pas venir.",
       "plotTwist": "Coup de théâtre : cette page n'existe pas. La vraie page, c'était les amis que l'on s'est faits en chemin. Spoiler : eux aussi ont disparu.",
-      "houdini": "Cette page a fait un tour de Houdini. Un instant elle était là, la seconde d'après — pouf — envolée, sans même un salut final.",
-      "void": "Cette URL mène au vide. Le vide vous observe en retour. Puis il hausse les épaules et retourne regarder des animes. Classique.",
-      "kamehameha": "Chargement échoué… essayez peut-être un Kamehameha ? Sinon un Rasengan, un Getsuga Tenshō, ou simplement Ctrl+R pourrait marcher.",
-      "timeline": "Notre serveur a fouillé toutes les timelines du multivers, consulté trois oracles, et n'a absolument rien trouvé ici.",
-      "questGone": "Erreur 404 : la page est partie en quête et n'est jamais revenue. On dit qu'elle a trouvé une super recommandation d'anime en chemin.",
+      "houdini": "On dirait que cette page nous a fait le coup de Houdini. Un instant elle était là, l'instant d'après — pouf — disparue, sans même un au revoir.",
+      "void": "Cette URL mène au vide. Le vide vous dévisage en retour. Puis il hausse les épaules et retourne regarder des animes. Classique, le vide.",
+      "kamehameha": "Échec du chargement… essayez donc un Kamehameha ? Sinon, un Rasengan, un Getsuga Tenshō ou simplement Ctrl+R devraient faire l'affaire.",
+      "timeline": "Notre serveur a fouillé chaque ligne temporelle du multivers, consulté trois oracles, et n'a absolument rien trouvé ici.",
+      "questGone": "Erreur 404 : la page est partie en quête et n'est jamais revenue. On murmure qu'elle a trouvé une excellente recommandation d'anime et qu'elle s'est laissée distraire.",
       "uncharted": "Vous avez découvert un territoire inexploré. Plantez un drapeau, donnez-lui votre nom, profitez de la solitude — il n'y a rien d'autre ici.",
-      "endOfInternet": "Vous avez atteint la fin d'internet. Sans rire. Mais cette page a disparu, probablement en train de binge-watcher quelque chose dans un autre onglet."
+      "endOfInternet": "Vous avez atteint la fin d'internet. Blague à part. Mais cette page a disparu, probablement en train de s'enchaîner des épisodes dans un autre onglet."
     },
     "goHome": "Retour à l'accueil",
     "characters": {
       "goku": {
         "name": "Goku",
-        "quote": "J'ai cherché cette page dans tout l'univers… elle a disparu. Même l'Ultra Instinct ne peut pas la trouver."
+        "quote": "J'ai cherché cette page dans tout l'univers… elle a disparu. Même l'Ultra Instinct n'a pas pu la trouver."
       },
       "luffy": {
         "name": "Monkey D. Luffy",
-        "quote": "Je serai Roi des Pirates ! Mais d'abord, où est cette page ?! Même mon Haki ne la détecte pas !"
+        "quote": "Je serai le Roi des Pirates ! Mais d'abord, où EST cette page ?! Même mon Haki ne la perçoit pas !"
       },
       "naruto": {
         "name": "Naruto Uzumaki",
-        "quote": "Croyez-y ! J'ai envoyé mille doubles pour trouver cette page et ils sont tous revenus bredouilles, dattebayo !"
+        "quote": "Croyez-y ! J'ai envoyé mille clones d'ombre pour trouver cette page et ils sont TOUS revenus bredouilles, dattebayo !"
       },
       "sailorMoon": {
         "name": "Sailor Moon",
@@ -1211,7 +1219,7 @@
       },
       "edwardElric": {
         "name": "Edward Elric",
-        "quote": "L'Échange Équivalent signifie qu'il devrait y avoir QUELQUE CHOSE ici. Mais il n'y a rien ! Absolument rien !"
+        "quote": "L'Échange Équivalent veut qu'il devrait y avoir QUELQUE CHOSE ici. Mais il n'y a rien ! Rien du tout !"
       },
       "lelouch": {
         "name": "Lelouch vi Britannia",
@@ -1223,11 +1231,11 @@
       },
       "tanjiro": {
         "name": "Tanjiro Kamado",
-        "quote": "Malgré tout mon entraînement, je n'ai pas pu localiser cette page. Je l'ai sentie une fois, mais la trace a disparu."
+        "quote": "Malgré tout mon entraînement, je n'ai pas pu retrouver cette page. Je l'ai sentie une fois, mais sa trace a disparu."
       },
       "spike": {
         "name": "Spike Spiegel",
-        "quote": "Quoi qu'il arrive, ça arrive. Et apparemment, ce qui est arrivé c'est que cette page a disparu. À bientôt, Page Spatiale."
+        "quote": "Quoi qu'il arrive, arrive. Et apparemment, ce qui est arrivé, c'est que cette page a disparu. Salut, page de l'espace."
       },
       "light": {
         "name": "Light Yagami",
@@ -1238,30 +1246,30 @@
   "userPreferences": {
     "autoApplyLastFilters": {
       "name": "Appliquer automatiquement les derniers filtres de recherche",
-      "desc": "Quand activé, vos derniers filtres de recherche sont automatiquement restaurés à l'ouverture de la liste « Mes Animes » ou de la page « Saisonnier »."
+      "desc": "Lorsqu'elle est activée, vos derniers filtres de recherche sont automatiquement restaurés et appliqués à l'ouverture de la liste des animes ou de la page des animes saisonniers."
     },
     "libraryHandbrake": {
-      "groupTitle": "🎬 Chemins Library & HandBrake",
+      "groupTitle": "🎬 Bibliothèque & chemins de transcodage HandBrake",
       "containerRoot": {
-        "name": "Racine média (conteneur)",
-        "desc": "Racine média telle qu'enregistrée par Sonarr dans le conteneur (défaut : /downloads_root)."
+        "name": "Racine média du conteneur",
+        "desc": "Racine média telle qu'enregistrée par Sonarr dans le conteneur (par défaut : /downloads_root)."
       },
       "hostRoot": {
-        "name": "Chemin de montage hôte (source)",
-        "desc": "Où ce stockage est monté sur CETTE machine (ex. /mnt/media ou /run/user/1000/gvfs/…)."
+        "name": "Point de montage média sur l'hôte (source)",
+        "desc": "Où ce stockage est monté sur CETTE machine (p. ex. /mnt/media ou /run/user/1000/gvfs/…)."
       },
       "destPath": {
         "name": "Chemin d'export HandBrake (destination)",
-        "desc": "Où écrire les fichiers transcodés (utilisé quand l'option sous-dossier _transcoded est désactivée)."
+        "desc": "Où écrire les fichiers transcodés (utilisé lorsque l'option du sous-dossier _transcoded est désactivée)."
       },
       "presetName": {
         "name": "Nom du préréglage HandBrake",
-        "desc": "Nom du préréglage HandBrake appliqué aux tâches de file exportées."
+        "desc": "Nom du préréglage HandBrake appliqué aux tâches envoyées dans la file d'attente."
       },
       "destModeTranscoded": "Écrire dans le sous-dossier \"_transcoded\" à côté des fichiers source",
       "browse": "📁 Parcourir un dossier",
-      "smbWarning": "⚠️ HandBrake exige un chemin local monté POSIX/Windows (ex. `/mnt/media/...` ou `/run/user/1000/gvfs/...`), pas une URI virtuelle `smb://`.",
-      "browseUp": "⬆ Remonter",
+      "smbWarning": "⚠️ HandBrake nécessite un chemin local POSIX/Windows monté (p. ex. `/mnt/media/...` ou `/run/user/1000/gvfs/...`), et non une URI virtuelle `smb://`.",
+      "browseUp": "⬆ Remonter d'un niveau",
       "browseSelectHere": "✅ Utiliser ce dossier",
       "browseLoading": "Chargement des dossiers…",
       "browseEmpty": "Aucun sous-dossier ici",
@@ -1270,46 +1278,46 @@
       "saved": "Enregistré"
     },
     "luckyPick": {
-      "groupTitle": "J'ai de la chance!",
+      "groupTitle": "J'ai de la chance !",
       "onlyFinished": {
         "name": "Uniquement les animes terminés",
-        "desc": "Lorsqu'activé, la sélection aléatoire choisit uniquement parmi les séries dont la diffusion est terminée."
+        "desc": "Lorsqu'elle est activée, la sélection aléatoire ne choisit que parmi les animes dont la diffusion est terminée."
       },
       "onlyPlanToWatch": {
-        "name": "Uniquement À regarder",
-        "desc": "Lorsqu'activé, la sélection aléatoire choisit uniquement parmi les animes de votre liste « À regarder »."
+        "name": "Uniquement « À regarder »",
+        "desc": "Lorsqu'elle est activée, la sélection aléatoire ne choisit que parmi les animes de votre liste « À regarder »."
       },
       "onlyWithFiles": {
         "name": "Uniquement avec fichiers locaux",
-        "desc": "Lorsqu'activé, la sélection aléatoire choisit uniquement les animes disposant de fichiers locaux dans Sonarr."
+        "desc": "Lorsqu'elle est activée, la sélection aléatoire ne choisit que parmi les animes disposant de fichiers locaux dans Sonarr."
       }
     }
   },
   "botKun": {
-    "subtitle": "Concierge IA Anime",
-    "inputPlaceholder": "Parlez-moi d'anime…",
+    "subtitle": "Concierge IA anime",
+    "inputPlaceholder": "Posez-moi vos questions sur les animes…",
     "clearConversation": "Effacer la conversation",
     "errorFallback": "Désolé, une erreur s'est produite. Veuillez réessayer.",
     "connectionError": "Erreur de connexion — vérifiez vos paramètres Bot-kun.",
     "fabLabel": "Bot-kun",
     "fabOpen": "Ouvrir le concierge IA Bot-kun",
     "newMessage": "Nouveau message de Bot-kun",
-    "dialogLabel": "Bot-kun Concierge Anime IA",
+    "dialogLabel": "Bot-kun, concierge IA anime",
     "title": "Bot-kun",
     "close": "Fermer Bot-kun",
     "typingIndicator": "Bot-kun est en train d'écrire",
     "inputLabel": "Écrire à Bot-kun",
     "sendMessage": "Envoyer le message",
     "surpriseMe": "Surprenez-moi",
-    "showMore": "Plus de résultats",
+    "showMore": "Afficher plus de résultats",
     "readAloud": "Lire à voix haute",
     "stopReading": "Arrêter la lecture",
-    "speaking": "Je lis...",
+    "speaking": "Lecture en cours...",
     "chips": {
       "transcodeTonight": "🎯 Que devrais-je transcoder ce soir ?",
-      "biggestOffenders": "📊 Qui sont mes pires taux GiB/h ?",
+      "biggestOffenders": "📊 Quels sont mes pires taux GiB/h ?",
       "finishedH264": "✅ Saisons terminées encore en H264",
-      "brokenMixed": "🧹 Trouver les saisons mixtes/cassées"
+      "brokenMixed": "🧹 Trouver les saisons à codecs mixtes ou cassés"
     },
     "actions": {
       "applyFilter": "Appliquer le filtre",
@@ -1317,28 +1325,28 @@
       "applied": "✓ Appliqué"
     }
   },
-    "configBackup": {
-    "title": "Sauvegarde & Restauration",
+  "configBackup": {
+    "title": "Sauvegarde et restauration",
     "desc": "Exportez toute votre configuration (fournisseurs, jetons, préférences) ou restaurez-la depuis un fichier JSON.",
-    "exportBtn": "⬇ Exporter la config",
-    "importBtn": "⬆ Importer la config",
-    "exportWarning": "⚠️ Le fichier exporté contient des clés API et jetons NON MASQUÉS. Stockez-le en sécurité.",
+    "exportBtn": "⬇ Exporter la configuration",
+    "importBtn": "⬆ Importer la configuration",
+    "exportWarning": "⚠️ Le fichier exporté contient des clés API et des jetons NON MASQUÉS. Conservez-le en lieu sûr.",
     "importTitle": "Importer une configuration",
-    "dropHint": "Déposez un fichier .json ici ou cliquez pour choisir",
+    "dropHint": "Déposez un fichier de configuration .json ici ou cliquez pour en choisir un",
     "imported": "Configuration importée ({{count}} valeurs) — Plex : {{plex}}, Sonarr : {{sonarr}}, MAL : {{mal}}",
     "statusYes": "connecté",
     "statusNo": "non connecté",
-    "importFailed": "Échec de l'import — fichier de config MetaAnime valide ?",
+    "importFailed": "Échec de l'import — s'agit-il d'un fichier de configuration MetaAnime valide ?",
     "completeSetup": "Terminer la configuration",
     "reviewSteps": "Vérifier les étapes"
   },
-"libraryIntel": {
+  "libraryIntel": {
     "matchMode": {
-      "label": "Correspondance codec",
+      "label": "Correspondance des codecs",
       "any": "Tout (>0%)",
       "strict": "Uniquement (100%)",
       "mixed": "Mixte (<100%)",
-      "custom": "Personnalisé %",
+      "custom": "% personnalisé",
       "opGte": "≥",
       "opLte": "≤",
       "percent": "Pourcentage",
@@ -1349,37 +1357,37 @@
       "all": "Tous les statuts",
       "seriesEndedComplete": "Série terminée (complète)",
       "seasonEndedHiatus": "Saison terminée (série en cours / pause)",
-      "airingWeekly": "En diffusion (hebdomadaire)",
+      "airingWeekly": "En cours de diffusion (hebdomadaire)",
       "incompleteOnDisk": "Incomplet sur le disque",
-      "transcodeReady": "Prêt à transcoder (terminée ou saison finie)"
+      "transcodeReady": "Prêt à transcoder (terminée ou saison terminée)"
     },
     "badge": {
-      "airingWeekly": "EN DIFFUSION",
+      "airingWeekly": "EN DIFFUSION (HEBDO)",
       "seasonEndedHiatus": "SAISON TERMINÉE",
       "seriesEndedComplete": "TERMINÉE",
       "incompleteOnDisk": "INCOMPLET"
     },
     "badgeTip": {
-      "airingWeekly": "Des épisodes sont actuellement diffusés",
-      "seasonEndedHiatus": "Série en pause / en cours, toutes les saisons diffusées sont complètes",
+      "airingWeekly": "De nouveaux épisodes sortent actuellement",
+      "seasonEndedHiatus": "Série en pause ou en cours, toutes les saisons diffusées sont complètes",
       "seriesEndedComplete": "Série terminée et entièrement téléchargée",
       "incompleteOnDisk": "Des épisodes diffusés manquent sur le disque"
     },
     "table": {
-      "moreAudio": "+{{count}} pistes audio supplémentaires"
+      "moreAudio": "+{{count}} autres pistes audio"
     },
     "buddy": {
-      "codecTitle": "Répartition codec & bitrate",
+      "codecTitle": "Répartition des codecs et des débits",
       "byCount": "Par nombre de fichiers",
-      "bySize": "Par taille disque",
+      "bySize": "Par taille sur disque",
       "avgGibPerHour": "GiB/h moy.",
-      "footprint": "Empreinte bibliothèque",
-      "hogsTitle": "Gros poids & ballonnement",
+      "footprint": "Empreinte de la bibliothèque",
+      "hogsTitle": "Gros consommateurs & ballonnement",
       "topTotal": "Top 5 par Go total",
-      "topBloat": "Top 5 pires GiB/h",
-      "topReclaimable": "Top 5 Go récupérables",
+      "topBloat": "Top 5 des pires GiB/h",
+      "topReclaimable": "Top 5 des Go récupérables",
       "rank": "N°",
-      "opportunityTitle": "Opportunité de transcodage",
+      "opportunityTitle": "Potentiel de transcodage",
       "savings": "~{{gb}} Go récupérables sur {{count}} séries",
       "chipsPrime": "🔥 Cibles de transcodage prioritaires",
       "chipsUnfinished": "🧩 Transcodages inachevés",
@@ -1390,28 +1398,28 @@
       "noData": "Enrichissement en cours…"
     },
     "drawer": {
-      "stackedTitle": "Composition codec",
+      "stackedTitle": "Composition des codecs",
       "needsTranscode": "À transcoder / H264",
       "optimized": "Optimisé / HEVC",
       "allFiles": "Tous les fichiers",
-      "estSavings": "Économie est.",
+      "estSavings": "Économie (est.)",
       "savingsHint": "si transcodé en HEVC (~55%)",
       "copyH264": "Copier les chemins H264",
       "exportList": "Exporter la liste de transcodage",
       "copied": "Copié !",
       "copyFolderPath": "📁 Copier le chemin du dossier",
       "copySelectedPaths": "📋 Copier les chemins sélectionnés ({{count}})",
-      "selectAllFiltered": "Tout sélectionner ({{count}})",
+      "selectAllFiltered": "Sélectionner tous les résultats ({{count}})",
       "clearSelection": "Effacer la sélection",
-      "exportQueue": "🎬 Exporter la file HandBrake ({{count}})",
+      "exportQueue": "🎬 Exporter la file d'attente HandBrake ({{count}})",
       "copyPaths": "📋 Copier les chemins",
-      "copyPlainPaths": "Copier les chemins des épisodes (texte brut)",
-      "quotedCliArgs": "Copier les chemins des épisodes (arguments CLI entre guillemets)",
-      "handBrakeScript": "🎬 Exporter le lot HandBrake (.sh)",
-      "mappedToHostPath": "Mappé vers le chemin hôte",
-      "editMapping": "Modifier le mappage de chemins",
-      "mapContainerRoot": "Racine média (conteneur)",
-      "mapHostRoot": "Racine média (hôte local)",
+      "copyPlainPaths": "Copier les chemins des épisodes sélectionnés (texte brut)",
+      "quotedCliArgs": "Copier les chemins des épisodes sélectionnés (arguments CLI entre guillemets)",
+      "handBrakeScript": "🎬 Exporter le script HandBrake (.sh)",
+      "mappedToHostPath": "Mappé vers le chemin de l'hôte",
+      "editMapping": "Modifier le mappage des chemins",
+      "mapContainerRoot": "Racine des médias (conteneur)",
+      "mapHostRoot": "Racine des médias (hôte local)",
       "mapSave": "Enregistrer",
       "mapCancel": "Annuler",
       "selectFile": "Sélectionner le fichier",
@@ -1419,8 +1427,8 @@
     }
   },
   "luckyPick": {
-    "buttonLabel": "J'ai de la chance!",
-    "ariaLabel": "Superposition de sélection aléatoire d'anime",
+    "buttonLabel": "J'ai de la chance",
+    "ariaLabel": "Fenêtre de sélection aléatoire d'anime",
     "resultAriaLabel": "Anime recommandé",
     "searching": "Recherche de votre prochain anime…",
     "watchNow": "Regarder maintenant",
@@ -1438,8 +1446,8 @@
       "retry": "Réessayer"
     },
     "chatCard": {
-      "rolling": "Feeling Lucky",
-      "label": "Feeling Lucky",
+      "rolling": "J'ai de la chance",
+      "label": "J'ai de la chance",
       "scoreSuffix": "/ 10",
       "openDetails": "Ouvrir les détails",
       "addToList": "Ajouter à ma liste",
@@ -1450,242 +1458,242 @@
     },
     "phrases": {
       "plex": [
-        "Convoque le popcorn !",
-        "Que le binge commence !",
-        "Lance le streaming avant que ta volonté ne craque.",
-        "Ton canapé t'attend.",
-        "Oublie le sommeil. Lance le stream.",
-        "Déploie la station de visionnage !",
-        "On ne regarde pas juste un épisode, c'est prouvé.",
+        "Invoquez le popcorn !",
+        "Que le marathon commence !",
+        "Lancez le flux avant que votre détermination ne cède.",
+        "Votre canapé vous appelle.",
+        "Oubliez le sommeil. Lancez le flux.",
+        "Déployez le poste de visionnage !",
+        "On ne regarde pas tout simplement un seul épisode.",
         "Défi accepté — mode marathon : ACTIVÉ.",
-        "Lumières, snacks, crise existentielle. C'est parti !",
-        "Ton écran t'attend, weeb.",
-        "Lance et ne regrette rien.",
+        "Lumières, snacks, angoisse existentielle. C'est parti !",
+        "Votre écran vous attend, weeb.",
+        "Appuyez sur lecture. Ne regrettez rien.",
         "La télécommande, c'est le destin.",
-        "Au programme ce soir : cet anime, snacks, recommencer.",
-        "Ton oreiller est déjà en position.",
-        "Commence le stream sacré.",
-        "En file d'attente. En mémoire tampon. Prêt à ruiner ton planning sommeil.",
+        "Au programme ce soir : cet anime, des snacks, et on recommence.",
+        "Votre oreiller est déjà en position.",
+        "Commencez le flux sacré.",
+        "En file d'attente. En mémoire tampon. Prêt à ruiner votre rythme de sommeil.",
         "La lecture automatique n'est pas une suggestion, c'est un mode de vie.",
-        "Plans sociaux ? Annulés. C'est mieux ainsi.",
-        "Le générique d'ouverture seul vaut le détour.",
-        "Installe-toi. Ton canapé est un cinéma maintenant.",
-        "Un épisode. Je le jure. (C'est un mensonge.)",
-        "Streame responsablement. Ah non — fais-en un marathon.",
-        "Ta liste de visionnage te remercie.",
-        "La forteresse canapé doit être assemblée.",
-        "Pas besoin de sous-titres — tu te débrouilleras.",
-        "Appuie sur lecture et laisse le destin guider.",
-        "Ton futur moi te remerciera d'avoir commencé ça.",
-        "Le sommeil est un mythe. Appuie sur lecture.",
-        "Tu mérites cette session de visionnage.",
-        "L'intrigue s'épaissit — va regarder.",
-        "Ta couverture t'attend déjà.",
-        "Passe la bande-annonce. Fais confiance au RNG.",
-        "L'opening banger t'attend.",
+        "Des sorties prévues ? Annulées. C'est mieux comme ça.",
+        "Le générique d'ouverture vaut déjà le détour.",
+        "Installez-vous. Votre canapé est devenu un cinéma.",
+        "Un seul épisode. Promis. (C'est un mensonge.)",
+        "Regardez avec modération. Blague — faites-en un marathon.",
+        "Votre liste de suivi vous remercie.",
+        "La forteresse-canapé doit être assemblée.",
+        "Pas besoin de sous-titres — vous vous débrouillerez.",
+        "Appuyez sur lecture et laissez le destin vous guider.",
+        "Vous vous remercierez plus tard d'avoir commencé.",
+        "Le sommeil est un mythe. Appuyez sur lecture.",
+        "Vous méritez cette séance de visionnage.",
+        "L'intrigue s'épaissit — filez la regarder.",
+        "Votre couverture vous attend déjà.",
+        "Passez la bande-annonce. Faites confiance au RNG.",
+        "Le générique qui déchire vous attend.",
         "Plein écran. Écouteurs. C'est parti.",
         "Ce n'est pas de la procrastination, c'est regarder des animes.",
-        "Considère ça comme un signe pour le regarder.",
+        "Prenez ça comme un signe : il faut le regarder.",
         "Les dieux du streaming ont bien choisi.",
         "Armure narrative : maximale. Peur : zéro.",
-        "Ton prochain binge est déjà en chargement.",
+        "Votre prochain marathon est déjà en cours de chargement.",
         "La nuit tombe. Plex appelle.",
         "C'est la voie. La voie Plex.",
         "Gloire à l'algorithme de recommandation.",
         "La saga commence maintenant.",
-        "Regarde-le avant qu'internet ne spoile tout.",
-        "Tu cherchais un signe. Le voilà.",
+        "Regardez-le avant qu'internet ne vous le spoile.",
+        "Vous cherchiez un signe. Le voilà.",
         "Épisode un ou saison trois, on ne juge pas.",
-        "Ferme le navigateur, ouvre Plex.",
-        "La manette est dans tes mains. Le destin aussi.",
-        "Ton statut DND est maintenant \"en streaming\".",
-        "Une nouvelle aventure t'attend sur ton écran.",
-        "Le nombre d'épisodes est une simple suggestion.",
-        "Ne regarde pas l'heure. Regarde juste.",
+        "Fermez le navigateur, ouvrez Plex.",
+        "La manette est dans vos mains. Le destin aussi.",
+        "Votre statut DND est maintenant \"streaming\".",
+        "Une nouvelle aventure vous attend sur votre écran.",
+        "Le nombre d'épisodes n'est qu'une suggestion.",
+        "Ne consultez pas l'heure. Regardez, c'est tout.",
         "La bibliothèque Plex est plus riche aujourd'hui.",
-        "Lance le prochain chef-d'œuvre.",
-        "Mets-le en file d'attente. Sans regret.",
-        "Cet anime T'a choisi.",
-        "L'heure de disparaître dans un autre monde.",
-        "Ton historique de visionnage a besoin d'une mise à jour.",
-        "L'anime ne se regarde pas tout seul — presque.",
-        "Ce soir, tu deviens le personnage principal."
+        "Lancez le prochain chef-d'œuvre.",
+        "Mettez-le en file d'attente. Aucun regret.",
+        "Cet anime vous a CHOISI.",
+        "Il est temps de disparaître dans un autre monde.",
+        "Votre historique de visionnage a besoin d'une mise à jour.",
+        "L'anime ne se regarde pas tout seul — mais presque.",
+        "Ce soir, vous devenez le personnage principal."
       ],
       "mal": [
-        "Vérifie ce que MAL en dit.",
-        "Le score communautaire attend ton jugement.",
-        "Vois si MAL est d'accord avec ton goût.",
-        "Ton entrée MAL se sent seule. Rends-lui visite.",
-        "Mets à jour ce compteur d'épisodes, procrastinateur.",
-        "Le champ de score est vide. Répare ça.",
-        "Marque-le 'Vu' pour la dose de dopamine.",
-        "Ton statut MAL : toujours un mensonge.",
-        "Il est temps de mettre à jour les épisodes vus.",
-        "La communauté est divisée. Où te situes-tu ?",
-        "Abandonne-le ou engage-toi. MAL exige un statut.",
-        "Donne-lui un score. Sois courageux.",
-        "Les fils de discussion du forum ne se liront pas seuls.",
-        "Vérifie le score MAL. Ressens-toi validé ou trahi.",
-        "Mets à jour ta progression avant d'oublier l'intrigue.",
-        "Quelqu'un a écrit une critique. Sois curieux.",
-        "Le consensus MAL est... intéressant.",
-        "Ton statut : 'À regarder' depuis 2019.",
-        "Change ce statut en 'En cours de visionnage'.",
-        "Le compteur d'épisodes t'attend.",
+        "Voyez ce que MAL en pense.",
+        "La note communautaire attend votre verdict.",
+        "Voyez si MAL partage vos goûts.",
+        "Votre fiche MAL se sent seule. Allez lui rendre visite.",
+        "Mettez à jour ce compteur d'épisodes, procrastinateur.",
+        "Le champ de note est vide. Corrigez ça.",
+        "Marquez-le « Terminé » pour votre dose de dopamine.",
+        "Votre statut MAL : toujours un mensonge.",
+        "Il est temps de mettre à jour vos épisodes vus.",
+        "La communauté est divisée. Et vous, où vous situez-vous ?",
+        "Abandonnez-le ou poursuivez. MAL exige un statut.",
+        "Donnez-lui une note. Soyez courageux.",
+        "Les discussions du forum ne vont pas se lire toutes seules.",
+        "Consultez la note MAL. Validé ou trahi, à vous de voir.",
+        "Mettez à jour votre progression avant d'oublier l'intrigue.",
+        "Quelqu'un a écrit une critique. Montrez-vous curieux.",
+        "Le consensus MAL est… intéressant.",
+        "Votre statut : « À voir » depuis 2019.",
+        "Changez ce statut en « En cours ».",
+        "Le compteur d'épisodes vous attend.",
         "10/10 ou lâche.",
-        "La communauté a besoin de ton score pour compléter la moyenne.",
-        "Lis les critiques. Pleure un peu.",
-        "Vérifie le générique d'ouverture sur YouTube après.",
-        "Ton entrée indique 0 épisodes. Les menteurs ne prospèrent pas.",
-        "Marque-le 'Vu'. Tu l'as mérité.",
-        "Le débat de score dans le forum est épicé.",
-        "Mets à jour ton journal MAL. Tu as encore oublié.",
-        "Ton historique de visionnage est une scène de crime.",
-        "Fais face au verdict de la communauté.",
-        "La page MAL contient des réponses que tu n'as pas demandées.",
-        "Médite sur la controverse du score 7,8.",
-        "Ta vie anime mérite une meilleure documentation.",
-        "Laisse une critique. Sois le chaos.",
-        "Augmente ton compteur d'épisodes d'au moins un.",
-        "Déclare ton score avant qu'internet le fasse.",
-        "Le synopsis te rappellera de quoi ça parle.",
-        "Ta liste 'Vu' manque d'une entrée.",
-        "Les critiques sont déjantées. Parfait.",
-        "Mets à jour le statut. Agis comme un adulte accompli.",
-        "Abandonne la stigmate 'En pause'. Finis-le.",
-        "Le score MAL a baissé de 0,1 aujourd'hui. Tragique.",
-        "Les statistiques de ton profil méritent cette mise à jour.",
+        "La communauté a besoin de votre note pour compléter la moyenne.",
+        "Lisez les critiques. Pleurez un peu.",
+        "Retrouvez le générique d'ouverture sur YouTube ensuite.",
+        "Votre fiche indique 0 épisode. Les menteurs finissent mal.",
+        "Marquez-le « Terminé ». Vous l'avez bien mérité.",
+        "Le débat sur la note s'enflamme sur le forum.",
+        "Mettez à jour votre journal MAL. Vous avez encore oublié.",
+        "Votre historique de visionnage est une scène de crime.",
+        "Affrontez le verdict de la communauté.",
+        "La page MAL recèle des réponses que vous n'avez pas demandées.",
+        "Méditez sur la controverse de la note 7,8.",
+        "Votre vie d'anime mérite une meilleure documentation.",
+        "Laissez une critique. Semez le chaos.",
+        "Augmentez votre compteur d'épisodes d'au moins un.",
+        "Attribuez votre note avant qu'internet ne le fasse.",
+        "Le synopsis vous rappellera de quoi il retourne.",
+        "Votre liste « Terminé » compte une fiche en moins.",
+        "Les critiques sont déchaînées. Parfait.",
+        "Mettez à jour votre statut. Sentez-vous enfin comme un adulte fonctionnel.",
+        "Débarrassez-vous du stigmate « En pause ». Terminez-le.",
+        "La note MAL a baissé de 0,1 aujourd'hui. Tragique.",
+        "Les statistiques de votre profil méritent cette mise à jour.",
         "Critique écrite. Dignité perdue. Ça valait le coup.",
-        "Mets à jour ces épisodes. L'algorithme te surveille.",
-        "Tes données MAL sont dépassées. Corrige ça.",
-        "L'onglet animes similaires va détruire ta soirée.",
-        "Vérifie les recommandations. Ruine encore plus ta liste.",
-        "Note-le maintenant avant que ton avis change demain.",
-        "La liste du staff est plus intéressante que tu ne le penses.",
-        "Ton futur revisionnage a besoin d'un marque-page.",
-        "Le score est à 8,2. Tu es d'accord ?",
-        "Marque-le 'Vu' et sens-toi supérieur.",
+        "Mettez à jour ces épisodes. L'algorithme vous surveille.",
+        "Vos données MAL ne sont plus à jour. Corrigez ça.",
+        "L'onglet des animes similaires va ruiner votre soirée.",
+        "Consultez les recommandations. Ruinez un peu plus votre liste de suivi.",
+        "Notez-le maintenant, avant que votre avis ne change demain.",
+        "La liste du staff est plus intéressante qu'on ne le croit.",
+        "Votre futur revisionnage a besoin d'un marque-page.",
+        "La note affiche 8,2. Vous êtes d'accord ?",
+        "Marquez-le « Terminé » et sentez-vous supérieur.",
         "Les critiques de fans sont une mine d'or de passion.",
-        "Mets à jour ton score. Tu as évolué en tant que personne.",
-        "Vérifie si le manga est mieux. Spoiler : peut-être.",
-        "Ta liste MAL : un monument à l'ambition.",
-        "Une mise à jour de score, un petit pas pour l'animé-kind.",
-        "La communauté attend ta note.",
-        "Ton entrée MAL a appelé. Elle veut une mise à jour."
+        "Mettez à jour votre note. Vous avez changé.",
+        "Voyez si le manga est meilleur. Spoiler : peut-être.",
+        "Votre liste MAL : un monument à l'ambition.",
+        "Une note en plus, un petit pas pour le monde de l'anime.",
+        "La communauté attend votre note.",
+        "Votre fiche MAL a appelé. Elle veut une mise à jour."
       ],
       "reroll": [
-        "Rang poubelle, rejoue !",
+        "Qualité poubelle, relancez !",
         "Non. Suivant !",
-        "La prophétie exige un reroll.",
-        "Celui-là... c'est pas ça.",
-        "Invoque les esprits du dé !",
+        "La prophétie exige une relance.",
+        "Celui-ci… ce n'est pas le bon.",
+        "Invoquez les esprits des dés !",
         "La fortune tourne deux fois pour les lâches.",
-        "Un autre tour du destin.",
-        "Rejeté. Tourne la roue !",
-        "404 : hype introuvable. Réessaie.",
+        "Encore un tour du destin.",
+        "Rejeté. Tournez la roue !",
+        "404 : hype introuvable. Réessayez.",
         "Les dieux du RNG exigent un sacrifice.",
-        "Passe ! La prochaine aventure t'attend.",
+        "Passons ! La prochaine aventure vous attend.",
         "Les dés ont parlé — encore.",
         "Le chaos exige un autre tour.",
-        "Hype insuffisante. Reroll en cours.",
-        "Pas aujourd'hui. Essaie le prochain destin.",
-        "Les astres ne sont pas alignés. Retourne.",
-        "Non merci. Roue, fais ton boulot.",
-        "Bof. Destin, recommence.",
-        "Retourne en arrière et réessaie.",
-        "Ton destin est à un spin.",
-        "Le RNG t'a trahi. Réessaie.",
+        "Hype insuffisante. Relance en cours.",
+        "Pas aujourd'hui. Tentez un autre destin.",
+        "Les astres ne sont pas alignés. Relancez.",
+        "Refus catégorique. Que la roue tourne !",
+        "Bof. Le destin va devoir réessayer.",
+        "Relancez et réessayez.",
+        "Votre destin est à un tour de roue.",
+        "Le RNG vous a trahi. Réessayez.",
         "La fortune sourit aux persistants.",
-        "Pas l'élu. Tourne encore.",
-        "Ce n'est pas l'anime que tu cherches.",
-        "La roue du destin continue de tourner.",
-        "Mouvement audacieux. Retourne quand même.",
-        "Lance les dés dans le vide.",
-        "Le hasard a plus à offrir.",
-        "Ta vraie vocation est à un spin.",
-        "L'univers a d'autres plans. Relance.",
-        "Passe au truc bien.",
-        "La prophétie avait tort. Respin.",
-        "Un tour de plus, une chance de grandeur.",
-        "Les dieux des dés n'en ont pas fini avec toi.",
-        "Un tour de plus. J'ai foi en toi.",
-        "Énergie neutre chaotique. Tourne encore.",
-        "Coup de théâtre : il y a un meilleur choix.",
-        "Les dieux anime ont d'autres intentions.",
-        "Tourne la roue du destin une fois encore.",
-        "Bof. Le RNG a des profondeurs cachées.",
-        "La fortune ne se lasse pas de tourner.",
-        "Rafraîchis les destins.",
-        "Défausse et pioche à nouveau.",
-        "Les dés sont capricieux. Relance.",
+        "Pas l'élu. Relancez.",
+        "Ce n'est pas l'anime que vous cherchez.",
+        "La roue du destin tourne toujours.",
+        "Audacieux. Relancez quand même.",
+        "Lancez les dés dans le vide.",
+        "Le hasard a mieux à offrir.",
+        "Votre vraie vocation est à un tour de roue.",
+        "L'univers a d'autres plans. Relancez.",
+        "Passons directement au meilleur.",
+        "La prophétie avait tort. Relancez.",
+        "Un tour de plus, une chance de gloire.",
+        "Les dieux des dés n'en ont pas fini avec vous.",
+        "Un lancer de plus. J'ai foi en vous.",
+        "Énergie chaotique neutre. Relancez.",
+        "Coup de théâtre : il existe un meilleur choix.",
+        "Les dieux de l'anime ont d'autres intentions.",
+        "Tournez encore une fois la roue du destin.",
+        "Bof. Le RNG a des profondeurs insoupçonnées.",
+        "La fortune ne se lasse jamais de tourner.",
+        "Rafraîchissez les destins.",
+        "Défaussez-vous et piochez à nouveau.",
+        "Les dés sont capricieux. Relancez.",
         "Non. La roue réclame de l'action.",
-        "Réessaie. L'algorithme a des secrets.",
-        "Ton vrai destin attend le prochain spin.",
-        "Le chaos est une échelle. Grimpe. Retourne.",
+        "Réessayez. L'algorithme a des secrets.",
+        "Votre vrai destin attend le prochain tour.",
+        "Le chaos est une échelle. Grimpez. Relancez.",
         "Destin insuffisant. Recalcul en cours.",
-        "Skip dur. Redémarrage du destin.",
-        "Consulte l'oracle encore une fois.",
-        "Tourne la roue des merveilles.",
-        "Pas tout à fait. Une chance de plus.",
-        "Ton fichier destin est corrompu. Recharge.",
-        "Débordement du tampon destin. Respin.",
-        "Le RNG présente ses excuses. Il réessaie.",
-        "Mauvaise chronologie. Recalcul.",
-        "Les dés ont donné 0/10. Recommence.",
+        "Gros skip. Redémarrage du destin.",
+        "Consultez l'oracle une fois de plus.",
+        "Tournez la roue des merveilles.",
+        "Pas tout à fait. Encore une chance.",
+        "Votre fichier destin est corrompu. Rechargez.",
+        "Débordement du tampon de destin. Relancez.",
+        "Le RNG s'excuse. Il réessaie.",
+        "Frise temporelle incorrecte. Recalcul.",
+        "Les dés ont donné 0/10. Réessayez.",
         "Non non non. Suivant !",
-        "Laisse le chaos décider encore !"
+        "Laissez le chaos décider encore !"
       ],
       "searching": [
-        "Consultation des weebs anciens...",
-        "Chargement du discours de l'amitié...",
-        "En attente que le protagoniste arrête de crier...",
-        "Invocation de Truck-kun...",
-        "Comptage des couches d'armure narrative...",
-        "Activation de la puissance de l'amitié...",
-        "Téléchargement de 10 000 heures de remplissage...",
-        "Demande à Senpai de nous remarquer...",
-        "Calibration du détecteur de tsundere...",
-        "Chargement de la Spirit Bomb...",
-        "Entraînement dans une chambre gravitationnelle...",
-        "En attente de l'annonce de la prochaine saison...",
-        "Consultation du Tome Sacré du Manga...",
-        "Réorganisation de l'arc du tournoi...",
-        "Activation des yeux spéciaux du protagoniste...",
-        "Localisation de la compétence cachée surpuissante...",
-        "Négociation avec les dieux de l'isekai...",
-        "Déploiement du protocole épisode plage...",
-        "Rassemblement des sept boules de cristal...",
-        "Analyse de l'opening en quête de préfiguration...",
-        "Réveil tardif et rencontre avec un(e) élève transféré(e)...",
-        "Polissage de la puissance du nakama...",
-        "Déverrouillage de la forme interdite...",
-        "Recalcul du traumatisme passé du protagoniste...",
-        "Déploiement de la distraction maid café...",
-        "Forge d'un lien plus solide que l'acier...",
-        "Recrutement du dernier membre du groupe...",
-        "Analyse image par image de l'opening...",
-        "Rechargement de la résolution du personnage principal...",
-        "En attente que l'auteur finisse le manga...",
-        "Soudoiement de l'épisode récap pour coopérer...",
-        "Décodage du discours du rival sur la force...",
-        "Consultation des archives akashiques...",
-        "Exécution de la scène obligatoire de source chaude...",
-        "Traduction du monologue du protagoniste...",
-        "Recompilation du passé tragique du héros...",
-        "Invocation de l'esprit du bandeau...",
-        "En attente de la sortie du groupe de fansub...",
-        "Surcharge du générateur de regard mortifiant...",
-        "Programmation de l'évaluation de la règle des trois épisodes...",
-        "Optimisation de la transition tsundere vers deredere...",
-        "Chargement de l'animation complète du coup légendaire...",
-        "Rembobinage du cliffhanger du dernier épisode...",
-        "Mise en mémoire tampon de la scène de retrouvailles inévitable...",
-        "Manifestation de votre prochain anime préféré...",
-        "Tirage au sort de la méthode de transport isekai...",
-        "Application de la puissance d'un seul cri déterminé...",
-        "Localisation du point faible du boss final...",
-        "Génération d'un passé étrangement pratique...",
-        "Alignement des étoiles pour votre prochaine obsession..."
+        "Consultation des vieux weebs…",
+        "Chargement du discours de l'amitié…",
+        "En attendant que le protagoniste arrête de crier…",
+        "Invocation de Truck-kun…",
+        "Comptage des couches d'armure narrative…",
+        "Mise en tampon de la puissance de l'amitié…",
+        "Téléchargement de 10 000 heures de remplissage…",
+        "Demande à Senpai de nous remarquer…",
+        "Calibration du détecteur de tsundere…",
+        "Chargement de la Spirit Bomb…",
+        "Entraînement dans une chambre gravitationnelle…",
+        "En attente de l'annonce de la prochaine saison…",
+        "Consultation du Tome sacré du manga…",
+        "Réorganisation de l'arc du tournoi…",
+        "Activation des yeux spéciaux du protagoniste…",
+        "Localisation de la compétence cachée surpuissante…",
+        "Négociation avec les dieux de l'isekai…",
+        "Déploiement du protocole de l'épisode à la plage…",
+        "Rassemblement des sept Dragon Balls…",
+        "Analyse de l'opening à la recherche d'indices…",
+        "Réveil en retard et rencontre avec un élève transféré…",
+        "Polissage de la puissance du nakama…",
+        "Déverrouillage de la forme interdite…",
+        "Recalcul du passé traumatique du protagoniste…",
+        "Déploiement de la diversion du maid café…",
+        "Forge d'un lien plus solide que l'acier…",
+        "Recrutement du dernier membre du groupe…",
+        "Analyse image par image de l'opening…",
+        "Rechargement de la détermination du personnage principal…",
+        "En attendant que l'auteur termine le manga…",
+        "Soudoiement de l'épisode récap pour qu'il coopère…",
+        "Décodage du discours du rival sur la force…",
+        "Consultation des archives akashiques…",
+        "Exécution de la scène obligatoire des sources chaudes…",
+        "Traduction du monologue du protagoniste…",
+        "Recompilation du passé tragique du héros…",
+        "Invocation de l'esprit du bandeau…",
+        "En attente de la sortie du fansub…",
+        "Surcadence du générateur de regards qui tuent…",
+        "Programmation de l'évaluation de la règle des trois épisodes…",
+        "Optimisation de la transition tsundere vers deredere…",
+        "Chargement de l'animation complète du coup légendaire…",
+        "Rembobinage du cliffhanger du dernier épisode…",
+        "Mise en mémoire tampon de la scène de retrouvailles inévitable…",
+        "Manifestation de votre prochain anime préféré…",
+        "Tirage au sort de la méthode de transport isekai…",
+        "Application de la puissance d'un seul cri déterminé…",
+        "Localisation du point faible du boss final…",
+        "Génération d'un passé étrangement pratique…",
+        "Alignement des étoiles pour votre prochaine obsession…"
       ]
     }
   },
@@ -1707,19 +1715,19 @@
   },
   "helpModal": {
     "mal": {
-      "title": "Comment obtenir votre Client ID & Secret MAL",
+      "title": "Comment obtenir votre Client ID et votre Client Secret pour MAL",
       "step1": "Allez sur myanimelist.net et connectez-vous à votre compte.",
-      "step2prefix": "Accédez à Compte → API (ou allez sur ",
+      "step2prefix": "Accédez à Compte → API (ou rendez-vous sur ",
       "step2suffix": ").",
-      "step3": "Cliquez sur \"Créer un ID\", remplissez les détails et sélectionnez le type d'application \"Web\".",
-      "step4": "Définissez l'URL de redirection sur l'URL suivante (copiez-la exactement) :",
+      "step3": "Cliquez sur \"Create ID\", remplissez les informations de l'application et choisissez \"Web\" comme type d'application.",
+      "step4": "Définissez l'URL de redirection de l'application sur l'URL suivante (copiez-la exactement) :",
       "step5": "Copiez le \"Client ID\" et le \"Client Secret\" affichés sur la page.",
-      "step6": "Collez le Client ID et le Client Secret dans les champs correspondants.",
+      "step6": "Collez le Client ID et le Client Secret dans les champs correspondants ci-dessous.",
       "copy": "Copier l'URL"
     },
     "sonarr": {
       "title": "Comment trouver votre clé API Sonarr",
-      "step1": "Ouvrez Sonarr dans votre navigateur et allez dans Paramètres → Général.",
+      "step1": "Ouvrez Sonarr dans votre navigateur et accédez à Paramètres → Général.",
       "step2": "Votre clé API se trouve dans la section Sécurité de cette page.",
       "step3": "Copiez la clé API et collez-la dans le champ ci-dessus."
     }
@@ -1732,9 +1740,9 @@
     "helpLabel": "Aide",
     "step1": {
       "title": "Bienvenue sur MetaAnime",
-      "desc": "Synchronisez Sonarr, Plex et MyAnimeList pour une gestion centralisée des animés.",
-      "feature1": "Synchronisez automatiquement votre liste MyAnimeList",
-      "feature2": "Suivez les animés dans Sonarr et Plex",
+      "desc": "Synchronisez Sonarr, Plex et MyAnimeList pour un suivi et une gestion centralisés de vos animes.",
+      "feature1": "Synchronisez automatiquement votre liste de suivi MyAnimeList",
+      "feature2": "Suivez vos animes dans Sonarr et Plex",
       "feature3": "Parcourez les sorties saisonnières et gérez votre bibliothèque",
       "getStarted": "Commencer",
       "languageLabel": "Langue",
@@ -1745,23 +1753,23 @@
     },
     "step2": {
       "title": "Mot de passe administrateur (Optionnel)",
-      "desc": "Protégez MetaAnime avec un mot de passe. Vous pouvez ignorer cette étape et l'activer plus tard.",
+      "desc": "Protégez MetaAnime avec un mot de passe. Vous pouvez ignorer cette étape et l'activer plus tard depuis les paramètres.",
       "enableLabel": "Activer le mot de passe administrateur",
       "passwordLabel": "Mot de passe",
-      "passwordPlaceholder": "Entrez un mot de passe fort",
+      "passwordPlaceholder": "Saisissez un mot de passe robuste",
       "confirmLabel": "Confirmer le mot de passe",
-      "confirmPlaceholder": "Ré-entrez votre mot de passe",
+      "confirmPlaceholder": "Saisissez à nouveau votre mot de passe",
       "passwordMismatch": "Les mots de passe ne correspondent pas."
     },
     "step3": {
       "title": "Connecter MyAnimeList",
       "desc": "MyAnimeList est requis pour utiliser MetaAnime. Connectez votre compte pour synchroniser votre liste.",
-      "clientIdHint": "Connecté via votre OAuth Client ID MAL.",
+      "clientIdHint": "Connecté via votre Client ID OAuth MAL.",
       "clientIdLabel": "OAuth Client ID",
       "clientIdPlaceholder": "Collez votre Client ID MAL ici",
       "clientSecretLabel": "OAuth Client Secret",
       "clientSecretPlaceholder": "Collez votre Client Secret MAL ici",
-      "callbackUrlLabel": "URL de redirection (à copier exactement dans MAL)",
+      "callbackUrlLabel": "URL de redirection de l'application (à copier à l'identique dans MAL)",
       "callbackUrlCopy": "Copier",
       "callbackUrlCopied": "Copié !",
       "connectBtn": "Connecter MyAnimeList",
@@ -1772,35 +1780,35 @@
     },
     "step4": {
       "title": "Connecter Plex (Optionnel)",
-      "desc": "Liez votre compte Plex pour voir quels animés sont dans votre bibliothèque.",
-      "disclaimer": "💡 Pour une meilleure expérience, créez une bibliothèque Plex dédiée aux animés.",
+      "desc": "Liez votre compte Plex pour voir quels animes sont présents dans votre bibliothèque et lesquels en manquent.",
+      "disclaimer": "💡 Pour un meilleur appariement, créez dans Plex une bibliothèque réservée aux animes.",
       "serverUrlLabel": "URL du serveur Plex",
-      "serverUrlPlaceholder": "ex. http://localhost:32400",
+      "serverUrlPlaceholder": "p. ex. http://localhost:32400",
       "connectBtn": "Se connecter avec Plex",
       "connected": "Plex connecté",
       "waiting": "En attente de l'autorisation Plex dans l'onglet ouvert…",
       "loadingLibraries": "Chargement des bibliothèques Plex…",
-      "selectLibraries": "Sélectionnez vos bibliothèques Animé"
+      "selectLibraries": "Sélectionnez vos bibliothèques d'animes"
     },
     "step5": {
       "title": "Connecter Sonarr (Optionnel)",
-      "desc": "Configurez Sonarr pour suivre et gérer les téléchargements de séries animées.",
-      "disclaimer": "💡 Il est recommandé de définir un tag Sonarr dédié aux animés pour filtrer correctement.",
+      "desc": "Configurez Sonarr pour suivre et gérer les téléchargements de vos séries d'animes.",
+      "disclaimer": "💡 La définition d'un tag Sonarr dédié aux animes est requise pour filtrer et identifier correctement les séries.",
       "localUrlLabel": "URL locale du serveur",
-      "localUrlPlaceholder": "ex. http://localhost:8989",
+      "localUrlPlaceholder": "p. ex. http://localhost:8989",
       "remoteUrlLabel": "URL distante",
-      "remoteUrlPlaceholder": "ex. https://sonarr.votredomaine.com",
+      "remoteUrlPlaceholder": "p. ex. https://sonarr.yourdomain.com",
       "apiKeyLabel": "Clé API",
       "apiKeyPlaceholder": "Votre clé API Sonarr",
-      "testAndLoadTags": "Tester la connexion & charger les tags",
-      "selectTags": "Sélectionnez vos tags Animé",
-      "connectBtn": "Connecter & Continuer",
+      "testAndLoadTags": "Tester la connexion et charger les tags",
+      "selectTags": "Sélectionnez vos tags d'animes",
+      "connectBtn": "Connecter et continuer",
       "newTagPlaceholder": "Nom du nouveau tag...",
-      "createTagBtn": "Créer le tag",
-      "defaultsTitle": "Paramètres par défaut",
+      "createTagBtn": "Créer un tag",
+      "defaultsTitle": "Paramètres par défaut pour l'ajout de séries",
       "rootFolderLabel": "Dossier racine",
       "qualityProfileLabel": "Profil de qualité",
-      "seasonFolderLabel": "Dossier par saison",
+      "seasonFolderLabel": "Utiliser un dossier par saison",
       "monitorLabel": "Surveiller",
       "monitor": {
         "all": "Tous les épisodes",
@@ -1815,16 +1823,16 @@
       }
     },
     "step6": {
-      "title": "Récapitulatif & Sync initiale",
+      "title": "Récapitulatif et synchronisation initiale",
       "desc": "Votre configuration est prête ! Lancez une première synchronisation pour remplir votre bibliothèque.",
-      "runSync": "Lancer la première sync",
+      "runSync": "Lancer la première synchronisation",
       "configured": "Configuré",
       "skipped": "Ignoré"
     },
     "step7": {
       "title": "C'est prêt !",
-      "desc": "MetaAnime est prêt à l'emploi. Votre bibliothèque sera synchronisée automatiquement.",
-      "hint": "Vous pouvez toujours modifier vos paramètres depuis la page Paramètres.",
+      "desc": "MetaAnime est prêt à l'emploi. Votre bibliothèque restera synchronisée automatiquement.",
+      "hint": "Vous pouvez modifier vos paramètres à tout moment depuis la page des paramètres.",
       "finish": "Aller au tableau de bord"
     }
   },
@@ -1832,64 +1840,64 @@
     "title": "MetaAnime",
     "subtitle": "Accès administrateur requis",
     "passwordLabel": "Mot de passe",
-    "passwordPlaceholder": "Entrez votre mot de passe",
+    "passwordPlaceholder": "Saisissez votre mot de passe",
     "showPassword": "Afficher le mot de passe",
     "hidePassword": "Masquer le mot de passe",
     "submit": "Se connecter",
     "errorGeneric": "Une erreur est survenue. Veuillez réessayer.",
     "forgotTitle": "Mot de passe oublié ?",
-    "forgotDesc": "Bloqué dehors ? Ouvrez votre appsettings.json ou les variables d'environnement Docker, définissez le flag ci-dessous sur true, et redémarrez le serveur MetaAnime pour réinitialiser le mot de passe.",
+    "forgotDesc": "Vous êtes bloqué ? Ouvrez votre appsettings.json ou les variables d'environnement Docker, définissez l'option ci-dessous sur true, puis redémarrez le serveur MetaAnime pour effacer le mot de passe et retrouver l'accès.",
     "wrongPasswordMessages": [
-      "Beau essai, hacker.",
+      "Beau essai, petit hacker.",
       "Vous avez tapé ça avec vos coudes ?",
-      "Accès refusé. La police de l'anime a été dépêchée.",
-      "Vos compétences au clavier sont aussi mauvaises que les CGI de bas étage.",
-      "Mot de passe incorrect. Regardez quelques épisodes de remplissage et réessayez.",
+      "Accès refusé. La police de l'anime a été dépêchée sur les lieux.",
+      "Votre vitesse de frappe est à la hauteur d'un anime en mauvaise 3D.",
+      "Mot de passe incorrect. Allez vous regarder quelques épisodes de remplissage, puis réessayez.",
       "Non. Essayez la Force. Ou simplement le bon mot de passe.",
-      "Mauvais mot de passe. Avez-vous essayé de regarder plus d'isekai pour l'inspiration ?",
-      "Ce n'est pas ça. Même le clone d'ombre de Naruto ne vous aiderait pas ici.",
-      "Accès refusé. Votre vitesse de frappe rivalise avec un paresseux regardant un épisode récapitulatif.",
-      "Ce mot de passe est aussi faux qu'un anime doublé.",
-      "Incorrect. Peut-être que le mot de passe est dans un autre château.",
-      "401 Non autorisé. Tout comme cet arc de remplissage que personne n'avait demandé.",
-      "Mauvais. Même le personnage secondaire le plus faible ferait mieux.",
-      "Avez-vous oublié votre mot de passe ou testez-vous simplement ma patience ?",
-      "Ce n'est pas le mot de passe. Comme les fois précédentes. Et celles d'avant.",
+      "Mauvais mot de passe. Avez-vous essayé de regarder plus d'isekai pour trouver l'inspiration ?",
+      "Ce n'est pas ça. Même le jutsu de clonage de Naruto ne vous serait d'aucun secours ici.",
+      "Accès refusé. Votre vitesse de frappe rivalise avec celle d'un paresseux regardant un épisode récapitulatif.",
+      "Ce mot de passe est aussi mauvais qu'un anime doublé.",
+      "Incorrect. Le mot de passe est peut-être dans un autre château.",
+      "401 non autorisé. Tout comme cet arc de remplissage que personne n'avait demandé.",
+      "Faux. Même le personnage secondaire le plus faible ferait mieux.",
+      "Vous avez oublié votre mot de passe ou vous testez simplement ma patience ?",
+      "Ce n'est pas le bon mot de passe. Comme la fois précédente. Et celle d'avant.",
       "Refusé. Le boss final rit de votre tentative.",
-      "Non. La clé de ce château nécessite un vrai effort.",
-      "Même Goku ne pourrait pas passer avec ce mauvais mot de passe.",
-      "Accès bloqué. Vous avez déclenché le drapeau de mort.",
+      "Non. La clé de ce château exige un vrai effort.",
+      "Même Goku ne pourrait pas se frayer un chemin avec un mot de passe aussi erroné.",
+      "Accès bloqué. Vous avez déclenché le death flag.",
       "Mauvaise réponse. Le conseil a délibéré et rejeté votre candidature.",
-      "Ce mot de passe a l'énergie d'un épisode de plage slice-of-life.",
+      "Ce mot de passe a l'énergie d'un épisode de plage dans une tranche de vie.",
       "Non. Retournez dans le donjon tutoriel.",
       "Accès refusé. Votre statistique INT est trop faible.",
-      "Ce n'est pas ça. Même l'arc d'entraînement ne vous a pas préparé à ça.",
-      "Mauvais mot de passe. Le pare-feu tsundere dit : 'C-c'est pas comme si je te laissais entrer !'",
-      "Incorrect. Votre tentative a été ajoutée à la compilation cringe.",
+      "Ce n'est pas ça. Même l'arc d'entraînement ne vous avait pas préparé à cela.",
+      "Mauvais mot de passe. Le pare-feu tsundere déclare : 'C-c'est pas comme si je vous laissais entrer, ou quoi que ce soit !'",
+      "Incorrect. Votre tentative a été ajoutée à la compilation de gêne.",
       "Refusé. Vous ne passerez pas — pas sans le bon mot de passe.",
       "Ce mot de passe a été exilé dans le royaume des ombres.",
-      "Erreur 401 : Votre mot de passe était plus faible qu'un méchant de remplissage.",
-      "Non. La protection fait son travail. Contrairement à vous.",
-      "Incorrect. Je m'attendais à mieux de votre part.",
+      "Erreur 401 : votre mot de passe était plus faible qu'un méchant de remplissage.",
+      "Non. La protection du mot de passe fait son travail. Contrairement à vous.",
+      "Incorrect. J'attendais mieux de quelqu'un de votre niveau.",
       "Accès révoqué. Le conseil étudiant a voté à l'unanimité contre vous.",
-      "Mauvais. Même le personnage comique finit par avoir raison.",
-      "Ce mot de passe a l'armure de l'intrigue d'un personnage qui meurt à l'épisode 1.",
-      "Accès refusé. Veuillez investir plus de points dans 'Frappe au clavier'.",
+      "Faux. Même le personnage comique finit par trouver la bonne réponse.",
+      "Ce mot de passe a la plot armor d'un personnage qui meurt dès l'épisode 1.",
+      "Accès refusé. Veuillez investir davantage de points de compétence dans 'Frappe au clavier'.",
       "Non. Ce n'est même pas ma forme finale — et vous échouez déjà.",
       "Mauvais mot de passe. Le protagoniste ne ferait jamais cette erreur.",
-      "Refusé. Vous avez débloqué la route 'Mauvaise fin'.",
-      "Incorrect. Consultez peut-être le sage mentor pour des conseils.",
+      "Refusé. Vous avez débloqué la voie du 'Bad End'.",
+      "Incorrect. Consultez peut-être le sage mentor pour vous guider.",
       "Ce mot de passe a déclenché un échec critique.",
       "Accès refusé. Votre tentative a l'énergie d'un épisode récapitulatif.",
-      "Mauvais. La fée des mots de passe pleure pour vous.",
-      "Non. Zéro sur dix. Ne voudrais pas authentifier à nouveau.",
+      "Faux. La fée des mots de passe pleure pour vous.",
+      "Non. Zéro sur dix. Je ne vous authentifierai pas une deuxième fois.",
       "Refusé. Cette zone est gardée par un mot de passe de rang S.",
       "Incorrect. Le sceau de ce donjon reste intact.",
-      "Ce mot de passe a été propulsé dans le multivers.",
-      "Mauvais. Même le protagoniste du harem comprend plus vite.",
-      "Accès refusé. Votre chakra de mot de passe est insuffisant.",
-      "Non. Les boules de dragon ne peuvent pas vous aider maintenant.",
-      "Incorrect. L'univers lui-même refuse votre tentative."
+      "Ce mot de passe a été balancé dans le multivers.",
+      "Faux. Même le protagoniste d'un harem comprend plus vite.",
+      "Accès refusé. Le chakra de votre mot de passe est insuffisant.",
+      "Non. Les Dragon Balls ne peuvent rien pour vous, maintenant.",
+      "Accès refusé. Le chakra de votre mot de passe a été scellé."
     ]
   },
   "library": {
@@ -1898,24 +1906,24 @@
     "retry": "Réessayer",
     "loading": "Analyse de la bibliothèque en cours…",
     "desktopOnly": {
-      "title": "Version bureau uniquement",
-      "message": "Cette fonctionnalité nécessite un navigateur de bureau pour une expérience optimale."
+      "title": "Ordinateur uniquement",
+      "message": "Cette fonctionnalité nécessite un navigateur sur ordinateur pour une expérience optimale."
     },
     "sonarrDisabled": {
       "title": "Sonarr non connecté",
-      "message": "Activez Sonarr dans les paramètres pour utiliser l'analyse de bibliothèque."
+      "message": "Activez Sonarr dans les paramètres pour utiliser l'analyse de la bibliothèque."
     },
     "pills": {
       "totalSpace": "Espace total utilisé",
-      "totalFiles": "Fichiers totaux",
+      "totalFiles": "Total des fichiers",
       "seriesWithMissingFiles": "Séries avec fichiers manquants",
-      "missingFilesHint": "Cliquer pour filtrer les séries sans fichiers"
+      "missingFilesHint": "Cliquez pour filtrer les séries sans fichiers"
     },
     "charts": {
-      "videoCodec": "Distribution des codecs vidéo",
-      "resolution": "Distribution des résolutions",
-      "audioCodec": "Distribution des codecs audio",
-      "topHogs": "Plus gros consommateurs"
+      "videoCodec": "Répartition des codecs vidéo",
+      "resolution": "Répartition des résolutions",
+      "audioCodec": "Répartition des codecs audio",
+      "topHogs": "Plus gros consommateurs d'espace"
     },
     "filters": {
       "searchTitle": "Rechercher par titre…",
@@ -1925,9 +1933,9 @@
       "avgEpSize": "Taille moy. épisode",
       "gibPerHour": "GiB/h",
       "status": "Statut",
-      "downloadPct": "Téléchargement %",
+      "downloadPct": "Téléchargement (%)",
       "bitDepth": "Profondeur",
-      "all": "Tout",
+      "all": "Tous",
       "ended": "Terminé",
       "continuing": "En cours",
       "partial": "Partiel",
@@ -1954,11 +1962,10 @@
     },
     "detail": {
       "ended": "Terminé",
-      "airing": "En cours",
+      "airing": "En diffusion",
       "copyPath": "Copier le chemin",
       "copied": "Copié !",
       "openSonarr": "Ouvrir dans Sonarr",
-      "openAnime": "Détails de l'animé",
       "totalSize": "Taille totale",
       "avgEpSize": "Taille moy. ép.",
       "avgGibPerHour": "GiB/h moy.",
@@ -1977,21 +1984,22 @@
       "channels": "Ch",
       "duration": "Durée",
       "gibPerHour": "GiB/h",
-      "estimatedDurationNote": "Durée indisponible — 23 min supposées",
+      "estimatedDurationNote": "Durée indisponible — 23 min par défaut",
       "download": "Téléch.",
+      "openAnime": "Détails de l'anime",
       "sortAsc": "Croissant",
       "sortDesc": "Décroissant"
     }
   },
   "seiyuuNexus": {
-    "title": "Nexus Seiyuu",
-    "button": "Nexus Seiyuu",
+    "title": "Seiyuu Nexus",
+    "button": "Seiyuu Nexus",
     "loading": "Construction du nexus…",
-    "empty": "Aucune donnée de distribution disponible. Lancez une synchronisation pour remplir.",
-    "error": "Échec du chargement du nexus. Veuillez réessayer.",
-    "hint": "Cliquez sur une carte de doubleur pour voir son profil.",
+    "empty": "Aucune donnée de casting disponible. Lancez une synchronisation pour la remplir.",
+    "error": "Impossible de charger les données du nexus. Veuillez réessayer.",
+    "hint": "Cliquez sur la carte d'un doubleur pour afficher son profil.",
     "lastUpdated": "Dernière mise à jour",
-    "close": "Fermer le Nexus Seiyuu",
+    "close": "Fermer Seiyuu Nexus",
     "chars": "personnages",
     "vas": "doubleurs",
     "filter": {
