@@ -1,22 +1,28 @@
 <div class="la-charts">
   <!-- Card 1 — Codec & Bitrate Distribution (donut + library stats) -->
-  <div class="la-chart-card">
-    <div class="la-chart-card__head">
-      <h3 class="la-chart-card__title">{{ 'libraryIntel.buddy.codecTitle' | translate }}</h3>
-      <div class="la-toggle" role="group">
-        <button type="button"
-                class="la-toggle__btn"
-                [class.la-toggle__btn--active]="donutMode() === 'count'"
-                (click)="setDonutMode('count')">
-          {{ 'libraryIntel.buddy.byCount' | translate }}
-        </button>
-        <button type="button"
-                class="la-toggle__btn"
-                [class.la-toggle__btn--active]="donutMode() === 'size'"
-                (click)="setDonutMode('size')">
-          {{ 'libraryIntel.buddy.bySize' | translate }}
-        </button>
-      </div>
+  <div class="la-chart-card la-cd">
+    <div class="la-cd__head">
+      <svg class="la-cd__head-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>
+      </svg>
+      <h3 class="la-cd__head-title">{{ 'libraryIntel.buddy.codecTitle' | translate }}</h3>
+    </div>
+
+    <!-- View switcher — full-width dark segmented control (mirrors the batch SORT control) -->
+    <div class="la-seg la-seg--2" role="group">
+      <button type="button"
+              class="la-seg__btn"
+              [class.la-seg__btn--active]="donutMode() === 'count'"
+              (click)="setDonutMode('count')">
+        {{ 'libraryIntel.buddy.byCount' | translate }}
+      </button>
+      <button type="button"
+              class="la-seg__btn"
+              [class.la-seg__btn--active]="donutMode() === 'size'"
+              (click)="setDonutMode('size')">
+        {{ 'libraryIntel.buddy.bySize' | translate }}
+      </button>
     </div>
 
     @if (isLoading()) {
@@ -26,29 +32,45 @@
     } @else if (!hasData()) {
       <p class="la-nodata">{{ 'libraryIntel.buddy.noData' | translate }}</p>
     } @else {
-      <div class="la-chart-card__body">
-        <canvas #codecCanvas></canvas>
+      <div class="la-cd__body">
+        <div class="la-cd__donut">
+          <canvas #codecCanvas></canvas>
+          <div class="la-cd__center" aria-hidden="true">
+            <span class="la-cd__center-value">{{ donutDominant().pct }}</span>
+            <span class="la-cd__center-label">{{ donutDominant().label }}</span>
+          </div>
+        </div>
+        <ul class="la-cd__legend">
+          @for (row of donutLegend(); track row.label) {
+            <li class="la-cd__legend-row">
+              <span class="la-cd__legend-dot" [style.background]="row.color"></span>
+              <span class="la-cd__legend-name">{{ row.label }}</span>
+              <span class="la-cd__legend-count">{{ formatCount(row.count) }}</span>
+              <span class="la-cd__legend-pct">{{ row.pct }}</span>
+            </li>
+          }
+        </ul>
       </div>
-      <div class="la-metrics">
-        <div class="la-metric">
-          <span class="la-metric__value">
+      <div class="la-cd__summary">
+        <div class="la-cd__summary-cell">
+          <span class="la-cd__summary-label">{{ 'libraryIntel.buddy.avgGibPerHour' | translate }}</span>
+          <span class="la-cd__summary-value">
             @if (isAnalyticsLoading()) {
               <span class="la-skel la-skel--metric"></span>
             } @else {
               {{ avgGibPerHour().toFixed(2) }}
             }
           </span>
-          <span class="la-metric__label">{{ 'libraryIntel.buddy.avgGibPerHour' | translate }}</span>
         </div>
-        <div class="la-metric">
-          <span class="la-metric__value">
+        <div class="la-cd__summary-cell">
+          <span class="la-cd__summary-label">{{ 'libraryIntel.buddy.footprint' | translate }}</span>
+          <span class="la-cd__summary-value">
             @if (isAnalyticsLoading()) {
               <span class="la-skel la-skel--metric"></span>
             } @else {
               {{ formatSize(footprintBytes()) }}
             }
           </span>
-          <span class="la-metric__label">{{ 'libraryIntel.buddy.footprint' | translate }}</span>
         </div>
       </div>
     }
@@ -70,29 +92,35 @@
   </div>
 
   <!-- Card 2 — Biggest Storage Hogs & Bloat Leaderboard -->
-  <div class="la-chart-card">
-    <div class="la-chart-card__head">
-      <h3 class="la-chart-card__title">{{ 'libraryIntel.buddy.hogsTitle' | translate }}</h3>
-      <div class="la-toggle" role="group">
-        <button type="button"
-                class="la-toggle__btn"
-                [class.la-toggle__btn--active]="leaderboardMode() === 'totalGb'"
-                (click)="setLeaderboardMode('totalGb')">
-          {{ 'libraryIntel.buddy.topTotal' | translate }}
-        </button>
-        <button type="button"
-                class="la-toggle__btn"
-                [class.la-toggle__btn--active]="leaderboardMode() === 'bloatGibPerHour'"
-                (click)="setLeaderboardMode('bloatGibPerHour')">
-          {{ 'libraryIntel.buddy.topBloat' | translate }}
-        </button>
-        <button type="button"
-                class="la-toggle__btn"
-                [class.la-toggle__btn--active]="leaderboardMode() === 'reclaimable'"
-                (click)="setLeaderboardMode('reclaimable')">
-          {{ 'libraryIntel.buddy.topReclaimable' | translate }}
-        </button>
-      </div>
+  <div class="la-chart-card la-hogs">
+    <div class="la-cd__head">
+      <svg class="la-cd__head-ico la-cd__head-ico--amber" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+      </svg>
+      <h3 class="la-cd__head-title">{{ 'libraryIntel.buddy.hogsTitle' | translate }}</h3>
+    </div>
+
+    <!-- Leaderboard mode — full-width 3-way dark segmented control -->
+    <div class="la-seg la-seg--3" role="group">
+      <button type="button"
+              class="la-seg__btn"
+              [class.la-seg__btn--active]="leaderboardMode() === 'totalGb'"
+              (click)="setLeaderboardMode('totalGb')">
+        {{ 'libraryIntel.buddy.topTotalShort' | translate }}
+      </button>
+      <button type="button"
+              class="la-seg__btn"
+              [class.la-seg__btn--active]="leaderboardMode() === 'bloatGibPerHour'"
+              (click)="setLeaderboardMode('bloatGibPerHour')">
+        {{ 'libraryIntel.buddy.topBloatShort' | translate }}
+      </button>
+      <button type="button"
+              class="la-seg__btn"
+              [class.la-seg__btn--active]="leaderboardMode() === 'reclaimable'"
+              (click)="setLeaderboardMode('reclaimable')">
+        {{ 'libraryIntel.buddy.topReclaimShort' | translate }}
+      </button>
     </div>
 
     @if (isLoading()) {
@@ -103,14 +131,12 @@
       <p class="la-nodata">{{ 'libraryIntel.buddy.noData' | translate }}</p>
     } @else {
       <div class="la-lb">
-        <div class="la-lb__head">
-          <span class="la-lb__rank">{{ 'libraryIntel.buddy.rank' | translate }}</span>
-        </div>
         @for (entry of leaderboard(); track entry.sonarrId) {
           <button type="button"
                   class="la-lb__row"
                   [attr.aria-label]="entry.title"
                   (click)="openSeries.emit(entry.sonarrId)">
+            <span class="la-lb__bar" [style.width.%]="lbBarPercent(entry)"></span>
             <span class="la-lb__rank">{{ entry.rank }}</span>
             <span class="la-lb__poster"
                   (mouseenter)="onPosterEnter($event, entry)"
@@ -131,27 +157,58 @@
             <span class="la-lb__main">
               <span class="la-lb__title">{{ entry.title }}</span>
               <span class="la-lb__badges">
-                <span [class]="codecBadgeClass(entry.codecBadge)">{{ entry.codecBadge }}</span>
+                @if (isMixedCodec(entry.codecBadge)) {
+                  <span [class]="codecBadgeClass(entry.codecBadge)"
+                        [attr.data-tip]="entry.codecBadge">{{ 'libraryIntel.buddy.codecMixed' | translate: { count: codecPartCount(entry.codecBadge) } }}</span>
+                } @else {
+                  <span [class]="codecBadgeClass(entry.codecBadge)">{{ entry.codecBadge }}</span>
+                }
                 @if (isAnalyticsLoading()) {
                   <span class="la-skel la-skel--badge"></span>
                 } @else {
-                  <span [class]="gibBadgeClass(entry.gibPerHour)">{{ entry.gibPerHour.toFixed(2) }} GiB/h</span>
+                  <!-- Complementary metric: never repeat what the right column shows. -->
+                  @if (leaderboardMode() !== 'totalGb') {
+                    <span class="la-badge la-badge--muted">{{ formatSize(entry.totalSizeBytes) }}</span>
+                  }
+                  @if (leaderboardMode() !== 'bloatGibPerHour') {
+                    <span [class]="gibBadgeClass(entry.gibPerHour)">{{ entry.gibPerHour.toFixed(2) }} GiB/h</span>
+                  }
                 }
               </span>
             </span>
-            <span class="la-lb__size">
+            <span class="la-lb__size" [class.la-lb__size--savings]="leaderboardMode() === 'reclaimable'">
               @if (isAnalyticsLoading()) {
                 <span class="la-skel la-skel--size"></span>
               } @else {
-                @if (leaderboardMode() === 'reclaimable') {
-                  <span class="la-lb__size-sub">{{ formatSize(entry.totalSizeBytes) }}</span>
-                }
                 {{ lbValue(entry) }}
               }
             </span>
-            <span class="la-lb__bar" [style.width.%]="lbBarPercent(entry)"></span>
           </button>
         }
+      </div>
+
+      <!-- Bottom summary bar: footprint + reclaimable of the displayed rows. -->
+      <div class="la-cd__summary la-lb__summary">
+        <div class="la-cd__summary-cell">
+          <span class="la-cd__summary-label">{{ 'libraryIntel.buddy.topFootprint' | translate }}</span>
+          <span class="la-cd__summary-value">
+            @if (isAnalyticsLoading()) {
+              <span class="la-skel la-skel--metric"></span>
+            } @else {
+              {{ formatSize(leaderboardFootprint()) }}
+            }
+          </span>
+        </div>
+        <div class="la-cd__summary-cell">
+          <span class="la-cd__summary-label">{{ 'libraryIntel.buddy.estReclaimable' | translate }}</span>
+          <span class="la-cd__summary-value la-lb__summary-savings">
+            @if (isAnalyticsLoading()) {
+              <span class="la-skel la-skel--metric"></span>
+            } @else {
+              ~{{ formatSize(leaderboardReclaimable()) }}
+            }
+          </span>
+        </div>
       </div>
     }
 

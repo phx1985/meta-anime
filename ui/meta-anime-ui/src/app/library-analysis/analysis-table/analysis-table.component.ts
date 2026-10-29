@@ -173,7 +173,7 @@ export class AnalysisTableComponent {
       });
     }
 
-    // ⚡ Split Codecs Only — series with more than one distinct video codec.
+    // Split Codecs Only — series with more than one distinct video codec.
     if (f.splitCodecsOnly) {
       result = result.filter(r => isSplitCodec(r));
     }
@@ -402,6 +402,17 @@ export class AnalysisTableComponent {
 
   formatSize(bytes: number | undefined): string {
     return formatTableSize(bytes, key => this.translateService.instant(key));
+  }
+
+  /**
+   * 'libraryIntel.matchMode.splitOnly' ships with a leading emoji glyph — the design
+   * replaces it with an inline SVG bolt, so strip decorative glyphs from the label.
+   */
+  splitOnlyLabel(): string {
+    return this.translateService
+      .instant('libraryIntel.matchMode.splitOnly')
+      .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '')
+      .trim();
   }
 
   // ── Audio codec pills (tone-coded, <5% entries folded into a +N badge) ──────

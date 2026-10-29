@@ -98,14 +98,15 @@ export interface HandBrakeQueueFile {
   durationSeconds: number;
   /** Raw resolution label ('1920x1080', '1080p', …). */
   resolution: string;
+  /** Display codec from the row data ('H264', 'HEVC', …) → Title.VideoCodec. */
+  videoCodec?: string;
+  /** Bit depth from the row data → Title.Color.BitDepth. */
+  bitDepth?: number;
 }
 
 /** '.h264.mkv' or '.mkv' → '.h265.mkv'; other extensions fall back to a swap. */
-export function destFileNameOf(sourceFileName: string): string {
-  // Canonical output: '<ep-name>.nvenc.h265.mkv'. Drop the container extension,
-  // then every trailing video-codec marker ('.h264', '-x265', '[AV1]', 'nvenc',
-  // lone '10bit'…) — possibly several — so old codec tags never leak into the
-  // destination name. Idempotent: re-exporting an output yields the same name.
+/** Episode name cleaned of container extension and codec markers ('Bleach S01E01'). */
+export function cleanEpisodeNameOf(sourceFileName: string): string {
   const codecToken =
     /[\s._-]*[([]?(?:(?:x264|h264|x265|h265|hevc|avc|av1|mpeg2|mpeg4|vp9|nvenc)(?:[\s._-]?(?:10|8)[\s._-]?bit)?|(?:10|8)[\s._-]?bit)[)\]]?\s*$/i;
   let clean = sourceFileName.replace(/\.(mkv|mp4|avi|m4v|mov|ts)$/i, '');
@@ -114,7 +115,13 @@ export function destFileNameOf(sourceFileName: string): string {
     prev = clean;
     clean = clean.replace(codecToken, '');
   } while (clean !== prev);
-  return `${clean}.nvenc.h265.mkv`;
+  return clean;
+}
+
+export function destFileNameOf(sourceFileName: string): string {
+  // Canonical output: '<ep-name>.nvenc.h265.mkv'. Idempotent: re-exporting an
+  // output yields the same name.
+  return `${cleanEpisodeNameOf(sourceFileName)}.nvenc.h265.mkv`;
 }
 
 /** Destination directory per the configured mode. */
@@ -201,26 +208,25 @@ export function buildHandBrakeQueue(
     const destFile = destFileNameOf(file.sourceFileName);
     const outDir = handBrakeDestDirOf(sourcePath, destDir, destMode);
     const destFull = `${outDir}/${destFile}`;
-    const baseName = file.sourceFileName.replace(/\.[^./\\]+$/, '');
+    const baseName = cleanEpisodeNameOf(file.sourceFileName);
     const now = new Date().toISOString();
     const geo = geometryOf(file.resolution);
     const durationObj = durationPartsOf(file.durationSeconds);
-    const dummyChapter = [{ Duration: durationObj, Name: '' }];
+    // Time range over the whole episode in 90 kHz ticks, +5s safety buffer so
+    // millisecond rounding never clips the last frame. (A chapter range stops
+    // at Chapter 1 — the ~45s cold open — on any MKV that has chapters.)
+    const endTicks = Math.ceil((file.durationSeconds + 5) * 90000);
 
     // ── Job ──────────────────────────────────────────────────────────────
     job.SequenceID = index;
     job.Source.Path = sourcePath;
     // Standalone video files (MKV/MP4) ALWAYS use Title 1 — never the index.
     job.Source.Title = 1;
-    // HandBrake null-pointers if Range is absent — restore it as a 1-to-1
-    // chapter range (whole file: no chapter slicing, no End>chapters error).
-    job.Source.Range = { Start: 1, End: 1, Type: 'chapter' };
+    job.Source.Range = { Type: 'time', Start: 0, End: endTicks };
     job.Destination.File = destFull;
-    // Never leave ChapterList empty: with uiSettings.end_point set, the GTK UI
-    // indexes chapter 0 of an empty list and segfaults. One dummy chapter that
-    // spans the whole file satisfies the index without slicing anything.
+    // Keep the MKV's own chapters: never fake a chapter list here.
     job.Destination.ChapterMarkers = false;
-    job.Destination.ChapterList = dummyChapter;
+    job.Destination.ChapterList = [];
     job.Metadata.Name = baseName;
     job.Metadata.CreationTime = now;
     job.Video.Options = options?.videoOptions ?? HANDBRAKE_VIDEO_OPTIONS;
@@ -228,10 +234,13 @@ export function buildHandBrakeQueue(
 
     // ── Title ────────────────────────────────────────────────────────────
     title.Path = sourcePath;
-    title.ChapterList = dummyChapter;
+    title.ChapterList = [];
     title.Name = baseName;
-    title.Index = index + 1;
+    title.Index = 1;
     title.Metadata.Name = baseName;
+    // Codec + bit depth from the file's row data when known (template fallback).
+    title.VideoCodec = codecSlugOf(file.videoCodec) ?? title.VideoCodec;
+    if (file.bitDepth) title.Color.BitDepth = file.bitDepth;
     title.Metadata.CreationTime = now;
     title.Duration = durationObj;
     title.Geometry = {
@@ -249,16 +258,30 @@ export function buildHandBrakeQueue(
     ui.dest_file = destFile;
     ui.source_label = baseName;
     ui.volume = baseName;
-    ui.title = String(index + 1);
-    // Clamp the point-to-point range to the single dummy chapter.
-    ui.PtoPType = 'chapter';
-    ui.start_point = 1;
-    ui.end_point = 1;
+    ui.title = 1;
+    // Mirror the Job's time range in the UI state.
+    ui.PtoPType = 'time';
+    ui.start_point = 0;
+    ui.end_point = Math.ceil(file.durationSeconds + 5);
+    if ('ChapterMarkers' in ui) ui.ChapterMarkers = false;
+    if ('MetaName' in ui) ui.MetaName = baseName;
+    else if ('MetaName' in job.Metadata) job.Metadata.MetaName = baseName;
     ui.PresetName = name;
     ui.PresetFullName = `/My Presets/${name}`;
 
     return entry;
   });
+}
+
+/** Display codec ('H264', 'HEVC', …) → HandBrake title slug ('h264', 'hevc', …). */
+function codecSlugOf(codec?: string): string | undefined {
+  if (!codec) return undefined;
+  const slug: Record<string, string> = {
+    H264: 'h264', X264: 'h264', AVC: 'h264',
+    HEVC: 'hevc', H265: 'hevc', X265: 'hevc',
+    AV1: 'av1', MPEG2: 'mpeg2', MPEG4: 'mpeg4', VP9: 'vp9',
+  };
+  return slug[codec.trim().toUpperCase()];
 }
 
 /** Serializes the queue exactly as HandBrake expects to import it. */

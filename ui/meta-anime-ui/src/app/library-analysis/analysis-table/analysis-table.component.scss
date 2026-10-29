@@ -1,37 +1,76 @@
-// ─── Analysis Table: Filter Bar ──────────────────────────────────────────────
+// ─── Analysis Table — Filter Toolbar Card + Data Table (Linear/Raycast dark) ──
+// Surfaces derive from the theme text color at low alpha
+// (color-mix(in srgb, var(--text-primary) N%, transparent)) so no light/dark
+// palette is ever hardcoded. Semantic hues (amber toggle, red clear button,
+// codec tones) stay literal — same convention as the finished .la-oppo*/.la-batch*
+// reference panels in analytics-charts.component.scss.
+
+// ─── Filter Toolbar Card ────────────────────────────────────────────────────
 
 .la-filter-bar {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
-  padding: 0.75rem 0;
-  margin-bottom: 0.25rem;
+  gap: 16px;           // space-y-4
+  padding: 16px;       // p-4
+  margin-bottom: 16px; // mb-4
+  border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+  border-radius: 12px; // rounded-xl
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent); // bg-zinc-900/40
 
   // Two aligned rows — grid tracks (not flex) keep every label/controls band on
-  // the same line even when the video cell grows with SPLIT / CODEC MATCH controls.
+  // the same line even when the video cell grows with SPLIT CODECS ONLY /
+  // CODEC MATCH controls.
   &__row {
     display: grid;
     align-items: start;
-    gap: 0.55rem 1rem;
 
     &--pillsets {
-      grid-template-columns: minmax(170px, 1.1fr) minmax(240px, 2.2fr) minmax(150px, 1.5fr) minmax(150px, 1.5fr);
+      // Wider AUDIO column (6 pills must stay on one line) + tighter search col.
+      grid-template-columns: minmax(150px, 1fr) minmax(220px, 2fr) minmax(300px, 2.6fr) minmax(230px, 1.8fr);
+      gap: 10px 12px;
     }
 
+    // Row 2 — the dropdown selects: 2 / 3 / 6 columns as the viewport grows.
     &--selects {
-      grid-template-columns: repeat(6, minmax(112px, 1fr)) auto;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;         // gap-3
+      padding-top: 12px; // pt-3
+      border-top: 1px solid color-mix(in srgb, var(--text-primary) 5%, transparent); // border-white/5
     }
+  }
+}
+
+@media (min-width: 768px) {
+  .la-filter-bar__row--selects {
+    grid-template-columns: repeat(3, minmax(0, 1fr)); // md:grid-cols-3
+  }
+}
+
+@media (min-width: 1024px) {
+  .la-filter-bar__row--selects {
+    grid-template-columns: repeat(6, minmax(0, 1fr)); // lg:grid-cols-6
   }
 }
 
 .la-filter {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 6px;
+  min-width: 0;
 
   &--search {
-    min-width: 0;
     max-width: 320px;
+  }
+
+  // Micro-label — sits on the same baseline band as VIDEO CODEC / AUDIO CODEC /
+  // RESOLUTION labels (text-[11px] font-semibold uppercase tracking-wider).
+  &__label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted); // text-zinc-400
+    white-space: nowrap;
   }
 
   &__search-wrap {
@@ -40,107 +79,130 @@
 
   &__search-icon {
     position: absolute;
-    left: 0.65rem;
+    left: 10px;
     top: 50%;
     transform: translateY(-50%);
     color: var(--text-muted);
     pointer-events: none;
   }
 
-  &__label {
-    font-size: 0.68rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-    white-space: nowrap; // single-line label band keeps row controls aligned
-  }
-
   &__input {
     width: 100%;
-    height: 2rem;
-    padding: 0 0.6rem 0 2rem;
-    border: 1px solid var(--card-border);
-    border-radius: 6px;
-    background: var(--bg-secondary);
+    height: 34px;
+    padding: 0 10px 0 32px;
+    border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--text-primary) 3.5%, transparent);
     color: var(--text-primary);
-    font-size: 0.82rem;
+    font-size: 12px;
     transition: border-color 0.15s;
 
-    &::placeholder { color: var(--text-muted); }
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--text-primary) 20%, transparent);
+    }
+
     &:focus {
       outline: none;
-      border-color: var(--accent-primary);
-      box-shadow: 0 0 0 2px rgba(108, 99, 255, 0.15);
+      border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
     }
   }
 
+  // Tight pill rows (gap-1.5)
   &__pills {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.3rem;
+    align-items: center;
+    gap: 4px;
   }
 
   &__pill {
     display: inline-flex;
     align-items: center;
-    padding: 0.2rem 0.55rem;
-    border: 1px solid var(--card-border);
-    border-radius: 4px;
-    background: transparent;
-    color: var(--text-secondary);
-    font-size: 0.7rem;
-    font-weight: 600;
+    gap: 6px;
+    padding: 5px 8px;   // tightened so 6 audio pills fit one line
+    border: 1px solid color-mix(in srgb, var(--text-primary) 5%, transparent); // border-white/5
+    border-radius: 6px;  // rounded-md
+    background: color-mix(in srgb, var(--text-primary) 3%, transparent); // bg-zinc-950/60
+    color: var(--text-muted); // text-zinc-400
+    font-size: 12px;     // text-xs
+    font-weight: 500;    // font-medium
+    line-height: 1;
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.15s, color 0.15s, border-color 0.15s;
-    text-transform: uppercase;
 
     &:hover {
-      border-color: var(--accent-primary);
-      color: var(--accent-primary);
+      color: var(--text-primary); // hover:text-zinc-200
+      border-color: color-mix(in srgb, var(--text-primary) 15%, transparent); // hover:border-white/15
     }
 
+    // Subtle accent active state — never a solid indigo fill (that is reserved
+    // for the Export HandBrake Queue CTA).
     &--active {
-      background: rgba(108, 99, 255, 0.15);
-      border-color: var(--accent-primary);
+      background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
+      border-color: color-mix(in srgb, var(--accent-primary) 40%, transparent);
       color: var(--accent-primary);
-      font-weight: 700;
+      font-weight: 600;
+
+      &:hover {
+        color: var(--accent-primary);
+        border-color: color-mix(in srgb, var(--accent-primary) 55%, transparent);
+      }
+    }
+
+    // SPLIT CODECS ONLY — amber toggle carrying the inline bolt SVG.
+    &--split {
+      border-color: rgba(245, 158, 11, 0.3); // border-amber-500/30
+      background: rgba(245, 158, 11, 0.1);   // bg-amber-500/10
+      color: #fcd34d;                        // text-amber-300
+
+      &:hover {
+        background: rgba(245, 158, 11, 0.2); // hover:bg-amber-500/20
+        border-color: rgba(245, 158, 11, 0.45);
+        color: #fcd34d;
+      }
+    }
+
+    &--split.la-filter__pill--active {
+      background: rgba(245, 158, 11, 0.18);
+      border-color: rgba(245, 158, 11, 0.5);
+      color: #fbbf24;
+
+      &:hover {
+        background: rgba(245, 158, 11, 0.24);
+        border-color: rgba(245, 158, 11, 0.55);
+        color: #fbbf24;
+      }
     }
   }
 
-  &__select {
-    height: 2rem;
-    padding: 0 0.5rem;
-    border: 1px solid var(--card-border);
-    border-radius: 6px;
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: border-color 0.15s;
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent-primary);
-    }
+  // Lucide-style bolt (replaces the emoji glyph in the i18n string)
+  &__bolt {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
   }
 
   &__clear {
+    grid-column: 1 / -1;
+    justify-self: end;
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    padding: 0.35rem 0.65rem;
+    gap: 6px;
+    padding: 7px 12px;
     border: 1px solid rgba(239, 68, 68, 0.3);
-    border-radius: 6px;
+    border-radius: 8px;
     background: rgba(239, 68, 68, 0.08);
     color: #ef4444;
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.15s, border-color 0.15s;
-    align-self: end;
 
     &:hover {
       background: rgba(239, 68, 68, 0.15);
@@ -152,73 +214,150 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 18px;
+    min-width: 18px;
     height: 18px;
-    border-radius: 50%;
+    padding: 0 5px;
+    border-radius: 999px;
     background: rgba(239, 68, 68, 0.2);
-    font-size: 0.65rem;
+    font-size: 10px;
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
   }
 }
 
-// ─── Table toolbar ───────────────────────────────────────────────────────────
+// ─── Custom-styled native selects (appearance-none + chevron overlay) ────────
+// The OS dropdown trigger is unthemeable and has covered card content before, so
+// appearance is stripped and a Lucide ChevronDown overlay is drawn instead — the
+// native <select> is retained purely as the accessible mechanism.
+
+.la-select-wrap {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+}
+
+.la-select-chevron {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: color-mix(in srgb, var(--text-muted) 75%, transparent); // text-zinc-500
+  pointer-events: none;
+}
+
+.la-select-wrap--sm .la-select-chevron {
+  right: 8px;
+  width: 12px;
+  height: 12px;
+}
+
+.la-filter__select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  padding: 8px 32px 8px 12px; // px-3 py-2 + chevron room
+  border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent); // border-white/10
+  border-radius: 8px; // rounded-lg
+  background: color-mix(in srgb, var(--text-primary) 3.5%, transparent); // bg-zinc-950/70
+  color: var(--text-primary); // text-zinc-200
+  font-size: 12px; // text-xs
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--text-primary) 20%, transparent); // hover:border-white/20
+  }
+
+  &:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent); // focus:border-indigo-500/50
+  }
+}
+
+// ─── Table Header Bar (attached to the table container) ─────────────────────
 
 .la-table-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.4rem 0.25rem 0.6rem;
-  gap: 1rem;
+  gap: 16px;
+  padding: 10px 16px; // px-4 py-2.5
+  border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+  border-bottom: 0; // border-b-0 — the table container draws the divider
+  border-radius: 12px 12px 0 0; // rounded-t-xl
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent); // bg-zinc-900/60
 
+  // Series count — clean pill badge
   &__count {
-    font-size: 0.8rem;
-    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 12px;
+    border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
   }
 
   &__controls {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 12px;
   }
 
   &__rpp {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
   }
 }
 
 .la-rpp-label {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
 .la-rpp-select {
-  height: 1.875rem;
-  padding: 0 0.5rem;
-  border: 1px solid var(--card-border);
-  border-radius: 0.375rem;
-  background: var(--bg-secondary);
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 5px 28px 5px 10px;
+  border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--text-primary) 3.5%, transparent);
   color: var(--text-primary);
-  font-size: 0.8rem;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
   transition: border-color 0.15s;
 
+  &:hover {
+    border-color: color-mix(in srgb, var(--text-primary) 20%, transparent);
+  }
+
   &:focus {
     outline: none;
-    border-color: var(--accent-primary);
+    border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
   }
 }
 
-// ─── Table ───────────────────────────────────────────────────────────────────
+// ─── Table ─────────────────────────────────────────────────────────────────
 
 .la-table-wrap {
   width: 100%;
-  overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid var(--card-border);
-  background: var(--card-bg);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+  border-radius: 0 0 12px 12px; // rounded-b-xl
+  background: color-mix(in srgb, var(--text-primary) 3%, transparent); // bg-zinc-900/30
 }
 
 .la-table {
@@ -228,61 +367,57 @@
   text-align: left;
   font-size: 0.82rem;
 
-  thead tr {
-    border-bottom: 2px solid rgba(108, 99, 255, 0.25);
-  }
-
   th {
     position: sticky;
     top: 0;
     z-index: 10;
-    background: var(--bg-primary);
-    padding: 0.6rem 0.75rem;
-    font-size: 0.7rem;
+    background: color-mix(in srgb, var(--text-primary) 5%, transparent); // bg-zinc-950/80
+    padding: 9px 12px;
+    font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--text-muted);
+    color: var(--text-muted); // text-zinc-400
     white-space: nowrap;
-    border-bottom: 1px solid rgba(108, 99, 255, 0.2);
+    border-bottom: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent); // border-white/10
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
+  // Uniform compact rows (~h-12): multi-badge cells wrap inline instead of
+  // stacking so every row keeps the same height.
   td {
-    padding: 0.5rem 0.75rem;
+    height: 48px;
+    padding: 6px 12px;
     vertical-align: middle;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid color-mix(in srgb, var(--text-primary) 5%, transparent); // border-white/5
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: var(--text-secondary);
   }
 
   tbody tr {
     cursor: pointer;
-    transition: background 0.1s;
-
-    &:nth-child(even) {
-      background: rgba(128, 128, 128, 0.05);
-    }
+    transition: background 0.15s; // transition-colors
 
     &:hover {
-      background: rgba(108, 99, 255, 0.08);
+      background: color-mix(in srgb, var(--text-primary) 2%, transparent); // hover:bg-white/[0.02]
     }
   }
 }
 
 // ─── Column widths ───────────────────────────────────────────────────────────
 
-.la-th--title              { width: 20%; }
-.la-th--status             { width: 12%; min-width: 150px; }
-.la-th--primaryVideoCodec  { width: 12%; }
-.la-th--primaryAudioCodec  { width: 10%; }
+.la-th--title              { width: 18%; }
+.la-th--status             { width: 11%; min-width: 150px; }
+.la-th--primaryVideoCodec  { width: 14%; }
+.la-th--primaryAudioCodec  { width: 13%; }
 .la-th--primaryResolution  { width: 7%;  }
 .la-th--fileCount          { width: 5%;  }
 .la-th--totalSizeBytes     { width: 9%;  }
-.la-th--avgEpisodeSizeBytes{ width: 10%; }
-.la-th--gibPerHour         { width: 9%;  }
+.la-th--avgEpisodeSizeBytes{ width: 9%;  }
+.la-th--gibPerHour         { width: 8%;  }
 .la-th--primaryBitDepth    { width: 6%;  }
 
 .la-th--sortable {
@@ -290,7 +425,7 @@
   user-select: none;
   transition: color 0.15s;
 
-  &:hover { color: var(--accent-primary); }
+  &:hover { color: var(--text-primary); }
 }
 
 .la-th--sorted {
@@ -314,17 +449,17 @@
 .la-td--bloated {
   color: #ef4444;
   font-weight: 600;
-  text-shadow: 0 0 8px rgba(239, 68, 68, 0.25);
 }
 
 .la-sort-arrow {
-  margin-left: 0.25rem;
+  margin-left: 4px;
   color: var(--accent-primary);
-  font-size: 0.6rem;
+  font-size: 8px;
 }
 
+// Dimmed '—' placeholders — empty / incomplete rows read distinct without clutter.
 .la-na {
-  color: var(--text-muted);
+  color: color-mix(in srgb, var(--text-muted) 65%, transparent); // text-zinc-600
   font-style: italic;
 }
 
@@ -332,48 +467,49 @@
   font-size: 0.68rem;
   font-weight: 400;
   opacity: 0.65;
-  margin-left: 0.1rem;
+  margin-left: 2px;
   letter-spacing: 0;
 }
 
 .la-empty {
   text-align: center;
-  padding: 2rem 1rem;
+  padding: 32px 16px;
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 13px;
 }
 
 .la-td--video-codec,
 .la-td--audio-codec {
   white-space: normal;
   overflow: visible;
-  padding: 0.35rem 0.75rem;
+  padding: 2px 12px;
   vertical-align: middle;
 }
 
-.la-td--audio-codec .la-codec-pills-wrap {
-  max-height: 56px; // overflow entries live in the +N badge — never stack tiny percentages
-  overflow: hidden;
-}
-
+// Multi-badge alignment: inline (flex-wrap gap-1 items-center) instead of
+// stacking, capped to the row band so every row stays ~h-12.
 .la-codec-pills-wrap {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.2rem;
+  gap: 4px;
+  max-height: 44px;
+  overflow: hidden;
 }
 
 // ─── Codec pills ─────────────────────────────────────────────────────────────
 
 .la-codec-pill {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.42rem;
   border-radius: 4px;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
+  line-height: 1.2;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  background: rgba(108, 99, 255, 0.12); // fallback tone
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent); // fallback tone
   color: var(--accent-primary);
 
   // Video codecs
@@ -384,15 +520,15 @@
 
   // Overflow "+N" badge for sub-5% audio entries
   &--more {
-    border: 1px solid var(--card-border);
-    background: rgba(128, 128, 128, 0.1);
+    border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
+    background: color-mix(in srgb, var(--text-primary) 6%, transparent);
     color: var(--text-muted);
     cursor: default;
   }
 
   &--sm {
-    padding: 0.1rem 0.35rem;
-    font-size: 0.65rem;
+    padding: 0.08rem 0.32rem;
+    font-size: 0.62rem;
   }
 }
 
@@ -406,6 +542,7 @@
   font-size: 0.7em;
   opacity: 0.75;
   margin-left: 3px;
+  font-variant-numeric: tabular-nums;
 }
 
 // ─── Resolution badge ────────────────────────────────────────────────────────
@@ -414,11 +551,12 @@
   display: inline-block;
   padding: 0.12rem 0.45rem;
   border-radius: 4px;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  background: rgba(108, 99, 255, 0.1);
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
   color: var(--accent-primary);
-  border: 1px solid rgba(108, 99, 255, 0.2);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 22%, transparent);
 }
 
 // ─── Status badge (season-aware) ────────────────────────────────────────────
@@ -459,19 +597,7 @@
   }
 }
 
-// ─── ⚡ Split toggle + codec match-mode popover ──────────────────────────────
-
-.la-filter__pill--split {
-  border-color: rgba(245, 158, 11, 0.4);
-  color: #f59e0b;
-}
-
-.la-filter__pill--split.la-filter__pill--active {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: #f59e0b;
-  color: #f59e0b;
-  font-weight: 700;
-}
+// ─── Codec match-mode popover ───────────────────────────────────────────────
 
 .la-match-mode {
   position: relative;
@@ -479,88 +605,104 @@
   align-items: center;
 
   &__trigger {
-    gap: 0.35rem;
-  }
+    gap: 6px;
 
-  &__trigger--on {
-    background: rgba(108, 99, 255, 0.15);
-    border-color: var(--accent-primary);
-    color: var(--accent-primary);
-    font-weight: 700;
+    &--on {
+      background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
+      border-color: color-mix(in srgb, var(--accent-primary) 40%, transparent);
+      color: var(--accent-primary);
+      font-weight: 600;
+    }
   }
 
   &__caret {
-    font-size: 0.55rem;
+    font-size: 8px;
+    line-height: 1;
     opacity: 0.75;
   }
 
   &__popover {
     position: absolute;
-    top: calc(100% + 0.4rem);
+    top: calc(100% + 8px);
     left: 0;
     z-index: 40;
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: 10px;
     min-width: 240px;
-    padding: 0.65rem;
-    border: 1px solid var(--card-border);
-    border-radius: 8px;
-    background: var(--bg-secondary);
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    padding: 12px;
+    border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--text-primary) 7%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
   }
 
   &__modes {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.3rem;
+    gap: 6px;
   }
 
   &__custom {
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
+    gap: 8px;
   }
 
   &__row {
     display: flex;
     align-items: center;
-    gap: 0.45rem;
+    gap: 8px;
   }
 
   &__label {
-    font-size: 0.68rem;
+    font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-muted);
+    white-space: nowrap;
   }
 
   &__percent {
-    width: 4.25rem;
-    height: 1.9rem;
-    padding: 0 0.45rem;
-    border: 1px solid var(--card-border);
+    width: 68px;
+    height: 30px;
+    padding: 0 8px;
+    border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
     border-radius: 6px;
-    background: var(--bg-primary);
+    background: color-mix(in srgb, var(--text-primary) 5%, transparent);
     color: var(--text-primary);
-    font-size: 0.8rem;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
 
     &:focus {
       outline: none;
-      border-color: var(--accent-primary);
+      border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
     }
   }
 
   &__op {
-    height: 1.9rem;
-    padding: 0 0.45rem;
-    border: 1px solid var(--card-border);
+    appearance: none;
+    -webkit-appearance: none;
+    height: 30px;
+    padding: 0 26px 0 10px;
+    border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent);
     border-radius: 6px;
-    background: var(--bg-primary);
+    background: color-mix(in srgb, var(--text-primary) 5%, transparent);
     color: var(--text-primary);
-    font-size: 0.85rem;
+    font-size: 13px;
     cursor: pointer;
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--text-primary) 20%, transparent);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
+    }
   }
 
   &__slider {
@@ -579,9 +721,9 @@
   border-radius: 3px;
   background: linear-gradient(
     90deg,
-    rgba(128, 128, 128, 0.08) 25%,
-    rgba(128, 128, 128, 0.18) 50%,
-    rgba(128, 128, 128, 0.08) 75%
+    color-mix(in srgb, var(--text-primary) 5%, transparent) 25%,
+    color-mix(in srgb, var(--text-primary) 12%, transparent) 50%,
+    color-mix(in srgb, var(--text-primary) 5%, transparent) 75%
   );
   background-size: 200% 100%;
   animation: laShimmer 1.5s infinite ease-in-out;
@@ -598,8 +740,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
-  padding: 0.75rem 0 0.5rem;
+  gap: 4px;
+  padding: 12px 0 8px;
   flex-wrap: wrap;
 }
 
@@ -607,27 +749,30 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2rem;
-  height: 2rem;
-  padding: 0 0.5rem;
-  border: 1px solid var(--card-border);
-  border-radius: 4px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
   background: transparent;
-  color: var(--text-secondary);
-  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 
   &:hover:not(:disabled) {
-    background: var(--accent-primary);
-    border-color: var(--accent-primary);
-    color: #fff;
+    background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+    border-color: color-mix(in srgb, var(--text-primary) 10%, transparent);
+    color: var(--text-primary);
   }
 
+  // Subtle accent active — never a solid indigo fill
   &--active {
-    background: var(--accent-primary);
-    border-color: var(--accent-primary);
-    color: #fff;
+    background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
+    border-color: color-mix(in srgb, var(--accent-primary) 40%, transparent);
+    color: var(--accent-primary);
     font-weight: 600;
   }
 
@@ -641,16 +786,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.5rem;
-  color: var(--text-secondary);
-  font-size: 0.8rem;
+  min-width: 24px;
+  color: var(--text-muted);
+  font-size: 12px;
   pointer-events: none;
 }
 
 // ─── Responsive ──────────────────────────────────────────────────────────────
 
 @media (max-width: 768px) {
-  .la-filter-bar__row {
+  .la-filter-bar__row--pillsets {
     grid-template-columns: 1fr;
   }
 
@@ -658,9 +803,13 @@
     max-width: 100%;
   }
 
+  .la-filter__clear {
+    justify-self: stretch;
+  }
+
   .la-table-toolbar {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: 8px;
   }
 }

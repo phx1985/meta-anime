@@ -16,6 +16,7 @@ import { LibraryAnalysisService } from '../services/library-analysis.service';
 import { ProviderStateService } from '../services/provider-state.service';
 import { LibraryAnalysisSummary, LibrarySeriesRow } from '../models/library-analysis.models';
 import { LibraryIntelStore } from '../services/library-intel-store.service';
+import { libraryAvgGibPerHour } from '../models/library-intel.models';
 import { TelemetryPillsComponent } from './telemetry-pills/telemetry-pills.component';
 import { AnalyticsChartsComponent } from './analytics-charts/analytics-charts.component';
 import { AnalysisTableComponent } from './analysis-table/analysis-table.component';
@@ -69,6 +70,9 @@ export class LibraryAnalysisComponent {
   // ── Table reference (for preset navigation from pill clicks) ─────────────
   private readonly tableRef = viewChild(AnalysisTableComponent);
   private readonly tableAnchorRef = viewChild<ElementRef>('tableAnchor');
+
+  /** KPI card 1 footer: library-wide average bitrate. */
+  readonly avgGibPerHour = computed(() => libraryAvgGibPerHour(this.displayRows()));
 
   // ── Merged rows: start with summary rows, overlay enriched data ─────────
   readonly displayRows = computed(() => {

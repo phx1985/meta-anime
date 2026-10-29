@@ -334,6 +334,8 @@ export class DetailPanelComponent {
       sourceFileName: this.fileNameOf(f),
       durationSeconds: f.durationSeconds ?? 0,
       resolution: f.resolution ?? '',
+      videoCodec: f.videoCodec,
+      bitDepth: f.videoBitDepth,
     }));
     const queue = buildHandBrakeQueue(
       queueFiles,

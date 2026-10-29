@@ -1381,8 +1381,14 @@
       "byCount": "By File Count",
       "bySize": "By Disk Size",
       "avgGibPerHour": "Avg GiB/h",
-      "footprint": "Library Footprint",
+      "footprint": "Total Footprint",
+      "topFootprint": "Top 5 footprint",
+      "estReclaimable": "Est. reclaimable",
       "hogsTitle": "Storage Hogs & Bloat",
+      "topTotalShort": "Total GB",
+      "topBloatShort": "Worst GiB/h",
+      "topReclaimShort": "Reclaimable",
+      "codecMixed": "Mixed ({{count}})",
       "topTotal": "Top 5 by Total GB",
       "topBloat": "Top 5 by Worst GiB/h",
       "topReclaimable": "Top 5 Reclaimable GB",
@@ -1924,6 +1930,9 @@
   },
   "library": {
     "title": "Library Analysis",
+    "header": {
+      "subtitle": "Transcode & storage intelligence"
+    },
     "refresh": "Refresh",
     "retry": "Retry",
     "loading": "Analyzing library…",
@@ -1939,7 +1948,9 @@
       "totalSpace": "Total Space Used",
       "totalFiles": "Total Files",
       "seriesWithMissingFiles": "Series w/ Missing Files",
-      "missingFilesHint": "Click to filter series without files"
+      "missingFilesHint": "Click to filter series without files",
+      "avgBitrate": "Avg bitrate: {{value}} GiB/h",
+      "spreadAcross": "Across {{count}} series"
     },
     "charts": {
       "videoCodec": "Video Codec Distribution",

@@ -414,6 +414,8 @@ export function collectUntranscodedFiles(
         sourceFileName: f.relativePath.split(/[/\\]/).pop() ?? f.relativePath,
         durationSeconds: f.durationSeconds ?? 0,
         resolution: f.resolution ?? '',
+        videoCodec: f.videoCodec,
+        bitDepth: f.videoBitDepth,
       });
     }
   }

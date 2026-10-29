@@ -45,14 +45,13 @@ import {
   Legend,
   ChartConfiguration,
 } from 'chart.js';
-import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
-
+// Slice-percentage datalabels were dropped in the restyle — the donut hole and
+// the HTML breakdown list carry those numbers now.
 Chart.register(
   ArcElement,
   DoughnutController,
   Tooltip,
   Legend,
-  ChartDataLabels,
 );
 
 /** Binary units — the whole page formats sizes the same way. */
@@ -187,6 +186,64 @@ export class AnalyticsChartsComponent implements OnDestroy {
   readonly footprintBytes = computed(
     () => this.rows().reduce((a, r) => a + (r.totalSizeBytes ?? 0), 0),
   );
+
+  // ── Donut hole hero + structured legend (replaces floating Chart.js labels) ──
+
+  /** Dominant codec share centered in the donut hole ("94%" + "HEVC"). */
+  readonly donutDominant = computed(() => {
+    const slices = this.donutSlices().slice(0, 15);
+    const top = slices[0];
+    const total = slices.reduce((a, s) => a + s.value, 0);
+    return {
+      pct: top && total > 0 ? this.pctLabel(top.value, total) : '—',
+      label: top?.label ?? '',
+    };
+  });
+
+  /** Legend rows: dot color + codec + file count + share pill (mode-aware %). */
+  readonly donutLegend = computed(() => {
+    const slices = this.donutSlices().slice(0, 15);
+    const total = slices.reduce((a, s) => a + s.value, 0);
+    const counts = this.codecCounts();
+    return slices.map((s, i) => ({
+      label: s.label,
+      color: this.PALETTE[i % this.PALETTE.length],
+      count: counts[s.label] ?? 0,
+      pct: total > 0 ? this.pctLabel(s.value, total) : '0%',
+    }));
+  });
+
+  /** File counts per codec label (mirrors buildCodecDonut's aggregation). */
+  private readonly codecCounts = computed<Record<string, number>>(() => {
+    const counts: Record<string, number> = {};
+    const bump = (key: string, n: number): void => {
+      counts[key] = (counts[key] ?? 0) + n;
+    };
+    for (const row of this.rows()) {
+      const files = row.episodeFiles;
+      if (files?.length) {
+        for (const f of files) bump(this.normCodec(f.videoCodec) || 'UNKNOWN', 1);
+        continue;
+      }
+      for (const [codec, count] of Object.entries(row.videoCodecDistribution ?? {})) {
+        bump(this.normCodec(codec) || 'UNKNOWN', count);
+      }
+    }
+    return counts;
+  });
+
+  /** Same codec normalization buildCodecDonut applies (x264 → H264). */
+  private normCodec(codec: string | null | undefined): string {
+    return (codec ?? '').trim().toUpperCase().replace('X264', 'H264');
+  }
+
+  /** "94%" / "0.42%" share label for a donut slice. */
+  private pctLabel(value: number, total: number): string {
+    const raw = total > 0 ? (value / total) * 100 : 0;
+    const pct = raw < 1 && raw > 0 ? raw.toFixed(2) : raw.toFixed(0);
+    return `${pct}%`;
+  }
+
   readonly savings = computed(() => estimateTranscodeSavings(this.rows(), this.userPaths.includeUnknown()));
   readonly savingsGb = computed(() => Math.round(this.savings().reclaimableBytes / GIB));
   readonly savingsCount = computed(() => this.savings().seriesCount);
@@ -443,6 +500,21 @@ export class AnalyticsChartsComponent implements OnDestroy {
     return (bytes / GIB).toFixed(1) + ' GB';
   }
 
+  /** File counts with locale grouping ("12,665"). */
+  formatCount(n: number): string {
+    return n.toLocaleString();
+  }
+
+  /** Multi-codec strings ("HEVC/UNKNOWN/H264") collapse into a 'Mixed (n)' pill. */
+  isMixedCodec(badge: string): boolean {
+    return (badge ?? '').includes('/');
+  }
+
+  /** Number of distinct codecs in a split-codec badge. */
+  codecPartCount(badge: string): number {
+    return (badge ?? '').split('/').length;
+  }
+
   /** Semantic GiB/h badge: emerald = lean, amber = bloaty, crimson = extreme. */
   gibBadgeClass(gib: number): string {
     if (gib >= BLOAT_GIB_PER_HOUR * 2) return 'la-badge la-badge--bad';
@@ -466,25 +538,27 @@ export class AnalyticsChartsComponent implements OnDestroy {
       case 'bloatGibPerHour':
         return entry.gibPerHour.toFixed(2) + ' GiB/h';
       case 'reclaimable':
-        return this.formatSize(entry.reclaimableBytes);
+        return '~' + this.formatSize(entry.reclaimableBytes);
     }
   }
 
-  /** Width of the row's background bar relative to the current mode's leader. */
+  /** Sum of the displayed rows' disk size (bottom summary bar). */
+  readonly leaderboardFootprint = computed(() =>
+    this.leaderboard().reduce((a, e) => a + e.totalSizeBytes, 0));
+
+  /** Sum of the displayed rows' reclaimable bytes (bottom summary bar). */
+  readonly leaderboardReclaimable = computed(() =>
+    this.leaderboard().reduce((a, e) => a + e.reclaimableBytes, 0));
+
+  /**
+   * Width of the row's size meter — always the relative DISK SIZE against the
+   * biggest row, whatever the sort mode (it's the "storage hog" bar; tying it
+   * to the sort metric made rate-sorted rows draw arbitrary-looking widths).
+   */
   lbBarPercent(entry: LeaderboardEntry): number {
-    const metric = (e: LeaderboardEntry): number => {
-      switch (this.leaderboardMode()) {
-        case 'totalGb':
-          return e.totalSizeBytes;
-        case 'bloatGibPerHour':
-          return e.gibPerHour;
-        case 'reclaimable':
-          return e.reclaimableBytes;
-      }
-    };
     const entries = this.leaderboard();
-    const max = entries.reduce((a, e) => Math.max(a, metric(e)), 0);
-    return max > 0 ? (metric(entry) / max) * 100 : 0;
+    const max = entries.reduce((a, e) => Math.max(a, e.totalSizeBytes), 0);
+    return max > 0 ? (entry.totalSizeBytes / max) * 100 : 0;
   }
 
   // ── Chart builder (Chart.js doughnut + datalabels) ─────────────────────────
@@ -500,7 +574,6 @@ export class AnalyticsChartsComponent implements OnDestroy {
     const entries = slices.slice(0, 15);
     const labels = entries.map(s => s.label);
     const data = entries.map(s => s.value);
-    const total = data.reduce((a, b) => a + b, 0);
     const colors = labels.map((_, i) => this.PALETTE[i % this.PALETTE.length]);
     const fmt = (value: number): string =>
       mode === 'size' ? this.formatSize(value) : `${value}`;
@@ -516,8 +589,9 @@ export class AnalyticsChartsComponent implements OnDestroy {
           {
             data,
             backgroundColor: colors,
+            // Transparent slice borders — no dark seams between wedges.
             borderWidth: 2,
-            borderColor: isDark ? '#1a1a2e' : '#fff',
+            borderColor: 'transparent',
             hoverOffset: 12,
           },
         ],
@@ -526,48 +600,21 @@ export class AnalyticsChartsComponent implements OnDestroy {
         responsive: true,
         maintainAspectRatio: false,
         animation: { duration: 900, easing: 'easeInOutQuart' as const },
-        cutout: '58%',
+        cutout: '62%',
         plugins: {
-          legend: {
-            display: true,
-            position: 'right',
-            labels: {
-              color: textColor,
-              font: { size: 11 },
-              boxWidth: 12,
-              padding: 10,
-              generateLabels: (chart: Chart) => {
-                const ds = chart.data.datasets[0];
-                return (chart.data.labels as string[]).map((lbl, i) => ({
-                  text: `${lbl} (${fmt((ds.data as number[])[i])})`,
-                  fillStyle: (ds.backgroundColor as string[])[i],
-                  strokeStyle: (ds.backgroundColor as string[])[i],
-                  lineWidth: 0,
-                  index: i,
-                  hidden: false,
-                  fontColor: textColor,
-                }));
-              },
-            },
-          },
+          // Legend + slice % labels live in HTML now (donut hole & breakdown list).
+          legend: { display: false },
+          // chartjs-plugin-datalabels is registered GLOBALLY by genre-chart /
+          // activity-stats — explicitly off here or it draws raw counts on the
+          // ring (they collide at the top for the small slices).
+          datalabels: { display: false },
           tooltip: {
+            titleColor: textColor,
+            bodyColor: textColor,
             callbacks: {
               label: (ctx) => this.tooltipLabel(ctx as never, fmt),
             },
           },
-          datalabels: {
-            color: '#fff',
-            font: { weight: 'bold' as const, size: 10 },
-            formatter: (value: number) => {
-              const raw = total > 0 ? (value / total) * 100 : 0;
-              const pct = raw < 1 && raw > 0 ? raw.toFixed(2) : raw.toFixed(0);
-              return `${pct}%`;
-            },
-            display: (ctx: Context) => {
-              const pct = total > 0 ? (ctx.dataset.data[ctx.dataIndex] as number) / total : 0;
-              return pct > 0.04;
-            },
-          } as never,
         },
       },
     };

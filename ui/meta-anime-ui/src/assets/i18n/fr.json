@@ -1378,11 +1378,17 @@
     },
     "buddy": {
       "codecTitle": "Répartition des codecs et des débits",
-      "byCount": "Par nombre de fichiers",
-      "bySize": "Par taille sur disque",
+      "byCount": "Par fichiers",
+      "bySize": "Par taille",
       "avgGibPerHour": "GiB/h moy.",
-      "footprint": "Empreinte de la bibliothèque",
+      "footprint": "Empreinte",
+      "topFootprint": "Empreinte du top 5",
+      "estReclaimable": "Récupérable (est.)",
       "hogsTitle": "Gros consommateurs & ballonnement",
+      "topTotalShort": "Total Go",
+      "topBloatShort": "Pire GiB/h",
+      "topReclaimShort": "Récupérable",
+      "codecMixed": "Mixte ({{count}})",
       "topTotal": "Top 5 par Go total",
       "topBloat": "Top 5 des pires GiB/h",
       "topReclaimable": "Top 5 des Go récupérables",
@@ -1391,7 +1397,7 @@
       "savings": "~{{gb}} Go récupérables sur {{count}} séries",
       "savingsLabel": "Stockage récupérable",
       "savingsSeries": "{{count}} séries",
-      "chipsPrime": "Cibles de transcodage prioritaires",
+      "chipsPrime": "Cibles prioritaires",
       "chipsUnfinished": "Transcodages inachevés",
       "chipsEightBit": "🐘 Ballonnement 8-bit",
       "batchTitle": "Lot de transcodage",
@@ -1924,6 +1930,9 @@
   },
   "library": {
     "title": "Analyse de la bibliothèque",
+    "header": {
+      "subtitle": "Intelligence de transcodage et de stockage"
+    },
     "refresh": "Actualiser",
     "retry": "Réessayer",
     "loading": "Analyse de la bibliothèque en cours…",
@@ -1939,7 +1948,9 @@
       "totalSpace": "Espace total utilisé",
       "totalFiles": "Total des fichiers",
       "seriesWithMissingFiles": "Séries avec fichiers manquants",
-      "missingFilesHint": "Cliquez pour filtrer les séries sans fichiers"
+      "missingFilesHint": "Cliquez pour filtrer les séries sans fichiers",
+      "avgBitrate": "Débit moyen : {{value}} GiB/h",
+      "spreadAcross": "Répartis sur {{count}} séries"
     },
     "charts": {
       "videoCodec": "Répartition des codecs vidéo",
