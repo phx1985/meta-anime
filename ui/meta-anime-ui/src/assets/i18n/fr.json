@@ -639,6 +639,22 @@
       }
     },
     "fields": {
+      "PathMap_ContainerRoot": {
+        "name": "Racine média (conteneur)",
+        "desc": "Racine média telle qu'enregistrée par Sonarr dans le conteneur (défaut : /downloads_root). Les chemins sont remappés de ce préfixe vers la racine locale."
+      },
+      "PathMap_HostRoot": {
+        "name": "Racine média (hôte local)",
+        "desc": "Où ce stockage est monté sur CETTE machine (ex. /mnt/media, /run/user/1000/gvfs/… ou Z:\\). Laisser vide pour désactiver le mappage."
+      },
+      "PathMap_Separator": {
+        "name": "Séparateur de chemin (OS cible)",
+        "desc": "Style du séparateur pour les chemins copiés/exportés : POSIX / ou Windows \\."
+      },
+      "HandBrake_Preset": {
+        "name": "Arguments de préréglage HandBrakeCLI",
+        "desc": "Paramètres utilisés par l'export HandBrake du tiroir (défaut : NVENC HEVC 10-bit qualité, CQ 22)."
+      },
       "Plex_Host": {
         "name": "URL du serveur",
         "desc": "URL de base de votre Plex Media Server (ex. http://localhost:32400)."
@@ -1224,6 +1240,35 @@
       "name": "Appliquer automatiquement les derniers filtres de recherche",
       "desc": "Quand activé, vos derniers filtres de recherche sont automatiquement restaurés à l'ouverture de la liste « Mes Animes » ou de la page « Saisonnier »."
     },
+    "libraryHandbrake": {
+      "groupTitle": "🎬 Chemins Library & HandBrake",
+      "containerRoot": {
+        "name": "Racine média (conteneur)",
+        "desc": "Racine média telle qu'enregistrée par Sonarr dans le conteneur (défaut : /downloads_root)."
+      },
+      "hostRoot": {
+        "name": "Chemin de montage hôte (source)",
+        "desc": "Où ce stockage est monté sur CETTE machine (ex. /mnt/media ou /run/user/1000/gvfs/…)."
+      },
+      "destPath": {
+        "name": "Chemin d'export HandBrake (destination)",
+        "desc": "Où écrire les fichiers transcodés (utilisé quand l'option sous-dossier _transcoded est désactivée)."
+      },
+      "presetName": {
+        "name": "Nom du préréglage HandBrake",
+        "desc": "Nom du préréglage HandBrake appliqué aux tâches de file exportées."
+      },
+      "destModeTranscoded": "Écrire dans le sous-dossier \"_transcoded\" à côté des fichiers source",
+      "browse": "📁 Parcourir un dossier",
+      "smbWarning": "⚠️ HandBrake exige un chemin local monté POSIX/Windows (ex. `/mnt/media/...` ou `/run/user/1000/gvfs/...`), pas une URI virtuelle `smb://`.",
+      "browseUp": "⬆ Remonter",
+      "browseSelectHere": "✅ Utiliser ce dossier",
+      "browseLoading": "Chargement des dossiers…",
+      "browseEmpty": "Aucun sous-dossier ici",
+      "browseError": "Impossible de lire ce dossier",
+      "browseRetry": "Réessayer",
+      "saved": "Enregistré"
+    },
     "luckyPick": {
       "groupTitle": "J'ai de la chance!",
       "onlyFinished": {
@@ -1259,7 +1304,119 @@
     "showMore": "Plus de résultats",
     "readAloud": "Lire à voix haute",
     "stopReading": "Arrêter la lecture",
-    "speaking": "Je lis..."
+    "speaking": "Je lis...",
+    "chips": {
+      "transcodeTonight": "🎯 Que devrais-je transcoder ce soir ?",
+      "biggestOffenders": "📊 Qui sont mes pires taux GiB/h ?",
+      "finishedH264": "✅ Saisons terminées encore en H264",
+      "brokenMixed": "🧹 Trouver les saisons mixtes/cassées"
+    },
+    "actions": {
+      "applyFilter": "Appliquer le filtre",
+      "openSeries": "Ouvrir la série",
+      "applied": "✓ Appliqué"
+    }
+  },
+    "configBackup": {
+    "title": "Sauvegarde & Restauration",
+    "desc": "Exportez toute votre configuration (fournisseurs, jetons, préférences) ou restaurez-la depuis un fichier JSON.",
+    "exportBtn": "⬇ Exporter la config",
+    "importBtn": "⬆ Importer la config",
+    "exportWarning": "⚠️ Le fichier exporté contient des clés API et jetons NON MASQUÉS. Stockez-le en sécurité.",
+    "importTitle": "Importer une configuration",
+    "dropHint": "Déposez un fichier .json ici ou cliquez pour choisir",
+    "imported": "Configuration importée ({{count}} valeurs) — Plex : {{plex}}, Sonarr : {{sonarr}}, MAL : {{mal}}",
+    "statusYes": "connecté",
+    "statusNo": "non connecté",
+    "importFailed": "Échec de l'import — fichier de config MetaAnime valide ?",
+    "completeSetup": "Terminer la configuration",
+    "reviewSteps": "Vérifier les étapes"
+  },
+"libraryIntel": {
+    "matchMode": {
+      "label": "Correspondance codec",
+      "any": "Tout (>0%)",
+      "strict": "Uniquement (100%)",
+      "mixed": "Mixte (<100%)",
+      "custom": "Personnalisé %",
+      "opGte": "≥",
+      "opLte": "≤",
+      "percent": "Pourcentage",
+      "splitOnly": "⚡ Codecs mixtes uniquement"
+    },
+    "status": {
+      "label": "Statut",
+      "all": "Tous les statuts",
+      "seriesEndedComplete": "Série terminée (complète)",
+      "seasonEndedHiatus": "Saison terminée (série en cours / pause)",
+      "airingWeekly": "En diffusion (hebdomadaire)",
+      "incompleteOnDisk": "Incomplet sur le disque",
+      "transcodeReady": "Prêt à transcoder (terminée ou saison finie)"
+    },
+    "badge": {
+      "airingWeekly": "EN DIFFUSION",
+      "seasonEndedHiatus": "SAISON TERMINÉE",
+      "seriesEndedComplete": "TERMINÉE",
+      "incompleteOnDisk": "INCOMPLET"
+    },
+    "badgeTip": {
+      "airingWeekly": "Des épisodes sont actuellement diffusés",
+      "seasonEndedHiatus": "Série en pause / en cours, toutes les saisons diffusées sont complètes",
+      "seriesEndedComplete": "Série terminée et entièrement téléchargée",
+      "incompleteOnDisk": "Des épisodes diffusés manquent sur le disque"
+    },
+    "table": {
+      "moreAudio": "+{{count}} pistes audio supplémentaires"
+    },
+    "buddy": {
+      "codecTitle": "Répartition codec & bitrate",
+      "byCount": "Par nombre de fichiers",
+      "bySize": "Par taille disque",
+      "avgGibPerHour": "GiB/h moy.",
+      "footprint": "Empreinte bibliothèque",
+      "hogsTitle": "Gros poids & ballonnement",
+      "topTotal": "Top 5 par Go total",
+      "topBloat": "Top 5 pires GiB/h",
+      "topReclaimable": "Top 5 Go récupérables",
+      "rank": "N°",
+      "opportunityTitle": "Opportunité de transcodage",
+      "savings": "~{{gb}} Go récupérables sur {{count}} séries",
+      "chipsPrime": "🔥 Cibles de transcodage prioritaires",
+      "chipsUnfinished": "🧩 Transcodages inachevés",
+      "chipsEightBit": "🐘 Ballonnement 8-bit",
+      "chipsCompleteH264": "📦 Saisons complètes en H264",
+      "presetApplied": "✓ Appliqué",
+      "analyzing": "Analyse de {{count}} fichiers…",
+      "noData": "Enrichissement en cours…"
+    },
+    "drawer": {
+      "stackedTitle": "Composition codec",
+      "needsTranscode": "À transcoder / H264",
+      "optimized": "Optimisé / HEVC",
+      "allFiles": "Tous les fichiers",
+      "estSavings": "Économie est.",
+      "savingsHint": "si transcodé en HEVC (~55%)",
+      "copyH264": "Copier les chemins H264",
+      "exportList": "Exporter la liste de transcodage",
+      "copied": "Copié !",
+      "copyFolderPath": "📁 Copier le chemin du dossier",
+      "copySelectedPaths": "📋 Copier les chemins sélectionnés ({{count}})",
+      "selectAllFiltered": "Tout sélectionner ({{count}})",
+      "clearSelection": "Effacer la sélection",
+      "exportQueue": "🎬 Exporter la file HandBrake ({{count}})",
+      "copyPaths": "📋 Copier les chemins",
+      "copyPlainPaths": "Copier les chemins des épisodes (texte brut)",
+      "quotedCliArgs": "Copier les chemins des épisodes (arguments CLI entre guillemets)",
+      "handBrakeScript": "🎬 Exporter le lot HandBrake (.sh)",
+      "mappedToHostPath": "Mappé vers le chemin hôte",
+      "editMapping": "Modifier le mappage de chemins",
+      "mapContainerRoot": "Racine média (conteneur)",
+      "mapHostRoot": "Racine média (hôte local)",
+      "mapSave": "Enregistrer",
+      "mapCancel": "Annuler",
+      "selectFile": "Sélectionner le fichier",
+      "selectRow": "Sélectionner la ligne"
+    }
   },
   "luckyPick": {
     "buttonLabel": "J'ai de la chance!",

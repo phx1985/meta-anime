@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   ElementRef,
   HostListener,
   inject,
@@ -14,6 +15,7 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { LibraryAnalysisService } from '../services/library-analysis.service';
 import { ProviderStateService } from '../services/provider-state.service';
 import { LibraryAnalysisSummary, LibrarySeriesRow } from '../models/library-analysis.models';
+import { LibraryIntelStore } from '../services/library-intel-store.service';
 import { TelemetryPillsComponent } from './telemetry-pills/telemetry-pills.component';
 import { AnalyticsChartsComponent } from './analytics-charts/analytics-charts.component';
 import { AnalysisTableComponent } from './analysis-table/analysis-table.component';
@@ -57,8 +59,11 @@ export class LibraryAnalysisComponent {
   readonly summary = signal<LibraryAnalysisSummary | null>(null);
   readonly enrichedRows = signal<LibrarySeriesRow[]>([]);
 
+  // ── Shared Ultra Library Buddy store (filters, rows, drawer selection) ───
+  protected readonly intel = inject(LibraryIntelStore);
+
   // ── Detail panel ─────────────────────────────────────────────────────────
-  readonly selectedRow = signal<LibrarySeriesRow | null>(null);
+  readonly selectedRow = this.intel.selectedRow;
   readonly selectedAnimeId = signal<string | null>(null);
 
   // ── Table reference (for preset navigation from pill clicks) ─────────────
@@ -95,10 +100,7 @@ export class LibraryAnalysisComponent {
     });
   });
 
-  // ── Aggregated distributions for charts ─────────────────────────────────
-  readonly videoCodecDist = computed(() => this.aggregateDistribution('videoCodecDistribution'));
-  readonly audioCodecDist = computed(() => this.aggregateDistribution('audioCodecDistribution'));
-  readonly resolutionDist = computed(() => this.aggregateDistribution('resolutionDistribution'));
+  // ── Rows mirror into the shared store (Bot-kun context + KPI lookups) ─────
 
   // ── Avg episode size threshold (from summary, default 1200 MB) ───────────
   readonly avgEpSizeThresholdBytes = computed(() =>
@@ -110,21 +112,15 @@ export class LibraryAnalysisComponent {
     this.summary()?.avgGibPerHourThreshold ?? 1.2,
   );
 
-  // ── Top 5 storage hogs ──────────────────────────────────────────────────
-  readonly topStorageHogs = computed(() => {
-    const rows = this.displayRows();
-    return [...rows]
-      .sort((a, b) => b.totalSizeBytes - a.totalSizeBytes)
-      .slice(0, 5)
-      .map(r => ({ title: r.title, totalSizeBytes: r.totalSizeBytes }));
-  });
-
   @HostListener('window:resize')
   onResize(): void {
     this.isDesktop.set(window.innerWidth >= 1024);
   }
 
   constructor() {
+    // Mirror the enriched rows into the shared store so KPI cards and Bot-kun
+    // can compute insights and resolve "Open Series" targets.
+    effect(() => this.intel.rows.set(this.displayRows()));
     this.loadData();
   }
 
@@ -133,7 +129,7 @@ export class LibraryAnalysisComponent {
     this.enriching.set(false);
     this.error.set(null);
     this.enrichedRows.set([]);
-    this.selectedRow.set(null);
+    this.intel.closeSeries();
 
     // Phase 1: Get summary
     this.analysisService.getSummary()
@@ -171,16 +167,21 @@ export class LibraryAnalysisComponent {
   }
 
   onRowClicked(row: LibrarySeriesRow): void {
-    this.selectedRow.set(row);
+    this.intel.openSeries(row);
+  }
+
+  onDetailClosed(): void {
+    this.intel.closeSeries();
+  }
+
+  /** KPI leaderboard row click → open the series drawer. */
+  onOpenSeriesFromKpi(sonarrId: number): void {
+    this.intel.openSeries(sonarrId);
   }
 
   onMissingFilesClick(): void {
     this.tableRef()?.applyPreset({ hasFiles: 'no', sortCol: 'title', sortDir: 'asc' });
     this.scrollToTable();
-  }
-
-  onDetailClosed(): void {
-    this.selectedRow.set(null);
   }
 
   private scrollToTable(): void {
@@ -189,21 +190,5 @@ export class LibraryAnalysisComponent {
 
   onRequestAnimeDetail(id: string): void {
     this.selectedAnimeId.set(id);
-  }
-
-  private aggregateDistribution(
-    field: 'videoCodecDistribution' | 'audioCodecDistribution' | 'resolutionDistribution',
-  ): Record<string, number> {
-    const rows = this.enrichedRows();
-    const agg: Record<string, number> = {};
-    for (const row of rows) {
-      const dist = row[field];
-      if (dist) {
-        for (const [key, count] of Object.entries(dist)) {
-          agg[key] = (agg[key] ?? 0) + count;
-        }
-      }
-    }
-    return agg;
   }
 }

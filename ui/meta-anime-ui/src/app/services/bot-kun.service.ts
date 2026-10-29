@@ -3,7 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 
-export type BotKunRole = 'user' | 'assistant';
+/** 'system' entries are forwarded verbatim by the backend (Library Buddy context). */
+export type BotKunRole = 'user' | 'assistant' | 'system';
 
 export interface BotKunHistoryMessage {
   role: BotKunRole;

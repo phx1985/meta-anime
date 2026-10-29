@@ -185,7 +185,8 @@ public sealed class LibraryAnalysisService(
             EpisodeFiles: null,
             LocalAnimeId: sonarrIdToAnimeId.TryGetValue(series.Id, out var aid) ? aid : null,
             TotalDurationSeconds: 0,
-            GibPerHour: 0.0
+            GibPerHour: 0.0,
+            NextAiringDate: series.NextAiring
         );
     }
 

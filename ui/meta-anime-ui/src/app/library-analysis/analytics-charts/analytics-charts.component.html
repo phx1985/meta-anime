@@ -1,64 +1,206 @@
 <div class="la-charts">
-  <!-- Video Codec Distribution — Doughnut -->
+  <!-- Card 1 — Codec & Bitrate Distribution (donut + library stats) -->
   <div class="la-chart-card">
-    <h3 class="la-chart-card__title">{{ 'library.charts.videoCodec' | translate }}</h3>
+    <div class="la-chart-card__head">
+      <h3 class="la-chart-card__title">{{ 'libraryIntel.buddy.codecTitle' | translate }}</h3>
+      <div class="la-toggle" role="group">
+        <button type="button"
+                class="la-toggle__btn"
+                [class.la-toggle__btn--active]="donutMode() === 'count'"
+                (click)="setDonutMode('count')">
+          {{ 'libraryIntel.buddy.byCount' | translate }}
+        </button>
+        <button type="button"
+                class="la-toggle__btn"
+                [class.la-toggle__btn--active]="donutMode() === 'size'"
+                (click)="setDonutMode('size')">
+          {{ 'libraryIntel.buddy.bySize' | translate }}
+        </button>
+      </div>
+    </div>
+
     @if (isLoading()) {
       <div class="la-chart-skeleton"></div>
-    } @else if (isEnriching()) {
+    } @else if (isEnriching() && !hasData()) {
       <div class="la-chart-card__shimmer"></div>
+    } @else if (!hasData()) {
+      <p class="la-nodata">{{ 'libraryIntel.buddy.noData' | translate }}</p>
     } @else {
       <div class="la-chart-card__body">
-        <canvas #videoCodecCanvas></canvas>
+        <canvas #codecCanvas></canvas>
+      </div>
+      <div class="la-metrics">
+        <div class="la-metric">
+          <span class="la-metric__value">
+            @if (isAnalyticsLoading()) {
+              <span class="la-skel la-skel--metric"></span>
+            } @else {
+              {{ avgGibPerHour().toFixed(2) }}
+            }
+          </span>
+          <span class="la-metric__label">{{ 'libraryIntel.buddy.avgGibPerHour' | translate }}</span>
+        </div>
+        <div class="la-metric">
+          <span class="la-metric__value">
+            @if (isAnalyticsLoading()) {
+              <span class="la-skel la-skel--metric"></span>
+            } @else {
+              {{ formatSize(footprintBytes()) }}
+            }
+          </span>
+          <span class="la-metric__label">{{ 'libraryIntel.buddy.footprint' | translate }}</span>
+        </div>
       </div>
     }
+
+    <!-- Loading overlay — glass blur + shimmer until telemetry lands, then fades out. -->
+    <div class="la-loading"
+         role="status"
+         [class.la-loading--hidden]="!isAnalyticsLoading()"
+         [attr.aria-hidden]="!isAnalyticsLoading()">
+      <span class="la-loading__spinner" aria-hidden="true"></span>
+      <span class="la-loading__badge">
+        @if (totalFileCount() > 0) {
+          {{ 'libraryIntel.buddy.analyzing' | translate: { count: totalFileCount() } }}
+        } @else {
+          {{ 'libraryIntel.buddy.noData' | translate }}
+        }
+      </span>
+    </div>
   </div>
 
-  <!-- Resolution Distribution — Horizontal bar -->
+  <!-- Card 2 — Biggest Storage Hogs & Bloat Leaderboard -->
   <div class="la-chart-card">
-    <h3 class="la-chart-card__title">{{ 'library.charts.resolution' | translate }}</h3>
-    @if (isLoading()) {
-      <div class="la-chart-skeleton"></div>
-    } @else if (isEnriching()) {
-      <div class="la-chart-card__shimmer"></div>
-    } @else {
-      <div class="la-chart-card__body">
-        <canvas #resolutionCanvas></canvas>
+    <div class="la-chart-card__head">
+      <h3 class="la-chart-card__title">{{ 'libraryIntel.buddy.hogsTitle' | translate }}</h3>
+      <div class="la-toggle" role="group">
+        <button type="button"
+                class="la-toggle__btn"
+                [class.la-toggle__btn--active]="leaderboardMode() === 'totalGb'"
+                (click)="setLeaderboardMode('totalGb')">
+          {{ 'libraryIntel.buddy.topTotal' | translate }}
+        </button>
+        <button type="button"
+                class="la-toggle__btn"
+                [class.la-toggle__btn--active]="leaderboardMode() === 'bloatGibPerHour'"
+                (click)="setLeaderboardMode('bloatGibPerHour')">
+          {{ 'libraryIntel.buddy.topBloat' | translate }}
+        </button>
+        <button type="button"
+                class="la-toggle__btn"
+                [class.la-toggle__btn--active]="leaderboardMode() === 'reclaimable'"
+                (click)="setLeaderboardMode('reclaimable')">
+          {{ 'libraryIntel.buddy.topReclaimable' | translate }}
+        </button>
       </div>
-    }
-  </div>
+    </div>
 
-  <!-- Audio Codec Distribution — Doughnut -->
-  <div class="la-chart-card">
-    <h3 class="la-chart-card__title">{{ 'library.charts.audioCodec' | translate }}</h3>
     @if (isLoading()) {
       <div class="la-chart-skeleton"></div>
-    } @else if (isEnriching()) {
+    } @else if (isEnriching() && !hasData()) {
       <div class="la-chart-card__shimmer"></div>
+    } @else if (!hasData()) {
+      <p class="la-nodata">{{ 'libraryIntel.buddy.noData' | translate }}</p>
     } @else {
-      <div class="la-chart-card__body">
-        <canvas #audioCodecCanvas></canvas>
-      </div>
-    }
-  </div>
-
-  <!-- Top 5 Storage Hogs — Ranked list -->
-  <div class="la-chart-card">
-    <h3 class="la-chart-card__title">{{ 'library.charts.topHogs' | translate }}</h3>
-    @if (isLoading()) {
-      <div class="la-chart-skeleton"></div>
-    } @else if (isEnriching() && topStorageHogs().length === 0) {
-      <div class="la-chart-card__shimmer"></div>
-    } @else {
-      <div class="la-chart-card__body la-hogs">
-        @for (hog of topStorageHogs(); track hog.title; let i = $index) {
-          <div class="la-hog">
-            <span class="la-hog__rank">{{ i + 1 }}</span>
-            <span class="la-hog__title">{{ hog.title }}</span>
-            <span class="la-hog__size">{{ formatSize(hog.totalSizeBytes) }}</span>
-            <div class="la-hog__bar" [style.width.%]="hogBarPercent(hog.totalSizeBytes)"></div>
-          </div>
+      <div class="la-lb">
+        <div class="la-lb__head">
+          <span class="la-lb__rank">{{ 'libraryIntel.buddy.rank' | translate }}</span>
+        </div>
+        @for (entry of leaderboard(); track entry.sonarrId) {
+          <button type="button"
+                  class="la-lb__row"
+                  title="{{ entry.title }}"
+                  (click)="openSeries.emit(entry.sonarrId)">
+            <span class="la-lb__rank">{{ entry.rank }}</span>
+            <span class="la-lb__title">{{ entry.title }}</span>
+            <span [class]="codecBadgeClass(entry.codecBadge)">{{ entry.codecBadge }}</span>
+            @if (isAnalyticsLoading()) {
+              <span class="la-skel la-skel--badge"></span>
+            } @else {
+              <span [class]="gibBadgeClass(entry.gibPerHour)">{{ entry.gibPerHour.toFixed(2) }} GiB/h</span>
+            }
+            <span class="la-lb__size">
+              @if (isAnalyticsLoading()) {
+                <span class="la-skel la-skel--size"></span>
+              } @else {
+                @if (leaderboardMode() === 'reclaimable') {
+                  <span class="la-lb__size-sub">{{ formatSize(entry.totalSizeBytes) }}</span>
+                }
+                {{ lbValue(entry) }}
+              }
+            </span>
+            <span class="la-lb__bar" [style.width.%]="lbBarPercent(entry)"></span>
+          </button>
         }
       </div>
     }
+
+    <!-- Loading overlay — glass blur + shimmer until telemetry lands, then fades out. -->
+    <div class="la-loading"
+         role="status"
+         [class.la-loading--hidden]="!isAnalyticsLoading()"
+         [attr.aria-hidden]="!isAnalyticsLoading()">
+      <span class="la-loading__spinner" aria-hidden="true"></span>
+      <span class="la-loading__badge">
+        @if (totalFileCount() > 0) {
+          {{ 'libraryIntel.buddy.analyzing' | translate: { count: totalFileCount() } }}
+        } @else {
+          {{ 'libraryIntel.buddy.noData' | translate }}
+        }
+      </span>
+    </div>
+  </div>
+
+  <!-- Card 3 — Transcode Opportunity & Quick-Filter Action Chips -->
+  <div class="la-chart-card">
+    <h3 class="la-chart-card__title">{{ 'libraryIntel.buddy.opportunityTitle' | translate }}</h3>
+
+    @if (isLoading()) {
+      <div class="la-chart-skeleton"></div>
+    } @else if (isEnriching() && !hasData()) {
+      <div class="la-chart-card__shimmer"></div>
+    } @else if (!hasData()) {
+      <p class="la-nodata">{{ 'libraryIntel.buddy.noData' | translate }}</p>
+    } @else {
+      <p class="la-savings">
+        @if (isAnalyticsLoading()) {
+          <span class="la-skel la-skel--savings"></span>
+        } @else {
+          {{ 'libraryIntel.buddy.savings' | translate: { gb: savingsGb(), count: savingsCount() } }}
+        }
+      </p>
+      <div class="la-chips">
+        @for (preset of presets; track preset.id) {
+          <button type="button"
+                  class="la-chip"
+                  [class.la-chip--prime]="preset.variant === 'prime'"
+                  [class.la-chip--unfinished]="preset.variant === 'unfinished'"
+                  [class.la-chip--complete]="preset.variant === 'complete'"
+                  [class.la-chip--active]="activePresetId() === preset.id"
+                  [attr.aria-pressed]="activePresetId() === preset.id"
+                  (click)="applyPreset(preset)">
+            {{ preset.labelKey | translate }}
+            @if (flashPresetId() === preset.id) {
+              <span class="la-chip__flash">{{ 'libraryIntel.buddy.presetApplied' | translate }}</span>
+            }
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Loading overlay — glass blur + shimmer until telemetry lands, then fades out. -->
+    <div class="la-loading"
+         role="status"
+         [class.la-loading--hidden]="!isAnalyticsLoading()"
+         [attr.aria-hidden]="!isAnalyticsLoading()">
+      <span class="la-loading__spinner" aria-hidden="true"></span>
+      <span class="la-loading__badge">
+        @if (totalFileCount() > 0) {
+          {{ 'libraryIntel.buddy.analyzing' | translate: { count: totalFileCount() } }}
+        } @else {
+          {{ 'libraryIntel.buddy.noData' | translate }}
+        }
+      </span>
+    </div>
   </div>
 </div>

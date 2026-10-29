@@ -4,22 +4,35 @@ import {
   DestroyRef,
   ElementRef,
   OnDestroy,
+  computed,
   effect,
   inject,
   input,
+  output,
+  signal,
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ThemeService } from '../../services/theme.service';
+import { LibraryIntelStore } from '../../services/library-intel-store.service';
+import { LibrarySeriesRow } from '../../models/library-analysis.models';
+import {
+  BLOAT_GIB_PER_HOUR,
+  DonutMode,
+  DonutSlice,
+  LeaderboardEntry,
+  LeaderboardMode,
+  LibraryFilterState,
+  buildCodecDonut,
+  buildLeaderboard,
+  estimateTranscodeSavings,
+  libraryAvgGibPerHour,
+} from '../../models/library-intel.models';
 import {
   Chart,
   ArcElement,
-  BarElement,
-  BarController,
   DoughnutController,
-  CategoryScale,
-  LinearScale,
   Tooltip,
   Legend,
   ChartConfiguration,
@@ -28,15 +41,25 @@ import ChartDataLabels, { Context } from 'chartjs-plugin-datalabels';
 
 Chart.register(
   ArcElement,
-  BarElement,
-  BarController,
   DoughnutController,
-  CategoryScale,
-  LinearScale,
   Tooltip,
   Legend,
   ChartDataLabels,
 );
+
+/** Binary units — the whole page formats sizes the same way. */
+const GIB = 1024 ** 3;
+const TIB = 1024 ** 4;
+
+/** Stable preset ids shared with the store's activePresetId highlight state. */
+export type QuickFilterPresetId = 'prime' | 'unfinished' | 'completeH264';
+
+export interface QuickFilterPreset {
+  id: QuickFilterPresetId;
+  labelKey: string;
+  variant: 'prime' | 'unfinished' | 'complete';
+  patch: Partial<LibraryFilterState>;
+}
 
 @Component({
   selector: 'app-la-analytics-charts',
@@ -50,27 +73,105 @@ export class AnalyticsChartsComponent implements OnDestroy {
   private readonly themeService = inject(ThemeService);
   private readonly translate = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly store = inject(LibraryIntelStore);
 
   // ── Input signals ──────────────────────────────────────────────────────────
 
-  readonly videoCodecDist = input<Record<string, number>>({});
-  readonly audioCodecDist = input<Record<string, number>>({});
-  readonly resolutionDist = input<Record<string, number>>({});
-  readonly topStorageHogs = input<{ title: string; totalSizeBytes: number }[]>([]);
-  readonly isEnriching = input<boolean>(false);
+  readonly rows = input<LibrarySeriesRow[]>([]);
   readonly isLoading = input<boolean>(false);
+  readonly isEnriching = input<boolean>(false);
 
-  // ── Canvas refs ────────────────────────────────────────────────────────────
+  // ── Output signals ─────────────────────────────────────────────────────────
 
-  readonly videoCodecCanvas = viewChild<ElementRef<HTMLCanvasElement>>('videoCodecCanvas');
-  readonly audioCodecCanvas = viewChild<ElementRef<HTMLCanvasElement>>('audioCodecCanvas');
-  readonly resolutionCanvas = viewChild<ElementRef<HTMLCanvasElement>>('resolutionCanvas');
+  /** Open a series in the detail drawer (Sonarr id). */
+  readonly openSeries = output<number>();
 
-  // ── Chart instances ────────────────────────────────────────────────────────
+  // ── Toggle state ───────────────────────────────────────────────────────────
 
-  private videoCodecChart: Chart | null = null;
-  private audioCodecChart: Chart | null = null;
-  private resolutionChart: Chart | null = null;
+  readonly donutMode = signal<DonutMode>('count');
+  readonly leaderboardMode = signal<LeaderboardMode>('totalGb');
+
+  // ── Derived view models ────────────────────────────────────────────────────
+
+  readonly hasData = computed(() => this.rows().length > 0);
+
+  /** Total files across rows — the "Analyzing {{count}} files…" badge count. */
+  readonly totalFileCount = computed(() =>
+    this.rows().reduce((sum, row) => sum + (row.fileCount ?? 0), 0),
+  );
+
+  /**
+   * True while library telemetry is still arriving: an explicit fetch/enrich pass,
+   * or rows that exist but not one of them is enriched yet (no episode files and
+   * GiB/h still 0). Gates every numeric readout so the cards never flash zeros.
+   */
+  readonly isAnalyticsLoading = computed(() => {
+    if (this.isLoading() || this.isEnriching()) return true;
+    const rows = this.rows();
+    return (
+      rows.length > 0 &&
+      rows.every((row) => !row.episodeFiles?.length && (row.gibPerHour ?? 0) === 0)
+    );
+  });
+
+  readonly donutSlices = computed(() => buildCodecDonut(this.rows(), this.donutMode()));
+  readonly leaderboard = computed(() => buildLeaderboard(this.rows(), this.leaderboardMode(), 5));
+  readonly avgGibPerHour = computed(() => libraryAvgGibPerHour(this.rows()));
+  readonly footprintBytes = computed(
+    () => this.rows().reduce((a, r) => a + (r.totalSizeBytes ?? 0), 0),
+  );
+  readonly savings = computed(() => estimateTranscodeSavings(this.rows()));
+  readonly savingsGb = computed(() => Math.round(this.savings().reclaimableBytes / GIB));
+  readonly savingsCount = computed(() => this.savings().seriesCount);
+
+  // ── Quick-filter presets (reset-then-apply via LibraryIntelStore.togglePreset) ──
+
+  /** Id of the preset currently driving the filters (bright ring on its chip). */
+  readonly activePresetId = this.store.activePresetId;
+
+  /** Chip that just applied its preset (brief "✓ Applied" flash). */
+  readonly flashPresetId = signal<QuickFilterPresetId | null>(null);
+  private flashTimer: ReturnType<typeof setTimeout> | null = null;
+
+  readonly presets: readonly QuickFilterPreset[] = [
+    {
+      id: 'prime',
+      labelKey: 'libraryIntel.buddy.chipsPrime',
+      variant: 'prime',
+      patch: {
+        videoCodec: ['H264'],
+        codecThreshold: { mode: 'custom', percent: 50, op: 'gte' },
+        gibPerHour: '2',
+        status: 'transcodeReady',
+      },
+    },
+    {
+      id: 'unfinished',
+      labelKey: 'libraryIntel.buddy.chipsUnfinished',
+      variant: 'unfinished',
+      patch: {
+        splitCodecsOnly: true,
+        videoCodec: ['H264'],
+        codecThreshold: { mode: 'any', percent: 0, op: 'gte' },
+      },
+    },
+    {
+      id: 'completeH264',
+      labelKey: 'libraryIntel.buddy.chipsCompleteH264',
+      variant: 'complete',
+      patch: {
+        videoCodec: ['H264'],
+        codecThreshold: { mode: 'any', percent: 0, op: 'gte' },
+        status: 'transcodeReady',
+        download: '100',
+      },
+    },
+  ];
+
+  // ── Canvas ref & chart instance ────────────────────────────────────────────
+
+  readonly codecCanvas = viewChild<ElementRef<HTMLCanvasElement>>('codecCanvas');
+  private codecChart: Chart | null = null;
 
   // ── Color palette (matches GenreChartComponent) ────────────────────────────
 
@@ -93,95 +194,127 @@ export class AnalyticsChartsComponent implements OnDestroy {
   ];
 
   constructor() {
-    // Rebuild charts on video codec data change
+    // Rebuild the codec donut when rows, mode or canvas availability change
     effect(() => {
-      const dist = this.videoCodecDist();
-      const canvas = this.videoCodecCanvas();
-      if (canvas && Object.keys(dist).length > 0) {
-        this.videoCodecChart = this.buildDoughnutChart(
-          canvas.nativeElement,
-          dist,
-          this.videoCodecChart,
-        );
+      const slices = this.donutSlices();
+      const mode = this.donutMode();
+      const canvas = this.codecCanvas();
+      if (!canvas) {
+        this.codecChart?.destroy();
+        this.codecChart = null;
+        return;
+      }
+      if (slices.length > 0) {
+        this.codecChart = this.buildDoughnutChart(canvas.nativeElement, slices, mode, this.codecChart);
       }
     });
 
-    // Rebuild charts on audio codec data change
-    effect(() => {
-      const dist = this.audioCodecDist();
-      const canvas = this.audioCodecCanvas();
-      if (canvas && Object.keys(dist).length > 0) {
-        this.audioCodecChart = this.buildDoughnutChart(
-          canvas.nativeElement,
-          dist,
-          this.audioCodecChart,
-        );
-      }
-    });
-
-    // Rebuild charts on resolution data change
-    effect(() => {
-      const dist = this.resolutionDist();
-      const canvas = this.resolutionCanvas();
-      if (canvas && Object.keys(dist).length > 0) {
-        this.resolutionChart = this.buildBarChart(
-          canvas.nativeElement,
-          dist,
-          this.resolutionChart,
-        );
-      }
-    });
-
-    // Rebuild all charts when the active language changes
+    // Rebuild the donut when the active language changes
     this.translate.onLangChange
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.rebuildAllCharts());
+      .subscribe(() => this.rebuildChart());
   }
 
   ngOnDestroy(): void {
-    this.videoCodecChart?.destroy();
-    this.audioCodecChart?.destroy();
-    this.resolutionChart?.destroy();
+    this.codecChart?.destroy();
+    if (this.flashTimer) clearTimeout(this.flashTimer);
+  }
+
+  // ── Toggle handlers ────────────────────────────────────────────────────────
+
+  setDonutMode(mode: DonutMode): void {
+    this.donutMode.set(mode);
+  }
+
+  setLeaderboardMode(mode: LeaderboardMode): void {
+    this.leaderboardMode.set(mode);
+  }
+
+  /**
+   * Quick-filter chip click: the store resets ALL filters before applying the
+   * preset's patch; clicking the active preset again clears and deactivates it.
+   */
+  applyPreset(preset: QuickFilterPreset): void {
+    this.store.togglePreset(preset.id, preset.patch);
+    if (this.store.activePresetId() !== preset.id) return; // toggled off — no flash
+    this.flashPresetId.set(preset.id);
+    if (this.flashTimer) clearTimeout(this.flashTimer);
+    this.flashTimer = setTimeout(() => this.flashPresetId.set(null), 1500);
   }
 
   // ── Public helpers for template ────────────────────────────────────────────
 
   formatSize(bytes: number): string {
-    const TiB = 1024 ** 4;
-    const GiB = 1024 ** 3;
-    if (bytes >= TiB) return (bytes / TiB).toFixed(1) + ' TB';
-    return (bytes / GiB).toFixed(1) + ' GB';
+    if (bytes >= TIB) return (bytes / TIB).toFixed(1) + ' TB';
+    return (bytes / GIB).toFixed(1) + ' GB';
   }
 
-  hogBarPercent(bytes: number): number {
-    const hogs = this.topStorageHogs();
-    if (!hogs.length) return 0;
-    const max = hogs[0].totalSizeBytes;
-    return max > 0 ? (bytes / max) * 100 : 0;
+  /** Semantic GiB/h badge: emerald = lean, amber = bloaty, crimson = extreme. */
+  gibBadgeClass(gib: number): string {
+    if (gib >= BLOAT_GIB_PER_HOUR * 2) return 'la-badge la-badge--bad';
+    if (gib > BLOAT_GIB_PER_HOUR) return 'la-badge la-badge--warn';
+    return 'la-badge la-badge--ok';
   }
 
-  // ── Chart builders ─────────────────────────────────────────────────────────
+  /** Semantic codec badge: H264 = transcode candidate (amber), HEVC/AV1 = optimized (emerald). */
+  codecBadgeClass(badge: string): string {
+    const b = (badge ?? '').toUpperCase();
+    if (!b || b === '—') return 'la-badge';
+    if (b.includes('H264')) return b.includes('/') ? 'la-badge la-badge--mixed' : 'la-badge la-badge--warn';
+    return 'la-badge la-badge--ok';
+  }
+
+  /** Value shown on the right of a leaderboard row for the active mode. */
+  lbValue(entry: LeaderboardEntry): string {
+    switch (this.leaderboardMode()) {
+      case 'totalGb':
+        return this.formatSize(entry.totalSizeBytes);
+      case 'bloatGibPerHour':
+        return entry.gibPerHour.toFixed(2) + ' GiB/h';
+      case 'reclaimable':
+        return this.formatSize(entry.reclaimableBytes);
+    }
+  }
+
+  /** Width of the row's background bar relative to the current mode's leader. */
+  lbBarPercent(entry: LeaderboardEntry): number {
+    const metric = (e: LeaderboardEntry): number => {
+      switch (this.leaderboardMode()) {
+        case 'totalGb':
+          return e.totalSizeBytes;
+        case 'bloatGibPerHour':
+          return e.gibPerHour;
+        case 'reclaimable':
+          return e.reclaimableBytes;
+      }
+    };
+    const entries = this.leaderboard();
+    const max = entries.reduce((a, e) => Math.max(a, metric(e)), 0);
+    return max > 0 ? (metric(entry) / max) * 100 : 0;
+  }
+
+  // ── Chart builder (Chart.js doughnut + datalabels) ─────────────────────────
 
   private buildDoughnutChart(
     canvas: HTMLCanvasElement,
-    dist: Record<string, number>,
+    slices: DonutSlice[],
+    mode: DonutMode,
     existing: Chart | null,
   ): Chart {
     existing?.destroy();
 
-    const entries = Object.entries(dist)
-      .map(([k, v]) => [k || 'Unknown', v] as [string, number])
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 15);
-    const labels = entries.map(([k]) => k);
-    const data = entries.map(([, v]) => v);
+    const entries = slices.slice(0, 15);
+    const labels = entries.map(s => s.label);
+    const data = entries.map(s => s.value);
     const total = data.reduce((a, b) => a + b, 0);
     const colors = labels.map((_, i) => this.PALETTE[i % this.PALETTE.length]);
+    const fmt = (value: number): string =>
+      mode === 'size' ? this.formatSize(value) : `${value}`;
 
     const isDark = this.themeService.isDarkTheme();
     const textColor = isDark ? '#e8e8f0' : '#1a1a2e';
 
-    const config: ChartConfiguration<'doughnut'>= {
+    const config: ChartConfiguration<'doughnut'> = {
       type: 'doughnut',
       data: {
         labels,
@@ -212,7 +345,7 @@ export class AnalyticsChartsComponent implements OnDestroy {
               generateLabels: (chart: Chart) => {
                 const ds = chart.data.datasets[0];
                 return (chart.data.labels as string[]).map((lbl, i) => ({
-                  text: `${lbl} (${(ds.data as number[])[i]})`,
+                  text: `${lbl} (${fmt((ds.data as number[])[i])})`,
                   fillStyle: (ds.backgroundColor as string[])[i],
                   strokeStyle: (ds.backgroundColor as string[])[i],
                   lineWidth: 0,
@@ -225,7 +358,7 @@ export class AnalyticsChartsComponent implements OnDestroy {
           },
           tooltip: {
             callbacks: {
-              label: (ctx) => this.tooltipLabel(ctx as never),
+              label: (ctx) => this.tooltipLabel(ctx as never, fmt),
             },
           },
           datalabels: {
@@ -248,109 +381,30 @@ export class AnalyticsChartsComponent implements OnDestroy {
     return new Chart(canvas, config as unknown as ChartConfiguration);
   }
 
-  private buildBarChart(
-    canvas: HTMLCanvasElement,
-    dist: Record<string, number>,
-    existing: Chart | null,
-  ): Chart {
-    existing?.destroy();
-
-    const entries = Object.entries(dist)
-      .map(([k, v]) => [k || 'Unknown', v] as [string, number])
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 15);
-    const labels = entries.map(([k]) => k);
-    const data = entries.map(([, v]) => v);
-    const total = data.reduce((a, b) => a + b, 0);
-    const colors = labels.map((_, i) => this.PALETTE[i % this.PALETTE.length]);
-
-    const isDark = this.themeService.isDarkTheme();
-    const textColor = isDark ? '#e8e8f0' : '#1a1a2e';
-    const gridColor= isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
-
-    const config: ChartConfiguration<'bar'> = {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [
-          {
-            data,
-            backgroundColor: colors,
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: { duration: 900, easing: 'easeInOutQuart' as const },
-        indexAxis: 'y' as const,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            mode: 'nearest' as const,
-            intersect: false,
-            callbacks: {
-              label: (ctx) => {
-                const value = ctx.raw as number;
-                const total = (ctx.dataset.data as number[]).reduce((a: number, b: number) => a + b, 0);
-                const raw = total > 0 ? (value / total) * 100 : 0;
-                const pct = raw < 1 && raw > 0 ? raw.toFixed(2) : raw.toFixed(1);
-                return `${value} ${this.translate.instant('library.table.series')} (${pct}%)`;
-              },
-            },
-          },
-          datalabels: {
-            anchor: 'end',
-            align: 'end',
-            color: textColor,
-            font: { size: 10, weight: 'bold' as const },
-            formatter: (value: number) => {
-              const raw = total > 0 ? (value / total) * 100 : 0;
-              const pct = raw < 1 && raw > 0 ? raw.toFixed(2) : raw.toFixed(1);
-              return `${pct}%`;
-            },
-          } as never,
-        },
-        scales: {
-          x: { ticks: { color: textColor }, grid: { color: gridColor } },
-          y: { ticks: { color: textColor, font: { size: 11 } }, grid: { display: false } },
-        },
-      },
-    };
-
-    return new Chart(canvas, config as unknown as ChartConfiguration);
-  }
-
   // ── Shared helpers ─────────────────────────────────────────────────────────
 
-  private tooltipLabel(ctx: { raw: unknown; dataset: { data: unknown[] } }): string {
+  private tooltipLabel(
+    ctx: { raw: unknown; dataset: { data: unknown[] } },
+    fmt: (value: number) => string,
+  ): string {
     const values = ctx.dataset.data as number[];
     const total = values.reduce((a, b) => a + b, 0);
     const value = ctx.raw as number;
     const raw = total > 0 ? (value / total) * 100 : 0;
     const pct = raw < 1 && raw > 0 ? raw.toFixed(2) : raw.toFixed(1);
-    return ` ${value} (${pct}%)`;
+    return ` ${fmt(value)} (${pct}%)`;
   }
 
-  private rebuildAllCharts(): void {
-    const vcCanvas = this.videoCodecCanvas();
-    const vcDist = this.videoCodecDist();
-    if (vcCanvas && Object.keys(vcDist).length > 0) {
-      this.videoCodecChart = this.buildDoughnutChart(vcCanvas.nativeElement, vcDist, this.videoCodecChart);
-    }
-
-    const acCanvas = this.audioCodecCanvas();
-    const acDist = this.audioCodecDist();
-    if (acCanvas && Object.keys(acDist).length > 0) {
-      this.audioCodecChart = this.buildDoughnutChart(acCanvas.nativeElement, acDist, this.audioCodecChart);
-    }
-
-    const resCanvas = this.resolutionCanvas();
-    const resDist = this.resolutionDist();
-    if (resCanvas && Object.keys(resDist).length > 0) {
-      this.resolutionChart = this.buildBarChart(resCanvas.nativeElement, resDist, this.resolutionChart);
+  private rebuildChart(): void {
+    const canvas = this.codecCanvas();
+    const slices = this.donutSlices();
+    if (canvas && slices.length > 0) {
+      this.codecChart = this.buildDoughnutChart(
+        canvas.nativeElement,
+        slices,
+        this.donutMode(),
+        this.codecChart,
+      );
     }
   }
 }

@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   HostListener,
   inject,
   input,
@@ -10,8 +11,34 @@ import {
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { LibrarySeriesRow } from '../../models/library-analysis.models';
+import { LibraryEpisodeFileInfo, LibrarySeriesRow } from '../../models/library-analysis.models';
+import {
+  codecByteTotal,
+  codecSizeShare,
+  deriveSeriesStatus,
+  estimateSeriesSavings,
+} from '../../models/library-intel.models';
 import { formatTableSize } from '../../utils/format.utils';
+import {
+  buildHandBrakeQueue,
+  HandBrakeQueueFile,
+  handBrakeQueueFileName,
+  quoteCliArgs,
+  seasonOf,
+  serializeHandBrakeQueue,
+} from '../../utils/user-path.utils';
+import { UserPathService } from '../../services/user-path.service';
+
+/** FILES table mini-tab selection. */
+type FileFilter = 'all' | 'h264' | 'hevc';
+
+/** One segment of the stacked dual-codec composition bar. */
+interface CodecSegment {
+  codec: string;
+  bytes: number;
+  pct: number;
+  color: string;
+}
 
 @Component({
   selector: 'app-la-detail-panel',
@@ -23,6 +50,7 @@ import { formatTableSize } from '../../utils/format.utils';
 })
 export class DetailPanelComponent {
   private readonly translateService = inject(TranslateService);
+  protected readonly userPath = inject(UserPathService);
 
   // ── Inputs ──────────────────────────────────────────────────────────────────
   readonly row = input<LibrarySeriesRow | null>(null);
@@ -36,7 +64,27 @@ export class DetailPanelComponent {
 
   // ── State ───────────────────────────────────────────────────────────────────
   readonly closing = signal(false);
+  /** Clipboard feedback ("Copied!" flash on the Copy Paths trigger). */
   readonly copySuccess = signal(false);
+
+  // ── FILES table mini-tabs ────────────────────────────────────────────────────
+  protected readonly fileFilter = signal<FileFilter>('all');
+
+  // ── Multi-episode selection (Set of episodeFileId) ───────────────────────────
+  protected readonly selectedIds = signal<Set<number>>(new Set());
+
+  // ── Split-dropdown 'Copy Paths' menu ─────────────────────────────────────────
+  protected readonly exportMenuOpen = signal(false);
+
+  constructor() {
+    // Reset the mini-tab and selection whenever a different series is shown
+    effect(() => {
+      this.row();
+      this.fileFilter.set('all');
+      this.selectedIds.set(new Set());
+      this.exportMenuOpen.set(false);
+    });
+  }
 
   // ── Sort state ───────────────────────────────────────────────────────────────
   protected readonly sortCol = signal<string>('size');
@@ -46,6 +94,15 @@ export class DetailPanelComponent {
   @HostListener('document:keydown.escape')
   onEscape(): void {
     if (this.row()) this.close();
+  }
+
+  // ── Click outside the split button closes its dropdown ──────────────────────
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement | null;
+    if (this.exportMenuOpen() && !target?.closest('.la-split')) {
+      this.exportMenuOpen.set(false);
+    }
   }
 
   // ── Touch: swipe-right to close ─────────────────────────────────────────────
@@ -93,6 +150,116 @@ export class DetailPanelComponent {
     () => this.row()?.episodeFiles?.some(f => f.isDurationEstimated) ?? false
   );
 
+  // ── Season-aware header status badge (same vocabulary as the table) ────────
+
+  protected readonly statusBadgeClass = computed(() => {
+    const r = this.row();
+    if (!r) return '';
+    switch (deriveSeriesStatus(r)) {
+      case 'seriesEndedComplete': return 'la-status-badge la-status-badge--ended';
+      case 'incompleteOnDisk':    return 'la-status-badge la-status-badge--incomplete';
+      case 'seasonEndedHiatus':
+      case 'airingWeekly':
+      default:                    return 'la-status-badge la-status-badge--amber';
+    }
+  });
+
+  protected readonly statusBadgeKey = computed(() => {
+    const r = this.row();
+    return r ? `libraryIntel.badge.${deriveSeriesStatus(r)}` : '';
+  });
+
+  // ── Stacked dual-codec composition ───────────────────────────────────────────
+
+  protected readonly codecSegments = computed<CodecSegment[]>(() => {
+    const r = this.row();
+    if (!r) return [];
+    const dist = r.videoCodecDistribution;
+    const codecs = dist
+      ? Object.keys(dist).filter(k => (dist[k] ?? 0) > 0)
+      : r.primaryVideoCodec
+        ? [r.primaryVideoCodec]
+        : [];
+    return codecs
+      .map(codec => ({
+        codec: this.normCodec(codec),
+        bytes: codecByteTotal(r, codec),
+        pct: codecSizeShare(r, codec),
+        color: this.codecColor(codec),
+      }))
+      .sort((a, b) => b.bytes - a.bytes);
+  });
+
+  /** More than one distinct video codec → stacked bar replaces the single codec stat. */
+  protected readonly hasMixedCodecs = computed(() => this.codecSegments().length > 1);
+
+  // ── Est. savings ─────────────────────────────────────────────────────────────
+
+  protected readonly estSavingsGb = computed(() => {
+    const r = this.row();
+    return r ? estimateSeriesSavings(r) / 1_073_741_824 : 0;
+  });
+
+  // ── Files filter tabs ────────────────────────────────────────────────────────
+
+  protected readonly allFileCount = computed(() => this.row()?.episodeFiles?.length ?? 0);
+
+  protected readonly h264Files = computed(
+    () => (this.row()?.episodeFiles ?? []).filter(f => this.isH264(f.videoCodec))
+  );
+
+  protected readonly h264FileCount = computed(() => this.h264Files().length);
+
+  protected readonly hevcFileCount = computed(
+    () => (this.row()?.episodeFiles ?? []).filter(f => this.isHevc(f.videoCodec)).length
+  );
+
+  /** Sorted file list narrowed to the selected mini-tab. */
+  protected readonly visibleFiles = computed(() => {
+    const filter = this.fileFilter();
+    const files = this.sortedFiles();
+    if (filter === 'h264') return files.filter(f => this.isH264(f.videoCodec));
+    if (filter === 'hevc') return files.filter(f => this.isHevc(f.videoCodec));
+    return files;
+  });
+
+  // ── Multi-episode selection ──────────────────────────────────────────────────
+
+  protected readonly selectedCount = computed(() => this.selectedIds().size);
+
+  protected readonly selectedFiles = computed<LibraryEpisodeFileInfo[]>(() => {
+    const ids = this.selectedIds();
+    return (this.row()?.episodeFiles ?? []).filter(f => ids.has(f.episodeFileId));
+  });
+
+  /**
+   * Export/copy scope: the checkbox selection, or every H264 episode when
+   * nothing is selected (the natural 'needs transcode' worklist).
+   */
+  protected readonly actionFiles = computed<LibraryEpisodeFileInfo[]>(() => {
+    const sel = this.selectedFiles();
+    return sel.length ? sel : this.h264Files();
+  });
+
+  /** Resolved HOST paths of the export scope (row.path + relativePath → mapping). */
+  protected readonly actionHostPaths = computed(() =>
+    this.actionFiles().map(f => this.userPath.resolve(this.filePath(f)))
+  );
+
+  /** Number of episodes the HandBrake queue export will contain. */
+  protected readonly exportQueueCount = computed(() => this.actionFiles().length);
+
+  protected readonly allVisibleSelected = computed(() => {
+    const visible = this.visibleFiles();
+    const ids = this.selectedIds();
+    return visible.length > 0 && visible.every(f => ids.has(f.episodeFileId));
+  });
+
+  protected readonly someVisibleSelected = computed(() => {
+    const ids = this.selectedIds();
+    return this.visibleFiles().some(f => ids.has(f.episodeFileId));
+  });
+
   // ── Methods ─────────────────────────────────────────────────────────────────
 
   close(): void {
@@ -104,10 +271,129 @@ export class DetailPanelComponent {
     }, 200);
   }
 
-  async copyPath(path: string): Promise<void> {
-    await navigator.clipboard.writeText(path);
+  // ── Path display (container → host) ─────────────────────────────────────────
+
+  /** Displayed/copied paths always go through the user's host mapping. */
+  protected resolvedPath(containerPath: string): string {
+    return this.userPath.resolve(containerPath);
+  }
+
+  protected isPathMapped(containerPath: string): boolean {
+    return this.userPath.isMapped(containerPath);
+  }
+
+  // ── Clipboard / exports ────────────────────────────────────────────────────
+
+  private async copyText(text: string): Promise<void> {
+    await navigator.clipboard.writeText(text);
     this.copySuccess.set(true);
     setTimeout(() => this.copySuccess.set(false), 2000);
+  }
+
+  /** 📁 Resolved host folder; appends the season subfolder when the scope is a single season. */
+  protected async copyFolderPath(): Promise<void> {
+    const r = this.row();
+    if (!r) return;
+    const scoped = this.selectedFiles().length ? this.selectedFiles() : this.visibleFiles();
+    const seasons = new Set(scoped.map(f => seasonOf(f.relativePath)));
+    let folder = r.path;
+    if (seasons.size === 1) {
+      const season = [...seasons][0];
+      if (season) folder = `${r.path}/${season}`;
+    }
+    await this.copyText(this.userPath.resolve(folder));
+    this.exportMenuOpen.set(false);
+  }
+
+  /** Dropdown item: newline-joined resolved host paths of the export scope. */
+  protected async copyPlainPaths(): Promise<void> {
+    const paths = this.actionHostPaths();
+    if (!paths.length) return;
+    await this.copyText(paths.join('\n'));
+    this.exportMenuOpen.set(false);
+  }
+
+  /** Dropdown item: quoted CLI arguments, one per line. */
+  protected async copyQuotedCliArgs(): Promise<void> {
+    const paths = this.actionHostPaths();
+    if (!paths.length) return;
+    await this.copyText(quoteCliArgs(paths));
+    this.exportMenuOpen.set(false);
+  }
+
+  /**
+   * Primary CTA: downloads a native HandBrake queue.json over the export scope
+   * (selected episodes, or all H264 episodes when nothing is selected).
+   */
+  protected exportQueue(): void {
+    const r = this.row();
+    const files = this.actionFiles();
+    if (!r || !files.length) return;
+    const queueFiles: HandBrakeQueueFile[] = files.map(f => ({
+      hostSourcePath: this.userPath.resolve(this.filePath(f)),
+      sourceFileName: this.fileNameOf(f),
+      durationSeconds: f.durationSeconds ?? 0,
+      resolution: f.resolution ?? '',
+    }));
+    const queue = buildHandBrakeQueue(
+      queueFiles,
+      this.userPath.destDir(),
+      this.userPath.destMode(),
+      this.userPath.presetName()
+    );
+    const blob = new Blob([serializeHandBrakeQueue(queue)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = handBrakeQueueFileName(r.title);
+    link.click();
+    URL.revokeObjectURL(url);
+    this.exportMenuOpen.set(false);
+  }
+
+  // ── Selection toggles ──────────────────────────────────────────────────────
+
+  protected isSelected(episodeFileId: number): boolean {
+    return this.selectedIds().has(episodeFileId);
+  }
+
+  protected toggleFile(episodeFileId: number): void {
+    this.selectedIds.update(ids => {
+      const next = new Set(ids);
+      if (next.has(episodeFileId)) next.delete(episodeFileId);
+      else next.add(episodeFileId);
+      return next;
+    });
+  }
+
+  /** Master checkbox: selects/deselects every currently visible (filtered) file. */
+  protected toggleAllVisible(): void {
+    const visible = this.visibleFiles();
+    const allSelected = this.allVisibleSelected();
+    this.selectedIds.update(ids => {
+      const next = new Set(ids);
+      for (const f of visible) {
+        if (allSelected) next.delete(f.episodeFileId);
+        else next.add(f.episodeFileId);
+      }
+      return next;
+    });
+  }
+
+  /** 'Select All Filtered ({{count}})' toggle button. */
+  protected toggleSelectAllFiltered(): void {
+    this.toggleAllVisible();
+  }
+
+  protected clearSelection(): void {
+    this.selectedIds.set(new Set());
+    this.exportMenuOpen.set(false);
+  }
+
+  /** Clicking the 'Needs Transcode / H264' tab auto-selects exactly those files. */
+  protected selectH264Tab(): void {
+    this.fileFilter.set('h264');
+    this.selectedIds.set(new Set(this.h264Files().map(f => f.episodeFileId)));
   }
 
   formatSize(bytes: number | undefined): string {
@@ -144,7 +430,52 @@ export class DetailPanelComponent {
     }
   }
 
-  protected getFilename(relativePath: string): string {
-    return relativePath.split(/[/\\]/).pop() ?? relativePath;
+  /** Full container path of a file: row.path + '/' + relativePath, or relativePath alone. */
+  protected filePath(f: LibraryEpisodeFileInfo): string {
+    const base = this.row()?.path ?? '';
+    return base ? `${base}/${f.relativePath}` : f.relativePath;
+  }
+
+  /** Full HOST path of a file (hover tooltip + copied in exports). */
+  protected resolvedFilePath(f: LibraryEpisodeFileInfo): string {
+    return this.userPath.resolve(this.filePath(f));
+  }
+
+  /** File name with extension, derived from the relative path. */
+  protected fileNameOf(f: LibraryEpisodeFileInfo): string {
+    const parts = (f.relativePath ?? '').split(/[\\/]/);
+    return parts[parts.length - 1] || f.relativePath || '';
+  }
+
+  /** Compact 'S01E01' badge derived from the relative path / file name. */
+  protected episodeBadge(f: LibraryEpisodeFileInfo): string {
+    const raw = f.relativePath ?? '';
+    const m = raw.match(/S(\d+)[\s._-]*E(\d+)/i) ?? raw.match(/\b(\d{1,2})[xX](\d{2,3})\b/);
+    if (!m) return '—';
+    const season = String(Math.max(0, Number(m[1]))).padStart(2, '0');
+    const episode = String(Math.max(0, Number(m[2]))).padStart(2, '0');
+    return `S${season}E${episode}`;
+  }
+
+  protected normCodec(codec: string | undefined | null): string {
+    return (codec ?? '').trim().toUpperCase();
+  }
+
+  protected isH264(codec: string | undefined | null): boolean {
+    return this.normCodec(codec) === 'H264';
+  }
+
+  protected isHevc(codec: string | undefined | null): boolean {
+    return this.normCodec(codec) === 'HEVC';
+  }
+
+  /** Segment colors: H264 amber, HEVC emerald, AV1 indigo, others slate. */
+  protected codecColor(codec: string | undefined | null): string {
+    switch (this.normCodec(codec)) {
+      case 'H264': return '#f59e0b';
+      case 'HEVC': return '#22c55e';
+      case 'AV1':  return '#7c6cf0';
+      default:     return '#64748b';
+    }
   }
 }

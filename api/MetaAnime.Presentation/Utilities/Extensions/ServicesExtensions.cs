@@ -107,6 +107,7 @@ public static class ServicesExtensions
         services.AddMemoryCache();
         services.AddSingleton<MetaAnime.Application.Interfaces.ISecretProtector, MetaAnime.Utilities.Security.DataProtectionSecretProtector>();
         services.AddScoped<IBotKunTasteProfileService, BotKunTasteProfileService>();
+        services.AddScoped<MetaAnime.Application.Interfaces.IAppConfigBackupService, MetaAnime.Application.Services.AppConfigBackupService>();
 
         services.AddScoped<IKometaAnimeMappingRepository, KometaAnimeMappingRepository>();
         services.AddScoped<ICacheEntryRepository, CacheEntryRepository>();

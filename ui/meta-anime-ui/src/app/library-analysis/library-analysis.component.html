@@ -35,14 +35,12 @@
           (missingFilesClick)="onMissingFilesClick()" />
       }
 
-      <!-- Analytics Charts — always visible; shows skeletons during Phase 1 loading -->
+      <!-- Analytics Charts — Transcode & Storage Intelligence Bar -->
       <app-la-analytics-charts
-        [videoCodecDist]="videoCodecDist()"
-        [audioCodecDist]="audioCodecDist()"
-        [resolutionDist]="resolutionDist()"
-        [topStorageHogs]="topStorageHogs()"
+        [rows]="displayRows()"
         [isEnriching]="enriching()"
-        [isLoading]="loadingSummary()" />
+        [isLoading]="loadingSummary()"
+        (openSeries)="onOpenSeriesFromKpi($event)" />
 
       @if (!loadingSummary()) {
         @if (summary(); as s) {

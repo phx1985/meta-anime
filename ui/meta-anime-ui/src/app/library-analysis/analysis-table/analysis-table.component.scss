@@ -2,11 +2,26 @@
 
 .la-filter-bar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 0.65rem;
   padding: 0.75rem 0;
   margin-bottom: 0.25rem;
+
+  // Two aligned rows — grid tracks (not flex) keep every label/controls band on
+  // the same line even when the video cell grows with SPLIT / CODEC MATCH controls.
+  &__row {
+    display: grid;
+    align-items: start;
+    gap: 0.55rem 1rem;
+
+    &--pillsets {
+      grid-template-columns: minmax(170px, 1.1fr) minmax(240px, 2.2fr) minmax(150px, 1.5fr) minmax(150px, 1.5fr);
+    }
+
+    &--selects {
+      grid-template-columns: repeat(6, minmax(112px, 1fr)) auto;
+    }
+  }
 }
 
 .la-filter {
@@ -15,16 +30,19 @@
   gap: 0.25rem;
 
   &--search {
-    position: relative;
-    flex: 1 1 220px;
-    min-width: 180px;
+    min-width: 0;
     max-width: 320px;
+  }
+
+  &__search-wrap {
+    position: relative;
   }
 
   &__search-icon {
     position: absolute;
     left: 0.65rem;
-    bottom: 0.55rem;
+    top: 50%;
+    transform: translateY(-50%);
     color: var(--text-muted);
     pointer-events: none;
   }
@@ -35,6 +53,7 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-muted);
+    white-space: nowrap; // single-line label band keeps row controls aligned
   }
 
   &__input {
@@ -121,7 +140,7 @@
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.15s, border-color 0.15s;
-    align-self: flex-end;
+    align-self: end;
 
     &:hover {
       background: rgba(239, 68, 68, 0.15);
@@ -255,7 +274,8 @@
 
 // ─── Column widths ───────────────────────────────────────────────────────────
 
-.la-th--title              { width: 22%; }
+.la-th--title              { width: 20%; }
+.la-th--status             { width: 12%; min-width: 150px; }
 .la-th--primaryVideoCodec  { width: 12%; }
 .la-th--primaryAudioCodec  { width: 10%; }
 .la-th--primaryResolution  { width: 7%;  }
@@ -331,6 +351,11 @@
   vertical-align: middle;
 }
 
+.la-td--audio-codec .la-codec-pills-wrap {
+  max-height: 56px; // overflow entries live in the +N badge — never stack tiny percentages
+  overflow: hidden;
+}
+
 .la-codec-pills-wrap {
   display: flex;
   flex-wrap: wrap;
@@ -348,32 +373,21 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.02em;
+  background: rgba(108, 99, 255, 0.12); // fallback tone
+  color: var(--accent-primary);
 
   // Video codecs
-  &--hevc, &--h265, &--x265 {
-    background: rgba(34, 197, 94, 0.15);
-    color: #22c55e;
-  }
+  &--hevc, &--h265, &--x265 { background: rgba(34, 197, 94, 0.15);  color: #22c55e; }
+  &--h264, &--x264, &--avc  { background: rgba(249, 115, 22, 0.15); color: #f97316; }
+  &--av1                    { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+  &--mpeg2                  { background: rgba(239, 68, 68, 0.15);  color: #ef4444; }
 
-  &--h264, &--x264, &--avc {
-    background: rgba(249, 115, 22, 0.15);
-    color: #f97316;
-  }
-
-  &--av1 {
-    background: rgba(59, 130, 246, 0.15);
-    color: #3b82f6;
-  }
-
-  &--mpeg2 {
-    background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
-  }
-
-  // Default (audio codecs, etc.)
-  &:not([class*='--h']):not([class*='--a']):not([class*='--m']):not([class*='--x']) {
-    background: rgba(108, 99, 255, 0.12);
-    color: var(--accent-primary);
+  // Overflow "+N" badge for sub-5% audio entries
+  &--more {
+    border: 1px solid var(--card-border);
+    background: rgba(128, 128, 128, 0.1);
+    color: var(--text-muted);
+    cursor: default;
   }
 
   &--sm {
@@ -381,6 +395,12 @@
     font-size: 0.65rem;
   }
 }
+
+// Audio codec tones — AAC/MP3 slate, OPUS teal, EAC3/AC3 purple, FLAC/WAV/DTS amber
+.la-audio-pill--slate  { border: 1px solid rgba(99, 102, 241, 0.3);  background: rgba(99, 102, 241, 0.15);  color: #818cf8; }
+.la-audio-pill--teal   { border: 1px solid rgba(20, 184, 166, 0.3);  background: rgba(20, 184, 166, 0.15);  color: #5eead4; }
+.la-audio-pill--purple { border: 1px solid rgba(168, 85, 247, 0.3);  background: rgba(168, 85, 247, 0.15);  color: #c4b5fd; }
+.la-audio-pill--amber  { border: 1px solid rgba(245, 158, 11, 0.3);  background: rgba(245, 158, 11, 0.15);  color: #fcd34d; }
 
 .la-pill-pct {
   font-size: 0.7em;
@@ -399,6 +419,155 @@
   background: rgba(108, 99, 255, 0.1);
   color: var(--accent-primary);
   border: 1px solid rgba(108, 99, 255, 0.2);
+}
+
+// ─── Status badge (season-aware) ────────────────────────────────────────────
+
+.la-td--status {
+  min-width: 150px;
+  white-space: nowrap;
+  overflow: visible; // badge labels must never truncate
+}
+
+.la-status-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+
+  &--ended {
+    background: rgba(34, 197, 94, 0.15);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: #22c55e;
+  }
+
+  &--amber {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #f59e0b;
+  }
+
+  &--incomplete {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+  }
+}
+
+// ─── ⚡ Split toggle + codec match-mode popover ──────────────────────────────
+
+.la-filter__pill--split {
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+}
+
+.la-filter__pill--split.la-filter__pill--active {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.la-match-mode {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+
+  &__trigger {
+    gap: 0.35rem;
+  }
+
+  &__trigger--on {
+    background: rgba(108, 99, 255, 0.15);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    font-weight: 700;
+  }
+
+  &__caret {
+    font-size: 0.55rem;
+    opacity: 0.75;
+  }
+
+  &__popover {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    left: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-width: 240px;
+    padding: 0.65rem;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  }
+
+  &__modes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  &__custom {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  &__label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  &__percent {
+    width: 4.25rem;
+    height: 1.9rem;
+    padding: 0 0.45rem;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.8rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent-primary);
+    }
+  }
+
+  &__op {
+    height: 1.9rem;
+    padding: 0 0.45rem;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  &__slider {
+    width: 100%;
+    accent-color: var(--accent-primary);
+    cursor: pointer;
+  }
 }
 
 // ─── Shimmer inline ──────────────────────────────────────────────────────────
@@ -481,9 +650,8 @@
 // ─── Responsive ──────────────────────────────────────────────────────────────
 
 @media (max-width: 768px) {
-  .la-filter-bar {
-    flex-direction: column;
-    align-items: stretch;
+  .la-filter-bar__row {
+    grid-template-columns: 1fr;
   }
 
   .la-filter--search {

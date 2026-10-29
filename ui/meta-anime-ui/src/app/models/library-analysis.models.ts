@@ -29,6 +29,8 @@ export interface LibrarySeriesRow {
   localAnimeId?: string | null;
   totalDurationSeconds: number;
   gibPerHour: number;
+  /** Sonarr next-airing date (null when ended or between seasons). Drives the season-aware status filter. */
+  nextAiringDate?: string | null;
 }
 
 export interface LibraryEpisodeFileInfo {

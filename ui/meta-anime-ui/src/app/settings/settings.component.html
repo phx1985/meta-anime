@@ -1294,6 +1294,280 @@
                     </div>
                   </div>
                   </div>
+                  <!-- ── Library & HandBrake transcode paths group ───────────────── -->
+                  <div id="library-handbrake-paths" class="pref-group">
+                    <div class="pref-group__header">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <rect x="2" y="3" width="20" height="18" rx="2"/>
+                        <line x1="7" y1="3" x2="7" y2="21"/>
+                        <line x1="17" y1="3" x2="17" y2="21"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                      </svg>
+                      <span>{{ 'userPreferences.libraryHandbrake.groupTitle' | translate }}</span>
+                    </div>
+
+                    <!-- Container Media Root -->
+                    <div class="setting-row" [class.setting-row--saved]="pathSavedKey() === 'containerRoot'">
+                      <div class="setting-info">
+                        <div class="setting-name">
+                          {{ 'userPreferences.libraryHandbrake.containerRoot.name' | translate }}
+                        </div>
+                        <div class="setting-desc">
+                          {{ 'userPreferences.libraryHandbrake.containerRoot.desc' | translate }}
+                        </div>
+                      </div>
+                      <div class="setting-value-area">
+                        <input
+                          type="text"
+                          class="form-control form-control-sm setting-input"
+                          [value]="userPaths.mapping().containerRoot"
+                          (change)="onContainerRootChange($event)"
+                          [attr.aria-label]="'userPreferences.libraryHandbrake.containerRoot.name' | translate"
+                        />
+                        <div class="path-field-row">
+                          @if (pathSavedKey() === 'containerRoot') {
+                            <span class="badge-saved"
+                              >&#10003; {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
+                            >
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Host Media Mount Path (Source) -->
+                    <div class="setting-row" [class.setting-row--saved]="pathSavedKey() === 'hostRoot'">
+                      <div class="setting-info">
+                        <div class="setting-name">
+                          {{ 'userPreferences.libraryHandbrake.hostRoot.name' | translate }}
+                        </div>
+                        <div class="setting-desc">
+                          {{ 'userPreferences.libraryHandbrake.hostRoot.desc' | translate }}
+                        </div>
+                      </div>
+                      <div class="setting-value-area">
+                        <input
+                          type="text"
+                          class="form-control form-control-sm setting-input"
+                          [value]="userPaths.mapping().hostRoot"
+                          (change)="onHostRootChange($event)"
+                          [attr.aria-label]="'userPreferences.libraryHandbrake.hostRoot.name' | translate"
+                        />
+                        @if (hostRootSmb()) {
+                          <div class="path-smb-warning">
+                            {{ 'userPreferences.libraryHandbrake.smbWarning' | translate }}
+                          </div>
+                        }
+                        <div class="path-field-row">
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary path-browse-btn"
+                            (click)="openPathBrowse('hostRoot')"
+                          >
+                            {{ 'userPreferences.libraryHandbrake.browse' | translate }}
+                          </button>
+                          @if (pathSavedKey() === 'hostRoot') {
+                            <span class="badge-saved"
+                              >&#10003; {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
+                            >
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- HandBrake Export / Destination Path -->
+                    <div class="setting-row" [class.setting-row--saved]="pathSavedKey() === 'destDir'">
+                      <div class="setting-info">
+                        <div class="setting-name">
+                          {{ 'userPreferences.libraryHandbrake.destPath.name' | translate }}
+                        </div>
+                        <div class="setting-desc">
+                          {{ 'userPreferences.libraryHandbrake.destPath.desc' | translate }}
+                        </div>
+                      </div>
+                      <div class="setting-value-area">
+                        <input
+                          type="text"
+                          class="form-control form-control-sm setting-input"
+                          [value]="userPaths.destDir()"
+                          [disabled]="userPaths.destMode() === 'transcoded'"
+                          (change)="onDestDirChange($event)"
+                          [attr.aria-label]="'userPreferences.libraryHandbrake.destPath.name' | translate"
+                        />
+                        @if (destDirSmb()) {
+                          <div class="path-smb-warning">
+                            {{ 'userPreferences.libraryHandbrake.smbWarning' | translate }}
+                          </div>
+                        }
+                        <div class="path-field-row">
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary path-browse-btn"
+                            [disabled]="userPaths.destMode() === 'transcoded'"
+                            (click)="openPathBrowse('destDir')"
+                          >
+                            {{ 'userPreferences.libraryHandbrake.browse' | translate }}
+                          </button>
+                          @if (pathSavedKey() === 'destDir') {
+                            <span class="badge-saved"
+                              >&#10003; {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
+                            >
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- "_transcoded subfolder" dest mode toggle (below the dest path) -->
+                    <div class="setting-row" [class.setting-row--saved]="pathSavedKey() === 'destMode'">
+                      <div class="setting-info">
+                        <div class="setting-name">
+                          {{ 'userPreferences.libraryHandbrake.destModeTranscoded' | translate }}
+                        </div>
+                      </div>
+                      <div class="setting-value-area">
+                        <div class="display-row">
+                          <button
+                            type="button"
+                            class="toggle-switch"
+                            [class.toggle-switch--on]="userPaths.destMode() === 'transcoded'"
+                            (click)="toggleDestMode()"
+                            role="switch"
+                            [attr.aria-checked]="userPaths.destMode() === 'transcoded'"
+                            [attr.aria-label]="'userPreferences.libraryHandbrake.destModeTranscoded' | translate"
+                          >
+                            <span class="toggle-thumb"></span>
+                          </button>
+                          <span class="toggle-label">
+                            {{
+                              (userPaths.destMode() === 'transcoded'
+                                ? 'settings.toggle.on'
+                                : 'settings.toggle.off'
+                              ) | translate
+                            }}
+                          </span>
+                          @if (pathSavedKey() === 'destMode') {
+                            <span class="badge-saved"
+                              >&#10003; {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
+                            >
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- HandBrake Preset Name -->
+                    <div class="setting-row" [class.setting-row--saved]="pathSavedKey() === 'presetName'">
+                      <div class="setting-info">
+                        <div class="setting-name">
+                          {{ 'userPreferences.libraryHandbrake.presetName.name' | translate }}
+                        </div>
+                        <div class="setting-desc">
+                          {{ 'userPreferences.libraryHandbrake.presetName.desc' | translate }}
+                        </div>
+                      </div>
+                      <div class="setting-value-area">
+                        <input
+                          type="text"
+                          class="form-control form-control-sm setting-input"
+                          [value]="userPaths.presetName()"
+                          (change)="onPresetNameChange($event)"
+                          [attr.aria-label]="'userPreferences.libraryHandbrake.presetName.name' | translate"
+                        />
+                        <div class="path-field-row">
+                          @if (pathSavedKey() === 'presetName') {
+                            <span class="badge-saved"
+                              >&#10003; {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
+                            >
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Target OS path separator -->
+                    <div class="setting-row" [class.setting-row--saved]="pathSavedKey() === 'separator'">
+                      <div class="setting-info">
+                        <div class="setting-name">
+                          {{ 'settings.fields.PathMap_Separator.name' | translate }}
+                        </div>
+                        <div class="setting-desc">
+                          {{ 'settings.fields.PathMap_Separator.desc' | translate }}
+                        </div>
+                      </div>
+                      <div class="setting-value-area">
+                        <div class="display-row display-row--select">
+                          <select
+                            class="setting-select"
+                            [value]="userPaths.mapping().separator"
+                            (change)="onSeparatorChange($event)"
+                            [attr.aria-label]="'settings.fields.PathMap_Separator.name' | translate"
+                          >
+                            <option value="posix">POSIX /</option>
+                            <option value="windows">Windows \</option>
+                          </select>
+                          @if (pathSavedKey() === 'separator') {
+                            <span class="badge-saved"
+                              >&#10003; {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
+                            >
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- /library-handbrake-paths -->
+
+                  <!-- ── Backup & Restore group ───────────────────────────────── -->
+                  <div
+                    id="config-backup"
+                    class="pref-group config-backup-group"
+                    [class.config-backup-group--dragover]="backupDragOver()"
+                    (dragover)="onBackupDragOver($event)"
+                    (dragleave)="onBackupDragLeave()"
+                    (drop)="onBackupDrop($event)"
+                  >
+                    <div class="pref-group__header">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                      <span>{{ 'configBackup.title' | translate }}</span>
+                    </div>
+                    <div class="setting-row">
+                      <div class="setting-info">
+                        <div class="setting-desc">
+                          {{ 'configBackup.desc' | translate }}
+                        </div>
+                        <div class="config-backup-drop-hint">
+                          {{ 'configBackup.dropHint' | translate }}
+                        </div>
+                      </div>
+                      <div class="setting-value-area">
+                        <div class="path-field-row">
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary path-browse-btn"
+                            (click)="openExportConfirm()"
+                          >
+                            {{ 'configBackup.exportBtn' | translate }}
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary path-browse-btn"
+                            (click)="backupFileInput.click()"
+                          >
+                            {{ 'configBackup.importBtn' | translate }}
+                          </button>
+                          <input
+                            #backupFileInput
+                            type="file"
+                            accept=".json,application/json"
+                            hidden
+                            (change)="onBackupFileSelected($event)"
+                            [attr.aria-label]="'configBackup.importTitle' | translate"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- /config-backup -->
                 }
               </div>
             </div>
@@ -1937,6 +2211,127 @@
         </button>
         <button type="button" class="sync-prompt-btn kometa-warn-proceed-btn" (click)="confirmEnableProvider()">
           {{ 'settings.providerEnableWarn.enableAnyway' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Config Export Warning (backup contains unmasked secrets) ──────────── -->
+@if (exportConfirmOpen()) {
+  <div class="sync-prompt-backdrop kometa-warn-backdrop"
+       [class.sync-prompt-backdrop--leaving]="exportConfirmLeaving()"
+       (click)="dismissExportConfirm()"
+       role="dialog" aria-modal="true"
+       [attr.aria-label]="'configBackup.title' | translate">
+    <div class="sync-prompt-modal kometa-warn-modal"
+         [class.sync-prompt-modal--leaving]="exportConfirmLeaving()"
+         (click)="$event.stopPropagation()">
+      <div class="kometa-warn-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <h3 class="sync-prompt-title">{{ 'configBackup.title' | translate }}</h3>
+      <p class="sync-prompt-desc">{{ 'configBackup.exportWarning' | translate }}</p>
+      <div class="sync-prompt-actions">
+        <button type="button" class="sync-prompt-btn sync-prompt-btn--secondary" (click)="dismissExportConfirm()">
+          {{ 'common.cancel' | translate }}
+        </button>
+        <button type="button" class="sync-prompt-btn kometa-warn-proceed-btn" (click)="confirmExport()">
+          {{ 'configBackup.exportBtn' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ── Library path browse modal (directory picker + manual-entry fallback) ─ -->
+@if (browseTarget()) {
+  <div
+    class="sync-prompt-backdrop"
+    (click)="closePathBrowse()"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'userPreferences.libraryHandbrake.browse' | translate"
+  >
+    <div class="sync-prompt-modal path-browse-modal" (click)="$event.stopPropagation()">
+      <h3 class="sync-prompt-title">{{ browseTitleKey() | translate }}</h3>
+      <p class="sync-prompt-desc">{{ browseDescKey() | translate }}</p>
+      <input
+        type="text"
+        class="form-control form-control-sm setting-input path-browse-input"
+        [value]="browseInput()"
+        (input)="onBrowseInput($event)"
+        [attr.aria-label]="browseTitleKey() | translate"
+      />
+      <div class="path-browse-chips">
+        <button type="button" class="path-browse-chip" (click)="applyBrowseQuickPick('/mnt/media')">
+          /mnt/media
+        </button>
+        <button
+          type="button"
+          class="path-browse-chip"
+          (click)="applyBrowseQuickPick('/run/user/1000/gvfs/')"
+        >
+          /run/user/1000/gvfs/
+        </button>
+        <button type="button" class="path-browse-chip" (click)="applyBrowseQuickPick('Z:\\')">
+          Z:\
+        </button>
+      </div>
+      <!-- Server-side folder navigator (real filesystem of the API host) -->
+      <div class="path-browse-nav">
+        <div class="path-browse-nav__header">
+          <button
+            type="button"
+            class="path-browse-nav__up"
+            (click)="browseUp()"
+            [disabled]="!browseParent()"
+            [attr.aria-label]="'userPreferences.libraryHandbrake.browseUp' | translate"
+          >
+            ⬆
+          </button>
+          <code class="path-browse-nav__path" [attr.title]="browseCurrentPath()">{{ browseCurrentPath() }}</code>
+        </div>
+        <div class="path-browse-nav__list">
+          @if (browseLoading()) {
+            <div class="path-browse-nav__note">
+              <span class="path-browse-nav__spinner" aria-hidden="true"></span>
+              {{ 'userPreferences.libraryHandbrake.browseLoading' | translate }}
+            </div>
+          } @else if (browseError()) {
+            <div class="path-browse-nav__note path-browse-nav__note--error">
+              <span aria-hidden="true">⚠️</span>
+              {{ browseError() | translate }}
+              <button type="button" class="path-browse-nav__retry" (click)="browseRetry()">
+                {{ 'userPreferences.libraryHandbrake.browseRetry' | translate }}
+              </button>
+            </div>
+          } @else if (browseDirectories().length === 0) {
+            <div class="path-browse-nav__note">
+              {{ 'userPreferences.libraryHandbrake.browseEmpty' | translate }}
+            </div>
+          } @else {
+            @for (d of browseDirectories(); track d.path) {
+              <button type="button" class="path-browse-nav__item" (click)="navigateBrowse(d)">
+                <span class="path-browse-nav__icon" aria-hidden="true">📁</span>
+                <span class="path-browse-nav__name">{{ d.name }}</span>
+                <span class="path-browse-nav__chevron" aria-hidden="true">›</span>
+              </button>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="sync-prompt-actions">
+        <button type="button" class="sync-prompt-btn sync-prompt-btn--secondary" (click)="closePathBrowse()">
+          {{ 'common.cancel' | translate }}
+        </button>
+        <button type="button" class="sync-prompt-btn sync-prompt-btn--primary" (click)="confirmPathBrowse()">
+          {{ 'userPreferences.libraryHandbrake.browseSelectHere' | translate }}
         </button>
       </div>
     </div>
