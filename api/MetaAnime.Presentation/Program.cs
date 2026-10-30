@@ -26,16 +26,6 @@ using System.Threading.RateLimiting;
 // try mkdir("/app") and crash on hosts with an immutable root filesystem (Bazzite).
 // Resolution order: METAANIME_WEBROOT -> /app/wwwroot when it exists (container) ->
 // a local-safe path next to the binary.
-var webRootPath = Environment.GetEnvironmentVariable("METAANIME_WEBROOT");
-if (string.IsNullOrEmpty(webRootPath))
-{
-    webRootPath = Directory.Exists("/app/wwwroot")
-        ? "/app/wwwroot"
-        : Path.Combine(AppContext.BaseDirectory, "wwwroot");
-}
-var dataProtectionKeysDir = Environment.GetEnvironmentVariable("METAANIME_KEYS_DIR");
-var assetConfigDir = Environment.GetEnvironmentVariable("METAANIME_ASSET_CONFIG_DIR") ?? "/config/wwwroot-assets";
-
 // Writable-path contract for containers with a read-only root filesystem:
 // the app directory (/app) is never written to. Deployments point the writable
 // locations at mounted volumes/tmpfs via these optional environment variables;
