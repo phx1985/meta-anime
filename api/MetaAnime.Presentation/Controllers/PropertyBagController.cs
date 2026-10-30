@@ -1,9 +1,12 @@
 using Asp.Versioning;
 using Mediator;
 using ApplicationConstants = MetaAnime.Application.Constants;
+using MetaAnime.Application;
 using MetaAnime.Application.Commands;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Queries;
+using MetaAnime.Utilities.ErrorHandling;
+using MetaAnime.Utilities.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,10 +22,9 @@ public sealed class PropertyBagController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<IEnumerable<PropertyBagResponse>>> GetAll()
     {
         var result = await mediator.Send(new GetAllPropertyBagQuery());
-
         if (result.IsFailure)
         {
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         return Ok(result.Value);
@@ -32,11 +34,12 @@ public sealed class PropertyBagController(IMediator mediator) : ControllerBase
     [Authorize]
     public async Task<ActionResult<PropertyBagResponse>> GetByKey(string key)
     {
+        // Internal System:* keys are excluded from the generic property-bag API —
+        // the query handler reports them exactly like missing keys (404).
         var result = await mediator.Send(new GetPropertyBagByKeyQuery(key));
-
         if (result.IsFailure)
         {
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         if (result.Value is null)
@@ -56,11 +59,18 @@ public sealed class PropertyBagController(IMediator mediator) : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var result = await mediator.Send(new UpsertPropertyBagCommand(key, request));
+        // Internal System:* keys cannot be written through the generic
+        // property-bag API at all (the settings API manages System:SessionLifetimeDays).
+        if (PropertyBagKeyPolicy.IsSystemManaged(key))
+        {
+            return StatusCode(StatusCodes.Status400BadRequest,
+                ProblemEnvelope.Create(StatusCodes.Status400BadRequest, $"Key '{key}' is managed by the system."));
+        }
 
+        var result = await mediator.Send(new UpsertPropertyBagCommand(key, request));
         if (result.IsFailure)
         {
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         return Ok(result.Value);
@@ -70,15 +80,12 @@ public sealed class PropertyBagController(IMediator mediator) : ControllerBase
     [Authorize]
     public async Task<IActionResult> Delete(string key)
     {
+        // Internal System:* keys are excluded from the generic property-bag API —
+        // the command handler reports them exactly like missing keys (404).
         var result = await mediator.Send(new DeletePropertyBagCommand(key));
-
         if (result.IsFailure)
         {
-            if (result.Error.Code == ApplicationConstants.Errors.NotFound)
-            {
-                return NotFound(result.Error.Message);
-            }
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         return NoContent();

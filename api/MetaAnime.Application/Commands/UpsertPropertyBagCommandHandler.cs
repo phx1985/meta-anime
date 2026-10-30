@@ -1,6 +1,7 @@
 using Mediator;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Interfaces;
+using MetaAnime.Application.Services.BotKun;
 using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Shared.Results;
@@ -16,6 +17,20 @@ public sealed class UpsertPropertyBagCommandHandler(
     {
         try
         {
+            // Write allowlist: only known settings/property keys are accepted, so the
+            // API can never plant arbitrary keys or overwrite internal ones.
+            if (!PropertyBagKeyPolicy.AllowedUpsertKeys.Contains(request.Key))
+                return Result.Failure<PropertyBagResponse>(new(Constants.Errors.PropertyBagKeyNotAllowed, $"Key '{request.Key}' is not a configurable settings key."));
+
+            // SSRF guard: the Bot-kun provider URL is fetched server-side on chat,
+            // so a disallowed URL must never be persisted in the first place.
+            if (request.Key == SettingsKeys.BotKunBaseUrl)
+            {
+                var validation = ProviderUrlGuard.Validate(request.Request.Value);
+                if (validation.IsFailure)
+                    return Result.Failure<PropertyBagResponse>(validation.Error);
+            }
+
             // Encrypt sensitive values at rest (e.g. the Bot-kun provider API key).
             // The response echoes the plaintext so API behaviour is unchanged.
             var storedValue = SensitiveKeys.Contains(request.Key) && !string.IsNullOrEmpty(request.Request.Value)

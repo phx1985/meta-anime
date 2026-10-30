@@ -107,17 +107,18 @@ EOF
 fi
 
 # ─── Always write Angular runtime config ─────────────────────────────────────
-# Extract the API key from the persisted appsettings and expose it to the
-# pre-built Angular front-end via /assets/config.json. The file is written to
-# /config (the persistent writable volume) — NEVER under /app: the container may
-# run with a read-only root filesystem. MetaAnime.Presentation serves this
-# directory at /assets (overlay above wwwroot) via METAANIME_ASSET_CONFIG_DIR.
-RUNTIME_API_KEY=$(jq -r '.Authentication.ApiKey // ""' /config/appsettings.json 2>/dev/null || true)
+# SECURITY: the runtime API key is NEVER written here. /config/wwwroot-assets is
+# served unauthenticated at /assets, so a config.json containing the key would
+# hand every visitor a full API credential. MetaAnime.Presentation serves
+# /assets/config.json dynamically instead (see Program.cs): the key is returned
+# only while no admin password exists (first-run wizard) or to authenticated
+# callers. The file is still written (with an empty key) so stale files from
+# older versions are scrubbed on upgrade and the SPA fetch keeps its shape.
 mkdir -p /config/wwwroot-assets
 cat > /config/wwwroot-assets/config.json << EOF
 {
-  "apiKey": "${RUNTIME_API_KEY}"
+  "apiKey": ""
 }
 EOF
 chown abc:abc /config/wwwroot-assets/config.json
-echo "[init] Angular runtime config written to /config/wwwroot-assets/config.json"
+echo "[init] Angular runtime config written to /config/wwwroot-assets/config.json (API key is served dynamically by the API, never from disk)"

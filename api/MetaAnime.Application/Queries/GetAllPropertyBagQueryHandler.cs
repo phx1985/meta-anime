@@ -13,7 +13,9 @@ public sealed class GetAllPropertyBagQueryHandler(IPropertyBagRepository propert
         try
         {
             var entries = await propertyBagRepository.GetAllAsync();
-            var response = entries.Select(e => new PropertyBagResponse(e.Key, e.Value, e.CreationDate, e.UpdateDate));
+            var response = entries
+                .Where(e => !PropertyBagKeyPolicy.IsSystemManaged(e.Key))
+                .Select(e => new PropertyBagResponse(e.Key, e.Value, e.CreationDate, e.UpdateDate));
             return Result.Success(response);
         }
         catch (Exception ex)

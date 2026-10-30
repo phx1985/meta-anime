@@ -78,6 +78,17 @@ public sealed class BotKunChatService(
             yield break;
         }
 
+        // SSRF guard: the configured provider URL is fetched server-side. Fail with
+        // the typed validation error (surfaced as an SSE message — the stream has no
+        // Result channel) instead of ever fetching a disallowed address.
+        var providerUrlCheck = ProviderUrlGuard.Validate(baseUrl);
+        if (providerUrlCheck.IsFailure)
+        {
+            logger.LogWarning("Bot-kun chat rejected ({Reason}): {Url}", providerUrlCheck.Error.Message, baseUrl);
+            yield return $"Bot-kun AI provider URL was rejected by the server ({providerUrlCheck.Error.Message}). Open **Settings → Bot-kun AI** and set a valid http(s) provider URL.";
+            yield break;
+        }
+
         // ── Deterministic fast path (explicit UI action): Feeling Lucky ───
         if (string.Equals(request.Action, "lucky", StringComparison.OrdinalIgnoreCase))
         {
@@ -217,6 +228,15 @@ public sealed class BotKunChatService(
             yield break;
         }
 
+        // SSRF guard: never fetch a disallowed provider address (see StreamChatAsync).
+        var providerUrlCheck = ProviderUrlGuard.Validate(baseUrl);
+        if (providerUrlCheck.IsFailure)
+        {
+            logger.LogWarning("Bot-kun greeting rejected ({Reason}): {Url}", providerUrlCheck.Error.Message, baseUrl);
+            yield return $"Bot-kun AI provider URL was rejected by the server ({providerUrlCheck.Error.Message}). Open **Settings → Bot-kun AI** and set a valid http(s) provider URL.";
+            yield break;
+        }
+
         List<OpenAiMessage> messages =
         [
             new("system", BotKunPromptBuilder.GreetingSystemPrompt),
@@ -244,12 +264,8 @@ public sealed class BotKunChatService(
         if (string.IsNullOrWhiteSpace(baseUrl)) return [];
 
         // SSRF guard: this endpoint makes the server fetch a client-supplied URL.
-        // Only absolute http(s) URLs without embedded credentials are allowed, and
-        // link-local (incl. cloud metadata 169.254.169.254), multicast, unspecified
-        // and broadcast literal addresses are blocked. Loopback/private hosts are
-        // intentionally allowed — local providers (Ollama, LM Studio, vLLM) are the
-        // primary use case. (DNS rebinding is out of scope for this self-hosted tool.)
-        if (!IsAllowedProviderUrl(baseUrl, out var reason))
+        // See ProviderUrlGuard for the exact policy and its rationale.
+        if (!ProviderUrlGuard.IsAllowed(baseUrl, out var reason))
         {
             logger.LogWarning("Bot-kun models request rejected ({Reason}): {Url}", reason, baseUrl);
             throw new InvalidOperationException($"Provider URL rejected: {reason}");
@@ -428,54 +444,6 @@ public sealed class BotKunChatService(
     }
 
     // ── HTTP request builder ───────────────────────────────────────────────────
-
-    /// <summary>
-    /// Validates a provider base URL for server-side fetching (SSRF guard).
-    /// See the call site for the exact policy and its rationale.
-    /// </summary>
-    private static bool IsAllowedProviderUrl(string raw, out string reason)
-    {
-        reason = string.Empty;
-
-        if (!Uri.TryCreate(raw, UriKind.Absolute, out var uri) ||
-            (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
-        {
-            reason = "only absolute http/https URLs are allowed";
-            return false;
-        }
-
-        if (!string.IsNullOrEmpty(uri.UserInfo))
-        {
-            reason = "embedded credentials are not allowed";
-            return false;
-        }
-
-        if (System.Net.IPAddress.TryParse(uri.Host, out var ip))
-        {
-            var bytes = ip.GetAddressBytes();
-            bool blocked;
-            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
-            {
-                blocked = bytes[0] == 0                                   // 0.0.0.0/8 unspecified
-                          || (bytes[0] == 169 && bytes[1] == 254)         // link-local incl. cloud metadata
-                          || bytes[0] >= 224;                             // multicast, reserved, broadcast
-            }
-            else
-            {
-                blocked = ip.Equals(System.Net.IPAddress.IPv6Any)          // ::
-                          || bytes[0] == 0xff                             // multicast ff00::/8
-                          || (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80); // link-local fe80::/10
-            }
-
-            if (blocked)
-            {
-                reason = "the address is link-local, multicast or unspecified";
-                return false;
-            }
-        }
-
-        return true;
-    }
 
     private HttpRequestMessage BuildRequest<T>(HttpMethod method, string url, string apiKey, T body)
     {
