@@ -3,13 +3,15 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { targetsOwnApi } from './request-target.util';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
   const token = authService.getToken();
-  const authReq = token
+  // Only attach the JWT to our own backend — never to cross-origin requests.
+  const authReq = token && targetsOwnApi(req.url)
     ? req.clone({ headers: req.headers.set('Authorization', `Bearer ${token}`) })
     : req;
 
