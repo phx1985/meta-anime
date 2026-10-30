@@ -15,7 +15,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { DatePipe, LowerCasePipe, TitleCasePipe } from '@angular/common';
+import { DatePipe, LowerCasePipe } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { switchMap, tap, catchError, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { of, Subject } from 'rxjs';
@@ -38,7 +38,7 @@ import { BotKunService } from '../services/bot-kun.service';
   selector: 'app-anime-detail-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, DatePipe, LowerCasePipe, TitleCasePipe, SafePipe, ScoreBadgeComponent],
+  imports: [TranslatePipe, DatePipe, LowerCasePipe, SafePipe, ScoreBadgeComponent],
   templateUrl: './anime-detail-panel.component.html',
   styleUrl: './anime-detail-panel.component.scss',
 })

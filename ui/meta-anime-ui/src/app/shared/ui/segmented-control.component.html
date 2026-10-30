@@ -1,0 +1,15 @@
+<div class="la-seg"
+     [class.la-seg--2]="columns() === 2"
+     [class.la-seg--3]="columns() === 3"
+     [class.la-seg--auto]="columns() === 'auto'"
+     role="group">
+  @for (opt of options(); track opt.id) {
+    <button type="button"
+            class="la-seg__btn"
+            [class.la-seg__btn--active]="value() === opt.id"
+            [attr.data-tip]="opt.tip || null"
+            (click)="valueChange.emit(opt.id)">
+      <span class="la-seg__label">{{ opt.label }}</span>
+    </button>
+  }
+</div>

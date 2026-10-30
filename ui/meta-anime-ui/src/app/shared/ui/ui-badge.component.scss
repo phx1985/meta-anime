@@ -1,0 +1,63 @@
+// ── Semantic badges (emerald / amber / crimson) ────────────────────────────────
+// Styles moved byte-equal from analytics-charts.component.scss; the chip
+// shades are value-preserved through the --color-*-deep / --color-mixed tokens.
+
+:host {
+  display: inline-flex;
+}
+
+.la-badge {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+
+  &--ok    { color: var(--color-success-deep); background: color-mix(in srgb, var(--color-success-deep) 14%, transparent); }
+  &--warn  { color: var(--color-warning-deep); background: color-mix(in srgb, var(--color-warning-deep) 14%, transparent); }
+  &--bad   { color: var(--color-danger-deep); background: color-mix(in srgb, var(--color-danger-deep) 14%, transparent); }
+  &--mixed { color: var(--color-mixed); background: color-mix(in srgb, var(--color-mixed) 14%, transparent); }
+  &--brand { color: var(--color-brand); background: color-mix(in srgb, var(--color-brand) 14%, transparent); }
+
+  // styled tooltip for collapsed codec strings ([attr.data-tip], never native title)
+  &[data-tip]::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) translateY(2px);
+    padding: 5px 9px;
+    border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--text-primary) 12%, var(--bg-primary, #101017));
+    color: var(--text-primary);
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: normal;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s, transform 0.15s;
+    z-index: 20;
+  }
+
+  &[data-tip]:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+// ── Muted accent (appended last: must win the cascade over the base rule) ──────
+.la-badge.la-badge--muted {
+  background: color-mix(in srgb, var(--text-primary) 10%, transparent);
+  color: var(--text-secondary);
+}

@@ -432,7 +432,7 @@
   }
 
   &.sync-hub--error {
-    border-left-color: #ef4444;
+    border-left-color: var(--color-danger-deep);
   }
 }
 
@@ -510,7 +510,7 @@
   }
 
   &.sync-status-icon--error {
-    background: #ef4444;
+    background: var(--color-danger-deep);
     color: #fff;
   }
 }
@@ -914,9 +914,9 @@
   gap: 0.5rem;
   padding: 0.6rem 1rem;
   font-size: 0.8rem;
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.06);
-  border-bottom: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--color-danger-deep);
+  background: color-mix(in srgb, var(--color-danger-deep) 6%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-danger-deep) 20%, transparent);
 }
 
 .toggle-switch {
@@ -1176,7 +1176,7 @@
   }
 
   .setting-slider {
-    background-image: linear-gradient(#10b981, #10b981);
+    background-image: linear-gradient(var(--color-success-deep), var(--color-success-deep));
   }
 }
 
@@ -1188,9 +1188,9 @@
 
   15%,
   70% {
-    color: #10b981;
-    border-color: rgba(16, 185, 129, 0.3);
-    background: rgba(16, 185, 129, 0.08);
+    color: var(--color-success-deep);
+    border-color: color-mix(in srgb, var(--color-success-deep) 30%, transparent);
+    background: color-mix(in srgb, var(--color-success-deep) 8%, transparent);
   }
 
   100% {
@@ -1209,7 +1209,7 @@
   }
 
   &.sync-card--error {
-    border-left-color: #ef4444;
+    border-left-color: var(--color-danger-deep);
   }
 }
 
@@ -1301,9 +1301,9 @@
   }
 
   &--error {
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: var(--color-danger-deep);
+    background: color-mix(in srgb, var(--color-danger-deep) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-danger-deep) 20%, transparent);
   }
 }
 
@@ -1641,12 +1641,12 @@
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: color-mix(in srgb, var(--color-warning-deep) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning-deep) 35%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #f59e0b;
+  color: var(--color-warning-deep);
   margin-bottom: 0.25rem;
   flex-shrink: 0;
 }
@@ -1659,13 +1659,13 @@
   cursor: pointer;
   border: none;
   transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
-  background: rgba(245, 158, 11, 0.18);
-  color: #f59e0b;
+  background: color-mix(in srgb, var(--color-warning-deep) 18%, transparent);
+  color: var(--color-warning-deep);
 
   &:hover {
-    background: rgba(245, 158, 11, 0.28);
+    background: color-mix(in srgb, var(--color-warning-deep) 28%, transparent);
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--color-warning-deep) 25%, transparent);
   }
 
   &:active {
@@ -1674,12 +1674,12 @@
 }
 
 // ── Setting row saved (success) flash ─────────────────────────────────────────
-// Same green (#10b981) used by badgeMinimalSave and slider-row--saved above.
+// Same green (--color-success-deep) used by badgeMinimalSave and slider-row--saved above.
 
 @keyframes rowSavedFlash {
   0%   { background: transparent; }
-  20%  { background: rgba(16, 185, 129, 0.10); }
-  60%  { background: rgba(16, 185, 129, 0.06); }
+  20%  { background: color-mix(in srgb, var(--color-success-deep) 10%, transparent); }
+  60%  { background: color-mix(in srgb, var(--color-success-deep) 6%, transparent); }
   100% { background: transparent; }
 }
 
@@ -1701,14 +1701,14 @@
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   font-size: 0.8rem;
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.07);
-  border-bottom: 1px solid rgba(245, 158, 11, 0.25);
+  color: var(--color-warning-deep);
+  background: color-mix(in srgb, var(--color-warning-deep) 7%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-warning-deep) 25%, transparent);
   flex-wrap: wrap;
 
   svg {
     flex-shrink: 0;
-    color: #f59e0b;
+    color: var(--color-warning-deep);
   }
 
   &__text {
@@ -1720,9 +1720,9 @@
 // ── Sync HTTP error message ────────────────────────────────────────────────────
 .sync-http-error {
   font-size: 0.72rem;
-  color: #ef4444;
+  color: var(--color-danger-deep);
   padding: 0.2rem 0.5rem;
-  background: rgba(239, 68, 68, 0.08);
+  background: color-mix(in srgb, var(--color-danger-deep) 8%, transparent);
   border-radius: 4px;
   max-width: 100%;
   word-break: break-word;
@@ -1851,14 +1851,14 @@
     box-shadow 0.18s ease;
 
   &:hover:not(:disabled) {
-    color: #ef4444;
-    border-color: #ef4444;
-    background: rgba(239, 68, 68, 0.08);
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+    color: var(--color-danger-deep);
+    border-color: var(--color-danger-deep);
+    background: color-mix(in srgb, var(--color-danger-deep) 8%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger-deep) 12%, transparent);
   }
 
   &:active:not(:disabled) {
-    background: rgba(239, 68, 68, 0.14);
+    background: color-mix(in srgb, var(--color-danger-deep) 14%, transparent);
     box-shadow: none;
   }
 
@@ -2162,9 +2162,9 @@
   padding: 0.45rem 0.65rem;
   font-size: 0.75rem;
   line-height: 1.45;
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.28);
+  color: var(--color-warning-deep);
+  background: color-mix(in srgb, var(--color-warning-deep) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-warning-deep) 28%, transparent);
   border-radius: 8px;
   word-break: break-word;
 }
@@ -2320,7 +2320,7 @@
     width: 18px;
     height: 18px;
     border: 2px solid rgba(255, 255, 255, 0.15);
-    border-top-color: #7c6cf0;
+    border-top-color: var(--accent-primary, #7c6cf0);
     border-radius: 50%;
     animation: path-browse-spin 0.8s linear infinite;
   }

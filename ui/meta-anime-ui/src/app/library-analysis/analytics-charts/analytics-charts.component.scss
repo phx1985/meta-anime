@@ -17,14 +17,11 @@
 }
 
 // ── Card shell ─────────────────────────────────────────────────────────────────
+// Chrome (surface, border, radius, shadow, padding, position) lives on
+// app-ui-card; the staggered entry animation is card-specific and stays here
+// (host classes pass through the wrapper).
 
 .la-chart-card {
-  position: relative;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
-  padding: 1.25rem;
-  box-shadow: 0 2px 8px var(--card-shadow);
   animation: chartFadeIn 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 
   &:nth-child(1) { animation-delay: 0.05s; }
@@ -65,52 +62,7 @@
   }
 }
 
-// ── Full-width segmented controls (cards 1–2; mirrors the batch SORT control) ──
-
-.la-seg {
-  display: grid;
-  gap: 4px;
-  padding: 4px;
-  margin-bottom: 14px;
-  border: 1px solid color-mix(in srgb, var(--text-primary) 6%, transparent);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
-
-  &--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  &--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-
-  &__btn {
-    height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 8px;
-    border: 1px solid transparent;
-    border-radius: 7px;
-    background: transparent;
-    color: var(--text-muted);
-    font-size: 0.78rem;
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-
-    &:hover {
-      color: var(--text-primary);
-    }
-
-    &--active {
-      background: color-mix(in srgb, var(--text-primary) 10%, transparent);
-      border-color: color-mix(in srgb, var(--text-primary) 12%, transparent);
-      color: var(--text-primary);
-      font-weight: 600;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
-    }
-  }
-}
+// ── Full-width segmented controls live in app-segmented-control (shared/ui) ────
 
 // ── Card 1 — Codec & Bitrate Distribution (donut hole hero + legend + telemetry) ──
 
@@ -133,7 +85,7 @@
   color: var(--accent-primary); // pie-chart icon (indigo accent)
 
   &--amber {
-    color: #fbbf24; // flame accent on the hogs card
+    color: var(--color-warning); // flame accent on the hogs card
   }
 }
 
@@ -443,56 +395,7 @@
   text-decoration: line-through;
 }
 
-// ── Semantic badges (emerald / amber / crimson) ────────────────────────────────
-
-.la-badge {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  padding: 0.125rem 0.5rem;
-  border-radius: 6px;
-  font-size: 0.6875rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-  color: var(--text-secondary);
-  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
-
-  &--ok    { color: #10b981; background: rgba(16, 185, 129, 0.14); }
-  &--warn  { color: #f59e0b; background: rgba(245, 158, 11, 0.14); }
-  &--bad   { color: #ef4444; background: rgba(239, 68, 68, 0.14); }
-  &--mixed { color: #a855f7; background: rgba(168, 85, 247, 0.14); }
-
-  // styled tooltip for collapsed codec strings ([attr.data-tip], never native title)
-  &[data-tip]::after {
-    content: attr(data-tip);
-    position: absolute;
-    bottom: calc(100% + 6px);
-    left: 50%;
-    transform: translateX(-50%) translateY(2px);
-    padding: 5px 9px;
-    border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
-    border-radius: 6px;
-    background: color-mix(in srgb, var(--text-primary) 12%, var(--bg-primary, #101017));
-    color: var(--text-primary);
-    font-size: 0.7rem;
-    font-weight: 500;
-    text-transform: none;
-    letter-spacing: normal;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s, transform 0.15s;
-    z-index: 20;
-  }
-
-  &[data-tip]:hover::after {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
-}
+// ── Semantic badges live in app-ui-badge (shared/ui) ───────────────────────────
 
 // ── Card 3 — savings hero + action chips ───────────────────────────────────────
 
@@ -525,9 +428,9 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px;
-  border: 1px solid rgba(52, 211, 153, 0.2);
+  border: 1px solid color-mix(in srgb, var(--color-success) 20%, transparent);
   border-radius: 12px;
-  background: rgba(52, 211, 153, 0.05);
+  background: color-mix(in srgb, var(--color-success) 5%, transparent);
   margin-bottom: 12px;
   font-variant-numeric: tabular-nums;
 }
@@ -542,7 +445,7 @@
 .la-oppo__hero-value {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #34d399;
+  color: var(--color-success);
   white-space: nowrap;
 }
 
@@ -598,11 +501,11 @@
   }
 
   &--prime .la-oppo__row-ico {
-    color: rgba(251, 113, 133, 0.7);
+    color: color-mix(in srgb, var(--color-danger) 70%, transparent);
   }
 
   &--unfinished .la-oppo__row-ico {
-    color: rgba(251, 191, 36, 0.7);
+    color: color-mix(in srgb, var(--color-warning) 70%, transparent);
   }
 
   &--complete .la-oppo__row-ico {
@@ -615,33 +518,33 @@
   }
 
   &--prime.la-oppo__row--active {
-    border-color: rgba(251, 113, 133, 0.3);
+    border-color: color-mix(in srgb, var(--color-danger) 30%, transparent);
 
     .la-oppo__row-ico {
-      color: #fb7185;
+      color: var(--color-danger);
     }
 
     .la-oppo__row-dot--on {
-      background: #fb7185;
-      box-shadow: 0 0 8px rgba(251, 113, 133, 0.6);
+      background: var(--color-danger);
+      box-shadow: 0 0 8px color-mix(in srgb, var(--color-danger) 60%, transparent);
     }
   }
 
   &--unfinished.la-oppo__row--active {
-    border-color: rgba(251, 191, 36, 0.3);
+    border-color: color-mix(in srgb, var(--color-warning) 30%, transparent);
 
     .la-oppo__row-ico {
-      color: #fbbf24;
+      color: var(--color-warning);
     }
 
     .la-oppo__row-dot--on {
-      background: #fbbf24;
-      box-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+      background: var(--color-warning);
+      box-shadow: 0 0 8px color-mix(in srgb, var(--color-warning) 60%, transparent);
     }
   }
 
   &--complete.la-oppo__row--active {
-    border-color: rgba(129, 140, 248, 0.3);
+    border-color: color-mix(in srgb, var(--color-brand) 30%, transparent);
 
     .la-oppo__row-ico {
       color: var(--accent-primary);
@@ -649,7 +552,7 @@
 
     .la-oppo__row-dot--on {
       background: var(--accent-primary);
-      box-shadow: 0 0 8px rgba(129, 140, 248, 0.6);
+      box-shadow: 0 0 8px color-mix(in srgb, var(--color-brand) 60%, transparent);
     }
   }
 }
@@ -714,7 +617,7 @@
 .la-oppo__row-flash {
   font-size: 0.7rem;
   font-weight: 600;
-  color: #34d399;
+  color: var(--color-success);
   white-space: nowrap;
 }
 
@@ -841,7 +744,8 @@
     opacity: 0;
     transform: scale(0.94);
   }
-  to {
+
+  &[data-tip]:hover::after {
     opacity: 1;
     transform: scale(1);
   }
@@ -982,7 +886,7 @@
     white-space: nowrap;
 
     &--savings {
-      color: #34d399;
+      color: var(--color-success);
     }
 
     .la-batch__ico {
@@ -1004,7 +908,7 @@
 
   &__ratio-saved {
     border-radius: 2px;
-    background: #34d399;
+    background: var(--color-success);
     transition: width 0.25s ease;
   }
 
@@ -1071,32 +975,6 @@
       color: var(--text-primary);
       font-weight: 600;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
-    }
-
-    // styled tooltip (replaces the native one)
-    &[data-tip]::after {
-      content: attr(data-tip);
-      position: absolute;
-      bottom: calc(100% + 8px);
-      left: 50%;
-      transform: translateX(-50%) translateY(2px);
-      padding: 5px 9px;
-      border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
-      border-radius: 6px;
-      background: color-mix(in srgb, var(--text-primary) 12%, var(--bg-primary, #101017));
-      color: var(--text-primary);
-      font-size: 0.7rem;
-      font-weight: 500;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.15s, transform 0.15s;
-      z-index: 20;
-    }
-
-    &[data-tip]:hover::after {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
     }
   }
 
@@ -1261,6 +1139,16 @@
     color: var(--text-muted);
     text-align: center;
   }
+}
+
+// ── Reclaimable accent (appended last: must win the cascade over the later
+// base .la-lb__size rules of equal specificity). ───────────────────────────
+.la-lb__size.la-lb__size--savings {
+  color: var(--color-success);
+}
+
+.la-cd__summary-value.la-lb__summary-savings {
+  color: var(--color-success);
 }
 
 // ── Reclaimable/muted accents (appended last: must win the cascade over the

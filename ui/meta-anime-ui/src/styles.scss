@@ -28,6 +28,21 @@
   --provider-mal:    #2f52a4;
   --provider-plex:   #e5a00d;
   --provider-sonarr: #00aae0;
+  /* semantic accent tokens — brand colors, theme-invariant (like provider colors) */
+  --color-success: #34d399;        /* emerald-400 */
+  --color-success-deep: #10b981;   /* emerald-500 — badge 'ok', save-confirmation states */
+  --color-warning: #fbbf24;        /* amber-400 */
+  --color-warning-deep: #f59e0b;   /* amber-500 — badge 'warn' */
+  --color-danger: #fb7185;         /* rose-400 */
+  --color-danger-deep: #ef4444;    /* red-500 — badge 'bad' */
+  --color-danger-hot: #f43f5e;     /* rose-500 — missing-files hover/outline */
+  --color-brand: #818cf8;          /* indigo-400 */
+  --color-mixed: #a855f7;          /* purple-500 — badge 'mixed' */
+  /* surface/border aliases — retune future themes here, not at every call site */
+  --color-surface-base: var(--bg-primary);
+  --color-surface-elevated: var(--card-bg);
+  --color-border-subtle: var(--card-border);
+  --color-border-strong: var(--navbar-border);
 }
 
 [data-theme='dark'] {
@@ -55,6 +70,21 @@
   --slider-track-unfilled: rgba(160, 160, 200, 0.22);
   --slider-thumb-border: #1a1a2e;
   /* provider colors inherit light-theme values — they are brand colors, not theme-sensitive */
+  /* semantic accent tokens — brand colors, theme-invariant (like provider colors) */
+  --color-success: #34d399;        /* emerald-400 */
+  --color-success-deep: #10b981;   /* emerald-500 — badge 'ok', save-confirmation states */
+  --color-warning: #fbbf24;        /* amber-400 */
+  --color-warning-deep: #f59e0b;   /* amber-500 — badge 'warn' */
+  --color-danger: #fb7185;         /* rose-400 */
+  --color-danger-deep: #ef4444;    /* red-500 — badge 'bad' */
+  --color-danger-hot: #f43f5e;     /* rose-500 — missing-files hover/outline */
+  --color-brand: #818cf8;          /* indigo-400 */
+  --color-mixed: #a855f7;          /* purple-500 — badge 'mixed' */
+  /* surface/border aliases — retune future themes here, not at every call site */
+  --color-surface-base: var(--bg-primary);
+  --color-surface-elevated: var(--card-bg);
+  --color-border-subtle: var(--card-border);
+  --color-border-strong: var(--navbar-border);
 }
 
 // Global styles

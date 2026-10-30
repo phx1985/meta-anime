@@ -12,8 +12,12 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { map, merge } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { SegmentedControlComponent, SegmentedOption } from '../../shared/ui/segmented-control.component';
+import { UiBadgeComponent, UiBadgeColor } from '../../shared/ui/ui-badge.component';
+import { UiCardComponent } from '../../shared/ui/ui-card.component';
 import { ThemeService } from '../../services/theme.service';
 import { AnimeService } from '../../services/anime.service';
 import { UserPathService } from '../../services/user-path.service';
@@ -72,7 +76,7 @@ export interface QuickFilterPreset {
   selector: 'app-la-analytics-charts',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, UiCardComponent, UiBadgeComponent, SegmentedControlComponent],
   templateUrl: './analytics-charts.component.html',
   styleUrl: './analytics-charts.component.scss',
 })
@@ -99,6 +103,48 @@ export class AnalyticsChartsComponent implements OnDestroy {
 
   readonly donutMode = signal<DonutMode>('count');
   readonly leaderboardMode = signal<LeaderboardMode>('totalGb');
+
+  /** Bumps whenever loaded translations change so option labels re-derive. */
+  private readonly translationsVersion = toSignal(
+    merge(this.translate.onLangChange, this.translate.onTranslationChange).pipe(map((_, i) => i + 1)),
+    { initialValue: 0 },
+  );
+
+  /** Segmented-control options for the donut view switcher. */
+  readonly donutModeOptions = computed<SegmentedOption[]>(() => {
+    this.translationsVersion();
+    return [
+      { id: 'count', label: this.translate.instant('libraryIntel.buddy.byCount') },
+      { id: 'size', label: this.translate.instant('libraryIntel.buddy.bySize') },
+    ];
+  });
+
+  /** Segmented-control options for the storage-hogs leaderboard mode. */
+  readonly leaderboardModeOptions = computed<SegmentedOption[]>(() => {
+    this.translationsVersion();
+    return [
+      { id: 'totalGb', label: this.translate.instant('libraryIntel.buddy.topTotalShort') },
+      { id: 'bloatGibPerHour', label: this.translate.instant('libraryIntel.buddy.topBloatShort') },
+      { id: 'reclaimable', label: this.translate.instant('libraryIntel.buddy.topReclaimShort') },
+    ];
+  });
+
+  /** Segmented-control options for the batch SORT control (copy in styled tips). */
+  readonly batchSortOptions = computed<SegmentedOption[]>(() => {
+    this.translationsVersion();
+    return [
+      {
+        id: 'biggest',
+        label: this.translate.instant('libraryIntel.buddy.batchSortBitrate'),
+        tip: this.translate.instant('libraryIntel.buddy.batchOrderBiggest'),
+      },
+      {
+        id: 'series',
+        label: this.translate.instant('libraryIntel.buddy.batchSortAlpha'),
+        tip: this.translate.instant('libraryIntel.buddy.batchOrderSeries'),
+      },
+    ];
+  });
 
   // ── Derived view models ────────────────────────────────────────────────────
 
@@ -516,18 +562,18 @@ export class AnalyticsChartsComponent implements OnDestroy {
   }
 
   /** Semantic GiB/h badge: emerald = lean, amber = bloaty, crimson = extreme. */
-  gibBadgeClass(gib: number): string {
-    if (gib >= BLOAT_GIB_PER_HOUR * 2) return 'la-badge la-badge--bad';
-    if (gib > BLOAT_GIB_PER_HOUR) return 'la-badge la-badge--warn';
-    return 'la-badge la-badge--ok';
+  gibBadgeColor(gib: number): UiBadgeColor {
+    if (gib >= BLOAT_GIB_PER_HOUR * 2) return 'danger';
+    if (gib > BLOAT_GIB_PER_HOUR) return 'warning';
+    return 'success';
   }
 
   /** Semantic codec badge: H264 = transcode candidate (amber), HEVC/AV1 = optimized (emerald). */
-  codecBadgeClass(badge: string): string {
+  codecBadgeColor(badge: string): UiBadgeColor {
     const b = (badge ?? '').toUpperCase();
-    if (!b || b === '—') return 'la-badge';
-    if (b.includes('H264')) return b.includes('/') ? 'la-badge la-badge--mixed' : 'la-badge la-badge--warn';
-    return 'la-badge la-badge--ok';
+    if (!b || b === '—') return 'neutral';
+    if (b.includes('H264')) return b.includes('/') ? 'mixed' : 'warning';
+    return 'success';
   }
 
   /** Value shown on the right of a leaderboard row for the active mode. */

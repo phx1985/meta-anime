@@ -1,0 +1,8 @@
+<span class="la-badge"
+      [class.la-badge--ok]="color() === 'success'"
+      [class.la-badge--warn]="color() === 'warning'"
+      [class.la-badge--bad]="color() === 'danger'"
+      [class.la-badge--brand]="color() === 'brand'"
+      [class.la-badge--mixed]="color() === 'mixed'"
+      [class.la-badge--muted]="muted()"
+      [attr.data-tip]="tip() || null"><ng-content /></span>
