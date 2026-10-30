@@ -97,7 +97,7 @@ export class BotKunComponent implements OnDestroy {
   /** True for ~300 ms on each word boundary — drives the CSS pulse class on the visualizer */
   readonly speakingPulse = signal<boolean>(false);
 
-  /** Keys of [act:…] CTAs already applied — persistent per-segment "✓ Applied" state */
+  /** Keys of [act:…] CTAs already applied — persistent per-segment "Applied" (checkmark) state */
   readonly appliedActionKeys = signal<ReadonlySet<string>>(new Set());
 
   readonly hasMessages = computed(() => this.messages().length > 0);
@@ -562,7 +562,7 @@ export class BotKunComponent implements OnDestroy {
 
   /**
    * Dispatches an [act:…] payload to the LibraryIntelStore (applyFilter resets filters first)
-   * and permanently marks this pill as "✓ Applied".
+   * and permanently marks this pill as "Applied" (checkmark).
    */
   onActionClick(msgIndex: number, action: BotKunActionPayload): void {
     this.libraryStore.applyBotKunAction(action);

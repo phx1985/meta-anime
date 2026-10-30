@@ -42,10 +42,10 @@
           }
         </ul>
       </div>
-      <div class="la-cd__summary">
-        <div class="la-cd__summary-cell">
-          <span class="la-cd__summary-label">{{ 'libraryIntel.buddy.avgGibPerHour' | translate }}</span>
-          <span class="la-cd__summary-value">
+      <app-telemetry-box>
+        <div class="app-telemetry-box__cell">
+          <span class="app-telemetry-box__label">{{ 'libraryIntel.buddy.avgGibPerHour' | translate }}</span>
+          <span class="app-telemetry-box__value">
             @if (isAnalyticsLoading()) {
               <span class="la-skel la-skel--metric"></span>
             } @else {
@@ -53,9 +53,9 @@
             }
           </span>
         </div>
-        <div class="la-cd__summary-cell">
-          <span class="la-cd__summary-label">{{ 'libraryIntel.buddy.footprint' | translate }}</span>
-          <span class="la-cd__summary-value">
+        <div class="app-telemetry-box__cell">
+          <span class="app-telemetry-box__label">{{ 'libraryIntel.buddy.footprint' | translate }}</span>
+          <span class="app-telemetry-box__value">
             @if (isAnalyticsLoading()) {
               <span class="la-skel la-skel--metric"></span>
             } @else {
@@ -63,7 +63,7 @@
             }
           </span>
         </div>
-      </div>
+      </app-telemetry-box>
     }
 
     <!-- Loading overlay — glass blur + shimmer until telemetry lands, then fades out. -->
@@ -164,10 +164,10 @@
       </div>
 
       <!-- Bottom summary bar: footprint + reclaimable of the displayed rows. -->
-      <div class="la-cd__summary la-lb__summary">
-        <div class="la-cd__summary-cell">
-          <span class="la-cd__summary-label">{{ 'libraryIntel.buddy.topFootprint' | translate }}</span>
-          <span class="la-cd__summary-value">
+      <app-telemetry-box class="la-lb__summary">
+        <div class="app-telemetry-box__cell">
+          <span class="app-telemetry-box__label">{{ 'libraryIntel.buddy.topFootprint' | translate }}</span>
+          <span class="app-telemetry-box__value">
             @if (isAnalyticsLoading()) {
               <span class="la-skel la-skel--metric"></span>
             } @else {
@@ -175,9 +175,9 @@
             }
           </span>
         </div>
-        <div class="la-cd__summary-cell">
-          <span class="la-cd__summary-label">{{ 'libraryIntel.buddy.estReclaimable' | translate }}</span>
-          <span class="la-cd__summary-value la-lb__summary-savings">
+        <div class="app-telemetry-box__cell">
+          <span class="app-telemetry-box__label">{{ 'libraryIntel.buddy.estReclaimable' | translate }}</span>
+          <span class="app-telemetry-box__value app-telemetry-box__value--success">
             @if (isAnalyticsLoading()) {
               <span class="la-skel la-skel--metric"></span>
             } @else {
@@ -185,7 +185,7 @@
             }
           </span>
         </div>
-      </div>
+      </app-telemetry-box>
     }
 
     <!-- Loading overlay — glass blur + shimmer until telemetry lands, then fades out. -->
@@ -269,7 +269,7 @@
             @if (flashPresetId() === preset.id) {
               <span class="la-oppo__row-flash">{{ 'libraryIntel.buddy.presetApplied' | translate }}</span>
             }
-            <span class="la-oppo__row-clear" aria-hidden="true">&times;</span>
+            <span class="la-oppo__row-clear" aria-hidden="true"><svg class="la-oppo__row-clear-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>
             <span class="la-oppo__row-dot" [class.la-oppo__row-dot--on]="activePresetId() === preset.id"></span>
           </button>
         }
@@ -363,9 +363,7 @@
                 [class.la-batch__switchrow--on]="userPaths.includeUnknown()"
                 (click)="toggleIncludeUnknown()">
           <span>{{ 'libraryIntel.buddy.batchIncludeUnknown' | translate }}</span>
-          <span class="la-batch__switch" [class.la-batch__switch--on]="userPaths.includeUnknown()" aria-hidden="true">
-            <span class="la-batch__knob"></span>
-          </span>
+          <app-ui-toggle [interactive]="false" [checked]="userPaths.includeUnknown()" />
         </button>
 
         @if (batchPool().length === 0) {

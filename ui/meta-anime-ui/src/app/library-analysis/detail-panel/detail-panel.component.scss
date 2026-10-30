@@ -393,6 +393,12 @@
   opacity: 0.7;
 }
 
+.la-panel__close-ico {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
 // ─── Codec pills (shared for detail panel episode table) ─────────────────────
 
 .la-codec-pill {
@@ -821,8 +827,56 @@ tbody tr.la-tr--needs-transcode:hover td {
   text-align: center;
 
   input[type='checkbox'] {
-    accent-color: var(--accent-primary);
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--text-primary) 5%, transparent);
     cursor: pointer;
+    vertical-align: middle;
+    transition: background 0.15s, border-color 0.15s;
+
+    // White CSS checkmark (dash for the indeterminate master checkbox)
+    &::after {
+      content: '';
+      position: absolute;
+      left: 4.5px;
+      top: 1.5px;
+      width: 4px;
+      height: 8px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+      opacity: 0;
+    }
+
+    &:checked,
+    &:indeterminate {
+      background: var(--color-brand);
+      border-color: var(--color-brand);
+    }
+
+    &:checked::after {
+      opacity: 1;
+    }
+
+    &:indeterminate::after {
+      opacity: 1;
+      left: 3px;
+      top: 6px;
+      width: 8px;
+      height: 0;
+      border-width: 0 0 2px 0;
+      transform: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid color-mix(in srgb, var(--accent-primary) 50%, transparent);
+      outline-offset: 2px;
+    }
   }
 }
 

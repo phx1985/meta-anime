@@ -180,15 +180,10 @@
               <!-- Enable toggle -->
               <div class="wizard-toggle-row">
                 <span class="wizard-label">{{ 'wizard.step2.enableLabel' | translate }}</span>
-                <button
-                  type="button"
-                  class="wizard-toggle-btn"
-                  [class.wizard-toggle-btn--on]="securityForm.get('enableAuth')?.value"
-                  (click)="securityForm.patchValue({ enableAuth: !securityForm.get('enableAuth')?.value })"
-                  [attr.aria-pressed]="securityForm.get('enableAuth')?.value"
-                >
-                  <span class="wizard-toggle-knob"></span>
-                </button>
+                <app-ui-toggle
+                  [checked]="!!securityForm.get('enableAuth')?.value"
+                  (checkedChange)="securityForm.patchValue({ enableAuth: $event })"
+                />
               </div>
 
               @if (securityForm.get('enableAuth')?.value) {
@@ -552,52 +547,56 @@
 
                     @if (sonarrRootFolders().length > 0) {
                       <div class="wizard-field">
-                        <label class="wizard-label" for="sonarr-root-folder">
+                        <label class="wizard-label">
                           {{ 'wizard.step5.rootFolderLabel' | translate }}
                         </label>
-                        <select id="sonarr-root-folder" class="wizard-input wizard-select" formControlName="rootFolder">
-                          @for (rf of sonarrRootFolders(); track rf.id) {
-                            <option [value]="rf.path">{{ rf.path }}</option>
-                          }
-                        </select>
+                        <div class="wizard-select-wrap">
+                          <app-ui-select
+                            [options]="rootFolderSelectOptions()"
+                            [value]="sonarrForm.get('rootFolder')?.value ?? ''"
+                            [ariaLabel]="'wizard.step5.rootFolderLabel' | translate"
+                            (selectionChange)="sonarrForm.patchValue({ rootFolder: $event })"
+                          />
+                        </div>
                       </div>
                     }
 
                     @if (sonarrQualityProfiles().length > 0) {
                       <div class="wizard-field">
-                        <label class="wizard-label" for="sonarr-quality-profile">
+                        <label class="wizard-label">
                           {{ 'wizard.step5.qualityProfileLabel' | translate }}
                         </label>
-                        <select id="sonarr-quality-profile" class="wizard-input wizard-select" formControlName="qualityProfile">
-                          @for (qp of sonarrQualityProfiles(); track qp.id) {
-                            <option [value]="qp.name">{{ qp.name }}</option>
-                          }
-                        </select>
+                        <div class="wizard-select-wrap">
+                          <app-ui-select
+                            [options]="qualityProfileSelectOptions()"
+                            [value]="sonarrForm.get('qualityProfile')?.value ?? ''"
+                            [ariaLabel]="'wizard.step5.qualityProfileLabel' | translate"
+                            (selectionChange)="sonarrForm.patchValue({ qualityProfile: $event })"
+                          />
+                        </div>
                       </div>
                     }
 
                     <div class="wizard-field">
-                      <label class="wizard-label" for="sonarr-monitor">
+                      <label class="wizard-label">
                         {{ 'wizard.step5.monitorLabel' | translate }}
                       </label>
-                      <select id="sonarr-monitor" class="wizard-input wizard-select" formControlName="monitor">
-                        @for (opt of MONITOR_OPTIONS; track opt) {
-                          <option [value]="opt">{{ 'wizard.step5.monitor.' + opt | translate }}</option>
-                        }
-                      </select>
+                      <div class="wizard-select-wrap">
+                        <app-ui-select
+                          [options]="monitorSelectOptions()"
+                          [value]="sonarrForm.get('monitor')?.value ?? ''"
+                          [ariaLabel]="'wizard.step5.monitorLabel' | translate"
+                          (selectionChange)="sonarrForm.patchValue({ monitor: $event })"
+                        />
+                      </div>
                     </div>
 
                     <div class="wizard-toggle-row">
                       <span class="wizard-label">{{ 'wizard.step5.seasonFolderLabel' | translate }}</span>
-                      <button
-                        type="button"
-                        class="wizard-toggle-btn"
-                        [class.wizard-toggle-btn--on]="sonarrForm.get('seasonFolder')?.value"
-                        (click)="sonarrForm.patchValue({ seasonFolder: !sonarrForm.get('seasonFolder')?.value })"
-                        [attr.aria-pressed]="sonarrForm.get('seasonFolder')?.value"
-                      >
-                        <span class="wizard-toggle-knob"></span>
-                      </button>
+                      <app-ui-toggle
+                        [checked]="!!sonarrForm.get('seasonFolder')?.value"
+                        (checkedChange)="sonarrForm.patchValue({ seasonFolder: $event })"
+                      />
                     </div>
                   </div>
                 }
@@ -661,9 +660,9 @@
                         @if (step.state === 'running') {
                           <span class="spinner-border spinner-border-sm" role="status"></span>
                         } @else if (step.state === 'done') {
-                          ✓
+                          <svg class="wizard-sync-state__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
                         } @else if (step.state === 'error') {
-                          ✗
+                          <svg class="wizard-sync-state__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                         }
                       </span>
                       <span class="wizard-sync-label">{{ step.stepKey }}</span>
@@ -683,7 +682,7 @@
         <!-- Step 7: Success -->
         @if (step() === 7) {
           <div class="wizard-step wizard-step--success">
-            <div class="wizard-success-icon" aria-hidden="true">🎉</div>
+            <div class="wizard-success-icon" aria-hidden="true"><svg class="wizard-success-icon__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11-.11.7-.72 1.22-1.43 1.22H17"/><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z"/></svg></div>
             <h2 class="wizard-title">{{ 'wizard.step7.title' | translate }}</h2>
             <p class="wizard-desc">{{ 'wizard.step7.desc' | translate }}</p>
             <p class="wizard-hint">{{ 'wizard.step7.hint' | translate }}</p>

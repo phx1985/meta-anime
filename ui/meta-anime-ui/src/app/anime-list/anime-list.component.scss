@@ -354,31 +354,6 @@
 
 // ─── Sort + display-mode toolbar ─────────────────────────────────────────────
 
-.sort-select {
-  height: 2rem;
-  padding: 0 0.625rem;
-  border: 1px solid var(--card-border);
-  border-radius: 0.375rem;
-  background: var(--card-bg);
-  color: var(--text-primary);
-  font-size: 0.8125rem;
-  cursor: pointer;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236c757d'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.5rem center;
-  padding-right: 1.75rem;
-
-  &:focus {
-    outline: none;
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
-  }
-}
-
 .sort-dir-btn {
   flex-shrink: 0;
 }
@@ -422,9 +397,9 @@
 .filter-input {
   height: 2.25rem;
   padding: 0 0.75rem;
-  border: 1px solid var(--card-border);
-  border-radius: 0.5rem;
-  background: var(--bg-secondary);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
   color: var(--text-primary);
   font-size: 0.875rem;
   width: 100%;
@@ -432,10 +407,14 @@
     border-color 0.2s,
     box-shadow 0.2s;
 
+  &:hover {
+    border-color: color-mix(in srgb, var(--text-primary) 20%, transparent);
+  }
+
   &:focus {
     outline: none;
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+    border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
+    box-shadow: none;
   }
 
   &::placeholder {
@@ -656,13 +635,27 @@
 
 .fp-popup__search-input {
   flex: 1;
-  border: none;
-  background: transparent;
+  min-width: 0;
+  padding: 7px 12px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text-primary) 4.5%, transparent);
   color: var(--text-primary);
-  font-size: 0.875rem;
+  font-size: 13px;
   outline: none;
+  transition: border-color 0.15s;
+
   &::placeholder {
     color: var(--text-muted);
+  }
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--text-primary) 20%, transparent);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
   }
 }
 
@@ -899,19 +892,23 @@
   min-width: 140px;
   height: 2rem;
   padding: 0 0.625rem;
-  border: 1px solid var(--card-border);
-  border-radius: 0.5rem;
-  background: var(--bg-secondary);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
   color: var(--text-primary);
   font-size: 0.8125rem;
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
 
+  &:hover {
+    border-color: color-mix(in srgb, var(--text-primary) 20%, transparent);
+  }
+
   &:focus {
     outline: none;
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+    border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
+    box-shadow: none;
   }
   &::placeholder {
     color: var(--text-muted);
@@ -1054,6 +1051,12 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
 
+  // Grid children default to min-width:auto — clamp so long fields never
+  // force horizontal overflow.
+  > * {
+    min-width: 0;
+  }
+
   @media (max-width: 1023px) {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1195,6 +1198,7 @@
 .anime-total-count {
   font-size: 0.875rem;
   color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .elapsed-time {
@@ -1914,6 +1918,10 @@ app-anime-card {
     justify-items: start;
     align-items: start;
     gap: 3px;
+
+    > * {
+      min-width: 0;
+    }
   }
 }
 
@@ -1978,6 +1986,7 @@ app-anime-card {
 .table-toolbar__count {
   font-size: 0.8rem;
   color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .table-toolbar__controls {
@@ -1998,21 +2007,20 @@ app-anime-card {
   white-space: nowrap;
 }
 
-.rpp-select {
-  height: 1.875rem;
-  padding: 0 0.5rem;
-  border: 1px solid var(--card-border);
-  border-radius: 0.375rem;
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: border-color 0.15s;
+// ── Custom dropdown host (app-ui-select replaces the native <select>) ─────────
+// Wrappers stay as the content-sized slots; min-widths keep the triggers at a
+// stable width now that the trigger sizes to its label instead of the widest option.
 
-  &:focus {
-    outline: none;
-    border-color: var(--accent-primary);
-  }
+.sort-select-wrap {
+  position: relative;
+  display: inline-flex;
+  min-width: 11rem;
+}
+
+.rpp-select-wrap {
+  position: relative;
+  display: inline-flex;
+  min-width: 4.5rem;
 }
 
 .tbl-action-btn {

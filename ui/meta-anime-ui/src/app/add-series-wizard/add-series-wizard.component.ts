@@ -3,13 +3,16 @@ import {
   Component,
   computed,
   effect,
+  inject,
   input,
   output,
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TranslatePipe } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { UiSelectComponent, UiSelectOption } from '../shared/ui/ui-select/ui-select.component';
+import { UiToggleComponent } from '../shared/ui/ui-toggle/ui-toggle.component';
 import { SeasonalAnimeItem } from '../models/anime.models';
 import {
   SonarrLookupResult,
@@ -44,11 +47,13 @@ const MAL_STATUSES: readonly { value: string; labelKey: string }[] = [
   selector: 'app-add-series-wizard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, UiSelectComponent, UiToggleComponent],
   templateUrl: './add-series-wizard.component.html',
   styleUrl: './add-series-wizard.component.scss',
 })
 export class AddSeriesWizardComponent {
+  private readonly translateService = inject(TranslateService);
+
   // ── Inputs ──────────────────────────────────────────────────────────────────
   showAddModal          = input.required<boolean>();
   addModalItem          = input.required<SeasonalAnimeItem | null>();
@@ -102,6 +107,30 @@ export class AddSeriesWizardComponent {
 
   readonly sonarrMonitorTypes = SONARR_MONITOR_TYPES;
   readonly malStatuses = MAL_STATUSES;
+
+  // ── ui-select option sets (labels translated here — the component takes final strings) ──
+
+  sonarrRootFolderSelectOptions(): UiSelectOption[] {
+    return this.sonarrRootFolders().map((f) => ({ label: f.path, value: f.path }));
+  }
+
+  sonarrProfileSelectOptions(): UiSelectOption[] {
+    return this.sonarrQualityProfiles().map((p) => ({ label: p.name, value: p.id }));
+  }
+
+  sonarrMonitorSelectOptions(): UiSelectOption[] {
+    return this.sonarrMonitorTypes.map((m) => ({
+      label: this.translateService.instant(m.labelKey),
+      value: m.value,
+    }));
+  }
+
+  malStatusSelectOptions(): UiSelectOption[] {
+    return this.malStatuses.map((s) => ({
+      label: this.translateService.instant(s.labelKey),
+      value: s.value,
+    }));
+  }
 
   // Reset step to 1 each time the modal opens
   constructor() {

@@ -33,12 +33,13 @@ import { ProviderStateService } from '../services/provider-state.service';
 import { SonarrService } from '../services/sonarr.service';
 import { SonarrLookupResult, SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
 import { BotKunService } from '../services/bot-kun.service';
+import { UiSelectComponent, UiSelectOption } from '../shared/ui/ui-select/ui-select.component';
 
 @Component({
   selector: 'app-anime-detail-panel',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, DatePipe, LowerCasePipe, SafePipe, ScoreBadgeComponent],
+  imports: [TranslatePipe, DatePipe, LowerCasePipe, SafePipe, ScoreBadgeComponent, UiSelectComponent],
   templateUrl: './anime-detail-panel.component.html',
   styleUrl: './anime-detail-panel.component.scss',
 })
@@ -154,6 +155,16 @@ export class AnimeDetailPanelComponent {
   readonly sonarrAddError = signal('');
   readonly sonarrAddSuccess = signal(false);
   readonly sonarrSearchTerm = signal('');
+
+  // ── ui-select option sets (labels translated here — the component takes final strings) ──
+
+  sonarrRootFolderSelectOptions(): UiSelectOption[] {
+    return this.sonarrRootFolders().map((f) => ({ label: f.path, value: f.path }));
+  }
+
+  sonarrQualityProfileSelectOptions(): UiSelectOption[] {
+    return this.sonarrQualityProfiles().map((p) => ({ label: p.name, value: p.id }));
+  }
   private readonly sonarrSearchSubject = new Subject<string>();
 
   // Local MAL overrides — immediate feedback after quick-update

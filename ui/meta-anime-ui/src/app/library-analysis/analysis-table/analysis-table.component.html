@@ -69,15 +69,10 @@
                              min="0" max="100"
                              [value]="filters().codecThreshold.percent"
                              (input)="setThresholdPercent($any($event.target).value)" />
-                      <div class="la-select-wrap la-select-wrap--sm">
-                        <select class="la-match-mode__op"
-                                [value]="filters().codecThreshold.op"
-                                (change)="setThresholdOp($any($event.target).value)">
-                          <option value="gte">{{ 'libraryIntel.matchMode.opGte' | translate }}</option>
-                          <option value="lte">{{ 'libraryIntel.matchMode.opLte' | translate }}</option>
-                        </select>
-                        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-                      </div>
+                      <app-ui-select [small]="true"
+                                     [options]="thresholdOpSelectOptions()"
+                                     [value]="filters().codecThreshold.op"
+                                     (selectionChange)="setThresholdOp($any($event))" />
                     </div>
                     <input type="range"
                            class="la-match-mode__slider"
@@ -128,93 +123,49 @@
     <!-- Avg Ep Size threshold (MB) -->
     <div class="la-filter">
       <label class="la-filter__label">{{ 'library.filters.avgEpSize' | translate }}</label>
-      <div class="la-select-wrap">
-        <select class="la-filter__select"
-                [value]="filters().avgEpSize"
-                (change)="setFilter({ avgEpSize: $any($event.target).value })">
-          <option value="">{{ 'library.filters.all' | translate }}</option>
-          @for (opt of AVG_EP_SIZES; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
-          }
-        </select>
-        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-      </div>
+      <app-ui-select [options]="avgEpSizeSelectOptions()"
+                     [value]="filters().avgEpSize"
+                     (selectionChange)="setFilter({ avgEpSize: $any($event) })" />
     </div>
 
     <!-- GiB/h threshold -->
     <div class="la-filter">
       <label class="la-filter__label">{{ 'library.filters.gibPerHour' | translate }}</label>
-      <div class="la-select-wrap">
-        <select class="la-filter__select"
-                [value]="filters().gibPerHour"
-                (change)="setFilter({ gibPerHour: $any($event.target).value })">
-          <option value="">{{ 'library.filters.all' | translate }}</option>
-          @for (opt of GIB_PER_HOUR_THRESHOLDS; track opt.value) {
-            <option [value]="opt.value">{{ opt.label }}</option>
-          }
-        </select>
-        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-      </div>
+      <app-ui-select [options]="gibPerHourSelectOptions()"
+                     [value]="filters().gibPerHour"
+                     (selectionChange)="setFilter({ gibPerHour: $any($event) })" />
     </div>
 
     <!-- Status select (season-aware) -->
     <div class="la-filter">
       <label class="la-filter__label">{{ 'libraryIntel.status.label' | translate }}</label>
-      <div class="la-select-wrap">
-        <select class="la-filter__select"
-                [value]="filters().status"
-                (change)="setFilter({ status: $any($event.target).value })">
-          @for (opt of STATUS_OPTIONS; track opt) {
-            <option [value]="opt">{{ STATUS_LABELS[opt] | translate }}</option>
-          }
-        </select>
-        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-      </div>
+      <app-ui-select [options]="statusSelectOptions()"
+                     [value]="filters().status"
+                     (selectionChange)="setFilter({ status: $any($event) })" />
     </div>
 
     <!-- Download % select -->
     <div class="la-filter">
       <label class="la-filter__label">{{ 'library.filters.downloadPct' | translate }}</label>
-      <div class="la-select-wrap">
-        <select class="la-filter__select"
-                [value]="filters().download"
-                (change)="setFilter({ download: $any($event.target).value })">
-          <option value="all">{{ 'library.filters.all' | translate }}</option>
-          <option value="100">100%</option>
-          <option value="partial">{{ 'library.filters.partial' | translate }}</option>
-        </select>
-        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-      </div>
+      <app-ui-select [options]="downloadSelectOptions()"
+                     [value]="filters().download"
+                     (selectionChange)="setFilter({ download: $any($event) })" />
     </div>
 
     <!-- Bit Depth select -->
     <div class="la-filter">
       <label class="la-filter__label">{{ 'library.filters.bitDepth' | translate }}</label>
-      <div class="la-select-wrap">
-        <select class="la-filter__select"
-                [value]="filters().bitDepth"
-                (change)="setFilter({ bitDepth: $any($event.target).value })">
-          <option value="">{{ 'library.filters.all' | translate }}</option>
-          <option value="8">8-bit</option>
-          <option value="10">10-bit</option>
-        </select>
-        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-      </div>
+      <app-ui-select [options]="bitDepthSelectOptions()"
+                     [value]="filters().bitDepth"
+                     (selectionChange)="setFilter({ bitDepth: $any($event) })" />
     </div>
 
     <!-- With Files select -->
     <div class="la-filter">
       <label class="la-filter__label">{{ 'library.filters.withFiles' | translate }}</label>
-      <div class="la-select-wrap">
-        <select class="la-filter__select"
-                [value]="filters().hasFiles"
-                (change)="setFilter({ hasFiles: $any($event.target).value })">
-          <option value="all">{{ 'library.filters.all' | translate }}</option>
-          <option value="yes">{{ 'library.filters.withFilesYes' | translate }}</option>
-          <option value="no">{{ 'library.filters.withFilesNo' | translate }}</option>
-        </select>
-        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-      </div>
+      <app-ui-select [options]="hasFilesSelectOptions()"
+                     [value]="filters().hasFiles"
+                     (selectionChange)="setFilter({ hasFiles: $any($event) })" />
     </div>
 
     <!-- Clear all filters -->
@@ -235,14 +186,10 @@
   <div class="la-table-toolbar__controls">
     <div class="la-table-toolbar__rpp">
       <span class="la-rpp-label">{{ 'library.table.rowsPerPage' | translate }}</span>
-      <div class="la-select-wrap la-select-wrap--sm">
-        <select class="la-rpp-select" (change)="setPageSize(+$any($event.target).value)">
-          @for (opt of pageSizeOptions; track opt) {
-            <option [value]="opt" [selected]="filters().pageSize === opt">{{ opt }}</option>
-          }
-        </select>
-        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-      </div>
+      <app-ui-select [small]="true"
+                     [options]="pageSizeSelectOptions()"
+                     [value]="filters().pageSize"
+                     (selectionChange)="setPageSize($any($event))" />
     </div>
   </div>
 </div>

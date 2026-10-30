@@ -310,6 +310,10 @@
   grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
 
+  > * {
+    min-width: 0;
+  }
+
   @media (max-width: 380px) { grid-template-columns: 1fr; }
 }
 
@@ -539,22 +543,37 @@
     letter-spacing: 0.04em;
   }
 
-  &__select,
   &__input {
     width: 100%;
     padding: 0.45rem 0.7rem;
     border-radius: 8px;
-    border: 1px solid var(--card-border);
-    background: var(--bg-secondary);
+    border: 1px solid var(--color-border-subtle);
+    background: color-mix(in srgb, var(--text-primary) 4%, transparent);
     color: var(--text-primary);
     font-size: 0.84rem;
     outline: none;
     transition: border-color 0.15s, box-shadow 0.15s;
     min-width: 0;
 
+    &:hover {
+      border-color: color-mix(in srgb, var(--text-primary) 20%, transparent);
+    }
+
     &:focus {
-      border-color: var(--accent-primary);
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 20%, transparent);
+      outline: none;
+      border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
+      box-shadow: none;
+    }
+
+    // Hide the native number spinners
+    &[type='number'] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
     }
   }
 
@@ -581,11 +600,42 @@
   }
 
   &__checkbox {
-    width: 1rem;
-    height: 1rem;
-    accent-color: var(--accent-primary);
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--text-primary) 5%, transparent);
     cursor: pointer;
     flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s;
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 4.5px;
+      top: 1.5px;
+      width: 4px;
+      height: 8px;
+      border: solid #fff;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+      opacity: 0;
+    }
+
+    &:checked {
+      background: var(--color-brand);
+      border-color: var(--color-brand);
+
+      &::after { opacity: 1; }
+    }
+
+    &:focus-visible {
+      outline: 2px solid color-mix(in srgb, var(--accent-primary) 50%, transparent);
+      outline-offset: 2px;
+    }
   }
 }
 
@@ -594,6 +644,15 @@
   gap: 0.75rem;
 
   @media (max-width: 400px) { flex-direction: column; }
+}
+
+// ── Custom dropdown host (app-ui-select replaces the native <select>) ─────────
+
+.field__select-wrap {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-width: 0;
 }
 
 .field__error--modal { margin: 0; }
@@ -619,16 +678,25 @@
     width: 100%;
     padding: 0.45rem 2.2rem 0.45rem 2rem;
     border-radius: 8px;
-    border: 1px solid var(--card-border);
-    background: var(--bg-secondary);
+    border: 1px solid var(--color-border-subtle);
+    background: color-mix(in srgb, var(--text-primary) 4%, transparent);
     color: var(--text-primary);
     font-size: 0.84rem;
     outline: none;
     transition: border-color 0.15s, box-shadow 0.15s;
 
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:hover {
+      border-color: color-mix(in srgb, var(--text-primary) 20%, transparent);
+    }
+
     &:focus {
-      border-color: var(--accent-primary);
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 20%, transparent);
+      outline: none;
+      border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
+      box-shadow: none;
     }
   }
 
@@ -658,36 +726,6 @@
   font-size: 0.7rem;
   color: var(--text-muted);
   margin: 0;
-}
-
-// ── Toggle pill ───────────────────────────────────────────────────────────────
-
-.prov-toggle {
-  width: 36px;
-  height: 20px;
-  border-radius: 10px;
-  background: var(--card-border);
-  position: relative;
-  flex-shrink: 0;
-  transition: background 0.2s;
-
-  &::after {
-    content: '';
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: #fff;
-    top: 3px;
-    left: 3px;
-    transition: transform 0.2s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  }
-
-  &--on {
-    background: var(--accent-primary);
-    &::after { transform: translateX(16px); }
-  }
 }
 
 // ── Buttons ───────────────────────────────────────────────────────────────────

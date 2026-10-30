@@ -26,6 +26,8 @@ import { SonarrService, SonarrTag } from '../services/sonarr.service';
 import { AuthService } from '../services/auth.service';
 import { EnrollmentService, PlexLibrary } from '../services/enrollment.service';
 import { BotKunService } from '../services/bot-kun.service';
+import { UiSelectComponent, UiSelectOption } from '../shared/ui/ui-select/ui-select.component';
+import { UiToggleComponent } from '../shared/ui/ui-toggle/ui-toggle.component';
 import { PropertyBagService } from '../services/property-bag.service';
 import { UserPathService } from '../services/user-path.service';
 import { FsBrowseService, FsBrowseEntry } from '../services/fs-browse.service';
@@ -58,7 +60,7 @@ function langToLocale(lang: string): string {
   selector: 'app-settings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, ReactiveFormsModule, SyncStepComponent, HelpModalComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, SyncStepComponent, HelpModalComponent, UiSelectComponent, UiToggleComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
@@ -737,6 +739,57 @@ export class SettingsComponent {
 
   slug(key: string): string {
     return fieldSlug(key);
+  }
+
+  // ── ui-select option sets (labels translated here — the component takes final strings) ──
+
+  selectOptionsFor(setting: SettingDefinition): UiSelectOption[] {
+    return (setting.selectOptions ?? []).map((opt) => ({
+      label: this.translate.instant('settings.fields.' + this.slug(setting.key) + '.option.' + opt),
+      value: opt,
+    }));
+  }
+
+  botkunModelSelectOptions(): UiSelectOption[] {
+    return [
+      { label: this.translate.instant('settings.botkun.selectModel'), value: '' },
+      ...this.botkunModels().map((m) => ({ label: m, value: m })),
+    ];
+  }
+
+  sonarrRootFolderSelectOptions(): UiSelectOption[] {
+    return [
+      { label: this.translate.instant('settings.notSet'), value: '' },
+      ...this.sonarrRootFolders().map((f) => ({ label: f.path, value: f.path })),
+    ];
+  }
+
+  sonarrQualityProfileSelectOptions(): UiSelectOption[] {
+    return [
+      { label: this.translate.instant('settings.notSet'), value: '' },
+      ...this.sonarrQualityProfiles().map((p) => ({ label: p.name, value: p.name })),
+    ];
+  }
+
+  sonarrMonitorSelectOptions(): UiSelectOption[] {
+    return (this.sonarrDefaultByKey('Sonarr:DefaultMonitor')?.selectOptions ?? []).map((opt) => ({
+      label: this.translate.instant('settings.fields.Sonarr_DefaultMonitor.option.' + opt),
+      value: opt,
+    }));
+  }
+
+  separatorSelectOptions(): UiSelectOption[] {
+    return [
+      { label: 'POSIX /', value: 'posix' },
+      { label: 'Windows \\', value: 'windows' },
+    ];
+  }
+
+  syncIntervalSelectOptions(setting: SettingDefinition): UiSelectOption[] {
+    return (setting.selectOptions ?? []).map((opt) => ({
+      label: this.translate.instant('settings.fields.App_SyncInterval.option.' + opt),
+      value: opt,
+    }));
   }
 
   /**

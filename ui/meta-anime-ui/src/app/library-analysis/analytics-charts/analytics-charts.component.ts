@@ -16,8 +16,10 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { map, merge } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { SegmentedControlComponent, SegmentedOption } from '../../shared/ui/segmented-control.component';
+import { UiToggleComponent } from '../../shared/ui/ui-toggle/ui-toggle.component';
 import { UiBadgeComponent, UiBadgeColor } from '../../shared/ui/ui-badge.component';
 import { UiCardComponent } from '../../shared/ui/ui-card.component';
+import { TelemetryBoxComponent } from '../../shared/ui/telemetry-box.component';
 import { ThemeService } from '../../services/theme.service';
 import { AnimeService } from '../../services/anime.service';
 import { UserPathService } from '../../services/user-path.service';
@@ -76,7 +78,7 @@ export interface QuickFilterPreset {
   selector: 'app-la-analytics-charts',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, UiCardComponent, UiBadgeComponent, SegmentedControlComponent],
+  imports: [TranslatePipe, UiCardComponent, UiBadgeComponent, SegmentedControlComponent, TelemetryBoxComponent, UiToggleComponent],
   templateUrl: './analytics-charts.component.html',
   styleUrl: './analytics-charts.component.scss',
 })
@@ -299,7 +301,7 @@ export class AnalyticsChartsComponent implements OnDestroy {
   /** Id of the preset currently driving the filters (bright ring on its chip). */
   readonly activePresetId = this.store.activePresetId;
 
-  /** Chip that just applied its preset (brief "✓ Applied" flash). */
+  /** Chip that just applied its preset (brief "Applied" checkmark flash). */
   readonly flashPresetId = signal<QuickFilterPresetId | null>(null);
   private flashTimer: ReturnType<typeof setTimeout> | null = null;
 

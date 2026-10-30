@@ -290,7 +290,7 @@ export class DetailPanelComponent {
     setTimeout(() => this.copySuccess.set(false), 2000);
   }
 
-  /** 📁 Resolved host folder; appends the season subfolder when the scope is a single season. */
+  /** Resolved host folder; appends the season subfolder when the scope is a single season. */
   protected async copyFolderPath(): Promise<void> {
     const r = this.row();
     if (!r) return;

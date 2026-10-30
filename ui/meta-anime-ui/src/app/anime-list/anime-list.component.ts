@@ -36,6 +36,7 @@ import { AnimeDetailPanelComponent } from '../anime-detail-panel/anime-detail-pa
 import { AnimeImageGalleryComponent } from '../anime-image-gallery/anime-image-gallery.component';
 import { StorageKeys } from '../constants/storage-keys';
 import { formatTableSize as formatSize, getCodecPills as codecPills } from '../utils/format.utils';
+import { UiSelectComponent, UiSelectOption } from '../shared/ui/ui-select/ui-select.component';
 
 const DEFAULT_PAGE_SIZE = 20;
 const DISPLAY_MODE_KEY = StorageKeys.displayMode;
@@ -109,7 +110,7 @@ export const RATING_OPTIONS = [
   selector: 'app-anime-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, AnimeImageGalleryComponent, NgTemplateOutlet, DatePipe],
+  imports: [FormsModule, RouterLink, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, AnimeImageGalleryComponent, NgTemplateOutlet, DatePipe, UiSelectComponent],
   templateUrl: './anime-list.component.html',
   styleUrl: './anime-list.component.scss',
 })
@@ -227,6 +228,16 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   readonly watchingStates = WATCHING_STATES;
   readonly airingStates = AIRING_STATES;
   readonly sortOptions = SORT_OPTIONS;
+
+  // ── ui-select option sets (labels translated here — the component takes final strings) ──
+
+  sortSelectOptions(): UiSelectOption[] {
+    return this.sortOptions.map((o) => ({ label: this.translateService.instant(o.labelKey), value: o.value }));
+  }
+
+  pageSizeSelectOptions(): UiSelectOption[] {
+    return this.pageSizeOptions.map((o) => ({ label: String(o), value: o }));
+  }
   readonly codecOptions = CODEC_OPTIONS;
   readonly mediaTypeOptions = MEDIA_TYPE_OPTIONS;
   readonly ratingOptions = RATING_OPTIONS;

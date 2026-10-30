@@ -339,7 +339,7 @@
 
       @if (pureGenres.length || themes.length || demographics.length) {
         <section class="panel__section">
-          <h3 class="panel__section-title">{{ 'animeDetailPanel.tags' | translate }}</h3>
+          <h3 class="panel__section-title"><svg class="panel__section-title-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/></svg>{{ 'animeDetailPanel.tags' | translate }}</h3>
           <div class="panel__tags">
             @for (g of pureGenres; track g) {
               <span class="panel__tag panel__tag--genre">{{ g }}</span>
@@ -356,14 +356,14 @@
 
       @if (mal?.synopsis) {
         <section class="panel__section">
-          <h3 class="panel__section-title">{{ 'animeDetailPanel.synopsis' | translate }}</h3>
+          <h3 class="panel__section-title"><svg class="panel__section-title-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/></svg>{{ 'animeDetailPanel.synopsis' | translate }}</h3>
           <p class="panel__synopsis">{{ mal!.synopsis }}</p>
         </section>
       }
 
       @if (mal?.trailerUrl) {
         <section class="panel__section">
-          <h3 class="panel__section-title">{{ 'animeDetailPanel.trailer' | translate }}</h3>
+          <h3 class="panel__section-title"><svg class="panel__section-title-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/></svg>{{ 'animeDetailPanel.trailer' | translate }}</h3>
           <div class="panel__trailer-wrapper">
             <iframe
               class="panel__trailer"
@@ -380,7 +380,7 @@
 
       @if (plex?.progression) {
         <section class="panel__section">
-          <h3 class="panel__section-title">{{ 'animeDetailPanel.plexStatus' | translate }}</h3>
+          <h3 class="panel__section-title"><svg class="panel__section-title-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/></svg>{{ 'animeDetailPanel.plexStatus' | translate }}</h3>
           <div class="panel__progress-row">
             <div class="panel__progress-bar">
               <div
@@ -395,7 +395,7 @@
 
       @if (sonarr) {
         <section class="panel__section">
-          <h3 class="panel__section-title">{{ 'animeDetailPanel.sonarrStatus' | translate }}</h3>
+          <h3 class="panel__section-title"><svg class="panel__section-title-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/></svg>{{ 'animeDetailPanel.sonarrStatus' | translate }}</h3>
           @if (sonarr!.seasonInfo?.length) {
             <div class="panel__seasons">
               @for (season of sonarr!.seasonInfo!; track season.seasonNumber) {
@@ -516,19 +516,21 @@
           <div class="panel__sonarr-add__config">
             @if (sonarrRootFolders().length > 1) {
               <label class="panel__sonarr-add__label">{{ 'animeDetailPanel.sonarrAdd.rootFolder' | translate }}</label>
-              <select class="panel__sonarr-add__select" (change)="sonarrRootFolder.set($any($event.target).value)">
-                @for (folder of sonarrRootFolders(); track folder.id) {
-                  <option [value]="folder.path" [selected]="sonarrRootFolder() === folder.path">{{ folder.path }}</option>
-                }
-              </select>
+              <app-ui-select
+                [options]="sonarrRootFolderSelectOptions()"
+                [value]="sonarrRootFolder()"
+                [ariaLabel]="'animeDetailPanel.sonarrAdd.rootFolder' | translate"
+                (selectionChange)="sonarrRootFolder.set($any($event))"
+              />
             }
             @if (sonarrQualityProfiles().length > 1) {
               <label class="panel__sonarr-add__label">{{ 'animeDetailPanel.sonarrAdd.quality' | translate }}</label>
-              <select class="panel__sonarr-add__select" (change)="sonarrProfileId.set(+$any($event.target).value)">
-                @for (profile of sonarrQualityProfiles(); track profile.id) {
-                  <option [value]="profile.id" [selected]="sonarrProfileId() === profile.id">{{ profile.name }}</option>
-                }
-              </select>
+              <app-ui-select
+                [options]="sonarrQualityProfileSelectOptions()"
+                [value]="sonarrProfileId()"
+                [ariaLabel]="'animeDetailPanel.sonarrAdd.quality' | translate"
+                (selectionChange)="sonarrProfileId.set($any($event))"
+              />
             }
           </div>
         }

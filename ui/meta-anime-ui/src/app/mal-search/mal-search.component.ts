@@ -42,12 +42,13 @@ import {
 import { MEDIA_TYPE_OPTIONS, RATING_OPTIONS } from '../anime-list/anime-list.component';
 import { SEASONAL_MAL_STATES, SEASONAL_SORT_OPTIONS } from '../seasonal/seasonal.component';
 import { AddSeriesWizardComponent } from '../add-series-wizard/add-series-wizard.component';
+import { UiSelectComponent, UiSelectOption } from '../shared/ui/ui-select/ui-select.component';
 
 @Component({
   selector: 'app-mal-search',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, NgTemplateOutlet, AnimeImageGalleryComponent, AddSeriesWizardComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, NgTemplateOutlet, AnimeImageGalleryComponent, AddSeriesWizardComponent, UiSelectComponent],
   templateUrl: './mal-search.component.html',
   styleUrl: './mal-search.component.scss',
 })
@@ -232,6 +233,12 @@ export class MalSearchComponent {
 
   readonly malStates = SEASONAL_MAL_STATES;
   readonly sortOptions = SEASONAL_SORT_OPTIONS;
+
+  // ── ui-select option sets (labels translated here — the component takes final strings) ──
+
+  sortSelectOptions(): UiSelectOption[] {
+    return this.sortOptions.map((o) => ({ label: this.translateService.instant(o.labelKey), value: o.value }));
+  }
   readonly mediaTypeOptions = MEDIA_TYPE_OPTIONS;
   readonly ratingOptions = RATING_OPTIONS;
 

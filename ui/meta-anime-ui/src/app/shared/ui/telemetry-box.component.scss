@@ -1,0 +1,53 @@
+// ── Inline telemetry box (moved byte-equal from analytics-charts la-cd__summary*) ──
+// Cells are projected content, so the contract classes are styled through a
+// :host-scoped deep selector — they only match inside <app-telemetry-box>.
+
+:host {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--text-primary) 6%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+}
+
+:host([data-cols='3']) {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+:host ::ng-deep .app-telemetry-box__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+:host ::ng-deep .app-telemetry-box__cell + .app-telemetry-box__cell {
+  padding-left: 16px;
+  border-left: 1px solid color-mix(in srgb, var(--text-primary) 6%, transparent);
+}
+
+:host ::ng-deep .app-telemetry-box__label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:host ::ng-deep .app-telemetry-box__value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+// Success accent (was .la-cd__summary-value.la-lb__summary-savings; #34d399 === --color-success)
+:host ::ng-deep .app-telemetry-box__value--success {
+  color: var(--color-success);
+}

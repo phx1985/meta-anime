@@ -90,10 +90,10 @@
 }
 
 .la-cd__head-title {
-  font-size: 0.72rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--text-muted);
 }
 
@@ -186,47 +186,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-// Unified telemetry box (mirrors the BATCH SIZE / EST. SAVINGS box)
-.la-cd__summary {
-  margin-top: auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  padding: 14px;
-  border: 1px solid color-mix(in srgb, var(--text-primary) 6%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
-}
-
-.la-cd__summary-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-
-  & + & {
-    padding-left: 16px;
-    border-left: 1px solid color-mix(in srgb, var(--text-primary) 6%, transparent);
-  }
-}
-
-.la-cd__summary-label {
-  font-size: 0.6875rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.la-cd__summary-value {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-}
+// Unified telemetry box — chrome + cells now live in shared/ui/telemetry-box
+// (styles moved byte-equal; call-site placement stays here).
 
 // ── Card 2 — Storage Hogs & Bloat leaderboard ──────────────────────────────────
 
@@ -392,6 +353,7 @@
   font-size: 0.66rem;
   font-weight: 500;
   color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
   text-decoration: line-through;
 }
 
@@ -415,10 +377,10 @@
 }
 
 .la-oppo__head-title {
-  font-size: 0.72rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: var(--text-muted);
 }
 
@@ -446,6 +408,7 @@
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--color-success);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
@@ -612,6 +575,11 @@
   .la-oppo__row:hover & {
     color: var(--text-primary);
   }
+}
+
+.la-oppo__row-clear-ico {
+  width: 9px;
+  height: 9px;
 }
 
 .la-oppo__row-flash {
@@ -841,6 +809,10 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
+
+    > * {
+      min-width: 0;
+    }
     padding: 12px;
     border: 1px solid color-mix(in srgb, var(--text-primary) 6%, transparent);
     border-radius: 10px;
@@ -1060,36 +1032,6 @@
     }
   }
 
-  &__switch {
-    position: relative;
-    width: 34px;
-    height: 20px;
-    flex-shrink: 0;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--text-primary) 14%, transparent);
-    transition: background 0.18s ease;
-
-    &--on {
-      background: var(--accent-primary);
-    }
-  }
-
-  &__knob {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-    transition: transform 0.18s ease;
-
-    .la-batch__switch--on & {
-      transform: translateX(14px);
-    }
-  }
-
   // ── Primary CTA (the one vibrant element) ─────────────────────────────────
   &__export {
     display: flex;
@@ -1147,17 +1089,9 @@
   color: var(--color-success);
 }
 
-.la-cd__summary-value.la-lb__summary-savings {
-  color: var(--color-success);
-}
-
 // ── Reclaimable/muted accents (appended last: must win the cascade over the
 // later base .la-lb__size / .la-badge rules of equal specificity). ──────────
 .la-lb__size.la-lb__size--savings {
-  color: #34d399;
-}
-
-.la-cd__summary-value.la-lb__summary-savings {
   color: #34d399;
 }
 

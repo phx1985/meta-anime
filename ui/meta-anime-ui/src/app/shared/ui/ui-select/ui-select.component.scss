@@ -1,0 +1,141 @@
+// ── Custom dark-mode dropdown (replaces native <select> whose OS popup is white) ──
+// Trigger = house form style; menu is position: fixed from the trigger rect so it
+// escapes overflow-hidden/auto ancestors (modals, panels, scrollable table areas).
+
+:host {
+  display: block;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.ui-select__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 7px 30px 7px 12px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text-primary) 4.5%, transparent);
+  color: var(--text-primary);
+  font-size: 12px; // text-xs
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--text-primary) 20%, transparent);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &--small {
+    padding: 5px 24px 5px 10px;
+    border-radius: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.ui-select__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-select__chevron {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  translate: 0 -50%;
+  width: 14px;
+  height: 14px;
+  color: color-mix(in srgb, var(--text-muted) 75%, transparent);
+  transition: transform 0.15s;
+
+  &--small,
+  .ui-select__trigger--small & {
+    width: 12px;
+    height: 12px;
+  }
+
+  &--open {
+    transform: rotate(180deg);
+  }
+}
+
+// ── Menu (fixed — geometry set inline from the trigger rect) ──────────────────
+
+.ui-select__menu {
+  position: fixed;
+  z-index: 1000;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 8px;
+  background: var(--color-surface-elevated);
+  box-shadow:
+    0 20px 32px rgba(0, 0, 0, 0.45),
+    0 6px 12px rgba(0, 0, 0, 0.35); // shadow-2xl equivalent
+  padding: 4px;
+  scrollbar-width: thin;
+}
+
+.ui-select__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px; // px-3 py-2
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px; // text-xs
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+
+  &:hover {
+    color: var(--text-primary);
+    background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+  }
+
+  &--selected {
+    color: var(--color-brand);
+    background: color-mix(in srgb, var(--color-brand) 10%, transparent);
+
+    &:hover {
+      color: var(--color-brand);
+      background: color-mix(in srgb, var(--color-brand) 14%, transparent);
+    }
+  }
+}
+
+.ui-select__option-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-select__check {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}

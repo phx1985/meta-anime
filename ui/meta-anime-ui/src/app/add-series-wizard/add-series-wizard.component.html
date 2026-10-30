@@ -99,7 +99,7 @@
                     <span>{{ 'seasonal.alreadyTracked' | translate }}</span>
                   </div>
                 } @else {
-                  <div class="prov-toggle" [class.prov-toggle--on]="addSonarr()" role="switch" [attr.aria-checked]="addSonarr()" [attr.aria-label]="'aria.toggleSonarr' | translate"></div>
+                  <app-ui-toggle [interactive]="false" [checked]="addSonarr()" [ariaLabel]="'aria.toggleSonarr' | translate" />
                 }
               </button>
             }
@@ -124,7 +124,7 @@
                   <span>{{ 'seasonal.alreadyTracked' | translate }}</span>
                 </div>
               } @else {
-                <div class="prov-toggle" [class.prov-toggle--on]="addMal()" role="switch" [attr.aria-checked]="addMal()" [attr.aria-label]="'aria.toggleMal' | translate"></div>
+                <app-ui-toggle [interactive]="false" [checked]="addMal()" [ariaLabel]="'aria.toggleMal' | translate" />
               }
             </button>
           </div>
@@ -212,27 +212,36 @@
                 } @else {
                   <div class="field">
                     <label class="field__label">{{ 'seasonal.rootFolder' | translate }}</label>
-                    <select class="field__select" [ngModel]="sonarrRootFolder()" (ngModelChange)="onRootFolderChange($event)">
-                      @for (f of sonarrRootFolders(); track f.id) {
-                        <option [value]="f.path">{{ f.path }}</option>
-                      }
-                    </select>
+                    <div class="field__select-wrap">
+                      <app-ui-select
+                        [options]="sonarrRootFolderSelectOptions()"
+                        [value]="sonarrRootFolder()"
+                        [ariaLabel]="'seasonal.rootFolder' | translate"
+                        (selectionChange)="onRootFolderChange($any($event))"
+                      />
+                    </div>
                   </div>
                   <div class="field">
                     <label class="field__label">{{ 'seasonal.qualityProfile' | translate }}</label>
-                    <select class="field__select" [ngModel]="sonarrProfileId()" (ngModelChange)="onProfileIdChange($event)">
-                      @for (p of sonarrQualityProfiles(); track p.id) {
-                        <option [value]="p.id">{{ p.name }}</option>
-                      }
-                    </select>
+                    <div class="field__select-wrap">
+                      <app-ui-select
+                        [options]="sonarrProfileSelectOptions()"
+                        [value]="sonarrProfileId()"
+                        [ariaLabel]="'seasonal.qualityProfile' | translate"
+                        (selectionChange)="onProfileIdChange($any($event))"
+                      />
+                    </div>
                   </div>
                   <div class="field">
                     <label class="field__label">{{ 'seasonal.monitor' | translate }}</label>
-                    <select class="field__select" [ngModel]="sonarrMonitor()" (ngModelChange)="onMonitorChange($event)">
-                      @for (m of sonarrMonitorTypes; track m.value) {
-                        <option [value]="m.value">{{ m.labelKey | translate }}</option>
-                      }
-                    </select>
+                    <div class="field__select-wrap">
+                      <app-ui-select
+                        [options]="sonarrMonitorSelectOptions()"
+                        [value]="sonarrMonitor()"
+                        [ariaLabel]="'seasonal.monitor' | translate"
+                        (selectionChange)="onMonitorChange($any($event))"
+                      />
+                    </div>
                   </div>
                   <div class="field field--checkbox">
                     <label class="field__checkbox-label">
@@ -254,11 +263,14 @@
                 </div>
                 <div class="field">
                   <label class="field__label">{{ 'seasonal.malStatusLabel' | translate }}</label>
-                  <select class="field__select" [ngModel]="addMalStatus()" (ngModelChange)="onMalStatusChange($event)">
-                    @for (s of malStatuses; track s.value) {
-                      <option [value]="s.value">{{ s.labelKey | translate }}</option>
-                    }
-                  </select>
+                  <div class="field__select-wrap">
+                    <app-ui-select
+                      [options]="malStatusSelectOptions()"
+                      [value]="addMalStatus()"
+                      [ariaLabel]="'seasonal.malStatusLabel' | translate"
+                      (selectionChange)="onMalStatusChange($any($event))"
+                    />
+                  </div>
                 </div>
                 <div class="field-row">
                   <div class="field">

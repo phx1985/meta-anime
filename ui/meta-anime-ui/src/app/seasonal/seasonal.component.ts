@@ -42,6 +42,7 @@ import {
 } from '../constants/genre-lists';
 import { MEDIA_TYPE_OPTIONS, RATING_OPTIONS } from '../anime-list/anime-list.component';
 import { AddSeriesWizardComponent } from '../add-series-wizard/add-series-wizard.component';
+import { UiSelectComponent, UiSelectOption } from '../shared/ui/ui-select/ui-select.component';
 
 const MIN_YEAR = 1963;
 
@@ -86,7 +87,7 @@ function getCurrentSeason(month: number): SeasonName {
   selector: 'app-seasonal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, NgTemplateOutlet, AnimeImageGalleryComponent, AddSeriesWizardComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, NgTemplateOutlet, AnimeImageGalleryComponent, AddSeriesWizardComponent, UiSelectComponent],
   templateUrl: './seasonal.component.html',
   styleUrl: './seasonal.component.scss',
 })
@@ -296,6 +297,12 @@ export class SeasonalComponent {
 
   readonly malStates = SEASONAL_MAL_STATES;
   readonly sortOptions = SEASONAL_SORT_OPTIONS;
+
+  // ── ui-select option sets (labels translated here — the component takes final strings) ──
+
+  sortSelectOptions(): UiSelectOption[] {
+    return this.sortOptions.map((o) => ({ label: this.translateService.instant(o.labelKey), value: o.value }));
+  }
   readonly mediaTypeOptions = MEDIA_TYPE_OPTIONS;
   readonly ratingOptions = RATING_OPTIONS;
 

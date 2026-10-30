@@ -615,16 +615,14 @@
               <div class="filter-field filter-field--compact">
                 <span class="filter-label">{{ 'animeList.sort.by' | translate }}</span>
                 <div class="d-flex align-items-center gap-2">
-                  <select
-                    class="sort-select"
-                    [(ngModel)]="sortBy"
-                    (ngModelChange)="onSortByChange()"
-                    [attr.aria-label]="'animeList.sort.by' | translate"
-                  >
-                    @for (opt of sortOptions; track opt.value) {
-                      <option [value]="opt.value">{{ opt.labelKey | translate }}</option>
-                    }
-                  </select>
+                  <div class="sort-select-wrap">
+                    <app-ui-select
+                      [options]="sortSelectOptions()"
+                      [value]="sortBy"
+                      [ariaLabel]="'animeList.sort.by' | translate"
+                      (selectionChange)="sortBy = $any($event); onSortByChange()"
+                    />
+                  </div>
                   <button
                     type="button"
                     class="mode-btn sort-dir-btn"
@@ -921,12 +919,15 @@
               </nav>
             }
             <div class="table-toolbar__rpp">
-              <label class="rpp-label" for="rpp-select">{{ 'animeList.table.resultsPerPage' | translate }}</label>
-              <select id="rpp-select" class="rpp-select" [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)">
-                @for (opt of pageSizeOptions; track opt) {
-                  <option [value]="opt">{{ opt }}</option>
-                }
-              </select>
+              <label class="rpp-label">{{ 'animeList.table.resultsPerPage' | translate }}</label>
+              <div class="rpp-select-wrap">
+                <app-ui-select [small]="true"
+                  [options]="pageSizeSelectOptions()"
+                  [value]="pageSize()"
+                  [ariaLabel]="'animeList.table.resultsPerPage' | translate"
+                  (selectionChange)="changePageSize($event)"
+                />
+              </div>
             </div>
           </div>
         </div>

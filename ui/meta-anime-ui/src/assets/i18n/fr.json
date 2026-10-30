@@ -57,8 +57,8 @@
         "loading": "Chargement de la liste…",
         "error": "Le chargement a échoué. Veuillez réessayer.",
         "empty": "Aucun anime trouvé pour cette lacune.",
-        "allClearTitle": "Impeccable ! Votre bibliothèque est parfaitement synchronisée.",
-        "allClearSub": "Il ne manque rien ici. Vos conteneurs communiquent bien entre eux. 🚀",
+        "allClearTitle": "Impeccable! Votre bibliothèque est parfaitement synchronisée.",
+        "allClearSub": "Il ne manque rien ici. Vos conteneurs communiquent bien entre eux.",
         "colTitle": "Titre",
         "colActions": "Actions",
         "colProgress": "Progression",
@@ -66,12 +66,12 @@
         "searchPlaceholder": "Rechercher sur MyAnimeList...",
         "searchButton": "Rechercher",
         "searchError": "La recherche a échoué. Veuillez réessayer.",
-        "matchSuccess": "Associé ! Suppression de la liste des lacunes...",
+        "matchSuccess": "Associé! Suppression de la liste des lacunes...",
         "alreadyMapped": "Déjà lié",
         "moreInfo": "Plus d'infos",
         "linkPanelHeading": "Liez cet élément à son entrée MAL pour résoudre l'écart",
         "confirmTitle": "Confirmer l'association",
-        "confirmSubtitle": "Est-ce correct ?",
+        "confirmSubtitle": "Est-ce correct?",
         "confirmCancel": "Annuler",
         "confirmButton": "Confirmer",
         "confirmMappingButton": "Confirmer l'association",
@@ -103,7 +103,7 @@
       "storage": "Stockage ajouté",
       "forceRefresh": "Actualiser",
       "refreshing": "Actualisation…",
-      "lastUpdated": "Dernière mise à jour : {{value}}"
+      "lastUpdated": "Dernière mise à jour: {{value}}"
     }
   },
   "seasonal": {
@@ -132,10 +132,10 @@
       "stepConfigure": "Configurer"
     },
     "allTracked": "Suivi dans Sonarr & MAL",
-    "alreadyTracked": "Déjà suivi ✓",
+    "alreadyTracked": "Déjà suivi",
     "willAdd": "Sera ajouté",
     "notTracked": "Non suivi",
-    "addSuccess": "Ajouté avec succès !",
+    "addSuccess": "Ajouté avec succès!",
     "sonarrNoneSelected": "Veuillez sélectionner une série dans les résultats de recherche",
     "enableToAdd": "Activez le commutateur ci-dessus pour configurer et ajouter ce fournisseur",
     "sonarrSearch": "Recherche Sonarr",
@@ -143,15 +143,15 @@
     "sonarrSearchError": "Échec de la recherche de séries Sonarr.",
     "rootFolder": "Dossier racine",
     "qualityProfile": "Profil qualité",
-    "sonarrAutoSettings": "Type de série : Anime/Absolute · Tags de la configuration",
+    "sonarrAutoSettings": "Type de série: Anime/Absolute · Tags de la configuration",
     "sonarrOptionsError": "Échec du chargement des options Sonarr.",
     "sonarrAddError": "Impossible d'ajouter la série à Sonarr.",
-    "sonarrAddSuccess": "Ajouté avec succès à Sonarr !",
+    "sonarrAddSuccess": "Ajouté avec succès à Sonarr!",
     "malStatusLabel": "Statut",
     "episodesWatched": "Épisodes vus",
     "score": "Note (0–10)",
     "malAddError": "Échec de la mise à jour de la liste MAL.",
-    "malAddSuccess": "Ajouté avec succès à votre liste MAL !",
+    "malAddSuccess": "Ajouté avec succès à votre liste MAL!",
     "malStatus": {
       "watching": "En cours",
       "completed": "Vu",
@@ -249,10 +249,10 @@
       "stepConfigure": "Configurer"
     },
     "allTracked": "Suivi dans Sonarr et MAL",
-    "alreadyTracked": "Déjà suivi ✓",
+    "alreadyTracked": "Déjà suivi",
     "willAdd": "Sera ajouté",
     "notTracked": "Non suivi",
-    "addSuccess": "Ajout effectué !",
+    "addSuccess": "Ajout effectué!",
     "sonarrNoneSelected": "Veuillez sélectionner une série dans les résultats",
     "enableToAdd": "Activez l'interrupteur ci-dessus pour configurer et ajouter ce fournisseur",
     "sonarrSearch": "Rechercher dans Sonarr",
@@ -260,15 +260,15 @@
     "sonarrSearchError": "Impossible de rechercher des séries sur Sonarr.",
     "rootFolder": "Dossier racine",
     "qualityProfile": "Profil qualité",
-    "sonarrAutoSettings": "Type de série : Anime/Absolute · Étiquettes de la configuration",
+    "sonarrAutoSettings": "Type de série: Anime/Absolute · Étiquettes de la configuration",
     "sonarrOptionsError": "Impossible de charger les options Sonarr.",
     "sonarrAddError": "Impossible d'ajouter la série à Sonarr.",
-    "sonarrAddSuccess": "Ajouté à Sonarr !",
+    "sonarrAddSuccess": "Ajouté à Sonarr!",
     "malStatusLabel": "Statut",
     "episodesWatched": "Épisodes vus",
     "score": "Note (0–10)",
     "malAddError": "Impossible de mettre à jour votre liste MAL.",
-    "malAddSuccess": "Ajouté à votre liste MAL !",
+    "malAddSuccess": "Ajouté à votre liste MAL!",
     "malStatus": {
       "watching": "En cours",
       "completed": "Terminé",
@@ -523,7 +523,7 @@
     "aka": "Alias",
     "copyTitle": "Copier le titre",
     "askBotKun": "Demander à Bot-kun",
-    "askBotKunInstruction": "Voici les données concernant un anime. Veuillez rédiger un court résumé captivant en vous fondant uniquement sur les informations fournies ci-dessous — sans rien ajouter d'extérieur :",
+    "askBotKunInstruction": "Voici les données concernant un anime. Veuillez rédiger un court résumé captivant en vous fondant uniquement sur les informations fournies ci-dessous — sans rien ajouter d'extérieur:",
     "addToMal": "Ajouter à MAL",
     "addToSonarr": "Ajouter à Sonarr",
     "sonarrAdd": {
@@ -537,7 +537,7 @@
       "rootFolder": "Dossier racine",
       "quality": "Qualité",
       "add": "Ajouter",
-      "success": "Ajouté à Sonarr !"
+      "success": "Ajouté à Sonarr!"
     }
   },
   "animeCard": {
@@ -546,7 +546,7 @@
     "addedOn": "Ajouté",
     "openPlex": "Ouvrir dans Plex",
     "openSonarr": "Ouvrir dans Sonarr",
-    "askBotKunInstruction": "Voici les données concernant un anime. Veuillez rédiger un court résumé captivant en vous fondant uniquement sur les informations fournies ci-dessous — sans rien ajouter d'extérieur :",
+    "askBotKunInstruction": "Voici les données concernant un anime. Veuillez rédiger un court résumé captivant en vous fondant uniquement sur les informations fournies ci-dessous — sans rien ajouter d'extérieur:",
     "onboarding": {
       "bodyHint": "Cliquez pour voir les détails"
     },
@@ -607,7 +607,7 @@
       }
     },
     "mal": {
-      "tokenRefreshed": "Jeton actualisé :",
+      "tokenRefreshed": "Jeton actualisé:",
       "authRequired": "Les identifiants MAL sont configurés, mais aucun jeton n'a été autorisé. Veuillez actualiser le jeton pour activer la synchronisation.",
       "refreshToken": "Autoriser / Actualiser le jeton",
       "refreshError": "Échec de l'actualisation du jeton MAL. Vérifiez vos identifiants."
@@ -641,7 +641,7 @@
     "fields": {
       "PathMap_ContainerRoot": {
         "name": "Racine média (conteneur)",
-        "desc": "Racine média telle qu'enregistrée par Sonarr dans le conteneur (défaut : /downloads_root). Les chemins sont convertis de ce préfixe vers la racine média de l'hôte local."
+        "desc": "Racine média telle qu'enregistrée par Sonarr dans le conteneur (défaut: /downloads_root). Les chemins sont convertis de ce préfixe vers la racine média de l'hôte local."
       },
       "PathMap_HostRoot": {
         "name": "Racine média (hôte local)",
@@ -649,11 +649,11 @@
       },
       "PathMap_Separator": {
         "name": "Séparateur de chemin (OS cible)",
-        "desc": "Style du séparateur pour les chemins copiés/exportés : POSIX / ou Windows \\."
+        "desc": "Style du séparateur pour les chemins copiés/exportés: POSIX / ou Windows \\."
       },
       "HandBrake_Preset": {
         "name": "Arguments de préréglage HandBrakeCLI",
-        "desc": "Paramètres utilisés par l'export HandBrake par lots du tiroir (défaut : qualité NVENC HEVC 10 bits, CQ 22)."
+        "desc": "Paramètres utilisés par l'export HandBrake par lots du tiroir (défaut: qualité NVENC HEVC 10 bits, CQ 22)."
       },
       "Plex_Host": {
         "name": "URL du serveur",
@@ -722,7 +722,7 @@
       },
       "App_TitleSimilarityThreshold": {
         "name": "Similarité de recherche par titre (%)",
-        "desc": "Pourcentage minimal de similarité (1–100) pour la recherche floue par titre via pg_trgm. Défaut : 80."
+        "desc": "Pourcentage minimal de similarité (1–100) pour la recherche floue par titre via pg_trgm. Défaut: 80."
       },
       "App_DownloadStatsCacheInterval": {
         "name": "Intervalle de rafraîchissement des statistiques",
@@ -805,9 +805,9 @@
       "library": {
         "title": "Analyse de bibliothèque",
         "avgEpSizeThreshold": "Alerte taille moyenne d'épisode (Mo)",
-        "avgEpSizeThresholdHint": "Les épisodes plus lourds que ce seuil seront mis en évidence comme surdimensionnés. Défaut : 1200",
+        "avgEpSizeThresholdHint": "Les épisodes plus lourds que ce seuil seront mis en évidence comme surdimensionnés. Défaut: 1200",
         "avgGibPerHourThreshold": "Alerte moyenne GiB/h",
-        "avgGibPerHourThresholdHint": "Les séries dont le taux de stockage dépasse ce seuil seront mises en évidence comme surdimensionnées. Défaut : 1,2"
+        "avgGibPerHourThresholdHint": "Les séries dont le taux de stockage dépasse ce seuil seront mises en évidence comme surdimensionnées. Défaut: 1,2"
       }
     },
     "botkun": {
@@ -832,7 +832,7 @@
       "goToSync": "Aller à la synchronisation"
     },
     "kometaWarn": {
-      "title": "Attention : paramètre sensible",
+      "title": "Attention: paramètre sensible",
       "body": "Modifier l'URL du fichier de correspondance Kometa peut rompre le lien entre votre suivi d'animes et votre serveur multimédia. Ne continuez que si vous savez exactement ce que vous faites.",
       "proceed": "J'ai compris, continuer"
     },
@@ -906,7 +906,7 @@
       "colPlexTitle": "Titre Plex",
       "deleteBtn": "Supprimer",
       "colAniDbId": "ID AniDB",
-      "deleteConfirm": "Supprimer cette correspondance ?"
+      "deleteConfirm": "Supprimer cette correspondance?"
     }
   },
   "theme": {
@@ -1048,7 +1048,7 @@
   "notifications": {
     "center": {
       "title": "Notifications",
-      "empty": "Tout est à jour !",
+      "empty": "Tout est à jour!",
       "markAllRead": "Tout marquer comme lu",
       "dismiss": "Ignorer"
     },
@@ -1059,8 +1059,8 @@
       "daysAgo": "il y a {{n}} j"
     },
     "welcome": {
-      "title": "Bienvenue sur MetaAnime 👋",
-      "message": "La configuration est terminée. MetaAnime agrège désormais votre bibliothèque d'animes depuis Plex, Sonarr et MyAnimeList — tout en un seul endroit. Profitez-en !"
+      "title": "Bienvenue sur MetaAnime",
+      "message": "La configuration est terminée. MetaAnime agrège désormais votre bibliothèque d'animes depuis Plex, Sonarr et MyAnimeList — tout en un seul endroit. Profitez-en!"
     },
     "noSync": {
       "title": "Première synchronisation requise",
@@ -1070,7 +1070,7 @@
     "sync": {
       "startTitle": "Synchronisation démarrée",
       "startMessage": "Une synchronisation manuelle a été lancée. Consultez le journal de progression dans les paramètres.",
-      "doneTitle": "Synchronisation terminée ✓",
+      "doneTitle": "Synchronisation terminée",
       "doneMessage": "Toutes les sources ont été synchronisées avec succès.",
       "errorTitle": "Échec de la synchronisation",
       "errorMessage": "La synchronisation a rencontré une erreur. Consultez le journal de synchronisation pour plus de détails.",
@@ -1084,7 +1084,7 @@
       "reloadFailedMessage": "Veuillez actualiser la page pour afficher le statut mis à jour du jeton."
     },
     "malConnect": {
-      "successTitle": "MyAnimeList connecté ✓",
+      "successTitle": "MyAnimeList connecté",
       "successMessage": "MyAnimeList a été connecté avec succès.",
       "errorTitle": "Échec de la connexion MyAnimeList",
       "errorMessage": "L'autorisation a échoué. Veuillez réessayer de vous connecter."
@@ -1093,24 +1093,24 @@
       "plex": {
         "downTitle": "Plex hors ligne",
         "downMessage": "Plex Media Server est actuellement inaccessible. Cela peut être dû à un problème réseau ou à une indisponibilité du serveur.",
-        "upTitle": "Plex rétabli ✓",
+        "upTitle": "Plex rétabli",
         "upMessage": "La connexion à Plex Media Server a été rétablie."
       },
       "sonarr": {
         "downTitle": "Sonarr hors ligne",
         "downMessage": "Sonarr est actuellement inaccessible. Cela peut être dû à un problème réseau ou à une indisponibilité du serveur.",
-        "upTitle": "Sonarr rétabli ✓",
+        "upTitle": "Sonarr rétabli",
         "upMessage": "La connexion à Sonarr a été rétablie."
       },
       "mal": {
         "downTitle": "API MAL hors ligne",
         "downMessage": "L'API MyAnimeList est actuellement inaccessible. Certaines fonctions MAL peuvent être indisponibles.",
-        "upTitle": "API MAL rétablie ✓",
+        "upTitle": "API MAL rétablie",
         "upMessage": "La connexion à l'API MyAnimeList a été rétablie."
       }
     },
     "botKun": {
-      "discoverTitle": "Découvrez Bot-kun, votre concierge IA 🤖",
+      "discoverTitle": "Découvrez Bot-kun, votre concierge IA",
       "discoverMessage": "Bot-kun est un assistant IA qui vous aide à découvrir, gérer et discuter de votre bibliothèque d'animes. Activez-le dans les paramètres de Bot-kun pour commencer.",
       "configure": "Configurer Bot-kun"
     }
@@ -1186,16 +1186,16 @@
   },
   "notFound": {
     "ariaLabel": "404 – Page introuvable",
-    "title": "Oups — cette page a quitté le script !",
+    "title": "Oups — cette page a quitté le script!",
     "subtitle": {
       "dimension": "Cette page s'est égarée dans une autre dimension et, franchement, elle semble très à l'aise là-bas sans intention de revenir.",
       "trainingArc": "Cette page est en plein arc d'entraînement — elle reviendra plus forte, plus sage, et avec un power-up que vous ne verrez pas venir.",
-      "plotTwist": "Coup de théâtre : cette page n'existe pas. La vraie page, c'était les amis que l'on s'est faits en chemin. Spoiler : eux aussi ont disparu.",
+      "plotTwist": "Coup de théâtre: cette page n'existe pas. La vraie page, c'était les amis que l'on s'est faits en chemin. Spoiler: eux aussi ont disparu.",
       "houdini": "On dirait que cette page nous a fait le coup de Houdini. Un instant elle était là, l'instant d'après — pouf — disparue, sans même un au revoir.",
       "void": "Cette URL mène au vide. Le vide vous dévisage en retour. Puis il hausse les épaules et retourne regarder des animes. Classique, le vide.",
-      "kamehameha": "Échec du chargement… essayez donc un Kamehameha ? Sinon, un Rasengan, un Getsuga Tenshō ou simplement Ctrl+R devraient faire l'affaire.",
+      "kamehameha": "Échec du chargement… essayez donc un Kamehameha? Sinon, un Rasengan, un Getsuga Tenshō ou simplement Ctrl+R devraient faire l'affaire.",
       "timeline": "Notre serveur a fouillé chaque ligne temporelle du multivers, consulté trois oracles, et n'a absolument rien trouvé ici.",
-      "questGone": "Erreur 404 : la page est partie en quête et n'est jamais revenue. On murmure qu'elle a trouvé une excellente recommandation d'anime et qu'elle s'est laissée distraire.",
+      "questGone": "Erreur 404: la page est partie en quête et n'est jamais revenue. On murmure qu'elle a trouvé une excellente recommandation d'anime et qu'elle s'est laissée distraire.",
       "uncharted": "Vous avez découvert un territoire inexploré. Plantez un drapeau, donnez-lui votre nom, profitez de la solitude — il n'y a rien d'autre ici.",
       "endOfInternet": "Vous avez atteint la fin d'internet. Blague à part. Mais cette page a disparu, probablement en train de s'enchaîner des épisodes dans un autre onglet."
     },
@@ -1207,19 +1207,19 @@
       },
       "luffy": {
         "name": "Monkey D. Luffy",
-        "quote": "Je serai le Roi des Pirates ! Mais d'abord, où EST cette page ?! Même mon Haki ne la perçoit pas !"
+        "quote": "Je serai le Roi des Pirates! Mais d'abord, où EST cette page?! Même mon Haki ne la perçoit pas!"
       },
       "naruto": {
         "name": "Naruto Uzumaki",
-        "quote": "Croyez-y ! J'ai envoyé mille clones d'ombre pour trouver cette page et ils sont TOUS revenus bredouilles, dattebayo !"
+        "quote": "Croyez-y! J'ai envoyé mille clones d'ombre pour trouver cette page et ils sont TOUS revenus bredouilles, dattebayo!"
       },
       "sailorMoon": {
         "name": "Sailor Moon",
-        "quote": "Au nom de la Lune, je punirai celui qui a supprimé cette page !"
+        "quote": "Au nom de la Lune, je punirai celui qui a supprimé cette page!"
       },
       "edwardElric": {
         "name": "Edward Elric",
-        "quote": "L'Échange Équivalent veut qu'il devrait y avoir QUELQUE CHOSE ici. Mais il n'y a rien ! Rien du tout !"
+        "quote": "L'Échange Équivalent veut qu'il devrait y avoir QUELQUE CHOSE ici. Mais il n'y a rien! Rien du tout!"
       },
       "lelouch": {
         "name": "Lelouch vi Britannia",
@@ -1239,7 +1239,7 @@
       },
       "light": {
         "name": "Light Yagami",
-        "quote": "J'ai calculé chaque URL possible et n'ai rien trouvé. Une page aussi insaisissable pourrait-elle être… la justice ?"
+        "quote": "J'ai calculé chaque URL possible et n'ai rien trouvé. Une page aussi insaisissable pourrait-elle être… la justice?"
       }
     }
   },
@@ -1249,10 +1249,10 @@
       "desc": "Lorsqu'elle est activée, vos derniers filtres de recherche sont automatiquement restaurés et appliqués à l'ouverture de la liste des animes ou de la page des animes saisonniers."
     },
     "libraryHandbrake": {
-      "groupTitle": "🎬 Bibliothèque & chemins de transcodage HandBrake",
+      "groupTitle": "Bibliothèque & chemins de transcodage HandBrake",
       "containerRoot": {
         "name": "Racine média du conteneur",
-        "desc": "Racine média telle qu'enregistrée par Sonarr dans le conteneur (par défaut : /downloads_root)."
+        "desc": "Racine média telle qu'enregistrée par Sonarr dans le conteneur (par défaut: /downloads_root)."
       },
       "hostRoot": {
         "name": "Point de montage média sur l'hôte (source)",
@@ -1267,10 +1267,10 @@
         "desc": "Nom du préréglage HandBrake appliqué aux tâches envoyées dans la file d'attente."
       },
       "destModeTranscoded": "Écrire dans le sous-dossier \"_transcoded\" à côté des fichiers source",
-      "browse": "📁 Parcourir un dossier",
-      "smbWarning": "⚠️ HandBrake nécessite un chemin local POSIX/Windows monté (p. ex. `/mnt/media/...` ou `/run/user/1000/gvfs/...`), et non une URI virtuelle `smb://`.",
-      "browseUp": "⬆ Remonter d'un niveau",
-      "browseSelectHere": "✅ Utiliser ce dossier",
+      "browse": "Parcourir un dossier",
+      "smbWarning": "HandBrake nécessite un chemin local POSIX/Windows monté (p. ex. `/mnt/media/...` ou `/run/user/1000/gvfs/...`), et non une URI virtuelle `smb://`.",
+      "browseUp": "Remonter d'un niveau",
+      "browseSelectHere": "Utiliser ce dossier",
       "browseLoading": "Chargement des dossiers…",
       "browseEmpty": "Aucun sous-dossier ici",
       "browseError": "Impossible de lire ce dossier",
@@ -1278,7 +1278,7 @@
       "saved": "Enregistré"
     },
     "luckyPick": {
-      "groupTitle": "J'ai de la chance !",
+      "groupTitle": "J'ai de la chance!",
       "onlyFinished": {
         "name": "Uniquement les animes terminés",
         "desc": "Lorsqu'elle est activée, la sélection aléatoire ne choisit que parmi les animes dont la diffusion est terminée."
@@ -1314,29 +1314,29 @@
     "stopReading": "Arrêter la lecture",
     "speaking": "Lecture en cours...",
     "chips": {
-      "transcodeTonight": "🎯 Que devrais-je transcoder ce soir ?",
-      "biggestOffenders": "📊 Quels sont mes pires taux GiB/h ?",
-      "finishedH264": "✅ Saisons terminées encore en H264",
-      "brokenMixed": "🧹 Trouver les saisons à codecs mixtes ou cassés"
+      "transcodeTonight": "Que devrais-je transcoder ce soir?",
+      "biggestOffenders": "Quels sont mes pires taux GiB/h?",
+      "finishedH264": "Saisons terminées encore en H264",
+      "brokenMixed": "Trouver les saisons à codecs mixtes ou cassés"
     },
     "actions": {
       "applyFilter": "Appliquer le filtre",
       "openSeries": "Ouvrir la série",
-      "applied": "✓ Appliqué"
+      "applied": "Appliqué"
     }
   },
   "configBackup": {
     "title": "Sauvegarde et restauration",
     "desc": "Exportez toute votre configuration (fournisseurs, jetons, préférences) ou restaurez-la depuis un fichier JSON.",
-    "exportBtn": "⬇ Exporter la configuration",
-    "importBtn": "⬆ Importer la configuration",
-    "exportWarning": "⚠️ Le fichier exporté contient des clés API et des jetons NON MASQUÉS. Conservez-le en lieu sûr.",
+    "exportBtn": "Exporter la configuration",
+    "importBtn": "Importer la configuration",
+    "exportWarning": "Le fichier exporté contient des clés API et des jetons NON MASQUÉS. Conservez-le en lieu sûr.",
     "importTitle": "Importer une configuration",
-    "dropHint": "Déposez un fichier de configuration .json ici ou cliquez pour en choisir un",
-    "imported": "Configuration importée ({{count}} valeurs) — Plex : {{plex}}, Sonarr : {{sonarr}}, MAL : {{mal}}",
+    "dropHint": "Déposez un fichier de configuration.json ici ou cliquez pour en choisir un",
+    "imported": "Configuration importée ({{count}} valeurs) — Plex: {{plex}}, Sonarr: {{sonarr}}, MAL: {{mal}}",
     "statusYes": "connecté",
     "statusNo": "non connecté",
-    "importFailed": "Échec de l'import — s'agit-il d'un fichier de configuration MetaAnime valide ?",
+    "importFailed": "Échec de l'import — s'agit-il d'un fichier de configuration MetaAnime valide?",
     "completeSetup": "Terminer la configuration",
     "reviewSteps": "Vérifier les étapes"
   },
@@ -1350,7 +1350,7 @@
       "opGte": "≥",
       "opLte": "≤",
       "percent": "Pourcentage",
-      "splitOnly": "⚡ Codecs mixtes uniquement"
+      "splitOnly": "Codecs mixtes uniquement"
     },
     "status": {
       "label": "Statut",
@@ -1399,7 +1399,7 @@
       "savingsSeries": "{{count}} séries",
       "chipsPrime": "Cibles prioritaires",
       "chipsUnfinished": "Transcodages inachevés",
-      "chipsEightBit": "🐘 Ballonnement 8-bit",
+      "chipsEightBit": "Ballonnement 8-bit",
       "batchTitle": "Lot de transcodage",
       "batchCount": "Épisodes",
       "batchCustom": "Personnalisé…",
@@ -1421,7 +1421,7 @@
       "batchSortBitrate": "Débit (GiB/h ↓)",
       "batchSortAlpha": "Alphabétique (A→Z)",
       "chipsCompleteH264": "Saisons complètes en H264",
-      "presetApplied": "✓ Appliqué",
+      "presetApplied": "Appliqué",
       "analyzing": "Analyse de {{count}} fichiers…",
       "noData": "Enrichissement en cours…"
     },
@@ -1434,16 +1434,16 @@
       "savingsHint": "si transcodé en HEVC (~55%)",
       "copyH264": "Copier les chemins H264",
       "exportList": "Exporter la liste de transcodage",
-      "copied": "Copié !",
-      "copyFolderPath": "📁 Copier le chemin du dossier",
-      "copySelectedPaths": "📋 Copier les chemins sélectionnés ({{count}})",
+      "copied": "Copié!",
+      "copyFolderPath": "Copier le chemin du dossier",
+      "copySelectedPaths": "Copier les chemins sélectionnés ({{count}})",
       "selectAllFiltered": "Sélectionner tous les résultats ({{count}})",
       "clearSelection": "Effacer la sélection",
-      "exportQueue": "🎬 Exporter la file d'attente HandBrake ({{count}})",
-      "copyPaths": "📋 Copier les chemins",
+      "exportQueue": "Exporter la file d'attente HandBrake ({{count}})",
+      "copyPaths": "Copier les chemins",
       "copyPlainPaths": "Copier les chemins des épisodes sélectionnés (texte brut)",
       "quotedCliArgs": "Copier les chemins des épisodes sélectionnés (arguments CLI entre guillemets)",
-      "handBrakeScript": "🎬 Exporter le script HandBrake (.sh)",
+      "handBrakeScript": "Exporter le script HandBrake (.sh)",
       "mappedToHostPath": "Mappé vers le chemin de l'hôte",
       "editMapping": "Modifier le mappage des chemins",
       "mapContainerRoot": "Racine des médias (conteneur)",
@@ -1486,24 +1486,24 @@
     },
     "phrases": {
       "plex": [
-        "Invoquez le popcorn !",
-        "Que le marathon commence !",
+        "Invoquez le popcorn!",
+        "Que le marathon commence!",
         "Lancez le flux avant que votre détermination ne cède.",
         "Votre canapé vous appelle.",
         "Oubliez le sommeil. Lancez le flux.",
-        "Déployez le poste de visionnage !",
+        "Déployez le poste de visionnage!",
         "On ne regarde pas tout simplement un seul épisode.",
-        "Défi accepté — mode marathon : ACTIVÉ.",
-        "Lumières, snacks, angoisse existentielle. C'est parti !",
+        "Défi accepté — mode marathon: ACTIVÉ.",
+        "Lumières, snacks, angoisse existentielle. C'est parti!",
         "Votre écran vous attend, weeb.",
         "Appuyez sur lecture. Ne regrettez rien.",
         "La télécommande, c'est le destin.",
-        "Au programme ce soir : cet anime, des snacks, et on recommence.",
+        "Au programme ce soir: cet anime, des snacks, et on recommence.",
         "Votre oreiller est déjà en position.",
         "Commencez le flux sacré.",
         "En file d'attente. En mémoire tampon. Prêt à ruiner votre rythme de sommeil.",
         "La lecture automatique n'est pas une suggestion, c'est un mode de vie.",
-        "Des sorties prévues ? Annulées. C'est mieux comme ça.",
+        "Des sorties prévues? Annulées. C'est mieux comme ça.",
         "Le générique d'ouverture vaut déjà le détour.",
         "Installez-vous. Votre canapé est devenu un cinéma.",
         "Un seul épisode. Promis. (C'est un mensonge.)",
@@ -1521,9 +1521,9 @@
         "Le générique qui déchire vous attend.",
         "Plein écran. Écouteurs. C'est parti.",
         "Ce n'est pas de la procrastination, c'est regarder des animes.",
-        "Prenez ça comme un signe : il faut le regarder.",
+        "Prenez ça comme un signe: il faut le regarder.",
         "Les dieux du streaming ont bien choisi.",
-        "Armure narrative : maximale. Peur : zéro.",
+        "Armure narrative: maximale. Peur: zéro.",
         "Votre prochain marathon est déjà en cours de chargement.",
         "La nuit tombe. Plex appelle.",
         "C'est la voie. La voie Plex.",
@@ -1555,9 +1555,9 @@
         "Mettez à jour ce compteur d'épisodes, procrastinateur.",
         "Le champ de note est vide. Corrigez ça.",
         "Marquez-le « Terminé » pour votre dose de dopamine.",
-        "Votre statut MAL : toujours un mensonge.",
+        "Votre statut MAL: toujours un mensonge.",
         "Il est temps de mettre à jour vos épisodes vus.",
-        "La communauté est divisée. Et vous, où vous situez-vous ?",
+        "La communauté est divisée. Et vous, où vous situez-vous?",
         "Abandonnez-le ou poursuivez. MAL exige un statut.",
         "Donnez-lui une note. Soyez courageux.",
         "Les discussions du forum ne vont pas se lire toutes seules.",
@@ -1565,7 +1565,7 @@
         "Mettez à jour votre progression avant d'oublier l'intrigue.",
         "Quelqu'un a écrit une critique. Montrez-vous curieux.",
         "Le consensus MAL est… intéressant.",
-        "Votre statut : « À voir » depuis 2019.",
+        "Votre statut: « À voir » depuis 2019.",
         "Changez ce statut en « En cours ».",
         "Le compteur d'épisodes vous attend.",
         "10/10 ou lâche.",
@@ -1599,34 +1599,34 @@
         "Notez-le maintenant, avant que votre avis ne change demain.",
         "La liste du staff est plus intéressante qu'on ne le croit.",
         "Votre futur revisionnage a besoin d'un marque-page.",
-        "La note affiche 8,2. Vous êtes d'accord ?",
+        "La note affiche 8,2. Vous êtes d'accord?",
         "Marquez-le « Terminé » et sentez-vous supérieur.",
         "Les critiques de fans sont une mine d'or de passion.",
         "Mettez à jour votre note. Vous avez changé.",
-        "Voyez si le manga est meilleur. Spoiler : peut-être.",
-        "Votre liste MAL : un monument à l'ambition.",
+        "Voyez si le manga est meilleur. Spoiler: peut-être.",
+        "Votre liste MAL: un monument à l'ambition.",
         "Une note en plus, un petit pas pour le monde de l'anime.",
         "La communauté attend votre note.",
         "Votre fiche MAL a appelé. Elle veut une mise à jour."
       ],
       "reroll": [
-        "Qualité poubelle, relancez !",
-        "Non. Suivant !",
+        "Qualité poubelle, relancez!",
+        "Non. Suivant!",
         "La prophétie exige une relance.",
         "Celui-ci… ce n'est pas le bon.",
-        "Invoquez les esprits des dés !",
+        "Invoquez les esprits des dés!",
         "La fortune tourne deux fois pour les lâches.",
         "Encore un tour du destin.",
-        "Rejeté. Tournez la roue !",
-        "404 : hype introuvable. Réessayez.",
+        "Rejeté. Tournez la roue!",
+        "404: hype introuvable. Réessayez.",
         "Les dieux du RNG exigent un sacrifice.",
-        "Passons ! La prochaine aventure vous attend.",
+        "Passons! La prochaine aventure vous attend.",
         "Les dés ont parlé — encore.",
         "Le chaos exige un autre tour.",
         "Hype insuffisante. Relance en cours.",
         "Pas aujourd'hui. Tentez un autre destin.",
         "Les astres ne sont pas alignés. Relancez.",
-        "Refus catégorique. Que la roue tourne !",
+        "Refus catégorique. Que la roue tourne!",
         "Bof. Le destin va devoir réessayer.",
         "Relancez et réessayez.",
         "Votre destin est à un tour de roue.",
@@ -1646,7 +1646,7 @@
         "Les dieux des dés n'en ont pas fini avec vous.",
         "Un lancer de plus. J'ai foi en vous.",
         "Énergie chaotique neutre. Relancez.",
-        "Coup de théâtre : il existe un meilleur choix.",
+        "Coup de théâtre: il existe un meilleur choix.",
         "Les dieux de l'anime ont d'autres intentions.",
         "Tournez encore une fois la roue du destin.",
         "Bof. Le RNG a des profondeurs insoupçonnées.",
@@ -1668,8 +1668,8 @@
         "Le RNG s'excuse. Il réessaie.",
         "Frise temporelle incorrecte. Recalcul.",
         "Les dés ont donné 0/10. Réessayez.",
-        "Non non non. Suivant !",
-        "Laissez le chaos décider encore !"
+        "Non non non. Suivant!",
+        "Laissez le chaos décider encore!"
       ],
       "searching": [
         "Consultation des vieux weebs…",
@@ -1745,10 +1745,10 @@
     "mal": {
       "title": "Comment obtenir votre Client ID et votre Client Secret pour MAL",
       "step1": "Allez sur myanimelist.net et connectez-vous à votre compte.",
-      "step2prefix": "Accédez à Compte → API (ou rendez-vous sur ",
+      "step2prefix": "Accédez à Compte → API (ou rendez-vous sur",
       "step2suffix": ").",
       "step3": "Cliquez sur \"Create ID\", remplissez les informations de l'application et choisissez \"Web\" comme type d'application.",
-      "step4": "Définissez l'URL de redirection de l'application sur l'URL suivante (copiez-la exactement) :",
+      "step4": "Définissez l'URL de redirection de l'application sur l'URL suivante (copiez-la exactement):",
       "step5": "Copiez le \"Client ID\" et le \"Client Secret\" affichés sur la page.",
       "step6": "Collez le Client ID et le Client Secret dans les champs correspondants ci-dessous.",
       "copy": "Copier l'URL"
@@ -1799,7 +1799,7 @@
       "clientSecretPlaceholder": "Collez votre Client Secret MAL ici",
       "callbackUrlLabel": "URL de redirection de l'application (à copier à l'identique dans MAL)",
       "callbackUrlCopy": "Copier",
-      "callbackUrlCopied": "Copié !",
+      "callbackUrlCopied": "Copié!",
       "connectBtn": "Connecter MyAnimeList",
       "connectingBtn": "Redirection vers MyAnimeList...",
       "connected": "MyAnimeList connecté",
@@ -1809,7 +1809,7 @@
     "step4": {
       "title": "Connecter Plex (Optionnel)",
       "desc": "Liez votre compte Plex pour voir quels animes sont présents dans votre bibliothèque et lesquels en manquent.",
-      "disclaimer": "💡 Pour un meilleur appariement, créez dans Plex une bibliothèque réservée aux animes.",
+      "disclaimer": "Pour un meilleur appariement, créez dans Plex une bibliothèque réservée aux animes.",
       "serverUrlLabel": "URL du serveur Plex",
       "serverUrlPlaceholder": "p. ex. http://localhost:32400",
       "connectBtn": "Se connecter avec Plex",
@@ -1821,7 +1821,7 @@
     "step5": {
       "title": "Connecter Sonarr (Optionnel)",
       "desc": "Configurez Sonarr pour suivre et gérer les téléchargements de vos séries d'animes.",
-      "disclaimer": "💡 La définition d'un tag Sonarr dédié aux animes est requise pour filtrer et identifier correctement les séries.",
+      "disclaimer": "La définition d'un tag Sonarr dédié aux animes est requise pour filtrer et identifier correctement les séries.",
       "localUrlLabel": "URL locale du serveur",
       "localUrlPlaceholder": "p. ex. http://localhost:8989",
       "remoteUrlLabel": "URL distante",
@@ -1852,13 +1852,13 @@
     },
     "step6": {
       "title": "Récapitulatif et synchronisation initiale",
-      "desc": "Votre configuration est prête ! Lancez une première synchronisation pour remplir votre bibliothèque.",
+      "desc": "Votre configuration est prête! Lancez une première synchronisation pour remplir votre bibliothèque.",
       "runSync": "Lancer la première synchronisation",
       "configured": "Configuré",
       "skipped": "Ignoré"
     },
     "step7": {
-      "title": "C'est prêt !",
+      "title": "C'est prêt!",
       "desc": "MetaAnime est prêt à l'emploi. Votre bibliothèque restera synchronisée automatiquement.",
       "hint": "Vous pouvez modifier vos paramètres à tout moment depuis la page des paramètres.",
       "finish": "Aller au tableau de bord"
@@ -1873,23 +1873,23 @@
     "hidePassword": "Masquer le mot de passe",
     "submit": "Se connecter",
     "errorGeneric": "Une erreur est survenue. Veuillez réessayer.",
-    "forgotTitle": "Mot de passe oublié ?",
-    "forgotDesc": "Vous êtes bloqué ? Ouvrez votre appsettings.json ou les variables d'environnement Docker, définissez l'option ci-dessous sur true, puis redémarrez le serveur MetaAnime pour effacer le mot de passe et retrouver l'accès.",
+    "forgotTitle": "Mot de passe oublié?",
+    "forgotDesc": "Vous êtes bloqué? Ouvrez votre appsettings.json ou les variables d'environnement Docker, définissez l'option ci-dessous sur true, puis redémarrez le serveur MetaAnime pour effacer le mot de passe et retrouver l'accès.",
     "wrongPasswordMessages": [
       "Beau essai, petit hacker.",
-      "Vous avez tapé ça avec vos coudes ?",
+      "Vous avez tapé ça avec vos coudes?",
       "Accès refusé. La police de l'anime a été dépêchée sur les lieux.",
       "Votre vitesse de frappe est à la hauteur d'un anime en mauvaise 3D.",
       "Mot de passe incorrect. Allez vous regarder quelques épisodes de remplissage, puis réessayez.",
       "Non. Essayez la Force. Ou simplement le bon mot de passe.",
-      "Mauvais mot de passe. Avez-vous essayé de regarder plus d'isekai pour trouver l'inspiration ?",
+      "Mauvais mot de passe. Avez-vous essayé de regarder plus d'isekai pour trouver l'inspiration?",
       "Ce n'est pas ça. Même le jutsu de clonage de Naruto ne vous serait d'aucun secours ici.",
       "Accès refusé. Votre vitesse de frappe rivalise avec celle d'un paresseux regardant un épisode récapitulatif.",
       "Ce mot de passe est aussi mauvais qu'un anime doublé.",
       "Incorrect. Le mot de passe est peut-être dans un autre château.",
       "401 non autorisé. Tout comme cet arc de remplissage que personne n'avait demandé.",
       "Faux. Même le personnage secondaire le plus faible ferait mieux.",
-      "Vous avez oublié votre mot de passe ou vous testez simplement ma patience ?",
+      "Vous avez oublié votre mot de passe ou vous testez simplement ma patience?",
       "Ce n'est pas le bon mot de passe. Comme la fois précédente. Et celle d'avant.",
       "Refusé. Le boss final rit de votre tentative.",
       "Non. La clé de ce château exige un vrai effort.",
@@ -1900,11 +1900,11 @@
       "Non. Retournez dans le donjon tutoriel.",
       "Accès refusé. Votre statistique INT est trop faible.",
       "Ce n'est pas ça. Même l'arc d'entraînement ne vous avait pas préparé à cela.",
-      "Mauvais mot de passe. Le pare-feu tsundere déclare : 'C-c'est pas comme si je vous laissais entrer, ou quoi que ce soit !'",
+      "Mauvais mot de passe. Le pare-feu tsundere déclare: 'C-c'est pas comme si je vous laissais entrer, ou quoi que ce soit!'",
       "Incorrect. Votre tentative a été ajoutée à la compilation de gêne.",
       "Refusé. Vous ne passerez pas — pas sans le bon mot de passe.",
       "Ce mot de passe a été exilé dans le royaume des ombres.",
-      "Erreur 401 : votre mot de passe était plus faible qu'un méchant de remplissage.",
+      "Erreur 401: votre mot de passe était plus faible qu'un méchant de remplissage.",
       "Non. La protection du mot de passe fait son travail. Contrairement à vous.",
       "Incorrect. J'attendais mieux de quelqu'un de votre niveau.",
       "Accès révoqué. Le conseil étudiant a voté à l'unanimité contre vous.",
@@ -1949,7 +1949,7 @@
       "totalFiles": "Total des fichiers",
       "seriesWithMissingFiles": "Séries avec fichiers manquants",
       "missingFilesHint": "Cliquez pour filtrer les séries sans fichiers",
-      "avgBitrate": "Débit moyen : {{value}} GiB/h",
+      "avgBitrate": "Débit moyen: {{value}} GiB/h",
       "spreadAcross": "Répartis sur {{count}} séries"
     },
     "charts": {
@@ -1997,7 +1997,7 @@
       "ended": "Terminé",
       "airing": "En diffusion",
       "copyPath": "Copier le chemin",
-      "copied": "Copié !",
+      "copied": "Copié!",
       "openSonarr": "Ouvrir dans Sonarr",
       "totalSize": "Taille totale",
       "avgEpSize": "Taille moy. ép.",

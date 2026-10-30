@@ -19,7 +19,7 @@
           class="nexus__lang-pill"
           [class.nexus__lang-pill--active]="langFilter() === lang"
           (click)="setLangFilter(lang)"
-        >{{ getFlag(lang) }} {{ lang }}</button>
+        ><span class="nexus__lang-code">{{ getFlag(lang) }}</span> {{ lang }}</button>
       }
     </div>
 

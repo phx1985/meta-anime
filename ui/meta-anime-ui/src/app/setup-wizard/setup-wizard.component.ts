@@ -22,6 +22,8 @@ import { SyncSignalRService } from '../services/sync-signalr.service';
 import { NotificationService } from '../services/notification.service';
 import { SonarrService, SonarrTag } from '../services/sonarr.service';
 import { HelpModalComponent } from '../help-modal/help-modal.component';
+import { UiSelectComponent, UiSelectOption } from '../shared/ui/ui-select/ui-select.component';
+import { UiToggleComponent } from '../shared/ui/ui-toggle/ui-toggle.component';
 import { ProviderStateService } from '../services/provider-state.service';
 import { AuthService } from '../services/auth.service';
 import { ThemeService } from '../services/theme.service';
@@ -43,7 +45,7 @@ const PLEX_POLL_MAX = 40;
   selector: 'app-setup-wizard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, ReactiveFormsModule, HelpModalComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, HelpModalComponent, UiSelectComponent, UiToggleComponent],
   templateUrl: './setup-wizard.component.html',
   styleUrl: './setup-wizard.component.scss',
 })
@@ -157,6 +159,23 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   sonarrCreatingTag = signal(false);
 
   readonly MONITOR_OPTIONS = ['all', 'future', 'missing', 'existing', 'recent', 'pilot', 'firstSeason', 'lastSeason', 'none'];
+
+  // ── ui-select option sets (labels translated here — the component takes final strings) ──
+
+  rootFolderSelectOptions(): UiSelectOption[] {
+    return this.sonarrRootFolders().map((rf) => ({ label: rf.path, value: rf.path }));
+  }
+
+  qualityProfileSelectOptions(): UiSelectOption[] {
+    return this.sonarrQualityProfiles().map((qp) => ({ label: qp.name, value: qp.name }));
+  }
+
+  monitorSelectOptions(): UiSelectOption[] {
+    return this.MONITOR_OPTIONS.map((opt) => ({
+      label: this.translate.instant('wizard.step5.monitor.' + opt),
+      value: opt,
+    }));
+  }
 
   // Sync state
   syncing = signal(false);

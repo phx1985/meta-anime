@@ -301,6 +301,12 @@
     animation: gap-bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
 
+  &__ico {
+    display: block;
+    width: 42px;
+    height: 42px;
+  }
+
   &__title {
     margin: 0;
     font-size: 1rem;
@@ -325,6 +331,7 @@
   color: var(--text-muted);
   margin: 0 0 0.625rem;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 // ── Table ─────────────────────────────────────────────────────────────────────

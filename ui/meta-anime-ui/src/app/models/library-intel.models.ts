@@ -59,7 +59,7 @@ export interface LibraryFilterState {
   audioCodec: string[];
   resolution: string[];
   codecThreshold: CodecThreshold;
-  /** ⚡ Split Codecs Only — series with more than one distinct video codec. */
+  /** Split Codecs Only — series with more than one distinct video codec. */
   splitCodecsOnly: boolean;
   status: LibraryStatusFilter;
   download: DownloadFilter;
@@ -152,7 +152,7 @@ export function codecSizeShare(row: LibrarySeriesRow, codec: string): number {
   return (codecByteTotal(row, codec) / total) * 100;
 }
 
-/** ⚡ Split Codecs: more than one distinct video codec across the series' files. */
+/** Split Codecs: more than one distinct video codec across the series' files. */
 export function isSplitCodec(row: LibrarySeriesRow): boolean {
   const dist = row.videoCodecDistribution;
   if (dist) return Object.keys(dist).filter(k => dist[k] > 0).length > 1;

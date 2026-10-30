@@ -1,5 +1,5 @@
 .settings-page {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   // Apply the same padding that Bootstrap py-5 provides on desktop
   padding-top: 3rem;
@@ -648,6 +648,12 @@
   align-items: start;
   gap: 1rem;
   padding: 1rem 1.5rem;
+
+  // Grid children default to min-width:auto — clamp so long values never
+  // force horizontal overflow.
+  > * {
+    min-width: 0;
+  }
   border-bottom: 1px solid var(--card-border);
   transition: background 0.2s ease;
 
@@ -687,6 +693,18 @@
   cursor: help;
 }
 
+.badge-sensitive__ico {
+  width: 12px;
+  height: 12px;
+  vertical-align: -2px;
+}
+
+.setting-name__ico {
+  width: 13px;
+  height: 13px;
+  vertical-align: -2px;
+}
+
 .setting-help-btn {
   width: 18px;
   height: 18px;
@@ -718,6 +736,20 @@
   color: #22c55e;
   white-space: nowrap;
   animation: fadeIn 0.3s ease both;
+}
+
+// Inline check glyph (replaces the ✓ dingbat entity)
+.check-ico {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  vertical-align: -1px;
+}
+
+.number-input-status .check-ico {
+  width: 14px;
+  height: 14px;
+  vertical-align: 0;
 }
 
 .setting-value-area {
@@ -829,15 +861,35 @@
 }
 
 .setting-input {
-  background: var(--bg-primary);
-  border-color: var(--card-border);
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
   color: var(--text-primary);
+  transition: border-color 0.15s;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--text-primary) 20%, transparent);
+  }
+
+  // Hide the native number spinners (NUDs style their own affordances)
+  &[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      appearance: none;
+      margin: 0;
+    }
+  }
 
   &:focus {
-    background: var(--bg-primary);
+    background: color-mix(in srgb, var(--text-primary) 4%, transparent);
     color: var(--text-primary);
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 0.2rem rgba(108, 99, 255, 0.25);
+    outline: none;
+    border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
+    box-shadow: none;
   }
 }
 
@@ -919,51 +971,6 @@
   border-bottom: 1px solid color-mix(in srgb, var(--color-danger-deep) 20%, transparent);
 }
 
-.toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 44px;
-  height: 24px;
-  border: none;
-  border-radius: 12px;
-  background: var(--border-color, #d1d5db);
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.22s ease;
-  flex-shrink: 0;
-
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &--on {
-    background: var(--accent, #6366f1);
-  }
-
-  .toggle-thumb {
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-    transition: transform 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
-    pointer-events: none;
-  }
-
-  &--on .toggle-thumb {
-    transform: translateX(20px);
-  }
-}
-
 .toggle-label {
   font-size: 0.8rem;
   font-weight: 500;
@@ -976,31 +983,14 @@
   gap: 0.6rem;
 }
 
-.setting-select {
-  appearance: none;
-  -webkit-appearance: none;
-  background: var(--bg-primary);
-  border: 1px solid var(--card-border);
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-size: 0.83rem;
-  padding: 0.35rem 2rem 0.35rem 0.75rem;
-  cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.65rem center;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+// ── Custom dropdown host (app-ui-select replaces the native <select>) ─────────
+// The wrapper stays as the content-sized slot; min-width keeps the trigger at a
+// stable width now that the trigger sizes to its label instead of the widest option.
 
-  &:focus {
-    outline: none;
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+.setting-select-wrap {
+  position: relative;
+  display: inline-flex;
+  min-width: 12rem;
 }
 
 .select-spinner {
@@ -1968,12 +1958,12 @@
   min-width: 0;
   padding: 0.4rem 0.7rem;
   border-radius: 8px;
-  border: 1px solid var(--card-border);
-  background: var(--bg-secondary);
+  border: 1px solid var(--color-border-subtle);
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
   color: var(--text-primary);
   font-size: 0.82rem;
   outline: none;
-  &:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 2px rgba(108,99,255,0.12); }
+  &:focus { outline: none; border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent); box-shadow: none; }
 }
 
 .picker-create-btn {
@@ -2085,6 +2075,12 @@
   padding: 0.2rem 0.4rem;
   border-radius: 4px;
   transition: color 0.15s, background 0.15s;
+
+  .picker-modal__close-ico {
+    display: block;
+    width: 15px;
+    height: 15px;
+  }
 
   &:hover {
     color: #fff;
@@ -2246,6 +2242,10 @@
     &:disabled { opacity: 0.35; cursor: default; }
   }
 
+  &__up-ico { width: 15px; height: 15px; }
+
+  &__note-ico { width: 16px; height: 16px; }
+
   &__path {
     flex: 1;
     min-width: 0;
@@ -2286,7 +2286,7 @@
     }
   }
 
-  &__icon { flex: none; opacity: 0.85; }
+  &__icon { flex: none; opacity: 0.85; width: 14px; height: 14px; }
 
   &__name {
     flex: 1;

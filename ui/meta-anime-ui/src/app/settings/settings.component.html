@@ -245,19 +245,13 @@
                 <!-- Plex / Sonarr / Bot-kun: master enabled toggle -->
                 @if (cat === 'plex' || cat === 'sonarr' || cat === 'botkun') {
                   <div class="provider-enable-toggle">
-                    <button
-                      type="button"
-                      class="toggle-switch"
-                      [class.toggle-switch--on]="isProviderEnabled(cat)"
+                    <app-ui-toggle
+                      [checked]="isProviderEnabled(cat)"
                       [disabled]="savingKey() === (cat === 'plex' ? 'Plex:Enabled' : cat === 'sonarr' ? 'Sonarr:Enabled' : 'BotKun:Enabled') || (!isProviderEnabled(cat) && isProviderToggleBlocked(cat))"
                       [title]="(!isProviderEnabled(cat) && isProviderToggleBlocked(cat)) ? ('settings.provider.configureFirstTooltip' | translate) : ''"
-                      (click)="toggleProviderEnabled(cat)"
-                      role="switch"
-                      [attr.aria-checked]="isProviderEnabled(cat)"
-                      [attr.aria-label]="'settings.provider.enabledToggle' | translate"
-                    >
-                      <span class="toggle-thumb"></span>
-                    </button>
+                      [ariaLabel]="'settings.provider.enabledToggle' | translate"
+                      (checkedChange)="toggleProviderEnabled(cat)"
+                    />
                     <span class="provider-enable-label">
                       {{
                         (isProviderEnabled(cat)
@@ -409,7 +403,7 @@
                       <div class="picker-modal" (click)="$event.stopPropagation()">
                         <div class="picker-modal__header">
                           <span class="picker-modal__title">{{ 'settings.plex.manageLibraries' | translate }}</span>
-                          <button type="button" class="picker-modal__close" (click)="plexPickerOpen.set(false)" [attr.aria-label]="'common.close' | translate">✕</button>
+                          <button type="button" class="picker-modal__close" (click)="plexPickerOpen.set(false)" [attr.aria-label]="'common.close' | translate"><svg class="picker-modal__close-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
                         </div>
                         <div class="picker-modal__body">
                           @if (plexLibsForSettings().length === 0) {
@@ -457,7 +451,7 @@
                             class="badge-sensitive"
                             [attr.aria-label]="'settings.sensitive' | translate"
                             role="img"
-                            >🔒</span
+                            ><svg class="badge-sensitive__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span
                           >
                         }
                         @if (setting.key === 'MAL:ClientId') {
@@ -485,20 +479,14 @@
                     <div class="setting-value-area">
                       @if (setting.fieldType === 'boolean') {
                         <div class="display-row">
-                          <button
-                            type="button"
-                            class="toggle-switch"
-                            [class.toggle-switch--on]="boolValue(setting)"
+                          <app-ui-toggle
+                            [checked]="boolValue(setting)"
                             [disabled]="isSaving(setting.key)"
-                            (click)="toggleBool(setting)"
-                            role="switch"
-                            [attr.aria-checked]="boolValue(setting)"
-                            [attr.aria-label]="
+                            [ariaLabel]="
                               'settings.fields.' + slug(setting.key) + '.name' | translate
                             "
-                          >
-                            <span class="toggle-thumb"></span>
-                          </button>
+                            (checkedChange)="toggleBool(setting)"
+                          />
                           <span class="toggle-label">
                             {{
                               (boolValue(setting) ? 'settings.toggle.on' : 'settings.toggle.off')
@@ -508,23 +496,15 @@
                         </div>
                       } @else if (setting.fieldType === 'select') {
                         <div class="display-row display-row--select">
-                          <select
-                            class="setting-select"
+                          <div class="setting-select-wrap">
+                          <app-ui-select
+                            [options]="selectOptionsFor(setting)"
+                            [value]="setting.value ?? ''"
                             [disabled]="isSaving(setting.key)"
-                            (change)="onSelectChange(setting, $event)"
-                            [attr.aria-label]="
-                              'settings.fields.' + slug(setting.key) + '.name' | translate
-                            "
-                          >
-                            @for (opt of setting.selectOptions ?? []; track opt) {
-                              <option [value]="opt" [selected]="setting.value === opt">
-                                {{
-                                  'settings.fields.' + slug(setting.key) + '.option.' + opt
-                                    | translate
-                                }}
-                              </option>
-                            }
-                          </select>
+                            [ariaLabel]="'settings.fields.' + slug(setting.key) + '.name' | translate"
+                            (selectionChange)="onSelectChange(setting, $any({ target: { value: $event } }))"
+                          />
+                          </div>
                           @if (isSaving(setting.key)) {
                             <span
                               class="spinner-border spinner-border-sm select-spinner"
@@ -532,7 +512,7 @@
                             ></span>
                           }
                           @if (isSaved(setting.key)) {
-                            <span class="badge-saved">&#10003;</span>
+                            <span class="badge-saved"><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
                           }
                         </div>
                       } @else if (setting.fieldType === 'number') {
@@ -626,7 +606,7 @@
                             }
                             @if (isSaved(setting.key)) {
                               <span class="badge-saved"
-                                >&#10003; {{ 'settings.saved' | translate }}</span
+                                ><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> {{ 'settings.saved' | translate }}</span
                               >
                             }
                             <button
@@ -658,16 +638,14 @@
                           @if (setting.key === 'BotKun:Model') {
                             <div class="input-with-eye">
                               @if (botkunModels().length > 0) {
-                                <select
-                                  formControlName="value"
-                                  class="form-control form-control-sm setting-select"
-                                  [attr.aria-label]="'settings.fields.BotKun_Model.name' | translate"
-                                >
-                                  <option value="">{{ 'settings.botkun.selectModel' | translate }}</option>
-                                  @for (m of botkunModels(); track m) {
-                                    <option [value]="m">{{ m }}</option>
-                                  }
-                                </select>
+                                <div class="setting-select-wrap">
+                                <app-ui-select
+                                  [options]="botkunModelSelectOptions()"
+                                  [value]="forms[setting.key].get('value')?.value ?? ''"
+                                  [ariaLabel]="'settings.fields.BotKun_Model.name' | translate"
+                                  (selectionChange)="forms[setting.key].patchValue({ value: $event })"
+                                />
+                                </div>
                               } @else {
                                 <input
                                   type="text"
@@ -846,7 +824,7 @@
                       <div class="picker-modal" (click)="$event.stopPropagation()">
                         <div class="picker-modal__header">
                           <span class="picker-modal__title">{{ 'settings.sonarr.manageTags' | translate }}</span>
-                          <button type="button" class="picker-modal__close" (click)="sonarrPickerOpen.set(false)" [attr.aria-label]="'common.close' | translate">✕</button>
+                          <button type="button" class="picker-modal__close" (click)="sonarrPickerOpen.set(false)" [attr.aria-label]="'common.close' | translate"><svg class="picker-modal__close-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
                         </div>
                         <div class="picker-modal__body">
                           @if (sonarrTagsForSettings().length === 0) {
@@ -949,25 +927,20 @@
                       </div>
                       <div class="setting-value-area">
                         <div class="display-row display-row--select">
-                          <select
-                            class="setting-select"
+                          <div class="setting-select-wrap">
+                          <app-ui-select
+                            [options]="sonarrRootFolderSelectOptions()"
+                            [value]="sonarrDefaultByKey('Sonarr:DefaultRootFolder')?.value ?? ''"
                             [disabled]="!sonarrDefaultsUnlocked() || isSaving('Sonarr:DefaultRootFolder')"
-                            (change)="onSonarrDefaultChange('Sonarr:DefaultRootFolder', $event)"
-                            [attr.aria-label]="'settings.fields.Sonarr_DefaultRootFolder.name' | translate"
-                          >
-                            <option value="">{{ 'settings.notSet' | translate }}</option>
-                            @for (folder of sonarrRootFolders(); track folder.id) {
-                              <option
-                                [value]="folder.path"
-                                [selected]="sonarrDefaultByKey('Sonarr:DefaultRootFolder')?.value === folder.path"
-                              >{{ folder.path }}</option>
-                            }
-                          </select>
+                            [ariaLabel]="'settings.fields.Sonarr_DefaultRootFolder.name' | translate"
+                            (selectionChange)="onSonarrDefaultChange('Sonarr:DefaultRootFolder', $any({ target: { value: $event } }))"
+                          />
+                          </div>
                           @if (isSaving('Sonarr:DefaultRootFolder')) {
                             <span class="spinner-border spinner-border-sm select-spinner" role="status"></span>
                           }
                           @if (isSaved('Sonarr:DefaultRootFolder')) {
-                            <span class="badge-saved">&#10003;</span>
+                            <span class="badge-saved"><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
                           }
                         </div>
                       </div>
@@ -981,25 +954,20 @@
                       </div>
                       <div class="setting-value-area">
                         <div class="display-row display-row--select">
-                          <select
-                            class="setting-select"
+                          <div class="setting-select-wrap">
+                          <app-ui-select
+                            [options]="sonarrQualityProfileSelectOptions()"
+                            [value]="sonarrDefaultByKey('Sonarr:DefaultQualityProfileName')?.value ?? ''"
                             [disabled]="!sonarrDefaultsUnlocked() || isSaving('Sonarr:DefaultQualityProfileName')"
-                            (change)="onSonarrDefaultChange('Sonarr:DefaultQualityProfileName', $event)"
-                            [attr.aria-label]="'settings.fields.Sonarr_DefaultQualityProfileName.name' | translate"
-                          >
-                            <option value="">{{ 'settings.notSet' | translate }}</option>
-                            @for (profile of sonarrQualityProfiles(); track profile.id) {
-                              <option
-                                [value]="profile.name"
-                                [selected]="sonarrDefaultByKey('Sonarr:DefaultQualityProfileName')?.value === profile.name"
-                              >{{ profile.name }}</option>
-                            }
-                          </select>
+                            [ariaLabel]="'settings.fields.Sonarr_DefaultQualityProfileName.name' | translate"
+                            (selectionChange)="onSonarrDefaultChange('Sonarr:DefaultQualityProfileName', $any({ target: { value: $event } }))"
+                          />
+                          </div>
                           @if (isSaving('Sonarr:DefaultQualityProfileName')) {
                             <span class="spinner-border spinner-border-sm select-spinner" role="status"></span>
                           }
                           @if (isSaved('Sonarr:DefaultQualityProfileName')) {
-                            <span class="badge-saved">&#10003;</span>
+                            <span class="badge-saved"><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
                           }
                         </div>
                       </div>
@@ -1013,18 +981,12 @@
                       </div>
                       <div class="setting-value-area">
                         <div class="display-row">
-                          <button
-                            type="button"
-                            class="toggle-switch"
-                            [class.toggle-switch--on]="sonarrDefaultByKey('Sonarr:DefaultSeasonFolder')?.value === 'true'"
+                          <app-ui-toggle
+                            [checked]="sonarrDefaultByKey('Sonarr:DefaultSeasonFolder')?.value === 'true'"
                             [disabled]="!sonarrDefaultsUnlocked() || isSaving('Sonarr:DefaultSeasonFolder')"
-                            (click)="onSonarrDefaultBoolToggle('Sonarr:DefaultSeasonFolder')"
-                            role="switch"
-                            [attr.aria-checked]="sonarrDefaultByKey('Sonarr:DefaultSeasonFolder')?.value === 'true'"
-                            [attr.aria-label]="'settings.fields.Sonarr_DefaultSeasonFolder.name' | translate"
-                          >
-                            <span class="toggle-thumb"></span>
-                          </button>
+                            [ariaLabel]="'settings.fields.Sonarr_DefaultSeasonFolder.name' | translate"
+                            (checkedChange)="onSonarrDefaultBoolToggle('Sonarr:DefaultSeasonFolder')"
+                          />
                           <span class="toggle-label">
                             {{
                               (sonarrDefaultByKey('Sonarr:DefaultSeasonFolder')?.value === 'true'
@@ -1034,7 +996,7 @@
                             }}
                           </span>
                           @if (isSaved('Sonarr:DefaultSeasonFolder')) {
-                            <span class="badge-saved">&#10003;</span>
+                            <span class="badge-saved"><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
                           }
                         </div>
                       </div>
@@ -1048,23 +1010,20 @@
                       </div>
                       <div class="setting-value-area">
                         <div class="display-row display-row--select">
-                          <select
-                            class="setting-select"
+                          <div class="setting-select-wrap">
+                          <app-ui-select
+                            [options]="sonarrMonitorSelectOptions()"
+                            [value]="sonarrDefaultByKey('Sonarr:DefaultMonitor')?.value ?? ''"
                             [disabled]="!sonarrDefaultsUnlocked() || isSaving('Sonarr:DefaultMonitor')"
-                            (change)="onSonarrDefaultChange('Sonarr:DefaultMonitor', $event)"
-                            [attr.aria-label]="'settings.fields.Sonarr_DefaultMonitor.name' | translate"
-                          >
-                            @for (opt of (sonarrDefaultByKey('Sonarr:DefaultMonitor')?.selectOptions ?? []); track opt) {
-                              <option [value]="opt" [selected]="sonarrDefaultByKey('Sonarr:DefaultMonitor')?.value === opt">
-                                {{ 'settings.fields.Sonarr_DefaultMonitor.option.' + opt | translate }}
-                              </option>
-                            }
-                          </select>
+                            [ariaLabel]="'settings.fields.Sonarr_DefaultMonitor.name' | translate"
+                            (selectionChange)="onSonarrDefaultChange('Sonarr:DefaultMonitor', $any({ target: { value: $event } }))"
+                          />
+                          </div>
                           @if (isSaving('Sonarr:DefaultMonitor')) {
                             <span class="spinner-border spinner-border-sm select-spinner" role="status"></span>
                           }
                           @if (isSaved('Sonarr:DefaultMonitor')) {
-                            <span class="badge-saved">&#10003;</span>
+                            <span class="badge-saved"><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
                           }
                         </div>
                       </div>
@@ -1103,7 +1062,7 @@
                             <span class="spinner-border spinner-border-sm number-input-status" role="status"></span>
                           }
                           @if (isSaved('LibraryAnalysis:AvgEpSizeMb')) {
-                            <span class="number-input-status number-input-status--saved">&#10003;</span>
+                            <span class="number-input-status number-input-status--saved"><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
                           }
                         </div>
                       </div>
@@ -1131,7 +1090,7 @@
                             <span class="spinner-border spinner-border-sm number-input-status" role="status"></span>
                           }
                           @if (isSaved('LibraryAnalysis:AvgGibPerHour')) {
-                            <span class="number-input-status number-input-status--saved">&#10003;</span>
+                            <span class="number-input-status number-input-status--saved"><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
                           }
                         </div>
                       </div>
@@ -1151,17 +1110,11 @@
                     </div>
                     <div class="setting-value-area">
                       <div class="display-row">
-                        <button
-                          type="button"
-                          class="toggle-switch"
-                          [class.toggle-switch--on]="userPrefs.autoApplyLastFilters()"
-                          (click)="toggleAutoApply()"
-                          role="switch"
-                          [attr.aria-checked]="userPrefs.autoApplyLastFilters()"
-                          [attr.aria-label]="'userPreferences.autoApplyLastFilters.name' | translate"
-                        >
-                          <span class="toggle-thumb"></span>
-                        </button>
+                        <app-ui-toggle
+                          [checked]="userPrefs.autoApplyLastFilters()"
+                          [ariaLabel]="'userPreferences.autoApplyLastFilters.name' | translate"
+                          (checkedChange)="toggleAutoApply()"
+                        />
                         <span class="toggle-label">
                           {{
                             (userPrefs.autoApplyLastFilters()
@@ -1195,17 +1148,11 @@
                     </div>
                     <div class="setting-value-area">
                       <div class="display-row">
-                        <button
-                          type="button"
-                          class="toggle-switch"
-                          [class.toggle-switch--on]="userPrefs.luckyOnlyFinished()"
-                          (click)="toggleLuckyOnlyFinished()"
-                          role="switch"
-                          [attr.aria-checked]="userPrefs.luckyOnlyFinished()"
-                          [attr.aria-label]="'userPreferences.luckyPick.onlyFinished.name' | translate"
-                        >
-                          <span class="toggle-thumb"></span>
-                        </button>
+                        <app-ui-toggle
+                          [checked]="userPrefs.luckyOnlyFinished()"
+                          [ariaLabel]="'userPreferences.luckyPick.onlyFinished.name' | translate"
+                          (checkedChange)="toggleLuckyOnlyFinished()"
+                        />
                         <span class="toggle-label">
                           {{
                             (userPrefs.luckyOnlyFinished()
@@ -1228,17 +1175,11 @@
                     </div>
                     <div class="setting-value-area">
                       <div class="display-row">
-                        <button
-                          type="button"
-                          class="toggle-switch"
-                          [class.toggle-switch--on]="userPrefs.luckyOnlyPlanToWatch()"
-                          (click)="toggleLuckyOnlyPlanToWatch()"
-                          role="switch"
-                          [attr.aria-checked]="userPrefs.luckyOnlyPlanToWatch()"
-                          [attr.aria-label]="'userPreferences.luckyPick.onlyPlanToWatch.name' | translate"
-                        >
-                          <span class="toggle-thumb"></span>
-                        </button>
+                        <app-ui-toggle
+                          [checked]="userPrefs.luckyOnlyPlanToWatch()"
+                          [ariaLabel]="'userPreferences.luckyPick.onlyPlanToWatch.name' | translate"
+                          (checkedChange)="toggleLuckyOnlyPlanToWatch()"
+                        />
                         <span class="toggle-label">
                           {{
                             (userPrefs.luckyOnlyPlanToWatch()
@@ -1270,18 +1211,12 @@
                     </div>
                     <div class="setting-value-area">
                       <div class="display-row">
-                        <button
-                          type="button"
-                          class="toggle-switch"
-                          [class.toggle-switch--on]="userPrefs.luckyOnlyWithFiles()"
+                        <app-ui-toggle
+                          [checked]="userPrefs.luckyOnlyWithFiles()"
                           [disabled]="!sonarrEnabled()"
-                          (click)="toggleLuckyOnlyWithFiles()"
-                          role="switch"
-                          [attr.aria-checked]="userPrefs.luckyOnlyWithFiles()"
-                          [attr.aria-label]="'userPreferences.luckyPick.onlyWithFiles.name' | translate"
-                        >
-                          <span class="toggle-thumb"></span>
-                        </button>
+                          [ariaLabel]="'userPreferences.luckyPick.onlyWithFiles.name' | translate"
+                          (checkedChange)="toggleLuckyOnlyWithFiles()"
+                        />
                         <span class="toggle-label">
                           {{
                             (userPrefs.luckyOnlyWithFiles()
@@ -1327,7 +1262,7 @@
                         <div class="path-field-row">
                           @if (pathSavedKey() === 'containerRoot') {
                             <span class="badge-saved"
-                              >&#10003; {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
+                              ><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
                             >
                           }
                         </div>
@@ -1367,7 +1302,7 @@
                           </button>
                           @if (pathSavedKey() === 'hostRoot') {
                             <span class="badge-saved"
-                              >&#10003; {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
+                              ><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
                             >
                           }
                         </div>
@@ -1409,7 +1344,7 @@
                           </button>
                           @if (pathSavedKey() === 'destDir') {
                             <span class="badge-saved"
-                              >&#10003; {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
+                              ><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
                             >
                           }
                         </div>
@@ -1425,17 +1360,11 @@
                       </div>
                       <div class="setting-value-area">
                         <div class="display-row">
-                          <button
-                            type="button"
-                            class="toggle-switch"
-                            [class.toggle-switch--on]="userPaths.destMode() === 'transcoded'"
-                            (click)="toggleDestMode()"
-                            role="switch"
-                            [attr.aria-checked]="userPaths.destMode() === 'transcoded'"
-                            [attr.aria-label]="'userPreferences.libraryHandbrake.destModeTranscoded' | translate"
-                          >
-                            <span class="toggle-thumb"></span>
-                          </button>
+                          <app-ui-toggle
+                            [checked]="userPaths.destMode() === 'transcoded'"
+                            [ariaLabel]="'userPreferences.libraryHandbrake.destModeTranscoded' | translate"
+                            (checkedChange)="toggleDestMode()"
+                          />
                           <span class="toggle-label">
                             {{
                               (userPaths.destMode() === 'transcoded'
@@ -1446,7 +1375,7 @@
                           </span>
                           @if (pathSavedKey() === 'destMode') {
                             <span class="badge-saved"
-                              >&#10003; {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
+                              ><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
                             >
                           }
                         </div>
@@ -1474,7 +1403,7 @@
                         <div class="path-field-row">
                           @if (pathSavedKey() === 'presetName') {
                             <span class="badge-saved"
-                              >&#10003; {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
+                              ><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
                             >
                           }
                         </div>
@@ -1493,18 +1422,17 @@
                       </div>
                       <div class="setting-value-area">
                         <div class="display-row display-row--select">
-                          <select
-                            class="setting-select"
+                          <div class="setting-select-wrap">
+                          <app-ui-select
+                            [options]="separatorSelectOptions()"
                             [value]="userPaths.mapping().separator"
-                            (change)="onSeparatorChange($event)"
-                            [attr.aria-label]="'settings.fields.PathMap_Separator.name' | translate"
-                          >
-                            <option value="posix">POSIX /</option>
-                            <option value="windows">Windows \</option>
-                          </select>
+                            [ariaLabel]="'settings.fields.PathMap_Separator.name' | translate"
+                            (selectionChange)="onSeparatorChange($any({ target: { value: $event } }))"
+                          />
+                          </div>
                           @if (pathSavedKey() === 'separator') {
                             <span class="badge-saved"
-                              >&#10003; {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
+                              ><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> {{ 'userPreferences.libraryHandbrake.saved' | translate }}</span
                             >
                           }
                         </div>
@@ -1617,18 +1545,15 @@
                 }}</span>
               </div>
               <div class="sync-interval-control">
-                <select
-                  class="setting-select"
+                <div class="setting-select-wrap">
+                <app-ui-select
+                  [options]="syncIntervalSelectOptions(intervalSetting)"
+                  [value]="intervalSetting.value ?? ''"
                   [disabled]="isSaving(intervalSetting.key) || syncing()"
-                  (change)="onSelectChange(intervalSetting, $event)"
-                  [attr.aria-label]="'settings.fields.App_SyncInterval.name' | translate"
-                >
-                  @for (opt of intervalSetting.selectOptions ?? []; track opt) {
-                    <option [value]="opt" [selected]="intervalSetting.value === opt">
-                      {{ 'settings.fields.App_SyncInterval.option.' + opt | translate }}
-                    </option>
-                  }
-                </select>
+                  [ariaLabel]="'settings.fields.App_SyncInterval.name' | translate"
+                  (selectionChange)="onSelectChange(intervalSetting, $any({ target: { value: $event } }))"
+                />
+                </div>
                 @if (isSaving(intervalSetting.key)) {
                   <span
                     class="spinner-border spinner-border-sm select-spinner"
@@ -1636,7 +1561,7 @@
                   ></span>
                 }
                 @if (isSaved(intervalSetting.key)) {
-                  <span class="badge-saved">&#10003;</span>
+                  <span class="badge-saved"><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
                 }
               </div>
             </div>
@@ -1821,9 +1746,9 @@
                 <div class="setting-info">
                   <div class="setting-name">
                     @if (securityEnabled()) {
-                      🔒 {{ 'settings.security.enabledLabel' | translate }}
+                      <svg class="setting-name__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> {{ 'settings.security.enabledLabel' | translate }}
                     } @else {
-                      🔓 {{ 'settings.security.disabledLabel' | translate }}
+                      <svg class="setting-name__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> {{ 'settings.security.disabledLabel' | translate }}
                     }
                   </div>
                 </div>
@@ -1833,7 +1758,7 @@
               @if (securitySuccess()) {
                 <div class="setting-row">
                   <div class="setting-info">
-                    <span class="badge-saved">&#10003; {{ securitySuccess() }}</span>
+                    <span class="badge-saved"><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> {{ securitySuccess() }}</span>
                   </div>
                 </div>
               }
@@ -2085,7 +2010,7 @@
                 <div class="setting-control d-flex align-items-center gap-2">
                   <input
                     type="number"
-                    class="form-control form-control-sm"
+                    class="form-control form-control-sm setting-input"
                     style="width:5rem"
                     [value]="sessionLifetimeDays()"
                     min="1"
@@ -2097,7 +2022,7 @@
                   @if (sessionLifetimeSaving()) {
                     <span class="spinner-border spinner-border-sm" role="status"></span>
                   } @else if (sessionLifetimeSaved()) {
-                    <span class="badge-saved">&#10003;</span>
+                    <span class="badge-saved"><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
                   }
                 </div>
               </div>
@@ -2292,7 +2217,7 @@
             [disabled]="!browseParent()"
             [attr.aria-label]="'userPreferences.libraryHandbrake.browseUp' | translate"
           >
-            ⬆
+            <svg class="path-browse-nav__up-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
           </button>
           <code class="path-browse-nav__path" [attr.title]="browseCurrentPath()">{{ browseCurrentPath() }}</code>
         </div>
@@ -2304,7 +2229,7 @@
             </div>
           } @else if (browseError()) {
             <div class="path-browse-nav__note path-browse-nav__note--error">
-              <span aria-hidden="true">⚠️</span>
+              <svg class="path-browse-nav__note-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
               {{ browseError() | translate }}
               <button type="button" class="path-browse-nav__retry" (click)="browseRetry()">
                 {{ 'userPreferences.libraryHandbrake.browseRetry' | translate }}
@@ -2317,7 +2242,7 @@
           } @else {
             @for (d of browseDirectories(); track d.path) {
               <button type="button" class="path-browse-nav__item" (click)="navigateBrowse(d)">
-                <span class="path-browse-nav__icon" aria-hidden="true">📁</span>
+                <svg class="path-browse-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
                 <span class="path-browse-nav__name">{{ d.name }}</span>
                 <span class="path-browse-nav__chevron" aria-hidden="true">›</span>
               </button>

@@ -12,16 +12,17 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { SeiyuuNexusService } from './seiyuu-nexus.service';
 import { NexusNode } from '../models/anime.models';
 
+// Language → ISO 3166-1 alpha-2 code (rendered as a small code chip — no emoji in UI).
 const LANG_FLAGS: Record<string, string> = {
-  japanese:   '🇯🇵',
-  english:    '🇺🇸',
-  french:     '🇫🇷',
-  german:     '🇩🇪',
-  spanish:    '🇪🇸',
-  portuguese: '🇧🇷',
-  italian:    '🇮🇹',
-  korean:     '🇰🇷',
-  chinese:    '🇨🇳',
+  japanese:   'JP',
+  english:    'US',
+  french:     'FR',
+  german:     'DE',
+  spanish:    'ES',
+  portuguese: 'BR',
+  italian:    'IT',
+  korean:     'KR',
+  chinese:    'CN',
 };
 
 export interface DubEntry {
@@ -68,7 +69,7 @@ export class SeiyuuNexusComponent {
     }
   });
 
-  /** Returns the emoji flag for a language name, or a short 2-letter fallback. */
+  /** Returns the ISO code chip label for a language name, or its 2-letter fallback. */
   protected getFlag(language: string): string {
     return LANG_FLAGS[language.toLowerCase()] ?? language.slice(0, 2).toUpperCase();
   }
