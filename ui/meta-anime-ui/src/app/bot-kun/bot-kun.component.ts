@@ -57,6 +57,9 @@ export type MessageSegment =
   | { type: 'action'; action: BotKunActionPayload }
   | { type: 'titleChip'; id: string; title: string };
 
+/** Shared empty segment list — user messages are plain text and never parsed into segments. */
+const NO_SEGMENTS: MessageSegment[] = [];
+
 @Component({
   selector: 'app-bot-kun',
   standalone: true,
@@ -102,6 +105,33 @@ export class BotKunComponent implements OnDestroy {
   private readonly _msgCount = computed(() => this.messages().length);
   private typewriterVersion = 0;
 
+  /**
+   * Parsed segments per message (parallel to `messages()`), memoized by message slot +
+   * last parsed content + permitted-ID snapshot: change detection and typing in the
+   * input box re-use the cached arrays instead of re-running the regex/markdown parse
+   * for every message on every pass. Only the message whose typed content actually
+   * changed is re-parsed.
+   */
+  readonly messageSegments = computed<MessageSegment[][]>(() => {
+    const msgs = this.messages();
+    const liveIds = this.botKunService.permittedMalIds();
+    // Drop memo entries for message slots that no longer exist (history cleared).
+    for (const key of [...this._segmentMemo.keys()]) {
+      if (key >= msgs.length) this._segmentMemo.delete(key);
+    }
+    return msgs.map((msg, idx) => {
+      if (msg.role !== 'assistant') return NO_SEGMENTS;
+      const permittedIds = msg.permittedIds ?? liveIds;
+      const cached = this._segmentMemo.get(idx);
+      if (cached && cached.source === msg.typedContent && cached.permittedIds === permittedIds) {
+        return cached.segments;
+      }
+      const segments = this.parseSegments(msg.typedContent, false, permittedIds);
+      this._segmentMemo.set(idx, { source: msg.typedContent, permittedIds, segments });
+      return segments;
+    });
+  });
+
   private readonly messagesEnd = viewChild<ElementRef<HTMLElement>>('messagesEnd');
   private readonly chatInput = viewChild<ElementRef<HTMLTextAreaElement>>('chatInput');
   private streamSub: Subscription | null = null;
@@ -119,8 +149,8 @@ export class BotKunComponent implements OnDestroy {
   private _libraryInsightPending = false;
   // Poll handle waiting for the greeting typewriter to drain before appending the insight
   private _insightPollHandle: ReturnType<typeof setTimeout> | null = null;
-  // Cache for parseSegments results (non-streaming only)
-  private readonly _segmentCache = new Map<string, MessageSegment[]>();
+  // Memoized segment parses keyed by message slot (see messageSegments)
+  private readonly _segmentMemo = new Map<number, { source: string; permittedIds: ReadonlySet<string>; segments: MessageSegment[] }>();
 
   // Track previous botkunEnabled state for open/close effect
   private _prevBotkunEnabled: boolean | null = null;
@@ -398,26 +428,18 @@ export class BotKunComponent implements OnDestroy {
    * Deduplicates by malId — if the AI emits the same [anime:ID] tag more than once,
    * only the first occurrence is rendered as a card.
    * Tag format: [anime:ID] or [lucky:ID] — ID only, no title in the tag.
-   * S6: non-streaming results are cached by content string to avoid redundant parsing.
+   * Parsing is memoized per message by the `messageSegments` computed — this method
+   * itself is pure and re-parses on every call.
    */
   parseSegments(content: string, streaming: boolean, permittedIds: ReadonlySet<string> = this.botKunService.permittedMalIds()): MessageSegment[] {
     if (streaming) {
       return [{ type: 'text', html: this.toSafeHtml(content) }];
     }
 
-    // Return cached result if available; key includes permittedIds when non-empty
-    // so finalized messages with different ID snapshots don't collide.
-    const cacheKey = permittedIds.size > 0
-      ? `${content}\x00${[...permittedIds].sort().join(',')}`
-      : content;
-    const cached = this._segmentCache.get(cacheKey);
-    if (cached) return cached;
-
     // Move any card tags that appear mid-sentence to the next sentence boundary for readability.
     const processedContent = this.pushCardsToSentenceBoundaries(content);
 
-    // Per-call local set — deduplicates within a single message without persisting
-    // across cache-miss re-parses (which happen each time the typewriter adds a char).
+    // Per-call local set — deduplicates within a single message.
     const seenMalIds = new Set<string>();
     const segments: MessageSegment[] = [];
     let lastIndex = 0;
@@ -503,9 +525,7 @@ export class BotKunComponent implements OnDestroy {
       segments.push({ type: 'text', html: this.toSafeHtml(tail) });
     }
 
-    const result: MessageSegment[] = segments.length > 0 ? segments : [{ type: 'text', html: this.toSafeHtml(processedContent) }];
-    this._segmentCache.set(cacheKey, result);
-    return result;
+    return segments.length > 0 ? segments : [{ type: 'text', html: this.toSafeHtml(processedContent) }];
   }
 
   /** Stable track key for `@for` over MessageSegment arrays — cards track by malId, chips by id, text/action by position. */
@@ -575,7 +595,7 @@ export class BotKunComponent implements OnDestroy {
     this._libraryInsightPending = false;
     clearTimeout(this._insightPollHandle ?? undefined);
     this._insightPollHandle = null;
-    this._segmentCache.clear();
+    this._segmentMemo.clear();
   }
 
   onLuckyCardReady(): void {

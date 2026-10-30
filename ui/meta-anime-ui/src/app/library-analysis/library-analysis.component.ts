@@ -3,7 +3,6 @@ import {
   Component,
   computed,
   DestroyRef,
-  effect,
   ElementRef,
   HostListener,
   inject,
@@ -104,8 +103,6 @@ export class LibraryAnalysisComponent {
     });
   });
 
-  // ── Rows mirror into the shared store (Bot-kun context + KPI lookups) ─────
-
   // ── Avg episode size threshold (from summary, default 1200 MB) ───────────
   readonly avgEpSizeThresholdBytes = computed(() =>
     (this.summary()?.avgEpSizeThresholdMb ?? 1200) * 1024 * 1024,
@@ -122,10 +119,16 @@ export class LibraryAnalysisComponent {
   }
 
   constructor() {
-    // Mirror the enriched rows into the shared store so KPI cards and Bot-kun
-    // can compute insights and resolve "Open Series" targets.
-    effect(() => this.intel.rows.set(this.displayRows()));
     this.loadData();
+  }
+
+  /**
+   * Mirrors the merged rows into the shared store (Bot-kun context + KPI lookups).
+   * Called from the data-loading path whenever the summary or enrichment data changes —
+   * derived state stays in `displayRows`, the store only receives the derived snapshot.
+   */
+  private syncIntelRows(): void {
+    this.intel.rows.set(this.displayRows());
   }
 
   loadData(): void {
@@ -133,6 +136,7 @@ export class LibraryAnalysisComponent {
     this.enriching.set(false);
     this.error.set(null);
     this.enrichedRows.set([]);
+    this.syncIntelRows();
     this.intel.closeSeries();
 
     // Phase 1: Get summary
@@ -141,6 +145,7 @@ export class LibraryAnalysisComponent {
       .subscribe({
         next: (data) => {
           this.summary.set(data);
+          this.syncIntelRows();
           this.loadingSummary.set(false);
 
           // Phase 2: Enrich with codec/resolution data
@@ -152,6 +157,7 @@ export class LibraryAnalysisComponent {
               .subscribe({
                 next: (enriched) => {
                   this.enrichedRows.set(enriched);
+                  this.syncIntelRows();
                   this.enriching.set(false);
                 },
                 error: (err) => {

@@ -111,7 +111,7 @@
         } @else {
         <!-- Segment-based rendering: text runs as markdown HTML, anime tags as real cards -->
         <div class="bot-kun__md">
-          @for (seg of parseSegments(msg.typedContent, false, msg.permittedIds ?? botKunService.permittedMalIds()); track segmentTrackKey($index, seg)) {
+          @for (seg of messageSegments()[msgIdx]; track segmentTrackKey($index, seg)) {
             @if (seg.type === 'text') {
               <span [innerHTML]="seg.html"></span>
             } @else if (seg.type === 'card') {
