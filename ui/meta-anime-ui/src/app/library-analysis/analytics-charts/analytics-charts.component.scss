@@ -744,7 +744,8 @@
     opacity: 0;
     transform: scale(0.94);
   }
-  to {
+
+  &[data-tip]:hover::after {
     opacity: 1;
     transform: scale(1);
   }
@@ -1148,4 +1149,19 @@
 
 .la-cd__summary-value.la-lb__summary-savings {
   color: var(--color-success);
+}
+
+// ── Reclaimable/muted accents (appended last: must win the cascade over the
+// later base .la-lb__size / .la-badge rules of equal specificity). ──────────
+.la-lb__size.la-lb__size--savings {
+  color: #34d399;
+}
+
+.la-cd__summary-value.la-lb__summary-savings {
+  color: #34d399;
+}
+
+.la-badge.la-badge--muted {
+  background: color-mix(in srgb, var(--text-primary) 10%, transparent);
+  color: var(--text-secondary);
 }
