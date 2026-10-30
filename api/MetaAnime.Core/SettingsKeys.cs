@@ -69,6 +69,19 @@ public static class SettingsKeys
     public const string BotKunApiKey   = "BotKun:ApiKey";
     public const string BotKunModel    = "BotKun:Model";
 
+    // User path mapping (container paths → local host paths for copy/export)
+    public const string PathMapContainerRoot = "PathMap:ContainerRoot";
+    public const string PathMapHostRoot      = "PathMap:HostRoot";
+    public const string PathMapSeparator     = "PathMap:Separator";
+
+    // HandBrake queue export parameters (used by the Library drawer export)
+    public const string HandBrakePresetName = "HandBrake:PresetName";
+    public const string HandBrakeDestDir    = "HandBrake:DestDir";
+    public const string HandBrakeDestMode   = "HandBrake:DestMode"; // "dir" | "transcoded"
+
+    // Transcode target preferences (Library batch export)
+    public const string TranscodeIncludeUnknown = "Transcode:IncludeUnknown"; // "true" | "false"
+
     // Known AI provider URLs (app-seeded reference list; not user-configurable)
     public const string KnownAiApiUrls = "App:KnownAiApiUrls";
 

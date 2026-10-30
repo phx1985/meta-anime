@@ -11,6 +11,13 @@ public sealed class DeletePropertyBagCommandHandler(IPropertyBagRepository prope
     {
         try
         {
+            // Internal System:* keys are never touched through the generic
+            // property-bag API — report them exactly like missing keys.
+            if (PropertyBagKeyPolicy.IsSystemManaged(request.Key))
+            {
+                return Result.Failure(new Error(Constants.Errors.NotFound, $"PropertyBag entry with key '{request.Key}' was not found"));
+            }
+
             var existing = await propertyBagRepository.GetByKeyAsync(request.Key);
             if (existing is null)
             {

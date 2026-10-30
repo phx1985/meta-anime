@@ -12,9 +12,10 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest, forkJoin, timer } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { finalize, switchMap } from 'rxjs/operators';
 import { HttpErrorResponse } from '@angular/common/http';
 import { SettingsService } from '../services/settings.service';
+import { ConfigBackupService } from '../services/config-backup.service';
 import { AnimeService } from '../services/anime.service';
 import { SyncSignalRService } from '../services/sync-signalr.service';
 import { NotificationService } from '../services/notification.service';
@@ -26,6 +27,9 @@ import { AuthService } from '../services/auth.service';
 import { EnrollmentService, PlexLibrary } from '../services/enrollment.service';
 import { BotKunService } from '../services/bot-kun.service';
 import { PropertyBagService } from '../services/property-bag.service';
+import { UserPathService } from '../services/user-path.service';
+import { FsBrowseService, FsBrowseEntry } from '../services/fs-browse.service';
+import { HandBrakeDestMode, PathSeparatorStyle } from '../utils/user-path.utils';
 import { SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
 import { SettingDefinition, SettingsByCategory } from '../models/settings.models';
 import { SyncStep } from '../models/sync-progress.models';
@@ -76,6 +80,9 @@ export class SettingsComponent {
   private enrollmentService = inject(EnrollmentService);
   private botKunService = inject(BotKunService);
   private propertyBagService = inject(PropertyBagService);
+  readonly userPaths = inject(UserPathService);
+  private readonly fsBrowse = inject(FsBrowseService);
+  private readonly configBackup = inject(ConfigBackupService);
 
   loading = signal(true);
   error = signal(false);
@@ -92,6 +99,42 @@ export class SettingsComponent {
 
   luckyPrefsSaved = signal(false);
   private luckyPrefsSavedTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // ── Library & HandBrake transcode paths card ─────────────────────────────
+  /** Key of the path field whose save flash is currently visible. */
+  pathSavedKey = signal<string | null>(null);
+  private pathSavedTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Browse modal: which path field is being edited ('hostRoot' | 'destDir'), null when closed. */
+  browseTarget = signal<'hostRoot' | 'destDir' | null>(null);
+  /** Editable path string inside the browse modal (manual entry / final value). */
+  browseInput = signal('');
+  /** Server-side folder navigator state (the API host's real filesystem). */
+  browseCurrentPath = signal('');
+  browseParent = signal<string | null>(null);
+  browseDirectories = signal<FsBrowseEntry[]>([]);
+  browseLoading = signal(false);
+  browseError = signal<string | null>(null);
+
+  /** Host mount path uses a virtual smb:// URI (HandBrake can't consume it). */
+  hostRootSmb = computed(() =>
+    this.userPaths.mapping().hostRoot.trim().toLowerCase().startsWith('smb://'),
+  );
+  /** HandBrake destination uses a virtual smb:// URI. */
+  destDirSmb = computed(() =>
+    this.userPaths.destDir().trim().toLowerCase().startsWith('smb://'),
+  );
+
+  browseTitleKey = computed(() =>
+    this.browseTarget() === 'destDir'
+      ? 'userPreferences.libraryHandbrake.destPath.name'
+      : 'userPreferences.libraryHandbrake.hostRoot.name',
+  );
+  browseDescKey = computed(() =>
+    this.browseTarget() === 'destDir'
+      ? 'userPreferences.libraryHandbrake.destPath.desc'
+      : 'userPreferences.libraryHandbrake.hostRoot.desc',
+  );
 
   sliderPreview = signal<Record<string, string | undefined>>({});
 
@@ -144,6 +187,14 @@ export class SettingsComponent {
   kometaWarnKey = signal<string | null>(null);
   /** `true` while the warning dialog exit animation is playing. */
   kometaWarnLeaving = signal(false);
+
+  // ── Backup & Restore card ─────────────────────────────────────────────────
+  /** `true` while a .json file is dragged over the backup card. */
+  backupDragOver = signal(false);
+  /** `true` while the export warning confirmation dialog is open. */
+  exportConfirmOpen = signal(false);
+  /** `true` while the export warning dialog exit animation is playing. */
+  exportConfirmLeaving = signal(false);
 
   // ── Help modals ───────────────────────────────────────────────────────────
   malHelpOpen = signal(false);
@@ -413,6 +464,7 @@ export class SettingsComponent {
 
     this.destroyRef.onDestroy(() => {
       if (this.autoApplySavedTimer) clearTimeout(this.autoApplySavedTimer);
+      if (this.pathSavedTimer) clearTimeout(this.pathSavedTimer);
       this.stopPlexPolling();
     });
 
@@ -435,52 +487,7 @@ export class SettingsComponent {
     this.loadSecurityStatus();
     this.loadSessionLifetime();
 
-    this.settingsService
-      .getAll()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (data) => {
-          const transformed = data.map((s) =>
-            SettingsComponent.FRONTEND_SENSITIVE_KEYS.has(s.key) ? { ...s, isSensitive: true } : s,
-          );
-          this.settings.set(transformed);
-          this.buildForms(transformed);
-          this.loading.set(false);
-          const first = this.navItems()[0];
-          if (first) this.activeCategory.set(first);
-          // Initialize dynamic picker selections from saved values
-          const plexSections = data.find((s) => s.key === 'Plex:AnimeSections')?.value ?? '';
-          if (plexSections.trim()) this.plexSelectedSectionKeys.set(plexSections.split(',').map((v) => v.trim()).filter(Boolean));
-          const sonarrTags = data.find((s) => s.key === 'Sonarr:AnimeTags')?.value ?? '';
-          if (sonarrTags.trim()) this.sonarrSelectedTagLabels.set(sonarrTags.split(',').map((v) => v.trim()).filter(Boolean));
-
-          if (pendingHighlight) {
-            // Use scrollToSection() — handles navbar offset, highlight scale animation,
-            // and auto-clear — matching the side-nav click behaviour exactly.
-            setTimeout(() => this.scrollToSection(pendingHighlight), SettingsComponent.DEEP_LINK_SCROLL_DELAY_MS);
-          } else {
-            const fragment = this.route.snapshot.fragment;
-            if (fragment) {
-              setTimeout(() => {
-                document
-                  .getElementById(fragment)
-                  ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }, 80);
-            }
-          }
-          this.loadSonarrDefaults();
-
-          // Auto-load dynamic pickers if the provider is already configured
-          const plexEnabledVal = data.find((s) => s.key === 'Plex:Enabled')?.value === 'true';
-          if (plexEnabledVal) this.loadPlexLibsForSettings();
-          const sonarrEnabledVal = data.find((s) => s.key === 'Sonarr:Enabled')?.value === 'true';
-          if (sonarrEnabledVal) this.loadSonarrTagsForSettings();
-        },
-        error: () => {
-          this.error.set(true);
-          this.loading.set(false);
-        },
-      });
+    this.loadSettings({ pendingHighlight });
 
     this.loadSyncStatus();
 
@@ -523,6 +530,65 @@ export class SettingsComponent {
     this.signalR.syncError$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((err) => {
       if (err) this.syncing.set(false);
     });
+  }
+
+  /**
+   * Loads the full settings list, rebuilds the forms and dynamic picker
+   * selections. Pass `deepLink` on the initial load to consume the pending
+   * `?highlight=` query param / URL fragment scroll target.
+   */
+  private loadSettings(deepLink?: { pendingHighlight?: string }): void {
+    const pendingHighlight = deepLink?.pendingHighlight;
+    this.settingsService
+      .getAll()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          const transformed = data.map((s) =>
+            SettingsComponent.FRONTEND_SENSITIVE_KEYS.has(s.key) ? { ...s, isSensitive: true } : s,
+          );
+          this.settings.set(transformed);
+          this.buildForms(transformed);
+          this.loading.set(false);
+          const first = this.navItems()[0];
+          if (first) this.activeCategory.set(first);
+          // Initialize dynamic picker selections from saved values
+          const plexSections = data.find((s) => s.key === 'Plex:AnimeSections')?.value ?? '';
+          this.plexSelectedSectionKeys.set(
+            plexSections.trim() ? plexSections.split(',').map((v) => v.trim()).filter(Boolean) : [],
+          );
+          const sonarrTags = data.find((s) => s.key === 'Sonarr:AnimeTags')?.value ?? '';
+          this.sonarrSelectedTagLabels.set(
+            sonarrTags.trim() ? sonarrTags.split(',').map((v) => v.trim()).filter(Boolean) : [],
+          );
+
+          if (deepLink && pendingHighlight) {
+            // Use scrollToSection() — handles navbar offset, highlight scale animation,
+            // and auto-clear — matching the side-nav click behaviour exactly.
+            setTimeout(() => this.scrollToSection(pendingHighlight), SettingsComponent.DEEP_LINK_SCROLL_DELAY_MS);
+          } else if (deepLink) {
+            const fragment = this.route.snapshot.fragment;
+            if (fragment) {
+              setTimeout(() => {
+                document
+                  .getElementById(fragment)
+                  ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 80);
+            }
+          }
+          this.loadSonarrDefaults();
+
+          // Auto-load dynamic pickers if the provider is already configured
+          const plexEnabledVal = data.find((s) => s.key === 'Plex:Enabled')?.value === 'true';
+          if (plexEnabledVal) this.loadPlexLibsForSettings();
+          const sonarrEnabledVal = data.find((s) => s.key === 'Sonarr:Enabled')?.value === 'true';
+          if (sonarrEnabledVal) this.loadSonarrTagsForSettings();
+        },
+        error: () => {
+          this.error.set(true);
+          this.loading.set(false);
+        },
+      });
   }
 
   private loadSyncStatus(): void {
@@ -704,6 +770,96 @@ export class SettingsComponent {
       this.kometaWarnLeaving.set(false);
       if (key) this.toggleEdit(key);
     }, 200);
+  }
+
+  // ── Backup & Restore card ─────────────────────────────────────────────────
+
+  /** Open the export confirmation (the file contains unmasked secrets). */
+  openExportConfirm(): void {
+    this.exportConfirmOpen.set(true);
+    this.exportConfirmLeaving.set(false);
+  }
+
+  /** Close the export confirmation without downloading. */
+  dismissExportConfirm(): void {
+    this.exportConfirmLeaving.set(true);
+    setTimeout(() => {
+      this.exportConfirmOpen.set(false);
+      this.exportConfirmLeaving.set(false);
+    }, 200);
+  }
+
+  /** Close the export confirmation and trigger the backup download. */
+  confirmExport(): void {
+    this.exportConfirmLeaving.set(true);
+    setTimeout(() => {
+      this.exportConfirmOpen.set(false);
+      this.exportConfirmLeaving.set(false);
+      this.configBackup.exportConfig();
+    }, 200);
+  }
+
+  onBackupDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.backupDragOver.set(true);
+  }
+
+  onBackupDragLeave(): void {
+    this.backupDragOver.set(false);
+  }
+
+  onBackupDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.backupDragOver.set(false);
+    const file = event.dataTransfer?.files?.[0];
+    if (file) this.importBackupFile(file);
+  }
+
+  onBackupFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    // Reset so picking the same file again re-fires the change event.
+    input.value = '';
+    if (file) this.importBackupFile(file);
+  }
+
+  /** parseFile → importConfig, then a status toast and a full state refresh. */
+  private importBackupFile(file: File): void {
+    this.configBackup
+      .parseFile(file)
+      .pipe(
+        switchMap((backup) => this.configBackup.importConfig(backup)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (res) => {
+          const yes = this.translate.instant('configBackup.statusYes');
+          const no = this.translate.instant('configBackup.statusNo');
+          this.notifService.push({
+            id: `config-import-${Date.now()}`,
+            severity: 'success',
+            titleKey: 'configBackup.title',
+            messageKey: this.translate.instant('configBackup.imported', {
+              count: res.importedValues,
+              plex: res.plexConnected ? yes : no,
+              sonarr: res.sonarrConnected ? yes : no,
+              mal: res.malConnected ? yes : no,
+            }),
+          });
+          // Refresh everything the import may have changed.
+          this.loadSettings();
+          this.userPaths.load();
+          this.loadEnrollmentStatus();
+        },
+        error: () => {
+          this.notifService.push({
+            id: `config-import-failed-${Date.now()}`,
+            severity: 'error',
+            titleKey: 'configBackup.title',
+            messageKey: 'configBackup.importFailed',
+          });
+        },
+      });
   }
 
   toggleEdit(key: string): void {
@@ -920,6 +1076,137 @@ export class SettingsComponent {
     if (this.luckyPrefsSavedTimer) clearTimeout(this.luckyPrefsSavedTimer);
     this.luckyPrefsSaved.set(true);
     this.luckyPrefsSavedTimer = setTimeout(() => this.luckyPrefsSaved.set(false), 2000);
+  }
+
+  // ── Library & HandBrake transcode paths card ─────────────────────────────
+
+  onContainerRootChange(event: Event): void {
+    const value = (event.target as HTMLInputElement).value.trim();
+    this.userPaths.save({ containerRoot: value }).subscribe();
+    this.flashPathSaved('containerRoot');
+  }
+
+  onHostRootChange(event: Event): void {
+    const value = (event.target as HTMLInputElement).value.trim();
+    this.userPaths.save({ hostRoot: value }).subscribe();
+    this.flashPathSaved('hostRoot');
+  }
+
+  onDestDirChange(event: Event): void {
+    const value = (event.target as HTMLInputElement).value.trim();
+    this.userPaths.saveHandBrake({ destDir: value }).subscribe();
+    this.flashPathSaved('destDir');
+  }
+
+  onPresetNameChange(event: Event): void {
+    const value = (event.target as HTMLInputElement).value.trim();
+    this.userPaths.saveHandBrake({ presetName: value }).subscribe();
+    this.flashPathSaved('presetName');
+  }
+
+  onSeparatorChange(event: Event): void {
+    const raw = (event.target as HTMLSelectElement).value;
+    const separator: PathSeparatorStyle = raw === 'windows' ? 'windows' : 'posix';
+    this.userPaths.save({ separator }).subscribe();
+    this.flashPathSaved('separator');
+  }
+
+  toggleDestMode(): void {
+    const next: HandBrakeDestMode =
+      this.userPaths.destMode() === 'transcoded' ? 'dir' : 'transcoded';
+    this.userPaths.saveHandBrake({ destMode: next }).subscribe();
+    this.flashPathSaved('destMode');
+  }
+
+  private flashPathSaved(key: string): void {
+    if (this.pathSavedTimer) clearTimeout(this.pathSavedTimer);
+    this.pathSavedKey.set(key);
+    this.pathSavedTimer = setTimeout(() => this.pathSavedKey.set(null), 2000);
+  }
+
+  // ── Folder browse modal (server-side navigator — real host filesystem) ──
+
+  /**
+   * Opens the folder navigator for the given field. Listings come from the API
+   * host's filesystem (GET /api/v1/fs/browse) — browsers never disclose absolute
+   * paths from native pickers, but the API runs on the very machine whose mount
+   * paths are being configured.
+   */
+  openPathBrowse(target: 'hostRoot' | 'destDir'): void {
+    const current = target === 'hostRoot' ? this.userPaths.mapping().hostRoot : this.userPaths.destDir();
+    this.browseInput.set(current);
+    this.browseTarget.set(target);
+    this.loadBrowseListing(current || '/');
+  }
+
+  loadBrowseListing(path: string): void {
+    // Optimistic: show where we are even when the read fails, so the header
+    // and the Up button stay meaningful in the error state.
+    this.browseCurrentPath.set(path);
+    this.browseLoading.set(true);
+    this.browseError.set(null);
+    this.fsBrowse.browse(path).subscribe({
+      next: r => {
+        this.browseCurrentPath.set(r.path);
+        this.browseParent.set(r.parent);
+        this.browseDirectories.set(r.directories ?? []);
+        this.browseLoading.set(false);
+      },
+      error: () => {
+        this.browseError.set('userPreferences.libraryHandbrake.browseError');
+        this.browseLoading.set(false);
+      },
+    });
+  }
+
+  navigateBrowse(entry: FsBrowseEntry): void {
+    this.browseInput.set(entry.path);
+    this.loadBrowseListing(entry.path);
+  }
+
+  browseUp(): void {
+    const parent = this.browseParent();
+    if (parent) {
+      this.browseInput.set(parent);
+      this.loadBrowseListing(parent);
+    }
+  }
+
+  /** Re-tries the listing for the current folder (error state recovery). */
+  browseRetry(): void {
+    this.loadBrowseListing(this.browseCurrentPath() || this.browseInput().trim() || '/');
+  }
+
+  onBrowseInput(event: Event): void {
+    this.browseInput.set((event.target as HTMLInputElement).value);
+  }
+
+  applyBrowseQuickPick(path: string): void {
+    this.browseInput.set(path);
+    this.loadBrowseListing(path);
+  }
+
+  /** Commits the value in the path input (typed or navigated to). */
+  confirmPathBrowse(): void {
+    const target = this.browseTarget();
+    const value = this.browseInput().trim();
+    if (target === 'hostRoot') {
+      this.userPaths.save({ hostRoot: value }).subscribe();
+      this.flashPathSaved('hostRoot');
+    } else if (target === 'destDir') {
+      this.userPaths.saveHandBrake({ destDir: value }).subscribe();
+      this.flashPathSaved('destDir');
+    }
+    this.closePathBrowse();
+  }
+
+  closePathBrowse(): void {
+    this.browseTarget.set(null);
+    this.browseInput.set('');
+    this.browseCurrentPath.set('');
+    this.browseParent.set(null);
+    this.browseDirectories.set([]);
+    this.browseError.set(null);
   }
 
   // ── Sonarr defaults helpers ──────────────────────────────────────────────
@@ -1169,11 +1456,12 @@ export class SettingsComponent {
   }
 
   togglePlexSection(key: string): void {
+    const k = String(key);
     const c = this.plexSelectedSectionKeys();
-    this.plexSelectedSectionKeys.set(c.includes(key) ? c.filter((k) => k !== key) : [...c, key]);
+    this.plexSelectedSectionKeys.set(c.includes(k) ? c.filter((x) => x !== k) : [...c, k]);
   }
 
-  isPlexSectionSelected(key: string): boolean { return this.plexSelectedSectionKeys().includes(key); }
+  isPlexSectionSelected(key: string): boolean { return this.plexSelectedSectionKeys().includes(String(key)); }
 
   savePlexSections(): void {
     const value = this.plexSelectedSectionKeys().join(',');

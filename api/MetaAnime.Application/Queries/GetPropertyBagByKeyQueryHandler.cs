@@ -12,6 +12,13 @@ public sealed class GetPropertyBagByKeyQueryHandler(IPropertyBagRepository prope
     {
         try
         {
+            // Internal System:* keys are never exposed through the generic
+            // property-bag API — report them exactly like missing keys.
+            if (PropertyBagKeyPolicy.IsSystemManaged(request.Key))
+            {
+                return Result.Success<PropertyBagResponse?>(null);
+            }
+
             var entry = await propertyBagRepository.GetByKeyAsync(request.Key);
             if (entry is null)
             {

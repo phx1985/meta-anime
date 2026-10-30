@@ -23,7 +23,9 @@ public sealed class BotKunChatService(
     IMalAnimeSourceService<MalAnime> malAnimeSourceService,
     IAnimeMediatorService animeMediatorService,
     ILogger<BotKunChatService> logger,
-    IConfiguration configuration) : IBotKunChatService
+    IConfiguration configuration,
+    ISecretProtector secretProtector,
+    IBotKunTasteProfileService tasteProfileService) : IBotKunChatService
 {
     private static readonly JsonSerializerOptions SerializeOptions = new()
     {
@@ -76,58 +78,93 @@ public sealed class BotKunChatService(
             yield break;
         }
 
-        // ── Pass 1: Intent extraction (non-streaming) ──────────────────────
-        BotKunSearchIntent? intent = null;
-        try
+        // SSRF guard: the configured provider URL is fetched server-side. Fail with
+        // the typed validation error (surfaced as an SSE message — the stream has no
+        // Result channel) instead of ever fetching a disallowed address.
+        var providerUrlCheck = ProviderUrlGuard.Validate(baseUrl);
+        if (providerUrlCheck.IsFailure)
         {
-            intent = await ExtractSearchIntentAsync(request.UserMessage, request.History, baseUrl, model, apiKey, cancellationToken);
-            logger.LogInformation(
-                "Bot-kun intent: type={Type} genres=[{Genres}] airingStatus={AiringStatus} watchStatus={WatchStatus} feelingLucky={IsFeelingLucky} page={Page}",
-                intent?.Type,
-                string.Join(",", intent?.Genres ?? []),
-                intent?.AiringStatus,
-                intent?.WatchStatus,
-                intent?.IsFeelingLucky,
-                intent?.Page);
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            logger.LogWarning("Bot-kun intent extraction failed ({Error}); falling back to RAG.", ex.Message);
+            logger.LogWarning("Bot-kun chat rejected ({Reason}): {Url}", providerUrlCheck.Error.Message, baseUrl);
+            yield return $"Bot-kun AI provider URL was rejected by the server ({providerUrlCheck.Error.Message}). Open **Settings → Bot-kun AI** and set a valid http(s) provider URL.";
+            yield break;
         }
 
-        // ── Lucky short-circuit ───────────────────────────────────────────
-        if (intent?.IsFeelingLucky == true)
+        // ── Deterministic fast path (explicit UI action): Feeling Lucky ───
+        if (string.Equals(request.Action, "lucky", StringComparison.OrdinalIgnoreCase))
         {
             await foreach (var token in StreamLuckyResponseAsync(request, baseUrl, model, apiKey, isNsfw, cancellationToken))
                 yield return token;
             yield break;
         }
 
+        // ── Deterministic fast path (explicit UI action): next page ───────
+        // The signed cursor carries the exact filters + page of the current results,
+        // so "more" never re-runs (or mutates) the LLM's filter extraction.
+        AnimeFilters? cursorFilters = null;
+        var cursorPage = 0;
+        var isMoreRequest = string.Equals(request.Action, "more", StringComparison.OrdinalIgnoreCase)
+            && TryParseCursor(request.NextPageCursor, out cursorFilters, out cursorPage);
+
+        // ── Pass 1: Intent extraction (non-streaming) ──────────────
+        BotKunSearchIntent? intent = null;
+        if (!isMoreRequest)
+        {
+            try
+            {
+                intent = await ExtractSearchIntentAsync(request.UserMessage, request.History, baseUrl, model, apiKey, cancellationToken);
+                logger.LogInformation(
+                    "Bot-kun intent: type={Type} genres=[{Genres}] airingStatus={AiringStatus} watchStatus={WatchStatus} feelingLucky={IsFeelingLucky} page={Page}",
+                    intent?.Type,
+                    string.Join(",", intent?.Genres ?? []),
+                    intent?.AiringStatus,
+                    intent?.WatchStatus,
+                    intent?.IsFeelingLucky,
+                    intent?.Page);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogWarning("Bot-kun intent extraction failed ({Error}); falling back to RAG.", ex.Message);
+            }
+
+            // ── Lucky short-circuit ───────────────────────────────────────────
+            if (intent?.IsFeelingLucky == true)
+            {
+                await foreach (var token in StreamLuckyResponseAsync(request, baseUrl, model, apiKey, isNsfw, cancellationToken))
+                    yield return token;
+                yield break;
+            }
+        }
+
         // ── Pass 2: Query database or fall back to MAL RAG ────────────────
-        var isDbQuery = intent?.Type is "search" or "recommendation";
+        var isDbQuery = isMoreRequest || intent?.Type is "search" or "recommendation";
         string animeContext;
         bool hasNextPage = false;
+        var promptPage = 1;
 
         if (isDbQuery)
         {
-            var filters = BuildFiltersFromIntent(intent!, isNsfw);
+            var filters = isMoreRequest
+                ? cursorFilters!
+                : BuildFiltersFromIntent(intent!, isNsfw);
 
             // R22: use explicit pagination context if the LLM didn't advance the page itself.
             // When the client sends PreviousSearchPage and the user asks for "more", the LLM
             // typically sets Page=1 (it doesn't always track pagination reliably). We override
             // with PreviousSearchPage + 1 to ensure reliable "next page" behaviour.
-            var queryPage = (intent!.Page <= 1 && request.PreviousSearchPage.HasValue && request.PreviousSearchPage.Value >= 1)
-                ? request.PreviousSearchPage.Value + 1
-                : intent.Page;
+            // (Legacy path — the signed cursor above is the preferred mechanism.)
+            var queryPage = isMoreRequest
+                ? cursorPage + 1
+                : (intent!.Page <= 1 && request.PreviousSearchPage.HasValue && request.PreviousSearchPage.Value >= 1)
+                    ? request.PreviousSearchPage.Value + 1
+                    : intent.Page;
+            promptPage = queryPage;
 
             var (results, nextPage) = await QueryAnimeAsync(filters, queryPage, cancellationToken);
             hasNextPage = nextPage;
 
-            var filteredResults = ApplyYearFilter(results, intent!.MinYear, intent!.MaxYear);
+            logger.LogInformation("Bot-kun DB query returned {Count} result(s) (page {Page}).", results.Count, queryPage);
 
-            logger.LogInformation("Bot-kun DB query returned {Count} result(s) (after year filter, page {Page}).", filteredResults.Count, queryPage);
-
-            if (filteredResults.Count == 0)
+            if (results.Count == 0)
             {
                 // Stream an AI-generated "nothing found" response instead of a hardcoded string
                 // so the Bot-kun persona stays consistent and natural.
@@ -142,16 +179,20 @@ public sealed class BotKunChatService(
                 yield break;
             }
 
-            animeContext = BuildDbAnimeContext(filteredResults, isNsfw);
+            animeContext = BuildDbAnimeContext(results, isNsfw);
 
             // R17b: Emit permitted MAL IDs as a metadata chunk so the frontend can validate
             // [anime:ID] tags and reject any IDs the LLM may have hallucinated.
-            var permittedMalIds = filteredResults
+            var permittedMalIds = results
                 .Select(a => a.MalAnimes?.FirstOrDefault()?.Id)
                 .Where(id => id != null)
                 .ToList();
             if (permittedMalIds.Count > 0)
                 yield return $"[PI:{string.Join(",", permittedMalIds)}]";
+
+            // Signed cursor for the next page so "Show more" is fully deterministic.
+            if (hasNextPage)
+                yield return $"[PC:{CreateCursor(filters, queryPage)}]";
         }
         else
         {
@@ -159,7 +200,8 @@ public sealed class BotKunChatService(
         }
 
         // ── Pass 3: Stream final response ─────────────────────────────────
-        var systemPrompt = BotKunPromptBuilder.Build(isNsfw, animeContext, isDbQuery, intent?.Page ?? 1, hasNextPage, request.Language);
+        var tasteProfile = await tasteProfileService.GetSummaryAsync(cancellationToken);
+        var systemPrompt = BotKunPromptBuilder.Build(isNsfw, animeContext, isDbQuery, promptPage, hasNextPage, request.Language, tasteProfile);
         List<OpenAiMessage> messages = [new("system", systemPrompt)];
         // Cap history to prevent unbounded token consumption on long conversations.
         const int MaxHistoryMessages = 10;
@@ -186,6 +228,15 @@ public sealed class BotKunChatService(
             yield break;
         }
 
+        // SSRF guard: never fetch a disallowed provider address (see StreamChatAsync).
+        var providerUrlCheck = ProviderUrlGuard.Validate(baseUrl);
+        if (providerUrlCheck.IsFailure)
+        {
+            logger.LogWarning("Bot-kun greeting rejected ({Reason}): {Url}", providerUrlCheck.Error.Message, baseUrl);
+            yield return $"Bot-kun AI provider URL was rejected by the server ({providerUrlCheck.Error.Message}). Open **Settings → Bot-kun AI** and set a valid http(s) provider URL.";
+            yield break;
+        }
+
         List<OpenAiMessage> messages =
         [
             new("system", BotKunPromptBuilder.GreetingSystemPrompt),
@@ -203,7 +254,22 @@ public sealed class BotKunChatService(
     public async Task<string[]> GetAvailableModelsAsync(
         string baseUrl, string apiKey, CancellationToken cancellationToken = default)
     {
+        // Fall back to the stored provider settings when the caller omits values,
+        // so listing models does not require the client to echo secrets back.
+        if (string.IsNullOrWhiteSpace(baseUrl))
+            baseUrl = await GetSettingAsync(SettingsKeys.BotKunBaseUrl) ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(apiKey))
+            apiKey = await GetSettingAsync(SettingsKeys.BotKunApiKey) ?? string.Empty;
+
         if (string.IsNullOrWhiteSpace(baseUrl)) return [];
+
+        // SSRF guard: this endpoint makes the server fetch a client-supplied URL.
+        // See ProviderUrlGuard for the exact policy and its rationale.
+        if (!ProviderUrlGuard.IsAllowed(baseUrl, out var reason))
+        {
+            logger.LogWarning("Bot-kun models request rejected ({Reason}): {Url}", reason, baseUrl);
+            throw new InvalidOperationException($"Provider URL rejected: {reason}");
+        }
 
         var url = baseUrl.TrimEnd('/') + Constants.BotKunEndpoints.Models;
         using var req = new HttpRequestMessage(HttpMethod.Get, url);
@@ -424,7 +490,9 @@ public sealed class BotKunChatService(
             MediaType:    intent.MediaType   is not null ? [intent.MediaType]   : null,
             Demographic:  intent.Demographic is not null ? [intent.Demographic] : null,
             Theme:        intent.Themes,
-            AgeRating:    ageRating);
+            AgeRating:    ageRating,
+            MinYear:      intent.MinYear,
+            MaxYear:      intent.MaxYear);
     }
 
     private static string? NormalizeAiringStatus(string? raw) =>
@@ -455,26 +523,52 @@ public sealed class BotKunChatService(
 
 
 
-    private static IReadOnlyList<AnimeDetailsResponse> ApplyYearFilter(
-        IReadOnlyList<AnimeDetailsResponse> results, int? minYear, int? maxYear)
-    {
-        if (minYear is null && maxYear is null) return results;
+    // ── Signed search cursor (deterministic "Show more") ─────────────────────
+    // Payload is plain JSON wrapped in ISecretProtector (opaque + tamper-evident).
+    // Deliberately default PascalCase JSON: the snake_case SerializeOptions do NOT
+    // round-trip multi-word property names through PropertyNameCaseInsensitive.
 
-        return results.Where(anime =>
+    private sealed record SearchCursor(AnimeFilters Filters, int Page);
+
+    private static readonly JsonSerializerOptions CursorJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
+    private string CreateCursor(AnimeFilters filters, int page)
+    {
+        var json = JsonSerializer.Serialize(new SearchCursor(filters, page), CursorJsonOptions);
+        return secretProtector.Protect(json);
+    }
+
+    private bool TryParseCursor(string? cursor, out AnimeFilters? filters, out int page)
+    {
+        filters = null;
+        page = 0;
+        if (string.IsNullOrWhiteSpace(cursor) || !secretProtector.TryUnprotect(cursor, out var json))
+            return false;
+
+        try
         {
-            var startDate = anime.MalAnimes?.FirstOrDefault()?.StartDate;
-            if (string.IsNullOrWhiteSpace(startDate)) return true;
-            if (!int.TryParse(startDate.AsSpan(0, Math.Min(4, startDate.Length)), out var year)) return true;
-            if (minYear.HasValue && year < minYear.Value) return false;
-            if (maxYear.HasValue && year > maxYear.Value) return false;
+            var payload = JsonSerializer.Deserialize<SearchCursor>(json, CursorJsonOptions);
+            if (payload?.Filters is null || payload.Page < 1) return false;
+            filters = payload.Filters;
+            page = payload.Page;
             return true;
-        }).ToList();
+        }
+        catch (JsonException ex)
+        {
+            logger.LogWarning("Bot-kun cursor parse failed: {Error}", ex.Message);
+            return false;
+        }
     }
 
     // ── Token-minimized context builder ───────────────────────────────────────
-    // Only Id, Title, Type, Score are included — all heavy fields (Synopsis, ImageUrls,
-    // Background, Characters, Genres, StartDate, Status) are explicitly excluded to keep
-    // the context window tight and prevent rate-limiting on free-tier providers (e.g. Groq).
+    // Micro-enriched lines: Id, Title, Type, Score, Year, top-3 Genres, Episodes and a
+    // 120-char plot snippet — enough for the model to explain WHY an item matches the
+    // request without hallucinating, still small enough to prevent rate-limiting on
+    // free-tier providers (e.g. Groq). Heavy fields (ImageUrls, Background, Characters)
+    // remain excluded.
 
     private static string BuildDbAnimeContext(IReadOnlyList<AnimeDetailsResponse> results, bool isNsfw)
     {
@@ -497,18 +591,30 @@ public sealed class BotKunChatService(
         sb.AppendLine($"PERMITTED IDs: {string.Join(", ", permittedIds)}");
         sb.AppendLine();
 
-        // Minimal 4-field lines to keep token usage low and prevent rate-limiting
+        // Micro-enriched lines (year/genres/episodes/short plot) — enough grounding
+        // for "why this matches" reasoning while keeping token usage low.
         foreach (var anime in results)
         {
             var mal   = anime.MalAnimes?.FirstOrDefault();
             var malId = mal?.Id ?? "unknown";
             var type  = mal?.MediaType ?? "N/A";
             var score = mal?.Rating?.MalMean is double d ? $"{d:F1}" : "N/A";
+            var year  = mal?.StartDate is { Length: >= 4 } ys ? ys[..4] : "N/A";
+            var genres = mal?.Genres is { Length: > 0 } g ? string.Join("/", g.Take(3)) : "N/A";
+            var eps   = mal?.Progression?.TotalEpisodes is int e and > 0 ? e.ToString() : "N/A";
+            var plot  = TruncatePlot(mal?.Synopsis, 120);
 
-            sb.AppendLine($"- MAL_ID={malId} | Title=\"{anime.Title}\" | Type={type} | Score={score}");
+            sb.AppendLine($"- MAL_ID={malId} | Title=\"{anime.Title}\" | Type={type} | Score={score} | Year={year} | Genres={genres} | Eps={eps} | Plot=\"{plot}\"");
         }
 
         return sb.ToString();
+    }
+
+    private static string TruncatePlot(string? synopsis, int maxChars)
+    {
+        if (string.IsNullOrWhiteSpace(synopsis)) return "N/A";
+        var single = synopsis.Replace('\n', ' ').Replace('\r', ' ').Trim();
+        return single.Length <= maxChars ? single : single[..maxChars].TrimEnd() + "…";
     }
 
 
@@ -525,10 +631,16 @@ public sealed class BotKunChatService(
     private async Task<string?> GetSettingAsync(string key)
     {
         var configValue = configuration[key];
-        if (!string.IsNullOrWhiteSpace(configValue)) return configValue;
+        if (string.IsNullOrWhiteSpace(configValue))
+        {
+            var entry = await propertyBagRepository.GetByKeyAsync(key);
+            configValue = entry?.Value;
+        }
+        if (string.IsNullOrEmpty(configValue)) return configValue;
 
-        var entry = await propertyBagRepository.GetByKeyAsync(key);
-        return entry?.Value;
+        // Sensitive values (API keys) are stored encrypted at rest — decrypt
+        // transparently here. Legacy plaintext passes through unchanged.
+        return secretProtector.TryUnprotect(configValue, out var plain) ? plain : configValue;
     }
 
     /// <summary>

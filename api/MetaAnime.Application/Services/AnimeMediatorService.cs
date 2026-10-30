@@ -306,6 +306,23 @@ public sealed class AnimeMediatorService(
             );
         }
 
+        if (filters?.MinYear is not null || filters?.MaxYear is not null)
+        {
+            // MAL StartDate is "yyyy-MM-dd" (or a "yyyy-MM"/"yyyy" prefix). String prefix
+            // comparison on the 4-digit year is translatable and parse-safe:
+            // minYear=2021 → StartDate >= "2021"; maxYear=2014 → StartDate < "2015".
+            var minStamp = filters!.MinYear?.ToString();
+            var maxStamp = filters.MaxYear is int maxY ? (maxY + 1).ToString() : null;
+            result = result.Where(a =>
+            {
+                var startDate = a.MalAnimes?.FirstOrDefault()?.StartDate;
+                if (string.IsNullOrWhiteSpace(startDate)) return true; // unknown year: keep
+                if (minStamp is not null && string.CompareOrdinal(startDate, minStamp) < 0) return false;
+                if (maxStamp is not null && string.CompareOrdinal(startDate, maxStamp) >= 0) return false;
+                return true;
+            });
+        }
+
         if (filters?.Status?.Length > 0)
         {
             result = result.Where(a =>
@@ -1525,8 +1542,14 @@ public sealed class AnimeMediatorService(
                     var animeForDb = malAnime.ToAnime();
                     await animeRepository.AddAsync(animeForDb);
 
-                    foreach (var aniDbId in aniDbIds)
-                        await animeMappingRepository.AddAsync(new AnimeMapping { AniDbId = aniDbId, AnimeId = animeForDb.Id });
+                    // Bulk insert the bridge mappings in one round-trip (house idiom for
+                    // sync jobs) — AnimeMappingRepository.BulkInsertAsync assigns each
+                    // row's Id exactly like AddAsync did.
+                    if (aniDbIds.Count > 0)
+                    {
+                        await animeMappingRepository.BulkInsertAsync(
+                            aniDbIds.Select(aniDbId => new AnimeMapping { AniDbId = aniDbId, AnimeId = animeForDb.Id }));
+                    }
                 }
                 else if (sourceAniDbId != null)
                 {

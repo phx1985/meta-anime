@@ -1,10 +1,13 @@
 using Asp.Versioning;
+using Mediator;
+using MetaAnime.Application.Commands;
 using MetaAnime.Application.Contracts;
-using MetaAnime.Application.Interfaces;
-using MetaAnime.Core;
-using MetaAnime.Core.Interfaces.Repositories;
+using MetaAnime.Application.Queries;
+using MetaAnime.Core.Settings;
+using MetaAnime.Utilities.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace MetaAnime.Controllers;
 
@@ -12,16 +15,19 @@ namespace MetaAnime.Controllers;
 [ApiVersion("1.0")]
 [Route("api/v1/auth")]
 public sealed class AuthController(
-    IPropertyBagRepository repo,
-    IAdminAuthService authService) : ControllerBase
+    IMediator mediator,
+    IOptions<AuthenticationSettings> authSettings) : ControllerBase
 {
     /// <summary>Returns whether admin password protection is currently enabled.</summary>
     [HttpGet("status")]
     [AllowAnonymous]
     public async Task<ActionResult<AuthStatusResponse>> GetStatus()
     {
-        var entry = await repo.GetByKeyAsync(SettingsKeys.AdminPasswordHash);
-        return Ok(new AuthStatusResponse(!string.IsNullOrWhiteSpace(entry?.Value)));
+        var result = await mediator.Send(new GetAuthStatusQuery());
+        if (result.IsFailure)
+            return this.ToErrorResult(result);
+
+        return Ok(result.Value);
     }
 
     /// <summary>
@@ -35,17 +41,18 @@ public sealed class AuthController(
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var hashEntry = await repo.GetByKeyAsync(SettingsKeys.AdminPasswordHash);
-        if (string.IsNullOrWhiteSpace(hashEntry?.Value))
-            return Unauthorized("Authentication is not configured.");
+        var result = await mediator.Send(new LoginCommand(request.Password));
+        if (result.IsFailure)
+        {
+            return result.Error.Code switch
+            {
+                MetaAnime.Application.Constants.Errors.AuthNotConfigured => Unauthorized("Authentication is not configured."),
+                MetaAnime.Application.Constants.Errors.AuthInvalidPassword => Unauthorized("Invalid password."),
+                _ => this.ToErrorResult(result),
+            };
+        }
 
-        if (!authService.VerifyPassword(request.Password, hashEntry.Value))
-            return Unauthorized("Invalid password.");
-
-        var secret = await GetOrCreateJwtSecretAsync();
-        var lifetime = await GetSessionLifetimeAsync();
-        var token = authService.GenerateJwt(secret, lifetime);
-        return Ok(new LoginResponse(token));
+        return Ok(result.Value);
     }
 
     /// <summary>
@@ -59,27 +66,24 @@ public sealed class AuthController(
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var hashEntry = await repo.GetByKeyAsync(SettingsKeys.AdminPasswordHash);
-        var existingHash = hashEntry?.Value;
-
-        // If a password already exists, verify it first.
-        if (!string.IsNullOrWhiteSpace(existingHash))
+        var result = await mediator.Send(new ChangePasswordCommand(request.CurrentPassword, request.NewPassword));
+        if (result.IsFailure)
         {
-            if (!authService.VerifyPassword(request.CurrentPassword, existingHash))
-                return Unauthorized("Current password is incorrect.");
+            return result.Error.Code switch
+            {
+                MetaAnime.Application.Constants.Errors.AuthInvalidPassword => Unauthorized("Current password is incorrect."),
+                MetaAnime.Application.Constants.Errors.AuthEmptyPassword => BadRequest("New password cannot be empty."),
+                _ => this.ToErrorResult(result),
+            };
         }
 
-        if (string.IsNullOrWhiteSpace(request.NewPassword))
-            return BadRequest("New password cannot be empty.");
-
-        var newHash = authService.HashPassword(request.NewPassword);
-        await repo.UpsertAsync(SettingsKeys.AdminPasswordHash, newHash);
         return NoContent();
     }
 
     /// <summary>
-    /// Sets (or overwrites) the admin password during the local setup wizard.
-    /// This endpoint is always anonymous — it is intended exclusively for wizard use.
+    /// Sets the admin password during the local setup wizard. First-run only:
+    /// once a password exists this endpoint always rejects (409), so an anonymous
+    /// caller can never overwrite an existing password.
     /// Returns a signed JWT so subsequent wizard steps can authenticate immediately.
     /// </summary>
     [HttpPost("setup-password")]
@@ -89,16 +93,18 @@ public sealed class AuthController(
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        if (string.IsNullOrWhiteSpace(request.Password))
-            return BadRequest("Password cannot be empty.");
+        var result = await mediator.Send(new SetupPasswordCommand(request.Password));
+        if (result.IsFailure)
+        {
+            return result.Error.Code switch
+            {
+                MetaAnime.Application.Constants.Errors.AuthPasswordAlreadySet => this.ToErrorResult(result),
+                MetaAnime.Application.Constants.Errors.AuthEmptyPassword => BadRequest("Password cannot be empty."),
+                _ => this.ToErrorResult(result),
+            };
+        }
 
-        var hash = authService.HashPassword(request.Password);
-        await repo.UpsertAsync(SettingsKeys.AdminPasswordHash, hash);
-
-        var secret = await GetOrCreateJwtSecretAsync();
-        var lifetime = await GetSessionLifetimeAsync();
-        var token = authService.GenerateJwt(secret, lifetime);
-        return Ok(new LoginResponse(token));
+        return Ok(result.Value);
     }
 
     /// <summary>
@@ -112,34 +118,29 @@ public sealed class AuthController(
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var hashEntry = await repo.GetByKeyAsync(SettingsKeys.AdminPasswordHash);
-        if (string.IsNullOrWhiteSpace(hashEntry?.Value))
-            return BadRequest("Authentication is not currently enabled.");
+        var result = await mediator.Send(new DisableAuthCommand(request.CurrentPassword));
+        if (result.IsFailure)
+        {
+            return result.Error.Code switch
+            {
+                MetaAnime.Application.Constants.Errors.AuthNotEnabled => BadRequest("Authentication is not currently enabled."),
+                MetaAnime.Application.Constants.Errors.AuthInvalidPassword => Unauthorized("Current password is incorrect."),
+                _ => this.ToErrorResult(result),
+            };
+        }
 
-        if (!authService.VerifyPassword(request.CurrentPassword, hashEntry.Value))
-            return Unauthorized("Current password is incorrect.");
-
-        await repo.DeleteAsync(SettingsKeys.AdminPasswordHash);
         return NoContent();
     }
 
-    private async Task<string> GetOrCreateJwtSecretAsync()
+    /// <summary>
+    /// Returns the runtime API key for authenticated clients. This is the ONLY way
+    /// to obtain the key once an admin password exists (the unauthenticated
+    /// /assets/config.json route never returns it in protected mode).
+    /// </summary>
+    [HttpGet("runtime-key")]
+    [Authorize]
+    public ActionResult<RuntimeKeyResponse> GetRuntimeKey()
     {
-        var existing = await repo.GetByKeyAsync(SettingsKeys.JwtSecret);
-        if (existing is not null && !string.IsNullOrWhiteSpace(existing.Value))
-            return existing.Value;
-
-        // Generate a cryptographically-random 256-bit secret on first use.
-        var secret = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
-        await repo.UpsertAsync(SettingsKeys.JwtSecret, secret);
-        return secret;
-    }
-
-    private async Task<TimeSpan> GetSessionLifetimeAsync()
-    {
-        var entry = await repo.GetByKeyAsync(SettingsKeys.SessionLifetimeDays);
-        if (int.TryParse(entry?.Value, out var days) && days >= 1 && days <= 365)
-            return TimeSpan.FromDays(days);
-        return TimeSpan.FromDays(7);
+        return Ok(new RuntimeKeyResponse(authSettings.Value.ApiKey));
     }
 }

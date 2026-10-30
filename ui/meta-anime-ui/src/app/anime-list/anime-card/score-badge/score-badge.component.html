@@ -1,19 +1,19 @@
-<div class="score-badge" [title]="titleKey | translate">
+<div class="score-badge" [title]="titleKey() | translate">
   <!-- Score formatted with '1.0-1': shows "7" for integers, "7.5" for decimals.
        Intentional improvement over '1.1-1' which always forced a trailing zero. -->
-  <span class="score-num">{{ score | number: '1.0-1' }}</span>
+  <span class="score-num">{{ score() | number: '1.0-1' }}</span>
   <span class="score-out">/10</span>
-  <span class="score-src">{{ label }}</span>
+  <span class="score-src">{{ label() }}</span>
   <svg class="score-arc" viewBox="0 0 36 36" fill="none">
     <circle class="arc-bg" cx="18" cy="18" r="15" stroke-width="3" />
     <circle
       class="arc-fill"
-      [class.arc-fill--mine]="mine"
+      [class.arc-fill--mine]="mine()"
       cx="18"
       cy="18"
       r="15"
       stroke-width="3"
-      [attr.stroke-dashoffset]="arcCircumference - scorePct(score) * (arcCircumference / 100)"
+      [attr.stroke-dashoffset]="arcCircumference - scorePct(score()) * (arcCircumference / 100)"
       [attr.stroke-dasharray]="arcCircumference + ' ' + arcCircumference"
       transform="rotate(-90 18 18)"
     />

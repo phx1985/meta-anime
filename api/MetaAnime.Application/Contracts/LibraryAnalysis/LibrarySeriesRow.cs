@@ -27,5 +27,7 @@ public sealed record LibrarySeriesRow(
     /// <summary>Total duration of all episode files in seconds. 0 when duration data is unavailable (Phase 1 or no episode files).</summary>
     int TotalDurationSeconds,
     /// <summary>Average storage rate in GiB per hour (TotalSizeBytes / 1 GiB / (TotalDurationSeconds / 3600)). 0 when duration is unavailable.</summary>
-    double GibPerHour
+    double GibPerHour,
+    /// <summary>Sonarr next-airing date (null when ended or between seasons). Drives the season-aware status filter.</summary>
+    DateTime? NextAiringDate = null
 );

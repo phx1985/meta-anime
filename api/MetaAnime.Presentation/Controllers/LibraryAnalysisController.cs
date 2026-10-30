@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using MetaAnime.Application.Contracts.LibraryAnalysis;
 using MetaAnime.Application.Interfaces;
+using MetaAnime.Utilities.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -30,7 +31,7 @@ public sealed class LibraryAnalysisController(
         if (result.IsFailure)
         {
             logger.LogError("Failed to get library analysis: {Error}", result.Error.Message);
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
         return Ok(result.Value);
     }
@@ -55,7 +56,7 @@ public sealed class LibraryAnalysisController(
         if (result.IsFailure)
         {
             logger.LogError("Failed to enrich library series: {Error}", result.Error.Message);
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
         return Ok(result.Value);
     }

@@ -3,6 +3,7 @@ using Mediator;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Queries;
 using MetaAnime.Presentation;
+using MetaAnime.Utilities.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,7 +33,7 @@ public sealed class SeasonalController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetSeasonalAnimesQuery(year, season.ToLower()));
 
         if (result.IsFailure)
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
 
         return Ok(result.Value);
     }

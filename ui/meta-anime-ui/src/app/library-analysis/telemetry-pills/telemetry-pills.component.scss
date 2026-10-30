@@ -1,116 +1,158 @@
-// ── Telemetry pill row ─────────────────────────────────────────────────────────
+// ── KPI telemetry cards (Linear/Raycast style) ─────────────────────────────────
 
-.la-pills {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 1.5rem;
+:host {
+  display: block;
 }
 
-// ── Individual pill ────────────────────────────────────────────────────────────
+.la-pills {
+  display: grid;
+  // Same ratio as the 3-panel row below (var set on .la-container) — the KPI
+  // card borders and the panel borders must line up on identical seams.
+  grid-template-columns: var(--la-cols, minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1.05fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 
-.la-pill {
-  flex: 1 1 200px;
+  @media (max-width: 1100px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ── Card shell ─────────────────────────────────────────────────────────────────
+
+.la-kpi {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 1.25rem 1.5rem;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
+  padding: 1rem; // p-4
+  border: 1px solid color-mix(in srgb, var(--text-primary) 8%, transparent); // border-white/10
+  border-radius: 12px; // rounded-xl
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent); // bg-zinc-900/50
   box-shadow: 0 2px 8px var(--card-shadow);
-  animation: pillFadeIn 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) both;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  animation: la-kpi-in 0.45s ease both;
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px var(--card-shadow);
-  }
+  &:nth-child(1) { animation-delay: 0.05s; }
+  &:nth-child(2) { animation-delay: 0.12s; }
+  &:nth-child(3) { animation-delay: 0.19s; }
 
-  &:nth-child(1) {
-    animation-delay: 0.05s;
-  }
-  &:nth-child(2) {
-    animation-delay: 0.12s;
-  }
-  &:nth-child(3) {
-    animation-delay: 0.19s;
-  }
-
-  // ── Top row: value + optional unit ──────────────────────────────────────────
+  // ── Top row: micro label + icon badge ────────────────────────────────────────
 
   &__top {
     display: flex;
-    align-items: baseline;
-    gap: 0.25rem;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
   }
 
+  &__label {
+    font-size: 0.6875rem; // text-[11px]
+    font-weight: 600; // font-semibold
+    text-transform: uppercase;
+    letter-spacing: 0.08em; // tracking-wider
+    color: var(--text-muted); // text-zinc-400
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem; // w-7
+    height: 1.75rem; // h-7
+    flex-shrink: 0;
+    border: 1px solid color-mix(in srgb, var(--text-primary) 6%, transparent); // border-white/5
+    border-radius: 8px; // rounded-lg
+    background: color-mix(in srgb, var(--text-primary) 5%, transparent); // bg-white/5
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    &--space svg {
+      color: rgba(129, 140, 248, 0.85); // text-indigo-400
+    }
+
+    &--files svg {
+      color: rgba(56, 189, 248, 0.85); // text-sky-400
+    }
+
+    &--missing svg {
+      color: rgba(251, 113, 133, 0.85); // text-rose-400
+    }
+  }
+
+  // ── Main metric ──────────────────────────────────────────────────────────────
+  // mt-2 mb-3 on every card: the three big numbers share one baseline row.
+
   &__value {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--accent-primary);
-    line-height: 1.2;
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    margin: 0.5rem 0 0.75rem; // mt-2 mb-3
+    font-size: 1.875rem; // text-3xl
+    font-weight: 700; // font-bold
+    color: var(--text-primary); // text-zinc-100
+    font-variant-numeric: tabular-nums;
+    line-height: 1; // leading-none
   }
 
   &__unit {
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
   }
 
-  &__label {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-top: 0.35rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  // ── Warning / interactive (missing files) ────────────────────────────────────
+
+  &--warning &__value {
+    color: rgba(251, 113, 133, 1); // text-rose-400
   }
 
-  // ── Warning variant (missing / incomplete) ──────────────────────────────────
-
-  &--warning .la-pill__value {
-    color: #ef4444;
-  }
-
-  // ── Clickable variant ───────────────────────────────────────────────────────
-
-  &--clickable {
+  &--interactive {
     cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border-color: rgba(244, 63, 94, 0.3); // hover:border-rose-500/30
+      background: rgba(244, 63, 94, 0.03); // hover:bg-rose-500/[0.03]
     }
 
-    &:active {
-      transform: translateY(0);
+    &:focus-visible {
+      outline: 2px solid rgba(244, 63, 94, 0.45);
+      outline-offset: 2px;
+    }
+
+    &:hover .la-kpi__footer-arrow {
+      transform: translateX(3px);
     }
   }
 
-  // ── Hint label shown below the pill label ───────────────────────────────────
+  // ── Footer hint row (shifts its arrow right on hover) ────────────────────────
 
-  &__hint {
+  &__footer {
     display: flex;
     align-items: center;
-    gap: 0.2rem;
-    margin-top: 0.4rem;
-    font-size: 0.68rem;
-    color: var(--text-muted);
-    opacity: 0.75;
-    letter-spacing: 0.02em;
-    text-transform: none;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: auto; // mt-auto — baseline row keeps even when footers differ
+    padding-top: 0.625rem; // pt-2.5
+    border-top: 1px solid color-mix(in srgb, var(--text-primary) 6%, transparent);
+    font-size: 0.75rem; // text-xs
+    color: var(--text-muted); // text-zinc-500 band
+    white-space: nowrap;
+  }
 
-    svg { flex-shrink: 0; }
+  &__footer-arrow {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    transition: transform 0.15s ease;
   }
 }
 
-@keyframes pillFadeIn {
+@keyframes la-kpi-in {
   from {
     opacity: 0;
-    transform: translateY(18px) scale(0.96);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;

@@ -84,7 +84,7 @@
 
   <!-- Messages -->
   <div class="bot-kun__messages">
-    @for (msg of messages(); track $index) {
+    @for (msg of messages(); track $index; let msgIdx = $index) {
     @if (msg.role === 'assistant') {
     <div class="bot-kun__msg bot-kun__msg--bot">
       <div class="bot-kun__msg-avatar" aria-hidden="true">
@@ -111,7 +111,7 @@
         } @else {
         <!-- Segment-based rendering: text runs as markdown HTML, anime tags as real cards -->
         <div class="bot-kun__md">
-          @for (seg of parseSegments(msg.typedContent, false, msg.permittedIds ?? botKunService.permittedMalIds()); track segmentTrackKey($index, seg)) {
+          @for (seg of messageSegments()[msgIdx]; track segmentTrackKey($index, seg)) {
             @if (seg.type === 'text') {
               <span [innerHTML]="seg.html"></span>
             } @else if (seg.type === 'card') {
@@ -125,6 +125,27 @@
                 (cardReady)="onLuckyCardReady()"
                 (cardClicked)="animeSelected.emit($event)"
               />
+            } @else if (seg.type === 'action') {
+              <!-- Single clean button — the whole pill is one hit target, no nested interactives -->
+              <button type="button" class="bot-kun__action"
+                [class.bot-kun__action--applied]="isActionApplied(msgIdx, seg.action)"
+                (click)="onActionClick(msgIdx, seg.action)"
+                [attr.aria-label]="actionAriaLabel(msgIdx, seg.action)">
+                <span class="bot-kun__action-label">{{ seg.action.label }}</span>
+                <span class="bot-kun__action-verb">
+                  @if (isActionApplied(msgIdx, seg.action)) {
+                    {{ 'botKun.actions.applied' | translate }}
+                  } @else {
+                    {{ actionVerbKey(seg.action) | translate }}
+                  }
+                </span>
+              </button>
+            } @else if (seg.type === 'titleChip') {
+              <!-- [id]:Title raw span — rendered as a small clickable chip with the clean title -->
+              <button type="button" class="bot-kun__title-chip"
+                (click)="onTitleChipClick(seg.id)" [attr.title]="seg.title">
+                {{ seg.title }}
+              </button>
             }
           }
         </div>
@@ -152,6 +173,13 @@
       }
       </div>
     </div>
+    } @else {
+    <!-- User message: right-aligned indigo bubble, plain text only (no tags/cards) -->
+    <div class="bot-kun__msg bot-kun__msg--user">
+      <div class="bot-kun__bubble">
+        <span class="bot-kun__user-text">{{ msg.typedContent }}</span>
+      </div>
+    </div>
     }
     }
     <div #messagesEnd></div>
@@ -159,6 +187,40 @@
 
   <!-- Input area -->
   <div class="bot-kun__footer">
+    <div class="bot-kun__chips">
+      <button class="bot-kun__chip" type="button" (click)="surpriseMe()"
+        [disabled]="isStreaming() || hasTypingMessage()"
+        [attr.aria-label]="'botKun.surpriseMe' | translate">
+        🎲 {{ 'botKun.surpriseMe' | translate }}
+      </button>
+      @if (botKunService.nextPageCursor()) {
+      <button class="bot-kun__chip bot-kun__chip--more" type="button" (click)="sendMore()"
+        [disabled]="isStreaming() || hasTypingMessage()"
+        [attr.aria-label]="'botKun.showMore' | translate">
+        {{ 'botKun.showMore' | translate }}
+      </button>
+      }
+      <button class="bot-kun__chip" type="button" (click)="sendChip('botKun.chips.transcodeTonight')"
+        [disabled]="isStreaming() || hasTypingMessage()"
+        [attr.aria-label]="'botKun.chips.transcodeTonight' | translate">
+        {{ 'botKun.chips.transcodeTonight' | translate }}
+      </button>
+      <button class="bot-kun__chip" type="button" (click)="sendChip('botKun.chips.biggestOffenders')"
+        [disabled]="isStreaming() || hasTypingMessage()"
+        [attr.aria-label]="'botKun.chips.biggestOffenders' | translate">
+        {{ 'botKun.chips.biggestOffenders' | translate }}
+      </button>
+      <button class="bot-kun__chip" type="button" (click)="sendChip('botKun.chips.finishedH264')"
+        [disabled]="isStreaming() || hasTypingMessage()"
+        [attr.aria-label]="'botKun.chips.finishedH264' | translate">
+        {{ 'botKun.chips.finishedH264' | translate }}
+      </button>
+      <button class="bot-kun__chip" type="button" (click)="sendChip('botKun.chips.brokenMixed')"
+        [disabled]="isStreaming() || hasTypingMessage()"
+        [attr.aria-label]="'botKun.chips.brokenMixed' | translate">
+        {{ 'botKun.chips.brokenMixed' | translate }}
+      </button>
+    </div>
     <textarea
       #chatInput
       class="bot-kun__input"

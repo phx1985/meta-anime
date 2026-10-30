@@ -28,8 +28,13 @@ import { ThemeService } from '../services/theme.service';
 import { StorageKeys } from '../constants/storage-keys';
 import { SyncStep } from '../models/sync-progress.models';
 import { fmtElapsed } from '../utils/format.utils';
-import { filter } from 'rxjs/operators';
+import { filter, map, switchMap } from 'rxjs/operators';
 import { combineLatest, forkJoin } from 'rxjs';
+import {
+  AppConfigBackup,
+  AppConfigImportResponse,
+  ConfigBackupService,
+} from '../services/config-backup.service';
 
 const PLEX_POLL_INTERVAL_MS = 3000;
 const PLEX_POLL_MAX = 40;
@@ -48,6 +53,7 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   private animeService = inject(AnimeService);
   readonly signalR = inject(SyncSignalRService);
   private notifService = inject(NotificationService);
+  private configBackupService = inject(ConfigBackupService);
   private sonarrService = inject(SonarrService);
   private providerState = inject(ProviderStateService);
   private authService = inject(AuthService);
@@ -88,6 +94,8 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   readonly TOTAL_STEPS = 7;
   readonly malCallbackUrl = window.location.origin + '/auth/mal/callback';
 
+  /** Wizard step that runs the initial sync (skipped-to after a successful config import). */
+  private static readonly SYNC_STEP = 6;
   step = signal(1);
   animStep = signal(1);
 
@@ -159,6 +167,13 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   /** True when SignalR reports at least one step is still running (cross-tab/page-reload safe). */
   readonly syncActive = toSignal(this.signalR.syncActive$, { initialValue: false });
   readonly hubConnected = toSignal(this.signalR.connected$, { initialValue: false });
+
+  // Config import (step 1)
+  importingConfig = signal(false);
+  importDragOver = signal(false);
+  importStatus = signal<{ kind: 'success' | 'error'; message: string } | null>(null);
+  readonly importResponse = signal<AppConfigImportResponse | null>(null);
+  /** After a successful import: all three providers verified as connected. */
 
   // Help modals
   malHelpOpen = signal(false);
@@ -378,10 +393,12 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   }
 
   togglePlexLibrary(key: string): void {
+    const k = String(key);
     const c = this.plexSelectedLibKeys();
-    this.plexSelectedLibKeys.set(c.includes(key) ? c.filter((k) => k !== key) : [...c, key]);
+    this.plexSelectedLibKeys.set(c.includes(k) ? c.filter((x) => x !== k) : [...c, k]);
   }
-  isPlexLibSelected(key: string): boolean { return this.plexSelectedLibKeys().includes(key); }
+
+  isPlexLibSelected(key: string): boolean { return this.plexSelectedLibKeys().includes(String(key)); }
 
   private stopPlexPolling(): void {
     if (this.plexPollIntervalId) { clearInterval(this.plexPollIntervalId); this.plexPollIntervalId = null; }
@@ -547,6 +564,155 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
         },
       });
   }
+
+  // Config import (step 1)
+  onImportFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = ''; // allow re-selecting the same file
+    if (file) this.importConfigFile(file);
+  }
+
+  onImportDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.importDragOver.set(true);
+  }
+
+  onImportDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    // Ignore dragleave events bubbling up from child elements
+    if (event.currentTarget instanceof Node && event.relatedTarget instanceof Node) {
+      if (event.currentTarget.contains(event.relatedTarget)) return;
+    }
+    this.importDragOver.set(false);
+  }
+
+  onImportFileDropped(event: DragEvent): void {
+    event.preventDefault();
+    this.importDragOver.set(false);
+    const file = event.dataTransfer?.files?.[0];
+    if (file) this.importConfigFile(file);
+  }
+
+  private importConfigFile(file: File): void {
+    if (this.importingConfig()) return;
+    this.importingConfig.set(true);
+    this.importStatus.set(null);
+    this.configBackupService
+      .parseFile(file)
+      .pipe(
+        switchMap((backup) =>
+          this.configBackupService.importConfig(backup).pipe(map((res) => ({ backup, res }))),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: ({ backup, res }) => {
+          this.importingConfig.set(false);
+          this.applyImportedConfig(backup, res);
+          const statusYes = this.translate.instant('configBackup.statusYes');
+          const statusNo = this.translate.instant('configBackup.statusNo');
+          const message = this.translate.instant('configBackup.imported', {
+            count: res.importedValues,
+            plex: res.plexConnected ? statusYes : statusNo,
+            sonarr: res.sonarrConnected ? statusYes : statusNo,
+            mal: res.malConnected ? statusYes : statusNo,
+          });
+          this.importStatus.set({ kind: 'success', message });
+          // Also record it in the notification center (floating toasts are
+          // suppressed while the wizard is active, so the banner above is the
+          // visible feedback here).
+          this.notifService.pushOrReplace({
+            id: 'config-backup-import',
+            severity: 'success',
+            titleKey: this.translate.instant('configBackup.title'),
+            messageKey: message,
+          });
+          // Successfully imported config → skip the provider steps entirely and
+          // land on the sync step (dots navigation allows going back to review).
+          this.goToStep(SetupWizardComponent.SYNC_STEP);
+        },
+        error: () => {
+          this.importingConfig.set(false);
+          this.importStatus.set({
+            kind: 'error',
+            message: this.translate.instant('configBackup.importFailed'),
+          });
+        },
+      });
+  }
+
+  /** Prefills every wizard-managed field from the imported backup payload. */
+  private applyImportedConfig(backup: AppConfigBackup, res: AppConfigImportResponse): void {
+    // MAL (step 3)
+    if (backup.mal?.clientId) this.malClientIdControl.setValue(backup.mal.clientId);
+    if (backup.mal?.clientSecret) this.malClientSecretControl.setValue(backup.mal.clientSecret);
+    this.malConnected.set(res.malConnected);
+    this.malError.set(false);
+
+    // Plex (step 4)
+    if (backup.plex?.host) this.plexServerUrlControl.setValue(backup.plex.host);
+    if (backup.plex?.animeSections) {
+      this.plexSelectedLibKeys.set(
+        backup.plex.animeSections.split(',').map((k) => k.trim()).filter(Boolean),
+      );
+    }
+    this.plexConnected.set(res.plexConnected);
+    if (res.plexConnected) this.loadPlexLibraries();
+
+    // Sonarr (step 5)
+    const s = backup.sonarr;
+    const sonarrPatch: Record<string, unknown> = {};
+    if (s?.host) sonarrPatch['localUrl'] = s.host;
+    if (s?.remoteUrl) sonarrPatch['remoteUrl'] = s.remoteUrl;
+    if (s?.apiKey) sonarrPatch['apiKey'] = s.apiKey;
+    if (s?.defaultRootFolder) sonarrPatch['rootFolder'] = s.defaultRootFolder;
+    if (s?.defaultQualityProfileName) sonarrPatch['qualityProfile'] = s.defaultQualityProfileName;
+    if (s?.defaultSeasonFolder != null) sonarrPatch['seasonFolder'] = s.defaultSeasonFolder;
+    if (s?.defaultMonitor) sonarrPatch['monitor'] = s.defaultMonitor;
+    this.sonarrForm.patchValue(sonarrPatch);
+    this.sonarrSaved.set(res.sonarrConnected);
+
+    const tagLabels = (s?.animeTags ?? '').split(',').map((t) => t.trim()).filter(Boolean);
+    const localUrl = (this.sonarrForm.get('localUrl')?.value as string) ?? '';
+    const keyPresent = !!this.sonarrForm.get('apiKey')?.value;
+    if (res.sonarrConnected && localUrl && keyPresent) {
+      // Load tags + options so the prefilled screen renders like a tested one.
+      forkJoin([this.sonarrService.getTags(), this.sonarrService.getOptions()])
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: ([tags, options]) => {
+            const rootFolders = options.rootFolders ?? [];
+            const qualityProfiles = options.qualityProfiles ?? [];
+            const rootFolder = (this.sonarrForm.get('rootFolder')?.value as string) ?? '';
+            const qualityProfile = (this.sonarrForm.get('qualityProfile')?.value as string) ?? '';
+            // Keep prefilled defaults selectable even if Sonarr no longer lists them.
+            this.sonarrRootFolders.set(
+              rootFolder && !rootFolders.some((rf) => rf.path === rootFolder)
+                ? [{ id: -1, path: rootFolder }, ...rootFolders]
+                : rootFolders,
+            );
+            this.sonarrQualityProfiles.set(
+              qualityProfile && !qualityProfiles.some((qp) => qp.name === qualityProfile)
+                ? [{ id: -1, name: qualityProfile }, ...qualityProfiles]
+                : qualityProfiles,
+            );
+            this.sonarrTags.set(tags);
+            this.sonarrTagsLoaded.set(true);
+            // Stored Sonarr:AnimeTags are labels (see the wizard save path), but
+            // accept numeric ids too and match loosely.
+            const wanted = new Set(tagLabels.map((x) => x.toLowerCase()));
+            this.sonarrSelectedTagIds.set(
+              tags
+                .filter((t) => wanted.has((t.label ?? '').toLowerCase()) || wanted.has(String(t.id)))
+                .map((t) => t.id),
+            );
+          },
+          error: () => {},
+        });
+    }
+  }
+
 
   // Completion
   finish(): void { this.notifService.setWizardActive(false); this.providerState.refresh(); this.router.navigate(['/']); }

@@ -1,31 +1,76 @@
 <div class="la-pills">
-  <div class="la-pill">
-    <div class="la-pill__top">
-      <span class="la-pill__value" [countUp]="totalSizeDisplay().value"></span>
-      <span class="la-pill__unit">{{ totalSizeDisplay().unit }}</span>
+  <!-- Total space used -->
+  <div class="la-kpi">
+    <div class="la-kpi__top">
+      <span class="la-kpi__label">{{ 'library.pills.totalSpace' | translate }}</span>
+      <span class="la-kpi__icon la-kpi__icon--space">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="22" y1="12" x2="2" y2="12"/>
+          <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+          <line x1="6" y1="16" x2="6.01" y2="16"/>
+          <line x1="10" y1="16" x2="10.01" y2="16"/>
+        </svg>
+      </span>
     </div>
-    <span class="la-pill__label">{{ 'library.pills.totalSpace' | translate }}</span>
+    <div class="la-kpi__value">
+      <span [laCountUp]="totalSizeDisplay().value" [laDecimals]="1"></span>
+      <span class="la-kpi__unit">{{ totalSizeDisplay().unit }}</span>
+    </div>
+    <div class="la-kpi__footer">
+      <span>{{ 'library.pills.avgBitrate' | translate: { value: avgGibPerHour().toFixed(2) } }}</span>
+    </div>
   </div>
 
-  <div class="la-pill">
-    <div class="la-pill__top">
-      <span class="la-pill__value" [countUp]="totalFileCount()"></span>
+  <!-- Total files -->
+  <div class="la-kpi">
+    <div class="la-kpi__top">
+      <span class="la-kpi__label">{{ 'library.pills.totalFiles' | translate }}</span>
+      <span class="la-kpi__icon la-kpi__icon--files">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect width="18" height="18" x="3" y="3" rx="2"/>
+          <path d="M7 3v18"/>
+          <path d="M3 7.5h4"/>
+          <path d="M3 12h18"/>
+          <path d="M3 16.5h4"/>
+          <path d="M17 3v18"/>
+          <path d="M17 7.5h4"/>
+          <path d="M17 16.5h4"/>
+        </svg>
+      </span>
     </div>
-    <span class="la-pill__label">{{ 'library.pills.totalFiles' | translate }}</span>
+    <div class="la-kpi__value">
+      <span [laCountUp]="totalFileCount()"></span>
+    </div>
+    <div class="la-kpi__footer">
+      <span>{{ 'library.pills.spreadAcross' | translate: { count: seriesCount() } }}</span>
+    </div>
   </div>
 
-  <div class="la-pill la-pill--warning la-pill--clickable"
-       [title]="'library.pills.missingFilesHint' | translate"
-       (click)="missingFilesClick.emit()">
-    <div class="la-pill__top">
-      <span class="la-pill__value" [countUp]="missingSeriesCount()"></span>
+  <!-- Series w/ missing files (interactive) -->
+  <div class="la-kpi la-kpi--warning la-kpi--interactive"
+       role="button"
+       tabindex="0"
+       (click)="missingFilesClick.emit()"
+       (keydown.enter)="missingFilesClick.emit()"
+       (keydown.space)="$event.preventDefault(); missingFilesClick.emit()">
+    <div class="la-kpi__top">
+      <span class="la-kpi__label">{{ 'library.pills.seriesWithMissingFiles' | translate }}</span>
+      <span class="la-kpi__icon la-kpi__icon--missing">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
+          <line x1="9" x2="15" y1="13" y2="13"/>
+        </svg>
+      </span>
     </div>
-    <span class="la-pill__label">{{ 'library.pills.seriesWithMissingFiles' | translate }}</span>
-    <span class="la-pill__hint">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+    <div class="la-kpi__value">
+      <span [laCountUp]="missingSeriesCount()"></span>
+    </div>
+    <div class="la-kpi__footer">
+      <span>{{ 'library.pills.missingFilesHint' | translate }}</span>
+      <svg class="la-kpi__footer-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M5 12h14"/>
+        <path d="m12 5 7 7-7 7"/>
       </svg>
-      {{ 'library.pills.missingFilesHint' | translate }}
-    </span>
+    </div>
   </div>
 </div>

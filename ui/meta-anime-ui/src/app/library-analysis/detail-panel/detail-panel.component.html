@@ -9,165 +9,294 @@
   <div class="la-panel" [class.la-panel--closing]="closing()">
     <button class="la-panel__close" (click)="close()" aria-label="Close">✕</button>
 
-    <!-- Header -->
-    <div class="la-panel__header">
-      <h2 class="la-panel__title">{{ r.title }}</h2>
-      @if (r.ended) {
-        <span class="la-panel__badge la-panel__badge--ended">{{ 'library.detail.ended' | translate }}</span>
-      } @else {
-        <span class="la-panel__badge la-panel__badge--airing">{{ 'library.detail.airing' | translate }}</span>
-      }
-    </div>
+    <!-- Shrink-0 summary block: header + path + actions + links + stat ribbon -->
+    <div class="la-panel__top">
 
-    <!-- Path + Copy -->
-    <div class="la-panel__path-row">
-      <code class="la-panel__path">{{ r.path }}</code>
-      <button class="la-panel__copy"
-              (click)="copyPath(r.path)"
-              [class.la-panel__copy--success]="copySuccess()">
-        {{ copySuccess() ? ('library.detail.copied' | translate) : ('library.detail.copyPath' | translate) }}
-      </button>
-    </div>
-
-    <!-- Sonarr link -->
-    @if (sonarrRemoteUrl()) {
-      <a class="la-panel__sonarr-link"
-         [href]="buildSonarrUrl(r.title)"
-         target="_blank"
-         rel="noopener noreferrer">
-        {{ 'library.detail.openSonarr' | translate }} ↗
-      </a>
-    }
-
-    <!-- Open Anime Details button -->
-    @if (r.localAnimeId) {
-      <button class="la-btn-anime" (click)="requestAnimeDetail.emit(r.localAnimeId!)" [title]="'library.detail.openAnime' | translate">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-        </svg>
-        {{ 'library.detail.openAnime' | translate }}
-      </button>
-    }
-
-    <!-- Aggregate stats grid -->
-    <div class="la-panel__stats">
-      <div class="la-panel__stat">
-        <span class="la-panel__stat-label">{{ 'library.detail.totalSize' | translate }}</span>
-        <span class="la-panel__stat-value">{{ formatSize(r.totalSizeBytes) }}</span>
+      <!-- Header -->
+      <div class="la-panel__header">
+        <h2 class="la-panel__title">{{ r.title }}</h2>
+        <span [class]="statusBadgeClass()">{{ statusBadgeKey() | translate }}</span>
       </div>
-      <div class="la-panel__stat">
-        <span class="la-panel__stat-label">{{ 'library.detail.avgEpSize' | translate }}</span>
-        <span class="la-panel__stat-value"
-              [class.la-panel__stat-value--bloated]="r.avgEpisodeSizeBytes > avgEpSizeThresholdBytes()">
-          {{ formatSize(r.avgEpisodeSizeBytes) }}
-        </span>
+
+      <!-- Resolved path + mapping badge -->
+      <div class="la-panel__path-row">
+        <code class="la-panel__path" [title]="resolvedPath(r.path)">{{ resolvedPath(r.path) }}</code>
+        @if (isPathMapped(r.path)) {
+          <span class="la-mapped-badge">{{ 'libraryIntel.drawer.mappedToHostPath' | translate }}</span>
+        }
       </div>
-      <div class="la-panel__stat">
-        <span class="la-panel__stat-label">{{ 'library.detail.avgGibPerHour' | translate }}</span>
-        <span class="la-panel__stat-value"
-              [class.la-panel__stat-value--bloated]="r.gibPerHour > avgGibPerHourThreshold()">
-          @if (r.gibPerHour > 0) {
-            {{ r.gibPerHour | number:'1.2-2' }} GiB/h
-          } @else {
-            —
+
+      <!-- Action bar: primary HandBrake queue export + Copy Paths split dropdown -->
+      <div class="la-panel__actions">
+        <button type="button"
+                class="la-export-cta"
+                [disabled]="exportQueueCount() === 0"
+                (click)="exportQueue()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          {{ 'libraryIntel.drawer.exportQueue' | translate: {count: exportQueueCount()} }}
+        </button>
+
+        <div class="la-split">
+          <button type="button"
+                  class="la-panel__copy la-panel__copy--ghost la-split__main"
+                  (click)="exportMenuOpen.set(!exportMenuOpen())"
+                  [class.la-panel__copy--success]="copySuccess()"
+                  [attr.aria-expanded]="exportMenuOpen()">
+            {{ copySuccess() ? ('libraryIntel.drawer.copied' | translate) : ('libraryIntel.drawer.copyPaths' | translate) }}
+          </button>
+          <button type="button"
+                  class="la-panel__copy la-panel__copy--ghost la-split__caret"
+                  (click)="exportMenuOpen.set(!exportMenuOpen())"
+                  [attr.aria-label]="'libraryIntel.drawer.copyPaths' | translate"
+                  [attr.aria-expanded]="exportMenuOpen()">▾</button>
+          @if (exportMenuOpen()) {
+            <div class="la-split__menu" role="menu">
+              <button type="button" class="la-split__item" role="menuitem" (click)="copyFolderPath()">
+                {{ 'libraryIntel.drawer.copyFolderPath' | translate }}
+              </button>
+              <button type="button" class="la-split__item" role="menuitem" (click)="copyPlainPaths()">
+                {{ 'libraryIntel.drawer.copyPlainPaths' | translate }}
+              </button>
+              <button type="button" class="la-split__item" role="menuitem" (click)="copyQuotedCliArgs()">
+                {{ 'libraryIntel.drawer.quotedCliArgs' | translate }}
+              </button>
+            </div>
           }
-        </span>
-      </div>
-      <div class="la-panel__stat">
-        <span class="la-panel__stat-label">{{ 'library.detail.episodes' | translate }}</span>
-        <span class="la-panel__stat-value">{{ r.fileCount }} / {{ r.totalEpisodes }}</span>
-      </div>
-      <div class="la-panel__stat">
-        <span class="la-panel__stat-label">{{ 'library.detail.codec' | translate }}</span>
-        <span class="la-panel__stat-value">{{ r.primaryVideoCodec ?? '—' }}</span>
-      </div>
-      <div class="la-panel__stat">
-        <span class="la-panel__stat-label">{{ 'library.detail.audio' | translate }}</span>
-        <span class="la-panel__stat-value">{{ r.primaryAudioCodec ?? '—' }}</span>
-      </div>
-      <div class="la-panel__stat">
-        <span class="la-panel__stat-label">{{ 'library.detail.resolution' | translate }}</span>
-        <span class="la-panel__stat-value">{{ r.primaryResolution ?? '—' }}</span>
-      </div>
-    </div>
-
-    <!-- Download progress -->
-    <div class="la-panel__progress-section">
-      <span class="la-panel__stat-label">{{ 'library.detail.downloadProgress' | translate }}</span>
-      <div class="la-panel__progress-bar">
-        <div class="la-panel__progress-fill"
-             [style.width.%]="r.percentDownloaded">
         </div>
       </div>
-      <span class="la-panel__progress-text">{{ r.percentDownloaded | number:'1.0-0' }}%</span>
+
+      <!-- Links row -->
+      <div class="la-panel__links">
+        @if (sonarrRemoteUrl()) {
+          <a class="la-panel__sonarr-link"
+             [href]="buildSonarrUrl(r.title)"
+             target="_blank"
+             rel="noopener noreferrer">
+            {{ 'library.detail.openSonarr' | translate }} ↗
+          </a>
+        }
+        @if (r.localAnimeId) {
+          <button class="la-btn-anime" (click)="requestAnimeDetail.emit(r.localAnimeId!)" [title]="'library.detail.openAnime' | translate">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            {{ 'library.detail.openAnime' | translate }}
+          </button>
+        }
+      </div>
+
+      <!-- High-density stat ribbon (1–2 rows) -->
+      <div class="la-ribbon">
+        <div class="la-ribbon__item">
+          <span class="la-ribbon__label">{{ 'library.detail.totalSize' | translate }}</span>
+          <span class="la-ribbon__value">{{ formatSize(r.totalSizeBytes) }}</span>
+        </div>
+        <div class="la-ribbon__item">
+          <span class="la-ribbon__label">{{ 'library.detail.avgEpSize' | translate }}</span>
+          <span class="la-ribbon__value"
+                [class.la-ribbon__value--bloated]="r.avgEpisodeSizeBytes > avgEpSizeThresholdBytes()">
+            {{ formatSize(r.avgEpisodeSizeBytes) }}
+          </span>
+        </div>
+        <div class="la-ribbon__item">
+          <span class="la-ribbon__label">{{ 'library.detail.avgGibPerHour' | translate }}</span>
+          <span class="la-ribbon__value"
+                [class.la-ribbon__value--bloated]="r.gibPerHour > avgGibPerHourThreshold()">
+            @if (r.gibPerHour > 0) {
+              {{ r.gibPerHour | number:'1.2-2' }} GiB/h
+            } @else {
+              —
+            }
+          </span>
+        </div>
+        <!-- Episodes + inline downloaded % bar -->
+        <div class="la-ribbon__item la-ribbon__item--episodes">
+          <span class="la-ribbon__label">{{ 'library.detail.episodes' | translate }}</span>
+          <span class="la-ribbon__value">{{ r.fileCount }} / {{ r.totalEpisodes }}</span>
+          <span class="la-ribbon__dl"
+                [title]="('library.detail.downloadProgress' | translate) + ': ' + (r.percentDownloaded | number:'1.0-0') + '%'">
+            <span class="la-ribbon__dl-track">
+              <span class="la-ribbon__dl-fill" [style.width.%]="r.percentDownloaded"></span>
+            </span>
+            <span class="la-ribbon__dl-pct">{{ r.percentDownloaded | number:'1.0-0' }}%</span>
+          </span>
+        </div>
+        @if (estSavingsGb() > 0) {
+          <div class="la-ribbon__item">
+            <span class="la-ribbon__label">{{ 'libraryIntel.drawer.estSavings' | translate }}</span>
+            <span class="la-ribbon__value la-ribbon__value--savings">~{{ estSavingsGb() | number:'1.1-1' }} GB</span>
+            <span class="la-ribbon__hint">{{ 'libraryIntel.drawer.savingsHint' | translate }}</span>
+          </div>
+        }
+        <div class="la-ribbon__item">
+          <span class="la-ribbon__label">{{ 'library.detail.audio' | translate }}</span>
+          <span class="la-ribbon__value">{{ r.primaryAudioCodec ?? '—' }}</span>
+        </div>
+        <div class="la-ribbon__item">
+          <span class="la-ribbon__label">{{ 'library.detail.resolution' | translate }}</span>
+          <span class="la-ribbon__value">{{ r.primaryResolution ?? '—' }}</span>
+        </div>
+        @if (hasMixedCodecs()) {
+          <!-- Stacked dual-codec composition (replaces the single codec stat) -->
+          <div class="la-ribbon__item la-ribbon__item--stack">
+            <span class="la-ribbon__label">{{ 'libraryIntel.drawer.stackedTitle' | translate }}</span>
+            <div class="la-stack-bar">
+              @for (seg of codecSegments(); track seg.codec) {
+                <div class="la-stack-bar__seg"
+                     [style.width.%]="seg.pct"
+                     [style.background]="seg.color"
+                     [title]="seg.codec + ' — ' + formatSize(seg.bytes)">
+                </div>
+              }
+            </div>
+            <div class="la-stack-bar__labels">
+              @for (seg of codecSegments(); track seg.codec) {
+                <span class="la-stack-bar__label">
+                  {{ seg.pct | number:'1.0-0' }}% <strong [style.color]="seg.color">{{ seg.codec }}</strong> ({{ formatSize(seg.bytes) }})
+                </span>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="la-ribbon__item">
+            <span class="la-ribbon__label">{{ 'library.detail.codec' | translate }}</span>
+            <span class="la-ribbon__value">{{ r.primaryVideoCodec ?? '—' }}</span>
+          </div>
+        }
+      </div>
     </div>
 
-    <!-- Episode files table -->
+    <!-- FILES section: the single scrolling area of the drawer -->
     @if (r.episodeFiles?.length) {
-      <h3 class="la-panel__section-title">{{ 'library.detail.files' | translate }}</h3>
-      <div class="la-panel__files-wrap">
-        <table class="la-panel__files">
-          <thead>
-            <tr>
-              <th class="la-sortable-th" (click)="sortBy('file')" [class.la-sort-active]="sortCol()==='file'">
-                {{ 'library.detail.file' | translate }}
-                <span class="la-sort-icon">{{ sortCol()==='file' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
-              </th>
-              <th class="la-sortable-th" (click)="sortBy('size')" [class.la-sort-active]="sortCol()==='size'">
-                {{ 'library.detail.size' | translate }}
-                <span class="la-sort-icon">{{ sortCol()==='size' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
-              </th>
-              <th class="la-sortable-th" (click)="sortBy('duration')" [class.la-sort-active]="sortCol()==='duration'">
-                {{ 'library.detail.duration' | translate }}
-                <span class="la-sort-icon">{{ sortCol()==='duration' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
-              </th>
-              <th class="la-sortable-th" (click)="sortBy('gibPerHour')" [class.la-sort-active]="sortCol()==='gibPerHour'">
-                {{ 'library.detail.gibPerHour' | translate }}
-                <span class="la-sort-icon">{{ sortCol()==='gibPerHour' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
-              </th>
-              <th class="la-sortable-th" (click)="sortBy('video')" [class.la-sort-active]="sortCol()==='video'">
-                {{ 'library.detail.video' | translate }}
-              </th>
-              <th class="la-sortable-th" (click)="sortBy('audio')" [class.la-sort-active]="sortCol()==='audio'">
-                {{ 'library.detail.audio' | translate }}
-              </th>
-              <th class="la-sortable-th" (click)="sortBy('res')" [class.la-sort-active]="sortCol()==='res'">
-                {{ 'library.detail.res' | translate }}
-              </th>
-              <th class="la-sortable-th" (click)="sortBy('depth')" [class.la-sort-active]="sortCol()==='depth'">
-                {{ 'library.detail.depth' | translate }}
-              </th>
-              <th class="la-sortable-th" (click)="sortBy('channels')" [class.la-sort-active]="sortCol()==='channels'">
-                {{ 'library.detail.channels' | translate }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (f of sortedFiles(); track f.episodeFileId) {
+      <div class="la-panel__files-section">
+        <h3 class="la-panel__section-title">{{ 'library.detail.files' | translate }}</h3>
+
+        <!-- Mini-tabs: All / Needs Transcode (H264) / Optimized (HEVC) -->
+        <div class="la-panel__file-tabs" role="tablist">
+          <button class="la-file-tab"
+                  [class.la-file-tab--active]="fileFilter() === 'all'"
+                  (click)="fileFilter.set('all')">
+            {{ 'libraryIntel.drawer.allFiles' | translate }} ({{ allFileCount() }})
+          </button>
+          <button class="la-file-tab"
+                  [class.la-file-tab--active]="fileFilter() === 'h264'"
+                  (click)="selectH264Tab()">
+            {{ 'libraryIntel.drawer.needsTranscode' | translate }} ({{ h264FileCount() }})
+          </button>
+          <button class="la-file-tab"
+                  [class.la-file-tab--active]="fileFilter() === 'hevc'"
+                  (click)="fileFilter.set('hevc')">
+            {{ 'libraryIntel.drawer.optimized' | translate }} ({{ hevcFileCount() }})
+          </button>
+        </div>
+
+        <!-- Selection controls -->
+        <div class="la-panel__select-bar">
+          <button type="button"
+                  class="la-file-tab"
+                  (click)="toggleSelectAllFiltered()">
+            {{ 'libraryIntel.drawer.selectAllFiltered' | translate: {count: visibleFiles().length} }}
+          </button>
+          @if (selectedCount() > 0) {
+            <button type="button"
+                    class="la-panel__clear"
+                    (click)="clearSelection()">
+              {{ 'libraryIntel.drawer.clearSelection' | translate }}
+            </button>
+          }
+        </div>
+
+        <div class="la-panel__files-wrap">
+          <table class="la-panel__files">
+            <thead>
               <tr>
-                <td class="la-file-path" [title]="f.relativePath">{{ getFilename(f.relativePath) }}</td>
-                <td>{{ formatSize(f.sizeBytes) }}</td>
-                <td>
-                  {{ formatDuration(f.durationSeconds) }}@if (f.isDurationEstimated) {<span class="la-duration--estimated"> *</span>}
-                </td>
-                <td [class.la-td--bloated]="f.durationSeconds > 0 && (f.sizeBytes / 1_073_741_824) / (f.durationSeconds / 3600) > avgGibPerHourThreshold()">
-                  {{ formatEpGibPerHour(f.sizeBytes, f.durationSeconds) }}
-                </td>
-                <td><span class="la-codec-pill la-codec-pill--sm">{{ f.videoCodec }}</span></td>
-                <td><span class="la-codec-pill la-codec-pill--sm">{{ f.audioCodec }}</span></td>
-                <td>{{ f.resolution }}</td>
-                <td>{{ f.videoBitDepth }}-bit</td>
-                <td>{{ f.audioChannels }}ch</td>
+                <th class="la-check-th">
+                  <input type="checkbox"
+                         [checked]="allVisibleSelected()"
+                         [indeterminate]="someVisibleSelected() && !allVisibleSelected()"
+                         (change)="toggleAllVisible()"
+                         [attr.aria-label]="'libraryIntel.drawer.selectRow' | translate" />
+                </th>
+                <th class="la-sortable-th" (click)="sortBy('file')" [class.la-sort-active]="sortCol()==='file'">
+                  {{ 'library.detail.file' | translate }}
+                  <span class="la-sort-icon">{{ sortCol()==='file' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
+                </th>
+                <th class="la-sortable-th" (click)="sortBy('size')" [class.la-sort-active]="sortCol()==='size'">
+                  {{ 'library.detail.size' | translate }}
+                  <span class="la-sort-icon">{{ sortCol()==='size' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
+                </th>
+                <th class="la-sortable-th" (click)="sortBy('duration')" [class.la-sort-active]="sortCol()==='duration'">
+                  {{ 'library.detail.duration' | translate }}
+                  <span class="la-sort-icon">{{ sortCol()==='duration' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
+                </th>
+                <th class="la-sortable-th" (click)="sortBy('gibPerHour')" [class.la-sort-active]="sortCol()==='gibPerHour'">
+                  {{ 'library.detail.gibPerHour' | translate }}
+                  <span class="la-sort-icon">{{ sortCol()==='gibPerHour' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
+                </th>
+                <th class="la-sortable-th" (click)="sortBy('video')" [class.la-sort-active]="sortCol()==='video'">
+                  {{ 'library.detail.video' | translate }}
+                </th>
+                <th class="la-sortable-th" (click)="sortBy('audio')" [class.la-sort-active]="sortCol()==='audio'">
+                  {{ 'library.detail.audio' | translate }}
+                </th>
+                <th class="la-sortable-th" (click)="sortBy('res')" [class.la-sort-active]="sortCol()==='res'">
+                  {{ 'library.detail.res' | translate }}
+                </th>
+                <th class="la-sortable-th" (click)="sortBy('depth')" [class.la-sort-active]="sortCol()==='depth'">
+                  {{ 'library.detail.depth' | translate }}
+                </th>
+                <th class="la-sortable-th" (click)="sortBy('channels')" [class.la-sort-active]="sortCol()==='channels'">
+                  {{ 'library.detail.channels' | translate }}
+                </th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (f of visibleFiles(); track f.episodeFileId) {
+                <tr [class.la-tr--needs-transcode]="isH264(f.videoCodec)">
+                  <td class="la-check-td">
+                    <input type="checkbox"
+                           [checked]="isSelected(f.episodeFileId)"
+                           (change)="toggleFile(f.episodeFileId)"
+                           [attr.aria-label]="'libraryIntel.drawer.selectFile' | translate" />
+                  </td>
+                  <td class="la-file-cell" [title]="resolvedFilePath(f)">
+                    <div class="la-file-cell__inner">
+                      <span class="la-ep-badge">{{ episodeBadge(f) }}</span>
+                      <span class="la-file-name">{{ fileNameOf(f) }}</span>
+                    </div>
+                  </td>
+                  <td class="la-td-num">{{ formatSize(f.sizeBytes) }}</td>
+                  <td class="la-td-num">
+                    {{ formatDuration(f.durationSeconds) }}@if (f.isDurationEstimated) {<span class="la-duration--estimated"> *</span>}
+                  </td>
+                  <td class="la-td-num"
+                      [class.la-td--bloated]="f.durationSeconds > 0 && (f.sizeBytes / 1_073_741_824) / (f.durationSeconds / 3600) > avgGibPerHourThreshold()">
+                    {{ formatEpGibPerHour(f.sizeBytes, f.durationSeconds) }}
+                  </td>
+                  <td class="la-td-nowrap">
+                    <span class="la-codec-pill la-codec-pill--sm">{{ f.videoCodec }}</span>
+                    @if (isH264(f.videoCodec)) {
+                      <span class="la-transcode-badge">{{ 'libraryIntel.drawer.needsTranscode' | translate }}</span>
+                    }
+                  </td>
+                  <td class="la-td-nowrap"><span class="la-codec-pill la-codec-pill--sm">{{ f.audioCodec }}</span></td>
+                  <td class="la-td-nowrap">{{ f.resolution }}</td>
+                  <td class="la-td-num">{{ f.videoBitDepth }}-bit</td>
+                  <td class="la-td-num">{{ f.audioChannels }}ch</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (hasDurationEstimates()) {
+          <p class="la-duration-legend">
+            <span class="la-duration--estimated">*</span>&nbsp;{{ 'library.detail.estimatedDurationNote' | translate }}
+          </p>
+        }
       </div>
-      @if (hasDurationEstimates()) {
-        <p class="la-duration-legend">
-          <span class="la-duration--estimated">*</span>&nbsp;{{ 'library.detail.estimatedDurationNote' | translate }}
-        </p>
-      }
     }
   </div>
 }

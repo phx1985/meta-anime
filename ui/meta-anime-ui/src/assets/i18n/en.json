@@ -639,6 +639,22 @@
       }
     },
     "fields": {
+      "PathMap_ContainerRoot": {
+        "name": "Container Media Root",
+        "desc": "Media root as stored by Sonarr inside the container (default: /downloads_root). Paths are remapped from this prefix to the Local Host Media Root."
+      },
+      "PathMap_HostRoot": {
+        "name": "Local Host Media Root",
+        "desc": "Where that storage is mounted on THIS machine (e.g. /mnt/media, /run/user/1000/gvfs/…, or Z:\\). Leave empty to disable path mapping."
+      },
+      "PathMap_Separator": {
+        "name": "Target OS Path Separator",
+        "desc": "Path separator style for copied/exported paths: POSIX / or Windows \\."
+      },
+      "HandBrake_Preset": {
+        "name": "HandBrakeCLI Preset Args",
+        "desc": "Parameters used by the drawer's HandBrake batch export (default: NVENC HEVC 10-bit quality, CQ 22)."
+      },
       "Plex_Host": {
         "name": "Server URL",
         "desc": "Base URL of your Plex Media Server (e.g. http://localhost:32400)."
@@ -1232,6 +1248,35 @@
       "name": "Auto-apply Last Search Filters",
       "desc": "When enabled, your last used anime search filters will be automatically restored and applied when you open the Anime List or Seasonal Anime page."
     },
+    "libraryHandbrake": {
+      "groupTitle": "🎬 Library & HandBrake Transcode Paths",
+      "containerRoot": {
+        "name": "Container Media Root",
+        "desc": "Media root as stored by Sonarr inside the container (default: /downloads_root)."
+      },
+      "hostRoot": {
+        "name": "Host Media Mount Path (Source)",
+        "desc": "Where that storage is mounted on THIS machine (e.g. /mnt/media or /run/user/1000/gvfs/…)."
+      },
+      "destPath": {
+        "name": "HandBrake Export / Destination Path",
+        "desc": "Where transcoded files are written (used when the _transcoded subfolder option is off)."
+      },
+      "presetName": {
+        "name": "HandBrake Preset Name",
+        "desc": "Name of the HandBrake preset applied to exported queue jobs."
+      },
+      "destModeTranscoded": "Output in \"_transcoded\" subfolder next to source files",
+      "browse": "📁 Browse Folder",
+      "smbWarning": "⚠️ HandBrake requires a mounted local POSIX/Windows path (e.g. `/mnt/media/...` or `/run/user/1000/gvfs/...`), not a virtual `smb://` URI.",
+      "browseUp": "⬆ Up one level",
+      "browseSelectHere": "✅ Use this folder",
+      "browseLoading": "Loading folders…",
+      "browseEmpty": "No subfolders here",
+      "browseError": "Cannot read this folder",
+      "browseRetry": "Try again",
+      "saved": "Saved"
+    },
     "luckyPick": {
       "groupTitle": "I'm Feeling Lucky!",
       "onlyFinished": {
@@ -1263,9 +1308,151 @@
     "typingIndicator": "Bot-kun is typing",
     "inputLabel": "Message Bot-kun",
     "sendMessage": "Send message",
+    "surpriseMe": "Surprise me",
+    "showMore": "Show more results",
     "readAloud": "Read aloud",
     "stopReading": "Stop reading",
-    "speaking": "Reading..."
+    "speaking": "Reading...",
+    "chips": {
+      "transcodeTonight": "🎯 What should I transcode tonight?",
+      "biggestOffenders": "📊 Who are my biggest GiB/h offenders?",
+      "finishedH264": "✅ Finished seasons still in H264",
+      "brokenMixed": "🧹 Find broken/mixed codec seasons"
+    },
+    "actions": {
+      "applyFilter": "Apply Filter",
+      "openSeries": "Open Series",
+      "applied": "✓ Applied"
+    }
+  },
+    "configBackup": {
+    "title": "Backup & Restore",
+    "desc": "Export your full configuration (providers, tokens, preferences) or restore it from a JSON file.",
+    "exportBtn": "⬇ Export Config",
+    "importBtn": "⬆ Import Config",
+    "exportWarning": "⚠️ The exported file contains UNMASKED API keys and tokens. Store it securely.",
+    "importTitle": "Import Configuration",
+    "dropHint": "Drop a .json config file here or click to choose",
+    "imported": "Configuration imported ({{count}} values) — Plex: {{plex}}, Sonarr: {{sonarr}}, MAL: {{mal}}",
+    "statusYes": "connected",
+    "statusNo": "not connected",
+    "importFailed": "Import failed — is this a valid MetaAnime config file?",
+    "completeSetup": "Complete Setup",
+    "reviewSteps": "Review steps"
+  },
+"libraryIntel": {
+    "matchMode": {
+      "label": "Codec match",
+      "any": "Any (>0%)",
+      "strict": "Strictly Only (100%)",
+      "mixed": "Mixed (<100%)",
+      "custom": "Custom %",
+      "opGte": "≥",
+      "opLte": "≤",
+      "percent": "Percent",
+      "splitOnly": "⚡ Split Codecs Only"
+    },
+    "status": {
+      "label": "Status",
+      "all": "All Statuses",
+      "seriesEndedComplete": "Series Ended (Complete)",
+      "seasonEndedHiatus": "Season Ended (Show Continuing / Hiatus)",
+      "airingWeekly": "Currently Airing (Active Weekly)",
+      "incompleteOnDisk": "Incomplete on Disk",
+      "transcodeReady": "Transcode Ready (Ended or Season Done)"
+    },
+    "badge": {
+      "airingWeekly": "AIRING NOW",
+      "seasonEndedHiatus": "SEASON DONE",
+      "seriesEndedComplete": "ENDED",
+      "incompleteOnDisk": "INCOMPLETE"
+    },
+    "badgeTip": {
+      "airingWeekly": "Episodes are actively dropping right now",
+      "seasonEndedHiatus": "Series on hiatus / continuing, all aired seasons complete",
+      "seriesEndedComplete": "Series finished airing and fully downloaded",
+      "incompleteOnDisk": "Aired episodes are missing on disk"
+    },
+    "table": {
+      "moreAudio": "+{{count}} more audio tracks"
+    },
+    "buddy": {
+      "codecTitle": "Codec & Bitrate Distribution",
+      "byCount": "By File Count",
+      "bySize": "By Disk Size",
+      "avgGibPerHour": "Avg GiB/h",
+      "footprint": "Total Footprint",
+      "topFootprint": "Top 5 footprint",
+      "estReclaimable": "Est. reclaimable",
+      "hogsTitle": "Storage Hogs & Bloat",
+      "topTotalShort": "Total GB",
+      "topBloatShort": "Worst GiB/h",
+      "topReclaimShort": "Reclaimable",
+      "codecMixed": "Mixed ({{count}})",
+      "topTotal": "Top 5 by Total GB",
+      "topBloat": "Top 5 by Worst GiB/h",
+      "topReclaimable": "Top 5 Reclaimable GB",
+      "rank": "#",
+      "opportunityTitle": "Transcode Opportunity",
+      "savings": "~{{gb}} GB reclaimable across {{count}} series",
+      "savingsLabel": "Reclaimable storage",
+      "savingsSeries": "{{count}} series",
+      "chipsPrime": "Prime Transcode Targets",
+      "chipsUnfinished": "Unfinished Transcodes",
+      "chipsEightBit": "🐘 8-Bit Bloat",
+      "batchTitle": "Transcode Batch",
+      "batchCount": "Episodes",
+      "batchCustom": "Custom…",
+      "batchOrder": "Order",
+      "batchOrderBiggest": "Biggest first (GiB/h)",
+      "batchOrderSeries": "Series order (A→Z)",
+      "batchExport": "Export HandBrake Queue",
+      "batchEstimate": "≈ {{gb}} GB across {{count}} episodes",
+      "batchEmpty": "No untranscoded episodes left — library is fully optimized.",
+      "batchPoolCount": "{{count}} in the library to transcode",
+      "batchFreed": "≈ {{gb}} GB freed",
+      "batchIncludeUnknown": "Include unknown codecs",
+      "batchFilesShort": "{{count}} files",
+      "batchAllShort": "All",
+      "batchMetricSize": "Batch size",
+      "batchMetricSavings": "Est. savings",
+      "batchLimitLabel": "Batch limit",
+      "batchSortLabel": "Sort",
+      "batchSortBitrate": "Bitrate (GiB/h ↓)",
+      "batchSortAlpha": "Alphabetical (A→Z)",
+      "chipsCompleteH264": "Complete Seasons in H264",
+      "presetApplied": "✓ Applied",
+      "analyzing": "Analyzing {{count}} files…",
+      "noData": "Enrichment in progress…"
+    },
+    "drawer": {
+      "stackedTitle": "Codec Composition",
+      "needsTranscode": "Needs Transcode / H264",
+      "optimized": "Optimized / HEVC",
+      "allFiles": "All Files",
+      "estSavings": "Est. Savings",
+      "savingsHint": "if transcoded to HEVC (~55%)",
+      "copyH264": "Copy H264 Paths",
+      "exportList": "Export Transcode List",
+      "copied": "Copied!",
+      "copyFolderPath": "📁 Copy Folder Path",
+      "copySelectedPaths": "📋 Copy Selected Paths ({{count}})",
+      "selectAllFiltered": "Select All Filtered ({{count}})",
+      "clearSelection": "Clear selection",
+      "exportQueue": "🎬 Export HandBrake Queue ({{count}})",
+      "copyPaths": "📋 Copy Paths",
+      "copyPlainPaths": "Copy Selected Episode Paths (Plain Text)",
+      "quotedCliArgs": "Copy Selected Episode Paths (Quoted CLI Args)",
+      "handBrakeScript": "🎬 Export HandBrake Batch (.sh)",
+      "mappedToHostPath": "Mapped to Host Path",
+      "editMapping": "Edit path mapping",
+      "mapContainerRoot": "Container Media Root",
+      "mapHostRoot": "Local Host Media Root",
+      "mapSave": "Save",
+      "mapCancel": "Cancel",
+      "selectFile": "Select file",
+      "selectRow": "Select row"
+    }
   },
   "luckyPick": {
     "buttonLabel": "I'm Feeling Lucky",
@@ -1743,6 +1930,9 @@
   },
   "library": {
     "title": "Library Analysis",
+    "header": {
+      "subtitle": "Transcode & storage intelligence"
+    },
     "refresh": "Refresh",
     "retry": "Retry",
     "loading": "Analyzing library…",
@@ -1758,7 +1948,9 @@
       "totalSpace": "Total Space Used",
       "totalFiles": "Total Files",
       "seriesWithMissingFiles": "Series w/ Missing Files",
-      "missingFilesHint": "Click to filter series without files"
+      "missingFilesHint": "Click to filter series without files",
+      "avgBitrate": "Avg bitrate: {{value}} GiB/h",
+      "spreadAcross": "Across {{count}} series"
     },
     "charts": {
       "videoCodec": "Video Codec Distribution",

@@ -1,9 +1,11 @@
 using Asp.Versioning;
+using Mediator;
+using MetaAnime.Application.Commands;
 using MetaAnime.Application.Interfaces;
-using MetaAnime.Core.Interfaces.Repositories;
+using MetaAnime.Application.Queries;
 using MetaAnime.Core.Interfaces.Services;
-using MetaAnime.Domain.Enums;
 using MetaAnime.Infrastructure.MyAnimeList;
+using MetaAnime.Utilities.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -16,10 +18,8 @@ namespace MetaAnime.Controllers;
 [ApiVersion("1.0")]
 [Route("api/v1/mal")]
 public sealed class MalController(
+    IMediator mediator,
     IAnimeMediatorService animeMediatorService,
-    ICrossLinkService crossLinkService,
-    IAnimeMappingRepository animeMappingRepository,
-    IAnimeRepository animeRepository,
     IMalTokenService malTokenService,
     ILogger<MalController> logger) : ControllerBase
 {
@@ -37,11 +37,10 @@ public sealed class MalController(
         try
         {
             var result = await animeMediatorService.GetFranchiseConstellationAsync(malId);
-
             if (result.IsFailure)
             {
                 logger.LogError("Franchise constellation fetch failed for anime '{MalId}': {Error}", malId, result.Error.Message);
-                return StatusCode(500, result.Error.Message);
+                return this.ToErrorResult(result);
             }
 
             return Ok(result.Value);
@@ -63,7 +62,6 @@ public sealed class MalController(
     {
         if (string.IsNullOrWhiteSpace(animeId))
             return BadRequest(PresentationConstants.Messages.MalAnimeIdRequired);
-
         if (!ValidListStatuses.Contains(request.Status))
             return BadRequest(PresentationConstants.Messages.MalStatusInvalid);
 
@@ -75,7 +73,7 @@ public sealed class MalController(
             if (result.IsFailure)
             {
                 logger.LogError("MAL list update failed for anime '{AnimeId}': {Error}", animeId, result.Error.Message);
-                return StatusCode(500, result.Error.Message);
+                return this.ToErrorResult(result);
             }
         }
         catch (MalAuthenticationException ex)
@@ -93,11 +91,10 @@ public sealed class MalController(
     public async Task<ActionResult> RefreshToken()
     {
         var result = await malTokenService.RefreshTokenAsync();
-
         if (result.IsFailure)
         {
             logger.LogError("MAL token refresh failed: {Error}", result.Error.Message);
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         return NoContent();
@@ -116,11 +113,9 @@ public sealed class MalController(
             var result = await animeMediatorService.SearchMalAnimeAsync(q, limit);
             if (result.IsFailure)
             {
-                if (result.Error.Code == MalConstants.Errors.InvalidSearchQuery)
-                    return BadRequest(result.Error.Message);
-
-                logger.LogError("MAL anime search failed for query '{Query}': {Error}", q, result.Error.Message);
-                return StatusCode(500, result.Error.Message);
+                if (result.Error.Code != MalConstants.Errors.InvalidSearchQuery)
+                    logger.LogError("MAL anime search failed for query '{Query}': {Error}", q, result.Error.Message);
+                return this.ToErrorResult(result);
             }
             return Ok(result.Value);
         }
@@ -138,7 +133,6 @@ public sealed class MalController(
     {
         if (string.IsNullOrWhiteSpace(q))
             return BadRequest("Query parameter 'q' is required.");
-
         if (q.Trim().Length < 3)
             return BadRequest(PresentationConstants.Messages.MalSearchQueryTooShort);
 
@@ -148,11 +142,9 @@ public sealed class MalController(
             if (result.IsFailure)
             {
                 // The raw query can be long enough but still too short once MAL-hostile characters are stripped.
-                if (result.Error.Code == MalConstants.Errors.InvalidSearchQuery)
-                    return BadRequest(result.Error.Message);
-
-                logger.LogError("MAL anime search (details) failed for query '{Query}': {Error}", q, result.Error.Message);
-                return StatusCode(500, result.Error.Message);
+                if (result.Error.Code != MalConstants.Errors.InvalidSearchQuery)
+                    logger.LogError("MAL anime search (details) failed for query '{Query}': {Error}", q, result.Error.Message);
+                return this.ToErrorResult(result);
             }
             return Ok(result.Value);
         }
@@ -162,31 +154,17 @@ public sealed class MalController(
             return Unauthorized(new { code = "MAL.AuthenticationFailed", message = ex.Message });
         }
     }
+
     /// <summary>Returns all user-confirmed AniDbId cross-links, enriched with titles.</summary>
     [HttpGet("crosslinks")]
     [Authorize]
     public async Task<ActionResult> GetCrossLinks()
     {
-        var entries = await crossLinkService.GetAllAsync();
-        if (entries.Count == 0)
-            return Ok(Array.Empty<CrossLinkDto>());
+        var result = await mediator.Send(new GetCrossLinksQuery());
+        if (result.IsFailure)
+            return this.ToErrorResult(result);
 
-        var aniDbIds = entries.Select(e => e.SourceAniDbId).Distinct().ToList();
-        var aniDbMappings = await animeMappingRepository.GetByAniDbIdsAsync(aniDbIds);
-        var aniDbTitleMap = aniDbMappings
-            .Where(m => m.Anime?.AnimeSource != AnimeSource.MyAnimeList && m.Anime?.Title != null)
-            .GroupBy(m => m.AniDbId)
-            .ToDictionary(g => g.Key, g => g.First().Anime!.Title);
-
-        var dtos = new List<CrossLinkDto>(entries.Count);
-        foreach (var e in entries)
-        {
-            var malAnime = await animeRepository.GetAnimeAsync(AnimeSource.MyAnimeList, e.MalId);
-            aniDbTitleMap.TryGetValue(e.SourceAniDbId, out var aniDbTitle);
-            dtos.Add(new CrossLinkDto(e.SourceAniDbId, aniDbTitle, e.MalId, malAnime?.Title));
-        }
-
-        return Ok(dtos);
+        return Ok(result.Value);
     }
 
     /// <summary>Removes a user-confirmed AniDbId cross-link and its bridge mapping.</summary>
@@ -199,17 +177,12 @@ public sealed class MalController(
         if (string.IsNullOrWhiteSpace(sourceAniDbId) || string.IsNullOrWhiteSpace(malId))
             return BadRequest("Both sourceAniDbId and malId are required.");
 
-        await crossLinkService.RemoveAsync(sourceAniDbId, malId);
-        await animeMappingRepository.DeleteByAniDbIdAsync(sourceAniDbId, malId);
+        var result = await mediator.Send(new RemoveCrossLinkCommand(sourceAniDbId, malId));
+        if (result.IsFailure)
+            return this.ToErrorResult(result);
+
         return NoContent();
     }
 }
 
 public sealed record MalListStatusRequest(string Status, int NumWatchedEpisodes, int Score);
-
-/// <summary>Cross-link entry enriched with human-readable titles for display.</summary>
-public sealed record CrossLinkDto(
-    string SourceAniDbId,
-    string? AniDbTitle,
-    string MalId,
-    string? MalTitle);

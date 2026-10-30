@@ -30,6 +30,8 @@
 }
 
 // ─── Panel shell ─────────────────────────────────────────────────────────────
+// Full-height flex column: the summary block is shrink-0, the FILES container
+// is the only scrolling area (flex-1, min-height ~380px, own overflow-y-auto).
 
 @keyframes laPanelSlideIn {
   0%   { transform: translateX(100%); }
@@ -46,32 +48,38 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: 720px;
-  max-width: 95vw;
+  width: 100%;
+  max-width: 840px;
   background: var(--bg-secondary);
-  border-left: 1px solid rgba(108, 99, 255, 0.2);
-  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.45), -2px 0 12px rgba(108, 99, 255, 0.15);
-  overflow-y: auto;
-  overflow-x: hidden;
+  border-left: 1px solid rgba(124, 108, 240, 0.2);
+  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.45), -2px 0 12px rgba(124, 108, 240, 0.15);
   z-index: 1081;
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  overflow-x: hidden;
+  overflow-y: auto; // safety valve on very short viewports only
   animation: laPanelSlideIn 260ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 
   // Custom scrollbar
   scrollbar-width: thin;
-  scrollbar-color: rgba(108, 99, 255, 0.4) transparent;
+  scrollbar-color: rgba(124, 108, 240, 0.4) transparent;
 
-  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar { width: 5px; }
   &::-webkit-scrollbar-thumb {
-    background: rgba(108, 99, 255, 0.4);
-    border-radius: 2px;
+    background: rgba(124, 108, 240, 0.4);
+    border-radius: 3px;
   }
 
   &--closing {
     animation: laPanelSlideOut 200ms cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+  }
+
+  // ── Summary block (never scrolls away) ───────────────────────────────────
+  &__top {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   // ── Close button ─────────────────────────────────────────────────────────
@@ -86,7 +94,7 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    border: 1px solid rgba(108, 99, 255, 0.35);
+    border: 1px solid rgba(124, 108, 240, 0.35);
     background: var(--bg-primary);
     color: var(--text-secondary);
     font-size: 1rem;
@@ -94,7 +102,7 @@
     transition: background 0.15s, color 0.15s, border-color 0.15s;
 
     &:hover {
-      background: rgba(108, 99, 255, 0.15);
+      background: rgba(124, 108, 240, 0.15);
       color: var(--accent-primary);
       border-color: var(--accent-primary);
     }
@@ -117,39 +125,14 @@
     word-break: break-word;
   }
 
-  &__badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.15rem 0.55rem;
-    border-radius: 4px;
-    font-size: 0.68rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-    flex-shrink: 0;
-    margin-top: 0.2rem;
-
-    &--ended {
-      background: rgba(239, 68, 68, 0.12);
-      color: #ef4444;
-      border: 1px solid rgba(239, 68, 68, 0.25);
-    }
-
-    &--airing {
-      background: rgba(34, 197, 94, 0.12);
-      color: #22c55e;
-      border: 1px solid rgba(34, 197, 94, 0.25);
-    }
-  }
-
   // ── Path row ─────────────────────────────────────────────────────────────
   &__path-row {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.5rem;
-    margin: 1rem 0;
-    padding: 0.75rem;
+    margin: 0.85rem 0 0.75rem;
+    padding: 0.6rem 0.75rem;
     background: var(--bg-primary);
     border-radius: 8px;
     border: 1px solid var(--card-border);
@@ -157,6 +140,7 @@
 
   &__path {
     flex: 1;
+    min-width: 0;
     font-size: 0.78rem;
     color: var(--text-secondary);
     word-break: break-all;
@@ -169,7 +153,7 @@
     color: #fff;
     border: none;
     border-radius: 6px;
-    padding: 0.4rem 0.75rem;
+    padding: 0.45rem 0.85rem;
     font-size: 0.78rem;
     font-weight: 600;
     cursor: pointer;
@@ -183,14 +167,43 @@
     &--success {
       background: #22c55e;
     }
+
+    &--ghost {
+      background: transparent;
+      border: 1px solid rgba(124, 108, 240, 0.4);
+      color: var(--accent-primary);
+
+      &:hover { background: rgba(124, 108, 240, 0.12); filter: none; }
+
+      &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+
+        &:hover { background: transparent; filter: none; }
+      }
+
+      &.la-panel__copy--success {
+        background: #22c55e;
+        border-color: #22c55e;
+        color: #fff;
+      }
+    }
   }
 
-  // ── Sonarr link ──────────────────────────────────────────────────────────
+  // ── Links row (Sonarr + Anime details) ───────────────────────────────────
+  &__links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.15rem;
+  }
+
   &__sonarr-link {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    padding: 0.5rem 0.75rem;
+    padding: 0.45rem 0.75rem;
     background: rgba(0, 174, 224, 0.1);
     border: 1px solid rgba(0, 174, 224, 0.25);
     border-radius: 6px;
@@ -207,105 +220,60 @@
     }
   }
 
-  // ── Stats grid ───────────────────────────────────────────────────────────
-  &__stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.75rem;
-    margin: 1rem 0;
-  }
-
-  &__stat {
+  // ── Episode files section (single scrolling area) ────────────────────────
+  &__files-section {
     display: flex;
     flex-direction: column;
-    padding: 0.65rem;
-    background: var(--bg-primary);
-    border-radius: 8px;
-    border: 1px solid var(--card-border);
-  }
-
-  &__stat-label {
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    letter-spacing: 0.5px;
-    font-weight: 600;
-  }
-
-  &__stat-value {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin-top: 0.15rem;
-    font-variant-numeric: tabular-nums;
-
-    &--bloated {
-      color: #ef4444;
-      text-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
-    }
-  }
-
-  // ── Download progress ────────────────────────────────────────────────────
-  &__progress-section {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 1rem;
-  }
-
-  &__progress-bar {
-    flex: 1;
-    height: 6px;
-    background: var(--bg-primary);
-    border-radius: 3px;
+    flex: 1 1 auto;
+    min-height: 380px;
     overflow: hidden;
-    border: 1px solid var(--card-border);
+    margin-top: 1rem;
   }
 
-  &__progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent-primary), #22c55e);
-    border-radius: 3px;
-    transition: width 0.4s ease;
-  }
-
-  &__progress-text {
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    min-width: 3rem;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-  }
-
-  // ── Episode files section ────────────────────────────────────────────────
   &__section-title {
+    flex-shrink: 0;
     font-size: 0.85rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     color: var(--text-muted);
-    margin: 0.5rem 0 0.75rem;
+    margin: 0 0 0.55rem;
     padding-bottom: 0.4rem;
     border-bottom: 1px solid var(--card-border);
   }
 
   &__files-wrap {
-    overflow-x: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
     border-radius: 6px;
     border: 1px solid var(--card-border);
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(124, 108, 240, 0.4) transparent;
+
+    &::-webkit-scrollbar { width: 5px; }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(124, 108, 240, 0.4);
+      border-radius: 3px;
+    }
   }
 
   &__files {
     width: 100%;
+    table-layout: fixed; // keeps pills/badges from forcing a horizontal scrollbar
     font-size: 0.73rem;
     border-collapse: collapse;
 
     th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
       text-align: left;
       font-weight: 700;
       color: var(--text-muted);
-      padding: 0.4rem 0.5rem;
+      padding: 0.45rem 0.5rem;
       border-bottom: 1px solid var(--card-border);
       white-space: nowrap;
       text-transform: uppercase;
@@ -317,8 +285,24 @@
     td {
       padding: 0.35rem 0.5rem;
       color: var(--text-secondary);
-      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      vertical-align: middle;
     }
+
+    // Column widths: check | file (auto) | size | duration | GiB/h | video+status | audio | res | depth | ch
+    th:nth-child(1)  { width: 30px; }
+    th:nth-child(2)  { width: auto; }
+    th:nth-child(3)  { width: 64px; }
+    th:nth-child(4)  { width: 68px; }
+    th:nth-child(5)  { width: 52px; }
+    th:nth-child(6)  { width: 198px; }
+    th:nth-child(7)  { width: 66px; }
+    th:nth-child(8)  { width: 70px; }
+    th:nth-child(9)  { width: 50px; }
+    th:nth-child(10) { width: 40px; }
 
     tr:nth-child(even) td {
       background: rgba(128, 128, 128, 0.04);
@@ -328,30 +312,67 @@
       transition: background 0.1s;
 
       &:hover td {
-        background: rgba(108, 99, 255, 0.06);
+        background: rgba(124, 108, 240, 0.06);
       }
     }
   }
-
-  &__file-path {
-    max-width: 350px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-family: 'Cascadia Code', 'Fira Code', monospace;
-    font-size: 0.68rem;
-  }
 }
 
-// ─── File path cell ──────────────────────────────────────────────────────────
+// ─── File cell: episode badge + truncated file name (full path in tooltip) ───
 
-.la-file-path {
-  max-width: 350px;
+.la-file-cell {
+  overflow: hidden;
+}
+
+.la-file-cell__inner {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.la-ep-badge {
+  flex-shrink: 0;
+  padding: 0.1rem 0.42rem;
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-primary, #7c6cf0);
+  background: rgba(124, 108, 240, 0.12);
+  border: 1px solid rgba(124, 108, 240, 0.3);
+}
+
+.la-file-name {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: 'Cascadia Code', 'Fira Code', monospace;
   font-size: 0.68rem;
+}
+
+// ─── Table cells: numeric + never-clipping pill/badge cells ───────────────────
+
+.la-td-num {
+  font-variant-numeric: tabular-nums;
+}
+
+.la-td-nowrap {
+  overflow: visible; // pills/badges are sized to fit — never clip
+  white-space: nowrap;
+
+  .la-transcode-badge {
+    margin-left: 0.3rem;
+    padding: 0.08rem 0.32rem;
+    font-size: 0.54rem;
+  }
+}
+
+.la-td--bloated {
+  color: #ef4444;
+  font-weight: 700;
 }
 
 // ─── Sortable table headers ───────────────────────────────────────────────────
@@ -364,7 +385,7 @@
   &:hover { opacity: 0.8; }
 }
 
-.la-sort-active { color: var(--accent-color, #6c63ff); }
+.la-sort-active { color: var(--accent-color, #7c6cf0); }
 
 .la-sort-icon {
   margin-left: 4px;
@@ -382,8 +403,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.02em;
-  background: rgba(108, 99, 255, 0.12);
-  color: var(--accent-primary);
+  background: rgba(124, 108, 240, 0.12);
+  color: var(--accent-primary, #7c6cf0);
+  white-space: nowrap;
 
   &--sm {
     padding: 0.1rem 0.35rem;
@@ -397,14 +419,14 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.45rem 0.75rem;
   border-radius: 6px;
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid rgba(108, 99, 255, 0.4);
-  color: var(--accent-primary, #6c63ff);
-  background: rgba(108, 99, 255, 0.08);
+  border: 1px solid rgba(124, 108, 240, 0.4);
+  color: var(--accent-primary, #7c6cf0);
+  background: rgba(124, 108, 240, 0.08);
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   width: fit-content;
 
@@ -414,9 +436,9 @@
   }
 
   &:hover {
-    background: rgba(108, 99, 255, 0.18);
-    border-color: rgba(108, 99, 255, 0.6);
-    color: var(--accent-primary, #6c63ff);
+    background: rgba(124, 108, 240, 0.18);
+    border-color: rgba(124, 108, 240, 0.6);
+    color: var(--accent-primary, #7c6cf0);
   }
 }
 
@@ -429,7 +451,8 @@
 }
 
 .la-duration-legend {
-  margin: 0.5rem 0 0;
+  flex-shrink: 0;
+  margin: 0.55rem 0 0;
   padding: 0.4rem 0.6rem;
   font-size: 0.72rem;
   color: var(--text-muted);
@@ -438,14 +461,409 @@
   border-radius: 0 4px 4px 0;
 }
 
+// ─── High-density stat ribbon (1–2 rows instead of 7 stat boxes) ─────────────
+
+.la-ribbon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 0.9rem;
+  padding: 0.3rem 0.25rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem;
+    min-width: 0;
+    border-left: 1px solid var(--card-border);
+
+    &:first-child { border-left: none; }
+
+    &--episodes {
+      gap: 0.45rem;
+    }
+
+    &--stack {
+      flex: 1 1 100%;
+      flex-wrap: wrap;
+      border-left: none;
+      border-top: 1px solid var(--card-border);
+      margin-top: 0.15rem;
+      padding-top: 0.55rem;
+      padding-bottom: 0.45rem;
+    }
+  }
+
+  &__label {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  &__value {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+
+    &--bloated {
+      color: #ef4444;
+      text-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
+    }
+
+    &--savings {
+      color: #22c55e;
+      text-shadow: 0 0 8px rgba(34, 197, 94, 0.2);
+    }
+  }
+
+  &__hint {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  // ── Inline 'Downloaded %' mini bar inside the EPISODES stat ────────────
+  &__dl {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  &__dl-track {
+    display: inline-block;
+    width: 56px;
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(128, 128, 128, 0.18);
+    overflow: hidden;
+  }
+
+  &__dl-fill {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-primary, #7c6cf0), #22c55e);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  &__dl-pct {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ─── Stacked dual-codec composition bar (inside the ribbon) ───────────────────
+
+.la-stack-bar {
+  display: flex;
+  flex: 1 1 160px;
+  min-width: 140px;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(128, 128, 128, 0.12);
+
+  &__seg {
+    min-width: 3px;
+    transition: width 0.3s ease;
+  }
+
+  &__labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.65rem;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+
+    strong {
+      font-weight: 700;
+    }
+
+    & + &::before {
+      content: '|';
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+  }
+}
+
+// ─── Files table mini-tabs ───────────────────────────────────────────────────
+
+.la-panel__file-tabs {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.55rem;
+}
+
+.la-file-tab {
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: var(--bg-primary);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover {
+    border-color: rgba(124, 108, 240, 0.5);
+    color: var(--text-secondary);
+  }
+
+  &--active {
+    background: rgba(124, 108, 240, 0.18);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+  }
+}
+
+// ─── Needs-transcode cue (H264 rows) ─────────────────────────────────────────
+
+.la-transcode-badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  white-space: nowrap;
+}
+
+tbody tr.la-tr--needs-transcode td {
+  background: rgba(245, 158, 11, 0.06);
+}
+
+tbody tr.la-tr--needs-transcode:hover td {
+  background: rgba(245, 158, 11, 0.12);
+}
+
+// ─── Status badge (season-aware, same visual language as the table) ─────────
+
+.la-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+
+  &--ended { // emerald
+    background: rgba(34, 197, 94, 0.15);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: #22c55e;
+  }
+
+  &--amber {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #f59e0b;
+  }
+
+  &--incomplete { // crimson
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+  }
+}
+
+// ─── Mapped-to-host-path badge ───────────────────────────────────────────────
+
+.la-mapped-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+// ─── Action bar: primary export CTA + split dropdown ─────────────────────────
+
+.la-panel__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.la-export-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.15rem;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #7c6cf0 0%, #6c63ff 55%, #5b5bf0 100%);
+  color: #fff;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(124, 108, 240, 0.35);
+  transition: filter 0.15s, transform 0.1s, box-shadow 0.15s;
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 6px 20px rgba(124, 108, 240, 0.45);
+  }
+
+  &:active { transform: scale(0.97); }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    filter: none;
+    box-shadow: none;
+  }
+}
+
+.la-split {
+  position: relative;
+  display: inline-flex;
+
+  &__main {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  &__caret {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: -1px;
+    padding: 0.45rem 0.55rem;
+  }
+
+  &__menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    min-width: 300px;
+    padding: 0.35rem;
+    background: var(--bg-primary, #181b28);
+    border: 1px solid rgba(124, 108, 240, 0.35);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  &__item {
+    text-align: left;
+    padding: 0.45rem 0.65rem;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.76rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover {
+      background: rgba(124, 108, 240, 0.15);
+      color: var(--text-primary);
+    }
+  }
+}
+
+// ─── Selection: checkbox column + toolbar controls ──────────────────────────
+
+.la-check-th,
+.la-check-td {
+  width: 28px;
+  text-align: center;
+
+  input[type='checkbox'] {
+    accent-color: var(--accent-primary);
+    cursor: pointer;
+  }
+}
+
+.la-panel__select-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.55rem;
+}
+
+.la-panel__clear {
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.5);
+  }
+}
+
 // ─── Responsive ──────────────────────────────────────────────────────────────
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .la-panel {
     width: 100vw;
+    max-width: none;
+    padding: 1rem;
 
-    &__stats {
-      grid-template-columns: repeat(2, 1fr);
+    &__files {
+      th:nth-child(6) { width: 150px; }
+      th:nth-child(8) { width: 58px; }
     }
   }
 }

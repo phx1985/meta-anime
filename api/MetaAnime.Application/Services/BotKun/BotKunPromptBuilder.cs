@@ -142,22 +142,25 @@ public static class BotKunPromptBuilder
         Output ONLY the greeting. No markdown.
         """;
 
-    public static string Build(bool isNsfwAllowed, string animeContext, bool isDbQuery = false, int page = 1, bool hasNextPage = false, string language = "en")
+    public static string Build(bool isNsfwAllowed, string animeContext, bool isDbQuery = false, int page = 1, bool hasNextPage = false, string language = "en", string tasteProfile = "")
     {
         var directive = isNsfwAllowed ? NsfwDirective : SfwDirective;
         var context = string.IsNullOrWhiteSpace(animeContext) ? "No results available." : animeContext;
         var langLine = !string.IsNullOrWhiteSpace(language) && language != "en"
             ? $"\nLANGUAGE: Respond entirely in {language}."
             : string.Empty;
+        var tasteLine = !string.IsNullOrWhiteSpace(tasteProfile)
+            ? $"\nUSER TASTE PROFILE (derived from the user's library — use it to personalize pitches, never recite it verbatim): {tasteProfile}"
+            : string.Empty;
 
         if (!isDbQuery)
-            return string.Format(RagTemplate, directive, context) + langLine;
+            return string.Format(RagTemplate, directive, context) + tasteLine + langLine;
 
         var paginationHint = hasNextPage
             ? "PAGINATION: More results exist — let the user know they can ask for 'more' to see the next batch."
             : "PAGINATION: This is the last page of results.";
 
-        return string.Format(DbQueryTemplate, directive, page, context, paginationHint) + langLine;
+        return string.Format(DbQueryTemplate, directive, page, context, paginationHint) + tasteLine + langLine;
     }
 
     public static string BuildLucky(bool isNsfwAllowed, string malId, string title, string animeDetails, string language = "en")

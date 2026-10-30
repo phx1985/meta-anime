@@ -6,6 +6,7 @@ using MetaAnime.Application.BackgroundJobs;
 using MetaAnime.Application.Commands;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Queries;
+using MetaAnime.Utilities.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,7 +26,7 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
 
         if (result.IsFailure)
         {
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         return Ok(result.Value);
@@ -45,7 +46,7 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
 
         if (result.IsFailure)
         {
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         return Ok(result.Value);
@@ -85,7 +86,7 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
         var result = await mediator.Send(new GetCoverageGapQuery(gapType));
 
         if (result.IsFailure)
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
 
         return Ok(result.Value);
     }
@@ -121,7 +122,7 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
 
         if (result.IsFailure)
         {
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         return Ok(result.Value);
@@ -135,7 +136,7 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
 
         if (result.IsFailure)
         {
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         if (result.Value == null)
@@ -154,7 +155,7 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
 
         if (result.IsFailure)
         {
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         if (result.Value == null)
@@ -178,7 +179,7 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
 
         if (result.IsFailure)
         {
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         return CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
@@ -197,11 +198,8 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
 
         if (result.IsFailure)
         {
-            if (result.Error.Code == ApplicationConstants.Errors.NotFound)
-            {
-                return NotFound(result.Error.Message);
-            }
-            return StatusCode(500, result.Error.Message);
+            // NotFound errors map to 404 via the shared Result→error mapping.
+            return this.ToErrorResult(result);
         }
 
         return Ok(result.Value);
@@ -215,11 +213,8 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
 
         if (result.IsFailure)
         {
-            if (result.Error.Code == ApplicationConstants.Errors.NotFound)
-            {
-                return NotFound(result.Error.Message);
-            }
-            return StatusCode(500, result.Error.Message);
+            // NotFound errors map to 404 via the shared Result→error mapping.
+            return this.ToErrorResult(result);
         }
 
         return NoContent();
@@ -246,7 +241,7 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
         var result = await mediator.Send(new GetSeiyuuNexusQuery(malId));
 
         if (result.IsFailure)
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
 
         return Ok(result.Value);
     }
@@ -258,7 +253,7 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
         var result = await mediator.Send(new GetVoiceActorProfileQuery(personId));
 
         if (result.IsFailure)
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
 
         if (result.Value is null)
             return NotFound();

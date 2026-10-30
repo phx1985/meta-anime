@@ -1,128 +1,230 @@
 <!-- ─── Filter bar ──────────────────────────────────────────────────────────── -->
 <div class="la-filter-bar">
-  <!-- Title search -->
-  <div class="la-filter la-filter--search">
-    <svg class="la-filter__search-icon" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-      <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
-    </svg>
-    <input type="text"
-           [value]="filterTitle()"
-           (input)="filterTitle.set($any($event.target).value)"
-           placeholder="{{ 'library.filters.searchTitle' | translate }}"
-           class="la-filter__input" />
-  </div>
+  <!-- Row 1: pill multi-selects — grid row keeps AUDIO/RESOLUTION aligned when the
+       video cell grows with the SPLIT CODECS ONLY / CODEC MATCH controls -->
+  <div class="la-filter-bar__row la-filter-bar__row--pillsets">
+    <!-- Title search -->
+    <div class="la-filter la-filter--search">
+      <span class="la-filter__label">{{ 'animeList.filter.search' | translate }}</span>
+      <div class="la-filter__search-wrap">
+        <svg class="la-filter__search-icon" viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+          <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+        </svg>
+        <input type="text"
+               [value]="filters().title"
+               (input)="setFilter({ title: $any($event.target).value })"
+               placeholder="{{ 'library.filters.searchTitle' | translate }}"
+               class="la-filter__input" />
+      </div>
+    </div>
 
-  <!-- Video Codec multi-select -->
-  <div class="la-filter">
-    <label class="la-filter__label">{{ 'library.filters.videoCodec' | translate }}</label>
-    <div class="la-filter__pills">
-      @for (codec of VIDEO_CODECS; track codec) {
-        <button class="la-filter__pill"
-                [class.la-filter__pill--active]="filterVideoCodec().includes(codec)"
-                (click)="toggleFilter(filterVideoCodec, codec)">
-          {{ codec }}
+    <!-- Video Codec multi-select + bolt Split toggle + match-mode popover -->
+    <div class="la-filter">
+      <label class="la-filter__label">{{ 'library.filters.videoCodec' | translate }}</label>
+      <div class="la-filter__pills">
+        @for (codec of VIDEO_CODECS; track codec) {
+          <button class="la-filter__pill"
+                  [class.la-filter__pill--active]="filters().videoCodec.includes(codec)"
+                  (click)="togglePill('videoCodec', codec)">
+            {{ codec }}
+          </button>
+        }
+
+        <!-- Split Codecs Only quick toggle (inline bolt SVG) -->
+        <button class="la-filter__pill la-filter__pill--split"
+                [class.la-filter__pill--active]="filters().splitCodecsOnly"
+                (click)="toggleSplitCodecsOnly()">
+          <svg class="la-filter__bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+          {{ splitOnlyLabel() }}
         </button>
-      }
+
+        <!-- Codec match mode (revealed while codec pills are active) -->
+        @if (filters().videoCodec.length > 0) {
+          <div class="la-match-mode" #matchModeHost>
+            <button class="la-filter__pill la-match-mode__trigger"
+                    [class.la-match-mode__trigger--on]="filters().codecThreshold.mode !== 'any'"
+                    (click)="matchModeOpen.set(!matchModeOpen())">
+              {{ 'libraryIntel.matchMode.label' | translate }}: {{ MATCH_MODE_LABELS[filters().codecThreshold.mode] | translate }}
+              <span class="la-match-mode__caret">{{ matchModeOpen() ? '▲' : '▼' }}</span>
+            </button>
+            @if (matchModeOpen()) {
+              <div class="la-match-mode__popover">
+                <div class="la-match-mode__modes">
+                  @for (mode of MATCH_MODES; track mode) {
+                    <button class="la-filter__pill la-match-mode__mode"
+                            [class.la-filter__pill--active]="filters().codecThreshold.mode === mode"
+                            (click)="setMatchMode(mode)">
+                      {{ MATCH_MODE_LABELS[mode] | translate }}
+                    </button>
+                  }
+                </div>
+                @if (filters().codecThreshold.mode === 'custom') {
+                  <div class="la-match-mode__custom">
+                    <div class="la-match-mode__row">
+                      <span class="la-match-mode__label">{{ 'libraryIntel.matchMode.percent' | translate }}</span>
+                      <input type="number"
+                             class="la-match-mode__percent"
+                             min="0" max="100"
+                             [value]="filters().codecThreshold.percent"
+                             (input)="setThresholdPercent($any($event.target).value)" />
+                      <div class="la-select-wrap la-select-wrap--sm">
+                        <select class="la-match-mode__op"
+                                [value]="filters().codecThreshold.op"
+                                (change)="setThresholdOp($any($event.target).value)">
+                          <option value="gte">{{ 'libraryIntel.matchMode.opGte' | translate }}</option>
+                          <option value="lte">{{ 'libraryIntel.matchMode.opLte' | translate }}</option>
+                        </select>
+                        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+                      </div>
+                    </div>
+                    <input type="range"
+                           class="la-match-mode__slider"
+                           min="0" max="100"
+                           [value]="filters().codecThreshold.percent"
+                           (input)="setThresholdPercent($any($event.target).value)" />
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Audio Codec multi-select -->
+    <div class="la-filter">
+      <label class="la-filter__label">{{ 'library.filters.audioCodec' | translate }}</label>
+      <div class="la-filter__pills">
+        @for (codec of AUDIO_CODECS; track codec) {
+          <button class="la-filter__pill"
+                  [class.la-filter__pill--active]="filters().audioCodec.includes(codec)"
+                  (click)="togglePill('audioCodec', codec)">
+            {{ codec }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Resolution multi-select -->
+    <div class="la-filter">
+      <label class="la-filter__label">{{ 'library.filters.resolution' | translate }}</label>
+      <div class="la-filter__pills">
+        @for (res of RESOLUTIONS; track res) {
+          <button class="la-filter__pill"
+                  [class.la-filter__pill--active]="filters().resolution.includes(res)"
+                  (click)="togglePill('resolution', res)">
+            {{ res }}
+          </button>
+        }
+      </div>
     </div>
   </div>
 
-  <!-- Audio Codec multi-select -->
-  <div class="la-filter">
-    <label class="la-filter__label">{{ 'library.filters.audioCodec' | translate }}</label>
-    <div class="la-filter__pills">
-      @for (codec of AUDIO_CODECS; track codec) {
-        <button class="la-filter__pill"
-                [class.la-filter__pill--active]="filterAudioCodec().includes(codec)"
-                (click)="toggleFilter(filterAudioCodec, codec)">
-          {{ codec }}
-        </button>
-      }
+  <!-- Row 2: select filters -->
+  <div class="la-filter-bar__row la-filter-bar__row--selects">
+
+    <!-- Avg Ep Size threshold (MB) -->
+    <div class="la-filter">
+      <label class="la-filter__label">{{ 'library.filters.avgEpSize' | translate }}</label>
+      <div class="la-select-wrap">
+        <select class="la-filter__select"
+                [value]="filters().avgEpSize"
+                (change)="setFilter({ avgEpSize: $any($event.target).value })">
+          <option value="">{{ 'library.filters.all' | translate }}</option>
+          @for (opt of AVG_EP_SIZES; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+      </div>
     </div>
-  </div>
 
-  <!-- Resolution multi-select -->
-  <div class="la-filter">
-    <label class="la-filter__label">{{ 'library.filters.resolution' | translate }}</label>
-    <div class="la-filter__pills">
-      @for (res of RESOLUTIONS; track res) {
-        <button class="la-filter__pill"
-                [class.la-filter__pill--active]="filterResolution().includes(res)"
-                (click)="toggleFilter(filterResolution, res)">
-          {{ res }}
-        </button>
-      }
+    <!-- GiB/h threshold -->
+    <div class="la-filter">
+      <label class="la-filter__label">{{ 'library.filters.gibPerHour' | translate }}</label>
+      <div class="la-select-wrap">
+        <select class="la-filter__select"
+                [value]="filters().gibPerHour"
+                (change)="setFilter({ gibPerHour: $any($event.target).value })">
+          <option value="">{{ 'library.filters.all' | translate }}</option>
+          @for (opt of GIB_PER_HOUR_THRESHOLDS; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+      </div>
     </div>
-  </div>
 
-  <!-- Avg Ep Size select -->
-  <div class="la-filter">
-    <label class="la-filter__label">{{ 'library.filters.avgEpSize' | translate }}</label>
-    <select class="la-filter__select" [value]="filterAvgEpSize()" (change)="filterAvgEpSize.set($any($event.target).value)">
-      <option value="">{{ 'library.filters.all' | translate }}</option>
-      @for (opt of AVG_EP_SIZES; track opt.value) {
-        <option [value]="opt.value">{{ opt.label }}</option>
-      }
-    </select>
-  </div>
+    <!-- Status select (season-aware) -->
+    <div class="la-filter">
+      <label class="la-filter__label">{{ 'libraryIntel.status.label' | translate }}</label>
+      <div class="la-select-wrap">
+        <select class="la-filter__select"
+                [value]="filters().status"
+                (change)="setFilter({ status: $any($event.target).value })">
+          @for (opt of STATUS_OPTIONS; track opt) {
+            <option [value]="opt">{{ STATUS_LABELS[opt] | translate }}</option>
+          }
+        </select>
+        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+      </div>
+    </div>
 
-  <!-- GiB/h select -->
-  <div class="la-filter">
-    <label class="la-filter__label">{{ 'library.filters.gibPerHour' | translate }}</label>
-    <select class="la-filter__select" [value]="filterGibPerHour()" (change)="filterGibPerHour.set($any($event.target).value)">
-      <option value="">{{ 'library.filters.all' | translate }}</option>
-      @for (opt of GIB_PER_HOUR_THRESHOLDS; track opt.value) {
-        <option [value]="opt.value">{{ opt.label }}</option>
-      }
-    </select>
-  </div>
+    <!-- Download % select -->
+    <div class="la-filter">
+      <label class="la-filter__label">{{ 'library.filters.downloadPct' | translate }}</label>
+      <div class="la-select-wrap">
+        <select class="la-filter__select"
+                [value]="filters().download"
+                (change)="setFilter({ download: $any($event.target).value })">
+          <option value="all">{{ 'library.filters.all' | translate }}</option>
+          <option value="100">100%</option>
+          <option value="partial">{{ 'library.filters.partial' | translate }}</option>
+        </select>
+        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+      </div>
+    </div>
 
-  <!-- Status select -->
-  <div class="la-filter">
-    <label class="la-filter__label">{{ 'library.filters.status' | translate }}</label>
-    <select class="la-filter__select" [value]="filterStatus()" (change)="filterStatus.set($any($event.target).value)">
-      <option value="">{{ 'library.filters.all' | translate }}</option>
-      <option value="ended">{{ 'library.filters.ended' | translate }}</option>
-      <option value="continuing">{{ 'library.filters.continuing' | translate }}</option>
-    </select>
-  </div>
+    <!-- Bit Depth select -->
+    <div class="la-filter">
+      <label class="la-filter__label">{{ 'library.filters.bitDepth' | translate }}</label>
+      <div class="la-select-wrap">
+        <select class="la-filter__select"
+                [value]="filters().bitDepth"
+                (change)="setFilter({ bitDepth: $any($event.target).value })">
+          <option value="">{{ 'library.filters.all' | translate }}</option>
+          <option value="8">8-bit</option>
+          <option value="10">10-bit</option>
+        </select>
+        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+      </div>
+    </div>
 
-  <!-- Download % select -->
-  <div class="la-filter">
-    <label class="la-filter__label">{{ 'library.filters.downloadPct' | translate }}</label>
-    <select class="la-filter__select" [value]="filterDownload()" (change)="filterDownload.set($any($event.target).value)">
-      <option value="">{{ 'library.filters.all' | translate }}</option>
-      <option value="100">100%</option>
-      <option value="partial">{{ 'library.filters.partial' | translate }}</option>
-    </select>
-  </div>
+    <!-- With Files select -->
+    <div class="la-filter">
+      <label class="la-filter__label">{{ 'library.filters.withFiles' | translate }}</label>
+      <div class="la-select-wrap">
+        <select class="la-filter__select"
+                [value]="filters().hasFiles"
+                (change)="setFilter({ hasFiles: $any($event.target).value })">
+          <option value="all">{{ 'library.filters.all' | translate }}</option>
+          <option value="yes">{{ 'library.filters.withFilesYes' | translate }}</option>
+          <option value="no">{{ 'library.filters.withFilesNo' | translate }}</option>
+        </select>
+        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+      </div>
+    </div>
 
-  <!-- Bit Depth select -->
-  <div class="la-filter">
-    <label class="la-filter__label">{{ 'library.filters.bitDepth' | translate }}</label>
-    <select class="la-filter__select" [value]="filterBitDepth()" (change)="filterBitDepth.set($any($event.target).value)">
-      <option value="">{{ 'library.filters.all' | translate }}</option>
-      <option value="8">8-bit</option>
-      <option value="10">10-bit</option>
-    </select>
+    <!-- Clear all filters -->
+    @if (activeFilterCount() > 0) {
+      <button class="la-filter__clear" (click)="clearFilters()">
+        {{ 'library.filters.clearAll' | translate }}
+        <span class="la-filter__clear-count">{{ activeFilterCount() }}</span>
+      </button>
+    }
   </div>
-
-  <!-- With Files select -->
-  <div class="la-filter">
-    <label class="la-filter__label">{{ 'library.filters.withFiles' | translate }}</label>
-    <select class="la-filter__select" [value]="filterHasFiles()" (change)="filterHasFiles.set($any($event.target).value)">
-      <option value="all">{{ 'library.filters.all' | translate }}</option>
-      <option value="yes">{{ 'library.filters.withFilesYes' | translate }}</option>
-      <option value="no">{{ 'library.filters.withFilesNo' | translate }}</option>
-    </select>
-  </div>
-
-  <!-- Clear all filters -->
-  @if (activeFilterCount() > 0) {
-    <button class="la-filter__clear" (click)="clearFilters()">
-      {{ 'library.filters.clearAll' | translate }}
-      <span class="la-filter__clear-count">{{ activeFilterCount() }}</span>
-    </button>
-  }
 </div>
 
 <!-- ─── Table toolbar ──────────────────────────────────────────────────────── -->
@@ -133,11 +235,14 @@
   <div class="la-table-toolbar__controls">
     <div class="la-table-toolbar__rpp">
       <span class="la-rpp-label">{{ 'library.table.rowsPerPage' | translate }}</span>
-      <select class="la-rpp-select" (change)="pageSize.set(+$any($event.target).value); page.set(1)">
-        @for (opt of pageSizeOptions; track opt) {
-          <option [value]="opt" [selected]="pageSize() === opt">{{ opt }}</option>
-        }
-      </select>
+      <div class="la-select-wrap la-select-wrap--sm">
+        <select class="la-rpp-select" (change)="setPageSize(+$any($event.target).value)">
+          @for (opt of pageSizeOptions; track opt) {
+            <option [value]="opt" [selected]="filters().pageSize === opt">{{ opt }}</option>
+          }
+        </select>
+        <svg class="la-select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+      </div>
     </div>
   </div>
 </div>
@@ -150,11 +255,11 @@
         @for (col of tableColumns; track col.key) {
           <th [class]="'la-th--' + col.key"
               [class.la-th--sortable]="col.sortable"
-              [class.la-th--sorted]="sortCol() === col.key"
+              [class.la-th--sorted]="filters().sortCol === col.key"
               (click)="col.sortable && toggleSort(col.key)">
             {{ col.label | translate }}
-            @if (sortCol() === col.key) {
-              <span class="la-sort-arrow">{{ sortDir() === 'asc' ? '▲' : '▼' }}</span>
+            @if (filters().sortCol === col.key) {
+              <span class="la-sort-arrow">{{ filters().sortDir === 'asc' ? '▲' : '▼' }}</span>
             }
           </th>
         }
@@ -165,6 +270,15 @@
         <tr class="la-row" (click)="rowClicked.emit(row)">
           <!-- Title -->
           <td class="la-td--title">{{ row.title }}</td>
+
+          <!-- Status badge (season-aware) -->
+          <td class="la-td--status">
+            <span class="la-status-badge"
+                  [ngClass]="statusBadgeClass(row)"
+                  [title]="statusBadgeTipKey(row) | translate">
+              {{ statusBadgeKey(row) | translate }}
+            </span>
+          </td>
 
           <!-- Video Codec -->
           <td class="la-td--video-codec">
@@ -183,13 +297,19 @@
             </div>
           </td>
 
-          <!-- Audio Codec -->
+          <!-- Audio Codec: tone pills for ≥5% codecs, tiny entries folded into one +N badge -->
           <td class="la-td--audio-codec">
             <div class="la-codec-pills-wrap">
-            @if (row.audioCodecDistribution && getCodecPills(row.audioCodecDistribution).length > 0 && !isEnriching()) {
-              @for (pill of getCodecPills(row.audioCodecDistribution); track pill.label) {
-                <span class="la-codec-pill la-codec-pill--audio" [ngClass]="'la-codec-pill--' + pill.label.toLowerCase()">
+            @if (row.audioCodecDistribution && audioPills(row).visible.length > 0 && !isEnriching()) {
+              @for (pill of audioPills(row).visible; track pill.label) {
+                <span class="la-codec-pill" [ngClass]="'la-audio-pill--' + pill.tone">
                   {{ pill.label }} <span class="la-pill-pct">{{ pill.pct }}%</span>
+                </span>
+              }
+              @if (audioPills(row).hiddenCount > 0) {
+                <span class="la-codec-pill la-codec-pill--more"
+                      [title]="'libraryIntel.table.moreAudio' | translate: { count: audioPills(row).hiddenCount }">
+                  +{{ audioPills(row).hiddenCount }}
                 </span>
               }
             } @else if (isEnriching()) {
@@ -239,6 +359,8 @@
               {{ row.primaryBitDepth }}-bit
             } @else if (isEnriching()) {
               <span class="la-shimmer-inline"></span>
+            } @else {
+              <span class="la-na">—</span>
             }
           </td>
         </tr>
@@ -257,8 +379,8 @@
 @if (totalPages() > 1) {
   <nav class="la-pagination" aria-label="Table pagination">
     <button class="la-page-btn"
-            [disabled]="page() <= 1"
-            (click)="goToPage(page() - 1)"
+            [disabled]="filters().page <= 1"
+            (click)="goToPage(filters().page - 1)"
             aria-label="Previous page">
       ‹
     </button>
@@ -268,7 +390,7 @@
         <span class="la-page-ellipsis">…</span>
       } @else {
         <button class="la-page-btn"
-                [class.la-page-btn--active]="page() === p"
+                [class.la-page-btn--active]="filters().page === p"
                 (click)="goToPage(p)">
           {{ p }}
         </button>
@@ -276,8 +398,8 @@
     }
 
     <button class="la-page-btn"
-            [disabled]="page() >= totalPages()"
-            (click)="goToPage(page() + 1)"
+            [disabled]="filters().page >= totalPages()"
+            (click)="goToPage(filters().page + 1)"
             aria-label="Next page">
       ›
     </button>

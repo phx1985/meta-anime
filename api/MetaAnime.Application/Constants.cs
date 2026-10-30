@@ -52,6 +52,28 @@ public static class Constants
         public const string GetSeiyuuNexusAsync = "Error.GetSeiyuuNexusAsync";
         public const string GetVoiceActorProfileAsync = "Error.GetVoiceActorProfileAsync";
         public const string SyncAnimeCastAsync = "Error.SyncAnimeCastAsync";
+
+        // Admin authentication flows
+        public const string GetAuthStatus = "Error.GetAuthStatus";
+        public const string Login = "Error.Login";
+        public const string ChangePassword = "Error.ChangePassword";
+        public const string SetupPassword = "Error.SetupPassword";
+        public const string DisableAuth = "Error.DisableAuth";
+        public const string AuthNotConfigured = "Error.AuthNotConfigured";
+        public const string AuthInvalidPassword = "Error.AuthInvalidPassword";
+        public const string AuthPasswordAlreadySet = "Error.AuthPasswordAlreadySet";
+        public const string AuthEmptyPassword = "Error.AuthEmptyPassword";
+        public const string AuthNotEnabled = "Error.AuthNotEnabled";
+
+        // Cross-link queries/commands
+        public const string GetCrossLinks = "Error.GetCrossLinks";
+        public const string RemoveCrossLink = "Error.RemoveCrossLink";
+
+        // Settings / property-bag write policy
+        public const string GetMalOAuthRedirectUri = "Error.GetMalOAuthRedirectUri";
+        public const string UpdateSetting = "Error.UpdateSetting";
+        public const string PropertyBagKeyNotAllowed = "Error.PropertyBagKeyNotAllowed";
+        public const string InvalidBotKunProviderUrl = "Error.InvalidBotKunProviderUrl";
     }
 
     public static class JobNames

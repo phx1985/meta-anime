@@ -10,7 +10,8 @@ namespace MetaAnime.Application.Queries;
 public sealed class GetSettingsQueryHandler(
     IPropertyBagRepository propertyBagRepository,
     IMalTokenService malTokenService,
-    IPlexAuthService plexAuthService)
+    IPlexAuthService plexAuthService,
+    MetaAnime.Application.Interfaces.ISecretProtector secretProtector)
     : IRequestHandler<GetSettingsQuery, Result<IEnumerable<SettingDefinition>>>
 {
     public async ValueTask<Result<IEnumerable<SettingDefinition>>> Handle(GetSettingsQuery request, CancellationToken cancellationToken)
@@ -19,6 +20,14 @@ public sealed class GetSettingsQueryHandler(
         {
             var allEntries = (await propertyBagRepository.GetAllAsync())
                 .ToDictionary(e => e.Key, e => e.Value);
+
+            // Sensitive values are stored encrypted at rest — transparently decrypt
+            // for display so the settings UI behaves exactly as before.
+            if (allEntries.TryGetValue(SettingsKeys.BotKunApiKey, out var protectedKey) &&
+                secretProtector.TryUnprotect(protectedKey ?? string.Empty, out var plainKey))
+            {
+                allEntries[SettingsKeys.BotKunApiKey] = plainKey;
+            }
 
             var malConnected = await malTokenService.IsConnectedAsync();
             var plexConnected = await plexAuthService.IsConnectedAsync();

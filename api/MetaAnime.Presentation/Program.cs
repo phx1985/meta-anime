@@ -1,14 +1,40 @@
 using Hangfire;
 using Hangfire.PostgreSql;
 using MetaAnime.Application.BackgroundJobs;
+using MetaAnime.Core;
+using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Settings;
 using MetaAnime.Hubs;
+using MetaAnime.Utilities.ErrorHandling;
 using MetaAnime.Utilities.Extensions;
 using MetaAnime.Utilities.Hangfire;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
+using System.Text.Json;
+using System.Threading.RateLimiting;
+
+// Writable-path contract for containers with a read-only root filesystem:
+// the app directory (/app) is never written to. Deployments point the writable
+// locations at mounted volumes/tmpfs via these optional environment variables;
+// the container's s6 run script sets them to /config and /tmp.
+// NOTE: ASP.NET's HostingEnvironmentExtensions.Initialize() CREATES the web root
+// (Directory.CreateDirectory) when it is missing — so a /app/wwwroot default would
+// try mkdir("/app") and crash on hosts with an immutable root filesystem (Bazzite).
+// Resolution order: METAANIME_WEBROOT -> /app/wwwroot when it exists (container) ->
+// a local-safe path next to the binary.
+var webRootPath = Environment.GetEnvironmentVariable("METAANIME_WEBROOT");
+if (string.IsNullOrEmpty(webRootPath))
+{
+    webRootPath = Directory.Exists("/app/wwwroot")
+        ? "/app/wwwroot"
+        : Path.Combine(AppContext.BaseDirectory, "wwwroot");
+}
+var dataProtectionKeysDir = Environment.GetEnvironmentVariable("METAANIME_KEYS_DIR");
+var assetConfigDir = Environment.GetEnvironmentVariable("METAANIME_ASSET_CONFIG_DIR") ?? "/config/wwwroot-assets";
 
 // Writable-path contract for containers with a read-only root filesystem:
 // the app directory (/app) is never written to. Deployments point the writable
@@ -52,6 +78,30 @@ builder.AddServiceDefaults();
 
 // Add services to the container.
 builder.Services.AddResponseCaching();
+
+// Global error handling (RFC 9457): unhandled exceptions are logged server-side
+// and answered with the unified ProblemDetails envelope — never raw exception text.
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+// Bot-kun AI endpoints: per-user rate limit (20 req/min) to protect free-tier
+// provider quotas and the server from runaway or looping clients.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy<string>("botkun", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.User.Identity?.Name
+                ?? context.Connection.RemoteIpAddress?.ToString()
+                ?? "anonymous",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+            }));
+});
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(
@@ -133,6 +183,8 @@ var app = builder.Build();
 await app.Services.MigrateDatabaseAsync();
 
 // Configure the HTTP request pipeline.
+app.UseExceptionHandler(); // unified RFC 9457 error envelope for unhandled exceptions
+
 if (app.Environment.IsDevelopment())
 {
     // Native .NET 10 OpenAPI endpoint + Scalar UI (replaces Swashbuckle)
@@ -151,6 +203,37 @@ app.MapHealthChecks("/api/health");
 // writable directory (see METAANIME_ASSET_CONFIG_DIR) as an overlay at /assets.
 // A request that the overlay cannot satisfy falls through to the wwwroot static
 // files below, so the rest of /assets/* keeps working unchanged.
+//
+// SECURITY: /assets/config.json is served DYNAMICALLY (below) and never from a
+// static file. Once an admin password exists, the runtime API key is returned
+// only to authenticated callers (or via GET /api/v1/auth/runtime-key) — an
+// anonymous visitor must never receive a credential that grants full API access.
+app.Use(async (context, next) =>
+{
+    if (HttpMethods.IsGet(context.Request.Method) &&
+        string.Equals(context.Request.Path, "/assets/config.json", StringComparison.OrdinalIgnoreCase))
+    {
+        var apiKey = string.Empty;
+        var repo = context.RequestServices.GetRequiredService<IPropertyBagRepository>();
+        var hashEntry = await repo.GetByKeyAsync(SettingsKeys.AdminPasswordHash);
+        var protectedMode = !string.IsNullOrWhiteSpace(hashEntry?.Value);
+
+        // First-run / wizard mode (no password yet): keep the original behaviour and
+        // hand the key to the SPA. Protected mode: only authenticated requests get it.
+        if (!protectedMode || (await context.AuthenticateAsync()).Succeeded)
+        {
+            apiKey = context.RequestServices
+                .GetRequiredService<IOptions<AuthenticationSettings>>().Value.ApiKey;
+        }
+
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync(JsonSerializer.Serialize(new { apiKey }));
+        return;
+    }
+
+    await next();
+});
+
 if (Directory.Exists(assetConfigDir))
 {
     app.UseStaticFiles(new StaticFileOptions
@@ -174,6 +257,7 @@ app.UseCors();
 app.UseResponseCaching();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 // Reset admin password if the flag is set (recovery mechanism).
 var authOptions = app.Services.GetRequiredService<IOptions<MetaAnime.Core.Settings.AuthenticationSettings>>();

@@ -2140,4 +2140,223 @@
 
 // ── Bot-kun API Health & Quota section ──────────────────────────────────────
 
+// ── Library & HandBrake transcode paths card ────────────────────────────────
+.path-field-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.45rem;
+}
 
+.path-browse-btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+// Amber warning for virtual smb:// URIs (HandBrake needs a mounted local path)
+.path-smb-warning {
+  margin-top: 0.45rem;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 8px;
+  word-break: break-word;
+}
+
+.path-browse-modal {
+  max-width: 460px;
+  text-align: left;
+  align-items: stretch;
+}
+
+.path-browse-input {
+  width: 100%;
+}
+
+.path-browse-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.path-browse-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+
+  &:hover {
+    border-color: var(--accent-primary);
+    background: rgba(108, 99, 255, 0.08);
+    color: var(--text-primary);
+  }
+}
+
+
+
+
+// ── Server-side folder navigator (browse modal) ─────────────────────────────
+.path-browse-nav {
+  margin-top: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  &__up {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary, #e8e8f0);
+    cursor: pointer;
+
+    &:hover:not(:disabled) { background: rgba(124, 108, 240, 0.25); }
+    &:disabled { opacity: 0.35; cursor: default; }
+  }
+
+  &__path {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.72rem;
+    color: var(--text-secondary, #b8b8d0);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__list {
+    max-height: 210px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+
+    &::-webkit-scrollbar { width: 6px; }
+    &::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18); border-radius: 3px; }
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 10px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-primary, #e8e8f0);
+    font-size: 0.82rem;
+    cursor: pointer;
+    text-align: left;
+
+    &:hover {
+      background: rgba(124, 108, 240, 0.22);
+    }
+  }
+
+  &__icon { flex: none; opacity: 0.85; }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__chevron {
+    flex: none;
+    opacity: 0.45;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  &__note {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 18px 12px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-secondary, #a8a8c0);
+
+    &--error { color: #f87171; }
+  }
+
+  &__spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-top-color: #7c6cf0;
+    border-radius: 50%;
+    animation: path-browse-spin 0.8s linear infinite;
+  }
+
+  &__retry {
+    padding: 5px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary, #e8e8f0);
+    font-size: 0.78rem;
+    cursor: pointer;
+
+    &:hover { background: rgba(124, 108, 240, 0.25); }
+  }
+}
+
+@keyframes path-browse-spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── Backup & Restore card ───────────────────────────────────────────────────
+.config-backup-group {
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+
+  &--dragover {
+    border-color: var(--accent-primary);
+    background: rgba(124, 108, 240, 0.06);
+  }
+}
+
+.config-backup-drop-hint {
+  margin-top: 0.45rem;
+  font-size: 0.72rem;
+  font-style: italic;
+  color: var(--text-muted);
+}

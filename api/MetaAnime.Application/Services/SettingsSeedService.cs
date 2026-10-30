@@ -117,5 +117,13 @@ public sealed class SettingsSeedService(
         // Library analysis alert thresholds
         [SettingsKeys.LibraryAnalysisAvgEpSizeMb] = "1200",
         [SettingsKeys.LibraryAnalysisAvgGibPerHour] = "1.2",
+        // User path mapping (container → local host) + HandBrake batch export
+        [SettingsKeys.PathMapContainerRoot] = "/downloads_root",
+        [SettingsKeys.PathMapHostRoot] = string.Empty,
+        [SettingsKeys.PathMapSeparator] = "posix",
+        [SettingsKeys.HandBrakePresetName] = "Anime 1080p NVENC VOSTFR (<500MB)",
+        [SettingsKeys.HandBrakeDestDir] = string.Empty,
+        [SettingsKeys.HandBrakeDestMode] = "transcoded",
+        [SettingsKeys.TranscodeIncludeUnknown] = "true",
     };
 }
