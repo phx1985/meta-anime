@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Infrastructure.Plex.Models;
+using MetaAnime.Utilities.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -27,7 +28,7 @@ public sealed class PlexAuthController(
         if (result.IsFailure)
         {
             logger.LogError("Plex OAuth pin creation failed: {Error}", result.Error.Message);
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         var pin = result.Value;
@@ -46,7 +47,7 @@ public sealed class PlexAuthController(
         if (result.IsFailure)
         {
             logger.LogError("Plex pin poll failed for pin {PinId}: {Error}", pinId, result.Error.Message);
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         if (result.Value)
@@ -76,7 +77,7 @@ public sealed class PlexAuthController(
         if (result.IsFailure)
         {
             logger.LogError("Plex disconnect failed: {Error}", result.Error.Message);
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         logger.LogInformation("Plex account disconnected");
@@ -93,7 +94,7 @@ public sealed class PlexAuthController(
         if (result.IsFailure)
         {
             logger.LogError("Failed to fetch Plex libraries: {Error}", result.Error.Message);
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         return Ok(result.Value.Select(l => new PlexLibraryResponse(l.Key, l.Title, l.Type)));

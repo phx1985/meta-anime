@@ -1,14 +1,12 @@
 using Asp.Versioning;
-using Hangfire;
 using Mediator;
-using MetaAnime.Application.BackgroundJobs;
 using MetaAnime.Application.Commands;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Interfaces;
 using MetaAnime.Application.Queries;
 using MetaAnime.Core;
-using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
+using MetaAnime.Utilities.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -20,9 +18,7 @@ namespace MetaAnime.Controllers;
 [Route("api/v1/settings")]
 public sealed class SettingsController(
     IMediator mediator,
-    IRecurringJobManager recurringJobManager,
     IAppConfigBackupService configBackupService,
-    IPropertyBagRepository propertyBagRepository,
     IPlexAuthService plexAuthService,
     IMalTokenService malTokenService,
     IAnimeMediatorService animeMediatorService) : ControllerBase
@@ -36,9 +32,8 @@ public sealed class SettingsController(
     public async Task<ActionResult<IEnumerable<SettingDefinition>>> GetAll()
     {
         var result = await mediator.Send(new GetSettingsQuery());
-
         if (result.IsFailure)
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
 
         return Ok(result.Value);
     }
@@ -51,9 +46,8 @@ public sealed class SettingsController(
     public async Task<ActionResult<SyncStatusResponse>> GetSyncStatus()
     {
         var result = await mediator.Send(new GetSyncStatusQuery());
-
         if (result.IsFailure)
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
 
         return Ok(result.Value);
     }
@@ -68,20 +62,11 @@ public sealed class SettingsController(
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        var result = await mediator.Send(new UpsertPropertyBagCommand(key, request));
-
+        // The handler performs the write-allowlist enforcement and re-schedules the
+        // background jobs when an interval setting changes.
+        var result = await mediator.Send(new UpdateSettingCommand(key, request));
         if (result.IsFailure)
-            return StatusCode(500, result.Error.Message);
-
-        // Re-schedule the sync job whenever the sync interval setting changes
-        if (key == SettingsKeys.AppSyncInterval)
-        {
-            await AnimeSyncJob.ScheduleAsync(recurringJobManager, HttpContext.RequestServices);
-        }
-        else if (key == SettingsKeys.DownloadStatsCacheInterval)
-        {
-            await DownloadStatsCacheJob.ScheduleAsync(recurringJobManager, HttpContext.RequestServices);
-        }
+            return this.ToErrorResult(result);
 
         return Ok(result.Value);
     }
@@ -118,8 +103,11 @@ public sealed class SettingsController(
         [FromBody] AppConfigBackupDto backup,
         CancellationToken cancellationToken)
     {
-        var hashEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.AdminPasswordHash);
-        var requiresAuth = !string.IsNullOrWhiteSpace(hashEntry?.Value);
+        var authStatus = await mediator.Send(new GetAuthStatusQuery());
+        if (authStatus.IsFailure)
+            return this.ToErrorResult(authStatus);
+
+        var requiresAuth = authStatus.Value.RequiresAuth;
         if (requiresAuth && User.Identity?.IsAuthenticated != true)
             return Unauthorized();
 

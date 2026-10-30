@@ -1542,8 +1542,14 @@ public sealed class AnimeMediatorService(
                     var animeForDb = malAnime.ToAnime();
                     await animeRepository.AddAsync(animeForDb);
 
-                    foreach (var aniDbId in aniDbIds)
-                        await animeMappingRepository.AddAsync(new AnimeMapping { AniDbId = aniDbId, AnimeId = animeForDb.Id });
+                    // Bulk insert the bridge mappings in one round-trip (house idiom for
+                    // sync jobs) — AnimeMappingRepository.BulkInsertAsync assigns each
+                    // row's Id exactly like AddAsync did.
+                    if (aniDbIds.Count > 0)
+                    {
+                        await animeMappingRepository.BulkInsertAsync(
+                            aniDbIds.Select(aniDbId => new AnimeMapping { AniDbId = aniDbId, AnimeId = animeForDb.Id }));
+                    }
                 }
                 else if (sourceAniDbId != null)
                 {

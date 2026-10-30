@@ -1,7 +1,8 @@
 using Asp.Versioning;
-using MetaAnime.Core;
-using MetaAnime.Core.Interfaces.Repositories;
+using Mediator;
+using MetaAnime.Application.Queries;
 using MetaAnime.Core.Interfaces.Services;
+using MetaAnime.Utilities.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -12,8 +13,8 @@ namespace MetaAnime.Controllers;
 [ApiVersion("1.0")]
 [Route("api/v1/mal/auth")]
 public sealed class MalAuthController(
+    IMediator mediator,
     IMalOAuthService malOAuthService,
-    IPropertyBagRepository propertyBagRepository,
     ILogger<MalAuthController> logger) : ControllerBase
 {
     /// <summary>
@@ -32,7 +33,7 @@ public sealed class MalAuthController(
         if (result.IsFailure)
         {
             logger.LogError("MAL OAuth initiation failed: {Error}", result.Error.Message);
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         return Ok(new MalAuthInitiateResponse(result.Value));
@@ -52,8 +53,14 @@ public sealed class MalAuthController(
             return BadRequest("code and state are required.");
         }
 
-        var redirectUriEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.MalOAuthRedirectUri);
-        var redirectUri = redirectUriEntry?.Value;
+        var redirectUriResult = await mediator.Send(new GetMalOAuthRedirectUriQuery());
+        if (redirectUriResult.IsFailure)
+        {
+            logger.LogError("MAL OAuth SPA callback: failed to read stored redirectUri: {Error}", redirectUriResult.Error.Message);
+            return StatusCode(500, "OAuth session expired. Please restart the authorization flow.");
+        }
+
+        var redirectUri = redirectUriResult.Value;
         if (string.IsNullOrWhiteSpace(redirectUri) ||
             !Uri.TryCreate(redirectUri, UriKind.Absolute, out var parsedUri) ||
             (parsedUri.Scheme != Uri.UriSchemeHttps && parsedUri.Scheme != Uri.UriSchemeHttp))
@@ -93,7 +100,7 @@ public sealed class MalAuthController(
         if (result.IsFailure)
         {
             logger.LogError("MAL disconnect failed: {Error}", result.Error.Message);
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         logger.LogInformation("MAL account disconnected");

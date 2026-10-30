@@ -3,6 +3,7 @@ using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Interfaces;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Presentation;
+using MetaAnime.Utilities.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -33,7 +34,7 @@ public sealed class SonarrController(
         if (result.IsFailure)
         {
             logger.LogError("Sonarr codec search failed for codec '{Codec}': {Error}", codec, result.Error.Message);
-            return StatusCode(500, Constants.Messages.SonarrCodecSearchError);
+            return this.ToErrorResult(result, statusCode: StatusCodes.Status500InternalServerError, message: Constants.Messages.SonarrCodecSearchError);
         }
 
         return Ok(result.Value);
@@ -46,7 +47,7 @@ public sealed class SonarrController(
     {
         var result = await animeMediatorService.GetSonarrOptionsAsync();
         if (result.IsFailure)
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         return Ok(result.Value);
     }
 
@@ -62,7 +63,7 @@ public sealed class SonarrController(
         if (result.IsFailure)
         {
             logger.LogError("Sonarr lookup failed for term '{Term}': {Error}", term, result.Error.Message);
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
         return Ok(result.Value);
     }
@@ -86,7 +87,7 @@ public sealed class SonarrController(
         if (result.IsFailure)
         {
             logger.LogError("Sonarr add failed for TVDB ID '{TvdbId}': {Error}", request.TvdbId, result.Error.Message);
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
 
         return Ok(result.Value);
@@ -101,7 +102,7 @@ public sealed class SonarrController(
         if (result.IsFailure)
         {
             logger.LogError("Sonarr remove failed for series '{SonarrId}': {Error}", sonarrId, result.Error.Message);
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
         return NoContent();
     }
@@ -115,7 +116,7 @@ public sealed class SonarrController(
         if (result.IsFailure)
         {
             logger.LogError("Failed to fetch Sonarr tags: {Error}", result.Error.Message);
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
         return Ok(result.Value.Select(t => new SonarrTagDto(t.Id, t.Label)));
     }
@@ -132,7 +133,7 @@ public sealed class SonarrController(
         if (result.IsFailure)
         {
             logger.LogError("Failed to create Sonarr tag '{Label}': {Error}", request.Label, result.Error.Message);
-            return StatusCode(500, result.Error.Message);
+            return this.ToErrorResult(result);
         }
         return Ok(new SonarrTagDto(result.Value.Id, result.Value.Label));
     }

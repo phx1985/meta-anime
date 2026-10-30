@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using MetaAnime.Utilities.ErrorHandling;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,7 +15,7 @@ namespace MetaAnime.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v1/fs")]
-public sealed class FileSystemController : ControllerBase
+public sealed class FileSystemController(ILogger<FileSystemController> logger) : ControllerBase
 {
     public sealed record BrowseDirectory(string Path, string? Parent, IReadOnlyList<BrowseEntry> Directories);
     public sealed record BrowseEntry(string Name, string Path);
@@ -33,11 +34,12 @@ public sealed class FileSystemController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(new { error = $"Invalid path: {ex.Message}" });
+            logger.LogWarning(ex, "Rejected invalid browse path");
+            return BadRequest(ProblemEnvelope.Create(StatusCodes.Status400BadRequest, "Invalid path."));
         }
 
         if (!Directory.Exists(target))
-            return NotFound(new { error = $"Directory not found: {target}" });
+            return NotFound(ProblemEnvelope.Create(StatusCodes.Status404NotFound, $"Directory not found: {target}"));
 
         try
         {
@@ -45,17 +47,18 @@ public sealed class FileSystemController : ControllerBase
                 .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
                 .Select(p => new BrowseEntry(Path.GetFileName(p), p))
                 .ToList();
-
             var parent = Directory.GetParent(target)?.FullName;
             return Ok(new BrowseDirectory(target, parent, directories));
         }
         catch (UnauthorizedAccessException)
         {
-            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Permission denied" });
+            return StatusCode(StatusCodes.Status403Forbidden, ProblemEnvelope.Create(StatusCodes.Status403Forbidden, "Permission denied"));
         }
         catch (Exception ex)
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, new { error = ex.Message });
+            logger.LogError(ex, "Failed to enumerate directories for '{Target}'", target);
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                ProblemEnvelope.Create(StatusCodes.Status500InternalServerError, "Failed to list directories."));
         }
     }
 }
