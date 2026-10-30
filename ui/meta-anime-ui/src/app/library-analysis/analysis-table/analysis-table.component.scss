@@ -168,14 +168,14 @@
     }
 
     &--split.la-filter__pill--active {
-      background: rgba(245, 158, 11, 0.18);
-      border-color: rgba(245, 158, 11, 0.5);
-      color: #fbbf24;
+      background: color-mix(in srgb, var(--color-warning-deep) 18%, transparent);
+      border-color: color-mix(in srgb, var(--color-warning-deep) 50%, transparent);
+      color: var(--color-warning);
 
       &:hover {
-        background: rgba(245, 158, 11, 0.24);
-        border-color: rgba(245, 158, 11, 0.55);
-        color: #fbbf24;
+        background: color-mix(in srgb, var(--color-warning-deep) 24%, transparent);
+        border-color: color-mix(in srgb, var(--color-warning-deep) 55%, transparent);
+        color: var(--color-warning);
       }
     }
   }
@@ -533,7 +533,7 @@
 }
 
 // Audio codec tones — AAC/MP3 slate, OPUS teal, EAC3/AC3 purple, FLAC/WAV/DTS amber
-.la-audio-pill--slate  { border: 1px solid rgba(99, 102, 241, 0.3);  background: rgba(99, 102, 241, 0.15);  color: #818cf8; }
+.la-audio-pill--slate  { border: 1px solid rgba(99, 102, 241, 0.3);  background: rgba(99, 102, 241, 0.15);  color: var(--color-brand); }
 .la-audio-pill--teal   { border: 1px solid rgba(20, 184, 166, 0.3);  background: rgba(20, 184, 166, 0.15);  color: #5eead4; }
 .la-audio-pill--purple { border: 1px solid rgba(168, 85, 247, 0.3);  background: rgba(168, 85, 247, 0.15);  color: #c4b5fd; }
 .la-audio-pill--amber  { border: 1px solid rgba(245, 158, 11, 0.3);  background: rgba(245, 158, 11, 0.15);  color: #fcd34d; }

@@ -143,7 +143,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  color: rgba(239, 68, 68, 0.9);
+  color: color-mix(in srgb, var(--color-danger-deep) 90%, transparent);
 
   p { font-size: 0.82rem; margin: 0; text-align: center; max-width: 320px; }
 }
@@ -205,10 +205,10 @@
 // design language stays consistent across the whole UI.
 
 $media-tv:      #3b82f6; // blue  — same as "watching" pill
-$media-movie:   #ef4444; // red   — same as "dropped" pill
+$media-movie:   var(--color-danger-deep); // red   — same as "dropped" pill
 $media-ova:     #22c55e; // green — same as "completed" pill
-$media-ona:     #f59e0b; // amber — same as "on_hold" pill
-$media-special: #a855f7; // purple — same as "plan_to_watch" pill
+$media-ona:     var(--color-warning-deep); // amber — same as "on_hold" pill
+$media-special: var(--color-mixed); // purple — same as "plan_to_watch" pill
 $media-music:   #ec4899; // pink
 
 // ── Nodes ─────────────────────────────────────────────────────────────────────

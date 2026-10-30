@@ -151,7 +151,7 @@
 .mal-qu-score-required {
   font-size: 0.68rem;
   font-weight: 600;
-  color: #ef4444;
+  color: var(--color-danger-deep);
   text-transform: none;
   letter-spacing: 0;
 }
@@ -206,25 +206,25 @@
   &--on_hold {
     &.mal-qu-status-btn--active,
     &:hover {
-      border-color: #f59e0b;
-      background: rgba(245, 158, 11, 0.12);
-      color: #f59e0b;
+      border-color: var(--color-warning-deep);
+      background: color-mix(in srgb, var(--color-warning-deep) 12%, transparent);
+      color: var(--color-warning-deep);
     }
   }
   &--dropped {
     &.mal-qu-status-btn--active,
     &:hover {
-      border-color: #ef4444;
-      background: rgba(239, 68, 68, 0.12);
-      color: #ef4444;
+      border-color: var(--color-danger-deep);
+      background: color-mix(in srgb, var(--color-danger-deep) 12%, transparent);
+      color: var(--color-danger-deep);
     }
   }
   &--plan_to_watch {
     &.mal-qu-status-btn--active,
     &:hover {
-      border-color: #a855f7;
-      background: rgba(168, 85, 247, 0.12);
-      color: #a855f7;
+      border-color: var(--color-mixed);
+      background: color-mix(in srgb, var(--color-mixed) 12%, transparent);
+      color: var(--color-mixed);
     }
   }
 }
@@ -322,7 +322,7 @@
   user-select: none;
 
   &--required .mal-qu-dial-track {
-    stroke: rgba(239, 68, 68, 0.25);
+    stroke: color-mix(in srgb, var(--color-danger-deep) 25%, transparent);
   }
 }
 
@@ -418,7 +418,7 @@
   }
 
   &--required .mal-qu-pc-score-btn {
-    border-color: rgba(239, 68, 68, 0.4);
+    border-color: color-mix(in srgb, var(--color-danger-deep) 40%, transparent);
   }
 }
 

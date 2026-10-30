@@ -26,13 +26,13 @@
   animation: loginBokehDrift 18s ease-in-out infinite alternate;
 
   &:nth-child(1)  { width: 300px; height: 300px; background: #6c63ff; top: -80px; left: -60px; animation-duration: 20s; }
-  &:nth-child(2)  { width: 200px; height: 200px; background: #a855f7; top: 30%; left: 15%; animation-duration: 17s; }
+  &:nth-child(2)  { width: 200px; height: 200px; background: var(--color-mixed); top: 30%; left: 15%; animation-duration: 17s; }
   &:nth-child(3)  { width: 280px; height: 280px; background: #22c55e; top: 60%; left: 5%; animation-duration: 22s; }
   &:nth-child(4)  { width: 250px; height: 250px; background: #38bdf8; top: 10%; right: 5%; animation-duration: 19s; }
-  &:nth-child(5)  { width: 200px; height: 200px; background: #f59e0b; top: 45%; right: 10%; animation-duration: 21s; }
+  &:nth-child(5)  { width: 200px; height: 200px; background: var(--color-warning-deep); top: 45%; right: 10%; animation-duration: 21s; }
   &:nth-child(6)  { width: 180px; height: 180px; background: #ec4899; bottom: 5%; left: 40%; animation-duration: 16s; }
   &:nth-child(7)  { width: 220px; height: 220px; background: #6c63ff; bottom: 10%; right: 2%; animation-duration: 23s; }
-  &:nth-child(8)  { width: 160px; height: 160px; background: #a855f7; top: 70%; left: 55%; animation-duration: 18s; }
+  &:nth-child(8)  { width: 160px; height: 160px; background: var(--color-mixed); top: 70%; left: 55%; animation-duration: 18s; }
 }
 
 @keyframes loginBokehDrift {
@@ -81,7 +81,7 @@
 .login-error {
   background: rgba(220, 38, 38, 0.1);
   border: 1px solid rgba(220, 38, 38, 0.35);
-  color: #ef4444;
+  color: var(--color-danger-deep);
   border-radius: 0.5rem;
   padding: 0.75rem 1rem;
   font-size: 0.9rem;

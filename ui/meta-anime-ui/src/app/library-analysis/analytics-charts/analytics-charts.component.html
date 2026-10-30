@@ -1,6 +1,6 @@
 <div class="la-charts">
   <!-- Card 1 — Codec & Bitrate Distribution (donut + library stats) -->
-  <div class="la-chart-card la-cd">
+  <app-ui-card class="la-chart-card la-cd">
     <div class="la-cd__head">
       <svg class="la-cd__head-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -10,20 +10,11 @@
     </div>
 
     <!-- View switcher — full-width dark segmented control (mirrors the batch SORT control) -->
-    <div class="la-seg la-seg--2" role="group">
-      <button type="button"
-              class="la-seg__btn"
-              [class.la-seg__btn--active]="donutMode() === 'count'"
-              (click)="setDonutMode('count')">
-        {{ 'libraryIntel.buddy.byCount' | translate }}
-      </button>
-      <button type="button"
-              class="la-seg__btn"
-              [class.la-seg__btn--active]="donutMode() === 'size'"
-              (click)="setDonutMode('size')">
-        {{ 'libraryIntel.buddy.bySize' | translate }}
-      </button>
-    </div>
+    <app-segmented-control
+      [options]="donutModeOptions()"
+      [value]="donutMode()"
+      [columns]="2"
+      (valueChange)="setDonutMode($any($event))" />
 
     @if (isLoading()) {
       <div class="la-chart-skeleton"></div>
@@ -89,10 +80,10 @@
         }
       </span>
     </div>
-  </div>
+  </app-ui-card>
 
   <!-- Card 2 — Biggest Storage Hogs & Bloat Leaderboard -->
-  <div class="la-chart-card la-hogs">
+  <app-ui-card class="la-chart-card la-hogs">
     <div class="la-cd__head">
       <svg class="la-cd__head-ico la-cd__head-ico--amber" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -102,26 +93,11 @@
     </div>
 
     <!-- Leaderboard mode — full-width 3-way dark segmented control -->
-    <div class="la-seg la-seg--3" role="group">
-      <button type="button"
-              class="la-seg__btn"
-              [class.la-seg__btn--active]="leaderboardMode() === 'totalGb'"
-              (click)="setLeaderboardMode('totalGb')">
-        {{ 'libraryIntel.buddy.topTotalShort' | translate }}
-      </button>
-      <button type="button"
-              class="la-seg__btn"
-              [class.la-seg__btn--active]="leaderboardMode() === 'bloatGibPerHour'"
-              (click)="setLeaderboardMode('bloatGibPerHour')">
-        {{ 'libraryIntel.buddy.topBloatShort' | translate }}
-      </button>
-      <button type="button"
-              class="la-seg__btn"
-              [class.la-seg__btn--active]="leaderboardMode() === 'reclaimable'"
-              (click)="setLeaderboardMode('reclaimable')">
-        {{ 'libraryIntel.buddy.topReclaimShort' | translate }}
-      </button>
-    </div>
+    <app-segmented-control
+      [options]="leaderboardModeOptions()"
+      [value]="leaderboardMode()"
+      [columns]="3"
+      (valueChange)="setLeaderboardMode($any($event))" />
 
     @if (isLoading()) {
       <div class="la-chart-skeleton"></div>
@@ -158,20 +134,20 @@
               <span class="la-lb__title">{{ entry.title }}</span>
               <span class="la-lb__badges">
                 @if (isMixedCodec(entry.codecBadge)) {
-                  <span [class]="codecBadgeClass(entry.codecBadge)"
-                        [attr.data-tip]="entry.codecBadge">{{ 'libraryIntel.buddy.codecMixed' | translate: { count: codecPartCount(entry.codecBadge) } }}</span>
+                  <app-ui-badge [color]="codecBadgeColor(entry.codecBadge)"
+                                [tip]="entry.codecBadge">{{ 'libraryIntel.buddy.codecMixed' | translate: { count: codecPartCount(entry.codecBadge) } }}</app-ui-badge>
                 } @else {
-                  <span [class]="codecBadgeClass(entry.codecBadge)">{{ entry.codecBadge }}</span>
+                  <app-ui-badge [color]="codecBadgeColor(entry.codecBadge)">{{ entry.codecBadge }}</app-ui-badge>
                 }
                 @if (isAnalyticsLoading()) {
                   <span class="la-skel la-skel--badge"></span>
                 } @else {
                   <!-- Complementary metric: never repeat what the right column shows. -->
                   @if (leaderboardMode() !== 'totalGb') {
-                    <span class="la-badge la-badge--muted">{{ formatSize(entry.totalSizeBytes) }}</span>
+                    <app-ui-badge [muted]="true">{{ formatSize(entry.totalSizeBytes) }}</app-ui-badge>
                   }
                   @if (leaderboardMode() !== 'bloatGibPerHour') {
-                    <span [class]="gibBadgeClass(entry.gibPerHour)">{{ entry.gibPerHour.toFixed(2) }} GiB/h</span>
+                    <app-ui-badge [color]="gibBadgeColor(entry.gibPerHour)">{{ entry.gibPerHour.toFixed(2) }} GiB/h</app-ui-badge>
                   }
                 }
               </span>
@@ -226,10 +202,10 @@
         }
       </span>
     </div>
-  </div>
+  </app-ui-card>
 
   <!-- Card 3 — Transcode Opportunity & Quick-Filter Action Chips -->
-  <div class="la-chart-card">
+  <app-ui-card class="la-chart-card">
     <div class="la-oppo__head">
       <svg class="la-oppo__head-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"
            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -375,22 +351,11 @@
 
         <div class="la-batch__group">
           <span class="la-batch__micro">{{ 'libraryIntel.buddy.batchSortLabel' | translate }}</span>
-          <div class="la-batch__segmented la-batch__segmented--full">
-            <button type="button"
-                    class="la-batch__seg"
-                    [class.la-batch__seg--active]="batchOrder() === 'biggest'"
-                    [attr.data-tip]="'libraryIntel.buddy.batchOrderBiggest' | translate"
-                    (click)="setBatchOrder('biggest')">
-              {{ 'libraryIntel.buddy.batchSortBitrate' | translate }}
-            </button>
-            <button type="button"
-                    class="la-batch__seg"
-                    [class.la-batch__seg--active]="batchOrder() === 'series'"
-                    [attr.data-tip]="'libraryIntel.buddy.batchOrderSeries' | translate"
-                    (click)="setBatchOrder('series')">
-              {{ 'libraryIntel.buddy.batchSortAlpha' | translate }}
-            </button>
-          </div>
+          <app-segmented-control class="la-seg--flush"
+                                 [options]="batchSortOptions()"
+                                 [value]="batchOrder()"
+                                 [columns]="2"
+                                 (valueChange)="setBatchOrder($any($event))" />
         </div>
 
         <button type="button"
@@ -434,7 +399,7 @@
         }
       </span>
     </div>
-  </div>
+  </app-ui-card>
 </div>
 
 <!-- Zoomed poster preview on mini-poster hover -->

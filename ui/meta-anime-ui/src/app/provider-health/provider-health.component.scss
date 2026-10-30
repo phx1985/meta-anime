@@ -29,8 +29,8 @@
   }
 
   &.dot--offline {
-    background: #ef4444;
-    box-shadow: 0 0 6px #ef4444;
+    background: var(--color-danger-deep);
+    box-shadow: 0 0 6px var(--color-danger-deep);
     animation: pulse-offline 1.6s ease-in-out infinite;
   }
 

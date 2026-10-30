@@ -383,7 +383,7 @@
     color 0.15s;
   flex-shrink: 0;
   &:hover {
-    background: #ef4444;
+    background: var(--color-danger-deep);
     color: #fff;
   }
   svg path {
@@ -866,14 +866,14 @@
 
   .fp-popup--demographic & {
     &:hover {
-      border-color: #f59e0b;
+      border-color: var(--color-warning-deep);
       color: #d97706;
     }
     &.fp-option--selected {
-      background: #f59e0b;
-      border-color: #f59e0b;
+      background: var(--color-warning-deep);
+      border-color: var(--color-warning-deep);
       color: #fff;
-      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+      box-shadow: 0 2px 8px color-mix(in srgb, var(--color-warning-deep) 30%, transparent);
     }
   }
 }
@@ -899,7 +899,7 @@
   padding: 0;
   transition: color 0.15s;
   &:hover {
-    color: #ef4444;
+    color: var(--color-danger-deep);
   }
 }
 
@@ -1218,7 +1218,7 @@
 }
 
 .seasonal-error {
-  color: #ef4444;
+  color: var(--color-danger-deep);
 }
 
 .seasonal-end {
@@ -1647,8 +1647,8 @@
   flex-shrink: 0;
 
   &:hover {
-    background: rgba(239, 68, 68, 0.12);
-    color: #ef4444;
+    background: color-mix(in srgb, var(--color-danger-deep) 12%, transparent);
+    color: var(--color-danger-deep);
   }
 }
 
@@ -1931,7 +1931,7 @@
 
   &__error {
     font-size: 0.75rem;
-    color: #ef4444;
+    color: var(--color-danger-deep);
     margin: 0;
   }
 

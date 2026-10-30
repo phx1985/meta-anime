@@ -1,0 +1,92 @@
+// ── Full-width segmented control (moved from analytics-charts.component.scss) ──
+
+// The host generates no box: the .la-seg grid is the caller's flex/grid item,
+// so its margins and sibling gaps behave exactly like the original inline block.
+:host {
+  display: contents;
+}
+
+.la-seg {
+  display: grid;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 14px;
+  border: 1px solid color-mix(in srgb, var(--text-primary) 6%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+
+  &--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  &--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  &--auto { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
+
+  &__btn {
+    position: relative;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    min-width: 0;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+
+    &--active {
+      background: color-mix(in srgb, var(--text-primary) 10%, transparent);
+      border-color: color-mix(in srgb, var(--text-primary) 12%, transparent);
+      color: var(--text-primary);
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+    }
+
+    // styled tooltip (replaces the native one)
+    &[data-tip]::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%) translateY(2px);
+      padding: 5px 9px;
+      border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
+      border-radius: 6px;
+      background: color-mix(in srgb, var(--text-primary) 12%, var(--bg-primary, #101017));
+      color: var(--text-primary);
+      font-size: 0.7rem;
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s, transform 0.15s;
+      z-index: 20;
+    }
+
+    &[data-tip]:hover::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+}
+
+// The button cannot clip its own label (overflow would also clip the tooltip),
+// so the ellipsis lives on the label span instead.
+.la-seg__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Flush placement (inside a tight control column such as .la-batch__group):
+// the parent's own gap owns the spacing, so drop the default footer margin.
+:host(.la-seg--flush) .la-seg {
+  margin-bottom: 0;
+}

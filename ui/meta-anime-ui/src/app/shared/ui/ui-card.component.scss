@@ -1,0 +1,11 @@
+// ── Standard card chrome (rounded-xl + border + surface + shadow) ──────────────
+// Padding is applied through the host binding so call sites can override it.
+
+:host {
+  display: block;
+  position: relative;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px var(--card-shadow);
+}

@@ -22,7 +22,7 @@
     font-weight: 500;
   }
   &.sync-step--error {
-    color: #ef4444;
+    color: var(--color-danger-deep);
   }
 }
 
@@ -47,7 +47,7 @@
 
 .sync-step-error {
   font-size: 0.72rem;
-  color: #ef4444;
+  color: var(--color-danger-deep);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
