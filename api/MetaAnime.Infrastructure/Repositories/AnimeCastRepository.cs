@@ -71,4 +71,7 @@ public sealed class AnimeCastRepository(MetaAnimeDbContext dbContext) : IAnimeCa
         => await dbContext.AnimeCast
             .Where(ac => ac.AnimeMalId == animeMalId)
             .ExecuteDeleteAsync();
+
+    public async Task DeleteAllAsync()
+        => await dbContext.AnimeCast.ExecuteDeleteAsync();
 }

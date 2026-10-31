@@ -34,7 +34,7 @@ public sealed class AnimeMediatorService(
     IKometaAnimeMappingRepository kometaAnimeMappingRepository,
     IAnimeRepository animeRepository,
     IAnimeMappingRepository animeMappingRepository,
-    JikanCastService jikanCastService,
+    AniListCastService anilistCastService,
     IOptions<MalSettings> malOptions,
     ILogger<AnimeMediatorService> logger)
     : IAnimeMediatorService
@@ -1951,11 +1951,93 @@ public sealed class AnimeMediatorService(
 
     public async Task<Result> EnsureAnimeCastForAnimeAsync(string malId)
     {
-        var ok = await jikanCastService.EnsureAsync(malId);
-        return ok
-            ? Result.Success()
-            : Result.Failure(new(Constants.Errors.GetSeiyuuNexusAsync, $"Failed to fetch cast for anime {malId}"));
+        // DB-first lazy sync; on provider failure the error is CastProviderUnavailable with the
+        // exact contract message "Cast provider is unavailable for anime {malId}" (→ 503).
+        var outcome = await anilistCastService.EnsureAsync(malId);
+        return outcome.IsSuccess ? Result.Success() : Result.Failure(outcome.Error);
     }
+
+    /// <summary>
+    /// Batch-resolves titles + poster URLs for MAL ids. Layered so the common case never touches
+    /// the network: (1) local MAL-sourced Anime rows (titles — the Anime table has no image
+    /// column), (2) cached MAL payloads (title + main_picture, same raw data the anime cards use),
+    /// (3) bounded live MAL lookups for ids still unresolved (library anime outside the MAL list
+    /// sync). Unresolvable ids are absent from the dictionary — callers must never render a raw
+    /// id in place of a title.
+    /// </summary>
+    public async Task<Result<IReadOnlyDictionary<string, AnimeCoverInfo>>> ResolveMalCoversAsync(IEnumerable<string> malIds)
+    {
+        try
+        {
+            var ids = malIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+            var covers = new Dictionary<string, AnimeCoverInfo>();
+            if (ids.Count == 0)
+                return Result.Success<IReadOnlyDictionary<string, AnimeCoverInfo>>(covers);
+
+            // ── 1) Local Anime rows (titles) ────────────────────────────────────────────
+            foreach (var anime in await animeRepository.GetManyBySourceIdsAsync(AnimeSource.MyAnimeList, ids))
+            {
+                if (!string.IsNullOrWhiteSpace(anime.Title))
+                    covers[anime.SourceId] = new AnimeCoverInfo(anime.Title, null);
+            }
+
+            // ── 2) Cached MAL payloads (title + main_picture — wins over step 1) ────────
+            var cacheResult = await cacheEntryService.GetBySourceIdsAsync(ids);
+            if (cacheResult.IsSuccess)
+            {
+                foreach (var entry in cacheResult.Value.Where(e => e.AnimeSource == AnimeSource.MyAnimeList))
+                {
+                    if (string.IsNullOrWhiteSpace(entry.RawData))
+                        continue;
+
+                    try
+                    {
+                        var malAnime = JsonSerializer.Deserialize<MalAnime>(entry.RawData, JsonOptions);
+                        if (malAnime is null || string.IsNullOrWhiteSpace(malAnime.Title))
+                            continue;
+
+                        covers[entry.SourceId] = new AnimeCoverInfo(
+                            malAnime.Title,
+                            malAnime.MainPicture?.Large ?? malAnime.MainPicture?.Medium);
+                    }
+                    catch (JsonException ex)
+                    {
+                        logger.LogWarning(ex, Constants.LogMessages.AnimeMediatorService.MalCacheDeserializeFailed, entry.SourceId);
+                    }
+                }
+            }
+
+            // ── 3) Live MAL lookups for the (small) remainder, in bounded parallel chunks ─
+            var missing = ids.Where(id => !covers.ContainsKey(id)).ToList();
+            foreach (var chunk in missing.Chunk(LiveCoverFetchChunk))
+            {
+                var fetched = await Task.WhenAll(chunk.Select(async id =>
+                {
+                    var result = await malAnimeSource.GetByIdAsync(id);
+                    return (Id: id, Mal: result.IsSuccess ? result.Value : null);
+                }));
+
+                foreach (var (id, mal) in fetched)
+                {
+                    if (mal is null || string.IsNullOrWhiteSpace(mal.Title))
+                        continue;
+
+                    covers[id] = new AnimeCoverInfo(
+                        mal.Title,
+                        mal.MainPicture?.Large ?? mal.MainPicture?.Medium);
+                }
+            }
+
+            return Result.Success<IReadOnlyDictionary<string, AnimeCoverInfo>>(covers);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<IReadOnlyDictionary<string, AnimeCoverInfo>>(new(Constants.Errors.ResolveMalCoversAsync, ex.Message));
+        }
+    }
+
+    /// <summary>Parallelism bound for last-resort live MAL cover lookups.</summary>
+    private const int LiveCoverFetchChunk = 8;
 
 }
 

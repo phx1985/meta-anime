@@ -2030,6 +2030,9 @@
     "loading": "Building nexus…",
     "empty": "No cast data available. Run a sync to populate.",
     "error": "Failed to load nexus data. Please try again.",
+    "retry": "Retry",
+    "crossLibrary": "Also in your library",
+    "appearsInOpen": "Open details",
     "hint": "Click a voice actor card to see their profile.",
     "lastUpdated": "Last updated",
     "close": "Close Seiyuu Nexus",
@@ -2048,6 +2051,9 @@
       "supporting": "Supporting"
     },
     "vaProfile": {
+      "close": "Close profile",
+      "notFound": "Profile not found.",
+      "birthday": "Birthday",
       "age": "Age",
       "bloodType": "Blood type",
       "height": "Height",

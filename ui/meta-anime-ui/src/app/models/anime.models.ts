@@ -404,8 +404,11 @@ export interface VoiceActorProfileResponse {
   givenName?: string;
   imageUrl?: string;
   age?: number;
-  bloodType?: string;
-  heightCm?: number;
-  weightKg?: number;
-  birthday?: string;
+  bloodType?: string | null;
+  /** AniList-sourced: always null today — UI hides the cell when null. */
+  heightCm?: number | null;
+  /** AniList-sourced: always null today — UI hides the cell when null. */
+  weightKg?: number | null;
+  /** Fuzzy/partial ('--05-12', '1985--') or null — UI renders what exists. */
+  birthday?: string | null;
 }

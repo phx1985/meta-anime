@@ -634,7 +634,15 @@
 }
 
 <!-- ── Seiyuu Nexus Overlay ──────────────────────────────────────────────── -->
-<app-seiyuu-nexus />
+<app-seiyuu-nexus (animeSelected)="onSeiyuuAnimeSelected($event)" />
+
+@if (seiyuuDetailMalId()) {
+  <app-anime-detail-panel
+    [malId]="seiyuuDetailMalId()"
+    [zIndexBase]="seiyuuNexusSvc.zIndexBase() + 1"
+    (closed)="closeSeiyuuDetail()"
+  />
+}
 
 <!-- ── Bot-kun Chat Drawer ───────────────────────────────────────────────── -->
 @if (providerState.botkunEnabled()) {

@@ -2030,6 +2030,9 @@
     "loading": "Construction du nexus…",
     "empty": "Aucune donnée de casting disponible. Lancez une synchronisation pour la remplir.",
     "error": "Impossible de charger les données du nexus. Veuillez réessayer.",
+    "retry": "Réessayer",
+    "crossLibrary": "Également dans votre bibliothèque",
+    "appearsInOpen": "Ouvrir les détails",
     "hint": "Cliquez sur la carte d'un doubleur pour afficher son profil.",
     "lastUpdated": "Dernière mise à jour",
     "close": "Fermer Seiyuu Nexus",
@@ -2048,6 +2051,9 @@
       "supporting": "Secondaire"
     },
     "vaProfile": {
+      "close": "Fermer le profil",
+      "notFound": "Profil introuvable.",
+      "birthday": "Date de naissance",
       "age": "Âge",
       "bloodType": "Groupe sanguin",
       "height": "Taille",

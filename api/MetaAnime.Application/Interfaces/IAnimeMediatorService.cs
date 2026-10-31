@@ -32,4 +32,10 @@ public interface IAnimeMediatorService
     Task<Result<IEnumerable<SeasonalAnimeResponse>>> SearchMalAnimeWithDetailsAsync(string query, int limit = 100);
     Task<Result<ActivityStatsResponse>> GetActivityStatsAsync(int tzOffsetMinutes = 0);
     Task<Result> EnsureAnimeCastForAnimeAsync(string malId);
+    /// <summary>
+    /// Batch-resolves titles + poster URLs for MAL ids from local data (Anime table, cached MAL
+    /// payloads) with bounded live MAL lookups as a last resort. Ids that cannot be resolved are
+    /// simply absent from the result dictionary.
+    /// </summary>
+    Task<Result<IReadOnlyDictionary<string, AnimeCoverInfo>>> ResolveMalCoversAsync(IEnumerable<string> malIds);
 }

@@ -27,6 +27,7 @@ import { LuckyPickComponent } from './lucky-pick/lucky-pick.component';
 import { FranchiseConstellationComponent } from './franchise-constellation/franchise-constellation.component';
 import { FranchiseConstellationService } from './services/franchise-constellation.service';
 import { SeiyuuNexusComponent } from './seiyuu-nexus/seiyuu-nexus.component';
+import { SeiyuuNexusService } from './seiyuu-nexus/seiyuu-nexus.service';
 import { MalQuickUpdateModalComponent } from './mal-quick-update/mal-quick-update-modal.component';
 import { ProviderHealthComponent } from './provider-health/provider-health.component';
 import { AuthService } from './services/auth.service';
@@ -55,6 +56,7 @@ export class App implements OnInit, AfterViewInit {
   readonly providerState = inject(ProviderStateService);
   readonly popupService = inject(PopupService);
   readonly franchiseConstellationSvc = inject(FranchiseConstellationService);
+  readonly seiyuuNexusSvc = inject(SeiyuuNexusService);
   private plexDeepLink = inject(PlexDeepLinkService);
   private authService = inject(AuthService);
   private userPrefs = inject(UserPreferencesService);
@@ -122,6 +124,18 @@ export class App implements OnInit, AfterViewInit {
 
   closeConstellationDetail(): void {
     this.constellationDetailMalId.set(null);
+  }
+
+  /** Seiyuu Nexus: MAL ID to open in the detail panel (on a cross-library entry click).
+   *  The nexus overlay closes first (top-layer dialog can't sit under a z-indexed panel). */
+  protected seiyuuDetailMalId = signal<string | null>(null);
+
+  onSeiyuuAnimeSelected(malId: string): void {
+    this.seiyuuDetailMalId.set(malId);
+  }
+
+  closeSeiyuuDetail(): void {
+    this.seiyuuDetailMalId.set(null);
   }
 
   /** True when a JWT token is stored — controls logout button visibility. */

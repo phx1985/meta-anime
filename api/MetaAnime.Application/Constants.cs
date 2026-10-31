@@ -50,8 +50,11 @@ public static class Constants
         public const string EnrichLibrarySeriesAsync = "Error.EnrichLibrarySeriesAsync";
         public const string GetEpisodeFilesAsync = "Error.GetEpisodeFilesAsync";
         public const string GetSeiyuuNexusAsync = "Error.GetSeiyuuNexusAsync";
+        public const string ResolveMalCoversAsync = "Error.ResolveMalCoversAsync";
+        public const string CastProviderUnavailable = "Error.CastProviderUnavailable";
         public const string GetVoiceActorProfileAsync = "Error.GetVoiceActorProfileAsync";
         public const string SyncAnimeCastAsync = "Error.SyncAnimeCastAsync";
+        public const string MigrateCastIdSpace = "Error.MigrateCastIdSpace";
 
         // Admin authentication flows
         public const string GetAuthStatus = "Error.GetAuthStatus";
@@ -113,14 +116,14 @@ public static class Constants
         {
             public const string Starting  = "Starting cast sync for anime {MalId}";
             public const string Succeeded = "Cast sync complete for anime {MalId}: {Count} entries";
-            public const string Skipped   = "Skipping cast sync for anime {MalId}: MAL credentials not configured";
+            public const string Skipped   = "Skipping cast sync for anime {MalId}: no cast data available";
             public const string Error     = "Error during cast sync for anime {MalId}";
         }
 
-        public static class JikanPersonService
+        public static class AniListPersonService
         {
-            public const string Fetching = "Fetching Jikan profile for person {PersonId}";
-            public const string FetchFailed = "Jikan fetch failed for person {PersonId}";
+            public const string Fetching = "Fetching AniList profile for person {PersonId}";
+            public const string FetchFailed = "AniList fetch failed for person {PersonId}";
         }
 
         public static class AnimeMediatorService
