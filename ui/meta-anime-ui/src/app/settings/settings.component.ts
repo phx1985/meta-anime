@@ -4,6 +4,7 @@ import {
   signal,
   computed,
   DestroyRef,
+  HostListener,
   ChangeDetectionStrategy,
 } from '@angular/core';
 
@@ -593,6 +594,27 @@ export class SettingsComponent {
       });
   }
 
+  /** Retry after a failed settings load (error-state recovery). */
+  retryLoad(): void {
+    this.error.set(false);
+    this.loading.set(true);
+    this.loadSettings();
+  }
+
+  /** Escape closes the topmost open dialog/picker (keyboard completeness). */
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.browseTarget()) this.closePathBrowse();
+    else if (this.plexPickerOpen()) this.plexPickerOpen.set(false);
+    else if (this.sonarrPickerOpen()) this.sonarrPickerOpen.set(false);
+    else if (this.kometaWarnKey()) this.dismissKometaWarning();
+    else if (this.exportConfirmOpen()) this.dismissExportConfirm();
+    else if (this.providerEnableWarnFor()) this.dismissProviderEnableWarn();
+    else if (this.malHelpOpen()) this.malHelpOpen.set(false);
+    else if (this.sonarrHelpOpen()) this.sonarrHelpOpen.set(false);
+    else if (this.syncPromptProvider()) this.dismissSyncPrompt();
+  }
+
   private loadSyncStatus(): void {
     this.settingsService
       .getSyncStatus()
@@ -741,56 +763,59 @@ export class SettingsComponent {
     return fieldSlug(key);
   }
 
-  // ── ui-select option sets (labels translated here — the component takes final strings) ──
+  // ── ui-select option sets (memoized — labels translate once per lang/settings change) ──
 
-  selectOptionsFor(setting: SettingDefinition): UiSelectOption[] {
-    return (setting.selectOptions ?? []).map((opt) => ({
-      label: this.translate.instant('settings.fields.' + this.slug(setting.key) + '.option.' + opt),
-      value: opt,
-    }));
-  }
+  /** Generic per-setting select options, keyed by settings key. */
+  readonly selectOptionsByKey = computed<Record<string, UiSelectOption[]>>(() => {
+    this.currentLang(); // re-translate on language change
+    const map: Record<string, UiSelectOption[]> = {};
+    for (const s of this.settings()) {
+      if (s.selectOptions?.length) {
+        map[s.key] = s.selectOptions.map((opt) => ({
+          label: this.translate.instant('settings.fields.' + fieldSlug(s.key) + '.option.' + opt),
+          value: opt,
+        }));
+      }
+    }
+    return map;
+  });
 
-  botkunModelSelectOptions(): UiSelectOption[] {
+  readonly botkunModelOptions = computed<UiSelectOption[]>(() => {
+    this.currentLang();
     return [
       { label: this.translate.instant('settings.botkun.selectModel'), value: '' },
       ...this.botkunModels().map((m) => ({ label: m, value: m })),
     ];
-  }
+  });
 
-  sonarrRootFolderSelectOptions(): UiSelectOption[] {
+  readonly sonarrRootFolderOptions = computed<UiSelectOption[]>(() => {
+    this.currentLang();
     return [
       { label: this.translate.instant('settings.notSet'), value: '' },
       ...this.sonarrRootFolders().map((f) => ({ label: f.path, value: f.path })),
     ];
-  }
+  });
 
-  sonarrQualityProfileSelectOptions(): UiSelectOption[] {
+  readonly sonarrQualityProfileOptions = computed<UiSelectOption[]>(() => {
+    this.currentLang();
     return [
       { label: this.translate.instant('settings.notSet'), value: '' },
       ...this.sonarrQualityProfiles().map((p) => ({ label: p.name, value: p.name })),
     ];
-  }
+  });
 
-  sonarrMonitorSelectOptions(): UiSelectOption[] {
+  readonly sonarrMonitorOptions = computed<UiSelectOption[]>(() => {
+    this.currentLang();
     return (this.sonarrDefaultByKey('Sonarr:DefaultMonitor')?.selectOptions ?? []).map((opt) => ({
       label: this.translate.instant('settings.fields.Sonarr_DefaultMonitor.option.' + opt),
       value: opt,
     }));
-  }
+  });
 
-  separatorSelectOptions(): UiSelectOption[] {
-    return [
-      { label: 'POSIX /', value: 'posix' },
-      { label: 'Windows \\', value: 'windows' },
-    ];
-  }
-
-  syncIntervalSelectOptions(setting: SettingDefinition): UiSelectOption[] {
-    return (setting.selectOptions ?? []).map((opt) => ({
-      label: this.translate.instant('settings.fields.App_SyncInterval.option.' + opt),
-      value: opt,
-    }));
-  }
+  readonly separatorOptions: UiSelectOption[] = [
+    { label: 'POSIX /', value: 'posix' },
+    { label: 'Windows \\', value: 'windows' },
+  ];
 
   /**
    * Called from the "Edit" button.  For the Kometa JSON URL this first shows

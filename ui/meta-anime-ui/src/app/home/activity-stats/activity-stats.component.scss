@@ -14,13 +14,8 @@
   }
 }
 
-// ── Floating card ────────────────────────────────────────────────────────────
+// ── Floating card (panel chrome comes from app-ui-card) ───────────────────────
 .activity-card {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 16px;
-  box-shadow: 0 4px 24px var(--card-shadow);
-  padding: 24px 28px 28px;
   animation: popFadeIn 0.6s cubic-bezier(0.34, 1.4, 0.64, 1) 0.55s both;
 }
 
@@ -34,13 +29,15 @@
   margin-bottom: 24px;
 }
 
+// Micro section header — 11px semibold uppercase, wider tracking, muted
 .activity-card__title {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  margin: 0;
   font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -58,7 +55,7 @@
   flex-wrap: wrap;
 }
 
-// ── Refresh button ────────────────────────────────────────────────────────────
+// ── Refresh button (muted — the only vibrant CTA is the state-panel action) ──
 @keyframes spin {
   from { transform: rotate(0deg);   }
   to   { transform: rotate(360deg); }
@@ -68,27 +65,34 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  border: 1px solid var(--card-border);
-  background: transparent;
-  border-radius: 6px;
-  font-size: .72rem;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface-elevated);
+  border-radius: 999px;
+  font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: .03em;
-  padding: 5px 12px;
+  letter-spacing: 0.03em;
+  padding: 5px 14px;
+  min-height: 30px;
   cursor: pointer;
   color: var(--text-secondary);
   transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
   white-space: nowrap;
 
   &:hover:not(:disabled) {
-    background: var(--bg-secondary);
+    background: color-mix(in srgb, var(--color-brand) 10%, var(--color-surface-elevated));
     color: var(--text-primary);
-    border-color: var(--accent-primary);
+    border-color: var(--color-brand);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--color-brand);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand) 35%, transparent);
   }
 
   &:disabled {
     cursor: not-allowed;
-    opacity: .6;
+    opacity: 0.6;
   }
 
   &__icon {
@@ -105,33 +109,52 @@
 // ── Period pill tabs ─────────────────────────────────────────────────────────
 .period-tabs {
   display: flex;
-  gap: 6px;
-  background: var(--bg-secondary);
-  border-radius: 8px;
+  gap: 4px;
+  background: color-mix(in srgb, var(--color-border-strong) 45%, transparent);
+  border-radius: 999px;
   padding: 3px;
   flex-wrap: wrap;
 }
 
 .period-tab {
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
-  border-radius: 6px;
-  font-size: .72rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: .03em;
+  letter-spacing: 0.03em;
   padding: 5px 14px;
+  min-height: 30px;
   cursor: pointer;
   color: var(--text-secondary);
-  transition: background 150ms ease, color 150ms ease;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
 
   &:hover:not(.period-tab--active) {
-    background: var(--card-bg);
+    background: var(--color-surface-elevated);
     color: var(--text-primary);
   }
 
+  &:focus-visible {
+    outline: none;
+    border-color: var(--color-brand);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand) 35%, transparent);
+  }
+
   &--active {
-    background: var(--accent-primary);
-    color: #fff;
+    background: color-mix(in srgb, var(--color-brand) 18%, var(--color-surface-elevated));
+    border-color: color-mix(in srgb, var(--color-brand) 40%, transparent);
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ── Tab panel (period-controlled tiles / chart) ──────────────────────────────
+.activity-card__panel {
+  // Keyboard-focusable tabpanel — house-style brand-tinted focus ring
+  &:focus-visible {
+    outline: none;
+    border-radius: 12px;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand) 35%, transparent);
   }
 }
 
@@ -144,8 +167,8 @@
 
 // ── Individual tile ───────────────────────────────────────────────────────────
 .stat-tile {
-  background: var(--bg-secondary);
-  border: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--color-border-strong) 35%, transparent);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 12px;
   padding: 20px 18px;
   min-height: 110px;
@@ -155,7 +178,7 @@
 
   &:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 24px var(--card-shadow);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--text-primary) 12%, transparent);
   }
 }
 
@@ -171,7 +194,7 @@
   width: 22px;
   height: 22px;
   flex-shrink: 0;
-  opacity: .6;
+  opacity: 0.6;
   color: var(--text-secondary);
 }
 
@@ -180,28 +203,28 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  letter-spacing: -.02em;
+  letter-spacing: -0.02em;
   color: var(--accent-primary);
   margin-top: 4px;
 
   &--empty {
+    // No opacity fade — full-strength muted token keeps AA contrast.
     color: var(--text-muted);
-    opacity: .55;
   }
 }
 
 .stat-tile__label {
-  font-size: .65rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  letter-spacing: .07em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
 
 // ── Skeleton pulse ────────────────────────────────────────────────────────────
 @keyframes skeleton-pulse {
-  0%, 100% { opacity: .5; }
-  50%       { opacity: .25; }
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 0.25; }
 }
 
 .stat-tile__skeleton {
@@ -209,25 +232,26 @@
   height: 100%;
   min-height: 70px;
   border-radius: 8px;
-  background: var(--card-border);
+  background: var(--color-border-subtle);
   animation: skeleton-pulse 1.5s ease-in-out infinite;
 }
 
 // ── Chart section ─────────────────────────────────────────────────────────────
 .activity-card__chart {
   margin-top: 24px;
-  border-top: 1px solid var(--card-border);
+  border-top: 1px solid var(--color-border-subtle);
   padding-top: 20px;
 }
 
-// ── Last updated label ────────────────────────────────────────────────────────
+// ── Last updated label (a date — tabular numerals) ────────────────────────────
 .activity-card__last-updated {
   margin-top: 14px;
-  font-size: .62rem;
+  font-size: 0.62rem;
   font-weight: 500;
-  letter-spacing: .04em;
+  letter-spacing: 0.04em;
+  // Full-strength muted token (no opacity fade) to keep AA contrast.
   color: var(--text-muted);
-  opacity: .65;
+  font-variant-numeric: tabular-nums;
 }
 
 .chart-legend {
@@ -237,9 +261,9 @@
 }
 
 .chart-legend__item {
-  font-size: .68rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  letter-spacing: .05em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   display: flex;
   align-items: center;
@@ -254,14 +278,17 @@
     flex-shrink: 0;
   }
 
+  // Series accent matches the token the line chart reads at build time.
+  // Text darkened/lightened toward the theme text color for AA contrast;
+  // the ::before swatch keeps the pure series color.
   &--downloads {
-    color: #00aae0;
-    &::before { background: #00aae0; }
+    color: color-mix(in srgb, var(--color-brand) 55%, var(--text-primary));
+    &::before { background: var(--color-brand); }
   }
 
   &--watching {
-    color: #e5a00d;
-    &::before { background: #e5a00d; }
+    color: color-mix(in srgb, var(--color-warning-deep) 55%, var(--text-primary));
+    &::before { background: var(--color-warning-deep); }
   }
 }
 
@@ -272,5 +299,62 @@
 
   canvas {
     display: block;
+  }
+}
+
+// ── Responsive geometry + touch targets ───────────────────────────────────────
+@media (max-width: 639.98px) {
+  .activity-card__header {
+    margin-bottom: 18px;
+  }
+
+  .activity-card__controls {
+    width: 100%;
+  }
+
+  .period-tabs {
+    width: 100%;
+  }
+
+  .period-tab {
+    flex: 1 1 auto;
+    min-height: 44px;
+    padding: 5px 10px;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .refresh-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .chart-wrap {
+    height: 160px;
+  }
+}
+
+// ── Reduced motion: entry tween, spinner rotation and shimmer become static ──
+@media (prefers-reduced-motion: reduce) {
+  .activity-card {
+    animation: none;
+  }
+
+  .refresh-btn--spinning .refresh-btn__icon {
+    animation: none;
+  }
+
+  .stat-tile {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  .stat-tile__skeleton {
+    animation: none;
+    opacity: 0.4;
   }
 }

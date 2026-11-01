@@ -178,22 +178,18 @@ export class AnimeCardComponent {
   }
 
   // ── Genres ────────────────────────────────────────────────────────────────
+  // computed() so the per-card array filtering runs once per anime change
+  // instead of on every change-detection pass.
 
-  private get allMalGenres(): string[] {
-    return this.seasonalItem()?.genres ?? this.mal?.genres ?? [];
-  }
+  private readonly allMalGenres = computed<string[]>(
+    () => this.seasonalItem()?.genres ?? this.mal?.genres ?? [],
+  );
 
-  get pureGenres(): string[] {
-    return this.allMalGenres.filter((g) => GENRE_LIST.includes(g));
-  }
+  readonly pureGenres = computed(() => this.allMalGenres().filter((g) => GENRE_LIST.includes(g)));
 
-  get themes(): string[] {
-    return this.allMalGenres.filter((g) => THEME_LIST.includes(g));
-  }
+  readonly themes = computed(() => this.allMalGenres().filter((g) => THEME_LIST.includes(g)));
 
-  get demographics(): string[] {
-    return this.allMalGenres.filter((g) => DEMOGRAPHIC_LIST.includes(g));
-  }
+  readonly demographics = computed(() => this.allMalGenres().filter((g) => DEMOGRAPHIC_LIST.includes(g)));
 
   translateGenre(name: string): string {
     const key = `genres.${name}`;
@@ -311,7 +307,7 @@ export class AnimeCardComponent {
     const dateParts = [this.startDate, this.endDate].filter(Boolean);
     if (dateParts.length > 0) lines.push(`Release: ${dateParts.join(' → ')}`);
 
-    const genres = [...this.pureGenres, ...this.themes];
+    const genres = [...this.pureGenres(), ...this.themes()];
     if (genres.length > 0) lines.push(`Genres: ${genres.join(', ')}`);
 
     if (this.malScore > 0) lines.push(`Score: ${this.malScore}/10`);

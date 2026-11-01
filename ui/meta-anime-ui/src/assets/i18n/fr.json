@@ -33,13 +33,21 @@
         "plex": "Séries d'animes disponibles dans votre bibliothèque de médias Plex.",
         "sonarr": "Séries d'animes suivies par votre instance Sonarr.",
         "mal": "Entrées d'animes issues de votre compte MyAnimeList."
+      },
+      "error": {
+        "title": "Impossible de charger les statistiques",
+        "sub": "Le service de statistiques n'a pas répondu. Vérifiez la connexion à l'API puis réessayez."
       }
     },
     "chart": {
       "title": "Répartition par genre",
       "toggleLabel": "Type de graphique",
       "pie": "Camembert",
-      "bar": "Barres"
+      "bar": "Barres",
+      "empty": {
+        "title": "Aucune donnée de genre pour le moment",
+        "sub": "La répartition par genre apparaîtra dès que votre bibliothèque sera indexée."
+      }
     },
     "missing": {
       "title": "Lacunes de couverture",
@@ -85,7 +93,9 @@
         "crossLinkRemove": "Supprimer",
         "crossLinkRemoving": "Suppression…",
         "crossLinkAniDbId": "AniDbId",
-        "crossLinkMalId": "MAL ID"
+        "crossLinkMalId": "MAL ID",
+        "tagAniDb": "AniDB",
+        "tagMal": "MAL"
       },
       "noProviders": {
         "title": "Aucun fournisseur configuré pour l'instant.",
@@ -103,7 +113,11 @@
       "storage": "Stockage ajouté",
       "forceRefresh": "Actualiser",
       "refreshing": "Actualisation…",
-      "lastUpdated": "Dernière mise à jour: {{value}}"
+      "lastUpdated": "Dernière mise à jour: {{value}}",
+      "error": {
+        "title": "Impossible de charger l'activité",
+        "sub": "Les données d'activité sont indisponibles. Vérifiez la connexion à l'API puis réessayez."
+      }
     }
   },
   "seasonal": {
@@ -202,7 +216,9 @@
       },
       "noFilterActive": "Aucun filtre actif",
       "mediaType": "Type de média",
-      "apply": "Appliquer"
+      "apply": "Appliquer",
+      "filterPlaceholder": "Filtrer…",
+      "done": "Terminé"
     },
     "sonarrAlreadyInLibrary": "Déjà dans Sonarr",
     "partiallyTracked": "Partiellement suivi — ajouter aux autres fournisseurs",
@@ -233,6 +249,7 @@
     "loading": "Recherche d'anime en cours…",
     "error": "La recherche a échoué. Veuillez réessayer.",
     "empty": "Aucun résultat. Essayez un autre titre.",
+    "noResults": "Aucun résultat pour « {{query}} ».",
     "noQuery": "Saisissez un titre ci-dessus pour commencer la recherche.",
     "resultCount": "{{count}} résultat(s) pour « {{query}} »",
     "openMal": "Ouvrir sur MyAnimeList",
@@ -343,7 +360,9 @@
   "animeList": {
     "title": "Liste des animes",
     "error": "Le chargement des animes a échoué. Veuillez réessayer plus tard.",
+    "errorSubtext": "Vérifiez votre connexion puis réessayez.",
     "empty": "Aucun anime trouvé.",
+    "emptySubtext": "Essayez d'ajuster ou de réinitialiser vos filtres.",
     "totalCount": "{{count}} animes trouvés",
     "loadingMore": "Chargement de la suite…",
     "loadMore": "Charger plus",
@@ -402,6 +421,8 @@
       "expandFilters": "Déplier les filtres",
       "collapseFilters": "Replier les filtres",
       "noFilterActive": "Aucun filtre sélectionné",
+      "done": "Terminé",
+      "filterPlaceholder": "Filtrer…",
       "prompt": "Définissez vos filtres puis cliquez sur Rechercher pour explorer votre bibliothèque d'animes.",
       "advanced": "Filtres avancés",
       "hideAdvanced": "Masquer les options avancées",
@@ -920,6 +941,9 @@
     "title": "Explorer l'univers",
     "loading": "Cartographie de la franchise...",
     "loadingProgress": "Cartographie en cours... ({{count}} nœuds trouvés)",
+    "errorTitle": "La cartographie de la franchise a échoué",
+    "retry": "Réessayer",
+    "graphAlt": "Graphe chronologique de la franchise avec {{count}} anime : {{nodes}}",
     "empty": "Aucun anime associé n'a été trouvé dans les données de la franchise.",
     "close": "Fermer",
     "viewButton": "Voir la constellation de la franchise",
@@ -1140,6 +1164,7 @@
       "tb": "To"
     },
     "loading": "Chargement...",
+    "retry": "Réessayer",
     "previousPage": "Page précédente",
     "nextPage": "Page suivante",
     "dismiss": "Masquer"
@@ -1164,6 +1189,12 @@
     "previousImage": "Image précédente",
     "nextImage": "Image suivante",
     "imageGallery": "Galerie d'images",
+    "homeHero": "Bannière d'accueil",
+    "closeGalleryTitle": "Fermer (Échap)",
+    "previousImageTitle": "Image précédente (←)",
+    "nextImageTitle": "Image suivante (→)",
+    "imageNumber": "Image {{index}}",
+    "animePoster": "Affiche d'anime",
     "syncSteps": "Étapes de synchronisation",
     "legend": "Légende",
     "providerLinks": "Liens des fournisseurs",
@@ -1295,6 +1326,11 @@
   },
   "botKun": {
     "subtitle": "Concierge IA anime",
+    "emptyTitle": "Bot-kun vous écoute",
+    "emptySubtitle": "Posez une question sur votre bibliothèque, faites une découverte ou choisissez une action rapide ci-dessous.",
+    "retry": "Réessayer",
+    "quickActions": "Actions rapides",
+    "scoreLabel": "Note",
     "inputPlaceholder": "Posez-moi vos questions sur les animes…",
     "clearConversation": "Effacer la conversation",
     "errorFallback": "Désolé, une erreur s'est produite. Veuillez réessayer.",
@@ -1423,7 +1459,8 @@
       "chipsCompleteH264": "Saisons complètes en H264",
       "presetApplied": "Appliqué",
       "analyzing": "Analyse de {{count}} fichiers…",
-      "noData": "Enrichissement en cours…"
+      "noData": "Enrichissement en cours…",
+      "chartAria": "Graphique de répartition des codecs : {{summary}}"
     },
     "drawer": {
       "stackedTitle": "Composition des codecs",
@@ -1991,7 +2028,10 @@
       "showing": "Affichage de",
       "of": "sur",
       "series": "séries",
-      "rowsPerPage": "Lignes par page"
+      "rowsPerPage": "Lignes par page",
+      "paginationNav": "Pagination du tableau",
+      "prevPage": "Page précédente",
+      "nextPage": "Page suivante"
     },
     "detail": {
       "ended": "Terminé",

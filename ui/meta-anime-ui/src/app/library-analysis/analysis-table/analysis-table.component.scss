@@ -2,8 +2,8 @@
 // Surfaces derive from the theme text color at low alpha
 // (color-mix(in srgb, var(--text-primary) N%, transparent)) so no light/dark
 // palette is ever hardcoded. Semantic hues (amber toggle, red clear button,
-// codec tones) stay literal — same convention as the finished .la-oppo*/.la-batch*
-// reference panels in analytics-charts.component.scss.
+// codec tones) resolve through the semantic token set via color-mix — raw
+// hex/rgba literals are banned in this tree.
 
 // ─── Filter Toolbar Card ────────────────────────────────────────────────────
 
@@ -156,14 +156,14 @@
 
     // SPLIT CODECS ONLY — amber toggle carrying the inline bolt SVG.
     &--split {
-      border-color: rgba(245, 158, 11, 0.3); // border-amber-500/30
-      background: rgba(245, 158, 11, 0.1);   // bg-amber-500/10
-      color: #fcd34d;                        // text-amber-300
+      border-color: color-mix(in srgb, var(--color-warning-deep) 30%, transparent); // border-amber-500/30
+      background: color-mix(in srgb, var(--color-warning-deep) 10%, transparent);   // bg-amber-500/10
+      color: var(--color-warning);                        // text-amber-300
 
       &:hover {
-        background: rgba(245, 158, 11, 0.2); // hover:bg-amber-500/20
-        border-color: rgba(245, 158, 11, 0.45);
-        color: #fcd34d;
+        background: color-mix(in srgb, var(--color-warning-deep) 20%, transparent); // hover:bg-amber-500/20
+        border-color: color-mix(in srgb, var(--color-warning-deep) 45%, transparent);
+        color: var(--color-warning);
       }
     }
 
@@ -194,10 +194,10 @@
     align-items: center;
     gap: 6px;
     padding: 7px 12px;
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    border: 1px solid color-mix(in srgb, var(--color-danger-deep) 30%, transparent);
     border-radius: 8px;
-    background: rgba(239, 68, 68, 0.08);
-    color: #ef4444;
+    background: color-mix(in srgb, var(--color-danger-deep) 8%, transparent);
+    color: var(--color-danger-deep);
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
@@ -205,8 +205,8 @@
     transition: background 0.15s, border-color 0.15s;
 
     &:hover {
-      background: rgba(239, 68, 68, 0.15);
-      border-color: rgba(239, 68, 68, 0.5);
+      background: color-mix(in srgb, var(--color-danger-deep) 15%, transparent);
+      border-color: color-mix(in srgb, var(--color-danger-deep) 50%, transparent);
     }
   }
 
@@ -218,7 +218,7 @@
     height: 18px;
     padding: 0 5px;
     border-radius: 999px;
-    background: rgba(239, 68, 68, 0.2);
+    background: color-mix(in srgb, var(--color-danger-deep) 20%, transparent);
     font-size: 10px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -372,7 +372,7 @@
 }
 
 .la-td--bloated {
-  color: #ef4444;
+  color: var(--color-danger-deep);
   font-weight: 600;
 }
 
@@ -438,10 +438,10 @@
   color: var(--accent-primary);
 
   // Video codecs
-  &--hevc, &--h265, &--x265 { background: rgba(34, 197, 94, 0.15);  color: #22c55e; }
-  &--h264, &--x264, &--avc  { background: rgba(249, 115, 22, 0.15); color: #f97316; }
-  &--av1                    { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
-  &--mpeg2                  { background: rgba(239, 68, 68, 0.15);  color: #ef4444; }
+  &--hevc, &--h265, &--x265 { background: color-mix(in srgb, var(--color-success-deep) 15%, transparent);  color: var(--color-success-deep); }
+  &--h264, &--x264, &--avc  { background: color-mix(in srgb, var(--color-warning-deep) 15%, transparent); color: var(--color-warning-deep); }
+  &--av1                    { background: color-mix(in srgb, var(--color-brand) 15%, transparent); color: var(--color-brand); }
+  &--mpeg2                  { background: color-mix(in srgb, var(--color-danger-deep) 15%, transparent);  color: var(--color-danger-deep); }
 
   // Overflow "+N" badge for sub-5% audio entries
   &--more {
@@ -458,10 +458,10 @@
 }
 
 // Audio codec tones — AAC/MP3 slate, OPUS teal, EAC3/AC3 purple, FLAC/WAV/DTS amber
-.la-audio-pill--slate  { border: 1px solid rgba(99, 102, 241, 0.3);  background: rgba(99, 102, 241, 0.15);  color: var(--color-brand); }
-.la-audio-pill--teal   { border: 1px solid rgba(20, 184, 166, 0.3);  background: rgba(20, 184, 166, 0.15);  color: #5eead4; }
-.la-audio-pill--purple { border: 1px solid rgba(168, 85, 247, 0.3);  background: rgba(168, 85, 247, 0.15);  color: #c4b5fd; }
-.la-audio-pill--amber  { border: 1px solid rgba(245, 158, 11, 0.3);  background: rgba(245, 158, 11, 0.15);  color: #fcd34d; }
+.la-audio-pill--slate  { border: 1px solid color-mix(in srgb, var(--color-brand) 30%, transparent);  background: color-mix(in srgb, var(--color-brand) 15%, transparent);  color: var(--color-brand); }
+.la-audio-pill--teal   { border: 1px solid color-mix(in srgb, var(--color-success) 30%, transparent);  background: color-mix(in srgb, var(--color-success) 15%, transparent);  color: var(--color-success); }
+.la-audio-pill--purple { border: 1px solid color-mix(in srgb, var(--accent-primary) 30%, transparent);  background: color-mix(in srgb, var(--accent-primary) 15%, transparent);  color: var(--accent-primary); }
+.la-audio-pill--amber  { border: 1px solid color-mix(in srgb, var(--color-warning-deep) 30%, transparent);  background: color-mix(in srgb, var(--color-warning-deep) 15%, transparent);  color: var(--color-warning); }
 
 .la-pill-pct {
   font-size: 0.7em;
@@ -504,21 +504,21 @@
   white-space: nowrap;
 
   &--ended {
-    background: rgba(34, 197, 94, 0.15);
-    border-color: rgba(34, 197, 94, 0.3);
-    color: #22c55e;
+    background: color-mix(in srgb, var(--color-success-deep) 15%, transparent);
+    border-color: color-mix(in srgb, var(--color-success-deep) 30%, transparent);
+    color: var(--color-success-deep);
   }
 
   &--amber {
-    background: rgba(245, 158, 11, 0.15);
-    border-color: rgba(245, 158, 11, 0.3);
-    color: #f59e0b;
+    background: color-mix(in srgb, var(--color-warning-deep) 15%, transparent);
+    border-color: color-mix(in srgb, var(--color-warning-deep) 30%, transparent);
+    color: var(--color-warning-deep);
   }
 
   &--incomplete {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: rgba(239, 68, 68, 0.3);
-    color: #ef4444;
+    background: color-mix(in srgb, var(--color-danger-deep) 15%, transparent);
+    border-color: color-mix(in srgb, var(--color-danger-deep) 30%, transparent);
+    color: var(--color-danger-deep);
   }
 }
 
@@ -561,7 +561,7 @@
     background: color-mix(in srgb, var(--text-primary) 7%, transparent);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 12px 32px color-mix(in srgb, var(--card-shadow) 100%, transparent);
   }
 
   &__modes {
@@ -731,5 +731,32 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+  }
+}
+
+// ─── Focus visibility (WCAG 2.4.7) — keyboard-reachable controls ────────────
+
+.la-filter__pill:focus-visible,
+.la-filter__clear:focus-visible,
+.la-page-btn:focus-visible,
+.la-filter__input:focus-visible,
+.la-match-mode__percent:focus-visible,
+.la-table th[tabindex]:focus-visible,
+.la-row:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-primary) 55%, transparent);
+  outline-offset: 2px;
+}
+
+// ─── Reduced motion — decorative animation off ──────────────────────────────
+
+@media (prefers-reduced-motion: reduce) {
+  .la-shimmer-inline {
+    animation: none;
+  }
+
+  .la-table tbody tr,
+  .la-filter__pill,
+  .la-page-btn {
+    transition: none;
   }
 }

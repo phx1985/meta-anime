@@ -134,7 +134,12 @@
         @if (currentStep() === 2) {
           <div class="step-section wizard-step">
             <div class="field">
-              <label class="field__label">{{ 'seasonal.sonarrSearch' | translate }}</label>
+              <label class="field__label">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.6-3.6" />
+                </svg>
+                {{ 'seasonal.sonarrSearch' | translate }}
+              </label>
               <div class="search-wrap">
                 <svg class="search-wrap__icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
                   <circle cx="8" cy="8" r="5.5" /><path d="M14 14l3.5 3.5" stroke-linecap="round" />
@@ -211,7 +216,12 @@
                   <div class="options-panel__loading"><div class="spinner spinner--sm"></div></div>
                 } @else {
                   <div class="field">
-                    <label class="field__label">{{ 'seasonal.rootFolder' | translate }}</label>
+                    <label class="field__label">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M4 4h6l2 3h8v13H4z"/>
+                      </svg>
+                      {{ 'seasonal.rootFolder' | translate }}
+                    </label>
                     <div class="field__select-wrap">
                       <app-ui-select
                         [options]="sonarrRootFolderSelectOptions()"
@@ -222,7 +232,12 @@
                     </div>
                   </div>
                   <div class="field">
-                    <label class="field__label">{{ 'seasonal.qualityProfile' | translate }}</label>
+                    <label class="field__label">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M3 6h18M6 12h12M10 18h4"/>
+                      </svg>
+                      {{ 'seasonal.qualityProfile' | translate }}
+                    </label>
                     <div class="field__select-wrap">
                       <app-ui-select
                         [options]="sonarrProfileSelectOptions()"
@@ -233,7 +248,12 @@
                     </div>
                   </div>
                   <div class="field">
-                    <label class="field__label">{{ 'seasonal.monitor' | translate }}</label>
+                    <label class="field__label">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                      </svg>
+                      {{ 'seasonal.monitor' | translate }}
+                    </label>
                     <div class="field__select-wrap">
                       <app-ui-select
                         [options]="sonarrMonitorSelectOptions()"
@@ -262,7 +282,12 @@
                   <span>{{ 'providers.mal' | translate }}</span>
                 </div>
                 <div class="field">
-                  <label class="field__label">{{ 'seasonal.malStatusLabel' | translate }}</label>
+                  <label class="field__label">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/>
+                    </svg>
+                    {{ 'seasonal.malStatusLabel' | translate }}
+                  </label>
                   <div class="field__select-wrap">
                     <app-ui-select
                       [options]="malStatusSelectOptions()"
@@ -274,11 +299,21 @@
                 </div>
                 <div class="field-row">
                   <div class="field">
-                    <label class="field__label">{{ 'seasonal.episodesWatched' | translate }}</label>
+                    <label class="field__label">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/>
+                      </svg>
+                      {{ 'seasonal.episodesWatched' | translate }}
+                    </label>
                     <input class="field__input" type="number" min="0" [ngModel]="addMalEpisodes()" (ngModelChange)="onMalEpisodesChange($event)" />
                   </div>
                   <div class="field">
-                    <label class="field__label">{{ 'seasonal.score' | translate }}</label>
+                    <label class="field__label">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/>
+                      </svg>
+                      {{ 'seasonal.score' | translate }}
+                    </label>
                     <input class="field__input" type="number" min="0" max="10" [ngModel]="addMalScore()" (ngModelChange)="onMalScoreChange($event)" />
                   </div>
                 </div>

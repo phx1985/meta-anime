@@ -16,15 +16,20 @@
   background-image: url('/assets/images/meta-anime-banner.png');
   background-size: cover;
   background-position: center;
-  background-color: var(--gradient-start);
+  background-color: var(--color-brand);
   z-index: 0;
 }
 
-// Subtle bottom vignette
+// Bottom fade-out: the image melts into the page background (no harsh wash)
 .hero-vignette {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, transparent 35%, rgba(0, 0, 0, 0.5) 100%);
+  background: linear-gradient(
+    to bottom,
+    transparent 40%,
+    color-mix(in srgb, var(--color-surface-base) 55%, transparent) 72%,
+    var(--color-surface-base) 100%
+  );
   z-index: 1;
   pointer-events: none;
 }
@@ -37,7 +42,7 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
-  background: rgb(128 128 128);
+  background: var(--text-muted);
   filter: url(#hero-grain);
   opacity: 0.12;
   mix-blend-mode: overlay;
@@ -147,8 +152,8 @@ $timing-fns: (
   );
   border: 1px solid var(--bubble-border);
   box-shadow:
-    inset 0 0 6px rgba(255, 255, 255, 0.15),
-    0 2px 6px rgba(0, 0, 0, 0.08);
+    inset 0 0 6px color-mix(in srgb, var(--hero-text) 15%, transparent),
+    0 2px 6px color-mix(in srgb, var(--text-primary) 8%, transparent);
 
   @for $i from 1 through 14 {
     &:nth-child(#{$i}) {
@@ -183,17 +188,17 @@ $timing-fns: (
 .hero-title {
   font-size: clamp(2.2rem, 6vw, 4rem);
   font-weight: 800;
-  color: #ffffff;
+  color: var(--hero-text);
   letter-spacing: -0.02em;
-  text-shadow: 0 3px 18px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 3px 18px color-mix(in srgb, var(--text-primary) 60%, transparent);
   margin-bottom: 0.5rem;
   animation: fadeSlideUp 0.9s ease both;
 }
 
 .hero-subtitle {
   font-size: clamp(1rem, 2.5vw, 1.3rem);
-  color: rgba(255, 255, 255, 0.88);
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+  color: color-mix(in srgb, var(--hero-text) 88%, transparent);
+  text-shadow: 0 1px 10px color-mix(in srgb, var(--text-primary) 50%, transparent);
   animation: fadeSlideUp 0.9s 0.2s ease both;
 }
 
@@ -227,17 +232,12 @@ $timing-fns: (
   font-size: 0.85rem;
 }
 
-// Stat Cards
+// Stat Cards (panel chrome comes from app-ui-card; this class rides on its host)
 
 .stat-card {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 14px;
-  padding: 1.5rem 1rem;
   text-align: center;
   cursor: default;
   position: relative;
-  overflow: hidden; // clip the watermark so it cannot bleed outside the card
 
   // Pop-fade-in on entry
   animation: popFadeIn 0.55s cubic-bezier(0.34, 1.4, 0.64, 1) both;
@@ -245,15 +245,19 @@ $timing-fns: (
   // Elegant spring-bounce on hover
   transition:
     transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 0.3s ease;
+    box-shadow 0.3s ease,
+    border-color 0.2s ease;
 
   &:hover {
     transform: translateY(-7px) scale(1.04);
-    box-shadow: 0 16px 36px var(--card-shadow);
+    box-shadow: 0 16px 36px color-mix(in srgb, var(--text-primary) 14%, transparent);
   }
 
-  @media (max-width: 575.98px) {
-    padding: 1.25rem 0.875rem;
+  // Focus = no native outline, brand-tinted border instead
+  &:focus-visible {
+    outline: none;
+    border-color: var(--color-brand);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand) 35%, transparent);
   }
 
   // ── CSS Tooltip ──────────────────────────────────────────────────────────
@@ -264,9 +268,9 @@ $timing-fns: (
     bottom: calc(100% + 10px);
     left: 50%;
     transform: translateX(-50%) translateY(6px);
-    background: rgba(15, 15, 25, 0.92);
+    background: color-mix(in srgb, var(--text-primary) 92%, transparent);
     backdrop-filter: blur(4px);
-    color: #fff;
+    color: var(--color-surface-elevated);
     padding: 7px 12px;
     border-radius: 8px;
     font-size: 0.72rem;
@@ -292,7 +296,7 @@ $timing-fns: (
     left: 50%;
     transform: translateX(-50%) translateY(6px);
     border: 6px solid transparent;
-    border-top-color: rgba(15, 15, 25, 0.92);
+    border-top-color: color-mix(in srgb, var(--text-primary) 92%, transparent);
     pointer-events: none;
     opacity: 0;
     transition:
@@ -302,7 +306,9 @@ $timing-fns: (
   }
 
   &:hover::before,
-  &:hover::after {
+  &:hover::after,
+  &:focus-visible::before,
+  &:focus-visible::after {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
@@ -358,8 +364,8 @@ $timing-fns: (
   width: 56px;
   height: 56px;
   opacity: 0.22;
-  mask-image: linear-gradient(to right, black 0%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, black 0%, transparent 100%);
+  mask-image: linear-gradient(to right, var(--text-primary) 0%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, var(--text-primary) 0%, transparent 100%);
   pointer-events: none;
   user-select: none;
   z-index: 0; // explicitly below the text
@@ -370,19 +376,162 @@ $timing-fns: (
   }
 }
 
+// Provider value accents — semantic tokens only, tinted toward the theme
+// text color so value text meets AA contrast on the card surface.
 .stat-card--matched .stat-value {
-  color: #22c55e;
+  color: color-mix(in srgb, var(--color-success-deep) 75%, var(--text-primary));
 }
 .stat-card--plex .stat-value {
-  color: #e5a00d;
+  color: color-mix(in srgb, var(--color-warning-deep) 75%, var(--text-primary));
 }
 .stat-card--sonarr .stat-value {
-  color: #3b82f6;
+  color: color-mix(in srgb, var(--color-brand) 75%, var(--text-primary));
 }
 .stat-card--mal .stat-value {
-  color: #2e51a2;
+  color: var(--accent-primary);
 }
 
-[data-theme='dark'] .stat-card--mal .stat-value {
-  color: #5b82e0;
+// ── Loading skeleton (matches loaded geometry) ─────────────────────────────────
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.stats-skeleton {
+  .row {
+    overflow: visible;
+  }
+}
+
+.skeleton-card {
+  position: relative;
+  height: 122px;
+  padding: 1.5rem 1rem;
+  border-radius: 12px;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.skeleton-block {
+  background: var(--color-border-subtle);
+  border-radius: 8px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+
+  &--value {
+    width: 55%;
+    height: 2.4rem;
+    margin-top: 0.65rem;
+  }
+
+  &--icon {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+  }
+}
+
+.skeleton-line {
+  background: var(--color-border-subtle);
+  border-radius: 8px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+
+  &--desc {
+    width: 220px;
+    height: 0.85rem;
+    margin: 0 auto 3rem;
+  }
+}
+
+.skeleton-panel {
+  position: relative;
+  height: 360px;
+  border-radius: 12px;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border-subtle);
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 1.25rem;
+    left: 1.5rem;
+    width: 40%;
+    height: 0.85rem;
+    border-radius: 8px;
+    background: var(--color-border-subtle);
+    animation: skeletonPulse 1.5s ease-in-out infinite;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 3.25rem;
+    left: 1.5rem;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    border-radius: 8px;
+    background: var(--color-border-subtle);
+    animation: skeletonPulse 1.5s ease-in-out infinite;
+  }
+
+  &--gaps {
+    height: 360px;
+  }
+}
+
+// ── Responsive geometry ───────────────────────────────────────────────────────
+
+@media (max-width: 639.98px) {
+  .hero-content {
+    padding: 0 1rem 1.75rem;
+  }
+
+  .skeleton-card {
+    height: 104px;
+  }
+
+  .skeleton-panel,
+  .skeleton-panel--gaps {
+    height: 300px;
+  }
+}
+
+// ── Reduced motion: particles, hero tween, pop-in and shimmer become static ──
+@media (prefers-reduced-motion: reduce) {
+  .particle {
+    animation: none;
+    opacity: 0; // purely decorative drift — hide when it cannot animate
+  }
+
+  .hero-title,
+  .hero-subtitle {
+    animation: none;
+  }
+
+  .stat-card {
+    animation: none;
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  .skeleton-block,
+  .skeleton-line,
+  .skeleton-panel::before,
+  .skeleton-panel::after {
+    animation: none;
+    opacity: 0.4;
+  }
 }

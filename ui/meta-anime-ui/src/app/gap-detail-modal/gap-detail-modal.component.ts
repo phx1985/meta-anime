@@ -1,10 +1,13 @@
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
   HostListener,
   inject,
   input,
+  OnDestroy,
   OnInit,
   output,
   signal,
@@ -29,9 +32,14 @@ import { GapConfirmModalComponent } from '../gap-confirm-modal/gap-confirm-modal
   templateUrl: './gap-detail-modal.component.html',
   styleUrl: './gap-detail-modal.component.scss',
 })
-export class GapDetailModalComponent implements OnInit {
+export class GapDetailModalComponent implements OnInit, AfterViewInit, OnDestroy {
   private animeService = inject(AnimeService);
   private destroyRef = inject(DestroyRef);
+  private hostEl = inject(ElementRef<HTMLElement>);
+
+  /** Element that opened the modal — focus is restored to it on close. */
+  private triggerEl: HTMLElement | null = null;
+  private focusTimer: ReturnType<typeof setTimeout> | null = null;
 
   gapType = input.required<string>();
   gapLabel = input.required<string>();
@@ -65,6 +73,9 @@ export class GapDetailModalComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Remember the trigger element (gap row) so focus can be restored on close.
+    this.triggerEl = (document.activeElement as HTMLElement) ?? null;
+
     this.animeService
       .getCoverageGap(this.gapType())
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -91,6 +102,22 @@ export class GapDetailModalComponent implements OnInit {
           error: () => this.crossLinksLoading.set(false),
         });
     }
+  }
+
+  ngAfterViewInit(): void {
+    // Move focus into the dialog once it is rendered.
+    this.focusTimer = setTimeout(() => {
+      this.focusTimer = null;
+      const closeBtn = this.hostEl.nativeElement.querySelector('.gap-modal-close') as HTMLElement | null;
+      closeBtn?.focus();
+    }, 0);
+  }
+
+  ngOnDestroy(): void {
+    if (this.focusTimer !== null) clearTimeout(this.focusTimer);
+    // Restore focus to the trigger when the dialog closes (@if teardown).
+    this.triggerEl?.focus();
+    this.triggerEl = null;
   }
 
   openSearchModal(item: CoverageGapItem): void {

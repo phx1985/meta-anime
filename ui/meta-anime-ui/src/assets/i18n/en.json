@@ -33,13 +33,21 @@
         "plex": "Anime series available in your Plex media library.",
         "sonarr": "Anime series tracked by your Sonarr instance.",
         "mal": "Anime entries sourced from your MyAnimeList account."
+      },
+      "error": {
+        "title": "Couldn't load statistics",
+        "sub": "The statistics service didn't respond. Check the API connection and try again."
       }
     },
     "chart": {
       "title": "Genre Distribution",
       "toggleLabel": "Chart type",
       "pie": "Pie",
-      "bar": "Bar"
+      "bar": "Bar",
+      "empty": {
+        "title": "No genre data yet",
+        "sub": "Genre distribution will appear here once your library has been indexed."
+      }
     },
     "missing": {
       "title": "Coverage Gaps",
@@ -85,7 +93,9 @@
         "crossLinkRemove": "Remove",
         "crossLinkRemoving": "Removing…",
         "crossLinkAniDbId": "AniDbId",
-        "crossLinkMalId": "MAL ID"
+        "crossLinkMalId": "MAL ID",
+        "tagAniDb": "AniDB",
+        "tagMal": "MAL"
       },
       "noProviders": {
         "title": "No providers configured yet.",
@@ -103,7 +113,11 @@
       "storage": "Storage Added",
       "forceRefresh": "Refresh",
       "refreshing": "Refreshing…",
-      "lastUpdated": "Last updated: {{value}}"
+      "lastUpdated": "Last updated: {{value}}",
+      "error": {
+        "title": "Couldn't load activity",
+        "sub": "Activity data is unavailable right now. Check the API connection and try again."
+      }
     }
   },
   "seasonal": {
@@ -202,7 +216,9 @@
       },
       "noFilterActive": "No filter active",
       "mediaType": "Media type",
-      "apply": "Apply"
+      "apply": "Apply",
+      "filterPlaceholder": "Filter…",
+      "done": "Done"
     },
     "sonarrAlreadyInLibrary": "Already in Sonarr",
     "partiallyTracked": "Partially tracked — add to more providers",
@@ -233,6 +249,7 @@
     "loading": "Searching for anime…",
     "error": "Search failed. Please try again.",
     "empty": "No results found. Try a different title.",
+    "noResults": "No results found for \"{{query}}\".",
     "noQuery": "Enter a title above to start searching.",
     "resultCount": "{{count}} results for \"{{query}}\"",
     "openMal": "Open on MyAnimeList",
@@ -343,7 +360,9 @@
   "animeList": {
     "title": "Anime List",
     "error": "Failed to load anime. Please try again later.",
+    "errorSubtext": "Check your connection and try again.",
     "empty": "No anime found.",
+    "emptySubtext": "Try adjusting or clearing your filters.",
     "totalCount": "{{count}} anime found",
     "loadingMore": "Loading more…",
     "loadMore": "Load more",
@@ -402,6 +421,8 @@
       "expandFilters": "Expand filters",
       "collapseFilters": "Collapse filters",
       "noFilterActive": "No filter selected",
+      "done": "Done",
+      "filterPlaceholder": "Filter…",
       "prompt": "Set your filters and press Search to explore your anime library.",
       "advanced": "Advanced filters",
       "hideAdvanced": "Hide advanced",
@@ -920,6 +941,9 @@
     "title": "Explore Universe",
     "loading": "Mapping Franchise Data...",
     "loadingProgress": "Mapping Franchise... ({{count}} nodes found)",
+    "errorTitle": "Franchise mapping failed",
+    "retry": "Retry",
+    "graphAlt": "Franchise timeline graph with {{count}} anime: {{nodes}}",
     "empty": "No related anime found in the franchise data.",
     "close": "Close",
     "viewButton": "View Franchise Constellation",
@@ -1140,6 +1164,7 @@
       "tb": "TB"
     },
     "loading": "Loading...",
+    "retry": "Retry",
     "previousPage": "Previous page",
     "nextPage": "Next page",
     "dismiss": "Dismiss"
@@ -1164,6 +1189,12 @@
     "previousImage": "Previous image",
     "nextImage": "Next image",
     "imageGallery": "Image Gallery",
+    "homeHero": "Hero banner",
+    "closeGalleryTitle": "Close (Esc)",
+    "previousImageTitle": "Previous (←)",
+    "nextImageTitle": "Next (→)",
+    "imageNumber": "Image {{index}}",
+    "animePoster": "Anime poster",
     "syncSteps": "Sync steps",
     "legend": "Legend",
     "providerLinks": "Provider links",
@@ -1295,6 +1326,11 @@
   },
   "botKun": {
     "subtitle": "AI Anime Concierge",
+    "emptyTitle": "Bot-kun is listening",
+    "emptySubtitle": "Ask about your library, discover something new, or pick a quick action below.",
+    "retry": "Retry",
+    "quickActions": "Quick actions",
+    "scoreLabel": "Score",
     "inputPlaceholder": "Ask me about anime…",
     "clearConversation": "Clear conversation",
     "errorFallback": "Sorry, something went wrong. Please try again.",
@@ -1423,7 +1459,8 @@
       "chipsCompleteH264": "Complete Seasons in H264",
       "presetApplied": "Applied",
       "analyzing": "Analyzing {{count}} files…",
-      "noData": "Enrichment in progress…"
+      "noData": "Enrichment in progress…",
+      "chartAria": "Codec distribution chart: {{summary}}"
     },
     "drawer": {
       "stackedTitle": "Codec Composition",
@@ -1991,7 +2028,10 @@
       "showing": "Showing",
       "of": "of",
       "series": "series",
-      "rowsPerPage": "Rows per page"
+      "rowsPerPage": "Rows per page",
+      "paginationNav": "Table pagination",
+      "prevPage": "Previous page",
+      "nextPage": "Next page"
     },
     "detail": {
       "ended": "Ended",

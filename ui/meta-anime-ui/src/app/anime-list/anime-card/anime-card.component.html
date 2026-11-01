@@ -22,7 +22,7 @@
 
     <!-- ── Main content ───────────────────────────────────────────────────── -->
     <div class="card-content">
-      <!-- ── Header: title + status pills + alt-titles ──────────────── -->
+      <!-- ── Header: title + status pills ──────────────────────────── -->
       <div class="card-head">
         <div class="head-top">
           <div class="title-block">
@@ -40,14 +40,12 @@
               [attr.aria-label]="'animeDetailPanel.askBotKun' | translate"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="3" y="3" width="18" height="12" rx="2" ry="2" />
-                <circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none" />
-                <circle cx="16" cy="8" r="1.2" fill="currentColor" stroke="none" />
-                <path d="M12 3V1" />
-                <circle cx="12" cy="0.8" r="0.8" fill="currentColor" stroke="none" />
-                <path d="M5 19h14" />
-                <path d="M8 19l-2 3" />
-                <path d="M16 19l2 3" />
+                <rect x="4" y="8" width="16" height="12" rx="2" />
+                <path d="M12 4v4" />
+                <circle cx="12" cy="3" r="1" />
+                <circle cx="9" cy="14" r="1" fill="currentColor" stroke="none" />
+                <circle cx="15" cy="14" r="1" fill="currentColor" stroke="none" />
+                <path d="M2 13v3M22 13v3" />
               </svg>
             </button>
           }
@@ -82,23 +80,23 @@
       }
 
       <!-- ── Genres / Themes / Demographics ─────────────────────────────── -->
-      @if (pureGenres.length > 0) {
+      @if (pureGenres().length > 0) {
         <div class="genre-list">
-          @for (g of pureGenres; track g) {
+          @for (g of pureGenres(); track g) {
             <span class="genre-tag">{{ translateGenre(g) }}</span>
           }
         </div>
       }
-      @if (themes.length > 0) {
+      @if (themes().length > 0) {
         <div class="genre-list genre-list--themes">
-          @for (t of themes; track t) {
+          @for (t of themes(); track t) {
             <span class="genre-tag genre-tag--theme">{{ translateGenre(t) }}</span>
           }
         </div>
       }
-      @if (demographics.length > 0) {
+      @if (demographics().length > 0) {
         <div class="genre-list genre-list--demographics">
-          @for (d of demographics; track d) {
+          @for (d of demographics(); track d) {
             <span class="genre-tag genre-tag--demographic">{{ translateGenre(d) }}</span>
           }
         </div>
@@ -138,27 +136,48 @@
   </div>
   <!-- /card-main -->
 
-  <!-- ── Provider dots — small colored circles, top-right of card content ── -->
+  <!-- ── Provider dots — small colored tabs, top-right of card content ── -->
   @if (inMal || inSonarr || inPlex) {
     <div class="provider-dots" (click)="$event.stopPropagation(); activeProviderTooltip.set(null)">
       @if (inSonarr) {
-        <span class="dot dot--sonarr" [class.dot--active]="activeProviderTooltip() === 'sonarr'" (click)="toggleTooltip('sonarr', $event)" [title]="'providers.inSonarr' | translate">
+        <span class="dot dot--sonarr" role="button" tabindex="0"
+              [class.dot--active]="activeProviderTooltip() === 'sonarr'"
+              [attr.aria-expanded]="activeProviderTooltip() === 'sonarr'"
+              [attr.aria-label]="'providers.inSonarr' | translate"
+              (click)="toggleTooltip('sonarr', $event)"
+              (keydown.enter)="toggleTooltip('sonarr', $event)"
+              (keydown.space)="$event.preventDefault(); toggleTooltip('sonarr', $event)"
+              [title]="'providers.inSonarr' | translate">
           @if (activeProviderTooltip() === 'sonarr') {
-            <span class="dot-tooltip">{{ 'providers.inSonarr' | translate }}</span>
+            <span class="dot-tooltip" role="tooltip">{{ 'providers.inSonarr' | translate }}</span>
           }
         </span>
       }
       @if (inPlex) {
-        <span class="dot dot--plex" [class.dot--active]="activeProviderTooltip() === 'plex'" (click)="toggleTooltip('plex', $event)" [title]="'providers.inPlex' | translate">
+        <span class="dot dot--plex" role="button" tabindex="0"
+              [class.dot--active]="activeProviderTooltip() === 'plex'"
+              [attr.aria-expanded]="activeProviderTooltip() === 'plex'"
+              [attr.aria-label]="'providers.inPlex' | translate"
+              (click)="toggleTooltip('plex', $event)"
+              (keydown.enter)="toggleTooltip('plex', $event)"
+              (keydown.space)="$event.preventDefault(); toggleTooltip('plex', $event)"
+              [title]="'providers.inPlex' | translate">
           @if (activeProviderTooltip() === 'plex') {
-            <span class="dot-tooltip">{{ 'providers.inPlex' | translate }}</span>
+            <span class="dot-tooltip" role="tooltip">{{ 'providers.inPlex' | translate }}</span>
           }
         </span>
       }
       @if (inMal) {
-        <span class="dot dot--mal" [class.dot--active]="activeProviderTooltip() === 'mal'" (click)="toggleTooltip('mal', $event)" [title]="'providers.inMal' | translate">
+        <span class="dot dot--mal" role="button" tabindex="0"
+              [class.dot--active]="activeProviderTooltip() === 'mal'"
+              [attr.aria-expanded]="activeProviderTooltip() === 'mal'"
+              [attr.aria-label]="'providers.inMal' | translate"
+              (click)="toggleTooltip('mal', $event)"
+              (keydown.enter)="toggleTooltip('mal', $event)"
+              (keydown.space)="$event.preventDefault(); toggleTooltip('mal', $event)"
+              [title]="'providers.inMal' | translate">
           @if (activeProviderTooltip() === 'mal') {
-            <span class="dot-tooltip">{{ 'providers.inMal' | translate }}</span>
+            <span class="dot-tooltip" role="tooltip">{{ 'providers.inMal' | translate }}</span>
           }
         </span>
       }
@@ -178,7 +197,6 @@
       </div>
     </div>
   }
-
 
 </article>
 

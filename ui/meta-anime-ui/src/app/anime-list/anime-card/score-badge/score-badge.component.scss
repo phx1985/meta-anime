@@ -18,7 +18,7 @@
   height: 100%;
 
   .arc-bg {
-    stroke: var(--card-border);
+    stroke: var(--color-border-subtle);
   }
   .arc-fill {
     stroke: var(--accent-primary);
@@ -26,7 +26,7 @@
     transition: stroke-dashoffset 0.7s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .arc-fill--mine {
-    stroke: #22c55e;
+    stroke: var(--color-success-deep);
   }
 }
 
@@ -58,4 +58,31 @@
   z-index: 1;
   line-height: 1;
   margin-top: 1px;
+}
+
+
+// --- A11y: keyboard focus ring ----------------------------------------------
+
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+// --- A11y: prefers-reduced-motion -------------------------------------------
+// Entry animations, shimmer/pulse loops and transitions collapse to instant.
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
 }

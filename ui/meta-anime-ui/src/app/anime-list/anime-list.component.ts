@@ -4,8 +4,10 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  HostListener,
   OnDestroy,
   QueryList,
+  ViewChild,
   ViewChildren,
   computed,
   effect,
@@ -37,6 +39,10 @@ import { AnimeImageGalleryComponent } from '../anime-image-gallery/anime-image-g
 import { StorageKeys } from '../constants/storage-keys';
 import { formatTableSize as formatSize, getCodecPills as codecPills } from '../utils/format.utils';
 import { UiSelectComponent, UiSelectOption } from '../shared/ui/ui-select/ui-select.component';
+import { UiStatePanelComponent } from '../shared/ui/ui-state-panel/ui-state-panel.component';
+import { FpPopoverComponent } from '../shared/ui/fp-popover/fp-popover.component';
+import { PillGroupComponent } from '../shared/ui/pill-group/pill-group.component';
+import { PresetChipsComponent } from '../shared/ui/preset-chips/preset-chips.component';
 
 const DEFAULT_PAGE_SIZE = 20;
 const DISPLAY_MODE_KEY = StorageKeys.displayMode;
@@ -110,7 +116,7 @@ export const RATING_OPTIONS = [
   selector: 'app-anime-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, RouterLink, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, AnimeImageGalleryComponent, NgTemplateOutlet, DatePipe, UiSelectComponent],
+  imports: [FormsModule, RouterLink, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, AnimeImageGalleryComponent, NgTemplateOutlet, DatePipe, UiSelectComponent, UiStatePanelComponent, FpPopoverComponent, PillGroupComponent, PresetChipsComponent],
   templateUrl: './anime-list.component.html',
   styleUrl: './anime-list.component.scss',
 })
@@ -126,6 +132,9 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   private readonly popupService = inject(PopupService);
 
   @ViewChildren('animeCard', { read: ElementRef }) cardRefs!: QueryList<ElementRef>;
+  /** Modal sheet containers (mobile filter sheet / presets bottom sheet) — focus targets. */
+  @ViewChild('filterSheet') filterSheetEl?: ElementRef<HTMLElement>;
+  @ViewChild('presetsSheet') presetsSheetEl?: ElementRef<HTMLElement>;
 
   animes = signal<AnimeDetailsResponse[]>([]);
   loading = signal(false);
@@ -231,12 +240,25 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   // ── ui-select option sets (labels translated here — the component takes final strings) ──
 
+  /** Cached per language so the ui-select inputs keep a stable array identity across CD runs. */
+  private sortOptionsCache: { key: string; value: UiSelectOption[] } | null = null;
+
   sortSelectOptions(): UiSelectOption[] {
-    return this.sortOptions.map((o) => ({ label: this.translateService.instant(o.labelKey), value: o.value }));
+    const key = String(this.langSignal());
+    if (this.sortOptionsCache?.key !== key) {
+      this.sortOptionsCache = {
+        key,
+        value: this.sortOptions.map((o) => ({ label: this.translateService.instant(o.labelKey), value: o.value })),
+      };
+    }
+    return this.sortOptionsCache.value;
   }
 
+  /** Static labels (numbers) — one cached array for the lifetime of the component. */
+  private pageSizeOptionsCache: UiSelectOption[] | null = null;
+
   pageSizeSelectOptions(): UiSelectOption[] {
-    return this.pageSizeOptions.map((o) => ({ label: String(o), value: o }));
+    return (this.pageSizeOptionsCache ??= this.pageSizeOptions.map((o) => ({ label: String(o), value: o })));
   }
   readonly codecOptions = CODEC_OPTIONS;
   readonly mediaTypeOptions = MEDIA_TYPE_OPTIONS;
@@ -294,6 +316,8 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   private readonly langSignal = signal(
     this.translateService.getCurrentLang() || this.translateService.getFallbackLang() || 'en',
   );
+  /** Version counter folded into langSignal so caches also invalidate when the async translation bundle loads. */
+  private i18nRevision = 0;
 
   /** Genre list: NSFW-filtered + sorted alphabetically (NSFW items last). */
   readonly sortedGenreList = computed(() => {
@@ -328,8 +352,57 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     })).sort((a, b) => a.label.localeCompare(b.label));
   });
 
+  // ── Memoised derived filter state ─────────────────────────────────────────
+  // These used to be plain getters re-evaluated on every change-detection run
+  // (filterSummary alone fired ~20 translate.instant() calls per CD). They are
+  // now memoised by value: the cache key covers every input (signals, plain
+  // props and the language tag) so outputs stay byte-identical while the heavy
+  // translation work only runs when something actually changed.
+
+  /** Value-based cache key over all filter/sort state + current language. */
+  private filterStateKey(): string {
+    return [
+      this.langSignal(),
+      this.filterTitle,
+      this.filterGenre().join('\u0001'),
+      this.genreOperator,
+      this.filterTheme().join('\u0001'),
+      this.themeOperator,
+      this.filterDemographic().join('\u0001'),
+      this.demographicOperator,
+      this.filterWatchState.join('\u0001'),
+      this.filterAiringStatus.join('\u0001'),
+      this.filterHasFile,
+      this.filterCodec.join('\u0001'),
+      this.filterMediaType.join('\u0001'),
+      this.filterAgeRating().join('\u0001'),
+      this.sortBy,
+      this.sortOrder,
+    ].join('\u0000');
+  }
+
+  private countsCache: { key: string; active: number; advanced: number } | null = null;
+  private summaryCache: { key: string; value: string } | null = null;
+
   /** Count of active (non-default) filters for the badge */
   get activeFilterCount(): number {
+    return this.filterCounts().active;
+  }
+
+  /** Count of active advanced filters (drives the badge on the Advanced toggle) */
+  get advancedFilterCount(): number {
+    return this.filterCounts().advanced;
+  }
+
+  private filterCounts(): { active: number; advanced: number } {
+    const key = this.filterStateKey();
+    if (this.countsCache?.key !== key) {
+      this.countsCache = { key, active: this.computeActiveFilterCount(), advanced: this.computeAdvancedFilterCount() };
+    }
+    return this.countsCache;
+  }
+
+  private computeActiveFilterCount(): number {
     let n = 0;
     if (this.filterTitle) n++;
     if (this.filterGenre().length) n++;
@@ -344,8 +417,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     return n;
   }
 
-  /** Count of active advanced filters (drives the badge on the Advanced toggle) */
-  get advancedFilterCount(): number {
+  private computeAdvancedFilterCount(): number {
     let n = 0;
     if (this.filterGenre().length) n++;
     if (this.filterTheme().length) n++;
@@ -364,8 +436,17 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
   private scrollObserver: IntersectionObserver | null = null;
   private searchStartTime = 0;
 
-  /** Short human-readable summary of the current filter + sort state for the card header */
+  /** Short human-readable summary of the current filter + sort state for the card header.
+   *  Memoised by value (see filterStateKey) — the translation work only runs on change. */
   get filterSummary(): string {
+    const key = this.filterStateKey();
+    if (this.summaryCache?.key !== key) {
+      this.summaryCache = { key, value: this.computeFilterSummary() };
+    }
+    return this.summaryCache.value;
+  }
+
+  private computeFilterSummary(): string {
     const parts: string[] = [];
     if (this.filterTitle) parts.push(`«${this.filterTitle}»`);
     const genres = this.filterGenre();
@@ -457,6 +538,26 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     });
     this.destroyRef.onDestroy(() => this.popupService.childOverlayOpen.set(false));
 
+    // Sheet focus management (a11y): move keyboard focus into a mobile sheet when
+    // it opens and restore it to the trigger on close. The sheet markup is
+    // display:none on desktop, so the visibility check below no-ops there.
+    effect(() => {
+      const filter = this.filterOpen();
+      const presets = this.presetsSheetOpen();
+      if (filter && !this.filterSheetWasOpen) {
+        this.focusSheetOnOpen(this.filterSheetEl);
+      } else if (!filter && this.filterSheetWasOpen) {
+        this.restoreSheetFocus();
+      }
+      if (presets && !this.presetsSheetWasOpen) {
+        this.focusSheetOnOpen(this.presetsSheetEl);
+      } else if (!presets && this.presetsSheetWasOpen) {
+        this.restoreSheetFocus();
+      }
+      this.filterSheetWasOpen = filter;
+      this.presetsSheetWasOpen = presets;
+    });
+
     this.settingsService
       .getShowNsfw()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -479,7 +580,18 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
     this.translateService.onLangChange
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((e) => this.langSignal.set(e.lang));
+      .subscribe((e) => this.langSignal.set(`${e.lang}#${++this.i18nRevision}`));
+
+    // The async translation bundle can arrive AFTER the first change detection
+    // passes; without this, cached label keys would keep raw i18n keys until the
+    // next filter/language change. Bumping the token recomputes every label.
+    this.translateService.onTranslationChange
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() =>
+        this.langSignal.set(
+          `${this.translateService.getCurrentLang() || ''}#${++this.i18nRevision}`,
+        ),
+      );
 
     this.syncSignalR.syncCompleted$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       if (this.searched()) this.loadAnimes(true);
@@ -511,6 +623,73 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.scrollObserver?.disconnect();
+  }
+
+  // ── Sheet focus management (a11y) ─────────────────────────────────────────
+
+  private filterSheetWasOpen = false;
+  private presetsSheetWasOpen = false;
+  private sheetFocusReturn: HTMLElement | null = null;
+
+  /** Focus a sheet once its DOM is rendered; no-op when hidden (desktop accordion). */
+  private focusSheetOnOpen(ref: ElementRef<HTMLElement> | undefined): void {
+    if (!ref) return;
+    this.sheetFocusReturn = (document.activeElement as HTMLElement) ?? null;
+    queueMicrotask(() => {
+      const el = ref.nativeElement;
+      if (el.isConnected && el.getClientRects().length > 0) {
+        el.focus();
+      } else {
+        this.sheetFocusReturn = null; // sheet never became visible — nothing to restore
+      }
+    });
+  }
+
+  /** Return focus to the control that opened the sheet. */
+  private restoreSheetFocus(): void {
+    const el = this.sheetFocusReturn;
+    this.sheetFocusReturn = null;
+    if (el && el.isConnected && el.getClientRects().length > 0) el.focus();
+  }
+
+  /** The visible modal sheet (the presets sheet stacks above the filter sheet). */
+  private activeSheetElement(): HTMLElement | null {
+    const el = this.presetsSheetOpen()
+      ? this.presetsSheetEl?.nativeElement
+      : this.filterOpen()
+        ? this.filterSheetEl?.nativeElement
+        : undefined;
+    return el && el.getClientRects().length > 0 ? el : null;
+  }
+
+  /** Keeps Tab focus inside the open mobile sheet (focus trap). No-op on desktop,
+   *  where the sheet markup is display:none, and while an fp popover manages its
+   *  own trap above the sheet. */
+  @HostListener('document:keydown.tab', ['$event'])
+  onSheetTab(event: Event): void {
+    const keyEvent = event as KeyboardEvent;
+    if (this.genreDropdownOpen || this.themeDropdownOpen || this.demographicDropdownOpen) return;
+    const sheet = this.activeSheetElement();
+    if (!sheet) return;
+    const focusable = Array.from(
+      sheet.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((el) => el.getClientRects().length > 0);
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement;
+    if (!(active instanceof HTMLElement) || !sheet.contains(active)) {
+      event.preventDefault();
+      (keyEvent.shiftKey ? last : first).focus();
+    } else if (keyEvent.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!keyEvent.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   // ── Collapse outside click handler ────────────────────────────────────────
@@ -877,7 +1056,7 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     this.newPresetName = '';
   }
 
-  deletePreset(id: string, event: MouseEvent): void {
+  deletePreset(id: string, event: Event): void {
     event.stopPropagation();
     this.presetService.deletePreset(id);
   }
@@ -976,6 +1155,12 @@ export class AnimeListComponent implements AfterViewInit, OnDestroy {
     if (this.loadingMore() || this.allLoaded()) return;
     this.currentPage++;
     this.loadAnimes(false);
+  }
+
+  /** Error-state Retry: re-runs the current query (table keeps its page, grid restarts at page 1). */
+  retrySearch(): void {
+    if (this.loading()) return;
+    this.loadAnimes(true, this.displayMode() === 4 ? this.tablePage() : 1);
   }
 
   private setupScrollSentinel(): void {

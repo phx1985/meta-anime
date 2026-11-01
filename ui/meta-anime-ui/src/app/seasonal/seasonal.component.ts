@@ -20,6 +20,8 @@ import {
   MalAnimeInfo,
   SonarrAnimeInfo,
   PlexAnimeInfo,
+  FilterPreset,
+  SavedFilterState,
 } from '../models/anime.models';
 import {
   SonarrRootFolder,
@@ -43,6 +45,10 @@ import {
 import { MEDIA_TYPE_OPTIONS, RATING_OPTIONS } from '../anime-list/anime-list.component';
 import { AddSeriesWizardComponent } from '../add-series-wizard/add-series-wizard.component';
 import { UiSelectComponent, UiSelectOption } from '../shared/ui/ui-select/ui-select.component';
+import { FpPopoverComponent } from '../shared/ui/fp-popover/fp-popover.component';
+import { PillGroupComponent } from '../shared/ui/pill-group/pill-group.component';
+import { PresetChipsComponent } from '../shared/ui/preset-chips/preset-chips.component';
+import { UiStatePanelComponent } from '../shared/ui/ui-state-panel/ui-state-panel.component';
 
 const MIN_YEAR = 1963;
 
@@ -87,7 +93,7 @@ function getCurrentSeason(month: number): SeasonName {
   selector: 'app-seasonal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, NgTemplateOutlet, AnimeImageGalleryComponent, AddSeriesWizardComponent, UiSelectComponent],
+  imports: [CommonModule, FormsModule, TranslatePipe, AnimeCardComponent, AnimeDetailPanelComponent, NgTemplateOutlet, AnimeImageGalleryComponent, AddSeriesWizardComponent, UiSelectComponent, FpPopoverComponent, PillGroupComponent, PresetChipsComponent, UiStatePanelComponent],
   templateUrl: './seasonal.component.html',
   styleUrl: './seasonal.component.scss',
 })
@@ -297,6 +303,38 @@ export class SeasonalComponent {
 
   readonly malStates = SEASONAL_MAL_STATES;
   readonly sortOptions = SEASONAL_SORT_OPTIONS;
+
+  // ── Shared-component adapters (app-ui-preset-chips / app-ui-fp-popover) ─────
+  // The shared chip row takes the generic FilterPreset display shape; apply is
+  // resolved back to the original SeasonalFilterPreset by id so the frozen
+  // preset flows (and their SeasonalSavedFilterState payloads) are untouched.
+
+  /** Saved presets projected into the shared chip row's display shape. */
+  readonly presetChipsItems = computed<FilterPreset[]>(() =>
+    this.savedPresets().map((p) => ({
+      id: p.id,
+      labelKey: p.label,
+      isBuiltIn: false,
+      filters: p.filters as SavedFilterState,
+    })),
+  );
+
+  /** Applies the saved preset behind a shared chip-row click. */
+  applyPresetById(id: string): void {
+    const preset = this.savedPresets().find((p) => p.id === id);
+    if (preset) this.applyPreset(preset);
+  }
+
+  /** Operator toggle coming from the shared fp-popover (it already stopped propagation). */
+  onFilterOperatorChange(type: 'genre' | 'theme' | 'demographic', op: 'or' | 'and'): void {
+    this.invalidatePreset();
+    this.setFilterOperator(type, op);
+  }
+
+  /** Re-runs the current season fetch (error-state Retry CTA). */
+  retryLoad(): void {
+    this._loadCurrent();
+  }
 
   // ── ui-select option sets (labels translated here — the component takes final strings) ──
 

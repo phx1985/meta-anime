@@ -1,6 +1,6 @@
-<div class="missing-stats-card">
+<app-ui-card class="missing-stats-card" padding="1.25rem 1.5rem">
   <div class="missing-header">
-    <h3 class="missing-title">{{ 'home.missing.title' | translate }}</h3>
+    <h2 class="missing-title"><svg class="missing-title-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></svg>{{ 'home.missing.title' | translate }}</h2>
   </div>
   <div class="missing-rows">
     @if (hasAnyRow()) {
@@ -10,6 +10,7 @@
         class="gap-row gap-row--sonarr-mal gap-row--clickable"
         role="button"
         tabindex="0"
+        aria-haspopup="dialog"
         (click)="openGap('sonarrNotInMal', 'home.missing.sonarrNotInMal')"
         (keydown.enter)="openGap('sonarrNotInMal', 'home.missing.sonarrNotInMal')"
         (keydown.space)="$event.preventDefault(); openGap('sonarrNotInMal', 'home.missing.sonarrNotInMal')"
@@ -38,6 +39,7 @@
         class="gap-row gap-row--plex-mal gap-row--clickable"
         role="button"
         tabindex="0"
+        aria-haspopup="dialog"
         (click)="openGap('plexNotInMal', 'home.missing.plexNotInMal')"
         (keydown.enter)="openGap('plexNotInMal', 'home.missing.plexNotInMal')"
         (keydown.space)="$event.preventDefault(); openGap('plexNotInMal', 'home.missing.plexNotInMal')"
@@ -68,7 +70,7 @@
       </div>
     }
   </div>
-</div>
+</app-ui-card>
 
 <!-- Gap detail modal -->
 @if (activeGapType()) {
@@ -79,4 +81,3 @@
     (gapItemResolved)="onGapItemResolved($event)"
   />
 }
-

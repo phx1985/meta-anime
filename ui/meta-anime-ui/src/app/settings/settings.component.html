@@ -15,8 +15,13 @@
       </div>
     </div>
   } @else if (error()) {
-    <div class="alert alert-danger" role="alert">
-      {{ 'settings.error' | translate }}
+    <div class="settings-load-error" role="alert">
+      <svg class="settings-load-error__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span class="settings-load-error__text">{{ 'settings.error' | translate }}</span>
+      <button type="button" class="settings-load-error__retry" (click)="retryLoad()">
+        <svg class="btn-glyph" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        {{ 'common.retry' | translate }}
+      </button>
     </div>
   } @else {
     <!-- ── Mobile sticky subnav (replaces hidden sidenav on small screens) ──── -->
@@ -261,7 +266,7 @@
                       }}
                     </span>
                     @if (!isProviderEnabled(cat) && isProviderToggleBlocked(cat)) {
-                      <span class="provider-configure-hint" [class.text-danger]="cat === 'botkun'">
+                      <span class="provider-configure-hint" [class.provider-configure-hint--error]="cat === 'botkun'">
                         {{ (cat === 'botkun' ? 'settings.botkun.credentialsError' : 'settings.provider.configureFirstTooltip') | translate }}
                       </span>
                     }
@@ -361,13 +366,13 @@
 
                 @if (cat === 'plex') {
                   <!-- ── Plex Anime Sections picker ─────────────────────────── -->
-                  <div class="pref-group picker-group">
-                    <div class="pref-group__header">
+                  <fieldset class="pref-group picker-group">
+                    <legend class="pref-group__header">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                         <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
                       </svg>
                       <span>{{ 'settings.fields.Plex_AnimeSections.name' | translate }}</span>
-                    </div>
+                    </legend>
                     <div class="picker-group__desc">{{ 'settings.fields.Plex_AnimeSections.desc' | translate }}</div>
                     @if (plexLibsLoading()) {
                       <div class="picker-loading">
@@ -376,9 +381,10 @@
                       </div>
                     }
                     @if (plexLibsError() && !plexLibsLoading()) {
-                      <div class="sonarr-defaults-error">{{ plexLibsError() }}</div>
+                      <div class="sonarr-defaults-error" role="alert">{{ plexLibsError() }}</div>
                       <button type="button" class="picker-load-btn" (click)="loadPlexLibsForSettings()">
-                        ↺ Retry
+                        <svg class="btn-glyph" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+                        {{ 'common.retry' | translate }}
                       </button>
                     }
                     <!-- Show only the selected libraries inline; full list is in the modal -->
@@ -395,7 +401,7 @@
                         + {{ 'settings.plex.manageLibraries' | translate }}
                       </button>
                     </div>
-                  </div>
+                  </fieldset>
 
                   <!-- ── Plex Library Picker Modal ───────────────────────────── -->
                   @if (plexPickerOpen()) {
@@ -498,7 +504,7 @@
                         <div class="display-row display-row--select">
                           <div class="setting-select-wrap">
                           <app-ui-select
-                            [options]="selectOptionsFor(setting)"
+                            [options]="selectOptionsByKey()[setting.key] ?? []"
                             [value]="setting.value ?? ''"
                             [disabled]="isSaving(setting.key)"
                             [ariaLabel]="'settings.fields.' + slug(setting.key) + '.name' | translate"
@@ -640,7 +646,7 @@
                               @if (botkunModels().length > 0) {
                                 <div class="setting-select-wrap">
                                 <app-ui-select
-                                  [options]="botkunModelSelectOptions()"
+                                  [options]="botkunModelOptions()"
                                   [value]="forms[setting.key].get('value')?.value ?? ''"
                                   [ariaLabel]="'settings.fields.BotKun_Model.name' | translate"
                                   (selectionChange)="forms[setting.key].patchValue({ value: $event })"
@@ -670,7 +676,7 @@
                               </button>
                             </div>
                             @if (botkunModelsFetchError()) {
-                              <div class="text-danger small mt-1">{{ botkunModelsFetchError() }}</div>
+                              <div class="field-error" role="alert">{{ botkunModelsFetchError() }}</div>
                             }
                           } @else {
                             <div class="input-with-eye">
@@ -690,6 +696,10 @@
                                 "
                                 [attr.aria-label]="
                                   'settings.fields.' + slug(setting.key) + '.name' | translate
+                                "
+                                [attr.aria-invalid]="hasError(setting.key) ? 'true' : null"
+                                [attr.aria-describedby]="
+                                  hasError(setting.key) ? 'field-error-' + slug(setting.key) : null
                                 "
                               />
                               @if (setting.key === 'BotKun:BaseUrl' && knownAiApiUrls().length > 0) {
@@ -770,7 +780,11 @@
                             </button>
                           </div>
                           @if (hasError(setting.key)) {
-                            <div class="text-danger small mt-1">
+                            <div
+                              class="field-error"
+                              role="alert"
+                              [id]="'field-error-' + slug(setting.key)"
+                            >
                               {{ 'settings.saveError' | translate }}
                             </div>
                           }
@@ -782,13 +796,13 @@
                 }
                 @if (cat === 'sonarr') {
                   <!-- ── Sonarr Anime Tags picker ───────────────────────────── -->
-                  <div class="pref-group picker-group">
-                    <div class="pref-group__header">
+                  <fieldset class="pref-group picker-group">
+              <legend class="pref-group__header">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                         <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
                       </svg>
                       <span>{{ 'settings.fields.Sonarr_AnimeTags.name' | translate }}</span>
-                    </div>
+                    </legend>
                     <div class="picker-group__desc">{{ 'settings.fields.Sonarr_AnimeTags.desc' | translate }}</div>
                     @if (sonarrTagsForSettingsLoading()) {
                       <div class="picker-loading">
@@ -797,9 +811,10 @@
                       </div>
                     }
                     @if (sonarrTagsForSettingsError() && !sonarrTagsForSettingsLoading()) {
-                      <div class="sonarr-defaults-error">{{ sonarrTagsForSettingsError() }}</div>
+                      <div class="sonarr-defaults-error" role="alert">{{ sonarrTagsForSettingsError() }}</div>
                       <button type="button" class="picker-load-btn" (click)="loadSonarrTagsForSettings()">
-                        ↺ Retry
+                        <svg class="btn-glyph" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+                        {{ 'common.retry' | translate }}
                       </button>
                     }
                     <!-- Show only selected tags inline; full list + create-tag are in the modal -->
@@ -816,7 +831,7 @@
                         + {{ 'settings.sonarr.manageTags' | translate }}
                       </button>
                     </div>
-                  </div>
+                  </fieldset>
 
                   <!-- ── Sonarr Tag Picker Modal ─────────────────────────────── -->
                   @if (sonarrPickerOpen()) {
@@ -848,6 +863,7 @@
                               [value]="sonarrNewTagLabelSettings()"
                               (input)="sonarrNewTagLabelSettings.set($any($event.target).value)"
                               [placeholder]="'settings.sonarr.createTagPlaceholder' | translate"
+                              [attr.aria-label]="'settings.sonarr.createTagPlaceholder' | translate"
                             />
                             <button
                               type="button"
@@ -878,12 +894,12 @@
                   }
 
                   <!-- ── Add Series Defaults sub-group ──────────────────────── -->
-                  <div
+                  <fieldset
                     id="sonarr-add-defaults"
                     class="pref-group sonarr-defaults-group"
                     [class.sonarr-defaults-group--locked]="!sonarrDefaultsUnlocked()"
                   >
-                    <div class="pref-group__header">
+              <legend class="pref-group__header">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                         <path d="M4 6h16M4 12h16M4 18h16"/>
                         <circle cx="8" cy="6" r="2" fill="currentColor" stroke="none"/>
@@ -891,7 +907,7 @@
                         <circle cx="10" cy="18" r="2" fill="currentColor" stroke="none"/>
                       </svg>
                       <span>{{ 'settings.sonarr.addDefaultsGroup' | translate }}</span>
-                    </div>
+                    </legend>
 
                     @if (!sonarrBasicConfigured()) {
                       <div class="sonarr-defaults-notice">
@@ -929,7 +945,7 @@
                         <div class="display-row display-row--select">
                           <div class="setting-select-wrap">
                           <app-ui-select
-                            [options]="sonarrRootFolderSelectOptions()"
+                            [options]="sonarrRootFolderOptions()"
                             [value]="sonarrDefaultByKey('Sonarr:DefaultRootFolder')?.value ?? ''"
                             [disabled]="!sonarrDefaultsUnlocked() || isSaving('Sonarr:DefaultRootFolder')"
                             [ariaLabel]="'settings.fields.Sonarr_DefaultRootFolder.name' | translate"
@@ -956,7 +972,7 @@
                         <div class="display-row display-row--select">
                           <div class="setting-select-wrap">
                           <app-ui-select
-                            [options]="sonarrQualityProfileSelectOptions()"
+                            [options]="sonarrQualityProfileOptions()"
                             [value]="sonarrDefaultByKey('Sonarr:DefaultQualityProfileName')?.value ?? ''"
                             [disabled]="!sonarrDefaultsUnlocked() || isSaving('Sonarr:DefaultQualityProfileName')"
                             [ariaLabel]="'settings.fields.Sonarr_DefaultQualityProfileName.name' | translate"
@@ -1012,7 +1028,7 @@
                         <div class="display-row display-row--select">
                           <div class="setting-select-wrap">
                           <app-ui-select
-                            [options]="sonarrMonitorSelectOptions()"
+                            [options]="sonarrMonitorOptions()"
                             [value]="sonarrDefaultByKey('Sonarr:DefaultMonitor')?.value ?? ''"
                             [disabled]="!sonarrDefaultsUnlocked() || isSaving('Sonarr:DefaultMonitor')"
                             [ariaLabel]="'settings.fields.Sonarr_DefaultMonitor.name' | translate"
@@ -1028,17 +1044,17 @@
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </fieldset>
                   <!-- /sonarr-add-defaults -->
 
                   <!-- ── Library Analysis sub-group ──────────────────────── -->
-                  <div class="pref-group">
-                    <div class="pref-group__header">
+                  <fieldset class="pref-group">
+              <legend class="pref-group__header">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                       </svg>
                       <span>{{ 'settings.sonarr.library.title' | translate }}</span>
-                    </div>
+                    </legend>
 
                     <!-- Avg Episode Size Alert Threshold -->
                     <div class="setting-row sonarr-default-row" [class.setting-row--saved]="isSaved('LibraryAnalysis:AvgEpSizeMb')">
@@ -1095,7 +1111,7 @@
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </fieldset>
                   <!-- /library-analysis sub-group -->
                 }
                 @if (cat === 'app') {
@@ -1127,13 +1143,13 @@
                     </div>
                   </div>
                   <!-- ── Lucky Pick preferences group ─────────────────────────── -->
-                  <div id="lucky-pick-preferences" class="pref-group">
-                    <div class="pref-group__header">
+                  <fieldset id="lucky-pick-preferences" class="pref-group">
+              <legend class="pref-group__header">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                       </svg>
                       <span>{{ 'userPreferences.luckyPick.groupTitle' | translate }}</span>
-                    </div>
+                    </legend>
                   <div
                     class="setting-row"
                     [class.setting-row--saved]="luckyPrefsSaved()"
@@ -1228,10 +1244,10 @@
                       </div>
                     </div>
                   </div>
-                  </div>
+                  </fieldset>
                   <!-- ── Library & HandBrake transcode paths group ───────────────── -->
-                  <div id="library-handbrake-paths" class="pref-group">
-                    <div class="pref-group__header">
+                  <fieldset id="library-handbrake-paths" class="pref-group">
+              <legend class="pref-group__header">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <rect x="2" y="3" width="20" height="18" rx="2"/>
                         <line x1="7" y1="3" x2="7" y2="21"/>
@@ -1239,7 +1255,7 @@
                         <line x1="2" y1="12" x2="22" y2="12"/>
                       </svg>
                       <span>{{ 'userPreferences.libraryHandbrake.groupTitle' | translate }}</span>
-                    </div>
+                    </legend>
 
                     <!-- Container Media Root -->
                     <div class="setting-row" [class.setting-row--saved]="pathSavedKey() === 'containerRoot'">
@@ -1424,7 +1440,7 @@
                         <div class="display-row display-row--select">
                           <div class="setting-select-wrap">
                           <app-ui-select
-                            [options]="separatorSelectOptions()"
+                            [options]="separatorOptions"
                             [value]="userPaths.mapping().separator"
                             [ariaLabel]="'settings.fields.PathMap_Separator.name' | translate"
                             (selectionChange)="onSeparatorChange($any({ target: { value: $event } }))"
@@ -1438,11 +1454,11 @@
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </fieldset>
                   <!-- /library-handbrake-paths -->
 
                   <!-- ── Backup & Restore group ───────────────────────────────── -->
-                  <div
+                  <fieldset
                     id="config-backup"
                     class="pref-group config-backup-group"
                     [class.config-backup-group--dragover]="backupDragOver()"
@@ -1450,14 +1466,14 @@
                     (dragleave)="onBackupDragLeave()"
                     (drop)="onBackupDrop($event)"
                   >
-                    <div class="pref-group__header">
+              <legend class="pref-group__header">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
                         <polyline points="7 10 12 15 17 10"/>
                         <line x1="12" y1="15" x2="12" y2="3"/>
                       </svg>
                       <span>{{ 'configBackup.title' | translate }}</span>
-                    </div>
+                    </legend>
                     <div class="setting-row">
                       <div class="setting-info">
                         <div class="setting-desc">
@@ -1494,7 +1510,7 @@
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </fieldset>
                   <!-- /config-backup -->
                 }
               </div>
@@ -1547,7 +1563,7 @@
               <div class="sync-interval-control">
                 <div class="setting-select-wrap">
                 <app-ui-select
-                  [options]="syncIntervalSelectOptions(intervalSetting)"
+                  [options]="selectOptionsByKey()[intervalSetting.key] ?? []"
                   [value]="intervalSetting.value ?? ''"
                   [disabled]="isSaving(intervalSetting.key) || syncing()"
                   [ariaLabel]="'settings.fields.App_SyncInterval.name' | translate"
@@ -1756,7 +1772,7 @@
 
               <!-- Success / Error feedback -->
               @if (securitySuccess()) {
-                <div class="setting-row">
+                <div class="setting-row" aria-live="polite">
                   <div class="setting-info">
                     <span class="badge-saved"><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> {{ securitySuccess() }}</span>
                   </div>
@@ -1765,7 +1781,7 @@
               @if (securityError()) {
                 <div class="setting-row">
                   <div class="setting-info">
-                    <span class="text-danger small">{{ securityError() }}</span>
+                    <span class="field-error" role="alert">{{ securityError() }}</span>
                   </div>
                 </div>
               }
@@ -1801,6 +1817,8 @@
                             type="password"
                             class="form-control form-control-sm setting-input"
                             [placeholder]="'settings.security.disableConfirmPlaceholder' | translate"
+                            [attr.aria-label]="'settings.security.disableConfirmLabel' | translate"
+                            autocomplete="current-password"
                             [value]="disablePasswordInput()"
                             (input)="disablePasswordInput.set($any($event.target).value)"
                           />
@@ -1832,14 +1850,14 @@
                 }
 
                 <!-- Change password group -->
-                <div class="pref-group">
-                  <div class="pref-group__header">
+                <fieldset class="pref-group">
+            <legend class="pref-group__header">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                       <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                     </svg>
                     <span>{{ 'settings.security.changePasswordTitle' | translate }}</span>
-                  </div>
+                  </legend>
                   <form [formGroup]="changePwForm" (ngSubmit)="changePassword()" novalidate>
                     <!-- Current password -->
                     <div class="setting-row">
@@ -1853,6 +1871,8 @@
                             class="form-control form-control-sm setting-input"
                             formControlName="currentPassword"
                             [placeholder]="'settings.security.currentPasswordPlaceholder' | translate"
+                            [attr.aria-label]="'settings.security.currentPasswordLabel' | translate"
+                            autocomplete="current-password"
                           />
                         </div>
                       </div>
@@ -1869,6 +1889,8 @@
                             class="form-control form-control-sm setting-input"
                             formControlName="newPassword"
                             [placeholder]="'settings.security.newPasswordPlaceholder' | translate"
+                            [attr.aria-label]="'settings.security.newPasswordLabel' | translate"
+                            autocomplete="new-password"
                           />
                         </div>
                       </div>
@@ -1885,10 +1907,24 @@
                             class="form-control form-control-sm setting-input"
                             formControlName="confirmPassword"
                             [placeholder]="'settings.security.confirmPasswordPlaceholder' | translate"
+                            [attr.aria-label]="'settings.security.confirmPasswordLabel' | translate"
+                            autocomplete="new-password"
+                            [attr.aria-invalid]="
+                              changePwForm.hasError('mismatch') && changePwForm.get('confirmPassword')?.dirty
+                                ? 'true'
+                                : null
+                            "
+                            [attr.aria-describedby]="
+                              changePwForm.hasError('mismatch') && changePwForm.get('confirmPassword')?.dirty
+                                ? 'pw-mismatch-desc'
+                                : null
+                            "
                           />
                         </div>
                         @if (changePwForm.hasError('mismatch') && changePwForm.get('confirmPassword')?.dirty) {
-                          <div class="form-text text-danger">{{ 'settings.security.passwordMismatch' | translate }}</div>
+                          <div class="field-error" id="pw-mismatch-desc" role="alert">
+                            {{ 'settings.security.passwordMismatch' | translate }}
+                          </div>
                         }
                       </div>
                     </div>
@@ -1911,7 +1947,7 @@
                       </div>
                     </div>
                   </form>
-                </div>
+                </fieldset>
               } @else {
                 <!-- Re-enable section (only when disabled) -->
                 @if (!showEnableForm()) {
@@ -1932,14 +1968,14 @@
                     </div>
                   </div>
                 } @else {
-                  <div class="pref-group">
-                    <div class="pref-group__header">
+                  <fieldset class="pref-group">
+              <legend class="pref-group__header">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                         <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                       </svg>
                       <span>{{ 'settings.security.enablePasswordTitle' | translate }}</span>
-                    </div>
+                    </legend>
                     <div class="setting-row">
                       <div class="setting-info">
                         <div class="setting-name">{{ 'settings.security.newPasswordLabel' | translate }}</div>
@@ -1950,6 +1986,8 @@
                             type="password"
                             class="form-control form-control-sm setting-input"
                             [placeholder]="'settings.security.newPasswordPlaceholder' | translate"
+                            [attr.aria-label]="'settings.security.newPasswordLabel' | translate"
+                            autocomplete="new-password"
                             [value]="enablePasswordInput()"
                             (input)="enablePasswordInput.set($any($event.target).value)"
                           />
@@ -1966,6 +2004,8 @@
                             type="password"
                             class="form-control form-control-sm setting-input"
                             [placeholder]="'settings.security.confirmPasswordPlaceholder' | translate"
+                            [attr.aria-label]="'settings.security.confirmPasswordLabel' | translate"
+                            autocomplete="new-password"
                             [value]="enablePasswordConfirm()"
                             (input)="enablePasswordConfirm.set($any($event.target).value)"
                           />
@@ -1998,7 +2038,7 @@
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </fieldset>
                 }
               }
               <!-- Session lifetime -->
@@ -2010,11 +2050,11 @@
                 <div class="setting-control d-flex align-items-center gap-2">
                   <input
                     type="number"
-                    class="form-control form-control-sm setting-input"
-                    style="width:5rem"
+                    class="form-control form-control-sm setting-input session-lifetime-input"
                     [value]="sessionLifetimeDays()"
                     min="1"
                     max="365"
+                    [attr.aria-label]="'settings.security.sessionLifetimeLabel' | translate"
                     (change)="saveSessionLifetime($event)"
                     [disabled]="sessionLifetimeSaving()"
                   />
@@ -2244,7 +2284,7 @@
               <button type="button" class="path-browse-nav__item" (click)="navigateBrowse(d)">
                 <svg class="path-browse-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
                 <span class="path-browse-nav__name">{{ d.name }}</span>
-                <span class="path-browse-nav__chevron" aria-hidden="true">›</span>
+                <svg class="path-browse-nav__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
               </button>
             }
           }

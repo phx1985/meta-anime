@@ -1,4 +1,4 @@
-<section class="hero-section" aria-label="Hero">
+<section class="hero-section" [attr.aria-label]="'aria.homeHero' | translate">
   <!-- Background image layer -->
   <div class="hero-image" aria-hidden="true"></div>
 
@@ -23,40 +23,52 @@
 </section>
 
 <!-- Stats -->
-<div class="stats-section container py-5">
+<section
+  class="stats-section container py-5"
+  [attr.aria-label]="'home.stats.description' | translate"
+  aria-live="polite"
+  aria-atomic="false"
+  [attr.aria-busy]="!stats() && !loadError()"
+>
   @if (stats()) {
     <!-- Source counters -->
     <div class="row g-4 mb-3 justify-content-center">
       @if (providerState.plexEnabled()) {
         <div [class]="colClass()">
-          <div
+          <app-ui-card
             class="stat-card stat-card--plex"
+            padding="1.5rem 1rem"
             [attr.data-tooltip]="'home.stats.tooltip.plex' | translate"
+            tabindex="0"
           >
             <div class="stat-value" [countUp]="stats()!.plexAnime"></div>
             <img class="stat-icon" src="assets/images/plex.svg" alt="Plex" aria-hidden="true" />
-          </div>
+          </app-ui-card>
         </div>
       }
       @if (providerState.sonarrEnabled()) {
         <div [class]="colClass()">
-          <div
+          <app-ui-card
             class="stat-card stat-card--sonarr"
+            padding="1.5rem 1rem"
             [attr.data-tooltip]="'home.stats.tooltip.sonarr' | translate"
+            tabindex="0"
           >
             <div class="stat-value" [countUp]="stats()!.sonarrAnime"></div>
             <img class="stat-icon" src="assets/images/sonarr.svg" alt="Sonarr" aria-hidden="true" />
-          </div>
+          </app-ui-card>
         </div>
       }
       <div [class]="colClass()">
-        <div
+        <app-ui-card
           class="stat-card stat-card--mal"
+          padding="1.5rem 1rem"
           [attr.data-tooltip]="'home.stats.tooltip.mal' | translate"
+          tabindex="0"
         >
           <div class="stat-value" [countUp]="stats()!.myAnimeListAnime"></div>
           <img class="stat-icon" src="assets/images/mal.svg" alt="MyAnimeList" aria-hidden="true" />
-        </div>
+        </app-ui-card>
       </div>
     </div>
     <p class="text-center stats-desc mb-5">{{ 'home.stats.description' | translate }}</p>
@@ -70,19 +82,52 @@
         <app-missing-stats [stats]="stats()!" (gapCountDecremented)="onGapCountDecremented($event)" />
       </div>
     </div>
+  } @else if (loadError()) {
+    <!-- Error state + functional retry -->
+    <app-ui-state-panel
+      variant="error"
+      [heading]="'home.stats.error.title' | translate"
+      [subtext]="'home.stats.error.sub' | translate"
+      [actionLabel]="'common.retry' | translate"
+      (action)="retryStats()"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 9v4" />
+        <path d="M12 17h.01" />
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      </svg>
+    </app-ui-state-panel>
   } @else {
-    <div class="d-flex justify-content-center py-5">
-      <div class="spinner-border" role="status">
-        <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+    <!-- Structural skeleton matching the loaded geometry -->
+    <div class="stats-skeleton" aria-hidden="true">
+      <div class="row g-4 mb-3 justify-content-center">
+        @for (c of skeletonCards(); track $index) {
+          <div [class]="colClass()">
+            <div class="skeleton-card">
+              <div class="skeleton-block skeleton-block--value"></div>
+              <div class="skeleton-block skeleton-block--icon"></div>
+            </div>
+          </div>
+        }
       </div>
+      <div class="skeleton-line skeleton-line--desc"></div>
+      <div class="row g-4">
+        <div class="col-12 col-lg-7">
+          <div class="skeleton-panel skeleton-panel--chart"></div>
+        </div>
+        <div class="col-12 col-lg-5">
+          <div class="skeleton-panel skeleton-panel--gaps"></div>
+        </div>
+      </div>
+      <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
     </div>
   }
-</div>
+</section>
 
 <!-- Activity Stats (downloads / watching / storage) -->
-<div class="container pb-5">
+<section class="container pb-5" [attr.aria-label]="'home.activityStats.title' | translate">
   <app-activity-stats />
-</div>
+</section>
 
 <!-- Gallery overlay — used by AnimeDetailPanel when opened from the home page -->
 <app-anime-image-gallery />

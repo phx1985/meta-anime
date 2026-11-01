@@ -56,7 +56,7 @@
   &__shimmer {
     height: 260px;
     border-radius: 8px;
-    background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--card-bg) 50%, var(--bg-secondary) 75%);
+    background: linear-gradient(90deg, var(--color-surface-elevated) 25%, var(--color-surface-elevated) 50%, var(--color-surface-elevated) 75%);
     background-size: 200% 100%;
     animation: la-shimmer 1.5s ease-in-out infinite;
   }
@@ -460,7 +460,7 @@
     background: color-mix(in srgb, var(--text-primary) 9%, transparent);
     border-color: color-mix(in srgb, var(--text-primary) 15%, transparent);
     color: var(--text-primary);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--card-shadow) 37%, transparent);
   }
 
   &--prime .la-oppo__row-ico {
@@ -593,7 +593,7 @@
   display: inline-block;
   vertical-align: middle;
   border-radius: 6px;
-  background: linear-gradient(90deg, var(--la-skeleton-base) 25%, var(--la-skeleton-shine) 50%, var(--la-skeleton-base) 75%);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--text-primary) 5%, transparent) 25%, color-mix(in srgb, var(--text-primary) 12%, transparent) 50%, color-mix(in srgb, var(--text-primary) 5%, transparent) 75%);
   background-size: 200% 100%;
   animation: la-shimmer 1.5s infinite, la-pulse 1.8s ease-in-out infinite;
 
@@ -617,8 +617,8 @@
   overflow: hidden;
   border-radius: 12px;
   background:
-    linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.08) 50%, transparent 68%),
-    rgba(15, 17, 26, 0.6); // slate-900/60 glass
+    linear-gradient(115deg, transparent 32%, color-mix(in srgb, var(--text-primary) 8%, transparent) 50%, transparent 68%),
+    color-mix(in srgb, var(--color-surface-base) 80%, transparent); // slate-900/60 glass
   background-size: 200% 100%, auto;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -635,8 +635,8 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    border: 3px solid rgba(124, 108, 240, 0.25);
-    border-top-color: #7c6cf0;
+    border: 3px solid color-mix(in srgb, var(--accent-primary) 25%, transparent);
+    border-top-color: var(--accent-primary);
     animation: la-spin 0.8s linear infinite;
   }
 
@@ -647,9 +647,9 @@
     font-weight: 700;
     letter-spacing: 0.04em;
     white-space: nowrap;
-    color: #e8e8f0;
-    background: rgba(124, 108, 240, 0.22);
-    border: 1px solid rgba(124, 108, 240, 0.45);
+    color: var(--hero-text);
+    background: color-mix(in srgb, var(--accent-primary) 22%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent-primary) 45%, transparent);
     animation: la-pulse 1.8s ease-in-out infinite;
   }
 }
@@ -696,8 +696,8 @@
   width: 220px;
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 16%, transparent);
+  box-shadow: 0 14px 36px color-mix(in srgb, var(--card-shadow) 100%, transparent);
   pointer-events: none;
   animation: la-poster-pop 0.14s ease-out;
 
@@ -736,9 +736,9 @@
   height: 100%;
   background: linear-gradient(
     100deg,
-    rgba(255, 255, 255, 0.05) 30%,
-    rgba(255, 255, 255, 0.16) 50%,
-    rgba(255, 255, 255, 0.05) 70%
+    color-mix(in srgb, var(--text-primary) 5%, transparent) 30%,
+    color-mix(in srgb, var(--text-primary) 16%, transparent) 50%,
+    color-mix(in srgb, var(--text-primary) 5%, transparent) 70%
   );
   background-size: 200% 100%;
   animation: la-poster-shimmer 1.2s ease-in-out infinite;
@@ -801,6 +801,7 @@
     color: var(--text-muted);
     font-size: 0.72rem;
     font-weight: 500;
+    font-variant-numeric: tabular-nums;
     white-space: nowrap;
   }
 
@@ -946,7 +947,7 @@
       border-color: color-mix(in srgb, var(--text-primary) 12%, transparent);
       color: var(--text-primary);
       font-weight: 600;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+      box-shadow: 0 1px 2px color-mix(in srgb, var(--card-shadow) 45%, transparent);
     }
   }
 
@@ -1044,7 +1045,7 @@
     border: 1px solid color-mix(in srgb, var(--accent-primary) 35%, transparent);
     border-radius: 10px;
     background: var(--accent-primary);
-    color: #fff;
+    color: var(--hero-text);
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
@@ -1070,7 +1071,7 @@
     padding: 2px 8px;
     margin-left: 6px;
     border-radius: 999px;
-    background: rgba(0, 0, 0, 0.2);
+    background: color-mix(in srgb, var(--card-shadow) 50%, transparent);
     font-size: 0.72rem;
     font-weight: 600;
   }
@@ -1083,19 +1084,84 @@
   }
 }
 
-// ── Reclaimable accent (appended last: must win the cascade over the later
-// base .la-lb__size rules of equal specificity). ───────────────────────────
+// ── Reclaimable accent (appended last: must win the cascade over the earlier
+// base .la-lb__size rules of equal specificity). ──────────────────────────
 .la-lb__size.la-lb__size--savings {
   color: var(--color-success);
 }
 
-// ── Reclaimable/muted accents (appended last: must win the cascade over the
-// later base .la-lb__size / .la-badge rules of equal specificity). ──────────
-.la-lb__size.la-lb__size--savings {
-  color: #34d399;
+// Card-level async states: chart-geometry skeleton + empty state.
+// (The loading overlay above covers the enriching pass; these two render
+// inside the card body when telemetry is loading or absent.)
+.la-chart-skeleton {
+  height: 260px;
+  border-radius: 12px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--text-primary) 5%, transparent) 25%,
+    color-mix(in srgb, var(--text-primary) 12%, transparent) 50%,
+    color-mix(in srgb, var(--text-primary) 5%, transparent) 75%
+  );
+  background-size: 200% 100%;
+  animation: la-shimmer 1.5s ease-in-out infinite;
 }
 
-.la-badge.la-badge--muted {
-  background: color-mix(in srgb, var(--text-primary) 10%, transparent);
-  color: var(--text-secondary);
+.la-nodata {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  margin: 0;
+  padding: 1.5rem;
+  border: 1px dashed color-mix(in srgb, var(--text-primary) 12%, transparent);
+  border-radius: 12px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+// ── Focus visibility (WCAG 2.4.7) — keyboard-reachable controls ──────────────
+.la-lb__row:focus-visible,
+.la-oppo__row:focus-visible,
+.la-batch__seg:focus-visible,
+.la-batch__export:focus-visible,
+.la-batch__switchrow:focus-visible,
+.la-batch__n:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-primary) 55%, transparent);
+  outline-offset: 2px;
+}
+
+// ── Reduced motion — decorative animation off (keyframes stay intact) ────────
+@media (prefers-reduced-motion: reduce) {
+  .la-chart-card,
+  .la-lb__row,
+  .la-skel,
+  .la-chart-skeleton,
+  .la-loading,
+  .la-loading__spinner,
+  .la-loading__badge,
+  .la-lb__poster-shimmer,
+  .la-poster-preview {
+    animation: none;
+  }
+
+  .la-lb__bar,
+  .la-batch__ratio-saved,
+  .la-batch__ratio-rest {
+    transition: none;
+  }
+}
+
+// ── Compact viewports: comfortable tap targets (44px) ────────────────────────
+@media (max-width: 640px) {
+  .la-oppo__row,
+  .la-batch__seg,
+  .la-batch__switchrow,
+  .la-batch__export {
+    min-height: 44px;
+  }
+
+  .la-batch__n {
+    height: 44px;
+  }
 }

@@ -57,10 +57,10 @@
         <!-- Meta chips: type + year -->
         <div class="lucky-card__meta">
           @if (mediaType()) {
-            <span class="lucky-card__chip lucky-card__chip--type">{{ mediaType() }}</span>
+            <app-ui-badge color="brand">{{ mediaType() }}</app-ui-badge>
           }
           @if (year()) {
-            <span class="lucky-card__chip">{{ year() }}</span>
+            <span class="lucky-card__year">{{ year() }}</span>
           }
         </div>
 
@@ -79,7 +79,7 @@
         @if (genres().length > 0) {
           <div class="lucky-card__genres">
             @for (genre of genres(); track genre) {
-              <span class="lucky-card__chip">{{ genre }}</span>
+              <app-ui-badge color="brand">{{ genre }}</app-ui-badge>
             }
           </div>
         }

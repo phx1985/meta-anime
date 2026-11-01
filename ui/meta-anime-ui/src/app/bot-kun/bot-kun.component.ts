@@ -5,6 +5,7 @@ import {
   computed,
   effect,
   ElementRef,
+  HostListener,
   inject,
   input,
   OnDestroy,
@@ -27,6 +28,7 @@ import {
   parseBotKunActionTag,
 } from '../models/library-intel.models';
 import { ProviderStateService } from '../services/provider-state.service';
+import { UiStatePanelComponent } from '../shared/ui/ui-state-panel/ui-state-panel.component';
 import { BotKunAnimeCardComponent } from './bot-kun-anime-card/bot-kun-anime-card.component';
 import { FeelingLuckyCardComponent } from './feeling-lucky-card/feeling-lucky-card.component';
 import { Subscription } from 'rxjs';
@@ -35,7 +37,14 @@ import { Subscription } from 'rxjs';
 // (anime titles are handled via pre-processing in renderMarkdown, not via marked links)
 marked.use({ breaks: true });
 
+/** Replay payload captured when a stream fails, so the bubble can offer "Retry". */
+export type BotKunRetry =
+  | { kind: 'chat'; text: string; action?: 'lucky' | 'more'; cursor?: string }
+  | { kind: 'greeting' };
+
 export type BotKunMessage = {
+  /** Stable identity for `@for` tracking — assigned by `appendMessage`. */
+  id: number;
   role: 'user' | 'assistant';
   content: string;
   /** The portion of content that has been "typed out" and is currently visible */
@@ -46,6 +55,10 @@ export type BotKunMessage = {
   typing?: boolean;
   /** Snapshot of permittedMalIds captured when this message was finalised (undefined = all allowed) */
   permittedIds?: ReadonlySet<string>;
+  /** True when the stream for this message failed — renders the error + retry state */
+  error?: boolean;
+  /** How to replay this message when the user presses Retry */
+  retry?: BotKunRetry;
 };
 
 /** A parsed segment of a bot message — plain HTML, an anime mini-card, a Feeling Lucky card,
@@ -63,7 +76,7 @@ const NO_SEGMENTS: MessageSegment[] = [];
 @Component({
   selector: 'app-bot-kun',
   standalone: true,
-  imports: [BotKunAnimeCardComponent, FeelingLuckyCardComponent, TranslatePipe],
+  imports: [BotKunAnimeCardComponent, FeelingLuckyCardComponent, TranslatePipe, UiStatePanelComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bot-kun.component.html',
   styleUrl: './bot-kun.component.scss',
@@ -134,6 +147,8 @@ export class BotKunComponent implements OnDestroy {
 
   private readonly messagesEnd = viewChild<ElementRef<HTMLElement>>('messagesEnd');
   private readonly chatInput = viewChild<ElementRef<HTMLTextAreaElement>>('chatInput');
+  private readonly fabButton = viewChild<ElementRef<HTMLButtonElement>>('fab');
+  private readonly drawerEl = viewChild<ElementRef<HTMLElement>>('drawer');
   private streamSub: Subscription | null = null;
   private greetingSub: Subscription | null = null;
 
@@ -145,6 +160,14 @@ export class BotKunComponent implements OnDestroy {
   private _scrollDebounceHandle: ReturnType<typeof setTimeout> | null = null;
   // Waveform pulse timer handle
   private _waveformDecayHandle: ReturnType<typeof setTimeout> | null = null;
+  // Close-transition timer handle (also restores focus to the trigger when done)
+  private _closeHandle: ReturnType<typeof setTimeout> | null = null;
+  // Deferred focus handle (open → focus composer)
+  private _focusHandle: ReturnType<typeof setTimeout> | null = null;
+  // Deferred auto-send handle for prompts queued from outside
+  private _pendingSendHandle: ReturnType<typeof setTimeout> | null = null;
+  // Monotonic message identity for stable `@for` tracking
+  private _msgSeq = 0;
   // Proactive library-insight: armed on open() when rows exist, fired after the greeting finishes
   private _libraryInsightPending = false;
   // Poll handle waiting for the greeting typewriter to drain before appending the insight
@@ -177,7 +200,9 @@ export class BotKunComponent implements OnDestroy {
         }
         this.inputText.set(prompt);
         // Send after a short tick; if Bot-kun is busy, the text stays in the input box.
-        setTimeout(() => {
+        clearTimeout(this._pendingSendHandle ?? undefined);
+        this._pendingSendHandle = setTimeout(() => {
+          this._pendingSendHandle = null;
           if (!this.isStreaming() && !this.hasTypingMessage()) {
             this.send();
           }
@@ -199,11 +224,15 @@ export class BotKunComponent implements OnDestroy {
       this._prevBotkunEnabled = enabled;
     });
 
-    // Auto-focus the textarea once the bot finishes responding
+    // Auto-focus the composer once the bot finishes responding
     effect(() => {
       const idle = !this.isStreaming() && !this.hasTypingMessage();
       if (idle && this.isOpen() && this.hasMessages()) {
-        setTimeout(() => this.chatInput()?.nativeElement?.focus(), 50);
+        clearTimeout(this._focusHandle ?? undefined);
+        this._focusHandle = setTimeout(() => {
+          this._focusHandle = null;
+          this.focusComposer();
+        }, 50);
       }
     });
 
@@ -222,12 +251,18 @@ export class BotKunComponent implements OnDestroy {
     clearTimeout(this._scrollDebounceHandle ?? undefined);
     clearTimeout(this._waveformDecayHandle ?? undefined);
     clearTimeout(this._insightPollHandle ?? undefined);
+    clearTimeout(this._closeHandle ?? undefined);
+    clearTimeout(this._focusHandle ?? undefined);
+    clearTimeout(this._pendingSendHandle ?? undefined);
     this.stopSpeech();
   }
 
   open(): void {
     this.isOpen.set(true);
     this.hasUnread.set(false);
+    clearTimeout(this._closeHandle ?? undefined);
+    this._closeHandle = null;
+    this.isClosing.set(false);
 
     if (!this.hasMessages()) {
       // Proactive Library Buddy insight: only when the analysis table has rows
@@ -236,20 +271,83 @@ export class BotKunComponent implements OnDestroy {
       this.streamGreeting();
     } else {
       // Restore scroll to last message after DOM renders
-      setTimeout(() => this.scrollToBottom(), 50);
+      clearTimeout(this._scrollDebounceHandle ?? undefined);
+      this._scrollDebounceHandle = setTimeout(() => {
+        this._scrollDebounceHandle = null;
+        this.scrollToBottom();
+      }, 50);
     }
+    // Focus management: move focus to the composer once the drawer is rendered
+    clearTimeout(this._focusHandle ?? undefined);
+    this._focusHandle = setTimeout(() => {
+      this._focusHandle = null;
+      this.focusComposer();
+    }, 50);
   }
 
   close(): void {
     if (this.isClosing()) return;
     this.stopSpeech();
     this.isClosing.set(true);
-    setTimeout(() => {
+    clearTimeout(this._closeHandle ?? undefined);
+    this._closeHandle = setTimeout(() => {
+      this._closeHandle = null;
       this.isOpen.set(false);
       this.isClosing.set(false);
+      // Focus management: return focus to the launcher that opened the drawer
+      this.restoreTriggerFocus();
       // NOTE: Do NOT cancel the stream here — the conversation continues in the background
       // so the response is ready when the user reopens the drawer.
     }, 220);
+  }
+
+  /** Moves focus to the composer input (or the drawer when the input is disabled). */
+  private focusComposer(): void {
+    const input = this.chatInput()?.nativeElement;
+    if (input && !input.disabled) {
+      input.focus();
+    } else {
+      this.drawerEl()?.nativeElement?.focus();
+    }
+  }
+
+  /** Restores focus to the FAB launcher, but only when focus is currently inside the drawer. */
+  private restoreTriggerFocus(): void {
+    const drawer = this.drawerEl()?.nativeElement;
+    const active = document.activeElement;
+    const focusWasInDrawer = !!drawer && (active === drawer || drawer.contains(active) || active === document.body);
+    if (focusWasInDrawer) {
+      this.fabButton()?.nativeElement?.focus();
+    }
+  }
+
+  /** Escape closes the drawer (aria-modal dialog contract). */
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.isOpen() && !this.isClosing()) {
+      this.close();
+    }
+  }
+
+  /** Keeps Tab focus inside the drawer while it is open (aria-modal dialog contract). */
+  onDrawerKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Tab') return;
+    const drawer = this.drawerEl()?.nativeElement;
+    if (!drawer) return;
+    const focusables = Array.from(
+      drawer.querySelectorAll<HTMLElement>('button, textarea, a[href], [tabindex]:not([tabindex="-1"])'),
+    ).filter(el => !el.hasAttribute('disabled') && el.getAttribute('aria-hidden') !== 'true' && el.offsetParent !== null);
+    if (focusables.length === 0) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement as HTMLElement | null;
+    if (event.shiftKey && (active === first || !drawer.contains(active))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (active === last || !drawer.contains(active))) {
+      event.preventDefault();
+      first.focus();
+    }
   }
 
   handleInput(event: Event): void {
@@ -306,8 +404,7 @@ export class BotKunComponent implements OnDestroy {
     }
 
     // Add the streaming placeholder
-    const botMsg: BotKunMessage = { role: 'assistant', content: '', typedContent: '', streaming: true, typing: true };
-    this.appendMessage(botMsg);
+    this.appendMessage({ role: 'assistant', content: '', typedContent: '', streaming: true, typing: true });
     this.isStreaming.set(true);
 
     const msgIndex = this.messages().length - 1;
@@ -350,6 +447,8 @@ export class BotKunComponent implements OnDestroy {
               ...last,
               content: last.content || this.translate.instant('botKun.errorFallback'),
               streaming: false,
+              error: true,
+              retry: { kind: 'chat', text, action, cursor },
             };
           }
           return updated;
@@ -357,6 +456,29 @@ export class BotKunComponent implements OnDestroy {
         this.isStreaming.set(false);
       },
     });
+  }
+
+  /**
+   * Re-dispatches a failed message in place: removes the failed bubble (and the user
+   * message that triggered it) and replays the original dispatch, so the retry keeps
+   * the exact same payload (including the lucky / show-more fast paths).
+   */
+  retryMessage(index: number): void {
+    const msg = this.messages()[index];
+    const retry = msg?.retry;
+    if (!msg?.error || !retry || this.isStreaming() || this.hasTypingMessage()) return;
+
+    this.messages.update(msgs =>
+      msgs.filter((_, i) => i !== index && !(retry.kind === 'chat' && i === index - 1)),
+    );
+    this._segmentMemo.clear();
+
+    if (retry.kind === 'greeting') {
+      this._libraryInsightPending = false;
+      this.streamGreeting();
+      return;
+    }
+    this.dispatchMessage(retry.text, retry.action, retry.cursor);
   }
 
   /**
@@ -696,8 +818,7 @@ export class BotKunComponent implements OnDestroy {
   }
 
   private streamGreeting(): void {
-    const botMsg: BotKunMessage = { role: 'assistant', content: '', typedContent: '', streaming: true, typing: true };
-    this.appendMessage(botMsg);
+    this.appendMessage({ role: 'assistant', content: '', typedContent: '', streaming: true, typing: true });
 
     const msgIndex = this.messages().length - 1;
     const version = ++this.typewriterVersion;
@@ -735,6 +856,8 @@ export class BotKunComponent implements OnDestroy {
               ...last,
               content: last.content || this.translate.instant('botKun.connectionError'),
               streaming: false,
+              error: true,
+              retry: { kind: 'greeting' },
             };
           }
           return updated;
@@ -744,8 +867,8 @@ export class BotKunComponent implements OnDestroy {
     });
   }
 
-  private appendMessage(msg: BotKunMessage): void {
-    this.messages.update(msgs => [...msgs, msg]);
+  private appendMessage(msg: Omit<BotKunMessage, 'id'>): void {
+    this.messages.update(msgs => [...msgs, { ...msg, id: ++this._msgSeq }]);
   }
 
   // ── Ultra Library Buddy ──────────────────────────────────────────────────────

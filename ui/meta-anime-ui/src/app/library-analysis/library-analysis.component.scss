@@ -54,7 +54,7 @@
     font-size: 0.75rem; // text-xs
     font-weight: 500; // font-medium
     line-height: 1;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12); // shadow-sm
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--card-shadow) 30%, transparent); // shadow-sm
     cursor: pointer;
     transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
 
@@ -65,7 +65,7 @@
 
     &:active:not(:disabled) {
       background: color-mix(in srgb, var(--text-primary) 11%, transparent);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+      box-shadow: 0 1px 2px color-mix(in srgb, var(--card-shadow) 45%, transparent);
     }
 
     // Inactive / disabled: quiet muted text (text-zinc-400)
@@ -80,7 +80,7 @@
       background: color-mix(in srgb, var(--text-primary) 9%, transparent);
       border-color: color-mix(in srgb, var(--text-primary) 10%, transparent);
       color: var(--text-primary);
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 1px 2px color-mix(in srgb, var(--card-shadow) 30%, transparent);
     }
   }
 
@@ -124,7 +124,7 @@
 .la-error {
   text-align: center;
   padding: 3rem 2rem;
-  color: rgba(239, 68, 68, 0.95);
+  color: color-mix(in srgb, var(--color-danger-deep) 95%, transparent);
 
   button {
     margin-top: 1rem;
@@ -174,5 +174,20 @@
   svg {
     width: 44px;
     height: 44px;
+  }
+}
+
+// ── Focus visibility (WCAG 2.4.7) ───────────────────────────────────────────
+.la-header__refresh:focus-visible,
+.la-error button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-primary) 55%, transparent);
+  outline-offset: 2px;
+}
+
+// ── Reduced motion — decorative animation off ───────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  .la-header__refresh-icon--spinning,
+  .la-loading__spinner {
+    animation: none;
   }
 }

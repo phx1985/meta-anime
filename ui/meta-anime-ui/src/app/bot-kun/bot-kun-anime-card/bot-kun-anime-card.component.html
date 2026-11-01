@@ -1,6 +1,6 @@
 <div class="bot-kun-card" (click)="onClick()" role="button" tabindex="0"
      (keydown.enter)="onClick()" (keydown.space)="onClick()"
-     [title]="title()">
+     [title]="title()" [attr.aria-label]="title()">
 
   <!-- Poster (left column, fixed width) -->
   <div class="bot-kun-card__poster">
@@ -42,32 +42,32 @@
       }
       @if (airingStatus()) {
         <span class="bot-kun-card__dot" aria-hidden="true">·</span>
-        <span class="bot-kun-card__status">{{ airingStatus() }}</span>
+        <span class="bot-kun-card__status">{{ 'animeDetailPanel.seriesStatus.' + airingStatus() | translate }}</span>
       }
     </div>
 
     <!-- Genre chips (max 3) + age rating badge -->
-    @if (genres().length > 0 || ageRating()) {
+    @if (topGenres().length > 0 || ageRating()) {
       <div class="bot-kun-card__genres">
-        @for (genre of genres().slice(0, 3); track genre) {
-          <span class="bot-kun-card__chip">{{ genre }}</span>
+        @for (genre of topGenres(); track genre) {
+          <app-ui-badge>{{ genre }}</app-ui-badge>
         }
-        @if (genres().length > 3) {
-          <span class="bot-kun-card__chip bot-kun-card__chip--more">+{{ genres().length - 3 }}</span>
+        @if (extraGenreCount() > 0) {
+          <app-ui-badge [muted]="true">+{{ extraGenreCount() }}</app-ui-badge>
         }
         @if (ageRating()) {
-          <span class="bot-kun-card__chip bot-kun-card__chip--age-rating">{{ ageRating()! | uppercase }}</span>
+          <app-ui-badge color="warning">{{ ageRating()! | uppercase }}</app-ui-badge>
         }
       </div>
     }
 
     <!-- Star rating (5 SVG stars) -->
     @if (score() !== null) {
-      <div class="bot-kun-card__stars" [attr.aria-label]="'Score: ' + score()">
-        @for (i of [0, 1, 2, 3, 4]; track i) {
-          <svg class="bot-kun-card__star bot-kun-card__star--{{ starFill(i) }}"
+      <div class="bot-kun-card__stars" [attr.aria-label]="('botKun.scoreLabel' | translate) + ' ' + score()!.toFixed(1)">
+        @for (i of starIndices; track i) {
+          <svg class="bot-kun-card__star bot-kun-card__star--{{ starFills()[i] }}"
                width="11" height="11" viewBox="0 0 24 24" aria-hidden="true">
-            @if (starFill(i) === 'half') {
+            @if (starFills()[i] === 'half') {
               <defs>
                 <linearGradient [id]="'half-' + malId() + '-' + i" x1="0" x2="1" y1="0" y2="0">
                   <stop offset="50%" stop-color="currentColor" />
@@ -77,7 +77,7 @@
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                        [attr.fill]="'url(#half-' + malId() + '-' + i + ')'"
                        stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
-            } @else if (starFill(i) === 'full') {
+            } @else if (starFills()[i] === 'full') {
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
                        fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
             } @else {

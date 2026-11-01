@@ -1,4 +1,5 @@
 // ─── Anime Card ─────────────────────────────────────────────────────────────
+// Semantic tokens + color-mix only — no raw hex/rgba/named colors.
 
 :host {
   display: flex;
@@ -14,23 +15,27 @@
   flex-direction: column;
   flex: 1;
   height: 100%;     // fill the grid cell height (set by grid-auto-rows)
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 14px;
   overflow: visible;  // must be visible — tabs protrude from the right edge
   z-index: 1;         // stacking context so z-index:-1 tabs slot behind card bg
-  box-shadow: 0 2px 12px var(--card-shadow);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--text-primary) 10%, transparent);
   transition:
     transform 0.3s cubic-bezier(0.34, 1.4, 0.64, 1),
     box-shadow 0.25s ease;
-  animation: cardIn 0.45s ease both;
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 18px 40px var(--card-shadow);
+    box-shadow: 0 18px 40px color-mix(in srgb, var(--text-primary) 16%, transparent);
   }
 
-  // ── Success glow — neon electrical discharge after successful add ─────────
+  // ── Onboarding highlight — soft pulsing ring on the first card ────────────
+  &--onboarding {
+    animation: onboardingPulse 2.4s ease-in-out infinite;
+  }
+
+  // ── Success glow — electrical discharge after successful add ──────────────
   &--success-glow {
     z-index: 10;
 
@@ -79,8 +84,12 @@
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
-  background: var(--bg-secondary);
-  align-self: stretch; // fills the full card height (replaces the old min-height: 245px)
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  align-self: stretch; // fills the full card height
+
+  @media (max-width: 768px) {
+    width: 130px;
+  }
 }
 
 .cover-img {
@@ -106,7 +115,11 @@
   font-size: 2.5rem;
   font-weight: 800;
   color: var(--text-muted);
-  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-primary));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--text-primary) 8%, transparent),
+    color-mix(in srgb, var(--text-primary) 3%, transparent)
+  );
 }
 
 // ─── Provider edge-tabs — emerge from behind the right border ────────────────
@@ -117,48 +130,43 @@
   right: -6px;
   display: flex;
   flex-direction: column;
-  // gap: 8px; // Removed in favor of margin-bottom on dots for better control
   z-index: 5;
   pointer-events: auto;
   // Clean, singular drop-shadow for the whole ribbon shape
-  filter: drop-shadow(-2px 2px 2px rgba(0,0,0,0.25)); 
+  filter: drop-shadow(-2px 2px 2px color-mix(in srgb, var(--text-primary) 25%, transparent));
 }
 
 .dot {
-  --dot-color: var(--text-muted); 
-  &--mal    { --dot-color: var(--provider-mal); }
-  &--plex   { --dot-color: var(--provider-plex); }
-  &--sonarr { --dot-color: var(--provider-sonarr); }
+  // Provider identity mapped onto semantic tokens
+  --dot-color: var(--text-muted);
+  &--mal    { --dot-color: var(--color-brand); }
+  &--plex   { --dot-color: var(--color-warning-deep); }
+  &--sonarr { --dot-color: var(--color-success-deep); }
 
   position: relative;
-  width: 20px; 
+  width: 20px;
   height: 18px;
-  margin-bottom: 4px; // Vertical separation between tabs
-  
-  // Volume: Horizontal Gradient from Light (Tip/Left) to Dark (Base/Right)
-  // Gives a sleek, metallic ribbon feel
+  margin-bottom: 4px; // vertical separation between tabs
+
+  // Volume: horizontal gradient light (tip/left) → dark (base/right)
   background: linear-gradient(
-    to right, 
-    color-mix(in srgb, var(--dot-color), white 20%) 0%, 
+    to right,
+    color-mix(in srgb, var(--dot-color) 78%, var(--color-surface-elevated)) 0%,
     var(--dot-color) 40%,
-    color-mix(in srgb, var(--dot-color), black 10%) 100%
+    color-mix(in srgb, var(--dot-color) 88%, var(--text-primary)) 100%
   );
   opacity: 0.9;
-  
-  // Shape: Pointy Top-Left, slanting down-right
-  // 0 0: Top Left (Sharp Point)
-  // 100% 0: Top Right
-  // 100% 100%: Bottom Right
-  // 25% 100%: Bottom Left (Indented)
+
+  // Shape: pointy top-left, slanting down-right
   clip-path: polygon(0 0, 100% 0, 100% 100%, 25% 100%);
-  
+
   // Radius on the outer (right) edge only
   border-radius: 0 4px 4px 0;
-  
+
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-left: 20%; // Push content away from the slanted left edge
+  padding-left: 20%; // push content away from the slanted left edge
   cursor: pointer;
 
   flex-shrink: 0;
@@ -182,8 +190,8 @@
     top: 50%;
     transform: translateY(-50%);
     margin-right: 8px;
-    background: rgba(0, 0, 0, 0.85);
-    color: #fff;
+    background: color-mix(in srgb, var(--text-primary) 92%, transparent);
+    color: var(--color-surface-elevated);
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 0.75rem;
@@ -191,7 +199,7 @@
     pointer-events: none;
     z-index: 10;
     animation: fadeInTooltip 0.2s ease forwards;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--text-primary) 25%, transparent);
 
     &::after {
       content: '';
@@ -201,23 +209,23 @@
       transform: translateY(-50%);
       border-width: 4px 0 4px 4px;
       border-style: solid;
-      border-color: transparent transparent transparent rgba(0, 0, 0, 0.85);
+      border-color: transparent transparent transparent color-mix(in srgb, var(--text-primary) 92%, transparent);
     }
   }
 
-  // The "3D Anchor" - A tiny dark triangle at the top-left point
-  // Simulates the ribbon tucking into the card
+  // The "3D anchor" — a tiny dark triangle at the top-left point,
+  // simulating the ribbon tucking into the card
   &::before {
     content: '';
     position: absolute;
     top: 0;
-    left: 0; 
-    width: 5px;  
-    height: 6px; 
-    background: color-mix(in srgb, var(--dot-color), black 45%);
+    left: 0;
+    width: 5px;
+    height: 6px;
+    background: color-mix(in srgb, var(--dot-color) 55%, var(--text-primary));
     // Triangle at the very corner
     clip-path: polygon(0 0, 100% 0, 0 100%);
-    z-index: 2; // Sit on top to accent the fold
+    z-index: 2; // sit on top to accent the fold
     opacity: 0.8;
 
     @media (max-width: 768px) {
@@ -225,17 +233,8 @@
       height: 5px;
     }
   }
-  
-  &::after { display: none; }
 
-  // Light Mode Refinements
-  :host-context([data-theme='light']) & {
-    filter: drop-shadow(-1px 2px 2px rgba(0,0,0,0.15)); 
-    
-    &::before {
-      opacity: 0.6;
-    }
-  }
+  &::after { display: none; }
 }
 
 @keyframes fadeInTooltip {
@@ -299,7 +298,7 @@
   text-overflow: ellipsis;
 }
 
-// Bot-kun face button — top-right of the card header, stops card click propagation
+// Bot-kun button — top-right of the card header, stops card click propagation
 .card-ask-bot-btn {
   flex-shrink: 0;
   display: flex;
@@ -308,16 +307,16 @@
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  border: 1px solid color-mix(in srgb, #a78bfa 35%, transparent);
-  background: color-mix(in srgb, #a78bfa 12%, transparent);
-  color: #a78bfa;
+  border: 1px solid color-mix(in srgb, var(--color-brand) 35%, transparent);
+  background: color-mix(in srgb, var(--color-brand) 12%, transparent);
+  color: var(--color-brand);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
 
   &:hover {
-    background: color-mix(in srgb, #a78bfa 26%, transparent);
-    border-color: #a78bfa;
-    box-shadow: 0 0 0 3px color-mix(in srgb, #a78bfa 16%, transparent);
+    background: color-mix(in srgb, var(--color-brand) 26%, transparent);
+    border-color: var(--color-brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand) 16%, transparent);
   }
 }
 
@@ -340,44 +339,45 @@
   text-transform: uppercase;
   line-height: 1.4;
 
+  // MAL view-state pills (dynamic class pill--{{ malViewState }})
   &--watching {
-    background: rgba(59, 130, 246, 0.14);
-    color: #3b82f6;
-    border: 1px solid rgba(59, 130, 246, 0.3);
+    background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
+    color: color-mix(in srgb, var(--accent-primary) 75%, var(--text-primary));
+    border: 1px solid color-mix(in srgb, var(--accent-primary) 30%, transparent);
   }
   &--completed {
-    background: rgba(34, 197, 94, 0.14);
-    color: #22c55e;
-    border: 1px solid rgba(34, 197, 94, 0.3);
+    background: color-mix(in srgb, var(--color-success-deep) 14%, transparent);
+    color: color-mix(in srgb, var(--color-success-deep) 55%, var(--text-primary));
+    border: 1px solid color-mix(in srgb, var(--color-success-deep) 30%, transparent);
   }
   &--on_hold {
     background: color-mix(in srgb, var(--color-warning-deep) 14%, transparent);
-    color: var(--color-warning-deep);
+    color: color-mix(in srgb, var(--color-warning-deep) 45%, var(--text-primary));
     border: 1px solid color-mix(in srgb, var(--color-warning-deep) 30%, transparent);
   }
   &--dropped {
     background: color-mix(in srgb, var(--color-danger-deep) 14%, transparent);
-    color: var(--color-danger-deep);
+    color: color-mix(in srgb, var(--color-danger-deep) 60%, var(--text-primary));
     border: 1px solid color-mix(in srgb, var(--color-danger-deep) 30%, transparent);
   }
   &--plan_to_watch {
-    background: color-mix(in srgb, var(--color-mixed) 14%, transparent);
-    color: var(--color-mixed);
-    border: 1px solid color-mix(in srgb, var(--color-mixed) 30%, transparent);
+    background: color-mix(in srgb, var(--color-brand) 14%, transparent);
+    color: color-mix(in srgb, var(--color-brand) 60%, var(--text-primary));
+    border: 1px solid color-mix(in srgb, var(--color-brand) 30%, transparent);
   }
   &--series {
     background: color-mix(in srgb, var(--text-muted) 12%, transparent);
-    color: var(--text-muted);
+    color: color-mix(in srgb, var(--text-muted) 65%, var(--text-primary));
     border: 1px solid color-mix(in srgb, var(--text-muted) 20%, transparent);
   }
   &--media-type {
     background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
-    color: var(--accent-primary);
+    color: color-mix(in srgb, var(--accent-primary) 75%, var(--text-primary));
     border: 1px solid color-mix(in srgb, var(--accent-primary) 25%, transparent);
   }
   &--age-rating {
     background: color-mix(in srgb, var(--color-warning-deep) 12%, transparent);
-    color: var(--color-warning-deep);
+    color: color-mix(in srgb, var(--color-warning-deep) 45%, var(--text-primary));
     border: 1px solid color-mix(in srgb, var(--color-warning-deep) 28%, transparent);
   }
 }
@@ -410,7 +410,7 @@
 
 .genre-tag {
   background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
-  color: var(--accent-primary);
+  color: color-mix(in srgb, var(--accent-primary) 75%, var(--text-primary));
   border: 1px solid color-mix(in srgb, var(--accent-primary) 22%, transparent);
   border-radius: 4px;
   font-size: 0.67rem;
@@ -420,14 +420,14 @@
   white-space: nowrap;
 
   &--theme {
-    background: color-mix(in srgb, #14b8a6 10%, transparent);
-    color: #14b8a6;
-    border-color: color-mix(in srgb, #14b8a6 25%, transparent);
+    background: color-mix(in srgb, var(--color-brand) 10%, transparent);
+    color: color-mix(in srgb, var(--color-brand) 60%, var(--text-primary));
+    border-color: color-mix(in srgb, var(--color-brand) 25%, transparent);
   }
 
   &--demographic {
     background: color-mix(in srgb, var(--color-warning-deep) 10%, transparent);
-    color: #d97706;
+    color: color-mix(in srgb, var(--color-warning-deep) 45%, var(--text-primary));
     border-color: color-mix(in srgb, var(--color-warning-deep) 25%, transparent);
   }
 }
@@ -452,6 +452,7 @@
 .date-range {
   font-size: 0.73rem;
   color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 .date-arrow {
@@ -462,6 +463,7 @@
 .added-date {
   font-size: 0.7rem;
   color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 // ─── Onboarding hints ────────────────────────────────────────────────────────
@@ -492,34 +494,23 @@
   &--poster {
     bottom: 0.7rem;
     left: 0.55rem;
-    background: rgba(0, 0, 0, 0.72);
-    color: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: color-mix(in srgb, var(--text-primary) 72%, transparent);
+    color: var(--color-surface-elevated);
+    border: 1px solid color-mix(in srgb, var(--text-primary) 25%, transparent);
   }
 
   // Body hint — top-right corner, on the content side
   &--body {
     top: 0.7rem;
     right: 0.55rem;
-    background: color-mix(in srgb, var(--accent-primary) 70%, rgba(0, 0, 0, 0.6));
-    color: #fff;
+    background: color-mix(in srgb, var(--accent-primary) 82%, var(--text-primary));
+    color: var(--color-surface-elevated);
     border: 1px solid color-mix(in srgb, var(--accent-primary) 80%, transparent);
     box-shadow: 0 0 12px color-mix(in srgb, var(--accent-primary) 40%, transparent);
   }
 }
 
 // ─── Animations ──────────────────────────────────────────────────────────────
-
-@keyframes cardIn {
-  from {
-    opacity: 0;
-    transform: translateY(12px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
 
 @keyframes popIn {
   from {
@@ -535,14 +526,25 @@
 @keyframes onboardingPulse {
   0%, 100% {
     box-shadow:
-      0 2px 12px var(--card-shadow),
+      0 2px 12px color-mix(in srgb, var(--text-primary) 10%, transparent),
       0 0 0 0 color-mix(in srgb, var(--accent-primary) 0%, transparent);
   }
   50% {
     box-shadow:
-      0 2px 12px var(--card-shadow),
+      0 2px 12px color-mix(in srgb, var(--text-primary) 10%, transparent),
       0 0 0 6px color-mix(in srgb, var(--accent-primary) 22%, transparent),
       0 0 24px 4px color-mix(in srgb, var(--accent-primary) 14%, transparent);
+  }
+}
+
+@keyframes hintFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -553,23 +555,24 @@
   pointer-events: none;
   z-index: 2;
   animation: arcFlicker 2.2s ease-out forwards;
-  filter: blur(2px) drop-shadow(0 0 2px rgba(255, 245, 160, 0.7))
-    drop-shadow(0 0 5px rgba(255, 214, 0, 0.5)) drop-shadow(0 0 11px rgba(255, 140, 0, 0.35))
-    drop-shadow(0 0 18px rgba(255, 120, 0, 0.2));
+  filter: blur(2px) drop-shadow(0 0 2px color-mix(in srgb, var(--accent-primary) 70%, transparent))
+    drop-shadow(0 0 5px color-mix(in srgb, var(--color-brand) 50%, transparent))
+    drop-shadow(0 0 11px color-mix(in srgb, var(--color-brand) 35%, transparent))
+    drop-shadow(0 0 18px color-mix(in srgb, var(--color-brand) 20%, transparent));
 
   path {
-    fill: rgba(255, 240, 160, 0.55);
+    fill: color-mix(in srgb, var(--accent-primary) 55%, transparent);
   }
 
   .bolt-branch {
     fill: none;
-    stroke: rgba(255, 196, 30, 0.45);
+    stroke: color-mix(in srgb, var(--color-brand) 45%, transparent);
     stroke-width: 1.5;
     stroke-linecap: round;
   }
 
   &--spark path {
-    fill: rgba(255, 248, 225, 0.55);
+    fill: color-mix(in srgb, var(--accent-primary) 55%, var(--color-surface-elevated));
   }
 
   &--1  { width: 18px; height: 28px; top: -17px;  left: 17%;   animation-delay: 0.03s; }
@@ -605,55 +608,44 @@
   0% { box-shadow: none; }
   5% {
     box-shadow:
-      0 0 0px 2px rgba(255, 255, 255, 0.92),
-      0 0 10px 5px rgba(0, 245, 255, 1),
-      0 0 30px 12px rgba(0, 191, 255, 0.82),
-      0 0 65px 22px rgba(0, 120, 255, 0.45),
-      0 0 100px 35px rgba(0, 60, 255, 0.2);
+      0 0 0 2px color-mix(in srgb, var(--color-surface-elevated) 92%, transparent),
+      0 0 10px 5px color-mix(in srgb, var(--accent-primary) 100%, transparent),
+      0 0 30px 12px color-mix(in srgb, var(--color-brand) 82%, transparent),
+      0 0 65px 22px color-mix(in srgb, var(--color-brand) 45%, transparent),
+      0 0 100px 35px color-mix(in srgb, var(--color-brand) 20%, transparent);
   }
   10% {
     box-shadow:
-      0 0 2px 3px rgba(200, 245, 255, 0.88),
-      0 0 10px 5px rgba(0, 229, 255, 0.92),
-      0 0 26px 10px rgba(0, 191, 255, 0.65),
-      0 0 55px 20px rgba(0, 140, 255, 0.38),
-      0 0 85px 30px rgba(0, 80, 255, 0.18);
+      0 0 2px 3px color-mix(in srgb, var(--accent-primary) 88%, var(--color-surface-elevated)),
+      0 0 10px 5px color-mix(in srgb, var(--accent-primary) 92%, transparent),
+      0 0 26px 10px color-mix(in srgb, var(--color-brand) 65%, transparent),
+      0 0 55px 20px color-mix(in srgb, var(--color-brand) 38%, transparent),
+      0 0 85px 30px color-mix(in srgb, var(--color-brand) 18%, transparent);
   }
   20% {
     box-shadow:
-      0 0 3px 2px rgba(0, 229, 255, 0.38),
-      0 0 10px 4px rgba(0, 180, 255, 0.18);
+      0 0 3px 2px color-mix(in srgb, var(--accent-primary) 38%, transparent),
+      0 0 10px 4px color-mix(in srgb, var(--color-brand) 18%, transparent);
   }
   28% {
     box-shadow:
-      0 0 5px 3px rgba(0, 240, 255, 0.82),
-      0 0 18px 7px rgba(0, 200, 255, 0.52),
-      0 0 38px 14px rgba(0, 130, 255, 0.28);
+      0 0 5px 3px color-mix(in srgb, var(--accent-primary) 82%, transparent),
+      0 0 18px 7px color-mix(in srgb, var(--color-brand) 52%, transparent),
+      0 0 38px 14px color-mix(in srgb, var(--color-brand) 28%, transparent);
   }
   62% {
     box-shadow:
-      0 0 3px 1px rgba(0, 229, 255, 0.22),
-      0 0 8px 3px rgba(0, 191, 255, 0.1);
+      0 0 3px 1px color-mix(in srgb, var(--accent-primary) 22%, transparent),
+      0 0 8px 3px color-mix(in srgb, var(--color-brand) 10%, transparent);
   }
   80% {
     box-shadow:
-      0 0 8px 4px rgba(0, 229, 255, 0.52),
-      0 0 24px 9px rgba(0, 191, 255, 0.28),
-      0 0 42px 14px rgba(0, 120, 255, 0.14);
+      0 0 8px 4px color-mix(in srgb, var(--accent-primary) 52%, transparent),
+      0 0 24px 9px color-mix(in srgb, var(--color-brand) 28%, transparent),
+      0 0 42px 14px color-mix(in srgb, var(--color-brand) 14%, transparent);
   }
-  93% { box-shadow: 0 0 2px 1px rgba(0, 229, 255, 0.14); }
+  93% { box-shadow: 0 0 2px 1px color-mix(in srgb, var(--accent-primary) 14%, transparent); }
   100% { box-shadow: none; }
-}
-
-@keyframes hintFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 // ─── Lightbox ─────────────────────────────────────────────────────────────────
@@ -662,8 +654,9 @@
   position: fixed;
   inset: 0;
   z-index: 1060;
-  background: rgba(0, 0, 0, 0.88);
-  backdrop-filter: blur(6px);
+  // No scrim color literal: the backdrop itself is blurred and darkened
+  backdrop-filter: blur(8px) brightness(0.45);
+  -webkit-backdrop-filter: blur(8px) brightness(0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -675,7 +668,7 @@
   max-width: min(420px, 90vw);
   max-height: 90vh;
   border-radius: 10px;
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 32px 80px color-mix(in srgb, var(--text-primary) 55%, transparent);
   object-fit: contain;
   animation: lightboxImgIn 0.28s cubic-bezier(0.34, 1.4, 0.64, 1) both;
   cursor: default;
@@ -688,9 +681,9 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: color-mix(in srgb, var(--color-surface-elevated) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-surface-elevated) 22%, transparent);
+  color: var(--color-surface-elevated);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -700,7 +693,7 @@
   svg { width: 18px; height: 18px; }
 
   &:hover {
-    background: rgba(255, 255, 255, 0.22);
+    background: color-mix(in srgb, var(--color-surface-elevated) 22%, transparent);
     transform: scale(1.1);
   }
 }
@@ -713,4 +706,31 @@
 @keyframes lightboxImgIn {
   from { opacity: 0; transform: scale(0.88); }
   to { opacity: 1; transform: scale(1); }
+}
+
+
+// --- A11y: keyboard focus ring ----------------------------------------------
+
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+// --- A11y: prefers-reduced-motion -------------------------------------------
+// Entry animations, shimmer/pulse loops and transitions collapse to instant.
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
 }

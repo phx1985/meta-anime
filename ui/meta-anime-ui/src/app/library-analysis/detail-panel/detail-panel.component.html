@@ -41,9 +41,9 @@
         <div class="la-split">
           <button type="button"
                   class="la-panel__copy la-panel__copy--ghost la-split__main"
-                  (click)="exportMenuOpen.set(!exportMenuOpen())"
+                  (click)="copyFolderPath()"
                   [class.la-panel__copy--success]="copySuccess()"
-                  [attr.aria-expanded]="exportMenuOpen()">
+                  [title]="'libraryIntel.drawer.copyFolderPath' | translate">
             {{ copySuccess() ? ('libraryIntel.drawer.copied' | translate) : ('libraryIntel.drawer.copyPaths' | translate) }}
           </button>
           <button type="button"
@@ -65,6 +65,15 @@
             </div>
           }
         </div>
+
+        @if (r.localAnimeId) {
+          <button class="la-btn-anime" (click)="requestAnimeDetail.emit(r.localAnimeId!)" [title]="'library.detail.openAnime' | translate">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            {{ 'library.detail.openAnime' | translate }}
+          </button>
+        }
       </div>
 
       <!-- Links row -->
@@ -76,14 +85,6 @@
              rel="noopener noreferrer">
             {{ 'library.detail.openSonarr' | translate }} ↗
           </a>
-        }
-        @if (r.localAnimeId) {
-          <button class="la-btn-anime" (click)="requestAnimeDetail.emit(r.localAnimeId!)" [title]="'library.detail.openAnime' | translate">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-            </svg>
-            {{ 'library.detail.openAnime' | translate }}
-          </button>
         }
       </div>
 
@@ -219,35 +220,35 @@
                          (change)="toggleAllVisible()"
                          [attr.aria-label]="'libraryIntel.drawer.selectRow' | translate" />
                 </th>
-                <th class="la-sortable-th" (click)="sortBy('file')" [class.la-sort-active]="sortCol()==='file'">
+                <th class="la-sortable-th" (click)="sortBy('file')" [attr.aria-sort]="sortCol()==='file' ? (sortDir()==='asc' ? 'ascending' : 'descending') : 'none'" tabindex="0" (keydown.enter)="sortBy('file')" (keydown.space)="$event.preventDefault(); sortBy('file')" [class.la-sort-active]="sortCol()==='file'">
                   {{ 'library.detail.file' | translate }}
                   <span class="la-sort-icon">{{ sortCol()==='file' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
                 </th>
-                <th class="la-sortable-th" (click)="sortBy('size')" [class.la-sort-active]="sortCol()==='size'">
+                <th class="la-sortable-th" (click)="sortBy('size')" [attr.aria-sort]="sortCol()==='size' ? (sortDir()==='asc' ? 'ascending' : 'descending') : 'none'" tabindex="0" (keydown.enter)="sortBy('size')" (keydown.space)="$event.preventDefault(); sortBy('size')" [class.la-sort-active]="sortCol()==='size'">
                   {{ 'library.detail.size' | translate }}
                   <span class="la-sort-icon">{{ sortCol()==='size' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
                 </th>
-                <th class="la-sortable-th" (click)="sortBy('duration')" [class.la-sort-active]="sortCol()==='duration'">
+                <th class="la-sortable-th" (click)="sortBy('duration')" [attr.aria-sort]="sortCol()==='duration' ? (sortDir()==='asc' ? 'ascending' : 'descending') : 'none'" tabindex="0" (keydown.enter)="sortBy('duration')" (keydown.space)="$event.preventDefault(); sortBy('duration')" [class.la-sort-active]="sortCol()==='duration'">
                   {{ 'library.detail.duration' | translate }}
                   <span class="la-sort-icon">{{ sortCol()==='duration' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
                 </th>
-                <th class="la-sortable-th" (click)="sortBy('gibPerHour')" [class.la-sort-active]="sortCol()==='gibPerHour'">
+                <th class="la-sortable-th" (click)="sortBy('gibPerHour')" [attr.aria-sort]="sortCol()==='gibPerHour' ? (sortDir()==='asc' ? 'ascending' : 'descending') : 'none'" tabindex="0" (keydown.enter)="sortBy('gibPerHour')" (keydown.space)="$event.preventDefault(); sortBy('gibPerHour')" [class.la-sort-active]="sortCol()==='gibPerHour'">
                   {{ 'library.detail.gibPerHour' | translate }}
                   <span class="la-sort-icon">{{ sortCol()==='gibPerHour' ? (sortDir()==='asc' ? '↑' : '↓') : '⇅' }}</span>
                 </th>
-                <th class="la-sortable-th" (click)="sortBy('video')" [class.la-sort-active]="sortCol()==='video'">
+                <th class="la-sortable-th" (click)="sortBy('video')" [attr.aria-sort]="sortCol()==='video' ? (sortDir()==='asc' ? 'ascending' : 'descending') : 'none'" tabindex="0" (keydown.enter)="sortBy('video')" (keydown.space)="$event.preventDefault(); sortBy('video')" [class.la-sort-active]="sortCol()==='video'">
                   {{ 'library.detail.video' | translate }}
                 </th>
-                <th class="la-sortable-th" (click)="sortBy('audio')" [class.la-sort-active]="sortCol()==='audio'">
+                <th class="la-sortable-th" (click)="sortBy('audio')" [attr.aria-sort]="sortCol()==='audio' ? (sortDir()==='asc' ? 'ascending' : 'descending') : 'none'" tabindex="0" (keydown.enter)="sortBy('audio')" (keydown.space)="$event.preventDefault(); sortBy('audio')" [class.la-sort-active]="sortCol()==='audio'">
                   {{ 'library.detail.audio' | translate }}
                 </th>
-                <th class="la-sortable-th" (click)="sortBy('res')" [class.la-sort-active]="sortCol()==='res'">
+                <th class="la-sortable-th" (click)="sortBy('res')" [attr.aria-sort]="sortCol()==='res' ? (sortDir()==='asc' ? 'ascending' : 'descending') : 'none'" tabindex="0" (keydown.enter)="sortBy('res')" (keydown.space)="$event.preventDefault(); sortBy('res')" [class.la-sort-active]="sortCol()==='res'">
                   {{ 'library.detail.res' | translate }}
                 </th>
-                <th class="la-sortable-th" (click)="sortBy('depth')" [class.la-sort-active]="sortCol()==='depth'">
+                <th class="la-sortable-th" (click)="sortBy('depth')" [attr.aria-sort]="sortCol()==='depth' ? (sortDir()==='asc' ? 'ascending' : 'descending') : 'none'" tabindex="0" (keydown.enter)="sortBy('depth')" (keydown.space)="$event.preventDefault(); sortBy('depth')" [class.la-sort-active]="sortCol()==='depth'">
                   {{ 'library.detail.depth' | translate }}
                 </th>
-                <th class="la-sortable-th" (click)="sortBy('channels')" [class.la-sort-active]="sortCol()==='channels'">
+                <th class="la-sortable-th" (click)="sortBy('channels')" [attr.aria-sort]="sortCol()==='channels' ? (sortDir()==='asc' ? 'ascending' : 'descending') : 'none'" tabindex="0" (keydown.enter)="sortBy('channels')" (keydown.space)="$event.preventDefault(); sortBy('channels')" [class.la-sort-active]="sortCol()==='channels'">
                   {{ 'library.detail.channels' | translate }}
                 </th>
               </tr>
@@ -264,7 +265,6 @@
                   <td class="la-file-cell" [title]="resolvedFilePath(f)">
                     <div class="la-file-cell__inner">
                       <span class="la-ep-badge">{{ episodeBadge(f) }}</span>
-                      <span class="la-file-name">{{ fileNameOf(f) }}</span>
                     </div>
                   </td>
                   <td class="la-td-num">{{ formatSize(f.sizeBytes) }}</td>

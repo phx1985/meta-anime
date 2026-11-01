@@ -1,3 +1,9 @@
+// ─── My Animes — page styles ─────────────────────────────────────────────────
+// Design rules: semantic tokens only (--color-*, --text-*, --accent-primary)
+// via color-mix() — zero raw hex/rgba. Micro headers (11px semibold uppercase,
+// wider tracking, muted, leading SVG), tabular-nums on counts/sizes/dates,
+// one vibrant CTA (Search), muted pills everywhere else.
+
 // ─── Page wrapper ─────────────────────────────────────────────────────────────
 
 .anime-list-page {
@@ -5,8 +11,6 @@
   min-height: 100vh;
   overflow: hidden;
 }
-
-// ─── Content sits on top of bokeh ─────────────────────────────────────────────
 
 .container {
   position: relative;
@@ -31,13 +35,11 @@
 // ─── Filter card ──────────────────────────────────────────────────────────────
 
 .filter-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--card-border);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 1rem;
-  box-shadow: 0 4px 24px var(--card-shadow);
-  // overflow:hidden removed so genre dropdown panel can escape the card boundary
-  backdrop-filter: blur(8px);
-  // Explicit stacking context so genre-panel (z-index:1000) beats any card stacking
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--text-primary) 8%, transparent);
+  // Explicit stacking context so popovers beat any card stacking
   position: relative;
   z-index: 2;
 }
@@ -58,7 +60,7 @@
     border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    background: var(--bg-secondary);
+    background: color-mix(in srgb, var(--text-primary) 4%, transparent);
   }
   &:focus-visible {
     outline: 2px solid var(--accent-primary);
@@ -69,7 +71,7 @@
 // When panel is open: square the bottom corners so the header flows into the body
 .filter-card:has(.filter-card__body.open) .filter-card__header {
   border-radius: 1rem 1rem 0 0;
-  border-bottom-color: var(--card-border);
+  border-bottom-color: var(--color-border-subtle);
 }
 
 .filter-card__header-left {
@@ -120,23 +122,37 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  padding: 0 0.3rem;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
   border-radius: 999px;
-  background: var(--accent-primary);
-  color: #fff;
-  font-size: 0.7rem;
+  background: color-mix(in srgb, var(--accent-primary) 92%, var(--text-primary));
+  color: var(--color-surface-elevated);
+  font-size: 0.68rem;
   font-weight: 700;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.filter-chevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &--open {
+    transform: rotate(180deg);
+    color: var(--accent-primary);
+  }
 }
 
 // ── Filter info icon & popover ────────────────────────────────────────────────
 // The wrapper is inline so it sits right next to the "Filters" label.
 // The popover is always in the DOM but hidden with visibility/opacity — shown
-// purely by CSS :hover.  An invisible ::after bridge covers the gap between the
+// purely by CSS :hover. An invisible ::after bridge covers the gap between the
 // button and the popover so the hover state is maintained while the mouse
 // travels downward to reach the popup links.
+
 .filter-info-wrap {
   position: relative;
   display: inline-flex;
@@ -150,16 +166,14 @@
     pointer-events: auto;
   }
 
-  // Invisible bridge: fills the gap between the button and the popover so
-  // moving the mouse down to click the link doesn't accidentally leave the
-  // hover zone and close the tooltip.
+  // Invisible bridge between button and popover
   &::after {
     content: '';
     position: absolute;
     top: 100%;
     left: -0.5rem;
     right: -0.5rem;
-    height: 12px; // matches the 8px gap + a small margin
+    height: 12px;
     pointer-events: auto;
   }
 }
@@ -180,9 +194,8 @@
 
   &:hover,
   &:focus-visible {
-    color: var(--accent-primary);
+    color: color-mix(in srgb, var(--accent-primary) 75%, var(--text-primary));
     background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
-    outline: none;
   }
 }
 
@@ -194,12 +207,12 @@
   z-index: 200;
   min-width: 230px;
   max-width: 290px;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 0.625rem;
   padding: 0.75rem 0.875rem;
-  box-shadow: 0 6px 20px var(--card-shadow);
-  // Hidden by default; shown via :hover or --open class
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--text-primary) 14%, transparent);
+  // Hidden by default; shown via :hover
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -216,7 +229,7 @@
     left: 1.1rem;
     border-left: 7px solid transparent;
     border-right: 7px solid transparent;
-    border-bottom: 7px solid var(--card-border);
+    border-bottom: 7px solid var(--color-border-subtle);
   }
 
   &::after {
@@ -226,7 +239,7 @@
     left: 1.1rem;
     border-left: 5px solid transparent;
     border-right: 5px solid transparent;
-    border-bottom: 5px solid var(--card-bg);
+    border-bottom: 5px solid var(--color-surface-elevated);
   }
 
   &__text {
@@ -249,34 +262,35 @@
   }
 }
 
+// ── Collapsible body wrapper ─────────────────────────────────────────────────
 
-.filter-chevron {
-  color: var(--text-muted);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-  path {
-    stroke: currentColor;
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    fill: none;
-  }
-
-  &--open {
-    transform: rotate(180deg);
-  }
-}
-
-// Collapsible body wrapper — height animated by @filterCollapse
 .filter-card__body {
-  // Angular animates height here
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 320ms cubic-bezier(0.4, 0, 0.2, 1), opacity 320ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.open {
+    max-height: 2000px;
+    opacity: 1;
+    overflow: visible; // allow popovers to escape
+  }
+
+  &.closed {
+    max-height: 0 !important;
+    opacity: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden;
+  }
 }
 
 // Inner padded content (overflow: hidden is on the outer wrapper)
 .filter-card__inner {
-  padding: 1.25rem 1.5rem;
+  padding: 1.125rem 1.25rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.125rem;
 }
 
 // ─── Filter field ─────────────────────────────────────────────────────────────
@@ -284,595 +298,312 @@
 .filter-field {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  flex: 1;
-  min-width: 160px;
+  gap: 0.5rem;
+  min-width: 0;
 
-  &--grow {
-    flex: 2;
-    min-width: 220px;
-  }
   &--compact {
+    gap: 0.4rem;
     flex: 0 0 auto;
-    min-width: 0;
-  }
-  &--pills {
-    min-width: 0;
-    flex: 1;
   }
 }
 
-// Label row — label + OR/AND operator toggle inline
 .filter-label-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
+  flex-wrap: wrap;
   min-height: 1.25rem;
 }
 
+// ─── Micro section labels (11px semibold uppercase, tracking, muted) ─────────
+
 .filter-label {
-  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--text-muted);
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+.filter-label__icon {
+  flex-shrink: 0;
+  opacity: 0.75;
 }
 
 // ─── OR / AND operator toggle ─────────────────────────────────────────────────
 
 .operator-toggle {
   display: inline-flex;
-  border: 1px solid var(--card-border);
-  border-radius: 0.375rem;
-  overflow: hidden;
+  gap: 0.25rem;
+  padding: 0.15rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-primary) 4.5%, transparent);
 }
 
 .op-btn {
   display: inline-flex;
   align-items: center;
-  padding: 0.1rem 0.45rem;
-  font-size: 0.65rem;
+  min-height: 1.55rem;
+  padding: 0.15rem 0.55rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: color-mix(in srgb, var(--text-muted) 85%, var(--text-primary));
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   cursor: pointer;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  transition:
-    background 0.15s,
-    color 0.15s;
+  transition: background 0.12s, color 0.12s;
 
   &:hover {
-    color: var(--accent-primary);
+    color: var(--text-primary);
   }
 
   &--active {
-    background: var(--accent-primary);
-    color: #fff;
+    background: color-mix(in srgb, var(--accent-primary) 16%, transparent);
+    color: color-mix(in srgb, var(--accent-primary) 75%, var(--text-primary));
   }
 }
 
-// ─── Sort + display-mode toolbar ─────────────────────────────────────────────
+// ─── Title search ─────────────────────────────────────────────────────────────
 
-.sort-dir-btn {
-  flex-shrink: 0;
-}
-
-.display-mode-toggle {
+.search-row {
   display: flex;
-  gap: 0.25rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.mode-btn {
-  display: inline-flex;
+.search-input-wrap {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border: 1px solid var(--card-border);
-  border-radius: 0.375rem;
-  background: var(--card-bg);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition:
-    background 0.2s,
-    color 0.2s,
-    border-color 0.2s;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 0.85rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 0.75rem;
+  background: var(--color-surface-elevated);
+  transition: border-color 0.15s, box-shadow 0.15s;
 
-  &:hover {
-    background: var(--bg-secondary);
-    color: var(--accent-primary);
+  &:focus-within {
     border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 18%, transparent);
   }
-  &--active {
-    background: var(--accent-primary);
-    color: #fff;
-    border-color: var(--accent-primary);
+
+  .search-icon {
+    color: var(--text-muted);
+    pointer-events: none;
+    flex-shrink: 0;
   }
 }
-
-// ─── Inputs ───────────────────────────────────────────────────────────────────
 
 .filter-input {
-  height: 2.25rem;
-  padding: 0 0.75rem;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
   color: var(--text-primary);
   font-size: 0.875rem;
-  width: 100%;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
-
-  &:hover {
-    border-color: color-mix(in srgb, var(--text-primary) 20%, transparent);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
-    box-shadow: none;
-  }
 
   &::placeholder {
     color: var(--text-muted);
   }
 }
 
-.search-input-wrap {
-  position: relative;
-
-  .search-icon {
-    position: absolute;
-    left: 0.625rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-    pointer-events: none;
-  }
-
-  .filter-input {
-    padding-left: 2rem;
-  }
-}
-
-// ─── Genre multi-select dropdown ──────────────────────────────────────────────
-
-.genre-dropdown {
-  position: relative;
-}
-
-// ─── Filter Popup trigger button (fp-trigger) ────────────────────────────────
+// ─── fp trigger (multi-select dropdown button) ────────────────────────────────
 
 .fp-trigger {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  height: 2.25rem;
-  padding: 0 0.75rem;
+  gap: 0.5rem;
   width: 100%;
-  border: 1px solid var(--card-border);
-  border-radius: 0.5rem;
-  background: var(--bg-secondary);
-  color: var(--text-muted);
-  font-size: 0.875rem;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 0.75rem;
+  background: var(--color-surface-elevated);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
   cursor: pointer;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s,
-    color 0.2s;
   text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s, color 0.15s;
+
+  &:hover {
+    border-color: var(--accent-primary);
+    color: var(--text-primary);
+  }
+
+  &--open {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 18%, transparent);
+  }
 
   &--has-value {
     color: var(--text-primary);
   }
-  &--open {
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
-  }
-  &:hover {
-    border-color: var(--accent-primary);
-    color: var(--text-primary);
+
+  @media (max-width: 639px) {
+    min-height: 44px;
   }
 }
 
 .fp-trigger__text {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.fp-trigger__chevron {
-  flex-shrink: 0;
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  &--open {
-    transform: rotate(180deg);
-  }
 }
 
 .fp-trigger__clear {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.2rem;
-  height: 1.2rem;
-  border: none;
-  background: var(--card-border);
-  border-radius: 50%;
-  color: var(--text-muted);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition:
-    background 0.15s,
-    color 0.15s;
-  &:hover {
-    background: var(--accent-primary);
-    color: #fff;
-  }
-}
-
-// ─── Filter Popup overlay & panel ────────────────────────────────────────────
-
-.fp-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 3000;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: fpBackdropIn 0.18s ease;
-
-  @media (max-width: 639px) {
-    align-items: flex-end;
-  }
-}
-
-@keyframes fpBackdropIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.fp-popup {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 1rem;
-  width: min(460px, calc(100vw - 2rem));
-  max-height: 72vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-  animation: fpPopupIn 0.22s cubic-bezier(0.34, 1.4, 0.64, 1);
-  overflow: hidden;
-
-  @media (max-width: 639px) {
-    width: 100%;
-    max-height: 82vh;
-    border-radius: 1.25rem 1.25rem 0 0;
-    animation: fpSheetUp 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-}
-
-@keyframes fpPopupIn {
-  from {
-    opacity: 0;
-    transform: scale(0.94) translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes fpSheetUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-.fp-popup__header {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 1rem 1.125rem 0.75rem;
-  border-bottom: 1px solid var(--card-border);
-  flex-shrink: 0;
-}
-
-.fp-popup__title {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  flex: 1;
-}
-
-.fp-popup__ops {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.fp-popup__close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border: none;
-  background: var(--bg-secondary);
-  border-radius: 50%;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s;
-  flex-shrink: 0;
-  &:hover {
-    background: var(--card-border);
-    color: var(--text-primary);
-  }
-}
-
-.fp-popup__search {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1rem;
-  border-bottom: 1px solid var(--card-border);
-  flex-shrink: 0;
-  color: var(--text-muted);
-}
-
-.fp-popup__search-input {
-  flex: 1;
-  min-width: 0;
-  padding: 7px 12px;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--text-primary) 4.5%, transparent);
-  color: var(--text-primary);
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.15s;
-
-  &::placeholder {
-    color: var(--text-muted);
-  }
-
-  &:hover {
-    border-color: color-mix(in srgb, var(--text-primary) 20%, transparent);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
-  }
-}
-
-.fp-popup__search-clear {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 1.25rem;
   height: 1.25rem;
   border: none;
-  background: var(--card-border);
+  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
   border-radius: 50%;
   color: var(--text-muted);
   cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+
   &:hover {
     background: var(--accent-primary);
-    color: #fff;
+    color: var(--color-surface-elevated);
   }
 }
 
-.fp-popup__body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0.625rem 1rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-  align-content: flex-start;
-  scrollbar-width: thin;
-  scrollbar-color: var(--card-border) transparent;
+.fp-trigger__chevron {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
-  &--no-search {
-    padding-top: 0.875rem;
-  }
-}
-
-.fp-option {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.3rem 0.75rem;
-  border-radius: 999px;
-  border: 1px solid var(--card-border);
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background 0.12s,
-    color 0.12s,
-    border-color 0.12s,
-    box-shadow 0.12s;
-  white-space: nowrap;
-
-  &:hover {
-    border-color: var(--accent-primary);
+  &--open {
+    transform: rotate(180deg);
     color: var(--accent-primary);
   }
-
-  &--selected {
-    background: var(--accent-primary);
-    border-color: var(--accent-primary);
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(108, 99, 255, 0.3);
-  }
-
-  // NSFW pills: pink border
-  &--nsfw:not(.fp-option--selected) {
-    border-color: #f472b6;
-    color: #f472b6;
-  }
-  &--nsfw:hover:not(.fp-option--selected) {
-    border-color: #ec4899;
-    color: #ec4899;
-  }
-  &--nsfw.fp-option--selected {
-    background: #ec4899;
-    border-color: #ec4899;
-    box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3);
-  }
-
-  // Theme popup: teal accent
-  .fp-popup--theme & {
-    &:hover:not(.fp-option--nsfw) {
-      border-color: #14b8a6;
-      color: #14b8a6;
-    }
-    &.fp-option--selected:not(.fp-option--nsfw) {
-      background: #14b8a6;
-      border-color: #14b8a6;
-      box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3);
-    }
-  }
-
-  // Demographic popup: amber accent
-  .fp-popup--demographic & {
-    &:hover {
-      border-color: var(--color-warning-deep);
-      color: #d97706;
-    }
-    &.fp-option--selected {
-      background: var(--color-warning-deep);
-      border-color: var(--color-warning-deep);
-      color: #fff;
-      box-shadow: 0 2px 8px color-mix(in srgb, var(--color-warning-deep) 30%, transparent);
-    }
-  }
 }
 
-.fp-popup__footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border-top: 1px solid var(--card-border);
-  flex-shrink: 0;
-}
-
-.fp-popup__clear-all {
-  flex: 1;
-  text-align: left;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.15s;
-  &:hover {
-    color: var(--color-danger-deep);
-  }
-}
-
-.fp-popup__done {
-  display: inline-flex;
-  align-items: center;
-  height: 2rem;
-  padding: 0 1.125rem;
-  border-radius: 0.5rem;
-  background: var(--accent-primary);
-  border: none;
-  color: #fff;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    box-shadow 0.15s;
-  &:hover {
-    background: color-mix(in srgb, var(--accent-primary) 85%, #000 15%);
-    box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
-  }
-}
-
-// ─── Presets bar (compact horizontal strip) ────────────────────────────────
+// ─── Presets bar ──────────────────────────────────────────────────────────────
 
 .presets-bar {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .presets-bar__chips {
-  flex: 1;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  padding-bottom: 2px; // prevent shadow clipping
-  &::-webkit-scrollbar {
-    display: none;
-  }
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  min-width: 0;
 }
 
 .presets-bar__sep {
   width: 1px;
   height: 1.25rem;
-  background: var(--card-border);
+  background: var(--color-border-subtle);
   flex-shrink: 0;
 }
 
 .btn-save-preset {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  height: 1.75rem;
-  padding: 0 0.75rem;
-  border: 1px dashed var(--card-border);
+  gap: 0.35rem;
+  min-height: 2.15rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px dashed var(--color-border-strong);
   border-radius: 999px;
   background: transparent;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
-  transition:
-    color 0.15s,
-    border-color 0.15s,
-    background 0.15s;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
   white-space: nowrap;
 
   &:hover {
-    color: var(--accent-primary);
+    color: color-mix(in srgb, var(--accent-primary) 75%, var(--text-primary));
     border-color: var(--accent-primary);
-    background: rgba(108, 99, 255, 0.06);
+    background: color-mix(in srgb, var(--accent-primary) 6%, transparent);
   }
 }
+
+// On desktop: hidden — the inline chip bar is used
+.btn-presets-mobile {
+  display: none;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.15rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-primary) 4.5%, transparent);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover {
+    color: color-mix(in srgb, var(--accent-primary) 75%, var(--text-primary));
+    border-color: var(--accent-primary);
+    background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+  }
+
+  // Count badge
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    padding: 0 0.2rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent-primary) 92%, var(--text-primary));
+    color: var(--color-surface-elevated);
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 639px) {
+    display: inline-flex;
+    min-height: 44px;
+  }
+}
+
+// On mobile: hide the inline chip list — the bottom sheet replaces it
+@media (max-width: 639px) {
+  .presets-bar__chips {
+    display: none;
+  }
+}
+
+// ─── Save-as-preset inline form ───────────────────────────────────────────────
 
 .preset-save-form {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
   animation: presetFormIn 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -890,16 +621,14 @@
 .preset-name-input {
   flex: 1;
   min-width: 140px;
-  height: 2rem;
-  padding: 0 0.625rem;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
+  min-height: 2.35rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 0.5rem;
+  background: var(--color-surface-elevated);
   color: var(--text-primary);
   font-size: 0.8125rem;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 
   &:hover {
     border-color: color-mix(in srgb, var(--text-primary) 20%, transparent);
@@ -907,9 +636,10 @@
 
   &:focus {
     outline: none;
-    border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
-    box-shadow: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 18%, transparent);
   }
+
   &::placeholder {
     color: var(--text-muted);
   }
@@ -919,9 +649,10 @@
 .btn-preset-cancel {
   display: inline-flex;
   align-items: center;
-  height: 2rem;
+  justify-content: center;
+  min-height: 2.35rem;
   padding: 0 0.875rem;
-  border-radius: 0.5rem;
+  border-radius: 999px;
   font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
@@ -940,108 +671,24 @@
 }
 
 .btn-preset-confirm {
-  background: var(--accent-primary);
-  color: #fff;
+  background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
   border-color: var(--accent-primary);
+  color: color-mix(in srgb, var(--accent-primary) 75%, var(--text-primary));
+
   &:not(:disabled):hover {
-    background: color-mix(in srgb, var(--accent-primary) 85%, #000 15%);
+    background: color-mix(in srgb, var(--accent-primary) 22%, transparent);
   }
 }
 
 .btn-preset-cancel {
   background: transparent;
+  border-color: var(--color-border-strong);
   color: var(--text-secondary);
-  border-color: var(--card-border);
+
   &:hover {
-    background: var(--bg-secondary);
-    color: var(--accent-primary);
-    border-color: var(--accent-primary);
+    background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+    color: var(--text-primary);
   }
-}
-
-.preset-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-.preset-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  height: 1.875rem;
-  padding: 0 0.7rem;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid transparent;
-  white-space: nowrap;
-  transition:
-    background 0.15s,
-    color 0.15s,
-    border-color 0.15s,
-    box-shadow 0.15s;
-  &:active {
-    transform: scale(0.96);
-  }
-
-  &--builtin {
-    background: rgba(108, 99, 255, 0.1);
-    border-color: rgba(108, 99, 255, 0.25);
-    color: var(--accent-primary);
-    &:hover {
-      background: var(--accent-primary);
-      color: #fff;
-      border-color: var(--accent-primary);
-      box-shadow: 0 2px 8px rgba(108, 99, 255, 0.3);
-    }
-  }
-
-  &--saved {
-    background: var(--bg-secondary);
-    border-color: var(--card-border);
-    color: var(--text-secondary);
-    &:hover {
-      border-color: var(--accent-primary);
-      color: var(--accent-primary);
-    }
-  }
-}
-
-.preset-chip__delete {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1rem;
-  height: 1rem;
-  border-radius: 50%;
-  background: var(--card-border);
-  margin-left: 0.1rem;
-  transition:
-    background 0.15s,
-    color 0.15s;
-  flex-shrink: 0;
-  &:hover {
-    background: var(--color-danger-deep);
-    color: #fff;
-  }
-  svg path {
-    stroke: currentColor;
-  }
-}
-
-// ─── Search row, filter grid, and footer ─────────────────────────────────────
-
-.search-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
 }
 
 // ─── Filter grid (3→2→1 columns) ─────────────────────────────────────────────
@@ -1063,6 +710,7 @@
 
   @media (max-width: 639px) {
     grid-template-columns: 1fr;
+    gap: 0.875rem;
   }
 }
 
@@ -1074,7 +722,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.75rem;
-  border-top: 1px solid var(--card-border);
+  border-top: 1px solid var(--color-border-subtle);
   padding-top: 0.875rem;
 }
 
@@ -1092,120 +740,323 @@
   margin-left: auto;
 }
 
-// ─── Filter actions buttons (Search / Reset) ─────────────────────────────────
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sort-dir-btn {
+  flex-shrink: 0;
+}
+
+// ── Custom dropdown host (app-ui-select replaces the native <select>) ─────────
+// Wrappers stay as the content-sized slots; min-widths keep the triggers at a
+// stable width now that the trigger sizes to its label instead of the widest option.
+
+.sort-select-wrap {
+  position: relative;
+  display: inline-flex;
+  min-width: 11rem;
+}
+
+.rpp-select-wrap {
+  position: relative;
+  display: inline-flex;
+  min-width: 4.5rem;
+}
+
+// ── Display-mode segmented toggle ────────────────────────────────────────────
+
+.display-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--text-primary) 4.5%, transparent);
+}
+
+.mode-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border: 1px solid transparent;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+
+  &:hover {
+    color: var(--accent-primary);
+    background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+  }
+
+  &--active {
+    background: color-mix(in srgb, var(--accent-primary) 16%, transparent);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+  }
+
+  @media (max-width: 639px) {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+// ── Reset (muted) and Search (the one vibrant CTA) ──────────────────────────
+
 .btn-search,
 .btn-reset {
   display: inline-flex;
   align-items: center;
-  gap: 0.375rem;
-  height: 2.25rem;
-  padding: 0 1.125rem;
-  border-radius: 0.5rem;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+  padding: 0.45rem 1.125rem;
+  border-radius: 999px;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
   transition:
     background 0.2s,
     color 0.2s,
     border-color 0.2s,
     box-shadow 0.2s,
     transform 0.1s;
-  border: 1px solid transparent;
-  white-space: nowrap;
 
   &:active {
     transform: scale(0.97);
   }
+
+  @media (max-width: 639px) {
+    min-height: 44px;
+  }
 }
 
 .btn-search {
-  background: var(--accent-primary);
-  color: #fff;
+  background: color-mix(in srgb, var(--accent-primary) 92%, var(--text-primary));
   border-color: var(--accent-primary);
+  color: var(--color-surface-elevated);
 
   &:hover {
-    background: color-mix(in srgb, var(--accent-primary) 85%, #000 15%);
-    box-shadow: 0 4px 12px rgba(108, 99, 255, 0.35);
+    background: color-mix(in srgb, var(--accent-primary) 85%, var(--text-primary));
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--accent-primary) 35%, transparent);
   }
 }
 
 .btn-reset {
-  background: transparent;
+  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+  border-color: var(--color-border-strong);
   color: var(--text-secondary);
-  border-color: var(--card-border);
 
   &:hover {
-    background: var(--bg-secondary);
-    color: var(--accent-primary);
-    border-color: var(--accent-primary);
-  }
-}
-
-// ─── Multi-select pill bar ─────────────────────────────────────────────────────
-
-.filter-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-.filter-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.7rem;
-  border-radius: 999px;
-  border: 1px solid var(--card-border);
-  background: var(--bg-secondary);
-  color: var(--text-secondary);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s,
-    border-color 0.15s;
-  white-space: nowrap;
-
-  &:hover {
-    border-color: var(--accent-primary);
-    color: var(--accent-primary);
-  }
-
-  &--active {
-    background: var(--accent-primary);
-    border-color: var(--accent-primary);
-    color: #fff;
+    background: color-mix(in srgb, var(--text-primary) 9%, transparent);
+    color: var(--text-primary);
   }
 }
 
 // ─── Search prompt ─────────────────────────────────────────────────────────────
 
 .search-prompt {
-  opacity: 0.7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3rem 1rem;
 }
 
 .search-prompt__icon {
-  filter: drop-shadow(0 4px 12px rgba(108, 99, 255, 0.25));
+  color: var(--accent-primary);
+  margin-bottom: 1rem;
 }
 
 .search-prompt__text {
+  margin: 0;
   font-size: 1rem;
   text-align: center;
+  color: var(--text-muted);
 }
 
-// ─── Total count ──────────────────────────────────────────────────────────────
+// ─── Structural skeletons (loading state) ────────────────────────────────────
+
+.skeleton-bar {
+  height: 0.75rem;
+  border-radius: 0.4rem;
+  background: color-mix(in srgb, var(--text-primary) 8%, transparent);
+  animation: skeletonPulse 1.4s ease-in-out infinite;
+
+  &--sm {
+    height: 0.55rem;
+    width: 65%;
+  }
+
+  &--title {
+    height: 1rem;
+    width: 75%;
+  }
+
+  &--sub {
+    width: 45%;
+  }
+
+  &--pill {
+    height: 1.45rem;
+    width: 4.25rem;
+    border-radius: 999px;
+  }
+
+  &--dot {
+    height: 1.25rem;
+    width: 1.25rem;
+    border-radius: 0.4rem;
+  }
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.skeleton-card {
+  display: flex;
+  height: 100%;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1rem;
+  background: var(--color-surface-elevated);
+  overflow: hidden;
+
+  &__cover {
+    width: 175px;
+    flex-shrink: 0;
+    background: color-mix(in srgb, var(--text-primary) 7%, transparent);
+    animation: skeletonPulse 1.4s ease-in-out infinite;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 1rem;
+  }
+
+  &__pills {
+    display: flex;
+    gap: 0.375rem;
+  }
+
+  &__meta {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 0.4rem;
+  }
+}
+
+.skeleton-table {
+  width: 100%;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1rem;
+  background: var(--color-surface-elevated);
+  overflow: hidden;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-border-subtle);
+
+    &--head {
+      background: color-mix(in srgb, var(--text-primary) 4%, transparent);
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__cell {
+    min-width: 0;
+  }
+}
+
+// ─── Total count + provider legend ───────────────────────────────────────────
+
+.results-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
 
 .anime-total-count {
-  font-size: 0.875rem;
-  color: var(--text-muted);
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
 
 .elapsed-time {
   margin-left: 0.35rem;
   font-size: 0.8rem;
-  color: var(--accent-primary);
-  opacity: 0.75;
+  font-weight: 400;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.provider-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+
+  // Provider identity mapped onto semantic tokens
+  &--mal {
+    background: var(--color-brand);
+  }
+
+  &--plex {
+    background: var(--color-warning-deep);
+  }
+
+  &--sonarr {
+    background: var(--color-success-deep);
+  }
+}
+
+.legend-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 // ─── Mobile responsive overrides ──────────────────────────────────────────────
@@ -1220,15 +1071,12 @@
     gap: 0.875rem;
   }
 
-  // Larger, thumb-friendly filter pills on mobile
-  .filter-pills {
-    gap: 0.5rem;
+  .filter-header-summary {
+    max-width: min(40ch, 45%);
   }
 
-  .filter-pill {
-    font-size: 0.875rem;
-    padding: 0.55rem 1rem;
-    min-height: 40px;
+  .filter-field--display-mode {
+    display: none;
   }
 
   .preset-save-form {
@@ -1241,22 +1089,19 @@
     .btn-preset-confirm,
     .btn-preset-cancel {
       flex: 1;
-      justify-content: center;
     }
-  }
-
-  .filter-header-summary {
-    max-width: min(40ch, 45%);
-  }
-
-  .filter-field--display-mode {
-    display: none;
   }
 
   // Footer stacks on mobile
   .filter-footer {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .filter-footer__left {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.875rem;
   }
 
   .filter-footer__actions {
@@ -1280,14 +1125,17 @@
   width: 100%;
   min-width: 0;
   transition: grid-template-columns 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  grid-auto-rows: 400px;  // enforce the same row height as the seasonal page
+  grid-auto-rows: 400px; // enforce the same row height as the seasonal page
 
   // Default: auto-fill with compact card widths
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
 
-  // Mobile — safe inline padding only; auto-fill naturally collapses to 1 column
+  // Mobile — single column, safe inline padding only
   @media (max-width: 639px) {
+    grid-template-columns: 1fr;
     padding-inline: 0.75rem;
+    gap: 1rem;
+    grid-auto-rows: auto;
   }
 
   &.cols-1 {
@@ -1303,20 +1151,47 @@
   }
 }
 
-// Stagger card entrance animations
-.anime-grid > app-anime-card {
-  @for $i from 1 through 20 {
-    &:nth-child(#{$i}) {
-      animation-delay: #{($i - 1) * 0.04}s;
-    }
+// Stagger card entrance animations (index via [style.--i])
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
   }
 }
 
-// ─── End of results message ───────────────────────────────────────────────────
+app-anime-card {
+  opacity: 0; // start hidden
+  animation: fadeSlideUp 300ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+  // Stagger items by index (max 20 items delay to avoid huge waits)
+  animation-delay: calc(min(var(--i), 20) * 30ms);
+}
+
+// ─── Loading-more strip + end-of-results ─────────────────────────────────────
+
+.loading-more-strip {
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 0;
+
+  &__bar {
+    width: min(220px, 50%);
+    height: 0.45rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--text-primary) 10%, transparent);
+    animation: skeletonPulse 1.4s ease-in-out infinite;
+  }
+}
 
 .anime-end-message {
+  margin: 0;
+  padding: 1.5rem 0;
+  text-align: center;
   font-size: 0.875rem;
-  opacity: 0.7;
+  color: var(--text-muted);
 }
 
 // ─── Active-preset subtitle in filter header ──────────────────────────────────
@@ -1324,69 +1199,15 @@
 .filter-header-preset-name {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--accent-primary);
+  color: color-mix(in srgb, var(--accent-primary) 75%, var(--text-primary));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: min(40ch, 50%);
 }
 
-// ─── Mobile "Presets" button ──────────────────────────────────────────────────
-
-// On desktop: hidden — the full inline chip bar is used
-.btn-presets-mobile {
-  display: none;
-  align-items: center;
-  gap: 0.35rem;
-  height: 1.75rem;
-  padding: 0 0.75rem;
-  border: 1px solid var(--card-border);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
-  white-space: nowrap;
-  flex-shrink: 0;
-
-  &:hover {
-    color: var(--accent-primary);
-    border-color: var(--accent-primary);
-    background: rgba(108, 99, 255, 0.06);
-  }
-
-  // Count badge
-  &__count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.1rem;
-    height: 1.1rem;
-    padding: 0 0.2rem;
-    border-radius: 999px;
-    background: var(--accent-primary);
-    color: #fff;
-    font-size: 0.65rem;
-    font-weight: 700;
-    line-height: 1;
-  }
-
-  @media (max-width: 639px) {
-    display: inline-flex;
-  }
-}
-
-// On mobile: hide the inline chip list — the bottom sheet replaces it
-@media (max-width: 639px) {
-  .presets-bar__chips {
-    display: none;
-  }
-}
-
 // ─── Mobile filter sheet (dedicated fixed overlay — outside filter-card so
-//     backdrop-filter on filter-card never creates a containing-block trap) ─────
+//     no ancestor stacking context can trap the fixed sheet) ──────────────────
 
 // On desktop: accordion body shown normally; mobile sheet hidden
 @media (max-width: 639px) {
@@ -1402,9 +1223,9 @@
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    // No scrim color literal — the backdrop itself is blurred and darkened
+    backdrop-filter: blur(3px) brightness(0.5);
+    -webkit-backdrop-filter: blur(3px) brightness(0.5);
     z-index: 1050;
     animation: mobileFilterBdIn 0.22s ease;
   }
@@ -1427,11 +1248,11 @@
     right: 0;
     max-height: 88vh;
     z-index: 1051; // above backdrop
-    background: var(--card-bg);
+    background: var(--color-surface-elevated);
     border-radius: 1.25rem 1.25rem 0 0;
-    border: 1px solid var(--card-border);
+    border: 1px solid var(--color-border-subtle);
     border-bottom: none;
-    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 -8px 40px color-mix(in srgb, var(--text-primary) 22%, transparent);
     overflow: hidden;
     animation: mobileSheetUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -1449,7 +1270,7 @@
     display: block;
     width: 2.5rem;
     height: 4px;
-    background: var(--card-border);
+    background: var(--color-border-strong);
     border-radius: 2px;
     margin: 0.65rem auto 0.25rem;
     flex-shrink: 0;
@@ -1464,7 +1285,7 @@
     grid-template-columns: 1fr auto 1fr;
     align-items: center;
     padding: 0.625rem 0.75rem;
-    border-bottom: 1px solid var(--card-border);
+    border-bottom: 1px solid var(--color-border-subtle);
     flex-shrink: 0;
     min-height: 52px;
   }
@@ -1477,7 +1298,7 @@
   text-align: center;
 }
 
-// Reset button — left side of the header
+// Reset button — left side of the header (muted)
 .mobile-filter-sheet__reset {
   display: none;
 
@@ -1498,12 +1319,12 @@
 
     &:hover {
       color: var(--text-primary);
-      background: var(--bg-secondary);
+      background: color-mix(in srgb, var(--text-primary) 6%, transparent);
     }
   }
 }
 
-// Apply button — right side of the header
+// Apply button — right side of the header (the vibrant CTA of this surface)
 .mobile-filter-sheet__apply {
   display: none;
 
@@ -1516,7 +1337,7 @@
     border: none;
     border-radius: 8px;
     background: transparent;
-    color: var(--accent-primary);
+    color: color-mix(in srgb, var(--accent-primary) 75%, var(--text-primary));
     font-size: 0.88rem;
     font-weight: 700;
     cursor: pointer;
@@ -1544,9 +1365,9 @@
 .presets-sheet-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  // No scrim color literal — the backdrop itself is blurred and darkened
+  backdrop-filter: blur(2px) brightness(0.5);
+  -webkit-backdrop-filter: blur(2px) brightness(0.5);
   z-index: 1060;
   display: flex;
   align-items: flex-end;
@@ -1560,15 +1381,15 @@
 }
 
 .presets-sheet {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border-subtle);
   border-bottom: none;
   border-radius: 1.25rem 1.25rem 0 0;
   width: 100%;
   max-height: 80vh;
   overflow-y: auto;
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 -6px 30px color-mix(in srgb, var(--text-primary) 18%, transparent);
   animation: presetsSheetUp 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -1581,7 +1402,7 @@
   width: 2.5rem;
   height: 4px;
   border-radius: 2px;
-  background: var(--card-border);
+  background: var(--color-border-strong);
   margin: 0.65rem auto 0;
 }
 
@@ -1590,7 +1411,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.25rem 0.5rem;
-  border-bottom: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 
 .presets-sheet__title {
@@ -1603,8 +1424,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   border: none;
   border-radius: 50%;
   background: transparent;
@@ -1612,90 +1433,41 @@
   cursor: pointer;
 
   &:hover {
-    background: var(--bg-secondary);
+    background: color-mix(in srgb, var(--text-primary) 8%, transparent);
     color: var(--text-primary);
   }
 }
 
 .presets-sheet__section {
-  padding: 0.75rem 1.25rem 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem 0.85rem;
 
   & + & {
-    border-top: 1px solid var(--card-border);
+    border-top: 1px solid var(--color-border-subtle);
   }
 }
 
+// Micro section label
 .presets-sheet__section-label {
   display: block;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--text-muted);
-  margin-bottom: 0.4rem;
-}
-
-.presets-sheet__item {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 0.75rem 0.5rem;
-  border: none;
-  border-radius: 0.5rem;
-  background: transparent;
-  color: var(--text-primary);
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  gap: 0.5rem;
-  text-align: left;
-  transition: background 0.12s;
-
-  &:hover {
-    background: var(--bg-secondary);
-  }
-}
-
-.presets-sheet__item-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.presets-sheet__item-check {
-  color: var(--accent-primary);
-  flex-shrink: 0;
-}
-
-.presets-sheet__item-delete {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border: none;
-  border-radius: 50%;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  flex-shrink: 0;
-
-  &:hover {
-    background: color-mix(in srgb, var(--color-danger-deep) 12%, transparent);
-    color: var(--color-danger-deep);
-  }
 }
 
 .presets-sheet__empty {
   font-size: 0.85rem;
   color: var(--text-muted);
-  margin: 0.25rem 0 0.5rem;
+  margin: 0;
 }
 
 .presets-sheet__footer {
   padding: 0.75rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
-  border-top: 1px solid var(--card-border);
+  border-top: 1px solid var(--color-border-subtle);
 }
 
 .presets-sheet__save-btn {
@@ -1704,80 +1476,23 @@
   justify-content: center;
   gap: 0.4rem;
   width: 100%;
+  min-height: 44px;
   padding: 0.85rem 1rem;
-  border: 1px dashed var(--accent-primary);
+  border: 1px dashed var(--color-border-strong);
   border-radius: 0.75rem;
-  background: rgba(108, 99, 255, 0.06);
-  color: var(--accent-primary);
+  background: color-mix(in srgb, var(--text-primary) 4.5%, transparent);
+  color: var(--text-secondary);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 
   &:hover {
-    background: rgba(108, 99, 255, 0.12);
+    background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
   }
 }
-
-// ── Grid Layout Transitions ──────────────────────────────────────────────
-@keyframes fadeSlideUp {
-  0% {
-    opacity: 0;
-    transform: translateY(6px) scale(0.97);
-  }
-  100% {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-app-anime-card {
-  opacity: 0; // Start hidden
-  animation: fadeSlideUp 300ms cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
-  // Stagger items by index (max 20 items delay to avoid huge waits)
-  animation-delay: calc(min(var(--i), 20) * 30ms);
-}
-
-// ── Filter Collapse Transition ────────────────────────────────────────────
-.filter-card__body {
-  // Base state (closed/animating)
-  overflow: hidden;
-  max-height: 0;
-  opacity: 0;
-  transition: max-height 320ms cubic-bezier(0.4, 0, 0.2, 1), opacity 320ms cubic-bezier(0.4, 0, 0.2, 1);
-  
-  &.open {
-    max-height: 2000px; // Large enough to fit content
-    opacity: 1;
-    overflow: visible; // Allow dropdowns
-  }
-
-  &.closed {
-    max-height: 0 !important;
-    opacity: 0;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden;
-  }
-}
-
-
-// ── CSS Animations for Grid ──────────────────────────────────────────────
-@keyframes fadeSlideUp {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-app-anime-card {
-  animation: fadeSlideUp 400ms ease-out both;
-  
-  @for $i from 1 through 20 {
-    &:nth-child(#{$i}) {
-      animation-delay: #{($i * 30)}ms;
-    }
-  }
-}
-
 
 // ─── Table display mode (mode 4) ─────────────────────────────────────────────
 
@@ -1791,6 +1506,9 @@ app-anime-card {
 .anime-table-wrap {
   width: 100%;
   overflow-x: auto;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1rem;
+  background: var(--color-surface-elevated);
 
   @media (max-width: 768px) {
     display: none;
@@ -1804,23 +1522,19 @@ app-anime-card {
   text-align: left;
   font-size: 0.82rem;
 
-  thead tr {
-    border-bottom: 2px solid rgba(108, 99, 255, 0.25);
-  }
-
   th {
     position: sticky;
     top: 0;
     z-index: 10;
-    background: var(--bg-primary);
-    padding: 0.6rem 0.75rem;
-    font-size: 0.7rem;
+    background: var(--color-surface-elevated);
+    padding: 0.65rem 0.75rem;
+    font-size: 0.6875rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.09em;
     color: var(--text-muted);
     white-space: nowrap;
-    border-bottom: 1px solid rgba(108, 99, 255, 0.2);
+    border-bottom: 1px solid var(--color-border-strong);
     overflow: hidden;
     text-overflow: ellipsis;
 
@@ -1859,9 +1573,9 @@ app-anime-card {
   }
 
   td {
-    padding: 0.5rem 0.75rem;
+    padding: 0.55rem 0.75rem;
     vertical-align: middle;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid var(--color-border-subtle);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1879,6 +1593,7 @@ app-anime-card {
       text-align: right;
       color: var(--text-secondary);
       white-space: nowrap;
+      font-variant-numeric: tabular-nums;
     }
 
     &.tbl-td--codecs {
@@ -1900,11 +1615,15 @@ app-anime-card {
 
     // Zebra striping — subtle tint on even rows
     &:nth-child(even) {
-      background: rgba(128, 128, 128, 0.05);
+      background: color-mix(in srgb, var(--text-primary) 3%, transparent);
     }
 
     &:hover {
-      background: rgba(108, 99, 255, 0.08);
+      background: color-mix(in srgb, var(--accent-primary) 7%, transparent);
+    }
+
+    &:last-child td {
+      border-bottom: none;
     }
   }
 
@@ -1925,7 +1644,7 @@ app-anime-card {
   }
 }
 
-// Dense pills for table cells — match card-view colour coding exactly
+// Dense pills for table cells — colour-coded by tag type
 .tbl-pill {
   display: inline-block;
   font-size: 0.62rem;
@@ -1936,36 +1655,37 @@ app-anime-card {
   margin: 1px 2px 1px 0;
   white-space: nowrap;
 
-  // Genres — purple (matches .genre-tag in card view)
+  // Genres — accent
   &--genre {
     background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
-    color: var(--accent-primary);
+    color: color-mix(in srgb, var(--accent-primary) 75%, var(--text-primary));
     border: 1px solid color-mix(in srgb, var(--accent-primary) 22%, transparent);
   }
 
-  // Themes — teal (matches .genre-tag--theme in card view)
+  // Themes — brand
   &--theme {
-    background: color-mix(in srgb, #14b8a6 10%, transparent);
-    color: #14b8a6;
-    border: 1px solid color-mix(in srgb, #14b8a6 25%, transparent);
+    background: color-mix(in srgb, var(--color-brand) 10%, transparent);
+    color: color-mix(in srgb, var(--color-brand) 60%, var(--text-primary));
+    border: 1px solid color-mix(in srgb, var(--color-brand) 25%, transparent);
   }
 
-  // Demographics — amber (matches .genre-tag--demographic in card view)
+  // Demographics — warning
   &--demographic {
     background: color-mix(in srgb, var(--color-warning-deep) 10%, transparent);
-    color: #d97706;
+    color: color-mix(in srgb, var(--color-warning-deep) 45%, var(--text-primary));
     border: 1px solid color-mix(in srgb, var(--color-warning-deep) 25%, transparent);
   }
 
   &--codec {
-    background: rgba(0, 200, 150, 0.12);
-    color: rgba(0, 200, 150, 0.9);
-    border: 1px solid rgba(0, 200, 150, 0.2);
+    background: color-mix(in srgb, var(--color-success-deep) 10%, transparent);
+    color: color-mix(in srgb, var(--color-success-deep) 55%, var(--text-primary));
+    border: 1px solid color-mix(in srgb, var(--color-success-deep) 20%, transparent);
     text-transform: uppercase;
     font-weight: 500;
     margin: 0;
     text-align: center;
     min-width: 0;
+    font-variant-numeric: tabular-nums;
   }
 }
 
@@ -2001,35 +1721,25 @@ app-anime-card {
   gap: 0.5rem;
 }
 
+// Micro label
 .rpp-label {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
-// ── Custom dropdown host (app-ui-select replaces the native <select>) ─────────
-// Wrappers stay as the content-sized slots; min-widths keep the triggers at a
-// stable width now that the trigger sizes to its label instead of the widest option.
-
-.sort-select-wrap {
-  position: relative;
-  display: inline-flex;
-  min-width: 11rem;
-}
-
-.rpp-select-wrap {
-  position: relative;
-  display: inline-flex;
-  min-width: 4.5rem;
-}
+// ─── Table action buttons (provider links) ───────────────────────────────────
 
 .tbl-action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 0.25rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 0.375rem;
   margin: 0 1px;
   opacity: 0.7;
   transition: opacity 0.15s, background 0.15s;
@@ -2037,7 +1747,7 @@ app-anime-card {
 
   &:hover {
     opacity: 1;
-    background: rgba(108, 99, 255, 0.12);
+    background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
   }
 }
 
@@ -2048,10 +1758,7 @@ app-anime-card {
   justify-content: flex-start;
 }
 
-
-
-
-// ─── Table pagination ──────────────────────────────────────────────────────────
+// ─── Table pagination ─────────────────────────────────────────────────────────
 
 .tbl-pagination {
   display: flex;
@@ -2070,27 +1777,28 @@ app-anime-card {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2rem;
-  height: 2rem;
+  min-width: 2.25rem;
+  height: 2.25rem;
   padding: 0 0.5rem;
-  border: 1px solid var(--border-color, #444);
-  border-radius: 4px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 0.5rem;
   background: transparent;
-  color: var(--text-secondary, #aaa);
+  color: var(--text-secondary);
   font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 
   &:hover:not(:disabled) {
-    background: var(--accent-primary, #7c3aed);
-    border-color: var(--accent-primary, #7c3aed);
-    color: #fff;
+    background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
+    border-color: var(--accent-primary);
+    color: color-mix(in srgb, var(--accent-primary) 75%, var(--text-primary));
   }
 
   &--active {
-    background: var(--accent-primary, #7c3aed);
-    border-color: var(--accent-primary, #7c3aed);
-    color: #fff;
+    background: color-mix(in srgb, var(--accent-primary) 16%, transparent);
+    border-color: var(--accent-primary);
+    color: color-mix(in srgb, var(--accent-primary) 75%, var(--text-primary));
     font-weight: 600;
   }
 
@@ -2105,7 +1813,34 @@ app-anime-card {
   align-items: center;
   justify-content: center;
   min-width: 1.5rem;
-  color: var(--text-secondary, #aaa);
+  color: var(--text-muted);
   font-size: 0.8rem;
   pointer-events: none;
+}
+
+
+// --- A11y: keyboard focus ring ----------------------------------------------
+
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+// --- A11y: prefers-reduced-motion -------------------------------------------
+// Entry animations, shimmer/pulse loops and transitions collapse to instant.
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,0 +1,16 @@
+<div class="pill-group">
+  <span class="pill-group__label">{{ labelKey() | translate }}</span>
+  <div class="filter-pills" role="group" [attr.aria-label]="labelKey() | translate">
+    @for (opt of options(); track opt.value) {
+      <button
+        type="button"
+        class="filter-pill"
+        [class.filter-pill--active]="selected().includes(opt.value)"
+        [attr.aria-pressed]="selected().includes(opt.value)"
+        (click)="optionClick.emit(opt.value)"
+      >
+        {{ opt.labelKey | translate }}
+      </button>
+    }
+  </div>
+</div>

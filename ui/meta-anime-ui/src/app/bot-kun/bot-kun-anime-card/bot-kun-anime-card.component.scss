@@ -1,3 +1,5 @@
+// ── Bot-kun anime mini-card — semantic tokens only, no raw colors ─────────────
+
 :host {
   display: block;
   width: 100%;
@@ -14,16 +16,14 @@
   cursor: pointer;
   border-radius: 10px;
   overflow: hidden;
-  background: rgba(108, 99, 255, 0.08);
-  border: 1px solid rgba(157, 148, 255, 0.22);
+  background: color-mix(in srgb, var(--color-brand) 8%, var(--color-surface-elevated));
+  border: 1px solid color-mix(in srgb, var(--color-brand) 28%, transparent);
   transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-  outline: none;
 
-  &:hover,
-  &:focus-visible {
-    background: rgba(108, 99, 255, 0.22);
-    border-color: rgba(157, 148, 255, 0.65);
-    box-shadow: 0 4px 18px rgba(108, 99, 255, 0.35);
+  &:hover {
+    background: color-mix(in srgb, var(--color-brand) 16%, var(--color-surface-elevated));
+    border-color: color-mix(in srgb, var(--color-brand) 55%, transparent);
+    box-shadow: 0 4px 18px color-mix(in srgb, var(--color-brand) 35%, transparent);
     transform: translateY(-2px);
   }
 
@@ -38,7 +38,7 @@
   position: relative;
   width: 72px;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.04);
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
 }
 
 .bot-kun-card__img {
@@ -53,9 +53,9 @@
   height: 100%;
   background: linear-gradient(
     90deg,
-    rgba(157, 148, 255, 0.08) 25%,
-    rgba(157, 148, 255, 0.18) 50%,
-    rgba(157, 148, 255, 0.08) 75%
+    color-mix(in srgb, var(--color-brand) 8%, transparent) 25%,
+    color-mix(in srgb, var(--color-brand) 18%, transparent) 50%,
+    color-mix(in srgb, var(--color-brand) 8%, transparent) 75%
   );
   background-size: 200% 100%;
   animation: botKunCardShimmer 1.4s ease infinite;
@@ -72,18 +72,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(108, 99, 255, 0.15), rgba(157, 148, 255, 0.08));
-  color: rgba(157, 148, 255, 0.5);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-brand) 15%, transparent),
+    color-mix(in srgb, var(--color-brand) 8%, transparent)
+  );
+  color: color-mix(in srgb, var(--color-brand) 55%, transparent);
 }
 
 .bot-kun-card__overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: color-mix(in srgb, var(--color-brand) 55%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--color-surface-elevated);
   opacity: 0;
   transition: opacity 0.18s ease;
 
@@ -110,7 +114,7 @@
   margin: 0;
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--text-primary, #e8e8f0);
+  color: var(--text-primary);
   line-height: 1.3;
   overflow: hidden;
   display: -webkit-box;
@@ -127,7 +131,7 @@
   flex-wrap: wrap;
   gap: 3px;
   font-size: 0.68rem;
-  color: var(--text-secondary, #a8a8c0);
+  color: var(--text-secondary);
   line-height: 1;
 }
 
@@ -138,7 +142,7 @@
 
 .bot-kun-card__type {
   font-weight: 600;
-  color: var(--accent-primary, #9d94ff);
+  color: color-mix(in srgb, var(--accent-primary) 80%, var(--text-primary));
 }
 
 .bot-kun-card__year,
@@ -146,35 +150,18 @@
   opacity: 0.75;
 }
 
-// ── Genre chips ───────────────────────────────────────────────────────────────
+// Numbers align in columns across messages (year, score)
+.bot-kun-card__year,
+.bot-kun-card__score-val {
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Genre chips (app-ui-badge) ─────────────────────────────────────────────────
 
 .bot-kun-card__genres {
   display: flex;
   flex-wrap: wrap;
   gap: 3px;
-}
-
-.bot-kun-card__chip {
-  display: inline-block;
-  font-size: 0.6rem;
-  font-weight: 600;
-  line-height: 1;
-  padding: 2px 5px;
-  border-radius: 4px;
-  background: rgba(157, 148, 255, 0.15);
-  color: rgba(157, 148, 255, 0.9);
-  white-space: nowrap;
-
-  &--more {
-    background: rgba(255, 255, 255, 0.07);
-    color: var(--text-secondary, #a8a8c0);
-  }
-  &--age-rating {
-    background: color-mix(in srgb, var(--color-warning-deep) 14%, transparent);
-    color: var(--color-warning-deep);
-    border: 1px solid color-mix(in srgb, var(--color-warning-deep) 28%, transparent);
-    letter-spacing: 0.04em;
-  }
 }
 
 // ── Star rating ───────────────────────────────────────────────────────────────
@@ -190,11 +177,11 @@
 
   &--full,
   &--half {
-    color: #f5c518; // IMDb-style amber
+    color: var(--color-warning);
   }
 
   &--empty {
-    color: rgba(255, 255, 255, 0.2);
+    color: color-mix(in srgb, var(--text-primary) 20%, transparent);
   }
 }
 
@@ -202,6 +189,28 @@
   margin-left: 4px;
   font-size: 0.68rem;
   font-weight: 600;
-  color: #f5c518;
+  color: var(--color-warning-deep);
   line-height: 1;
+}
+
+// ── A11y: keyboard focus ring (brand) ─────────────────────────────────────────
+
+.bot-kun-card:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+// ── A11y: prefers-reduced-motion ──────────────────────────────────────────────
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
 }

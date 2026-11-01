@@ -1,20 +1,25 @@
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   HostListener,
   OnDestroy,
   OnInit,
+  ViewChild,
   computed,
   effect,
   inject,
   input,
   output,
   signal,
+  untracked,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { FranchiseConstellationService } from '../services/franchise-constellation.service';
 import { PopupService } from '../services/popup.service';
+import { UiCardComponent } from '../shared/ui/ui-card.component';
+import { UiStatePanelComponent } from '../shared/ui/ui-state-panel/ui-state-panel.component';
 import { FranchiseGraph, FranchiseGraphEdge, FranchiseGraphNode } from '../models/anime.models';
 
 // ── Layout constants ──────────────────────────────────────────────────────────
@@ -64,14 +69,13 @@ export interface DisplayEdge {
   selector: 'app-franchise-constellation',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TranslatePipe],
+  imports: [TranslatePipe, UiCardComponent, UiStatePanelComponent],
   templateUrl: './franchise-constellation.component.html',
   styleUrl: './franchise-constellation.component.scss',
 })
-export class FranchiseConstellationComponent implements OnInit, OnDestroy {
+export class FranchiseConstellationComponent implements OnInit, AfterViewInit, OnDestroy {
   protected readonly svc = inject(FranchiseConstellationService);
   private readonly popupService = inject(PopupService);
-  protected readonly translate = inject(TranslateService);
 
   /** Emits the MAL ID of the node the user clicked — parent opens the detail panel. */
   readonly nodeSelected = output<string>();
@@ -80,6 +84,17 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
 
   protected readonly CANVAS_W = CANVAS_W;
   protected readonly CANVAS_H = CANVAS_H;
+
+  /** Close button — receives focus when the overlay opens. */
+  @ViewChild('closeBtn') private closeBtn?: ElementRef<HTMLButtonElement>;
+  /** Mobile legend bottom-sheet — receives focus while open. */
+  @ViewChild('legendSheet') private legendSheet?: ElementRef<HTMLDivElement>;
+  /** Mobile legend toggle button — regains focus when the sheet closes. */
+  @ViewChild('legendToggleBtn') private legendToggleBtn?: ElementRef<HTMLButtonElement>;
+
+  /** Element that was focused before the overlay opened — refocused on close. */
+  private triggerEl: HTMLElement | null = null;
+  private legendFocusTimer: ReturnType<typeof setTimeout> | null = null;
 
   protected translateX = signal(0);
   protected translateY = signal(0);
@@ -162,6 +177,13 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
       .filter((e) => e.d !== '');
   });
 
+  /** Node titles joined for the visually-hidden graph text alternative. */
+  protected readonly nodeListText = computed(() =>
+    this.displayNodes()
+      .map((n) => n.title)
+      .join('; '),
+  );
+
   private isPanning = false;
   private panStartX = 0;
   private panStartY = 0;
@@ -180,56 +202,61 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     // Triggered on every BFS graph update. New nodes are placed; existing nodes
     // (including manually-dragged ones) are NOT moved. Camera auto-fits after
     // every placement so no card is ever off-screen.
+    // The whole placement pass is untracked so the layout rebuilds ONLY when the
+    // graph data changes — the per-node render drain and manual drags must never
+    // retrigger it.
     effect(() => {
       const g = this.svc.graph();
       if (!g) return;
 
-      const { positions: newPositions, layoutInfo } = this._computeSnakePositions(g);
+      untracked(() => {
+        const { positions: newPositions, layoutInfo } = this._computeSnakePositions(g);
 
-      // Replace all auto-layout positions so that column shifts caused by newly-
-      // discovered prequels are reflected immediately (prevents coordinate sharing).
-      // Manually-dragged nodes are the only exception — their positions are preserved.
-      let merged: Map<string, { x: number; y: number }> | undefined;
-      this.nodePositions.update((current) => {
-        const m = new Map<string, { x: number; y: number }>();
-        // Preserve manually-dragged positions as-is
-        for (const malId of this.manuallyDraggedIds) {
-          const p = current.get(malId);
-          if (p) m.set(malId, p);
-        }
-        // Apply fresh computed positions for every auto-layout node
-        for (const [malId, pos] of newPositions) {
-          if (!this.manuallyDraggedIds.has(malId)) {
-            m.set(malId, pos);
+        // Replace all auto-layout positions so that column shifts caused by newly-
+        // discovered prequels are reflected immediately (prevents coordinate sharing).
+        // Manually-dragged nodes are the only exception — their positions are preserved.
+        let merged: Map<string, { x: number; y: number }> | undefined;
+        this.nodePositions.update((current) => {
+          const m = new Map<string, { x: number; y: number }>();
+          // Preserve manually-dragged positions as-is
+          for (const malId of this.manuallyDraggedIds) {
+            const p = current.get(malId);
+            if (p) m.set(malId, p);
+          }
+          // Apply fresh computed positions for every auto-layout node
+          for (const [malId, pos] of newPositions) {
+            if (!this.manuallyDraggedIds.has(malId)) {
+              m.set(malId, pos);
+            }
+          }
+          merged = m;
+          return m;
+        });
+
+        // Update layout metadata for all nodes (including manual ones keep old meta)
+        this.layoutMeta.update((current) => {
+          const m = new Map<string, LayoutMeta>(current);
+          for (const [malId, info] of layoutInfo) {
+            m.set(malId, info);
+          }
+          return m;
+        });
+
+        // Auto-fit camera after every node arrival (pass data to avoid
+        // reading the just-written signal and creating a re-entrant effect).
+        if (merged) this._fitCameraToNodes(merged, g);
+
+        // Queue any newly arrived nodes for sequential visual rendering.
+        // Nodes already visible or already queued are skipped (deduplication).
+        const alreadyQueued = new Set(this._renderQueue);
+        const visible = this.visibleNodeIds();
+        for (const node of g.nodes) {
+          if (!visible.has(node.malId) && !alreadyQueued.has(node.malId)) {
+            this._renderQueue.push(node.malId);
           }
         }
-        merged = m;
-        return m;
+        this._startRenderDrain();
       });
-
-      // Update layout metadata for all nodes (including manual ones keep old meta)
-      this.layoutMeta.update((current) => {
-        const m = new Map<string, LayoutMeta>(current);
-        for (const [malId, info] of layoutInfo) {
-          m.set(malId, info);
-        }
-        return m;
-      });
-
-      // Auto-fit camera after every node arrival (pass data to avoid
-      // reading the just-written signal and creating a re-entrant effect).
-      if (merged) this._fitCameraToNodes(merged, g);
-
-      // Queue any newly arrived nodes for sequential visual rendering.
-      // Nodes already visible or already queued are skipped (deduplication).
-      const alreadyQueued = new Set(this._renderQueue);
-      const visible = this.visibleNodeIds();
-      for (const node of g.nodes) {
-        if (!visible.has(node.malId) && !alreadyQueued.has(node.malId)) {
-          this._renderQueue.push(node.malId);
-        }
-      }
-      this._startRenderDrain();
     });
 
     // When a new franchise is opened (graph resets to null), clear all local state.
@@ -249,21 +276,35 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Remember the trigger so focus can be restored when the overlay closes.
+    const active = document.activeElement;
+    this.triggerEl = active instanceof HTMLElement ? active : null;
     this.popupService.franchiseConstellationOpen.set(true);
+  }
+
+  ngAfterViewInit(): void {
+    // Dialog focus management: move focus to the close button on open.
+    this.closeBtn?.nativeElement.focus();
   }
 
   ngOnDestroy(): void {
     this._stopRenderDrain();
+    if (this.legendFocusTimer !== null) {
+      clearTimeout(this.legendFocusTimer);
+      this.legendFocusTimer = null;
+    }
     // F13: explicitly clear the queue reference so any captured closures can be GC'd
     this._renderQueue.length = 0;
     this.popupService.franchiseConstellationOpen.set(false);
+    // Dialog focus management: restore focus to the element that opened the overlay.
+    this.triggerEl?.focus();
   }
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
     if (this.detailPanelOpen()) return; // let the detail panel handle its own escape
     if (this.legendOpen()) {
-      this.legendOpen.set(false);
+      this.toggleLegend();
     } else {
       this.svc.close();
     }
@@ -286,8 +327,38 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     this.svc.close();
   }
 
+  /**
+   * Re-runs the mapping from the error state. The service exposes no retry
+   * entry point, so the activation gesture that opened the overlay is replayed:
+   * `open()` is re-entered with the original root parameters and restarts the
+   * BFS from scratch. Falls back to closing when no trigger element survived.
+   */
+  retry(): void {
+    if (this.triggerEl) {
+      this.triggerEl.click();
+      return;
+    }
+    this.svc.close();
+  }
+
   toggleLegend(): void {
-    this.legendOpen.update((v) => !v);
+    const opening = !this.legendOpen();
+    this.legendOpen.set(opening);
+    if (opening) {
+      // Sheet is rendered on the next change-detection pass — focus after it lands.
+      this.legendFocusTimer = setTimeout(() => {
+        this.legendFocusTimer = null;
+        this.legendSheet?.nativeElement.focus();
+      }, 0);
+    } else {
+      this.legendToggleBtn?.nativeElement.focus();
+    }
+  }
+
+  /** Keyboard activation for graph nodes: Enter/Space select, Space must not scroll. */
+  activateNode(event: Event, malId: string): void {
+    event.preventDefault();
+    this.nodeSelected.emit(malId);
   }
 
   onPointerDown(event: PointerEvent): void {
@@ -379,13 +450,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ── Quick Look modal (removed) ────────────────────────────────────────────
-  // Node clicks now emit nodeSelected output; parent opens the detail panel.
-
-  openMalPage(malId: string): void {
-    window.open(`https://myanimelist.net/anime/${malId}`, '_blank', 'noopener,noreferrer');
-  }
-
   protected get rootTitle(): string | undefined {
     return this.svc.graph()?.nodes.find((n) => n.isRoot)?.title;
   }
@@ -399,14 +463,6 @@ export class FranchiseConstellationComponent implements OnInit, OnDestroy {
   protected mediaTypeClass(mediaType: string | undefined, prefix = 'node-card-inner'): string {
     if (!mediaType) return '';
     return `${prefix}--${mediaType.toLowerCase().replace(/\s+/g, '_')}`;
-  }
-
-  /** Formats an ISO date string for display; returns the i18n "N/A" fallback when absent or invalid. */
-  protected formatDateOrUnknown(rawDate: string | undefined): string {
-    if (!rawDate) return this.translate.instant('franchise.quickLook.unknownDate');
-    const d = new Date(rawDate);
-    if (isNaN(d.getTime())) return rawDate;
-    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
   /** Starts draining the render queue if not already running. */

@@ -6,6 +6,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideTranslateService } from '@ngx-translate/core';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { AnimeListComponent } from './anime-list.component';
+import { UserPreferencesService } from '../services/user-preferences.service';
 import { AnimeDetailsResponse, PagedResponse } from '../models/anime.models';
 
 const emptyResponse: PagedResponse<AnimeDetailsResponse> = {
@@ -91,7 +92,8 @@ describe('AnimeListComponent', () => {
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelectorAll('.anime-name-item').length).toBe(0);
-    const emptyMsg = compiled.querySelector('p.text-muted');
+    // Empty state now renders through app-ui-state-panel (icon + heading + subtext + CTA)
+    const emptyMsg = compiled.querySelector('app-ui-state-panel .ui-state-panel__title');
     expect(emptyMsg).toBeTruthy();
   });
 
@@ -197,25 +199,30 @@ describe('AnimeListComponent', () => {
   });
 
   // ── Preset persistence tests ─────────────────────────────────────────────
+  // NOTE: filter persistence runs through UserPreferencesService (server property
+  // bag; localStorage only as legacy migration source), so these tests capture
+  // the snapshot handed to saveLastFilters instead of reading localStorage.
 
   it('should include activePresetName in saved filter snapshot when a preset is active', () => {
+    let saved: string | null = null;
+    comp.userPrefs.saveLastFilters = (json: string) => { saved = json; };
     comp.activePresetName.set('My Preset');
     comp.search();
     httpMock.expectOne((r) => r.url.includes('/api/v1/animes')).flush(emptyResponse);
 
-    const raw = localStorage.getItem('meta-anime:lastUsedFilters');
-    expect(raw).toBeTruthy();
-    const snapshot = JSON.parse(raw!);
+    expect(saved).toBeTruthy();
+    const snapshot = JSON.parse(saved!);
     expect(snapshot.activePresetName).toBe('My Preset');
   });
 
   it('should not include activePresetName in saved snapshot when no preset is active', () => {
+    let saved: string | null = null;
+    comp.userPrefs.saveLastFilters = (json: string) => { saved = json; };
     comp.activePresetName.set(null);
     comp.search();
     httpMock.expectOne((r) => r.url.includes('/api/v1/animes')).flush(emptyResponse);
 
-    const raw = localStorage.getItem('meta-anime:lastUsedFilters');
-    const snapshot = JSON.parse(raw!);
+    const snapshot = JSON.parse(saved!);
     expect(snapshot.activePresetName).toBeUndefined();
   });
 
@@ -223,14 +230,14 @@ describe('AnimeListComponent', () => {
     // The restore logic runs in the constructor, which already ran in beforeEach.
     // Verify instead by directly testing that snapshotFilters() includes the preset name
     // (the round-trip: save → restore → save again would carry the preset name through).
+    let saved: string | null = null;
+    comp.userPrefs.saveLastFilters = (json: string) => { saved = json; };
     comp.activePresetName.set('Saved Preset');
     comp.search();
     httpMock.expectOne((r) => r.url.includes('/api/v1/animes')).flush(emptyResponse);
 
-    // Simulate what the constructor reads back on next init
-    const raw = localStorage.getItem('meta-anime:lastUsedFilters')!;
-    const snapshot = JSON.parse(raw);
     // The restored value matches what was saved
+    const snapshot = JSON.parse(saved!);
     expect(snapshot.activePresetName).toBe('Saved Preset');
   });
 
@@ -307,6 +314,12 @@ describe('AnimeListComponent – constructor restore of activePresetName', () =>
   });
 
   it('should bind activePresetName from localStorage during construction', () => {
+    // The constructor restores through UserPreferencesService (auto-apply +
+    // loadLastFilters); stub it the way an already-loaded service behaves.
+    const prefs = TestBed.inject(UserPreferencesService);
+    prefs.autoApplyLastFilters.set(true);
+    prefs.loadLastFilters = () => JSON.stringify({ activePresetName: 'Constructor Preset' });
+
     const fixture2 = TestBed.createComponent(AnimeListComponent);
     const comp2 = fixture2.componentInstance;
 

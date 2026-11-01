@@ -203,7 +203,11 @@
           <th [class]="'la-th--' + col.key"
               [class.la-th--sortable]="col.sortable"
               [class.la-th--sorted]="filters().sortCol === col.key"
-              (click)="col.sortable && toggleSort(col.key)">
+              [attr.aria-sort]="col.sortable ? (filters().sortCol === col.key ? (filters().sortDir === 'asc' ? 'ascending' : 'descending') : 'none') : null"
+              [attr.tabindex]="col.sortable ? 0 : null"
+              (click)="col.sortable && toggleSort(col.key)"
+              (keydown.enter)="col.sortable && toggleSort(col.key)"
+              (keydown.space)="$event.preventDefault(); col.sortable && toggleSort(col.key)">
             {{ col.label | translate }}
             @if (filters().sortCol === col.key) {
               <span class="la-sort-arrow">{{ filters().sortDir === 'asc' ? '▲' : '▼' }}</span>
@@ -214,7 +218,7 @@
     </thead>
     <tbody>
       @for (row of pagedRows(); track row.sonarrId) {
-        <tr class="la-row" (click)="rowClicked.emit(row)">
+        <tr class="la-row" tabindex="0" (click)="rowClicked.emit(row)" (keydown.enter)="rowClicked.emit(row)">
           <!-- Title -->
           <td class="la-td--title">{{ row.title }}</td>
 
@@ -324,11 +328,11 @@
 
 <!-- ─── Pagination ─────────────────────────────────────────────────────────── -->
 @if (totalPages() > 1) {
-  <nav class="la-pagination" aria-label="Table pagination">
+  <nav class="la-pagination" [attr.aria-label]="'library.table.paginationNav' | translate">
     <button class="la-page-btn"
             [disabled]="filters().page <= 1"
             (click)="goToPage(filters().page - 1)"
-            aria-label="Previous page">
+            [attr.aria-label]="'library.table.prevPage' | translate">
       ‹
     </button>
 
@@ -338,6 +342,7 @@
       } @else {
         <button class="la-page-btn"
                 [class.la-page-btn--active]="filters().page === p"
+                [attr.aria-current]="filters().page === p ? 'page' : null"
                 (click)="goToPage(p)">
           {{ p }}
         </button>
@@ -347,7 +352,7 @@
     <button class="la-page-btn"
             [disabled]="filters().page >= totalPages()"
             (click)="goToPage(filters().page + 1)"
-            aria-label="Next page">
+            [attr.aria-label]="'library.table.nextPage' | translate">
       ›
     </button>
   </nav>

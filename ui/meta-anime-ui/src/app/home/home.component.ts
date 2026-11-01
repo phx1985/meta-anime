@@ -10,12 +10,23 @@ import { CountUpDirective } from '../directives/count-up.directive';
 import { ProviderStateService } from '../services/provider-state.service';
 import { AnimeImageGalleryComponent } from '../anime-image-gallery/anime-image-gallery.component';
 import { ActivityStatsComponent } from './activity-stats/activity-stats.component';
+import { UiCardComponent } from '../shared/ui/ui-card.component';
+import { UiStatePanelComponent } from '../shared/ui/ui-state-panel/ui-state-panel.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, GenreChartComponent, MissingStatsComponent, CountUpDirective, AnimeImageGalleryComponent, ActivityStatsComponent],
+  imports: [
+    TranslatePipe,
+    GenreChartComponent,
+    MissingStatsComponent,
+    CountUpDirective,
+    AnimeImageGalleryComponent,
+    ActivityStatsComponent,
+    UiCardComponent,
+    UiStatePanelComponent,
+  ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
@@ -26,6 +37,8 @@ export class HomeComponent {
   readonly providerState = inject(ProviderStateService);
 
   stats = signal<AnimeStatisticsResponse | null>(null);
+  /** True when the statistics request failed — drives the error state + retry. */
+  readonly loadError = signal(false);
 
   /** Array used to render floating particles via @for in the template */
   readonly particles = Array.from({ length: 14 });
@@ -44,6 +57,9 @@ export class HomeComponent {
     }
   });
 
+  /** Skeleton card placeholders matching the visible counter-card geometry. */
+  readonly skeletonCards = computed(() => Array.from({ length: this.visibleProviderCount() }));
+
   constructor() {
     this.loadStats();
 
@@ -58,13 +74,22 @@ export class HomeComponent {
 
   private loadStats(resetFirst = false): void {
     if (resetFirst) this.stats.set(null);
+    this.loadError.set(false);
     this.animeService
       .getStatistics()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (data) => this.stats.set(data),
-        error: () => this.stats.set(null),
+        error: () => {
+          this.stats.set(null);
+          this.loadError.set(true);
+        },
       });
+  }
+
+  /** Retry handler for the error state. */
+  retryStats(): void {
+    this.loadStats();
   }
 
   onGapCountDecremented(gapType: string): void {

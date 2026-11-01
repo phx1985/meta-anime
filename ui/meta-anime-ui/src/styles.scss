@@ -5,7 +5,7 @@
   --bg-secondary: #e9ecf1;
   --text-primary: #2c2d3e;
   --text-secondary: #4a5568;
-  --text-muted: #8896aa;
+  --text-muted: #63718a;
   --accent-primary: #6c63ff;
   --navbar-bg: rgba(240, 237, 255, 0.93);
   --navbar-border: rgba(0, 0, 0, 0.08);
@@ -45,12 +45,20 @@
   --color-border-strong: var(--navbar-border);
 }
 
+/* Overlay depth shadow — dropdowns/popovers/menus. Depth base is --card-shadow
+   (dark in dark theme, soft grey in light); never a --text-primary mix, which
+   casts a bright white glow in dark theme. Defined once — resolves per theme. */
+:root {
+  --shadow-overlay: 0 8px 24px color-mix(in srgb, var(--card-shadow) 85%, transparent),
+    0 2px 6px color-mix(in srgb, var(--card-shadow) 55%, transparent);
+}
+
 [data-theme='dark'] {
   --bg-primary: #0f0f1a;
   --bg-secondary: #1a1a2e;
   --text-primary: #e8e8f0;
   --text-secondary: #a8a8c0;
-  --text-muted: #6c6c88;
+  --text-muted: #8787a4;
   --accent-primary: #9d94ff;
   --navbar-bg: rgba(15, 15, 26, 0.92);
   --navbar-border: rgba(255, 255, 255, 0.06);

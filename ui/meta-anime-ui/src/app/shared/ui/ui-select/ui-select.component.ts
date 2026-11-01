@@ -38,7 +38,7 @@ export interface UiSelectOption {
 export class UiSelectComponent implements OnDestroy {
   private readonly host = inject(ElementRef<HTMLElement>);
 
-  readonly options = input<UiSelectOption[]>([]);
+  readonly options = input<readonly UiSelectOption[]>([]);
   readonly value = input<string | number>('');
   readonly placeholder = input<string>('');
   /** Compact variant for dense toolbars (rows-per-page, match-mode op). */

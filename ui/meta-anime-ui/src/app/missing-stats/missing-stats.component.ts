@@ -4,12 +4,13 @@ import { AnimeStatisticsResponse } from '../models/anime.models';
 import { CountUpDirective } from '../directives/count-up.directive';
 import { GapDetailModalComponent } from '../gap-detail-modal/gap-detail-modal.component';
 import { ProviderStateService } from '../services/provider-state.service';
+import { UiCardComponent } from '../shared/ui/ui-card.component';
 
 @Component({
   selector: 'app-missing-stats',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, CountUpDirective, GapDetailModalComponent],
+  imports: [TranslatePipe, CountUpDirective, GapDetailModalComponent, UiCardComponent],
   templateUrl: './missing-stats.component.html',
   styleUrl: './missing-stats.component.scss',
 })

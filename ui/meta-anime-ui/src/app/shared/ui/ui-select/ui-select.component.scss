@@ -33,6 +33,11 @@
 
   &:focus {
     outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
     border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent);
   }
 
@@ -87,9 +92,7 @@
   border: 1px solid var(--color-border-strong);
   border-radius: 8px;
   background: var(--color-surface-elevated);
-  box-shadow:
-    0 20px 32px rgba(0, 0, 0, 0.45),
-    0 6px 12px rgba(0, 0, 0, 0.35); // shadow-2xl equivalent
+  box-shadow: var(--shadow-overlay); // shared overlay depth — no white glow in dark theme
   padding: 4px;
   scrollbar-width: thin;
 }
@@ -117,11 +120,11 @@
   }
 
   &--selected {
-    color: var(--color-brand);
+    color: color-mix(in srgb, var(--color-brand) 60%, var(--text-primary));
     background: color-mix(in srgb, var(--color-brand) 10%, transparent);
 
     &:hover {
-      color: var(--color-brand);
+      color: color-mix(in srgb, var(--color-brand) 60%, var(--text-primary));
       background: color-mix(in srgb, var(--color-brand) 14%, transparent);
     }
   }
@@ -138,4 +141,31 @@
   flex-shrink: 0;
   width: 14px;
   height: 14px;
+}
+
+
+// --- A11y: keyboard focus ring ----------------------------------------------
+
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+// --- A11y: prefers-reduced-motion -------------------------------------------
+// Entry animations, shimmer/pulse loops and transitions collapse to instant.
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
 }

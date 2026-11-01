@@ -471,13 +471,18 @@ export class DetailPanelComponent {
     return this.normCodec(codec) === 'HEVC';
   }
 
-  /** Segment colors: H264 amber, HEVC emerald, AV1 indigo, others slate. */
+  /**
+   * Segment colors: H264 amber, HEVC emerald, AV1 indigo, others slate.
+   * Values are semantic CSS custom-property references — they render
+   * theme-reactive wherever bound (bar segments, legend labels) and keep
+   * raw hex literals out of the component.
+   */
   protected codecColor(codec: string | undefined | null): string {
     switch (this.normCodec(codec)) {
-      case 'H264': return '#f59e0b';
-      case 'HEVC': return '#22c55e';
-      case 'AV1':  return '#7c6cf0';
-      default:     return '#64748b';
+      case 'H264': return 'var(--color-warning-deep)';
+      case 'HEVC': return 'var(--color-success-deep)';
+      case 'AV1':  return 'var(--accent-primary)';
+      default:     return 'var(--text-muted)';
     }
   }
 }

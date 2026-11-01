@@ -7,13 +7,14 @@
     </div>
 
     <!-- ── Filter card ──────────────────────────────────────────────────── -->
-    <div class="filter-card mb-4">
+    <div class="filter-card mb-4" role="search" [attr.aria-label]="'animeList.filter.title' | translate">
       <!-- Card header — always visible, toggles body -->
       <div
         class="filter-card__header"
         (click)="toggleFilterPanel()"
         role="button"
         [attr.aria-expanded]="filterOpen()"
+        aria-controls="filter-card-body"
         [attr.aria-label]="
           (filterOpen() ? 'animeList.filter.collapseFilters' : 'animeList.filter.expandFilters')
             | translate
@@ -89,16 +90,20 @@
           [class.filter-chevron--open]="filterOpen()"
           width="16"
           height="16"
-          viewBox="0 0 16 16"
-          fill="currentColor"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
           aria-hidden="true"
         >
-          <path d="M4 6l4 4 4-4" />
+          <path d="M6 9l6 6 6-6" />
         </svg>
       </div>
 
       <!-- Collapsible body (desktop accordion; hidden on mobile via CSS) -->
-      <div class="filter-card__body" [class.open]="filterOpen()" [class.closed]="!filterOpen()">
+      <div class="filter-card__body" id="filter-card-body" [class.open]="filterOpen()" [class.closed]="!filterOpen()">
         <ng-container *ngTemplateOutlet="filterBodyTpl"></ng-container>
       </div>
     </div>
@@ -124,69 +129,37 @@
                 <span class="btn-presets-mobile__count">{{ presetService.builtInPresets.length + savedPresets().length }}</span>
               }
             </button>
-            <div class="presets-bar__chips" role="list">
-              @for (p of presetService.builtInPresets; track p.id) {
-                <button
-                  type="button"
-                  class="preset-chip preset-chip--builtin"
-                  role="listitem"
-                  [attr.aria-label]="p.labelKey | translate"
-                  (click)="applyPreset(p)"
-                >
-                  {{ p.labelKey | translate }}
-                </button>
-              }
+            <div class="presets-bar__chips">
+              <app-ui-preset-chips
+                [presets]="presetService.builtInPresets"
+                [activeName]="activePresetName()"
+                [deleteLabel]="'animeList.presets.delete' | translate"
+                (apply)="applyPreset($event)"
+                (delete)="deletePreset($event.id, $event.event)"
+              />
               @if (savedPresets().length > 0) {
                 <span class="presets-bar__sep" aria-hidden="true"></span>
-                @for (p of savedPresets(); track p.id) {
-                  <button
-                    type="button"
-                    class="preset-chip preset-chip--saved"
-                    role="listitem"
-                    [attr.aria-label]="p.labelKey"
-                    (click)="applyPreset(p)"
-                  >
-                    {{ p.labelKey }}
-                    <span
-                      class="preset-chip__delete"
-                      role="button"
-                      [attr.aria-label]="'animeList.presets.delete' | translate"
-                      (click)="deletePreset(p.id, $event)"
-                    >
-                      <svg
-                        width="8"
-                        height="8"
-                        viewBox="0 0 16 16"
-                        fill="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M2 2l12 12M14 2L2 14"
-                          stroke="currentColor"
-                          stroke-width="2.5"
-                          stroke-linecap="round"
-                        />
-                      </svg>
-                    </span>
-                  </button>
-                }
+                <app-ui-preset-chips
+                  [presets]="savedPresets()"
+                  [activeName]="activePresetName()"
+                  [deleteLabel]="'animeList.presets.delete' | translate"
+                  (apply)="applyPreset($event)"
+                  (delete)="deletePreset($event.id, $event.event)"
+                />
               }
             </div>
             <button type="button" class="btn-save-preset" (click)="openSavePreset()">
               <svg
                 width="12"
                 height="12"
-                viewBox="0 0 16 16"
-                fill="currentColor"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
                 aria-hidden="true"
               >
-                <path
-                  d="M8 2v12M2 8h12"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  fill="none"
-                />
+                <path d="M12 5v14M5 12h14" />
               </svg>
               {{ 'animeList.presets.saveAs' | translate }}
             </button>
@@ -228,24 +201,15 @@
                 class="search-icon"
                 width="14"
                 height="14"
-                viewBox="0 0 16 16"
-                fill="currentColor"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
                 aria-hidden="true"
               >
-                <circle
-                  cx="6.5"
-                  cy="6.5"
-                  r="4.5"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  fill="none"
-                />
-                <path
-                  d="M10 10l3.5 3.5"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                />
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3.6-3.6" />
               </svg>
               <input
                 id="filterTitle"
@@ -264,12 +228,20 @@
             <!-- Genre -->
             <div class="filter-field">
               <div class="filter-label-row">
-                <span class="filter-label">{{ 'animeList.filter.genre' | translate }}</span>
+                <span class="filter-label">
+                  <svg class="filter-label__icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+                    <line x1="7" y1="7" x2="7.01" y2="7"/>
+                  </svg>
+                  {{ 'animeList.filter.genre' | translate }}
+                </span>
                 @if (filterGenre().length > 1) {
-                  <div class="operator-toggle" role="radiogroup">
+                  <div class="operator-toggle" role="radiogroup" [attr.aria-label]="'animeList.filter.genreOperator' | translate">
                     <button
                       type="button"
                       class="op-btn"
+                      role="radio"
+                      [attr.aria-checked]="genreOperator === 'or'"
                       [class.op-btn--active]="genreOperator === 'or'"
                       (click)="genreOperator = 'or'; invalidatePreset()"
                     >
@@ -278,6 +250,8 @@
                     <button
                       type="button"
                       class="op-btn"
+                      role="radio"
+                      [attr.aria-checked]="genreOperator === 'and'"
                       [class.op-btn--active]="genreOperator === 'and'"
                       (click)="genreOperator = 'and'; invalidatePreset()"
                     >
@@ -291,6 +265,9 @@
                 class="fp-trigger"
                 [class.fp-trigger--has-value]="filterGenre().length > 0"
                 [class.fp-trigger--open]="genreDropdownOpen"
+                aria-haspopup="dialog"
+                [attr.aria-expanded]="genreDropdownOpen"
+                [attr.aria-controls]="genreDropdownOpen ? 'fp-popover-dialog' : null"
                 (click)="toggleGenreDropdown($event)"
               >
                 <span class="fp-trigger__text">
@@ -301,18 +278,18 @@
                   }
                 </span>
                 @if (filterGenre().length > 0) {
-                  <button type="button" class="fp-trigger__clear" (click)="clearGenres($event)">
+                  <button type="button" class="fp-trigger__clear" [attr.aria-label]="'animeList.filter.clear' | translate" (click)="clearGenres($event)">
                     <svg
                       width="9"
                       height="9"
-                      viewBox="0 0 16 16"
+                      viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       stroke-width="2"
                       stroke-linecap="round"
                       aria-hidden="true"
                     >
-                      <path d="M2 2l12 12M14 2L2 14" />
+                      <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
                   </button>
                 }
@@ -321,17 +298,15 @@
                   [class.fp-trigger__chevron--open]="genreDropdownOpen"
                   width="12"
                   height="12"
-                  viewBox="0 0 16 16"
+                  viewBox="0 0 24 24"
                   fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
                   aria-hidden="true"
                 >
-                  <path
-                    d="M4 6l4 4 4-4"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
+                  <path d="M6 9l6 6 6-6" />
                 </svg>
               </button>
             </div>
@@ -339,12 +314,20 @@
             <!-- Theme -->
             <div class="filter-field">
               <div class="filter-label-row">
-                <span class="filter-label">{{ 'animeList.filter.theme' | translate }}</span>
+                <span class="filter-label">
+                  <svg class="filter-label__icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/>
+                    <path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15z"/>
+                  </svg>
+                  {{ 'animeList.filter.theme' | translate }}
+                </span>
                 @if (filterTheme().length > 1) {
-                  <div class="operator-toggle" role="radiogroup">
+                  <div class="operator-toggle" role="radiogroup" [attr.aria-label]="'animeList.filter.themeOperator' | translate">
                     <button
                       type="button"
                       class="op-btn"
+                      role="radio"
+                      [attr.aria-checked]="themeOperator === 'or'"
                       [class.op-btn--active]="themeOperator === 'or'"
                       (click)="themeOperator = 'or'; invalidatePreset()"
                     >
@@ -353,6 +336,8 @@
                     <button
                       type="button"
                       class="op-btn"
+                      role="radio"
+                      [attr.aria-checked]="themeOperator === 'and'"
                       [class.op-btn--active]="themeOperator === 'and'"
                       (click)="themeOperator = 'and'; invalidatePreset()"
                     >
@@ -366,6 +351,9 @@
                 class="fp-trigger"
                 [class.fp-trigger--has-value]="filterTheme().length > 0"
                 [class.fp-trigger--open]="themeDropdownOpen"
+                aria-haspopup="dialog"
+                [attr.aria-expanded]="themeDropdownOpen"
+                [attr.aria-controls]="themeDropdownOpen ? 'fp-popover-dialog' : null"
                 (click)="toggleThemeDropdown($event)"
               >
                 <span class="fp-trigger__text">
@@ -376,18 +364,18 @@
                   }
                 </span>
                 @if (filterTheme().length > 0) {
-                  <button type="button" class="fp-trigger__clear" (click)="clearThemes($event)">
+                  <button type="button" class="fp-trigger__clear" [attr.aria-label]="'animeList.filter.clear' | translate" (click)="clearThemes($event)">
                     <svg
                       width="9"
                       height="9"
-                      viewBox="0 0 16 16"
+                      viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       stroke-width="2"
                       stroke-linecap="round"
                       aria-hidden="true"
                     >
-                      <path d="M2 2l12 12M14 2L2 14" />
+                      <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
                   </button>
                 }
@@ -396,17 +384,15 @@
                   [class.fp-trigger__chevron--open]="themeDropdownOpen"
                   width="12"
                   height="12"
-                  viewBox="0 0 16 16"
+                  viewBox="0 0 24 24"
                   fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
                   aria-hidden="true"
                 >
-                  <path
-                    d="M4 6l4 4 4-4"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
+                  <path d="M6 9l6 6 6-6" />
                 </svg>
               </button>
             </div>
@@ -414,12 +400,22 @@
             <!-- Demographic -->
             <div class="filter-field">
               <div class="filter-label-row">
-                <span class="filter-label">{{ 'animeList.filter.demographic' | translate }}</span>
+                <span class="filter-label">
+                  <svg class="filter-label__icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                  {{ 'animeList.filter.demographic' | translate }}
+                </span>
                 @if (filterDemographic().length > 1) {
-                  <div class="operator-toggle" role="radiogroup">
+                  <div class="operator-toggle" role="radiogroup" [attr.aria-label]="'animeList.filter.demographicOperator' | translate">
                     <button
                       type="button"
                       class="op-btn"
+                      role="radio"
+                      [attr.aria-checked]="demographicOperator === 'or'"
                       [class.op-btn--active]="demographicOperator === 'or'"
                       (click)="demographicOperator = 'or'; invalidatePreset()"
                     >
@@ -428,6 +424,8 @@
                     <button
                       type="button"
                       class="op-btn"
+                      role="radio"
+                      [attr.aria-checked]="demographicOperator === 'and'"
                       [class.op-btn--active]="demographicOperator === 'and'"
                       (click)="demographicOperator = 'and'; invalidatePreset()"
                     >
@@ -441,6 +439,9 @@
                 class="fp-trigger"
                 [class.fp-trigger--has-value]="filterDemographic().length > 0"
                 [class.fp-trigger--open]="demographicDropdownOpen"
+                aria-haspopup="dialog"
+                [attr.aria-expanded]="demographicDropdownOpen"
+                [attr.aria-controls]="demographicDropdownOpen ? 'fp-popover-dialog' : null"
                 (click)="toggleDemographicDropdown($event)"
               >
                 <span class="fp-trigger__text">
@@ -454,19 +455,20 @@
                   <button
                     type="button"
                     class="fp-trigger__clear"
+                    [attr.aria-label]="'animeList.filter.clear' | translate"
                     (click)="clearDemographics($event)"
                   >
                     <svg
                       width="9"
                       height="9"
-                      viewBox="0 0 16 16"
+                      viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       stroke-width="2"
                       stroke-linecap="round"
                       aria-hidden="true"
                     >
-                      <path d="M2 2l12 12M14 2L2 14" />
+                      <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
                   </button>
                 }
@@ -475,137 +477,71 @@
                   [class.fp-trigger__chevron--open]="demographicDropdownOpen"
                   width="12"
                   height="12"
-                  viewBox="0 0 16 16"
+                  viewBox="0 0 24 24"
                   fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
                   aria-hidden="true"
                 >
-                  <path
-                    d="M4 6l4 4 4-4"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
+                  <path d="M6 9l6 6 6-6" />
                 </svg>
               </button>
             </div>
 
             <!-- Watch status -->
-            <div class="filter-field filter-field--pills">
-              <span class="filter-label">{{ 'animeList.filter.watchState' | translate }}</span>
-              <div class="filter-pills">
-                @for (s of watchingStates; track s.value) {
-                  <button
-                    type="button"
-                    class="filter-pill"
-                    [class.filter-pill--active]="filterWatchState.includes(s.value)"
-                    (click)="filterWatchState = togglePill(filterWatchState, s.value); invalidatePreset()"
-                  >
-                    {{ s.labelKey | translate }}
-                  </button>
-                }
-              </div>
-            </div>
+            <app-ui-pill-group
+              labelKey="animeList.filter.watchState"
+              [options]="watchingStates"
+              [selected]="filterWatchState"
+              (optionClick)="filterWatchState = togglePill(filterWatchState, $event); invalidatePreset()"
+            />
 
             <!-- Airing status -->
-            <div class="filter-field filter-field--pills">
-              <span class="filter-label">{{ 'animeList.filter.airingStatus' | translate }}</span>
-              <div class="filter-pills">
-                @for (s of airingStates; track s.value) {
-                  <button
-                    type="button"
-                    class="filter-pill"
-                    [class.filter-pill--active]="filterAiringStatus.includes(s.value)"
-                    (click)="filterAiringStatus = togglePill(filterAiringStatus, s.value); invalidatePreset()"
-                  >
-                    {{ s.labelKey | translate }}
-                  </button>
-                }
-              </div>
-            </div>
+            <app-ui-pill-group
+              labelKey="animeList.filter.airingStatus"
+              [options]="airingStates"
+              [selected]="filterAiringStatus"
+              (optionClick)="filterAiringStatus = togglePill(filterAiringStatus, $event); invalidatePreset()"
+            />
 
             <!-- Media type -->
-            <div class="filter-field filter-field--pills">
-              <span class="filter-label">{{ 'animeList.filter.mediaType' | translate }}</span>
-              <div class="filter-pills">
-                @for (t of mediaTypeOptions; track t.value) {
-                  <button
-                    type="button"
-                    class="filter-pill"
-                    [class.filter-pill--active]="filterMediaType.includes(t.value)"
-                    (click)="filterMediaType = togglePill(filterMediaType, t.value); invalidatePreset()"
-                  >
-                    {{ t.labelKey | translate }}
-                  </button>
-                }
-              </div>
-            </div>
+            <app-ui-pill-group
+              labelKey="animeList.filter.mediaType"
+              [options]="mediaTypeOptions"
+              [selected]="filterMediaType"
+              (optionClick)="filterMediaType = togglePill(filterMediaType, $event); invalidatePreset()"
+            />
 
             <!-- Age Rating -->
-            <div class="filter-field filter-field--pills">
-              <span class="filter-label">{{ 'animeList.filter.ageRating' | translate }}</span>
-              <div class="filter-pills">
-                @for (r of ratingOptions; track r.value) {
-                  <button
-                    type="button"
-                    class="filter-pill"
-                    [class.filter-pill--active]="filterAgeRating().includes(r.value)"
-                    (click)="filterAgeRating.set(togglePill(filterAgeRating(), r.value)); invalidatePreset()"
-                  >
-                    {{ r.labelKey | translate }}
-                  </button>
-                }
-              </div>
-            </div>
+            <app-ui-pill-group
+              labelKey="animeList.filter.ageRating"
+              [options]="ratingOptions"
+              [selected]="filterAgeRating()"
+              (optionClick)="filterAgeRating.set(togglePill(filterAgeRating(), $event)); invalidatePreset()"
+            />
 
             <!-- Codec (Sonarr-only filter, Table view only) -->
             @if (providerState.sonarrEnabled() && displayMode() === 4) {
-              <div class="filter-field filter-field--pills">
-                <span class="filter-label">{{ 'animeList.filter.codec' | translate }}</span>
-                <div class="filter-pills">
-                  @for (c of codecOptions; track c.value) {
-                    <button
-                      type="button"
-                      class="filter-pill"
-                      [class.filter-pill--active]="filterCodec.includes(c.value)"
-                      (click)="filterCodec = togglePill(filterCodec, c.value); invalidatePreset()"
-                    >
-                      {{ c.labelKey | translate }}
-                    </button>
-                  }
-                </div>
-              </div>
+              <app-ui-pill-group
+                labelKey="animeList.filter.codec"
+                [options]="codecOptions"
+                [selected]="filterCodec"
+                (optionClick)="filterCodec = togglePill(filterCodec, $event); invalidatePreset()"
+              />
 
               <!-- Has file (Sonarr-only filter) -->
-              <div class="filter-field filter-field--pills">
-                <span class="filter-label">{{ 'animeList.filter.hasFile' | translate }}</span>
-                <div class="filter-pills">
-                  <button
-                    type="button"
-                    class="filter-pill"
-                    [class.filter-pill--active]="filterHasFile === 'any'"
-                    (click)="filterHasFile = 'any'; invalidatePreset()"
-                  >
-                    {{ 'animeList.filter.any' | translate }}
-                  </button>
-                  <button
-                    type="button"
-                    class="filter-pill"
-                    [class.filter-pill--active]="filterHasFile === 'yes'"
-                    (click)="filterHasFile = 'yes'; invalidatePreset()"
-                  >
-                    {{ 'animeList.filter.hasFileYes' | translate }}
-                  </button>
-                  <button
-                    type="button"
-                    class="filter-pill"
-                    [class.filter-pill--active]="filterHasFile === 'no'"
-                    (click)="filterHasFile = 'no'; invalidatePreset()"
-                  >
-                    {{ 'animeList.filter.hasFileNo' | translate }}
-                  </button>
-                </div>
-              </div>
+              <app-ui-pill-group
+                labelKey="animeList.filter.hasFile"
+                [options]="[
+                  { value: 'any', labelKey: 'animeList.filter.any' },
+                  { value: 'yes', labelKey: 'animeList.filter.hasFileYes' },
+                  { value: 'no', labelKey: 'animeList.filter.hasFileNo' }
+                ]"
+                [selected]="[filterHasFile]"
+                (optionClick)="filterHasFile = $any($event); invalidatePreset()"
+              />
             }
           </div>
 
@@ -613,8 +549,13 @@
           <div class="filter-footer">
             <div class="filter-footer__left">
               <div class="filter-field filter-field--compact">
-                <span class="filter-label">{{ 'animeList.sort.by' | translate }}</span>
-                <div class="d-flex align-items-center gap-2">
+                <span class="filter-label">
+                  <svg class="filter-label__icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M3 6h18M6 12h12M10 18h4"/>
+                  </svg>
+                  {{ 'animeList.sort.by' | translate }}
+                </span>
+                <div class="sort-controls">
                   <div class="sort-select-wrap">
                     <app-ui-select
                       [options]="sortSelectOptions()"
@@ -634,28 +575,44 @@
                       <svg
                         width="14"
                         height="14"
-                        viewBox="0 0 16 16"
-                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
                         aria-hidden="true"
                       >
-                        <path d="M3 12l5-8 5 8H3z" />
+                        <path d="M12 19V5M5 12l7-7 7 7" />
                       </svg>
                     } @else {
                       <svg
                         width="14"
                         height="14"
-                        viewBox="0 0 16 16"
-                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
                         aria-hidden="true"
                       >
-                        <path d="M3 4l5 8 5-8H3z" />
+                        <path d="M12 5v14M5 12l7 7 7-7" />
                       </svg>
                     }
                   </button>
                 </div>
               </div>
               <div class="filter-field filter-field--compact filter-field--display-mode">
-                <span class="filter-label">{{ 'animeList.displayMode' | translate }}</span>
+                <span class="filter-label">
+                  <svg class="filter-label__icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                  </svg>
+                  {{ 'animeList.displayMode' | translate }}
+                </span>
                 <div
                   class="display-mode-toggle"
                   role="group"
@@ -749,25 +706,16 @@
                 <svg
                   width="14"
                   height="14"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
                   aria-hidden="true"
                 >
-                  <path
-                    d="M13.5 2.5A7 7 0 1 0 15 8"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    fill="none"
-                  />
-                  <path
-                    d="M11 1l2.5 1.5L12 5"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    fill="none"
-                  />
+                  <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                  <path d="M3 3v5h5" />
                 </svg>
                 {{ 'animeList.filter.reset' | translate }}
               </button>
@@ -775,24 +723,16 @@
                 <svg
                   width="14"
                   height="14"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
                   aria-hidden="true"
                 >
-                  <circle
-                    cx="6.5"
-                    cy="6.5"
-                    r="4.5"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    fill="none"
-                  />
-                  <path
-                    d="M10 10l3.5 3.5"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                  />
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M20 20l-3.6-3.6" />
                 </svg>
                 {{ 'animeList.filter.search' | translate }}
               </button>
@@ -803,51 +743,121 @@
     <!-- ── /Filter card ─────────────────────────────────────────────────── -->
 
     @if (!searched()) {
-      <div class="search-prompt d-flex flex-column align-items-center py-5">
+      <div class="search-prompt">
         <svg
           width="48"
           height="48"
           viewBox="0 0 64 64"
           fill="none"
           aria-hidden="true"
-          class="search-prompt__icon mb-3"
+          class="search-prompt__icon"
         >
           <circle
             cx="28"
             cy="28"
             r="18"
-            stroke="var(--accent-primary)"
+            stroke="currentColor"
             stroke-width="3"
             opacity="0.6"
           />
           <path
             d="M42 42l12 12"
-            stroke="var(--accent-primary)"
+            stroke="currentColor"
             stroke-width="3"
             stroke-linecap="round"
             opacity="0.6"
           />
         </svg>
-        <p class="search-prompt__text text-muted">{{ 'animeList.filter.prompt' | translate }}</p>
+        <p class="search-prompt__text">{{ 'animeList.filter.prompt' | translate }}</p>
       </div>
     } @else if (loading()) {
-      <div class="d-flex justify-content-center py-5">
-        <div class="spinner-border" role="status">
+      @if (displayMode() === 4) {
+        <!-- Structural skeleton matching the table geometry -->
+        <div class="skeleton-table" role="status" aria-busy="true">
           <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+          <div class="skeleton-table__row skeleton-table__row--head">
+            @for (w of ['27%', '20%', '11%', '7%', '9%', '10%', '10%', '8%']; track $index) {
+              <div class="skeleton-table__cell" [style.width]="w">
+                <div class="skeleton-bar skeleton-bar--sm"></div>
+              </div>
+            }
+          </div>
+          @for (r of [1, 2, 3, 4, 5, 6, 7, 8]; track r) {
+            <div class="skeleton-table__row">
+              <div class="skeleton-table__cell"><div class="skeleton-bar skeleton-bar--title"></div></div>
+              <div class="skeleton-table__cell"><div class="skeleton-bar"></div></div>
+              <div class="skeleton-table__cell"><div class="skeleton-bar"></div></div>
+              <div class="skeleton-table__cell"><div class="skeleton-bar skeleton-bar--sm"></div></div>
+              <div class="skeleton-table__cell"><div class="skeleton-bar skeleton-bar--sm"></div></div>
+              <div class="skeleton-table__cell"><div class="skeleton-bar skeleton-bar--sm"></div></div>
+              <div class="skeleton-table__cell"><div class="skeleton-bar skeleton-bar--sm"></div></div>
+              <div class="skeleton-table__cell"><div class="skeleton-bar skeleton-bar--sm"></div></div>
+            </div>
+          }
         </div>
-      </div>
+      } @else {
+        <!-- Structural skeleton matching the card grid geometry -->
+        <div class="anime-grid" [class]="'cols-' + displayMode()" role="status" aria-busy="true">
+          <span class="visually-hidden">{{ 'common.loading' | translate }}</span>
+          @for (s of [1, 2, 3, 4, 5, 6]; track s) {
+            <div class="skeleton-card">
+              <div class="skeleton-card__cover"></div>
+              <div class="skeleton-card__body">
+                <div class="skeleton-bar skeleton-bar--title"></div>
+                <div class="skeleton-bar skeleton-bar--sub"></div>
+                <div class="skeleton-card__pills">
+                  <div class="skeleton-bar skeleton-bar--pill"></div>
+                  <div class="skeleton-bar skeleton-bar--pill"></div>
+                  <div class="skeleton-bar skeleton-bar--pill"></div>
+                </div>
+                <div class="skeleton-bar"></div>
+                <div class="skeleton-bar"></div>
+                <div class="skeleton-bar skeleton-bar--sub"></div>
+                <div class="skeleton-card__meta">
+                  <div class="skeleton-bar skeleton-bar--dot"></div>
+                  <div class="skeleton-bar skeleton-bar--dot"></div>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
     } @else if (error()) {
-      <div class="alert alert-danger" role="alert">{{ 'animeList.error' | translate }}</div>
+      <app-ui-state-panel
+        variant="error"
+        [heading]="'animeList.error' | translate"
+        [subtext]="'animeList.errorSubtext' | translate"
+        [actionLabel]="'common.retry' | translate"
+        (action)="retrySearch()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </app-ui-state-panel>
     } @else if (animes().length === 0) {
-      <p class="text-muted">{{ 'animeList.empty' | translate }}</p>
+      <app-ui-state-panel
+        [heading]="'animeList.empty' | translate"
+        [subtext]="'animeList.emptySubtext' | translate"
+        [actionLabel]="'animeList.filter.reset' | translate"
+        (action)="reset()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="M20 20l-3.6-3.6"/>
+          <path d="M8.5 8.5l5 5M13.5 8.5l-5 5"/>
+        </svg>
+      </app-ui-state-panel>
     } @else {
+      <section class="results-section" aria-labelledby="results-heading">
       <div class="results-bar mb-3">
-        <p class="anime-total-count mb-0">
+        <h2 class="anime-total-count" id="results-heading" aria-live="polite">
           {{ 'animeList.totalCount' | translate: { count: totalCount() } }}
           @if (searchElapsedMs() !== null) {
             <span class="elapsed-time">({{ searchElapsedMs() }}ms)</span>
           }
-        </p>
+        </h2>
         <div class="provider-legend" aria-hidden="true">
           <span class="legend-item">
             <span class="legend-dot legend-dot--mal"></span>
@@ -869,10 +879,11 @@
       </div>
 
       @if (displayMode() !== 4) {
-        <div class="anime-grid" [class]="'cols-' + displayMode()">
+        <div class="anime-grid" [class]="'cols-' + displayMode()" role="list" [attr.aria-busy]="loadingMore() ? 'true' : null">
           @for (anime of animes(); track anime.aniDbId; let isFirst = $first; let i = $index) {
             <app-anime-card
               #animeCard
+              role="listitem"
               [anime]="anime"
               [showOnboardingHint]="isFirst && cardHintActive()"
               (onboardingDismissed)="dismissCardHint()"
@@ -881,6 +892,10 @@
             />
           }
         </div>
+        <!-- Announces infinite-scroll appends to screen readers -->
+        <p class="visually-hidden" role="status" aria-live="polite">
+          {{ 'animeList.totalCount' | translate: { count: animes().length } }}
+        </p>
       }
 
       @if (displayMode() === 4) {
@@ -936,41 +951,61 @@
           <table class="anime-table">
             <thead>
               <tr>
-                <th class="tbl-th--title tbl-th--sortable" (click)="sortTable('title')">
+                <th class="tbl-th--title tbl-th--sortable" scope="col" tabindex="0"
+                    [attr.aria-sort]="tableSortCol() === 'title' ? (tableSortDir() === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    (click)="sortTable('title')"
+                    (keydown.enter)="sortTable('title')"
+                    (keydown.space)="$event.preventDefault(); sortTable('title')">
                   {{ 'animeList.table.col.title' | translate }}
                   @if (tableSortCol() === 'title') {
                     <span class="tbl-sort-arrow">{{ tableSortDir() === 'asc' ? '↑' : '↓' }}</span>
                   }
                 </th>
-                <th class="tbl-th--tags">{{ 'animeList.table.col.tags' | translate }}</th>
-                <th class="tbl-th--codecs">{{ 'animeList.table.col.codecs' | translate }}</th>
-                <th class="tbl-th--episodes tbl-th--sortable tbl-th--num" (click)="sortTable('episodes')">
+                <th class="tbl-th--tags" scope="col">{{ 'animeList.table.col.tags' | translate }}</th>
+                <th class="tbl-th--codecs" scope="col">{{ 'animeList.table.col.codecs' | translate }}</th>
+                <th class="tbl-th--episodes tbl-th--sortable tbl-th--num" scope="col" tabindex="0"
+                    [attr.aria-sort]="tableSortCol() === 'episodes' ? (tableSortDir() === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    (click)="sortTable('episodes')"
+                    (keydown.enter)="sortTable('episodes')"
+                    (keydown.space)="$event.preventDefault(); sortTable('episodes')">
                   {{ 'animeList.table.col.episodes' | translate }}
                   @if (tableSortCol() === 'episodes') {
                     <span class="tbl-sort-arrow">{{ tableSortDir() === 'asc' ? '↑' : '↓' }}</span>
                   }
                 </th>
-                <th class="tbl-th--size tbl-th--sortable tbl-th--num" (click)="sortTable('size')">
+                <th class="tbl-th--size tbl-th--sortable tbl-th--num" scope="col" tabindex="0"
+                    [attr.aria-sort]="tableSortCol() === 'size' ? (tableSortDir() === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    (click)="sortTable('size')"
+                    (keydown.enter)="sortTable('size')"
+                    (keydown.space)="$event.preventDefault(); sortTable('size')">
                   {{ 'animeList.table.col.size' | translate }}
                   @if (tableSortCol() === 'size') {
                     <span class="tbl-sort-arrow">{{ tableSortDir() === 'asc' ? '↑' : '↓' }}</span>
                   }
                 </th>
-                <th class="tbl-th--avgsize tbl-th--sortable tbl-th--num" (click)="sortTable('avgsize')">
+                <th class="tbl-th--avgsize tbl-th--sortable tbl-th--num" scope="col" tabindex="0"
+                    [attr.aria-sort]="tableSortCol() === 'avgsize' ? (tableSortDir() === 'asc' ? 'ascending' : 'descending') : 'none'"
+                    (click)="sortTable('avgsize')"
+                    (keydown.enter)="sortTable('avgsize')"
+                    (keydown.space)="$event.preventDefault(); sortTable('avgsize')">
                   {{ 'animeList.table.col.avgEpSize' | translate }}
                   @if (tableSortCol() === 'avgsize') {
                     <span class="tbl-sort-arrow">{{ tableSortDir() === 'asc' ? '↑' : '↓' }}</span>
                   }
                 </th>
                 @if (providerState.sonarrEnabled()) {
-                <th class="tbl-th--added tbl-th--sortable" (click)="sortTable('added')">
+                <th class="tbl-th--added tbl-th--sortable" scope="col" tabindex="0"
+                  [attr.aria-sort]="tableSortCol() === 'added' ? (tableSortDir() === 'asc' ? 'ascending' : 'descending') : 'none'"
+                  (click)="sortTable('added')"
+                  (keydown.enter)="sortTable('added')"
+                  (keydown.space)="$event.preventDefault(); sortTable('added')">
                   {{ 'animeList.table.col.added' | translate }}
                   @if (tableSortCol() === 'added') {
                     <span class="tbl-sort-arrow">{{ tableSortDir() === 'asc' ? '↑' : '↓' }}</span>
                   }
                 </th>
                 }
-                <th class="tbl-th--actions">{{ 'animeList.table.col.actions' | translate }}</th>
+                <th class="tbl-th--actions" scope="col">{{ 'animeList.table.col.actions' | translate }}</th>
               </tr>
             </thead>
             <tbody>
@@ -1088,18 +1123,18 @@
       }
 
       @if (displayMode() !== 4 && loadingMore()) {
-        <div class="d-flex justify-content-center py-4">
-          <div class="spinner-border spinner-border-sm" role="status">
-            <span class="visually-hidden">{{ 'animeList.loadingMore' | translate }}</span>
-          </div>
+        <div class="loading-more-strip" role="status" aria-busy="true">
+          <span class="visually-hidden">{{ 'animeList.loadingMore' | translate }}</span>
+          <div class="loading-more-strip__bar"></div>
         </div>
       }
 
       @if (displayMode() !== 4 && allLoaded() && animes().length > 0) {
-        <p class="anime-end-message text-center text-muted py-4">
+        <p class="anime-end-message">
           {{ 'animeList.endOfResults' | translate }}
         </p>
       }
+      </section>
     }
   </div>
 </div>
@@ -1108,9 +1143,11 @@
 @if (filterOpen()) {
   <div class="mobile-filter-backdrop" (click)="filterOpen.set(false)" aria-hidden="true"></div>
   <div
+    #filterSheet
     class="mobile-filter-sheet"
     role="dialog"
     aria-modal="true"
+    tabindex="-1"
     [attr.aria-label]="'animeList.filter.title' | translate"
   >
     <div class="mobile-filter-sheet__handle" aria-hidden="true"></div>
@@ -1132,26 +1169,26 @@
 <!-- ── Presets bottom sheet (mobile) ───────────────────────────────────── -->
 @if (presetsSheetOpen()) {
   <div class="presets-sheet-backdrop" (click)="presetsSheetOpen.set(false)" role="dialog" aria-modal="true" [attr.aria-label]="'animeList.presets.label' | translate">
-    <div class="presets-sheet" (click)="$event.stopPropagation()">
+    <div #presetsSheet class="presets-sheet" tabindex="-1" (click)="$event.stopPropagation()">
       <div class="presets-sheet__handle" aria-hidden="true"></div>
       <div class="presets-sheet__header">
         <span class="presets-sheet__title">{{ 'animeList.presets.label' | translate }}</span>
         <button type="button" class="presets-sheet__close" (click)="presetsSheetOpen.set(false)" [attr.aria-label]="'nav.disabledModal.close' | translate">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
 
       <!-- Built-in presets -->
       <div class="presets-sheet__section">
         <span class="presets-sheet__section-label">{{ 'animeList.presets.suggestions' | translate }}</span>
-        @for (p of presetService.builtInPresets; track p.id) {
-          <button type="button" class="presets-sheet__item" (click)="applyPreset(p)">
-            <span class="presets-sheet__item-name">{{ p.labelKey | translate }}</span>
-            @if (activePresetName() === (p.labelKey | translate)) {
-              <svg class="presets-sheet__item-check" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M2 8l4 4 8-8"/></svg>
-            }
-          </button>
-        }
+        <app-ui-preset-chips
+          [presets]="presetService.builtInPresets"
+          [activeName]="activePresetName()"
+          [showCheck]="true"
+          [deleteLabel]="'animeList.presets.delete' | translate"
+          (apply)="applyPreset($event)"
+          (delete)="deletePreset($event.id, $event.event)"
+        />
       </div>
 
       <!-- Custom presets -->
@@ -1160,23 +1197,20 @@
         @if (savedPresets().length === 0) {
           <p class="presets-sheet__empty">{{ 'animeList.presets.noPresets' | translate }}</p>
         }
-        @for (p of savedPresets(); track p.id) {
-          <button type="button" class="presets-sheet__item" (click)="applyPreset(p)">
-            <span class="presets-sheet__item-name">{{ p.labelKey }}</span>
-            @if (activePresetName() === p.labelKey) {
-              <svg class="presets-sheet__item-check" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M2 8l4 4 8-8"/></svg>
-            }
-            <button type="button" class="presets-sheet__item-delete" (click)="deletePreset(p.id, $event)" [attr.aria-label]="'animeList.presets.delete' | translate">
-              <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l12 12M14 2L2 14"/></svg>
-            </button>
-          </button>
-        }
+        <app-ui-preset-chips
+          [presets]="savedPresets()"
+          [activeName]="activePresetName()"
+          [showCheck]="true"
+          [deleteLabel]="'animeList.presets.delete' | translate"
+          (apply)="applyPreset($event)"
+          (delete)="deletePreset($event.id, $event.event)"
+        />
       </div>
 
       <!-- Save current filters as preset -->
       <div class="presets-sheet__footer">
         <button type="button" class="presets-sheet__save-btn" (click)="openSavePreset()">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 2v12M2 8h12"/></svg>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           {{ 'animeList.presets.saveAs' | translate }}
         </button>
       </div>
@@ -1187,314 +1221,66 @@
 <!-- ── Genre / Theme / Demographic filter popups (fixed overlay — never clipped) ─── -->
 
 @if (genreDropdownOpen) {
-  <div class="fp-backdrop" (click)="genreDropdownOpen = false" role="dialog" aria-modal="true">
-    <div class="fp-popup" (click)="$event.stopPropagation()">
-      <div class="fp-popup__header">
-        <span class="fp-popup__title">{{ 'animeList.filter.genre' | translate }}</span>
-        @if (filterGenre().length > 1) {
-          <div class="fp-popup__ops">
-            <button
-              type="button"
-              class="op-btn"
-              [class.op-btn--active]="genreOperator === 'or'"
-              (click)="genreOperator = 'or'; invalidatePreset()"
-            >
-              OR
-            </button>
-            <button
-              type="button"
-              class="op-btn"
-              [class.op-btn--active]="genreOperator === 'and'"
-              (click)="genreOperator = 'and'; invalidatePreset()"
-            >
-              AND
-            </button>
-          </div>
-        }
-        <button
-          type="button"
-          class="fp-popup__close"
-          (click)="genreDropdownOpen = false"
-          [attr.aria-label]="'common.close' | translate"
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          >
-            <path d="M2 2l12 12M14 2L2 14" />
-          </svg>
-        </button>
-      </div>
-      <div class="fp-popup__search">
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 16 16"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          aria-hidden="true"
-        >
-          <circle cx="6.5" cy="6.5" r="4.5" />
-          <path d="M10 10l3 3" stroke-linecap="round" />
-        </svg>
-        <input
-          class="fp-popup__search-input"
-          type="search"
-          [(ngModel)]="genreSearch"
-          placeholder="Filter..."
-          autocomplete="off"
-        />
-        @if (genreSearch) {
-          <button type="button" class="fp-popup__search-clear" (click)="genreSearch = ''">
-            <svg
-              width="9"
-              height="9"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            >
-              <path d="M2 2l12 12M14 2L2 14" />
-            </svg>
-          </button>
-        }
-      </div>
-      <div class="fp-popup__body" role="listbox" aria-multiselectable="true">
-        @for (item of sortedGenreList(); track item.key) {
-          @if (
-            !genreSearch ||
-            item.label.toLowerCase().includes(genreSearch.toLowerCase()) ||
-            item.key.toLowerCase().includes(genreSearch.toLowerCase())
-          ) {
-            <button
-              type="button"
-              class="fp-option"
-              [class.fp-option--selected]="filterGenre().includes(item.key)"
-              [class.fp-option--nsfw]="item.nsfw"
-              role="option"
-              [attr.aria-selected]="filterGenre().includes(item.key)"
-              (click)="toggleGenre(item.key, $event)"
-            >
-              {{ item.label }}
-            </button>
-          }
-        }
-      </div>
-      <div class="fp-popup__footer">
-        @if (filterGenre().length > 0) {
-          <button type="button" class="fp-popup__clear-all" (click)="clearGenres($event)">
-            {{ 'animeList.filter.clear' | translate }} ({{ filterGenre().length }})
-          </button>
-        }
-        <button type="button" class="fp-popup__done" (click)="genreDropdownOpen = false">
-          Done
-        </button>
-      </div>
-    </div>
-  </div>
+  <app-ui-fp-popover
+    [title]="'animeList.filter.genre' | translate"
+    [items]="sortedGenreList()"
+    [selected]="filterGenre()"
+    [search]="genreSearch"
+    [searchable]="true"
+    [operator]="genreOperator"
+    [showOperator]="filterGenre().length > 1"
+    [searchPlaceholder]="'animeList.filter.filterPlaceholder' | translate"
+    [clearLabel]="'animeList.filter.clear' | translate"
+    [doneLabel]="'animeList.filter.done' | translate"
+    [closeLabel]="'common.close' | translate"
+    (closed)="genreDropdownOpen = false"
+    (searchChange)="genreSearch = $event"
+    (itemToggle)="toggleGenre($event.key, $event.event)"
+    (clearAll)="clearGenres($event)"
+    (operatorChange)="genreOperator = $event; invalidatePreset()"
+  />
 }
 
 @if (themeDropdownOpen) {
-  <div class="fp-backdrop" (click)="themeDropdownOpen = false" role="dialog" aria-modal="true">
-    <div class="fp-popup fp-popup--theme" (click)="$event.stopPropagation()">
-      <div class="fp-popup__header">
-        <span class="fp-popup__title">{{ 'animeList.filter.theme' | translate }}</span>
-        @if (filterTheme().length > 1) {
-          <div class="fp-popup__ops">
-            <button
-              type="button"
-              class="op-btn"
-              [class.op-btn--active]="themeOperator === 'or'"
-              (click)="themeOperator = 'or'; invalidatePreset()"
-            >
-              OR
-            </button>
-            <button
-              type="button"
-              class="op-btn"
-              [class.op-btn--active]="themeOperator === 'and'"
-              (click)="themeOperator = 'and'; invalidatePreset()"
-            >
-              AND
-            </button>
-          </div>
-        }
-        <button
-          type="button"
-          class="fp-popup__close"
-          (click)="themeDropdownOpen = false"
-          [attr.aria-label]="'common.close' | translate"
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          >
-            <path d="M2 2l12 12M14 2L2 14" />
-          </svg>
-        </button>
-      </div>
-      <div class="fp-popup__search">
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 16 16"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          aria-hidden="true"
-        >
-          <circle cx="6.5" cy="6.5" r="4.5" />
-          <path d="M10 10l3 3" stroke-linecap="round" />
-        </svg>
-        <input
-          class="fp-popup__search-input"
-          type="search"
-          [(ngModel)]="themeSearch"
-          placeholder="Filter..."
-          autocomplete="off"
-        />
-        @if (themeSearch) {
-          <button type="button" class="fp-popup__search-clear" (click)="themeSearch = ''">
-            <svg
-              width="9"
-              height="9"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            >
-              <path d="M2 2l12 12M14 2L2 14" />
-            </svg>
-          </button>
-        }
-      </div>
-      <div class="fp-popup__body" role="listbox" aria-multiselectable="true">
-        @for (item of sortedThemeList(); track item.key) {
-          @if (
-            !themeSearch ||
-            item.label.toLowerCase().includes(themeSearch.toLowerCase()) ||
-            item.key.toLowerCase().includes(themeSearch.toLowerCase())
-          ) {
-            <button
-              type="button"
-              class="fp-option"
-              [class.fp-option--selected]="filterTheme().includes(item.key)"
-              [class.fp-option--nsfw]="item.nsfw"
-              role="option"
-              [attr.aria-selected]="filterTheme().includes(item.key)"
-              (click)="toggleTheme(item.key, $event)"
-            >
-              {{ item.label }}
-            </button>
-          }
-        }
-      </div>
-      <div class="fp-popup__footer">
-        @if (filterTheme().length > 0) {
-          <button type="button" class="fp-popup__clear-all" (click)="clearThemes($event)">
-            {{ 'animeList.filter.clear' | translate }} ({{ filterTheme().length }})
-          </button>
-        }
-        <button type="button" class="fp-popup__done" (click)="themeDropdownOpen = false">
-          Done
-        </button>
-      </div>
-    </div>
-  </div>
+  <app-ui-fp-popover
+    [title]="'animeList.filter.theme' | translate"
+    [items]="sortedThemeList()"
+    [selected]="filterTheme()"
+    [search]="themeSearch"
+    [searchable]="true"
+    [operator]="themeOperator"
+    [showOperator]="filterTheme().length > 1"
+    [searchPlaceholder]="'animeList.filter.filterPlaceholder' | translate"
+    [clearLabel]="'animeList.filter.clear' | translate"
+    [doneLabel]="'animeList.filter.done' | translate"
+    [closeLabel]="'common.close' | translate"
+    (closed)="themeDropdownOpen = false"
+    (searchChange)="themeSearch = $event"
+    (itemToggle)="toggleTheme($event.key, $event.event)"
+    (clearAll)="clearThemes($event)"
+    (operatorChange)="themeOperator = $event; invalidatePreset()"
+  />
 }
 
 @if (demographicDropdownOpen) {
-  <div
-    class="fp-backdrop"
-    (click)="demographicDropdownOpen = false"
-    role="dialog"
-    aria-modal="true"
-  >
-    <div class="fp-popup fp-popup--demographic" (click)="$event.stopPropagation()">
-      <div class="fp-popup__header">
-        <span class="fp-popup__title">{{ 'animeList.filter.demographic' | translate }}</span>
-        @if (filterDemographic().length > 1) {
-          <div class="fp-popup__ops">
-            <button
-              type="button"
-              class="op-btn"
-              [class.op-btn--active]="demographicOperator === 'or'"
-              (click)="demographicOperator = 'or'; invalidatePreset()"
-            >
-              OR
-            </button>
-            <button
-              type="button"
-              class="op-btn"
-              [class.op-btn--active]="demographicOperator === 'and'"
-              (click)="demographicOperator = 'and'; invalidatePreset()"
-            >
-              AND
-            </button>
-          </div>
-        }
-        <button
-          type="button"
-          class="fp-popup__close"
-          (click)="demographicDropdownOpen = false"
-          [attr.aria-label]="'common.close' | translate"
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          >
-            <path d="M2 2l12 12M14 2L2 14" />
-          </svg>
-        </button>
-      </div>
-      <div
-        class="fp-popup__body fp-popup__body--no-search"
-        role="listbox"
-        aria-multiselectable="true"
-      >
-        @for (item of sortedDemographicList(); track item.key) {
-          <button
-            type="button"
-            class="fp-option"
-            [class.fp-option--selected]="filterDemographic().includes(item.key)"
-            role="option"
-            [attr.aria-selected]="filterDemographic().includes(item.key)"
-            (click)="toggleDemographic(item.key, $event)"
-          >
-            {{ item.label }}
-          </button>
-        }
-      </div>
-      <div class="fp-popup__footer">
-        @if (filterDemographic().length > 0) {
-          <button type="button" class="fp-popup__clear-all" (click)="clearDemographics($event)">
-            {{ 'animeList.filter.clear' | translate }} ({{ filterDemographic().length }})
-          </button>
-        }
-        <button type="button" class="fp-popup__done" (click)="demographicDropdownOpen = false">
-          Done
-        </button>
-      </div>
-    </div>
-  </div>
+  <app-ui-fp-popover
+    [title]="'animeList.filter.demographic' | translate"
+    [items]="sortedDemographicList()"
+    [selected]="filterDemographic()"
+    [search]="demographicSearch"
+    [searchable]="false"
+    [operator]="demographicOperator"
+    [showOperator]="filterDemographic().length > 1"
+    [searchPlaceholder]="'animeList.filter.filterPlaceholder' | translate"
+    [clearLabel]="'animeList.filter.clear' | translate"
+    [doneLabel]="'animeList.filter.done' | translate"
+    [closeLabel]="'common.close' | translate"
+    (closed)="demographicDropdownOpen = false"
+    (searchChange)="demographicSearch = $event"
+    (itemToggle)="toggleDemographic($event.key, $event.event)"
+    (clearAll)="clearDemographics($event)"
+    (operatorChange)="demographicOperator = $event; invalidatePreset()"
+  />
 }
 
 <app-anime-detail-panel

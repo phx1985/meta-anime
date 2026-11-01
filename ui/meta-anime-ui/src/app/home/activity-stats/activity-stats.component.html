@@ -1,15 +1,20 @@
 @if (isVisible()) {
-  <div class="activity-card">
+  <app-ui-card class="activity-card" padding="24px 28px 28px">
     <!-- Header row -->
     <div class="activity-card__header">
-      <span class="activity-card__title"><svg class="activity-card__title-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>{{ 'home.activityStats.title' | translate }}</span>
+      <h2 class="activity-card__title"><svg class="activity-card__title-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>{{ 'home.activityStats.title' | translate }}</h2>
       <div class="activity-card__controls">
         <div class="period-tabs" role="tablist">
           @for (p of periods; track p.key) {
             <button
+              #periodTab
               class="period-tab"
               [class.period-tab--active]="selectedPeriod() === p.key"
+              [attr.id]="'activity-tab-' + p.key"
+              [attr.tabindex]="selectedPeriod() === p.key ? 0 : -1"
+              [attr.aria-controls]="'activity-period-panel'"
               (click)="selectPeriod(p.key)"
+              (keydown)="onTabKeydown($event, $index)"
               role="tab"
               [attr.aria-selected]="selectedPeriod() === p.key"
             >
@@ -37,8 +42,21 @@
       </div>
     </div>
 
+    <!-- Period-controlled content -->
+    <div
+      class="activity-card__panel"
+      id="activity-period-panel"
+      role="tabpanel"
+      [attr.aria-labelledby]="'activity-tab-' + selectedPeriod()"
+      tabindex="0"
+    >
+
     <!-- Stat tiles -->
-    <div class="activity-card__tiles">
+    <div
+      class="activity-card__tiles"
+      aria-live="polite"
+      [attr.aria-busy]="loading() || refreshing()"
+    >
 
       @if (providerState.sonarrEnabled()) {
         <!-- Downloads -->
@@ -81,8 +99,25 @@
 
     </div>
 
+    <!-- Error container + functional retry -->
+    @if (loadError() && !loading()) {
+      <app-ui-state-panel
+        variant="error"
+        [heading]="'home.activityStats.error.title' | translate"
+        [subtext]="'home.activityStats.error.sub' | translate"
+        [actionLabel]="'common.retry' | translate"
+        (action)="retryFetch()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 9v4" />
+          <path d="M12 17h.01" />
+          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        </svg>
+      </app-ui-state-panel>
+    }
+
     <!-- Last updated timestamp (always shown once data is loaded) -->
-    <div class="activity-card__last-updated">
+    <div class="activity-card__last-updated" aria-live="polite">
       @if (lastUpdated()) {
         {{ 'home.activityStats.lastUpdated' | translate: { value: lastUpdated() } }}
       } @else {
@@ -105,5 +140,6 @@
         </div>
       </div>
     }
-  </div>
+    </div>
+  </app-ui-card>
 }

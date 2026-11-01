@@ -13,6 +13,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeService } from '../../services/anime.service';
 import { AnimeDetailsResponse } from '../../models/anime.models';
+import { UiBadgeComponent } from '../../shared/ui/ui-badge.component';
 
 type LuckyCardState = 'rolling' | 'loaded' | 'error';
 
@@ -20,7 +21,7 @@ type LuckyCardState = 'rolling' | 'loaded' | 'error';
   selector: 'app-feeling-lucky-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe],
+  imports: [TranslatePipe, UiBadgeComponent],
   templateUrl: './feeling-lucky-card.component.html',
   styleUrl: './feeling-lucky-card.component.scss',
 })

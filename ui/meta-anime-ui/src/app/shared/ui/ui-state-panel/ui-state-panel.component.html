@@ -1,0 +1,18 @@
+<div
+  class="ui-state-panel"
+  [class.ui-state-panel--error]="variant() === 'error'"
+  [attr.role]="variant() === 'error' ? 'alert' : null"
+>
+  <div class="ui-state-panel__icon" aria-hidden="true">
+    <ng-content />
+  </div>
+  <p class="ui-state-panel__title">{{ heading() }}</p>
+  @if (subtext()) {
+    <p class="ui-state-panel__sub">{{ subtext() }}</p>
+  }
+  @if (actionLabel()) {
+    <button type="button" class="ui-state-panel__action" (click)="action.emit()">
+      {{ actionLabel() }}
+    </button>
+  }
+</div>
