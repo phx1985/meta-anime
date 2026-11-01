@@ -10,11 +10,22 @@ using System.Text.Json;
 
 namespace MetaAnime.Infrastructure.Sonarr.Services;
 
-public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagRepository) : ISonarrAnimeSourceService<SonarrSeries>
+public sealed class SonarrAnimeSourceService(
+    IPropertyBagRepository propertyBagRepository,
+    IHttpClientFactory httpClientFactory) : ISonarrAnimeSourceService<SonarrSeries>
 {
     #region Fields
+    private const string ClientName = "Sonarr";
     private static readonly JsonSerializerOptions jsonOptions = new() { PropertyNameCaseInsensitive = true };
     #endregion
+
+    /// <summary>
+    /// Creates a RestSharp client backed by the pooled <see cref="IHttpClientFactory"/> client
+    /// so requests flow through the Aspire standard resilience handler instead of allocating
+    /// a fresh socket pool per call.
+    /// </summary>
+    private RestClient CreateRestClient(string host)
+        => new(httpClientFactory.CreateClient(ClientName), new RestClientOptions { BaseUrl = new Uri(host) });
 
     private async Task<(string host, string apiKey, List<string> tags, bool isConfigured)> GetSettingsAsync()
     {
@@ -46,7 +57,7 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
         }
 
         var sonarrTags = await GetSonarrTagsAsync(host, apiKey, tags);
-        var restClient = new RestClient(host);
+        var restClient = CreateRestClient(host);
         var restRequest = new RestRequest("api/v3/series");
         restRequest.AddParameter("apikey", apiKey);
         var response = await restClient.ExecuteAsync(restRequest);
@@ -74,7 +85,7 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
             return Result.Failure<SonarrSeries>(new(Constants.Errors.NotConfigured, "Sonarr is not configured"));
         }
 
-        var restClient = new RestClient(host);
+        var restClient = CreateRestClient(host);
         var restRequest = new RestRequest($"api/v3/series/{id}");
         restRequest.AddParameter("apikey", apiKey);
         var response = await restClient.ExecuteAsync(restRequest);
@@ -115,6 +126,14 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
         return codecDistribution;
     }
 
+    /// <summary>
+    /// Computes codec distributions for the requested series. Sonarr has NO bulk endpoint
+    /// for episode files: <c>api/v3/episodefile</c> rejects requests without a seriesId, and
+    /// its <c>episodeFileIds</c> list variant throws when any id is missing (so blind id-range
+    /// batching is unusable). One call per series is therefore forced by the API — callers
+    /// must only request series that actually need codec data (see SonarrCodecEnrichmentJob,
+    /// which skips series already enriched and series without files).
+    /// </summary>
     public async Task<Dictionary<string, Dictionary<string, int>>> GetBulkCodecDistributionsAsync(IEnumerable<string> seriesIds)
     {
         var ids = seriesIds.ToList();
@@ -165,7 +184,8 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
         if (allSeriesResult.IsFailure)
             return Result.Failure<IList<SonarrSeriesCodecResult>>(allSeriesResult.Error);
 
-        // Throttle concurrent requests to avoid overwhelming the Sonarr API
+        // Episode files must be fetched per series (see GetBulkCodecDistributionsAsync for
+        // the API constraint); the semaphore keeps Sonarr from being flooded.
         using var semaphore = new SemaphoreSlim(10, 10);
 
         var tasks = allSeriesResult.Value.Select(async series =>
@@ -218,7 +238,7 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
             return Result.Failure<SonarrInstanceOptions>(
                 new(Constants.Errors.NotConfigured, "Sonarr is not configured"));
 
-        var client = new RestClient(host);
+        var client = CreateRestClient(host);
 
         var rootReq = new RestRequest("api/v3/rootfolder");
         rootReq.AddParameter("apikey", apiKey);
@@ -251,7 +271,7 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
         if (!isConfigured)
             return Result.Failure<SonarrAddedSeries>(new(Constants.Errors.NotConfigured, "Sonarr is not configured"));
 
-        var client = new RestClient(host);
+        var client = CreateRestClient(host);
 
         // Look up series by TVDB ID
         var lookupReq = new RestRequest("api/v3/series/lookup");
@@ -300,7 +320,7 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
         if (!isConfigured)
             return Result.Failure<IList<SonarrLookupItem>>(new(Constants.Errors.NotConfigured, "Sonarr is not configured"));
 
-        var client = new RestClient(host);
+        var client = CreateRestClient(host);
         var req = new RestRequest("api/v3/series/lookup");
         req.AddParameter("apikey", apiKey);
         req.AddParameter("term", term);
@@ -331,7 +351,7 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
         if (!isConfigured)
             return Result.Failure(new(Constants.Errors.NotConfigured, "Sonarr is not configured"));
 
-        var client = new RestClient(host);
+        var client = CreateRestClient(host);
         var req = new RestRequest($"api/v3/series/{sonarrId}", Method.Delete);
         req.AddQueryParameter("apikey", apiKey);
         req.AddQueryParameter("deleteFiles", "false");
@@ -347,7 +367,7 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
         if (!isConfigured)
             return Result.Failure<IList<SonarrTagInfo>>(new("sonarr.notConfigured", "Sonarr is not configured."));
 
-        var restClient = new RestClient(host);
+        var restClient = CreateRestClient(host);
         var restRequest = new RestRequest("api/v3/tag");
         restRequest.AddParameter("apikey", apiKey);
         var response = await restClient.ExecuteAsync(restRequest);
@@ -367,7 +387,7 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
         if (!isConfigured)
             return Result.Failure<SonarrTagInfo>(new("sonarr.notConfigured", "Sonarr is not configured."));
 
-        var restClient = new RestClient(host);
+        var restClient = CreateRestClient(host);
         var restRequest = new RestRequest("api/v3/tag", Method.Post);
         restRequest.AddQueryParameter("apikey", apiKey);
         restRequest.AddJsonBody(new { label });
@@ -396,7 +416,7 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
         // 2 000 records/page reduces round-trips by ~8× vs the old 250 default.
         // Most libraries need only 1-2 calls to cover an entire year.
         const int fetchPageSize = 2000;
-        var client = new RestClient(host);
+        var client = CreateRestClient(host);
         var allEvents = new List<SonarrDownloadEvent>();
         var page = 1;
 
@@ -443,7 +463,7 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
     #region Private Methods
     private async Task<SonarrEpisodeFile[]?> FetchEpisodeFilesAsync(string seriesId, string host, string apiKey)
     {
-        var restClient = new RestClient(host);
+        var restClient = CreateRestClient(host);
         var restRequest = new RestRequest("api/v3/episodefile");
         restRequest.AddParameter("apikey", apiKey);
         restRequest.AddParameter("seriesId", seriesId);
@@ -457,7 +477,7 @@ public sealed class SonarrAnimeSourceService(IPropertyBagRepository propertyBagR
 
     private async Task<List<SonarrTag>?> GetSonarrTagsAsync(string host, string apiKey, List<string> tags)
     {
-        var restClient = new RestClient(host);
+        var restClient = CreateRestClient(host);
         var restRequest = new RestRequest("api/v3/tag");
         restRequest.AddParameter("apikey", apiKey);
         var response = await restClient.ExecuteAsync(restRequest);

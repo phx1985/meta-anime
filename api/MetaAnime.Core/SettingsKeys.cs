@@ -41,6 +41,9 @@ public static class SettingsKeys
 
     // Kometa
     public const string KometaAnimeIdsJsonUrl = "Kometa:AnimeIdsJsonUrl";
+    // Kometa conditional-fetch validators (managed internally by the sync pipeline)
+    public const string KometaAnimeIdsJsonEtag = "Kometa:AnimeIdsJsonEtag";
+    public const string KometaAnimeIdsJsonLastModified = "Kometa:AnimeIdsJsonLastModified";
 
     // App preferences
     public const string AppShowNsfw = "App:ShowNsfw";

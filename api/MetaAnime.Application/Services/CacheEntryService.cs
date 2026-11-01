@@ -48,6 +48,32 @@ public sealed class CacheEntryService(ICacheEntryRepository cacheEntryRepository
         }
     }
 
+    public async Task<Result> MergeBySourceAsync(AnimeSource animeSource, IEnumerable<ICacheable> incoming)
+    {
+        try
+        {
+            await cacheEntryRepository.MergeBySourceAsync(animeSource, incoming.Select(c => c.ToCacheEntry()));
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(new Error(Constants.Errors.MergeAsync, ex.Message));
+        }
+    }
+
+    public async Task<Result> BulkUpdateRawDataAsync(AnimeSource animeSource, IEnumerable<(string SourceId, string RawData)> updates)
+    {
+        try
+        {
+            await cacheEntryRepository.BulkUpdateRawDataAsync(animeSource, updates);
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(new Error(Constants.Errors.UpdateRawDataAsync, ex.Message));
+        }
+    }
+
     public async Task<Result> BulkDeleteAllAsync()
     {
         try

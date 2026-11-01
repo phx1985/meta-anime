@@ -16,6 +16,8 @@ public static class Constants
         public const string BulkDeleteAllAsync = "Error.BulkDeleteAllAsync";
         public const string BulkDeleteBySourceAsync = "Error.BulkDeleteBySourceAsync";
         public const string BulkInsertAsync = "Error.BulkInsertAsync";
+        public const string MergeAsync = "Error.MergeAsync";
+        public const string UpdateRawDataAsync = "Error.UpdateRawDataAsync";
         public const string CreateAsync = "Error.CreateAsync";
         public const string DeleteAsync = "Error.DeleteAsync";
         public const string DeletePropertyBag = "Error.DeletePropertyBag";
@@ -92,6 +94,7 @@ public static class Constants
         {
             public const string Starting = "Starting anime metadata sync at {Time}";
             public const string Succeeded = "Successfully synced anime metadata at {Time}";
+            public const string MatchSummary = "Matching produced {Exact} exact-id mappings, {Strong} strong title+year mappings; {Unmatched} rows unmatched";
             public const string MatchFailed = "Failed to match anime: {ErrorMessage}";
             public const string Error = "Error during anime sync";
         }
@@ -110,6 +113,14 @@ public static class Constants
             public const string Starting = "Starting download stats cache refresh at {Time}";
             public const string Succeeded = "Successfully cached download stats at {Time}";
             public const string Error = "Error during download stats cache refresh";
+        }
+
+        public static class CodecEnrichmentJob
+        {
+            public const string Starting = "Starting Sonarr codec enrichment at {Time}";
+            public const string Succeeded = "Sonarr codec enrichment complete: {Updated} entries updated";
+            public const string Failed = "Sonarr codec enrichment failed: {ErrorMessage}";
+            public const string Error = "Error during Sonarr codec enrichment";
         }
 
         public static class CastSyncJob
@@ -136,6 +147,11 @@ public static class Constants
             public const string MalCacheDeserializeFailed = "Failed to deserialize MAL anime cache data for SourceId: {SourceId}";
             public const string SonarrAnimeSeasons = "Sonarr anime {SourceId} ({Title}) has {TotalSeasons} seasons";
             public const string SonarrCacheDeserializeFailed = "Failed to deserialize Sonarr anime cache data for SourceId: {SourceId}";
+        }
+
+        public static class AnimeMatchingService
+        {
+            public const string MatchTimings = "Match timings: index {IndexMs}ms, meta {MetaMs}ms, idPass {IdPassMs}ms, fuzzy {FuzzyMs}ms, crossLinks {CrossLinkMs}ms, persist {PersistMs}ms";
         }
     }
 }

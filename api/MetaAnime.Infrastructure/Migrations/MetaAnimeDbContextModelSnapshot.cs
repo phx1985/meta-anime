@@ -17,7 +17,7 @@ namespace MetaAnime.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.7")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -48,6 +48,62 @@ namespace MetaAnime.Infrastructure.Migrations
                         .HasDatabaseName("IX_Anime_AnimeSource");
 
                     b.ToTable("Anime", (string)null);
+                });
+
+            modelBuilder.Entity("MetaAnime.Domain.Entities.AnimeCast", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AnimeMalId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("CharacterId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CharacterImageUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CharacterName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CharacterRole")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("SyncedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VaImageUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("VaName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("VaPersonId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnimeMalId")
+                        .HasDatabaseName("IX_AnimeCast_AnimeMalId");
+
+                    b.HasIndex("VaPersonId")
+                        .HasDatabaseName("IX_AnimeCast_VaPersonId");
+
+                    b.HasIndex("AnimeMalId", "CharacterId", "Language")
+                        .IsUnique()
+                        .HasDatabaseName("UX_AnimeCast_Anime_Character_Language");
+
+                    b.ToTable("AnimeCast", (string)null);
                 });
 
             modelBuilder.Entity("MetaAnime.Domain.Entities.AnimeMapping", b =>
@@ -84,7 +140,7 @@ namespace MetaAnime.Infrastructure.Migrations
 
                     b.Property<string>("RawData")
                         .IsRequired()
-                        .HasColumnType("jsonb");
+                        .HasColumnType("text");
 
                     b.Property<string>("SourceId")
                         .IsRequired()
@@ -150,60 +206,24 @@ namespace MetaAnime.Infrastructure.Migrations
                     b.ToTable("KometaAnimeMapping", (string)null);
                 });
 
-            modelBuilder.Entity("MetaAnime.Domain.Entities.AnimeCast", b =>
+            modelBuilder.Entity("MetaAnime.Domain.Entities.PropertyBag", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AnimeMalId")
-                        .IsRequired()
+                    b.Property<string>("Key")
                         .HasColumnType("text");
 
-                    b.Property<int>("CharacterId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("CharacterImageUrl")
-                        .HasColumnType("text");
-
-                    b.Property<string>("CharacterName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("CharacterRole")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Language")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("SyncedAt")
+                    b.Property<DateTime>("CreationDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("VaImageUrl")
-                        .HasColumnType("text");
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("VaName")
+                    b.Property<string>("Value")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("VaPersonId")
-                        .HasColumnType("integer");
+                    b.HasKey("Key");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("AnimeMalId")
-                        .HasDatabaseName("IX_AnimeCast_AnimeMalId");
-
-                    b.HasIndex("VaPersonId")
-                        .HasDatabaseName("IX_AnimeCast_VaPersonId");
-
-                    b.HasIndex("AnimeMalId", "CharacterId", "Language")
-                        .IsUnique()
-                        .HasDatabaseName("UX_AnimeCast_Anime_Character_Language");
-
-                    b.ToTable("AnimeCast", (string)null);
+                    b.ToTable("PropertyBag", (string)null);
                 });
 
             modelBuilder.Entity("MetaAnime.Domain.Entities.VoiceActor", b =>
@@ -244,26 +264,6 @@ namespace MetaAnime.Infrastructure.Migrations
                     b.HasKey("PersonId");
 
                     b.ToTable("VoiceActors", (string)null);
-                });
-
-            modelBuilder.Entity("MetaAnime.Domain.Entities.PropertyBag", b =>
-                {
-                    b.Property<string>("Key")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreationDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("UpdateDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Key");
-
-                    b.ToTable("PropertyBag", (string)null);
                 });
 
             modelBuilder.Entity("MetaAnime.Domain.Entities.AnimeMapping", b =>

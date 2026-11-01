@@ -172,6 +172,29 @@ if (!string.IsNullOrWhiteSpace(dataProtectionKeysDir))
 var app = builder.Build();
 await app.Services.MigrateDatabaseAsync();
 
+// Hangfire.PostgreSql probes its version table ("hangfire"."schema") BEFORE creating it,
+// so on a fresh database Postgres logs `relation "hangfire.schema" does not exist` once.
+// Pre-create the schema and version table with the installer's own idempotent DDL so the
+// probe simply reads zero rows and the install proceeds silently. The warm-up connection
+// also forces the (idempotent) install to complete single-threaded before the background
+// server hands connections to its workers.
+await using (var hangfireSetup = new Npgsql.NpgsqlConnection(hangfireConnectionString))
+{
+    await hangfireSetup.OpenAsync();
+    await using var setupCommand = new Npgsql.NpgsqlCommand(
+        """
+        CREATE SCHEMA IF NOT EXISTS "hangfire";
+        CREATE TABLE IF NOT EXISTS "hangfire"."schema" ("version" INT NOT NULL, PRIMARY KEY ("version"));
+        """, hangfireSetup);
+    await setupCommand.ExecuteNonQueryAsync();
+}
+using (var hangfireConnection = (app.Services.GetService<JobStorage>() ?? JobStorage.Current).GetConnection())
+{
+    // Job ids are numeric in Hangfire.PostgreSql (GetJobData parses the id as long) —
+    // a nonexistent id just returns null but still forces the schema bootstrap above.
+    hangfireConnection.GetJobData("1");
+}
+
 // Configure the HTTP request pipeline.
 app.UseExceptionHandler(); // unified RFC 9457 error envelope for unhandled exceptions
 

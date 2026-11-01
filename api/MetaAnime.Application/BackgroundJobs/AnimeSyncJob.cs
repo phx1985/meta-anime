@@ -11,6 +11,7 @@ public sealed class AnimeSyncJob(
     IAnimeMatchingService animeMatchingService,
     ISyncProgressNotifier progressNotifier,
     ISyncStateTracker stateTracker,
+    IBackgroundJobClient backgroundJobClient,
     ILogger<AnimeSyncJob> logger)
 {
     /// <summary>
@@ -27,7 +28,19 @@ public sealed class AnimeSyncJob(
 
             if (matchResult.IsSuccess)
             {
-                logger.LogInformation(Constants.LogMessages.AnimeSyncJob.Succeeded, DateTime.UtcNow);
+                var report = matchResult.Value;
+                logger.LogInformation(
+                    Constants.LogMessages.AnimeSyncJob.Succeeded,
+                    DateTime.UtcNow);
+                logger.LogInformation(
+                    Constants.LogMessages.AnimeSyncJob.MatchSummary,
+                    report.ExactIdMappings,
+                    report.StrongTitleYearMappings,
+                    report.UnmatchedCandidates.Count);
+
+                // Codec enrichment is deferred out of the sync critical path: it runs as an
+                // asynchronous follow-up job and only touches entries still missing codec data.
+                backgroundJobClient.Enqueue<SonarrCodecEnrichmentJob>(job => job.EnrichAsync());
             }
             else
             {

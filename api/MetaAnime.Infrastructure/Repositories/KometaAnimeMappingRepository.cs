@@ -95,6 +95,54 @@ public sealed class KometaAnimeMappingRepository(MetaAnimeDbContext dbContext)
         await dbContext.BulkCopyAsync(mappingList);
     }
 
+    /// <inheritdoc />
+    public async Task MergeAsync(IEnumerable<KometaAnimeMapping> kometaAnimeMappings)
+    {
+        static (string AniDbId, string PlatformName, string PlatformId) Key(KometaAnimeMapping k)
+            => (k.AniDbId, k.PlatformName, k.PlatformId);
+
+        var incomingByKey = new Dictionary<(string, string, string), KometaAnimeMapping>();
+        foreach (var kam in kometaAnimeMappings)
+            incomingByKey[Key(kam)] = kam;
+
+        var existing = await dbContext.KometaAnimeMapping.AsNoTracking().ToListAsync();
+        var existingByKey = new Dictionary<(string, string, string), KometaAnimeMapping>();
+        foreach (var kam in existing)
+            existingByKey[Key(kam)] = kam;
+
+        // Tombstone rows missing from the incoming set.
+        var staleIds = existing
+            .Where(kam => !incomingByKey.ContainsKey(Key(kam)))
+            .Select(kam => kam.Id)
+            .ToList();
+        if (staleIds.Count > 0)
+        {
+            await dbContext.KometaAnimeMapping
+                .Where(kam => staleIds.Contains(kam.Id))
+                .ExecuteDeleteAsync();
+        }
+
+        // Rows whose Season/EpOffset changed are replaced; unchanged rows are never rewritten.
+        var changedIds = existing
+            .Where(kam => incomingByKey.TryGetValue(Key(kam), out var inc)
+                && (kam.Season != inc.Season || kam.EpOffset != inc.EpOffset))
+            .Select(kam => kam.Id)
+            .ToList();
+        if (changedIds.Count > 0)
+        {
+            await dbContext.KometaAnimeMapping
+                .Where(kam => changedIds.Contains(kam.Id))
+                .ExecuteDeleteAsync();
+        }
+
+        var toInsert = incomingByKey.Values
+            .Where(inc => !existingByKey.TryGetValue(Key(inc), out var ex)
+                || ex.Season != inc.Season || ex.EpOffset != inc.EpOffset)
+            .ToList();
+        if (toInsert.Count > 0)
+            await BulkInsertAsync(toInsert);
+    }
+
     public async Task<bool> AnyAsync()
     {
         return await dbContext.KometaAnimeMapping.AsNoTracking().AnyAsync();

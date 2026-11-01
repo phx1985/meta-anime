@@ -12,10 +12,20 @@ namespace MetaAnime.Infrastructure.MyAnimeList.Services;
 
 public sealed class MalOAuthService(
     IPropertyBagRepository propertyBagRepository,
-    IMalTokenService malTokenService) : IMalOAuthService
+    IMalTokenService malTokenService,
+    IHttpClientFactory httpClientFactory) : IMalOAuthService
 {
     private const string TokenUrl = "https://myanimelist.net/v1/oauth2/token";
+    private const string ClientName = "MAL";
     private const int CodeVerifierLength = 64;
+
+    /// <summary>
+    /// Creates a RestSharp client backed by the pooled <see cref="IHttpClientFactory"/> client
+    /// so requests flow through the Aspire standard resilience handler instead of allocating
+    /// a fresh socket pool per call.
+    /// </summary>
+    private RestClient CreateRestClient(Uri uri)
+        => new(httpClientFactory.CreateClient(ClientName), new RestClientOptions { BaseUrl = uri });
 
     public async Task<Result<string>> GetAuthorizationUrlAsync(string redirectUri)
     {
@@ -79,7 +89,7 @@ public sealed class MalOAuthService(
         var clientSecretEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.MalClientSecret);
         var clientSecret = clientSecretEntry?.Value;
 
-        var client = new RestClient(new Uri(TokenUrl));
+        var client = CreateRestClient(new Uri(TokenUrl));
         var request = new RestRequest { Method = Method.Post };
         request.AddParameter("client_id", clientId);
         if (!string.IsNullOrWhiteSpace(clientSecret))

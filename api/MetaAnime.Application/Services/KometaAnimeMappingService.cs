@@ -73,6 +73,19 @@ public sealed class KometaAnimeMappingService(IKometaAnimeMappingRepository kome
         }
     }
 
+    public async Task<Result> MergeAsync(IEnumerable<KometaAnimeMapping> kometaAnimeMappings)
+    {
+        try
+        {
+            await kometaAnimeMappingRepository.MergeAsync(kometaAnimeMappings);
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(new Error(Constants.Errors.MergeAsync, ex.Message));
+        }
+    }
+
     public async Task<Result<bool>> AnyAsync()
     {
         try

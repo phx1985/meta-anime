@@ -11,9 +11,14 @@ using System.Text.RegularExpressions;
 
 namespace MetaAnime.Infrastructure.MyAnimeList.Services;
 
-public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepository, IMalTokenService malTokenService, ILogger<MalAnimeSourceService> logger) : IMalAnimeSourceService<MalAnime>
+public sealed class MalAnimeSourceService(
+    IPropertyBagRepository propertyBagRepository,
+    IMalTokenService malTokenService,
+    IHttpClientFactory httpClientFactory,
+    ILogger<MalAnimeSourceService> logger) : IMalAnimeSourceService<MalAnime>
 {
     #region Fields
+    private const string ClientName = "MAL";
     private const int MalPageLimit = 500;
     // MAL rejects GET /anime?q= with 400 "invalid q" below 3 characters and caps limit at 100.
     private const int MalMinSearchQueryLength = 3;
@@ -21,6 +26,14 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
     private const string UnreadableSearchResponseMessage = "MyAnimeList returned a search response that could not be read.";
     private static readonly Regex SearchNoiseRegex = new(@"[:\?!]", RegexOptions.Compiled);
     private static readonly Regex WhitespaceRunRegex = new(@"\s+", RegexOptions.Compiled);
+
+    /// <summary>
+    /// Creates a RestSharp client backed by the pooled <see cref="IHttpClientFactory"/> client
+    /// so requests flow through the Aspire standard resilience handler instead of allocating
+    /// a fresh socket pool per call.
+    /// </summary>
+    private RestClient CreateRestClient(Uri uri)
+        => new(httpClientFactory.CreateClient(ClientName), new RestClientOptions { BaseUrl = uri });
     private const string REQUEST_FIELDS = "synopsis, ";
     private const string EXTENDED_REQUEST_FIELDS = REQUEST_FIELDS + "alternative_titles{en,ja,synonyms}, " +
                                                                     "genres{id,name}, " +
@@ -147,7 +160,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
         {
             var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
             {
-                var restClient = new RestClient(new Uri(nextUrl));
+                var restClient = CreateRestClient(new Uri(nextUrl));
                 var restRequest = new RestRequest { Method = Method.Get };
                 restRequest.AddHeader("Authorization", $"Bearer {t}");
                 return ExecuteRequestAsync(restClient, restRequest);
@@ -210,7 +223,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
     private async Task<RestResponse> FetchAnimeWithRelatedAsync(string baseUrl, string id, string token)
     {
         var animeUri = new Uri($"{baseUrl}/anime/{id}?fields={FRANCHISE_FIELDS}");
-        var restClient = new RestClient(animeUri);
+        var restClient = CreateRestClient(animeUri);
         var restRequest = new RestRequest { Method = Method.Get };
         restRequest.AddHeader("Authorization", $"Bearer {token}");
 
@@ -228,7 +241,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
         var uri = new Uri($"{baseUrl}/anime/{animeId}/my_list_status");
         var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
         {
-            var restClient = new RestClient(uri);
+            var restClient = CreateRestClient(uri);
             var restRequest = new RestRequest { Method = Method.Patch };
             restRequest.AddHeader("Authorization", $"Bearer {t}");
             restRequest.AddParameter("status", status);
@@ -260,7 +273,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
         var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
         {
             var uri = new Uri($"{baseUrl}/anime?q={encodedQuery}&limit={effectiveLimit}&fields=id,title,main_picture,start_date,media_type");
-            var restClient = new RestClient(uri);
+            var restClient = CreateRestClient(uri);
             var restRequest = new RestRequest { Method = Method.Get };
             restRequest.AddHeader("Authorization", $"Bearer {t}");
             return ExecuteRequestAsync(restClient, restRequest);
@@ -318,7 +331,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
         var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
         {
             var uri = new Uri($"{baseUrl}/anime?q={encodedQuery}&limit={effectiveLimit}&nsfw=true&fields={SEASONAL_FIELDS}");
-            var restClient = new RestClient(uri);
+            var restClient = CreateRestClient(uri);
             var restRequest = new RestRequest { Method = Method.Get };
             restRequest.AddHeader("Authorization", $"Bearer {t}");
             return ExecuteRequestAsync(restClient, restRequest);
@@ -349,7 +362,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
         var (response, _) = await ExecuteWithAutoRefreshAsync(token, t =>
         {
             var uri = new Uri($"{baseUrl}/anime/{animeId}?fields={fields}");
-            var restClient = new RestClient(uri);
+            var restClient = CreateRestClient(uri);
             var restRequest = new RestRequest { Method = Method.Get };
             restRequest.AddHeader("Authorization", $"Bearer {t}");
             return ExecuteRequestAsync(restClient, restRequest);
@@ -459,7 +472,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
         // Use EXTENDED_REQUEST_FIELDS to get my_list_status data (needed for viewState, addedDate, progression, rating)
         var animeListUri = new Uri(pagingUri ?? $"{baseUrl}/users/@me/animelist?nsfw=true&limit=1000&fields={EXTENDED_REQUEST_FIELDS}");
 
-        var restClient = new RestClient(animeListUri);
+        var restClient = CreateRestClient(animeListUri);
         var restRequest = new RestRequest { Method = Method.Get };
         restRequest.AddHeader("Authorization", $"Bearer {token}");
 
@@ -469,7 +482,7 @@ public sealed class MalAnimeSourceService(IPropertyBagRepository propertyBagRepo
     private async Task<RestResponse> FetchAnimeByIdAsync(string baseUrl, string id, string token)
     {
         var animeUri = new Uri($"{baseUrl}/anime/{id}?fields={EXTENDED_REQUEST_FIELDS}");
-        var restClient = new RestClient(animeUri);
+        var restClient = CreateRestClient(animeUri);
         var restRequest = new RestRequest { Method = Method.Get };
         restRequest.AddHeader("Authorization", $"Bearer {token}");
 

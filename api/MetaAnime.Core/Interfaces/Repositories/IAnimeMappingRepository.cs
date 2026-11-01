@@ -33,6 +33,8 @@ public interface IAnimeMappingRepository
     Task<string?> GetAniDbIdByMalIdAsync(string malId);
     Task BulkDeleteAllAsync();
     Task BulkInsertAsync(IEnumerable<AnimeMapping> mappings);
+    /// <summary>Diff-based merge keyed on (AnimeId, AniDbId); unchanged pairs are skipped.</summary>
+    Task MergeAsync(IEnumerable<AnimeMapping> mappings);
     Task AddAsync(AnimeMapping mapping);
     /// <summary>
     /// Removes bridge AnimeMapping rows where AniDbId matches and the Anime is a MAL entry with the given SourceId.

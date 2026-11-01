@@ -21,9 +21,20 @@ public sealed class LibraryAnalysisService(
     ISonarrAnimeSourceService<SonarrSeries> sonarrService,
     IPropertyBagRepository propertyBagRepository,
     IAnimeMappingRepository animeMappingRepository,
+    IHttpClientFactory httpClientFactory,
     ILogger<LibraryAnalysisService> logger) : ILibraryAnalysisService
 {
     #region Constants
+
+    private const string SonarrClientName = "Sonarr";
+
+    /// <summary>
+    /// Creates a RestSharp client backed by the pooled <see cref="IHttpClientFactory"/> client
+    /// so requests flow through the Aspire standard resilience handler instead of allocating
+    /// a fresh socket pool per call.
+    /// </summary>
+    private RestClient CreateRestClient(string host)
+        => new(httpClientFactory.CreateClient(SonarrClientName), new RestClientOptions { BaseUrl = new Uri(host) });
 
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
@@ -291,9 +302,9 @@ public sealed class LibraryAnalysisService(
     }
 
     /// <summary>Fetches episode files for a single series from Sonarr's API.</summary>
-    private static async Task<SonarrEpisodeFile[]?> FetchEpisodeFilesAsync(string seriesId, string host, string apiKey, CancellationToken cancellationToken = default)
+    private async Task<SonarrEpisodeFile[]?> FetchEpisodeFilesAsync(string seriesId, string host, string apiKey, CancellationToken cancellationToken = default)
     {
-        var restClient = new RestClient(host);
+        var restClient = CreateRestClient(host);
         var restRequest = new RestRequest("api/v3/episodefile");
         restRequest.AddParameter("apikey", apiKey);
         restRequest.AddParameter("seriesId", seriesId);

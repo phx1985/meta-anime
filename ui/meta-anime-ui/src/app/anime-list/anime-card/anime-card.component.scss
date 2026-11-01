@@ -137,11 +137,13 @@
 }
 
 .dot {
-  // Provider identity mapped onto semantic tokens
+  // Provider identity colors — same palette as the setup wizard provider cards
+  // (MAL blue, Plex gold, Sonarr teal): distinct hues that read as providers,
+  // not as semantic success/warning states.
   --dot-color: var(--text-muted);
-  &--mal    { --dot-color: var(--color-brand); }
-  &--plex   { --dot-color: var(--color-warning-deep); }
-  &--sonarr { --dot-color: var(--color-success-deep); }
+  &--mal    { --dot-color: #2d67c3; }
+  &--plex   { --dot-color: #e5a00d; }
+  &--sonarr { --dot-color: #35c0d4; }
 
   position: relative;
   width: 20px;

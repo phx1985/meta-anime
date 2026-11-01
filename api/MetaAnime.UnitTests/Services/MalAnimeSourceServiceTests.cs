@@ -25,6 +25,7 @@ public class MalAnimeSourceServiceTests
         _sut = new MalAnimeSourceService(
             _mockRepo.Object,
             _mockTokenService.Object,
+            new StubHttpClientFactory(),
             Mock.Of<ILogger<MalAnimeSourceService>>());
     }
 

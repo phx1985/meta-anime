@@ -68,6 +68,10 @@ public static class ServicesExtensions
             .ValidateOnStart();
 
         services.AddHttpClient("Kometa");
+        // Named clients for Sonarr/MAL traffic: pooled handlers + the Aspire standard
+        // resilience handler apply to every request (RestSharp wraps these clients).
+        services.AddHttpClient("Sonarr");
+        services.AddHttpClient("MAL");
         services.AddScoped<IKometaAnimeJsonService<KometaRaw>, KometaAnimeJsonService>();
         services.AddScoped<IKometaAnimeMappingService, KometaAnimeMappingService>();
         services.AddScoped<ISonarrAnimeSourceService<SonarrSeries>, SonarrAnimeSourceService>();
@@ -143,6 +147,7 @@ public static class ServicesExtensions
         services.AddSingleton<ISyncStateTracker, InMemorySyncStateTracker>();
         services.AddSingleton<IProviderHealthCache, InMemoryProviderHealthCache>();
         services.AddScoped<AnimeSyncJob>();
+        services.AddScoped<SonarrCodecEnrichmentJob>();
         services.AddHostedService<SettingsSeedService>();
         services.AddHostedService<ProviderHealthMonitor>();
     }

@@ -1,6 +1,7 @@
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Interfaces;
 using MetaAnime.Application.Queries;
+using MetaAnime.Application.Utilities;
 using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
@@ -46,7 +47,6 @@ public sealed class AnimeMediatorService(
     };
 
     private const int    TitleSimilarityDefault = 80;
-    private const double MinLengthRatioForFuzzy = 0.2;
     private const string SonarrCoverType        = "poster";
 
     /// <summary>Maps filter codec tokens to all equivalent codec strings that may appear in file metadata.</summary>
@@ -173,18 +173,7 @@ public sealed class AnimeMediatorService(
                 .Distinct()
                 .ToList();
 
-            var cacheResult = await cacheEntryService.GetBySourceIdsAsync(sourceIds);
-            var cacheEntries = cacheResult.IsSuccess ? cacheResult.Value.ToList() : new List<CacheEntry>();
-
-            var plexCache = cacheEntries
-                .Where(c => c.AnimeSource == AnimeSource.Plex)
-                .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData);
-            var malCache = cacheEntries
-                .Where(c => c.AnimeSource == AnimeSource.MyAnimeList)
-                .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData);
-            var sonarrCache = cacheEntries
-                .Where(c => c.AnimeSource == AnimeSource.Sonarr)
-                .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData);
+            var (plexCache, malCache, sonarrCache) = await BuildSourceCachesAsync(sourceIds);
 
             var sonarrBaseUrl = await GetSonarrSeriesBaseUrlAsync();
 
@@ -207,9 +196,9 @@ public sealed class AnimeMediatorService(
 
                 if (enriched)
                 {
-                    var plexTask = FetchPlexAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex));
-                    var malTask = FetchMalAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList));
-                    var sonarrTask = FetchSonarrAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr));
+                    var plexTask = FetchPlexAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex), plexCache);
+                    var malTask = FetchMalAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList), malCache);
+                    var sonarrTask = FetchSonarrAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr), sonarrCache);
                     await Task.WhenAll(plexTask, malTask, sonarrTask);
                     plexAnimes = plexTask.Result;
                     malAnimes = malTask.Result;
@@ -475,79 +464,7 @@ public sealed class AnimeMediatorService(
     private static bool TitleMatches(string? candidate, string query, double threshold) =>
         !string.IsNullOrWhiteSpace(candidate) &&
         (candidate.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-         ComputeWordLevelFuzzySimilarity(candidate, query) >= threshold);
-
-    /// <summary>
-    /// Computes a word-level fuzzy similarity between a search query and an anime title.
-    /// For each word in the query, finds the best-matching word in the title using normalised
-    /// Levenshtein distance, then averages those per-word scores.
-    /// This correctly handles single-character typos (e.g. "dargon ball" ≈ "Dragon Ball Z").
-    /// Returns a value in [0.0, 1.0].
-    /// </summary>
-    private static double ComputeWordLevelFuzzySimilarity(string title, string query)
-    {
-        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(query)) return 0.0;
-
-        var qWords = query.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var tWords = title.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-        if (qWords.Length == 0 || tWords.Length == 0) return 0.0;
-
-        double totalScore = 0;
-        foreach (var qWord in qWords)
-        {
-            double bestWordScore = 0;
-            foreach (var tWord in tWords)
-            {
-                double score = NormalisedLevenshteinSimilarity(qWord, tWord);
-                if (score > bestWordScore) bestWordScore = score;
-                if (bestWordScore >= 1.0) break; // exact match found – no need to check further
-            }
-            totalScore += bestWordScore;
-        }
-
-        return totalScore / qWords.Length;
-    }
-
-    /// <summary>
-    /// Returns 1 − (Levenshtein(a, b) / max(|a|, |b|)), i.e. 1.0 for identical strings.
-    /// </summary>
-    private static double NormalisedLevenshteinSimilarity(string a, string b)
-    {
-        if (a == b) return 1.0;
-        int maxLen = Math.Max(a.Length, b.Length);
-        if (maxLen == 0) return 1.0;
-        // Skip if lengths differ too much to ever reach the caller's 80% threshold
-        int minLen = Math.Min(a.Length, b.Length);
-        if ((double)minLen / maxLen < MinLengthRatioForFuzzy) return 0.0;
-        return 1.0 - (double)LevenshteinDistance(a, b) / maxLen;
-    }
-
-    /// <summary>Standard iterative Levenshtein (edit) distance.</summary>
-    private static int LevenshteinDistance(string s, string t)
-    {
-        int m = s.Length, n = t.Length;
-        if (m == 0) return n;
-        if (n == 0) return m;
-
-        var prev = new int[n + 1];
-        var curr = new int[n + 1];
-
-        for (int j = 0; j <= n; j++) prev[j] = j;
-
-        for (int i = 1; i <= m; i++)
-        {
-            curr[0] = i;
-            for (int j = 1; j <= n; j++)
-            {
-                int cost = s[i - 1] == t[j - 1] ? 0 : 1;
-                curr[j] = Math.Min(Math.Min(curr[j - 1] + 1, prev[j] + 1), prev[j - 1] + cost);
-            }
-            Array.Copy(curr, prev, n + 1);
-        }
-
-        return prev[n];
-    }
+         TitleSimilarity.ComputeWordLevelFuzzySimilarity(candidate, query) >= threshold);
 
     /// <summary>
     /// Returns <c>true</c> when the anime has at least one Sonarr series with downloaded episode files
@@ -991,14 +908,19 @@ public sealed class AnimeMediatorService(
             var plexEnabled = await IsPlexEnabledAsync();
             var sonarrEnabled = await IsSonarrEnabledAsync();
 
+            // Cached provider payloads — used as fallback when a live fetch fails, so a
+            // transient API error never downgrades the response to empty shells.
+            var (plexCache, malCache, sonarrCache) = await BuildSourceCachesAsync(
+                animeMappings.Where(m => m.Anime != null).Select(m => m.Anime!.SourceId));
+
             var plexAnimes = plexEnabled
-                ? await FetchPlexAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex))
+                ? await FetchPlexAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex), plexCache)
                 : [];
 
-            var malAnimes = await FetchMalAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList));
+            var malAnimes = await FetchMalAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList), malCache);
 
             var sonarrAnimes = sonarrEnabled
-                ? await FetchSonarrAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr))
+                ? await FetchSonarrAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr), sonarrCache)
                 : [];
 
             var animeDto = new AnimeDetailsResponse(
@@ -1734,7 +1656,30 @@ public sealed class AnimeMediatorService(
         return new SonarrAnimeInfo(mapping.Anime, sonarrBaseUrl);
     }
 
-    private async Task<List<PlexAnimeInfo>> FetchPlexAnimeDetailsAsync(IEnumerable<AnimeMapping> mappings)
+    /// <summary>
+    /// Loads the cached provider payloads (CacheEntry.RawData) for the given source ids,
+    /// grouped per provider. The Fetch* helpers fall back to these when a live fetch fails.
+    /// </summary>
+    private async Task<(Dictionary<string, string> Plex, Dictionary<string, string> Mal, Dictionary<string, string> Sonarr)> BuildSourceCachesAsync(
+        IEnumerable<string> sourceIds)
+    {
+        var cacheResult = await cacheEntryService.GetBySourceIdsAsync(sourceIds.Distinct().ToList());
+        var cacheEntries = cacheResult.IsSuccess ? cacheResult.Value.ToList() : new List<CacheEntry>();
+
+        return (
+            cacheEntries
+                .Where(c => c.AnimeSource == AnimeSource.Plex)
+                .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData),
+            cacheEntries
+                .Where(c => c.AnimeSource == AnimeSource.MyAnimeList)
+                .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData),
+            cacheEntries
+                .Where(c => c.AnimeSource == AnimeSource.Sonarr)
+                .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData));
+    }
+
+    private async Task<List<PlexAnimeInfo>> FetchPlexAnimeDetailsAsync(
+        IEnumerable<AnimeMapping> mappings, Dictionary<string, string> plexCache)
     {
         var baseUrl = await GetPlexBaseUrlAsync();
         var tasks = mappings.Select(async mapping =>
@@ -1751,14 +1696,16 @@ public sealed class AnimeMediatorService(
             }
             else
             {
-                return new PlexAnimeInfo(mapping.Anime, baseUrl);
+                // Live fetch failed → fall back to the cached payload, never to a bare shell.
+                return await CreatePlexAnimeInfoFromCacheAsync(mapping, plexCache);
             }
         });
 
         return (await Task.WhenAll(tasks)).ToList();
     }
 
-    private async Task<List<MalAnimeInfo>> FetchMalAnimeDetailsAsync(IEnumerable<AnimeMapping> mappings)
+    private async Task<List<MalAnimeInfo>> FetchMalAnimeDetailsAsync(
+        IEnumerable<AnimeMapping> mappings, Dictionary<string, string> malCache)
     {
         var tasks = mappings.Select(async mapping =>
         {
@@ -1769,14 +1716,16 @@ public sealed class AnimeMediatorService(
             }
             else
             {
-                return new MalAnimeInfo(mapping.Anime, myAnimeListHost);
+                // Live fetch failed → fall back to the cached payload, never to a bare shell.
+                return CreateMalAnimeInfoFromCache(mapping, malCache);
             }
         });
 
         return (await Task.WhenAll(tasks)).ToList();
     }
 
-    private async Task<List<SonarrAnimeInfo>> FetchSonarrAnimeDetailsAsync(IEnumerable<AnimeMapping> mappings)
+    private async Task<List<SonarrAnimeInfo>> FetchSonarrAnimeDetailsAsync(
+        IEnumerable<AnimeMapping> mappings, Dictionary<string, string> sonarrCache)
     {
         try
         {
@@ -1797,7 +1746,8 @@ public sealed class AnimeMediatorService(
                 }
                 else
                 {
-                    return new SonarrAnimeInfo(mapping.Anime, sonarrBaseUrl);
+                    // Live fetch failed → fall back to the cached payload, never to a bare shell.
+                    return CreateSonarrAnimeInfoFromCache(mapping, sonarrCache, sonarrBaseUrl);
                 }
             });
 

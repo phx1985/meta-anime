@@ -505,9 +505,10 @@
 
   &:hover { opacity: 0.9; transform: translateY(-1px); }
 
-  &--mal        { background: rgba(47, 86, 138, 0.25); color: #4a90d9; border: 1px solid rgba(74, 144, 217, 0.3); }
+  // Provider identity colors — same palette as the setup wizard provider cards
+  &--mal        { background: rgba(45, 103, 195, 0.25); color: #6fa3ee; border: 1px solid rgba(45, 103, 195, 0.4); }
   &--plex   { background: rgba(229, 160, 13, 0.15); color: #e5a00d; border: 1px solid rgba(229, 160, 13, 0.3); }
-  &--sonarr { background: rgba(53, 152, 219, 0.15); color: #3598db; border: 1px solid rgba(53, 152, 219, 0.3); }
+  &--sonarr { background: rgba(53, 192, 212, 0.15); color: #35c0d4; border: 1px solid rgba(53, 192, 212, 0.3); }
 
   &--add {
     background: rgba(108, 99, 255, 0.15);
