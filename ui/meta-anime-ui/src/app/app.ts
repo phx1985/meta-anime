@@ -22,6 +22,7 @@ import { NotificationService, AppNotification } from './services/notification.se
 import { SyncSignalRService } from './services/sync-signalr.service';
 import { ProviderStateService } from './services/provider-state.service';
 import { PopupService } from './services/popup.service';
+import { BotKunService } from './services/bot-kun.service';
 import { PlexDeepLinkService } from './services/plex-deep-link.service';
 import { LuckyPickComponent } from './lucky-pick/lucky-pick.component';
 import { FranchiseConstellationComponent } from './franchise-constellation/franchise-constellation.component';
@@ -59,6 +60,9 @@ export class App implements OnInit, AfterViewInit {
   /** "Show NSFW Content" easter egg — rendered at the root so the overlay escapes every
    *  transformed ancestor (a settings card would trap `position: fixed`). */
   readonly nsfwEgg = inject(NsfwEasterEggService);
+  /** Mobile dock's hero slot opens the same Bot-kun drawer the FAB used to (and mirrors
+   *  its unread dot on the orb). */
+  readonly botKunService = inject(BotKunService);
   readonly popupService = inject(PopupService);
   readonly franchiseConstellationSvc = inject(FranchiseConstellationService);
   readonly seiyuuNexusSvc = inject(SeiyuuNexusService);
@@ -424,6 +428,16 @@ export class App implements OnInit, AfterViewInit {
   toggleNotifCenter(event: Event): void {
     event.stopPropagation();
     this.notifCenterOpen.update((v) => !v);
+  }
+
+  /**
+   * Mobile dock hero slot: toggles the Bot-kun drawer (the service de-bounces duplicate
+   * touch+click events and the drawer itself decides open vs close).
+   */
+  openBotKun(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.botKunService.requestOpen();
   }
 
   openLuckyPick(): void {

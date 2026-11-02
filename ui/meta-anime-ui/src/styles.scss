@@ -65,6 +65,24 @@
   --overlay-border: rgba(255, 255, 255, 0.22);
 }
 
+/* Mobile glass dock + Bot-kun FAB (theme-invariant: both float over page content in
+   either theme, so they keep one dark-glass identity). */
+:root {
+  --dock-bg: rgba(20, 22, 36, 0.78);
+  --dock-border: rgba(255, 255, 255, 0.12);
+  --dock-shadow: 0 12px 32px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(139, 92, 246, 0.15) inset;
+  --dock-scrim: linear-gradient(to top, rgba(11, 12, 20, 0.92) 20%, transparent 100%);
+  --dock-fg: rgba(255, 255, 255, 0.66);
+  --dock-fg-active: #ffffff;
+  --dock-accent: #a78bfa;
+  --dock-active-bg: linear-gradient(135deg, rgba(139, 92, 246, 0.22), rgba(99, 102, 241, 0.10));
+  --dock-active-glow: 0 0 16px rgba(139, 92, 246, 0.25);
+  /* Centre "hero" action (Bot-kun): the only vibrant element in the dock */
+  --dock-hero-bg: linear-gradient(135deg, #7c3aed, #4f46e5);
+  --dock-hero-shadow: 0 4px 16px rgba(124, 58, 237, 0.45);
+  --dock-hero-fg: #ffffff;
+}
+
 [data-theme='dark'] {
   --bg-primary: #0f0f1a;
   --bg-secondary: #1a1a2e;

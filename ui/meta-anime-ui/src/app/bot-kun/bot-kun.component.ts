@@ -104,7 +104,8 @@ export class BotKunComponent implements OnDestroy {
   readonly inputText = signal('');
   readonly isStreaming = signal(false);
   /** True when Bot-kun has a new response and the drawer is currently closed */
-  readonly hasUnread = signal(false);
+  /** Unread flag lives in the service: the mobile dock entry point shows the same dot. */
+  readonly hasUnread = this.botKunService.hasUnread;
 
   readonly speakingIndex = signal<number>(-1);
   /** True for ~300 ms on each word boundary — drives the CSS pulse class on the visualizer */
@@ -188,6 +189,18 @@ export class BotKunComponent implements OnDestroy {
       }
     });
 
+    // Toggle from an external launcher (mobile dock hero slot). Reads the live open
+    // state so the dock can never stack a second drawer, and ignores mid-close taps.
+    effect(() => {
+      const requested = this.botKunService.openRequested();
+      if (requested === 0) return;
+      untracked(() => {
+        if (this.isClosing()) return;
+        if (this.isOpen()) this.close();
+        else this.open();
+      });
+    });
+
     // Open drawer and send a prompt queued from outside (e.g. anime detail panel "Ask Bot-kun" button)
     effect(() => {
       const prompt = this.botKunService.pendingPrompt();
@@ -196,7 +209,7 @@ export class BotKunComponent implements OnDestroy {
         this.botKunService.consumePrompt();
         if (!this.isOpen()) {
           this.isOpen.set(true);
-          this.hasUnread.set(false);
+          this.botKunService.markRead();
         }
         this.inputText.set(prompt);
         // Send after a short tick; if Bot-kun is busy, the text stays in the input box.
@@ -259,7 +272,7 @@ export class BotKunComponent implements OnDestroy {
 
   open(): void {
     this.isOpen.set(true);
-    this.hasUnread.set(false);
+    this.botKunService.markRead();
     clearTimeout(this._closeHandle ?? undefined);
     this._closeHandle = null;
     this.isClosing.set(false);
@@ -435,7 +448,7 @@ export class BotKunComponent implements OnDestroy {
         this.isStreaming.set(false);
         // Notify the user if the drawer was closed while waiting for the response
         if (!this.isOpen()) {
-          this.hasUnread.set(true);
+          this.botKunService.markUnread();
         }
       },
       error: () => {
@@ -712,7 +725,7 @@ export class BotKunComponent implements OnDestroy {
     this.botKunService.cancel();
     this.botKunService.cancelGreeting();
     this.isStreaming.set(false);
-    this.hasUnread.set(false);
+    this.botKunService.markRead();
     this.appliedActionKeys.set(new Set());
     this._libraryInsightPending = false;
     clearTimeout(this._insightPollHandle ?? undefined);

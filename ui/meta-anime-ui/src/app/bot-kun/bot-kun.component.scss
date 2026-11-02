@@ -6,20 +6,24 @@
 
 .bot-kun__fab {
   position: fixed;
-  bottom: 88px; // above mobile bottom nav
-  right: 18px;
+  // Sits clear of the mobile dock (64px tall, 14px off the bottom) + safe area.
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  right: 16px;
   z-index: 1050;
   display: flex;
   align-items: center;
   gap: 7px;
   min-height: 44px;
   padding: 10px 16px 10px 12px;
-  background: var(--color-surface-elevated);
-  color: var(--text-secondary);
-  border: 1px solid color-mix(in srgb, var(--color-brand) 55%, transparent);
-  border-radius: 50px;
+  // Same glass language as the mobile dock so the two read as one system.
+  background: var(--dock-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  color: var(--dock-fg);
+  border: 1px solid var(--dock-border);
+  border-radius: 999px;
   cursor: pointer;
-  box-shadow: 0 4px 20px color-mix(in srgb, var(--text-primary) 16%, transparent);
+  box-shadow: var(--dock-shadow);
   font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -33,9 +37,9 @@
 
   &:hover {
     transform: translateY(-2px) scale(1.04);
-    color: var(--text-primary);
-    border-color: var(--color-brand);
-    box-shadow: 0 6px 28px color-mix(in srgb, var(--color-brand) 35%, transparent);
+    color: var(--dock-fg-active);
+    border-color: var(--dock-accent);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(139, 92, 246, 0.35) inset;
   }
 
   &:active {
@@ -50,6 +54,13 @@
 
   @media (min-width: 992px) {
     bottom: 28px;
+    border-radius: 50px;
+  }
+
+  // The mobile dock carries the Bot-kun entry point (hero center item), so the floating
+  // pill would only duplicate it and collide with the dock.
+  @media (max-width: 991.98px) {
+    display: none;
   }
 }
 
@@ -142,6 +153,40 @@
       z-index: 1082;
     }
   }
+
+  // ── Mobile: centred floating dialog above the nav dock ────────────────────
+  // The desktop rule pins the sheet to the right edge (right: 0 + a fixed width),
+  // which left an uneven gap on the left and tucked the chat under the dock.
+  // Breakpoint matches the mobile dock's (it exists up to 991.98px): the chat must float
+  // above the dock at every width where the dock is on screen, never behind it.
+  @media (max-width: 991.98px) {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: calc(100% - 24px);
+    max-width: 440px;
+    bottom: calc(80px + env(safe-area-inset-bottom, 12px));
+    height: auto;
+    max-height: 82vh;
+    margin: 0 auto;
+    border-radius: 18px;
+    // Centred dialog, so the entry animation must keep the centering translate.
+    animation-name: botKunSlideUpMobile;
+
+    &--closing {
+      animation-name: botKunSlideDownMobile;
+    }
+  }
+}
+
+@keyframes botKunSlideUpMobile {
+  from { transform: translate(-50%, 24px); opacity: 0; }
+  to   { transform: translate(-50%, 0);    opacity: 1; }
+}
+
+@keyframes botKunSlideDownMobile {
+  from { transform: translate(-50%, 0);    opacity: 1; }
+  to   { transform: translate(-50%, 24px); opacity: 0; }
 }
 
 @keyframes botKunSlideUp {

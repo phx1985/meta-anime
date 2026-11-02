@@ -1356,6 +1356,7 @@
     "errorFallback": "Sorry, something went wrong. Please try again.",
     "connectionError": "Connection error — please check your Bot-kun settings.",
     "fabLabel": "Bot-kun",
+    "dockLabel": "Bot-kun",
     "fabOpen": "Open Bot-kun AI concierge",
     "newMessage": "New message from Bot-kun",
     "dialogLabel": "Bot-kun AI Anime Concierge",
