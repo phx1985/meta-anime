@@ -107,6 +107,9 @@
 .nav-link {
   color: var(--text-secondary) !important;
   transition: color 0.2s ease;
+  // Never let a label wrap onto a second line: a squeezed navbar must trade
+  // controls away instead of turning "My Animes" into a two-line block.
+  white-space: nowrap;
 }
 
 .nav-link:hover,
@@ -124,6 +127,9 @@
     display: flex !important;
     align-items: center;
     flex: 1;
+    // Keep the links on one line; the toolbar sheds controls below instead (see the
+    // 992–1199 band on .navbar-actions).
+    min-width: 0;
   }
 }
 
@@ -133,7 +139,6 @@
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
-
   @media (max-width: 991.98px) {
     order: 1; // place before the toggler (order 2 via .navbar-toggler below)
     border-top: none;
@@ -143,9 +148,11 @@
     gap: 0.3rem;
     margin-left: auto; // push to the right side so it sits next to the toggler
 
-    // Hide provider links, lucky pick, settings, language & theme controls on mobile
-    // Only the notification bell remains in the top bar
-    .provider-links,
+    // Hide provider links, lucky pick, settings, language & theme controls on mobile.
+    // Only the notification bell remains in the top bar. NB: target the child *host*
+    // (app-provider-health), not `.provider-links` — that element belongs to the child
+    // component, so an emulated-encapsulation selector here would never match it.
+    app-provider-health,
     .btn-lucky,
     .btn-settings,
     .btn-logout,
@@ -164,6 +171,38 @@
   .navbar-toggler {
     order: 2;
     margin-left: 0.25rem;
+  }
+}
+
+// ── Intermediate widths (992–1199px): tablets and small laptops ────────────────
+// The full toolbar (provider chips + lucky + bell + theme + language + avatar) does not
+// fit next to five inline links at Bootstrap's `lg` container width, and the row used to
+// collapse onto itself: labels wrapped to two lines and the action cluster ran into the
+// links. Nothing is removed here — the spacing is just tightened so every control keeps
+// its place on one line (verified at 992 / 1024 / 1100 / 1199 px).
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .navbar .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .navbar-actions {
+    gap: 0.3rem;
+
+    // "Follow OS theme" is the only control here with a twin elsewhere (Settings →
+    // Appearance) and it is the narrowest saving that keeps every other control.
+    .btn-os-theme {
+      display: none;
+    }
+  }
+
+  .navbar-nav .nav-link {
+    padding-left: 0.45rem;
+    padding-right: 0.45rem;
+  }
+
+  .navbar-brand {
+    font-size: 1.05rem;
   }
 }
 
