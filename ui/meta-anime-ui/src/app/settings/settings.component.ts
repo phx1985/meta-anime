@@ -10,6 +10,7 @@ import {
 
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NgTemplateOutlet } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest, forkJoin, timer } from 'rxjs';
@@ -27,6 +28,7 @@ import { SonarrService, SonarrTag } from '../services/sonarr.service';
 import { AuthService } from '../services/auth.service';
 import { EnrollmentService, PlexLibrary } from '../services/enrollment.service';
 import { BotKunService } from '../services/bot-kun.service';
+import { NsfwEasterEggService } from '../services/nsfw-easter-egg.service';
 import { UiSelectComponent, UiSelectOption } from '../shared/ui/ui-select/ui-select.component';
 import { UiToggleComponent } from '../shared/ui/ui-toggle/ui-toggle.component';
 import { PropertyBagService } from '../services/property-bag.service';
@@ -61,7 +63,7 @@ function langToLocale(lang: string): string {
   selector: 'app-settings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, ReactiveFormsModule, SyncStepComponent, HelpModalComponent, UiSelectComponent, UiToggleComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, NgTemplateOutlet, SyncStepComponent, HelpModalComponent, UiSelectComponent, UiToggleComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
@@ -82,6 +84,7 @@ export class SettingsComponent {
   readonly popupService = inject(PopupService);
   private enrollmentService = inject(EnrollmentService);
   private botKunService = inject(BotKunService);
+  private nsfwEasterEgg = inject(NsfwEasterEggService);
   private propertyBagService = inject(PropertyBagService);
   readonly userPaths = inject(UserPathService);
   private readonly fsBrowse = inject(FsBrowseService);
@@ -416,6 +419,8 @@ export class SettingsComponent {
   private static readonly FRONTEND_SENSITIVE_KEYS = new Set(['MAL:ClientId', 'MAL:ClientSecret']);
   /** The Kometa JSON URL key that requires a warning before editing. */
   private static readonly KOMETA_URL_KEY = 'Kometa:AnimeIdsJsonUrl';
+  /** "Show NSFW Content" — enabling it fires the blush easter egg. */
+  private static readonly NSFW_TOGGLE_KEY = 'App:ShowNsfw';
 
   /** Locale-aware date formatter — uses current app language */
   fmtDate(iso: string): string {
@@ -955,6 +960,11 @@ export class SettingsComponent {
 
   toggleBool(setting: SettingDefinition): void {
     const next = setting.value !== 'true' ? 'true' : 'false';
+    // Capture the switch position synchronously: the async save response is too late to
+    // locate the toggle, and the easter egg spawns its hearts from there.
+    const eggOrigin = setting.key === SettingsComponent.NSFW_TOGGLE_KEY
+      ? this.toggleOrigin(setting.key)
+      : null;
     this.savingKey.set(setting.key);
     this.settingsService
       .update(setting.key, { value: next })
@@ -966,6 +976,10 @@ export class SettingsComponent {
           this.settings.update((list) =>
             list.map((s) => (s.key === setting.key ? { ...s, value: next } : s)),
           );
+          // Easter egg: only on a genuine false → true flip of the NSFW toggle.
+          if (setting.key === SettingsComponent.NSFW_TOGGLE_KEY && next === 'true') {
+            this.nsfwEasterEgg.celebrate(eggOrigin ?? undefined);
+          }
           setTimeout(() => {
             if (this.savedKey() === setting.key) this.savedKey.set(null);
           }, 2000);
@@ -974,6 +988,16 @@ export class SettingsComponent {
           this.savingKey.set(null);
         },
       });
+  }
+
+  /** Viewport centre of a setting's toggle — the spawn point of the NSFW easter egg. */
+  private toggleOrigin(key: string): { x: number; y: number } | null {
+    const row = document.querySelector<HTMLElement>(`[data-setting-key="${key}"]`);
+    const el = row?.querySelector<HTMLElement>('app-ui-toggle') ?? row;
+    const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const rect = (el ?? active)?.getBoundingClientRect();
+    if (!rect || (rect.width === 0 && rect.height === 0)) return null;
+    return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
   }
 
   boolValue(setting: SettingDefinition): boolean {

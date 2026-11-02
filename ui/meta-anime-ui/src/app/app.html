@@ -710,3 +710,8 @@
   </div>
 </div>
 }
+
+<!-- "Show NSFW Content" easter egg (3 s blush + hearts, fires on false → true) -->
+@if (nsfwEgg.burst(); as burst) {
+  <app-nsfw-blush [burst]="burst" />
+}

@@ -151,9 +151,13 @@
 .settings-mobile-subnav__icon {
   object-fit: contain;
   border-radius: 3px;
+  // One rule for BOTH the provider images and the inline SVG glyphs, so every tab in the
+  // mobile row has an identically sized, identically aligned icon.
   width: 22px;
   height: 22px;
   flex-shrink: 0;
+  display: block;
+  color: inherit;
 }
 
 .settings-mobile-subnav__label {

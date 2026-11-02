@@ -1,0 +1,92 @@
+// ── "Show NSFW Content" easter egg ────────────────────────────────────────────
+// Decorative overlay: a 3-second blush vignette with pastel hearts rising from the
+// toggle. Theme-invariant by design (it is a flame, not chrome), so it uses its own
+// pink literals rather than semantic tokens — colors live here only.
+
+:host {
+  display: contents;
+}
+
+.blush {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  overflow: hidden; // never let drifting hearts create scrollbars on narrow screens
+  opacity: 0;
+  animation: blushIn 300ms ease-out forwards;
+
+  &--out {
+    animation: blushOut 600ms ease-in forwards;
+  }
+}
+
+@keyframes blushIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes blushOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+// Ultra-subtle romantic vignette — spec values, kept literal on purpose.
+.blush__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 105, 180, 0.06) 0%,
+    rgba(255, 20, 147, 0.14) 100%
+  );
+}
+
+.blush__hearts {
+  position: absolute;
+  inset: 0;
+}
+
+.blush__heart {
+  position: absolute;
+  width: var(--heart-size, 18px);
+  height: var(--heart-size, 18px);
+  margin: calc(var(--heart-size, 18px) / -2) 0 0 calc(var(--heart-size, 18px) / -2);
+  opacity: 0;
+  // Soft glow so the hearts read against any backdrop.
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--heart-color) 55%, transparent));
+  animation: heartFloat var(--dur, 2600ms) cubic-bezier(0.22, 0.61, 0.36, 1) var(--delay, 0ms) both;
+  will-change: transform, opacity;
+}
+
+@keyframes heartFloat {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.4) rotate(0deg);
+  }
+  12% {
+    opacity: 0.95;
+  }
+  55% {
+    // Mid-flight: drift sideways and wobble.
+    opacity: 0.9;
+    transform: translate3d(calc(var(--drift) * 0.55), calc(var(--rise) * 0.55), 0)
+      scale(var(--heart-scale)) rotate(calc(var(--wobble) * 0.5));
+  }
+  85% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift), var(--rise), 0)
+      scale(calc(var(--heart-scale) * 0.85)) rotate(var(--wobble));
+  }
+}
+
+// Respect reduced-motion: keep the soft blush, drop the particle storm.
+@media (prefers-reduced-motion: reduce) {
+  .blush__heart {
+    animation: none;
+    opacity: 0;
+  }
+}
