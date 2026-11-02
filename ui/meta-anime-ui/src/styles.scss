@@ -53,6 +53,18 @@
     0 2px 6px color-mix(in srgb, var(--card-shadow) 55%, transparent);
 }
 
+/* Theme-invariant media-overlay tokens (photo viewer / lightbox).
+   A full-screen image viewer is always dark-on-black, in both themes: mixing
+   --text-primary here inverted to a milky WHITE scrim in dark theme. Declared once,
+   like the provider brand colours, so call sites carry no raw literals. */
+:root {
+  --overlay-scrim: rgba(0, 0, 0, 0.92);
+  --overlay-fg: #ffffff;
+  --overlay-surface: rgba(255, 255, 255, 0.10);
+  --overlay-surface-strong: rgba(255, 255, 255, 0.18);
+  --overlay-border: rgba(255, 255, 255, 0.22);
+}
+
 [data-theme='dark'] {
   --bg-primary: #0f0f1a;
   --bg-secondary: #1a1a2e;
