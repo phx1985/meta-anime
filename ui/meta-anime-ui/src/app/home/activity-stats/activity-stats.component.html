@@ -59,8 +59,15 @@
     >
 
       @if (providerState.sonarrEnabled()) {
-        <!-- Downloads -->
-        <div class="stat-tile">
+        <!-- Downloads (click → drill-down list of the episodes added) -->
+        <button
+          type="button"
+          class="stat-tile stat-tile--action"
+          [disabled]="loading() || loadError()"
+          (click)="openEpisodes()"
+          [attr.aria-label]="('home.activityStats.episodesDialog.open' | translate) + ' — ' + (periodLabelKey() | translate)"
+          [attr.aria-haspopup]="'dialog'"
+        >
           <div class="stat-tile__inner">
             <img class="stat-tile__icon" src="assets/images/sonarr.svg" alt="Sonarr" aria-hidden="true" />
             @if (loading()) {
@@ -72,12 +79,19 @@
             }
             <div class="stat-tile__label">{{ 'home.activityStats.downloads' | translate }}</div>
           </div>
-        </div>
+        </button>
       }
 
       @if (providerState.sonarrEnabled()) {
-        <!-- Storage -->
-        <div class="stat-tile">
+        <!-- Storage (click → same drill-down list, with sizes) -->
+        <button
+          type="button"
+          class="stat-tile stat-tile--action"
+          [disabled]="loading() || loadError()"
+          (click)="openEpisodes()"
+          [attr.aria-label]="('home.activityStats.episodesDialog.open' | translate) + ' — ' + (periodLabelKey() | translate)"
+          [attr.aria-haspopup]="'dialog'"
+        >
           <div class="stat-tile__inner">
             <!-- Disk icon (inline SVG) -->
             <svg class="stat-tile__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -94,7 +108,7 @@
             }
             <div class="stat-tile__label">{{ 'home.activityStats.storage' | translate }}</div>
           </div>
-        </div>
+        </button>
       }
 
     </div>
@@ -142,4 +156,17 @@
     }
     </div>
   </app-ui-card>
+
+  @if (episodesOpen()) {
+    <app-activity-episodes-dialog
+      [items]="episodes()"
+      [totalCount]="episodesTotalCount()"
+      [totalBytes]="episodesTotalBytes()"
+      [periodLabelKey]="periodLabelKey()"
+      [loading]="episodesLoading()"
+      [error]="episodesError()"
+      (closed)="closeEpisodes()"
+      (retry)="fetchEpisodes()"
+    />
+  }
 }

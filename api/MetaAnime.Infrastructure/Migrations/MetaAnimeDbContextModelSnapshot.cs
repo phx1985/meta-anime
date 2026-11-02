@@ -226,6 +226,40 @@ namespace MetaAnime.Infrastructure.Migrations
                     b.ToTable("PropertyBag", (string)null);
                 });
 
+            modelBuilder.Entity("MetaAnime.Domain.Entities.SonarrHistoryEvent", b =>
+                {
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("SeriesId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EpisodeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SeriesTitle")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SeasonNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EpisodeNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.ToTable("SonarrHistoryEvents", (string)null);
+                });
+
             modelBuilder.Entity("MetaAnime.Domain.Entities.VoiceActor", b =>
                 {
                     b.Property<int>("PersonId")

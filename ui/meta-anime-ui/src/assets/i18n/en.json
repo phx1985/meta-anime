@@ -114,6 +114,22 @@
       "forceRefresh": "Refresh",
       "refreshing": "Refreshing…",
       "lastUpdated": "Last updated: {{value}}",
+      "episodesDialog": {
+        "title": "Episodes added",
+        "open": "Show the episodes added",
+        "countOne": "{{count}} episode",
+        "countMany": "{{count}} episodes",
+        "columnSeries": "Series",
+        "columnEpisode": "Episode",
+        "columnSize": "Size",
+        "unknownSeries": "Unknown series",
+        "unknownEpisode": "Special",
+        "empty": "Nothing was added in this period.",
+        "error": "Couldn't load the episode list.",
+        "retry": "Retry",
+        "close": "Close",
+        "truncated": "Newest {{shown}} of {{total}} shown"
+      },
       "error": {
         "title": "Couldn't load activity",
         "sub": "Activity data is unavailable right now. Check the API connection and try again."
@@ -1161,7 +1177,11 @@
       "kb": "KB",
       "mb": "MB",
       "gb": "GB",
-      "tb": "TB"
+      "tb": "TB",
+      "kib": "KiB",
+      "mib": "MiB",
+      "gib": "GiB",
+      "tib": "TiB"
     },
     "loading": "Loading...",
     "retry": "Retry",

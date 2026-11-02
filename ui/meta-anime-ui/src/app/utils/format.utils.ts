@@ -23,6 +23,24 @@ export function formatTableSize(bytes: number | undefined, translateFn: (key: st
 }
 
 /**
+ * Format raw bytes with BINARY units and localized labels — "1.42 GiB" in English,
+ * "1.42 Gio" in French (KiB/MiB/GiB/TiB vs Kio/Mio/Gio/Tio).
+ * @param bytes - size in bytes
+ * @param translateFn - function to translate unit keys ('common.units.gib', …)
+ */
+export function formatBinarySize(bytes: number | undefined, translateFn: (key: string) => string): string {
+  if (!bytes || bytes <= 0) return '—';
+  const TiB = 1024 ** 4;
+  const GiB = 1024 ** 3;
+  const MiB = 1024 ** 2;
+  const KiB = 1024;
+  if (bytes >= TiB) return (bytes / TiB).toFixed(2) + ' ' + translateFn('common.units.tib');
+  if (bytes >= GiB) return (bytes / GiB).toFixed(2) + ' ' + translateFn('common.units.gib');
+  if (bytes >= MiB) return (bytes / MiB).toFixed(0) + ' ' + translateFn('common.units.mib');
+  return (bytes / KiB).toFixed(0) + ' ' + translateFn('common.units.kib');
+}
+
+/**
  * Convert a codec distribution map into a sorted array of { label, pct } pills.
  * Filters out empty/null keys and entries with 0 count.
  */

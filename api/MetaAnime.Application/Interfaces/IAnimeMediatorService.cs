@@ -31,6 +31,18 @@ public interface IAnimeMediatorService
     Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query, int limit = 10);
     Task<Result<IEnumerable<SeasonalAnimeResponse>>> SearchMalAnimeWithDetailsAsync(string query, int limit = 100);
     Task<Result<ActivityStatsResponse>> GetActivityStatsAsync(int tzOffsetMinutes = 0);
+    /// <summary>
+    /// Lists the episodes imported during <paramref name="period"/>, newest first, straight from
+    /// the local Sonarr history mirror (no provider call). <paramref name="limit"/> caps the rows;
+    /// the response always reports the true period totals.
+    /// </summary>
+    Task<Result<ActivityEpisodesResponse>> GetActivityEpisodesAsync(ActivityStatsPeriod period, int tzOffsetMinutes = 0, int limit = 250);
+    /// <summary>
+    /// Mirrors new Sonarr download events into the local history table (incremental — only the
+    /// recent overlap is re-fetched, de-duplicated by Sonarr history id) and prunes rows that
+    /// fell out of the stats window. Returns what the sync actually did.
+    /// </summary>
+    Task<Result<DownloadHistorySyncSummary>> RefreshDownloadHistoryAsync();
     Task<Result> EnsureAnimeCastForAnimeAsync(string malId);
     /// <summary>
     /// Batch-resolves titles + poster URLs for MAL ids from local data (Anime table, cached MAL

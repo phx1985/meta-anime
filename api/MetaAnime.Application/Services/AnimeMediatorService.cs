@@ -15,6 +15,7 @@ using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MalSearchResultItem = MetaAnime.Core.Models.MalSearchResultItem;
@@ -35,6 +36,7 @@ public sealed class AnimeMediatorService(
     IKometaAnimeMappingRepository kometaAnimeMappingRepository,
     IAnimeRepository animeRepository,
     IAnimeMappingRepository animeMappingRepository,
+    ISonarrHistoryEventRepository sonarrHistoryEventRepository,
     AniListCastService anilistCastService,
     IOptions<MalSettings> malOptions,
     ILogger<AnimeMediatorService> logger)
@@ -594,76 +596,118 @@ public sealed class AnimeMediatorService(
     {
         try
         {
-            // Shift UTC to the caller's local clock so day/week/month/year
-            // boundaries match what the user sees on their calendar.
-            // JavaScript's Date.getTimezoneOffset() returns (UTC − local) in minutes,
-            // so UTC-4 → tzOffsetMinutes = +240; subtracting 240 min from UTC = local time.
-            var nowLocal = DateTime.UtcNow.AddMinutes(-tzOffsetMinutes);
+            var nowUtc = DateTime.UtcNow;
 
-            var todayStart = nowLocal.Date;
-            var weekStart  = todayStart.AddDays(-(int)nowLocal.DayOfWeek);
-            var monthStart = new DateTime(nowLocal.Year, nowLocal.Month, 1);
-            var yearStart  = new DateTime(nowLocal.Year, 1, 1);
+            // Served entirely from the local mirror written by DownloadStatsCacheJob — this
+            // path never calls Sonarr, so it stays fast (and correct for any tz offset)
+            // even when Sonarr is slow, busy or unreachable.
+            var events = await sonarrHistoryEventRepository.GetSinceAsync(ActivityStatsCalculator.WindowStartUtc(nowUtc));
+            var lastUpdated = (await propertyBagRepository.GetByKeyAsync(SettingsKeys.DownloadStatsCacheLastUpdated))?.Value;
 
-            // Convert a UTC datetime to the caller's local time before comparing.
-            DateTime ToLocal(DateTime utcDt) => utcDt.AddMinutes(-tzOffsetMinutes);
-
-            var dlTask    = await sonarrAnimeSource.GetDownloadHistoryAsync();
-            var dlRecords = dlTask.IsSuccess ? dlTask.Value : [];
-
-            // ── Period totals ──────────────────────────────────────────────────
-            var dlToday  = dlRecords.Count(r => ToLocal(r.Date) >= todayStart);
-            var dlWeek   = dlRecords.Count(r => ToLocal(r.Date) >= weekStart);
-            var dlMonth  = dlRecords.Count(r => ToLocal(r.Date) >= monthStart);
-            var dlYear   = dlRecords.Count(r => ToLocal(r.Date) >= yearStart);
-
-            var storToday = dlRecords.Where(r => ToLocal(r.Date) >= todayStart).Sum(r => r.SizeBytes);
-            var storWeek  = dlRecords.Where(r => ToLocal(r.Date) >= weekStart).Sum(r => r.SizeBytes);
-            var storMonth = dlRecords.Where(r => ToLocal(r.Date) >= monthStart).Sum(r => r.SizeBytes);
-            var storYear  = dlRecords.Where(r => ToLocal(r.Date) >= yearStart).Sum(r => r.SizeBytes);
-
-            // ── Chart series ───────────────────────────────────────────────────
-            string[] shortDays   = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-            string[] shortMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-            // Week: past 7 days (day-6 … today), one point per day
-            var weekPoints = Enumerable.Range(0, 7).Select(i =>
-            {
-                var day     = todayStart.AddDays(i - 6);
-                var dls     = dlRecords.Count(r => ToLocal(r.Date).Date == day);
-                var storage = dlRecords.Where(r => ToLocal(r.Date).Date == day).Sum(r => r.SizeBytes);
-                return new ActivityChartPoint(shortDays[(int)day.DayOfWeek], dls, storage);
-            }).ToList();
-
-            // Month: ALL days in the current month (future days show 0), one point per day
-            var daysInMonth = DateTime.DaysInMonth(nowLocal.Year, nowLocal.Month);
-            var monthPoints = Enumerable.Range(1, daysInMonth).Select(d =>
-            {
-                var day     = new DateTime(nowLocal.Year, nowLocal.Month, d);
-                var dls     = dlRecords.Count(r => ToLocal(r.Date).Date == day);
-                var storage = dlRecords.Where(r => ToLocal(r.Date).Date == day).Sum(r => r.SizeBytes);
-                return new ActivityChartPoint(d.ToString(), dls, storage);
-            }).ToList();
-
-            // Year: ALL 12 months (future months show 0), one point per month
-            var yearPoints = Enumerable.Range(1, 12).Select(m =>
-            {
-                var mStart = new DateTime(nowLocal.Year, m, 1);
-                var mEnd   = mStart.AddMonths(1);
-                var dls     = dlRecords.Count(r => ToLocal(r.Date) >= mStart && ToLocal(r.Date) < mEnd);
-                var storage = dlRecords.Where(r => ToLocal(r.Date) >= mStart && ToLocal(r.Date) < mEnd).Sum(r => r.SizeBytes);
-                return new ActivityChartPoint(shortMonths[m - 1], dls, storage);
-            }).ToList();
-
-            return Result.Success(new ActivityStatsResponse(
-                new ActivityPeriodStats(dlToday, dlWeek, dlMonth, dlYear),
-                new StoragePeriodStats(storToday, storWeek, storMonth, storYear),
-                new ActivityChartData(weekPoints, monthPoints, yearPoints)));
+            var stats = ActivityStatsCalculator.Build(events, nowUtc, tzOffsetMinutes) with { LastUpdated = lastUpdated };
+            return Result.Success(stats);
         }
         catch (Exception ex)
         {
             return Result.Failure<ActivityStatsResponse>(new(Constants.Errors.GetActivityStatsAsync, ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Lists the episodes imported during <paramref name="period"/>, newest first, straight from
+    /// the local mirror (no Sonarr call, so the dialog opens instantly).
+    /// </summary>
+    public async Task<Result<ActivityEpisodesResponse>> GetActivityEpisodesAsync(
+        ActivityStatsPeriod period,
+        int tzOffsetMinutes = 0,
+        int limit = 250)
+    {
+        try
+        {
+            var nowUtc = DateTime.UtcNow;
+            var periodStartUtc = ActivityStatsCalculator.PeriodStartUtc(period, nowUtc, tzOffsetMinutes);
+
+            // The repository already filters on OccurredAt and orders newest-first, so the
+            // period cut is the only extra predicate needed.
+            var events = await sonarrHistoryEventRepository.GetSinceAsync(periodStartUtc);
+            var inPeriod = events.Where(e => e.OccurredAt <= nowUtc).ToList();
+
+            var capped = limit <= 0 ? inPeriod : inPeriod.Take(limit).ToList();
+
+            IList<ActivityEpisodeItem> items = capped
+                .Select(e => new ActivityEpisodeItem(
+                    e.SeriesTitle,
+                    e.SeasonNumber,
+                    e.EpisodeNumber,
+                    e.SizeBytes,
+                    e.OccurredAt))
+                .ToList();
+
+            return Result.Success(new ActivityEpisodesResponse(
+                period,
+                inPeriod.Count,
+                inPeriod.Sum(e => e.SizeBytes),
+                items));
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<ActivityEpisodesResponse>(new(Constants.Errors.GetActivityEpisodesAsync, ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Overlap re-requested on every sync so late-arriving history rows are never missed.
+    /// Duplicates are dropped by Sonarr history id, so re-fetching is free.
+    /// </summary>
+    private static readonly TimeSpan DownloadHistoryOverlap = TimeSpan.FromHours(2);
+
+    public async Task<Result<DownloadHistorySyncSummary>> RefreshDownloadHistoryAsync()
+    {
+        var startedAt = Stopwatch.GetTimestamp();
+        try
+        {
+            var nowUtc = DateTime.UtcNow;
+            var windowStart = ActivityStatsCalculator.WindowStartUtc(nowUtc);
+
+            // Cold start (or a mirror that never reached the current year) backfills the whole
+            // stats window in a single call. Once warm, only the recent overlap is requested —
+            // that is what turns an hourly 20s job into a few-hundred-ms one.
+            var watermark = await sonarrHistoryEventRepository.GetLatestOccurredAtAsync();
+            var since = watermark is null || watermark.Value - DownloadHistoryOverlap < windowStart
+                ? windowStart
+                : watermark.Value - DownloadHistoryOverlap;
+
+            var fetched = await sonarrAnimeSource.GetDownloadHistorySinceAsync(since);
+            if (fetched.IsFailure)
+                return Result.Failure<DownloadHistorySyncSummary>(fetched.Error);
+
+            var incoming = fetched.Value
+                .Where(e => e.Date >= windowStart)
+                .Select(e => new SonarrHistoryEvent
+                {
+                    Id = e.Id,
+                    OccurredAt = e.Date,
+                    SizeBytes = e.SizeBytes,
+                    SeriesId = e.SeriesId,
+                    EpisodeId = e.EpisodeId,
+                    SeriesTitle = e.SeriesTitle,
+                    SeasonNumber = e.SeasonNumber,
+                    EpisodeNumber = e.EpisodeNumber,
+                })
+                .ToList();
+
+            var inserted = await sonarrHistoryEventRepository.MergeAsync(incoming);
+            await sonarrHistoryEventRepository.PruneBeforeAsync(windowStart);
+
+            return Result.Success(new DownloadHistorySyncSummary(
+                fetched.Value.Count,
+                inserted,
+                since,
+                (long)Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds));
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<DownloadHistorySyncSummary>(new(Constants.Errors.RefreshDownloadHistoryAsync, ex.Message));
         }
     }
 

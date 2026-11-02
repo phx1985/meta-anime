@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import {
   AnimeStatisticsResponse,
   ActivityStatsResponse,
+  ActivityEpisodesResponse,
+  ActivityPeriod,
   AnimeResponse,
   AnimeDetailsResponse,
   PagedResponse,
@@ -40,6 +42,21 @@ export class AnimeService {
 
   refreshActivityStats(): Observable<void> {
     return this.http.post<void>(`${this.base}/activity-stats/refresh`, null);
+  }
+
+  /** Newest-first list of the episodes imported during the given activity period. */
+  getActivityEpisodes(
+    period: ActivityPeriod,
+    tzOffset: number,
+    limit = 250,
+  ): Observable<ActivityEpisodesResponse> {
+    return this.http.get<ActivityEpisodesResponse>(`${this.base}/activity-stats/episodes`, {
+      params: {
+        period,
+        tzOffset: tzOffset.toString(),
+        limit: limit.toString(),
+      },
+    });
   }
 
   getAnimes(

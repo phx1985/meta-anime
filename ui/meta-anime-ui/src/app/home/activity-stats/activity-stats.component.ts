@@ -31,10 +31,12 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { AnimeService } from '../../services/anime.service';
 import { ProviderStateService } from '../../services/provider-state.service';
 import { ThemeService } from '../../services/theme.service';
-import { ActivityChartPoint, ActivityStatsResponse } from '../../models/anime.models';
+import { ActivityChartPoint, ActivityEpisodeItem, ActivityPeriod, ActivityStatsResponse } from '../../models/anime.models';
 import { readToken, withAlpha } from '../../shared/chart-theme';
 import { UiCardComponent } from '../../shared/ui/ui-card.component';
 import { UiStatePanelComponent } from '../../shared/ui/ui-state-panel/ui-state-panel.component';
+import { ActivityEpisodesDialogComponent } from './activity-episodes-dialog/activity-episodes-dialog.component';
+import { formatBinarySize } from '../../utils/format.utils';
 
 // Register Chart.js elements needed for line charts (global, idempotent).
 Chart.register(
@@ -49,13 +51,13 @@ Chart.register(
   ChartDataLabels,
 );
 
-type Period = 'today' | 'thisWeek' | 'thisMonth' | 'thisYear';
+type Period = ActivityPeriod;
 
 @Component({
   selector: 'app-activity-stats',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, UiCardComponent, UiStatePanelComponent],
+  imports: [TranslatePipe, UiCardComponent, UiStatePanelComponent, ActivityEpisodesDialogComponent],
   templateUrl: './activity-stats.component.html',
   styleUrl: './activity-stats.component.scss',
 })
@@ -75,6 +77,22 @@ export class ActivityStatsComponent implements OnInit, AfterViewInit, OnDestroy 
   readonly refreshing = signal(false);
   readonly selectedPeriod = signal<Period>('thisMonth');
   private viewInit = signal(false);
+
+  // ── Episodes drill-down dialog ─────────────────────────────────────────────
+  readonly episodesOpen = signal(false);
+  readonly episodes = signal<ActivityEpisodeItem[]>([]);
+  readonly episodesTotalCount = signal(0);
+  readonly episodesTotalBytes = signal(0);
+  readonly episodesLoading = signal(false);
+  readonly episodesError = signal(false);
+
+  /** Bumped on language change so translate.instant()-based labels re-render. */
+  private readonly langVersion = signal(0);
+
+  /** Translation key of the selected period — the dialog translates it itself. */
+  readonly periodLabelKey = computed(
+    () => this.periods.find(p => p.key === this.selectedPeriod())?.labelKey ?? 'home.activityStats.thisMonth',
+  );
 
   private chart: Chart | null = null;
   /** Theme the current chart instance was built for (forces rebuild on switch). */
@@ -103,7 +121,12 @@ export class ActivityStatsComponent implements OnInit, AfterViewInit, OnDestroy 
     return stats.storage[this.selectedPeriod()];
   });
 
-  readonly storageFormatted = computed(() => this.formatBytes(this.storageBytes()));
+  readonly storageFormatted = computed(() => {
+    // Same binary units the drill-down dialog uses ("5.61 GiB" / "5.61 Gio") — the old
+    // hard-coded "GB" label sat on top of 1024-based math.
+    this.langVersion();
+    return formatBinarySize(this.storageBytes(), (k: string) => this.translate.instant(k));
+  });
 
   readonly lastUpdated = computed(() => {
     const raw = this.activityStats()?.lastUpdated;
@@ -162,6 +185,7 @@ export class ActivityStatsComponent implements OnInit, AfterViewInit, OnDestroy 
     this.translate.onLangChange
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
+        this.langVersion.update(v => v + 1);
         const stats = this.activityStats();
         this.destroyChart();
         if (stats && this.showChart()) {
@@ -178,6 +202,41 @@ export class ActivityStatsComponent implements OnInit, AfterViewInit, OnDestroy 
 
   selectPeriod(period: Period): void {
     this.selectedPeriod.set(period);
+    // Keep an open drill-down in sync with the tab the user just picked.
+    if (this.episodesOpen()) this.fetchEpisodes();
+  }
+
+  /** Opens the "what was added" dialog for the currently selected period. */
+  openEpisodes(): void {
+    if (this.loading() || this.loadError()) return;
+    this.episodesOpen.set(true);
+    this.fetchEpisodes();
+  }
+
+  closeEpisodes(): void {
+    this.episodesOpen.set(false);
+  }
+
+  /** Reloads the open drill-down (also used by the dialog's retry button). */
+  fetchEpisodes(): void {
+    this.episodesLoading.set(true);
+    this.episodesError.set(false);
+    this.animeService
+      .getActivityEpisodes(this.selectedPeriod(), new Date().getTimezoneOffset())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          this.episodes.set(data.items);
+          this.episodesTotalCount.set(data.totalCount);
+          this.episodesTotalBytes.set(data.totalBytes);
+          this.episodesLoading.set(false);
+        },
+        error: () => {
+          this.episodes.set([]);
+          this.episodesLoading.set(false);
+          this.episodesError.set(true);
+        },
+      });
   }
 
   /**
@@ -379,15 +438,5 @@ export class ActivityStatsComponent implements OnInit, AfterViewInit, OnDestroy 
     if (isNaN(d.getTime())) return isoUtc;
     const pad = (n: number) => String(n).padStart(2, '0');
     return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
-
-  private formatBytes(bytes: number): string {
-    if (bytes === 0) return '0 GB';
-    const tb = bytes / 1_099_511_627_776;
-    if (tb >= 1) return `${tb.toFixed(2)} TB`;
-    const gb = bytes / 1_073_741_824;
-    if (gb >= 1) return `${gb.toFixed(2)} GB`;
-    const mb = bytes / 1_048_576;
-    return `${mb.toFixed(0)} MB`;
   }
 }

@@ -114,6 +114,22 @@
       "forceRefresh": "Actualiser",
       "refreshing": "Actualisation…",
       "lastUpdated": "Dernière mise à jour: {{value}}",
+      "episodesDialog": {
+        "title": "Épisodes ajoutés",
+        "open": "Voir les épisodes ajoutés",
+        "countOne": "{{count}} épisode",
+        "countMany": "{{count}} épisodes",
+        "columnSeries": "Série",
+        "columnEpisode": "Épisode",
+        "columnSize": "Taille",
+        "unknownSeries": "Série inconnue",
+        "unknownEpisode": "Spécial",
+        "empty": "Aucun ajout sur cette période.",
+        "error": "Impossible de charger la liste des épisodes.",
+        "retry": "Réessayer",
+        "close": "Fermer",
+        "truncated": "{{shown}} plus récents sur {{total}}"
+      },
       "error": {
         "title": "Impossible de charger l'activité",
         "sub": "Les données d'activité sont indisponibles. Vérifiez la connexion à l'API puis réessayez."
@@ -1161,7 +1177,11 @@
       "kb": "Ko",
       "mb": "Mo",
       "gb": "Go",
-      "tb": "To"
+      "tb": "To",
+      "kib": "Kio",
+      "mib": "Mio",
+      "gib": "Gio",
+      "tib": "Tio"
     },
     "loading": "Chargement...",
     "retry": "Réessayer",

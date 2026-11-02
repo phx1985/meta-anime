@@ -183,6 +183,26 @@ export interface ActivityStatsResponse {
   lastUpdated?: string | null;
 }
 
+/** The four selectable activity periods — also the `period` query token of the episodes API. */
+export type ActivityPeriod = 'today' | 'thisWeek' | 'thisMonth' | 'thisYear';
+
+/** One imported episode in the activity drill-down list. */
+export interface ActivityEpisodeItem {
+  seriesTitle: string;
+  seasonNumber: number;
+  episodeNumber: number;
+  sizeBytes: number;
+  occurredAt: string;
+}
+
+/** Episode list for one activity period (newest first, capped by `limit`). */
+export interface ActivityEpisodesResponse {
+  period: ActivityPeriod;
+  totalCount: number;
+  totalBytes: number;
+  items: ActivityEpisodeItem[];
+}
+
 export interface PagedResponse<T> {
   data: T[];
   page: number;

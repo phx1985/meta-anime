@@ -13,6 +13,7 @@ public class MetaAnimeDbContext(DbContextOptions<MetaAnimeDbContext> options) : 
     public DbSet<PropertyBag> PropertyBag { get; set; }
     public DbSet<AnimeCast> AnimeCast { get; set; }
     public DbSet<VoiceActor> VoiceActors { get; set; }
+    public DbSet<SonarrHistoryEvent> SonarrHistoryEvents { get; set; }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new AnimeConfiguration());
@@ -23,6 +24,7 @@ public class MetaAnimeDbContext(DbContextOptions<MetaAnimeDbContext> options) : 
         modelBuilder.ApplyConfiguration(new PropertyBagConfiguration());
         modelBuilder.ApplyConfiguration(new AnimeCastConfiguration());
         modelBuilder.ApplyConfiguration(new VoiceActorConfiguration());
+        modelBuilder.ApplyConfiguration(new SonarrHistoryEventConfiguration());
 
         base.OnModelCreating(modelBuilder);
     }

@@ -38,12 +38,33 @@ public interface ISonarrAnimeSourceService<T> : IAnimeSourceService<T>
     /// <summary>Creates a new tag in the Sonarr instance and returns the created tag.</summary>
     Task<Result<SonarrTagInfo>> CreateTagAsync(string label);
 
-    /// <summary>Returns recent downloaded episode events from Sonarr, ordered most-recent first.</summary>
-    Task<Result<IList<SonarrDownloadEvent>>> GetDownloadHistoryAsync(int pageSize = 1000);
+    /// <summary>
+    /// Returns the "download folder imported" events Sonarr recorded strictly after
+    /// <paramref name="sinceUtc"/>, with the series title and episode numbers needed by the
+    /// "what was added" dialog. One unsorted call to <c>api/v3/history/since</c> — cheap
+    /// enough to run on every cache cycle, unlike paging the sorted history table.
+    /// </summary>
+    Task<Result<IList<SonarrDownloadEvent>>> GetDownloadHistorySinceAsync(DateTime sinceUtc);
 }
 
 /// <summary>Lightweight projection of a Sonarr history download event.</summary>
-public sealed record SonarrDownloadEvent(DateTime Date, long SizeBytes);
+/// <param name="Id">Sonarr's history record id (unique per instance; merge key).</param>
+/// <param name="Date">UTC import timestamp.</param>
+/// <param name="SizeBytes">Imported file size in bytes.</param>
+/// <param name="SeriesId">Sonarr series id.</param>
+/// <param name="EpisodeId">Sonarr episode id.</param>
+/// <param name="SeriesTitle">Series title (empty when Sonarr could not resolve it).</param>
+/// <param name="SeasonNumber">Season number (0 = specials).</param>
+/// <param name="EpisodeNumber">Episode number within the season.</param>
+public sealed record SonarrDownloadEvent(
+    long Id,
+    DateTime Date,
+    long SizeBytes,
+    int SeriesId = 0,
+    int EpisodeId = 0,
+    string SeriesTitle = "",
+    int SeasonNumber = 0,
+    int EpisodeNumber = 0);
 
 /// <summary>Light-weight projection returned by GetSeriesByCodecAsync.</summary>
 public sealed record SonarrSeriesCodecResult(

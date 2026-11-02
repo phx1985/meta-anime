@@ -12,9 +12,12 @@ public sealed class SonarrHistoryResponse
     [JsonPropertyName("totalRecords")]
     public int TotalRecords { get; set; }
 }
-
 public sealed class SonarrHistoryRecord
 {
+    /// <summary>Sonarr's own history record id — stable and unique per Sonarr instance.</summary>
+    [JsonPropertyName("id")]
+    public long Id { get; set; }
+
     [JsonPropertyName("seriesId")]
     public int SeriesId { get; set; }
 
@@ -29,6 +32,37 @@ public sealed class SonarrHistoryRecord
 
     [JsonPropertyName("data")]
     public SonarrHistoryData Data { get; set; }
+
+    /// <summary>Series object — only present when the request sets <c>includeSeries=true</c>.</summary>
+    [JsonPropertyName("series")]
+    public SonarrHistorySeries? Series { get; set; }
+
+    /// <summary>Episode object — only present when the request sets <c>includeEpisode=true</c>.</summary>
+    [JsonPropertyName("episode")]
+    public SonarrHistoryEpisode? Episode { get; set; }
+}
+
+/// <summary>Minimal projection of the series object embedded in a history record.</summary>
+public sealed class SonarrHistorySeries
+{
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
+
+    [JsonPropertyName("title")]
+    public string? Title { get; set; }
+}
+
+/// <summary>Minimal projection of the episode object embedded in a history record.</summary>
+public sealed class SonarrHistoryEpisode
+{
+    [JsonPropertyName("id")]
+    public int Id { get; set; }
+
+    [JsonPropertyName("seasonNumber")]
+    public int SeasonNumber { get; set; }
+
+    [JsonPropertyName("episodeNumber")]
+    public int EpisodeNumber { get; set; }
 }
 
 public sealed class SonarrHistoryData

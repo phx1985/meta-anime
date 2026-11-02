@@ -21,6 +21,12 @@ public sealed class GetCachedActivityStatsQueryHandler(IPropertyBagRepository pr
     {
         try
         {
+            // The snapshot is pre-aggregated at UTC. Serving it to a caller in another timezone
+            // would put downloads on the wrong day (up to a whole day of skew), so those
+            // callers fall through to the DB-backed computation, which is equally cheap.
+            if (request.TzOffsetMinutes != 0)
+                return Result.Success<ActivityStatsResponse?>(null);
+
             var cacheEntry       = await propertyBagRepository.GetByKeyAsync(SettingsKeys.DownloadStatsCache);
             var lastUpdatedEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.DownloadStatsCacheLastUpdated);
 

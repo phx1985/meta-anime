@@ -37,8 +37,12 @@ public static class Constants
         public const string GetSonarrSeriesByCodecAsync = "Error.GetSonarrSeriesByCodecAsync";
         public const string GetStatisticsAsync = "Error.GetStatisticsAsync";
         public const string GetActivityStatsAsync = "Error.GetActivityStatsAsync";
+        public const string GetActivityEpisodesAsync = "Error.GetActivityEpisodesAsync";
         public const string GetCachedActivityStatsAsync = "Error.GetCachedActivityStatsAsync";
         public const string CacheDownloadStatsAsync = "Error.CacheDownloadStatsAsync";
+        public const string RefreshDownloadHistoryAsync = "Error.RefreshDownloadHistoryAsync";
+        /// <summary>Failure raised by the Sonarr client when the history endpoint is unreachable or errors.</summary>
+        public const string SonarrDownloadHistory = "Error.SonarrDownloadHistory";
         public const string GetSyncStatus = "Error.GetSyncStatus";
         public const string NotFound = "Error.NotFound";
         public const string RefreshData = "Error.RefreshData";
@@ -111,6 +115,7 @@ public static class Constants
         public static class DownloadStatsCacheJob
         {
             public const string Starting = "Starting download stats cache refresh at {Time}";
+            public const string Refreshed = "Download history sync: fetched {Fetched} event(s) from Sonarr since {Since}, stored {Inserted} new one(s) ({Elapsed} ms)";
             public const string Succeeded = "Successfully cached download stats at {Time}";
             public const string Error = "Error during download stats cache refresh";
         }

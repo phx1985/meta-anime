@@ -5,6 +5,7 @@ using MetaAnime.Core.Interfaces.Shared.Results;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
 using RestSharp;
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
 
@@ -16,6 +17,10 @@ public sealed class SonarrAnimeSourceService(
 {
     #region Fields
     private const string ClientName = "Sonarr";
+
+    /// <summary>Sonarr history event type value for a completed import.</summary>
+    private const int DownloadFolderImportedEventType = 3;
+
     private static readonly JsonSerializerOptions jsonOptions = new() { PropertyNameCaseInsensitive = true };
     #endregion
 
@@ -403,60 +408,50 @@ public sealed class SonarrAnimeSourceService(
         return Result.Success(new SonarrTagInfo(created.Id, created.Label));
     }
 
-    public async Task<Result<IList<SonarrDownloadEvent>>> GetDownloadHistoryAsync(int pageSize = 1000)
+    public async Task<Result<IList<SonarrDownloadEvent>>> GetDownloadHistorySinceAsync(DateTime sinceUtc)
     {
         var (host, apiKey, _, isConfigured) = await GetSettingsAsync();
         if (!isConfigured)
             return Result.Success<IList<SonarrDownloadEvent>>([]);
 
-        // Fetch all downloadFolderImported records going back to the start of the current year.
-        // We paginate until the oldest record in a page is before yearStart, so we never cap
-        // stats at a fixed round number like 1000.
-        var yearStart = new DateTime(DateTime.UtcNow.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        // 2 000 records/page reduces round-trips by ~8× vs the old 250 default.
-        // Most libraries need only 1-2 calls to cover an entire year.
-        const int fetchPageSize = 2000;
+        // api/v3/history/since is the cheap endpoint: it filters on the date index and returns
+        // records unsorted. The paginated api/v3/history call we used before has to sort the
+        // ENTIRE history table on every page (measured ~10s per 2 000-record page on a 34k-row
+        // history), and a cold year backfill cost two of those. This one call covers the same
+        // window in ~8s cold and a few hundred ms once the mirror is warm.
         var client = CreateRestClient(host);
-        var allEvents = new List<SonarrDownloadEvent>();
-        var page = 1;
+        var req = new RestRequest("api/v3/history/since");
+        req.AddParameter("apikey", apiKey);
+        req.AddParameter("date", sinceUtc.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
+        // Sonarr expects the numeric enum value: 3 = DownloadFolderImported
+        req.AddParameter("eventType", DownloadFolderImportedEventType);
+        // Embedded series/episode objects carry the display title and SxxExx the activity
+        // dialog shows. Without these flags the payload is smaller but only has ids.
+        req.AddParameter("includeSeries", "true");
+        req.AddParameter("includeEpisode", "true");
 
-        while (true)
-        {
-            var req = new RestRequest("api/v3/history");
-            req.AddParameter("apikey", apiKey);
-            req.AddParameter("page", page);
-            req.AddParameter("pageSize", fetchPageSize);
-            req.AddParameter("sortKey", "date");
-            req.AddParameter("sortDirection", "descending");
-            // Sonarr expects the numeric enum value: 3 = DownloadFolderImported
-            req.AddParameter("eventType", 3);
+        var resp = await client.ExecuteAsync(req);
+        if (!resp.IsSuccessful || string.IsNullOrWhiteSpace(resp.Content))
+            return Result.Failure<IList<SonarrDownloadEvent>>(
+                new(Constants.Errors.DownloadHistory, $"Failed to fetch Sonarr history since {sinceUtc:O} (HTTP {(int)resp.StatusCode})"));
 
-            var resp = await client.ExecuteAsync(req);
-            if (!resp.IsSuccessful || string.IsNullOrEmpty(resp.Content))
-                break;
+        var records = JsonSerializer.Deserialize<List<SonarrHistoryRecord>>(resp.Content, jsonOptions) ?? [];
 
-            var historyResponse = JsonSerializer.Deserialize<SonarrHistoryResponse>(resp.Content, jsonOptions);
-            var records = historyResponse?.Records;
-            if (records == null || records.Count == 0)
-                break;
+        IList<SonarrDownloadEvent> events = records
+            .Where(r => r.EventType.Equals("downloadFolderImported", StringComparison.OrdinalIgnoreCase))
+            // Sonarr always emits UTC ("…Z"); normalise defensively so nothing is re-localised later.
+            .Select(r => new SonarrDownloadEvent(
+                r.Id,
+                r.Date.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(r.Date, DateTimeKind.Utc) : r.Date.ToUniversalTime(),
+                r.Data?.GetSizeBytes() ?? 0L,
+                r.SeriesId != 0 ? r.SeriesId : r.Series?.Id ?? 0,
+                r.EpisodeId != 0 ? r.EpisodeId : r.Episode?.Id ?? 0,
+                r.Series?.Title ?? string.Empty,
+                r.Episode?.SeasonNumber ?? 0,
+                r.Episode?.EpisodeNumber ?? 0))
+            .ToList();
 
-            allEvents.AddRange(records
-                .Where(r => r.EventType.Equals("downloadFolderImported", StringComparison.OrdinalIgnoreCase))
-                .Select(r => new SonarrDownloadEvent(r.Date, r.Data?.GetSizeBytes() ?? 0L)));
-
-            // Stop once the oldest record on this page pre-dates the year start —
-            // everything further back is outside the stats window we need.
-            if (records.Min(r => r.Date) < yearStart)
-                break;
-
-            // Stop if Sonarr returned fewer records than requested (last page).
-            if (records.Count < fetchPageSize)
-                break;
-
-            page++;
-        }
-
-        return Result.Success<IList<SonarrDownloadEvent>>(allEvents);
+        return Result.Success(events);
     }
     #endregion
 

@@ -4,6 +4,7 @@ using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 using System.Text.Json;
 
 namespace MetaAnime.Application.BackgroundJobs;
@@ -19,7 +20,14 @@ public sealed class DownloadStatsCacheJob(
     };
 
     /// <summary>
-    /// Fetches download stats from Sonarr and persists them in the PropertyBag cache.
+    /// Syncs new Sonarr download events into the local history mirror, then rebuilds the
+    /// stats snapshot served by <c>/api/v1/animes/activity-stats</c>.
+    /// <para>
+    /// The sync is incremental: Sonarr is only asked for events newer than the newest one we
+    /// already stored (minus a two-hour overlap). The expensive part of the old implementation
+    /// — paging <c>api/v3/history</c>, which sorts Sonarr's whole history table per page — now
+    /// happens once, on the cold start, instead of on every cycle.
+    /// </para>
     /// </summary>
     public async Task CacheDownloadStatsAsync()
     {
@@ -27,6 +35,20 @@ public sealed class DownloadStatsCacheJob(
 
         try
         {
+            var sync = await animeMediatorService.RefreshDownloadHistoryAsync();
+            if (sync.IsFailure)
+            {
+                logger.LogError(Constants.LogMessages.DownloadStatsCacheJob.Error + ": {ErrorMessage}", sync.Error.Message);
+                return;
+            }
+
+            logger.LogInformation(
+                Constants.LogMessages.DownloadStatsCacheJob.Refreshed,
+                sync.Value.Fetched,
+                sync.Value.SinceUtc.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture),
+                sync.Value.Inserted,
+                sync.Value.ElapsedMs);
+
             var result = await animeMediatorService.GetActivityStatsAsync(0);
 
             if (result.IsFailure)

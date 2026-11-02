@@ -121,6 +121,7 @@ public static class ServicesExtensions
         services.AddScoped<IPropertyBagRepository, PropertyBagRepository>();
         services.AddScoped<IAnimeCastRepository, AnimeCastRepository>();
         services.AddScoped<IVoiceActorRepository, VoiceActorRepository>();
+        services.AddScoped<ISonarrHistoryEventRepository, SonarrHistoryEventRepository>();
         // AniList GraphQL client: singleton pacing gate (400ms spacing, 55 req/60s sliding window,
         // queue with 15s drop budget — safe under AniList's ~90 req/min unauthenticated limit) and
         // two-state negative cache shared across requests. The pipeline POSTs { query, variables }
