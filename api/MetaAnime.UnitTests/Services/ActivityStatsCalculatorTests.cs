@@ -67,11 +67,11 @@ public class ActivityStatsCalculatorTests
         var stats = ActivityStatsCalculator.Build(events, Now, tzOffsetMinutes: 0);
 
         stats.Downloads.Today.Should().Be(1);
-        stats.Downloads.ThisWeek.Should().Be(3);   // Sunday-based week start: Nov 1 → Nov 4
+        stats.Downloads.ThisWeek.Should().Be(2);   // Monday-based week start: Nov 2 → Nov 4
         stats.Downloads.ThisMonth.Should().Be(3);  // Oct 15 belongs to the year, not the month
         stats.Downloads.ThisYear.Should().Be(4);
         stats.Storage.Today.Should().Be(1_000);
-        stats.Storage.ThisWeek.Should().Be(7_000);
+        stats.Storage.ThisWeek.Should().Be(3_000);  // Nov 4 (1 000) + Nov 2 (2 000)
         stats.Storage.ThisMonth.Should().Be(7_000);
         stats.Storage.ThisYear.Should().Be(15_000);
     }
@@ -82,8 +82,10 @@ public class ActivityStatsCalculatorTests
         var stats = ActivityStatsCalculator.Build([Event(new DateTime(2026, 11, 4, 10, 0, 0, DateTimeKind.Utc), 777)], Now, 0);
 
         stats.Chart.Week.Should().HaveCount(7);
-        stats.Chart.Week[^1].Label.Should().Be("Wed", "the last week point is today");
-        stats.Chart.Week[^1].Downloads.Should().Be(1);
+        // Calendar week Monday → Sunday: index 2 is this Wednesday (today).
+        stats.Chart.Week.Select(p => p.Label).Should().Equal("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun");
+        stats.Chart.Week[2].Downloads.Should().Be(1);
+        stats.Chart.Week[3].Downloads.Should().Be(0, "future days still render a zero point");
 
         stats.Chart.Month.Should().HaveCount(30, "November has 30 days — every day is present");
         stats.Chart.Month[3].Label.Should().Be("4");
@@ -135,10 +137,55 @@ public class ActivityStatsCalculatorTests
         start.Should().BeBefore(new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
     }
 
+    [Fact]
+    public void Build_WeekChartWindowMatchesTheThisWeekCounter()
+    {
+        // Regression: the week chart used to plot a rolling "last 7 days" window while the
+        // counter counted the calendar week, so on a Sunday the chart showed six days the
+        // counter excluded (78 episodes on the chart vs 6 in the tile).
+        var events = new[]
+        {
+            Event(new DateTime(2026, 11, 4, 10, 0, 0, DateTimeKind.Utc)),  // this week (Wed)
+            Event(new DateTime(2026, 10, 28, 10, 0, 0, DateTimeKind.Utc)), // previous week — chart must NOT show it
+            Event(new DateTime(2026, 10, 29, 10, 0, 0, DateTimeKind.Utc)), // previous week
+        };
+
+        var stats = ActivityStatsCalculator.Build(events, Now, tzOffsetMinutes: 0);
+
+        stats.Downloads.ThisWeek.Should().Be(1);
+        stats.Chart.Week.Sum(p => p.Downloads).Should().Be(stats.Downloads.ThisWeek);
+        stats.Chart.Week.Sum(p => p.StorageBytes).Should().Be(stats.Storage.ThisWeek);
+    }
+
+    [Fact]
+    public void Build_OnASunday_TheWeekStillCoversMondayToSunday()
+    {
+        // 2026-11-01 is a Sunday. A Sunday-based week would collapse to a single day (which
+        // made Today == This Week == This Month and looked like a broken card); Monday-based
+        // weeks keep the whole Oct 26 → Nov 1 window.
+        var sundayNow = new DateTime(2026, 11, 1, 20, 0, 0, DateTimeKind.Utc);
+        var events = new[]
+        {
+            Event(new DateTime(2026, 11, 1, 17, 0, 0, DateTimeKind.Utc)), // today (Sunday)
+            Event(new DateTime(2026, 10, 31, 17, 0, 0, DateTimeKind.Utc)), // Saturday, same week
+            Event(new DateTime(2026, 10, 25, 17, 0, 0, DateTimeKind.Utc)), // previous Sunday — out
+        };
+
+        var stats = ActivityStatsCalculator.Build(events, sundayNow, tzOffsetMinutes: 0);
+
+        stats.Downloads.Today.Should().Be(1);
+        stats.Downloads.ThisWeek.Should().Be(2);
+        stats.Chart.Week.Should().HaveCount(7);
+        stats.Chart.Week[^1].Label.Should().Be("Sun");
+        stats.Chart.Week[^1].Downloads.Should().Be(1);
+        stats.Chart.Week[5].Label.Should().Be("Sat");
+        stats.Chart.Week[5].Downloads.Should().Be(1);
+    }
+
     [Theory]
     // nowUtc 2026-11-04 12:00Z (Wednesday). UTC-5 caller: local "now" is 07:00 on Nov 4.
     [InlineData(ActivityStatsPeriod.Today,     0,   "2026-11-04T00:00:00Z")]
-    [InlineData(ActivityStatsPeriod.ThisWeek,  0,   "2026-11-01T00:00:00Z")] // Sunday
+    [InlineData(ActivityStatsPeriod.ThisWeek,  0,   "2026-11-02T00:00:00Z")] // Monday
     [InlineData(ActivityStatsPeriod.ThisMonth, 0,   "2026-11-01T00:00:00Z")]
     [InlineData(ActivityStatsPeriod.ThisYear,  0,   "2026-01-01T00:00:00Z")]
     // Same instants shift by the offset: local midnight in UTC-5 is 05:00Z.

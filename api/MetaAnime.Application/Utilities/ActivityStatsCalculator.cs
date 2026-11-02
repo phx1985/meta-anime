@@ -34,7 +34,9 @@ public static class ActivityStatsCalculator
 
     private static LocalBounds Bounds(DateTime nowLocal) => new(
         nowLocal.Date,
-        nowLocal.Date.AddDays(-(int)nowLocal.DayOfWeek), // weeks start on Sunday, like the chart
+        // Weeks start on MONDAY (ISO 8601 / French calendar). The Sunday-based start made
+        // "This Week" collapse to a single day every Sunday, which reads as a broken card.
+        nowLocal.Date.AddDays(-(((int)nowLocal.DayOfWeek + 6) % 7)),
         new DateTime(nowLocal.Year, nowLocal.Month, 1),
         new DateTime(nowLocal.Year, 1, 1));
 
@@ -93,26 +95,42 @@ public static class ActivityStatsCalculator
         int  dlToday = 0, dlWeek = 0, dlMonth = 0, dlYear = 0;
         long stToday = 0, stWeek = 0, stMonth = 0, stYear = 0;
 
+        // Independent checks, deliberately NOT a `continue` chain: a week that straddles a
+        // month boundary (e.g. Mon Oct 26 → Sun Nov 1) must keep its earlier days in the
+        // weekly total even though they belong to the previous month.
         foreach (var (day, bucket) in perDay)
         {
-            if (day < yearStart)
-                continue;
+            if (day >= yearStart)
+            {
+                dlYear += bucket.Count; stYear += bucket.Bytes;
+            }
 
-            dlYear  += bucket.Count; stYear  += bucket.Bytes;
-            if (day < monthStart) continue;
-            dlMonth += bucket.Count; stMonth += bucket.Bytes;
-            if (day < weekStart) continue;
-            dlWeek  += bucket.Count; stWeek  += bucket.Bytes;
-            if (day != todayStart) continue;
-            dlToday += bucket.Count; stToday += bucket.Bytes;
+            if (day >= monthStart)
+            {
+                dlMonth += bucket.Count; stMonth += bucket.Bytes;
+            }
+
+            if (day >= weekStart)
+            {
+                dlWeek += bucket.Count; stWeek += bucket.Bytes;
+            }
+
+            if (day == todayStart)
+            {
+                dlToday += bucket.Count; stToday += bucket.Bytes;
+            }
         }
 
         // ── Chart series ───────────────────────────────────────────────────────
-        // Week: the last 7 days, oldest first.
+        // Week: the CURRENT calendar week, Monday → Sunday — the same window the
+        // "This Week" counter and the drill-down list use. It used to plot a rolling
+        // "last 7 days" window, so on a Sunday the chart showed six days that the tile
+        // excluded (chart 78 episodes vs tile 6). Future days report zero, exactly like
+        // the month chart.
         var weekPoints = new List<ActivityChartPoint>(7);
-        for (var i = 6; i >= 0; i--)
+        for (var i = 0; i < 7; i++)
         {
-            var day = todayStart.AddDays(-i);
+            var day = weekStart.AddDays(i);
             perDay.TryGetValue(day, out var bucket);
             weekPoints.Add(new ActivityChartPoint(ShortDays[(int)day.DayOfWeek], bucket.Count, bucket.Bytes));
         }
