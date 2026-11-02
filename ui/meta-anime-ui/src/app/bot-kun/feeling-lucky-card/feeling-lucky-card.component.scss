@@ -3,12 +3,52 @@
 // ── Container ─────────────────────────────────────────────────────────────────
 
 .lucky-card {
+  position: relative;
   border-radius: 14px;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--color-brand) 28%, transparent);
   background: color-mix(in srgb, var(--color-brand) 7%, var(--color-surface-elevated));
   width: 100%;
   user-select: none;
+}
+
+// Blurred poster aura — mirrors the modal card so both feel like one family
+.lucky-card__ambient {
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(32px) saturate(150%);
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+// Reroll from inside the chat card (shared engine)
+.lucky-card__reroll {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--color-brand) 35%, transparent);
+  background: color-mix(in srgb, var(--color-surface-elevated) 80%, transparent);
+  color: color-mix(in srgb, var(--color-brand) 85%, var(--text-muted));
+  cursor: pointer;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), color 0.18s ease, border-color 0.18s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--color-brand);
+    border-color: var(--color-brand);
+    transform: rotate(180deg);
+    outline: none;
+  }
 }
 
 // ── Rolling animation ─────────────────────────────────────────────────────────

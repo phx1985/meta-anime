@@ -12,6 +12,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TranslatePipe } from '@ngx-translate/core';
 import { AnimeService } from '../../services/anime.service';
+import { LuckyPickService } from '../../services/lucky-pick.service';
 import { AnimeDetailsResponse } from '../../models/anime.models';
 import { UiBadgeComponent } from '../../shared/ui/ui-badge.component';
 
@@ -43,6 +44,8 @@ export class FeelingLuckyCardComponent implements OnInit {
   protected readonly isAddingToList = signal(false);
   protected readonly addedToList    = signal(false);
   protected readonly actionErrorKey = signal<string | null>(null);
+  /** Ids follow the displayed anime once the user rerolls inside the chat card. */
+  protected readonly currentMalId = signal<string>('');
 
   protected readonly isRolling = computed(() => this.state() === 'rolling');
   protected readonly isLoaded  = computed(() => this.state() === 'loaded');
@@ -57,12 +60,14 @@ export class FeelingLuckyCardComponent implements OnInit {
   });
 
   private readonly animeService = inject(AnimeService);
+  private readonly lucky        = inject(LuckyPickService);
   private readonly destroyRef   = inject(DestroyRef);
 
   private rollTimer: ReturnType<typeof setTimeout> | null = null;
 
   ngOnInit(): void {
     this.displayTitle.set(this.title());
+    this.currentMalId.set(this.malId());
 
     // Clean up the timer if the component is destroyed before it fires
     this.destroyRef.onDestroy(() => {
@@ -74,24 +79,7 @@ export class FeelingLuckyCardComponent implements OnInit {
       .getAnimeByMalId(this.malId())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: detail => {
-          this.anime.set(detail);
-          const mal = detail?.malAnimes?.[0];
-          this.coverUrl.set(mal?.coverImageUrl ?? null);
-          const en = mal?.alternativeTitles?.en;
-          this.displayTitle.set(en ?? detail?.title ?? this.title());
-          this.year.set(mal?.startDate?.slice(0, 4) ?? null);
-          this.score.set(mal?.rating?.malMean ?? null);
-          this.genres.set((mal?.genres ?? []).slice(0, 4));
-          this.mediaType.set(mal?.mediaType ?? null);
-          // F10: clear any previous timer before scheduling a new one
-          if (this.rollTimer !== null) clearTimeout(this.rollTimer);
-          // Wait for the roll animation before revealing the result
-          this.rollTimer = setTimeout(() => {
-            this.state.set('loaded');
-            this.cardReady.emit();
-          }, 1500);
-        },
+        next: detail => this.applyAnime(detail, 1500),
         error: () => {
           // F10: clear any previous timer before scheduling a new one
           if (this.rollTimer !== null) clearTimeout(this.rollTimer);
@@ -103,10 +91,49 @@ export class FeelingLuckyCardComponent implements OnInit {
       });
   }
 
+  /** Reroll straight from the chat card — same engine as the modal. */
+  onReroll(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    if (this.isRolling()) return;
+
+    this.addedToList.set(false);
+    this.actionErrorKey.set(null);
+    this.state.set('rolling');
+
+    this.lucky
+      .pickOnce()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (detail) => (detail ? this.applyAnime(detail, 900) : this.state.set('error')),
+        error: () => this.state.set('error'),
+      });
+  }
+
+  private applyAnime(detail: AnimeDetailsResponse | null, spinMs: number): void {
+    this.anime.set(detail);
+    const mal = detail?.malAnimes?.[0];
+    this.coverUrl.set(mal?.coverImageUrl ?? null);
+    const en = mal?.alternativeTitles?.en;
+    this.displayTitle.set(en ?? detail?.title ?? this.title());
+    this.year.set(mal?.startDate?.slice(0, 4) ?? null);
+    this.score.set(mal?.rating?.malMean ?? null);
+    this.genres.set((mal?.genres ?? []).slice(0, 4));
+    this.mediaType.set(mal?.mediaType ?? null);
+    if (mal?.id) this.currentMalId.set(mal.id);
+
+    // Always cancel a queued reveal before scheduling the next one
+    if (this.rollTimer !== null) clearTimeout(this.rollTimer);
+    this.rollTimer = setTimeout(() => {
+      this.state.set('loaded');
+      this.cardReady.emit();
+    }, spinMs);
+  }
+
   onOpenDetails(event?: Event): void {
     event?.preventDefault();
     event?.stopPropagation();
-    this.cardClicked.emit(this.malId());
+    this.cardClicked.emit(this.currentMalId());
   }
 
   onAddToList(event: Event): void {
@@ -119,7 +146,7 @@ export class FeelingLuckyCardComponent implements OnInit {
     this.actionErrorKey.set(null);
 
     this.animeService
-      .updateMalListStatus(this.malId(), {
+      .updateMalListStatus(this.currentMalId(), {
         status: 'plan_to_watch',
         numWatchedEpisodes: 0,
         score: 0,

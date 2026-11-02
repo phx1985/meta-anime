@@ -1,207 +1,271 @@
 <div class="lucky-overlay" [class.lucky-overlay--reduced-motion]="prefersReducedMotion" role="dialog" aria-modal="true"
   [attr.aria-label]="'luckyPick.ariaLabel' | translate" (click)="close()">
-  <div class="lucky-container" [class.lucky-container--beating]="isSpinning()" (click)="$event.stopPropagation()">
 
-    <button class="lucky-close" type="button" (click)="close()" [attr.aria-label]="'luckyPick.close' | translate">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-        aria-hidden="true">
-        <line x1="18" y1="6" x2="6" y2="18" />
-        <line x1="6" y1="6" x2="18" y2="18" />
-      </svg>
-    </button>
+  <section #card class="lucky-card" tabindex="-1" [class.lucky-card--spinning]="isSpinning()"
+    (click)="$event.stopPropagation()">
 
-    @if (isSpinning()) {
-    <div class="lucky-spin-scene" aria-hidden="true">
-      <div class="lucky-orb">
-        <div class="lucky-orb__gimbal lucky-orb__gimbal--outer"></div>
-        <div class="lucky-orb__gimbal lucky-orb__gimbal--mid"></div>
-        <div class="lucky-orb__gimbal lucky-orb__gimbal--inner"></div>
-
-        <div class="lucky-orb__center">
-          <div class="lucky-orb__sphere">
-            <div class="lucky-orb__slice" style="--slice-idx: 0;"></div>
-            <div class="lucky-orb__slice" style="--slice-idx: 1;"></div>
-            <div class="lucky-orb__slice" style="--slice-idx: 2;"></div>
-            <div class="lucky-orb__slice" style="--slice-idx: 3;"></div>
-            <div class="lucky-orb__slice" style="--slice-idx: 4;"></div>
-            <div class="lucky-orb__slice" style="--slice-idx: 5;"></div>
-
-            <div class="lucky-orb__core-glow"></div>
-
-            <svg class="lucky-orb__star" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"
-              aria-hidden="true">
-              <polygon
-                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-          </div>
-        </div>
-      </div>
-      <p class="lucky-spin-label">{{ searchingPhrase() }}</p>
-    </div>
+    <!-- Ambient aura — the picked poster tints the glass card -->
+    @if (coverImageUrl) {
+    <div class="lucky-card__ambient" [style.backgroundImage]="'url(' + coverImageUrl + ')'" aria-hidden="true"></div>
     }
 
-    @if (isResult()) {
-    <div class="lucky-result lucky-card-wrapper" role="region" [attr.aria-label]="'luckyPick.resultAriaLabel' | translate">
-
-      <div class="lucky-result__body">
-        @if (coverImageUrl) {
-        <img
-          [src]="coverImageUrl"
-          [alt]="title"
-          class="lucky-result__cover lucky-result__cover--clickable"
-          (click)="toggleFullScreenImage()"
-        />
-        } @else {
-        <div class="lucky-result__cover lucky-result__cover--placeholder">
-          {{ title.charAt(0) }}
-        </div>
+    <!-- ── Top bar: roll filters + close ─────────────────────────────────── -->
+    <header class="lucky-card__bar">
+      <div class="lucky-chips" role="group" [attr.aria-label]="'luckyPick.filters.label' | translate">
+        <button class="lucky-chip" type="button" [class.lucky-chip--on]="lucky.planToWatch()"
+          [attr.aria-pressed]="lucky.planToWatch()" (click)="toggleFilter('planToWatch')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" aria-hidden="true">
+            <polyline points="4 7 20 7" />
+            <polyline points="7 12 17 12" />
+            <polyline points="10 17 14 17" />
+          </svg>
+          <span>{{ 'luckyPick.filters.planToWatch' | translate }}</span>
+        </button>
+        <button class="lucky-chip" type="button" [class.lucky-chip--on]="lucky.onlyFinished()"
+          [attr.aria-pressed]="lucky.onlyFinished()" (click)="toggleFilter('finished')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          <span>{{ 'luckyPick.filters.finished' | translate }}</span>
+        </button>
+        @if (providerState.sonarrEnabled()) {
+        <button class="lucky-chip" type="button" [class.lucky-chip--on]="lucky.onlyWithFiles()"
+          [attr.aria-pressed]="lucky.onlyWithFiles()" (click)="toggleFilter('hasFiles')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          <span>{{ 'luckyPick.filters.hasFiles' | translate }}</span>
+        </button>
         }
-        <div class="lucky-result__info">
-          <h2 class="lucky-result__title">{{ title }}</h2>
-          <div class="lucky-result__status-pills">
+      </div>
+
+      <button class="lucky-card__close" type="button" (click)="close()"
+        [attr.aria-label]="'luckyPick.close' | translate">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- ── Body ──────────────────────────────────────────────────────────── -->
+    <div class="lucky-card__body">
+
+      @if (isSpinning()) {
+      <div class="lucky-spin-scene" aria-hidden="true">
+        <div class="lucky-orb">
+          <div class="lucky-orb__gimbal lucky-orb__gimbal--outer"></div>
+          <div class="lucky-orb__gimbal lucky-orb__gimbal--mid"></div>
+          <div class="lucky-orb__gimbal lucky-orb__gimbal--inner"></div>
+
+          <div class="lucky-orb__center">
+            <div class="lucky-orb__sphere">
+              <div class="lucky-orb__slice" style="--slice-idx: 0;"></div>
+              <div class="lucky-orb__slice" style="--slice-idx: 1;"></div>
+              <div class="lucky-orb__slice" style="--slice-idx: 2;"></div>
+              <div class="lucky-orb__slice" style="--slice-idx: 3;"></div>
+              <div class="lucky-orb__slice" style="--slice-idx: 4;"></div>
+              <div class="lucky-orb__slice" style="--slice-idx: 5;"></div>
+
+              <div class="lucky-orb__core-glow"></div>
+
+              <svg class="lucky-orb__star" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"
+                aria-hidden="true">
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <p class="lucky-spin-label">{{ searchingPhrase() }}</p>
+      </div>
+      }
+
+      @if (isResult()) {
+      <div class="lucky-result" role="region" [attr.aria-label]="'luckyPick.resultAriaLabel' | translate">
+
+        <button class="lucky-result__poster" type="button" (click)="openDetail()"
+          [attr.aria-label]="'luckyPick.actions.openDetails' | translate">
+          @if (coverImageUrl) {
+          <img [src]="coverImageUrl" [alt]="title" />
+          } @else {
+          <span class="lucky-result__poster-fallback">{{ title.charAt(0) }}</span>
+          }
+          <span class="lucky-result__zoom" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round">
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              <line x1="11" y1="8" x2="11" y2="14" />
+              <line x1="8" y1="11" x2="14" y2="11" />
+            </svg>
+          </span>
+        </button>
+
+        <div class="lucky-result__head">
+          <button class="lucky-result__title" type="button" (click)="openDetail()">{{ title }}</button>
+
+          <div class="lucky-result__pills">
             @if (mediaType) {
-              <span class="lucky-pill lucky-pill--media-type">{{ mediaTypeLabel(mediaType) }}</span>
+            <span class="lucky-pill lucky-pill--media">{{ mediaTypeLabel(mediaType) }}</span>
             }
             @if (malViewState) {
-              <span class="lucky-pill lucky-pill--{{ malViewState }}">{{ viewStateLabel(malViewState) }}</span>
+            <span class="lucky-pill lucky-pill--{{ malViewState }}">{{ viewStateLabel(malViewState) }}</span>
             }
             @if (seriesStatus) {
-              <span class="lucky-pill lucky-pill--series">{{ seriesStatusLabel(seriesStatus) }}</span>
+            <span class="lucky-pill lucky-pill--series">{{ seriesStatusLabel(seriesStatus) }}</span>
+            }
+            @if (hasScore) {
+            <app-score-badge [score]="malScore" label="MAL" titleKey="animeCard.malScore" />
             }
           </div>
-          @if (synopsis) {
-          <div class="lucky-result__synopsis-wrap">
-            <p
-              class="lucky-result__synopsis"
-              [class.lucky-result__synopsis--clickable]="isSynopsisTruncated"
-              [attr.role]="isSynopsisTruncated ? 'button' : null"
-              [attr.tabindex]="isSynopsisTruncated ? 0 : null"
-              (click)="isSynopsisTruncated && openSynopsisModal()"
-              (keydown.enter)="isSynopsisTruncated && openSynopsisModal()"
-              (keydown.space)="isSynopsisTruncated && openSynopsisModal($event)"
-            >{{ synopsis }}</p>
-            @if (isSynopsisTruncated) {
-              <button
-                type="button"
-                class="lucky-result__synopsis-toggle"
-                (click)="openSynopsisModal()"
-              >
-                {{ 'animeCard.seeMore' | translate }}
-              </button>
-            }
-          </div>
+
+          @if (startDate) {
+          <span class="lucky-result__dates">
+            {{ startDate }}@if (endDate) {<span class="lucky-result__arrow"> → </span>{{ endDate }}}
+          </span>
           }
-          @if (pureGenres.length > 0) {
-            <div class="lucky-genre-list">
-              @for (g of pureGenres; track g) {
-                <span class="lucky-genre-tag">{{ translateGenre(g) }}</span>
-              }
-            </div>
+        </div>
+
+        @if (synopsis) {
+        <div class="lucky-result__text">
+          <p class="lucky-result__synopsis">{{ synopsis }}</p>
+          @if (isSynopsisTruncated) {
+          <button class="lucky-result__more" type="button" (click)="openDetail()">
+            {{ 'animeCard.seeMore' | translate }}
+          </button>
           }
-          @if (themes.length > 0) {
-            <div class="lucky-genre-list">
-              @for (t of themes; track t) {
-                <span class="lucky-genre-tag lucky-genre-tag--theme">{{ translateGenre(t) }}</span>
-              }
-            </div>
+        </div>
+        }
+
+        <div class="lucky-result__tags">
+          @for (tag of tagChips; track tag.label) {
+          <span class="lucky-tag lucky-tag--{{ tag.kind }}">{{ tag.label }}</span>
           }
-          @if (demographics.length > 0) {
-            <div class="lucky-genre-list">
-              @for (d of demographics; track d) {
-                <span class="lucky-genre-tag lucky-genre-tag--demographic">{{ translateGenre(d) }}</span>
-              }
-            </div>
+          @if (hiddenTagCount > 0) {
+          <span class="lucky-tag lucky-tag--more">+{{ hiddenTagCount }}</span>
           }
-          <div class="lucky-meta-row">
-            @if (mal?.rating) {
-              <app-score-badge [score]="malScore" label="MAL" titleKey="animeCard.malScore" />
-            }
-            @if (startDate) {
-              <span class="lucky-date-range">
-                {{ startDate }}
-                @if (endDate) {
-                  <span class="lucky-date-arrow">→</span> {{ endDate }}
-                }
-              </span>
-            }
-          </div>
-          <div class="lucky-result__actions">
-            @if (plexUrl && plexProviderEnabled) {
-            <a href="javascript:void(0)" (click)="openPlexLink($event)" class="lucky-btn lucky-btn--plex">
-              <img src="assets/images/plex.svg" class="lucky-btn__logo" width="16" height="16" alt=""
-                aria-hidden="true" />
-              {{ plexPhrase() }}
-            </a>
-            }
-            @if (malUrl) {
-            <a [href]="malUrl" target="_blank" rel="noopener noreferrer" class="lucky-btn lucky-btn--mal">
-              <img src="assets/images/mal.svg" class="lucky-btn__logo" width="16" height="16" alt=""
-                aria-hidden="true" />
-              {{ malPhrase() }}
-            </a>
-            }
-            <button type="button" class="lucky-btn lucky-btn--reroll" (click)="tryAgain()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polyline points="16 3 21 3 21 8" />
-                <line x1="4" y1="20" x2="21" y2="3" />
-                <polyline points="21 16 21 21 16 21" />
-                <line x1="15" y1="15" x2="21" y2="21" />
-                <line x1="4" y1="4" x2="9" y2="9" />
-              </svg>
-              {{ rerollPhrase() }}
-            </button>
-          </div>
         </div>
       </div>
-    </div>
-    }
+      }
 
-    @if (isNoMatch()) {
-    <div class="lucky-message" role="status">
-      <div class="lucky-message__icon" aria-hidden="true">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          <line x1="8" y1="11" x2="14" y2="11" />
-        </svg>
+      @if (isNoMatch()) {
+      <div class="lucky-message" role="status">
+        <div class="lucky-message__icon" aria-hidden="true">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            <line x1="8" y1="11" x2="14" y2="11" />
+          </svg>
+        </div>
+        <h2 class="lucky-message__title">{{ 'luckyPick.noMatch.title' | translate }}</h2>
+        <p class="lucky-message__desc">{{ 'luckyPick.noMatch.desc' | translate }}</p>
+        <div class="lucky-message__actions">
+          <a routerLink="/settings" fragment="lucky-pick-preferences" class="lucky-btn lucky-btn--secondary"
+            (click)="close()">{{ 'luckyPick.noMatch.adjustSettings' | translate }}</a>
+          <button type="button" class="lucky-btn lucky-btn--ghost" (click)="close()">
+            {{ 'luckyPick.close' | translate }}
+          </button>
+        </div>
       </div>
-      <h2 class="lucky-message__title">{{ 'luckyPick.noMatch.title' | translate }}</h2>
-      <p class="lucky-message__desc">{{ 'luckyPick.noMatch.desc' | translate }}</p>
-      <div class="lucky-message__actions">
-        <a routerLink="/settings" fragment="lucky-pick-preferences" class="lucky-btn lucky-btn--secondary"
-          (click)="close()">
-          {{ 'luckyPick.noMatch.adjustSettings' | translate }}
-        </a>
-        <button type="button" class="lucky-btn lucky-btn--ghost" (click)="close()">
-          {{ 'luckyPick.close' | translate }}
-        </button>
-      </div>
-    </div>
-    }
+      }
 
-    @if (isError()) {
-    <div class="lucky-message" role="alert">
-      <div class="lucky-message__icon lucky-message__icon--error" aria-hidden="true">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      @if (isError()) {
+      <div class="lucky-message" role="alert">
+        <div class="lucky-message__icon lucky-message__icon--error" aria-hidden="true">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+        </div>
+        <h2 class="lucky-message__title">{{ 'luckyPick.error.title' | translate }}</h2>
+        <p class="lucky-message__desc">{{ 'luckyPick.error.desc' | translate }}</p>
+        <div class="lucky-message__actions">
+          <button type="button" class="lucky-btn lucky-btn--primary" (click)="tryAgain()">
+            {{ 'luckyPick.error.retry' | translate }}
+          </button>
+          <button type="button" class="lucky-btn lucky-btn--ghost" (click)="close()">
+            {{ 'luckyPick.close' | translate }}
+          </button>
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- ── Action zone (result only) ─────────────────────────────────────── -->
+    @if (isResult()) {
+    <p class="lucky-whisper">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="lucky-whisper__icon">
+        <path d="M12 2l2.1 6.3L20.5 10l-6.4 1.7L12 18l-2.1-6.3L3.5 10l6.4-1.7z" />
+      </svg>
+      {{ quip() }}
+    </p>
+
+    <div class="lucky-actions">
+      @if (showPlexAction) {
+      <a href="javascript:void(0)" (click)="openPlexLink($event)" class="lucky-btn lucky-btn--primary">
+        <img src="assets/images/plex.svg" class="lucky-btn__logo" width="16" height="16" alt="" aria-hidden="true" />
+        {{ 'luckyPick.actions.watchPlex' | translate }}
+      </a>
+      } @else {
+      <button type="button" class="lucky-btn lucky-btn--primary" (click)="openDetail()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="12" />
-          <line x1="12" y1="16" x2="12.01" y2="16" />
+          <line x1="12" y1="16" x2="12" y2="12" />
+          <line x1="12" y1="8" x2="12.01" y2="8" />
         </svg>
-      </div>
-      <h2 class="lucky-message__title">{{ 'luckyPick.error.title' | translate }}</h2>
-      <p class="lucky-message__desc">{{ 'luckyPick.error.desc' | translate }}</p>
-      <div class="lucky-message__actions">
-        <button type="button" class="lucky-btn lucky-btn--primary" (click)="tryAgain()">
-          {{ 'luckyPick.error.retry' | translate }}
+        {{ 'luckyPick.actions.openDetails' | translate }}
+      </button>
+      }
+
+      @if (malUrl) {
+      <a [href]="malUrl" target="_blank" rel="noopener noreferrer" class="lucky-btn lucky-btn--secondary">
+        <img src="assets/images/mal.svg" class="lucky-btn__logo" width="15" height="15" alt="" aria-hidden="true" />
+        {{ 'luckyPick.actions.openMal' | translate }}
+      </a>
+      }
+
+      <button type="button" class="lucky-btn lucky-btn--reroll" (click)="tryAgain()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="lucky-btn__dice">
+          <path d="M21 2v6h-6" />
+          <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+          <path d="M3 22v-6h6" />
+          <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+        </svg>
+        {{ 'luckyPick.actions.reroll' | translate }}
+        <kbd class="lucky-btn__kbd">R</kbd>
+      </button>
+    </div>
+
+    @if (history().length > 1) {
+    <div class="lucky-history">
+      <span class="lucky-history__label">{{ 'luckyPick.history.label' | translate }}</span>
+      <div class="lucky-history__list">
+        @for (item of history(); track item.aniDbId) {
+        <button class="lucky-history__thumb" type="button" (click)="showHistory(item)"
+          [title]="historyTitle(item)" [attr.aria-label]="historyTitle(item)">
+          @if (historyCover(item)) {
+          <img [src]="historyCover(item)" alt="" loading="lazy" />
+          } @else {
+          <span class="lucky-history__thumb-fallback">{{ historyTitle(item).charAt(0) }}</span>
+          }
         </button>
-        <button type="button" class="lucky-btn lucky-btn--ghost" (click)="close()">
-          {{ 'luckyPick.close' | translate }}
-        </button>
+        }
       </div>
     </div>
     }
+    }
+  </section>
 
-  </div>
+  <!-- Screen-reader announcement for every landed pick -->
+  <p class="lucky-sr-only" aria-live="polite">{{ liveMessage() }}</p>
 </div>
-

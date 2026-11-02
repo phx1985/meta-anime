@@ -1513,13 +1513,14 @@
     }
   },
   "luckyPick": {
+    "triggerShort": "Lucky",
+    "filters": {"label": "Roll filters", "planToWatch": "Plan to Watch", "finished": "Finished", "hasFiles": "Downloaded"},
+    "actions": {"watchPlex": "Watch on Plex", "openMal": "MyAnimeList", "openDetails": "Details", "reroll": "Reroll"},
+    "history": {"label": "Previous rolls"},
+
     "buttonLabel": "I'm Feeling Lucky",
     "ariaLabel": "Random anime pick overlay",
     "resultAriaLabel": "Recommended anime",
-    "searching": "Finding your next anime…",
-    "watchNow": "Watch Now",
-    "viewDetails": "View on MAL",
-    "tryAgain": "Try Again",
     "close": "Close",
     "noMatch": {
       "title": "No matches found",
