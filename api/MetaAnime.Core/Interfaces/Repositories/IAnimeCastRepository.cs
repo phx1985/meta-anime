@@ -9,4 +9,6 @@ public interface IAnimeCastRepository
     Task<IEnumerable<AnimeCast>> GetByVaPersonIdAsync(int vaPersonId);
     Task BulkUpsertAsync(IEnumerable<AnimeCast> entries);
     Task DeleteByAnimeMalIdAsync(string animeMalId);
+    /// <summary>Deletes every cast row (one-time ID-space migration).</summary>
+    Task DeleteAllAsync();
 }

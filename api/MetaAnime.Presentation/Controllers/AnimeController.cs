@@ -36,12 +36,13 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
     [Authorize]
     public async Task<ActionResult<ActivityStatsResponse>> GetActivityStats([FromQuery] int tzOffset = 0)
     {
-        // Try to serve from the pre-populated cache first (fast path).
-        var cached = await mediator.Send(new GetCachedActivityStatsQuery());
+        // Try to serve from the pre-populated cache first (fast path; UTC snapshots only).
+        var cached = await mediator.Send(new GetCachedActivityStatsQuery(tzOffset));
         if (cached.IsSuccess && cached.Value is not null)
             return Ok(cached.Value);
 
-        // Cache is empty (cold start) — fall back to live computation.
+        // Cache miss (cold start or non-UTC caller) — compute from the local history mirror.
+        // This no longer talks to Sonarr: DownloadStatsCacheJob keeps the mirror current.
         var result = await mediator.Send(new GetActivityStatsQuery(tzOffset));
 
         if (result.IsFailure)
@@ -61,6 +62,39 @@ public sealed class AnimeController(IMediator mediator, IBackgroundJobClient bac
     {
         backgroundJobClient.Enqueue<DownloadStatsCacheJob>(job => job.CacheDownloadStatsAsync());
         return Accepted(new { message = "Download stats refresh started" });
+    }
+
+    /// <summary>
+    /// Lists the episodes imported during the given activity period (drill-down behind the
+    /// activity card's counters). Served from the local Sonarr history mirror.
+    /// </summary>
+    [HttpGet("activity-stats/episodes")]
+    [Authorize]
+    public async Task<ActionResult<ActivityEpisodesResponse>> GetActivityEpisodes(
+        [FromQuery] string? period = null,
+        [FromQuery] int tzOffset = 0,
+        [FromQuery] int limit = 250)
+    {
+        // The UI sends the same token it uses for the stat counters (today / thisWeek / …).
+        if (string.IsNullOrWhiteSpace(period) ||
+            !Enum.TryParse<ActivityStatsPeriod>(period, ignoreCase: true, out var parsedPeriod) ||
+            !Enum.IsDefined(parsedPeriod) ||
+            !period.Equals(parsedPeriod.ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest($"Unknown period '{period}'. Valid values: today, thisWeek, thisMonth, thisYear");
+        }
+
+        var result = await mediator.Send(new GetActivityEpisodesQuery(
+            parsedPeriod,
+            tzOffset,
+            Math.Clamp(limit, 1, 1000)));
+
+        if (result.IsFailure)
+        {
+            return this.ToErrorResult(result);
+        }
+
+        return Ok(result.Value);
     }
 
     [HttpGet("plex-thumb/{ratingKey}")]

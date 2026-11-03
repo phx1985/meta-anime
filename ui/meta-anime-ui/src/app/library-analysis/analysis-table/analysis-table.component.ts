@@ -28,12 +28,13 @@ import {
 } from '../../models/library-intel.models';
 import { LibraryIntelStore } from '../../services/library-intel-store.service';
 import { formatTableSize, getCodecPills } from '../../utils/format.utils';
+import { UiSelectComponent, UiSelectOption } from '../../shared/ui/ui-select/ui-select.component';
 
 @Component({
   selector: 'app-la-analysis-table',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, NgClass, DecimalPipe],
+  imports: [TranslatePipe, NgClass, DecimalPipe, UiSelectComponent],
   templateUrl: './analysis-table.component.html',
   styleUrl: './analysis-table.component.scss',
 })
@@ -277,6 +278,64 @@ export class AnalysisTableComponent {
   });
 
   // ── Methods ─────────────────────────────────────────────────────────────────
+
+  // ── ui-select option sets (labels translated here — the component takes final strings) ──
+
+  thresholdOpSelectOptions(): UiSelectOption[] {
+    return [
+      { label: this.translateService.instant('libraryIntel.matchMode.opGte'), value: 'gte' },
+      { label: this.translateService.instant('libraryIntel.matchMode.opLte'), value: 'lte' },
+    ];
+  }
+
+  avgEpSizeSelectOptions(): UiSelectOption[] {
+    return [
+      { label: this.translateService.instant('library.filters.all'), value: '' },
+      ...this.AVG_EP_SIZES.map(o => ({ label: o.label, value: o.value })),
+    ];
+  }
+
+  gibPerHourSelectOptions(): UiSelectOption[] {
+    return [
+      { label: this.translateService.instant('library.filters.all'), value: '' },
+      ...this.GIB_PER_HOUR_THRESHOLDS.map(o => ({ label: o.label, value: o.value })),
+    ];
+  }
+
+  statusSelectOptions(): UiSelectOption[] {
+    return this.STATUS_OPTIONS.map(opt => ({
+      label: this.translateService.instant(this.STATUS_LABELS[opt]),
+      value: opt,
+    }));
+  }
+
+  downloadSelectOptions(): UiSelectOption[] {
+    return [
+      { label: this.translateService.instant('library.filters.all'), value: 'all' },
+      { label: '100%', value: '100' },
+      { label: this.translateService.instant('library.filters.partial'), value: 'partial' },
+    ];
+  }
+
+  bitDepthSelectOptions(): UiSelectOption[] {
+    return [
+      { label: this.translateService.instant('library.filters.all'), value: '' },
+      { label: '8-bit', value: '8' },
+      { label: '10-bit', value: '10' },
+    ];
+  }
+
+  hasFilesSelectOptions(): UiSelectOption[] {
+    return [
+      { label: this.translateService.instant('library.filters.all'), value: 'all' },
+      { label: this.translateService.instant('library.filters.withFilesYes'), value: 'yes' },
+      { label: this.translateService.instant('library.filters.withFilesNo'), value: 'no' },
+    ];
+  }
+
+  pageSizeSelectOptions(): UiSelectOption[] {
+    return this.pageSizeOptions.map(o => ({ label: String(o), value: o }));
+  }
 
   /** Applies a partial filter patch against the shared store state and resets paging. */
   setFilter(patch: Partial<LibraryFilterState>): void {

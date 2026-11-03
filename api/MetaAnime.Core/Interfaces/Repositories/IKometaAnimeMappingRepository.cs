@@ -20,5 +20,7 @@ public interface IKometaAnimeMappingRepository
     Task<IList<(string MalId, string AniDbId, string? TvdbId)>> GetMalMappingsWithTvdbAsync(IEnumerable<string> malIds);
     Task BulkDeleteAllAsync();
     Task BulkInsertAsync(IEnumerable<KometaAnimeMapping> kometaAnimeMappings);
+    /// <summary>Diff-based merge keyed on (AniDbId, PlatformName, PlatformId); unchanged rows are skipped.</summary>
+    Task MergeAsync(IEnumerable<KometaAnimeMapping> kometaAnimeMappings);
     Task<bool> AnyAsync();
 }

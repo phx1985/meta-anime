@@ -1,0 +1,50 @@
+<button type="button"
+        class="ui-select__trigger"
+        [class.ui-select__trigger--small]="small()"
+        [class.ui-select__trigger--open]="isOpen()"
+        [disabled]="disabled()"
+        [attr.aria-label]="ariaLabel()"
+        aria-haspopup="listbox"
+        [attr.aria-expanded]="isOpen()"
+        (click)="toggle()">
+  <span class="ui-select__label">{{ selectedLabel() }}</span>
+  <svg class="ui-select__chevron"
+       [class.ui-select__chevron--open]="isOpen()"
+       viewBox="0 0 24 24"
+       fill="none"
+       stroke="currentColor"
+       stroke-width="2"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+</button>
+
+@if (isOpen()) {
+  <div class="ui-select__menu"
+       role="listbox"
+       [style.top.px]="menuPos()?.top ?? 0"
+       [style.left.px]="menuPos()?.left ?? 0"
+       [style.width.px]="menuPos()?.width ?? 0"
+       [style.max-height.px]="menuPos()?.maxHeight ?? 240">
+    @for (opt of options(); track opt.value) {
+      <button type="button"
+              class="ui-select__option"
+              [class.ui-select__option--selected]="opt.value === value()"
+              role="option"
+              [attr.aria-selected]="opt.value === value()"
+              (click)="select(opt.value)">
+        <span class="ui-select__option-label">{{ opt.label }}</span>
+        @if (opt.value === value()) {
+          <svg class="ui-select__check"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2"
+               stroke-linecap="round"
+               stroke-linejoin="round"
+               aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+        }
+      </button>
+    }
+  </div>
+}

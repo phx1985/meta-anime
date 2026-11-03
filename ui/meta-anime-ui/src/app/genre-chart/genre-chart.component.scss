@@ -1,9 +1,6 @@
+// Panel chrome (surface, border, rounded-xl) comes from app-ui-card;
+// this class rides on its host.
 .genre-chart-card {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 24px var(--card-shadow);
   animation: popFadeIn 0.6s cubic-bezier(0.34, 1.4, 0.64, 1) 0.3s both;
   height: 100%;
   display: flex;
@@ -30,22 +27,32 @@
   gap: 0.75rem;
 }
 
+// Micro section header — 11px semibold uppercase, wider tracking, muted
 .chart-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-muted);
   margin: 0;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.09em;
 }
 
-// ── Toggle buttons ────────────────────────────────────────────────────────────
+.chart-title-ico {
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+
+// ── Toggle buttons (muted pills) ─────────────────────────────────────────────
 
 .chart-toggle {
   display: flex;
   gap: 0.25rem;
-  background: var(--bg-secondary);
-  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-border-strong) 45%, transparent);
+  border-radius: 999px;
   padding: 3px;
 }
 
@@ -53,28 +60,36 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.3rem 0.8rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.78rem;
-  font-weight: 500;
+  padding: 0.3rem 0.85rem;
+  min-height: 30px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
   cursor: pointer;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   background: transparent;
   transition:
     background 0.2s ease,
     color 0.2s ease,
-    transform 0.15s ease;
+    border-color 0.2s ease;
 
-  &:hover {
-    color: var(--accent-primary);
+  &:hover:not(.active) {
+    background: var(--color-surface-elevated);
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--color-brand);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand) 35%, transparent);
   }
 
   &.active {
-    background: var(--card-bg);
-    color: var(--accent-primary);
-    box-shadow: 0 1px 6px var(--card-shadow);
-    transform: scale(1.02);
+    background: color-mix(in srgb, var(--color-brand) 18%, var(--color-surface-elevated));
+    border-color: color-mix(in srgb, var(--color-brand) 40%, transparent);
+    color: var(--text-primary);
   }
 }
 
@@ -95,5 +110,32 @@
   canvas {
     width: 100% !important;
     height: 100% !important;
+  }
+}
+
+// ── Responsive geometry + touch targets ───────────────────────────────────────
+
+@media (max-width: 639.98px) {
+  .toggle-btn {
+    min-height: 44px;
+  }
+
+  .chart-canvas-wrap {
+    min-height: 220px;
+
+    &.bar-mode {
+      min-height: 300px;
+    }
+  }
+}
+
+// ── Reduced motion: entry tween and hover lift become static ─────────────────
+@media (prefers-reduced-motion: reduce) {
+  .genre-chart-card {
+    animation: none;
+  }
+
+  .toggle-btn {
+    transition: none;
   }
 }

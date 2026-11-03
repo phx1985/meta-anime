@@ -26,6 +26,7 @@ public static class ControllerResultExtensions
     private static int MapStatus(string? code) => code switch
     {
         MetaAnime.Application.Constants.Errors.NotFound => StatusCodes.Status404NotFound,
+        MetaAnime.Application.Constants.Errors.CastProviderUnavailable => StatusCodes.Status503ServiceUnavailable,
         MetaAnime.Application.Constants.Errors.AuthNotConfigured => StatusCodes.Status401Unauthorized,
         MetaAnime.Application.Constants.Errors.AuthInvalidPassword => StatusCodes.Status401Unauthorized,
         MetaAnime.Application.Constants.Errors.AuthPasswordAlreadySet => StatusCodes.Status409Conflict,

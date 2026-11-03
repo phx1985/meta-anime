@@ -1,0 +1,93 @@
+:host {
+  display: block;
+}
+
+.ui-state-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 2.25rem 1.25rem;
+  text-align: center;
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 0.35rem;
+    border-radius: 50%;
+    color: var(--text-muted);
+    background: color-mix(in srgb, var(--color-border-strong) 55%, transparent);
+    border: 1px solid var(--color-border-subtle);
+
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  &--error &__icon {
+    color: var(--color-danger-deep);
+    background: color-mix(in srgb, var(--color-danger-deep) 12%, transparent);
+    border-color: color-mix(in srgb, var(--color-danger-deep) 35%, transparent);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__sub {
+    margin: 0;
+    max-width: 34ch;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  // The single vibrant CTA of a state surface.
+  &__action {
+    margin-top: 0.65rem;
+    min-height: 38px;
+    padding: 0.45rem 1.35rem;
+    border: none;
+    border-radius: 999px;
+    background: var(--color-brand);
+    color: var(--color-surface-elevated);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: filter 0.15s ease, transform 0.15s ease;
+
+    &:hover {
+      filter: brightness(1.08);
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-brand) 45%, transparent);
+    }
+
+    @media (max-width: 639.98px) {
+      min-height: 44px;
+    }
+  }
+}
+
+// ── Reduced motion: CTA hover lift becomes static ────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  .ui-state-panel__action {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}

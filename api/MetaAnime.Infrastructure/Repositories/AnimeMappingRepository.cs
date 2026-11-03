@@ -22,6 +22,35 @@ public sealed class AnimeMappingRepository(MetaAnimeDbContext dbContext) : IAnim
         await dbContext.BulkCopyAsync(mappingList);
     }
 
+    /// <inheritdoc />
+    public async Task MergeAsync(IEnumerable<AnimeMapping> mappings)
+    {
+        var desired = mappings
+            .Select(m => (m.AnimeId, m.AniDbId))
+            .ToHashSet();
+        var existing = await dbContext.AnimeMappings
+            .AsNoTracking()
+            .Select(am => new { am.Id, am.AnimeId, am.AniDbId })
+            .ToListAsync();
+        var existingPairs = existing.Select(e => (e.AnimeId, e.AniDbId)).ToHashSet();
+
+        var staleIds = existing
+            .Where(e => !desired.Contains((e.AnimeId, e.AniDbId)))
+            .Select(e => e.Id)
+            .ToList();
+        if (staleIds.Count > 0)
+        {
+            await dbContext.AnimeMappings.Where(am => staleIds.Contains(am.Id)).ExecuteDeleteAsync();
+        }
+
+        var toInsert = desired
+            .Where(p => !existingPairs.Contains(p))
+            .Select(p => new AnimeMapping { AnimeId = p.AnimeId, AniDbId = p.AniDbId })
+            .ToList();
+        if (toInsert.Count > 0)
+            await BulkInsertAsync(toInsert);
+    }
+
     public async Task AddAsync(AnimeMapping mapping)
     {
         mapping.Id = Guid.CreateVersion7();

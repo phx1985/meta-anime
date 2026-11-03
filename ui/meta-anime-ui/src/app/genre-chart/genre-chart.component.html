@@ -1,12 +1,12 @@
-<div class="genre-chart-card">
+<app-ui-card class="genre-chart-card" padding="1.5rem">
   <div class="chart-header">
-    <h3 class="chart-title">{{ 'home.chart.title' | translate }}</h3>
+    <h2 class="chart-title"><svg class="chart-title-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>{{ 'home.chart.title' | translate }}</h2>
     <div class="chart-toggle" role="group" [attr.aria-label]="'home.chart.toggleLabel' | translate">
       <button
         class="toggle-btn"
-        [class.active]="chartType === 'doughnut'"
+        [class.active]="chartType() === 'doughnut'"
         (click)="setChartType('doughnut')"
-        [attr.aria-pressed]="chartType === 'doughnut'"
+        [attr.aria-pressed]="chartType() === 'doughnut'"
       >
         <svg
           width="16"
@@ -24,9 +24,9 @@
       </button>
       <button
         class="toggle-btn"
-        [class.active]="chartType === 'bar'"
+        [class.active]="chartType() === 'bar'"
         (click)="setChartType('bar')"
-        [attr.aria-pressed]="chartType === 'bar'"
+        [attr.aria-pressed]="chartType() === 'bar'"
       >
         <svg
           width="16"
@@ -45,7 +45,20 @@
       </button>
     </div>
   </div>
-  <div class="chart-canvas-wrap" [class.bar-mode]="chartType === 'bar'">
-    <canvas #chartCanvas></canvas>
-  </div>
-</div>
+  @if (hasData()) {
+    <div class="chart-canvas-wrap" [class.bar-mode]="chartType() === 'bar'">
+      <canvas #chartCanvas role="img" [attr.aria-label]="'home.chart.title' | translate"></canvas>
+    </div>
+  } @else {
+    <!-- Empty state -->
+    <app-ui-state-panel
+      [heading]="'home.chart.empty.title' | translate"
+      [subtext]="'home.chart.empty.sub' | translate"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+        <path d="M22 12A10 10 0 0 0 12 2v10z" />
+      </svg>
+    </app-ui-state-panel>
+  }
+</app-ui-card>

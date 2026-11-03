@@ -33,13 +33,21 @@
         "plex": "Anime series available in your Plex media library.",
         "sonarr": "Anime series tracked by your Sonarr instance.",
         "mal": "Anime entries sourced from your MyAnimeList account."
+      },
+      "error": {
+        "title": "Couldn't load statistics",
+        "sub": "The statistics service didn't respond. Check the API connection and try again."
       }
     },
     "chart": {
       "title": "Genre Distribution",
       "toggleLabel": "Chart type",
       "pie": "Pie",
-      "bar": "Bar"
+      "bar": "Bar",
+      "empty": {
+        "title": "No genre data yet",
+        "sub": "Genre distribution will appear here once your library has been indexed."
+      }
     },
     "missing": {
       "title": "Coverage Gaps",
@@ -58,7 +66,7 @@
         "error": "Failed to load the list. Please try again.",
         "empty": "No anime found for this gap.",
         "allClearTitle": "All clear! Your library is perfectly in sync.",
-        "allClearSub": "Nothing is missing here. Your containers are talking to each other. 🚀",
+        "allClearSub": "Nothing is missing here. Your containers are talking to each other.",
         "colTitle": "Title",
         "colActions": "Actions",
         "colProgress": "Progress",
@@ -85,7 +93,9 @@
         "crossLinkRemove": "Remove",
         "crossLinkRemoving": "Removing…",
         "crossLinkAniDbId": "AniDbId",
-        "crossLinkMalId": "MAL ID"
+        "crossLinkMalId": "MAL ID",
+        "tagAniDb": "AniDB",
+        "tagMal": "MAL"
       },
       "noProviders": {
         "title": "No providers configured yet.",
@@ -103,10 +113,121 @@
       "storage": "Storage Added",
       "forceRefresh": "Refresh",
       "refreshing": "Refreshing…",
-      "lastUpdated": "Last updated: {{value}}"
+      "lastUpdated": "Last updated: {{value}}",
+      "episodesDialog": {
+        "title": "Episodes added",
+        "open": "Show the episodes added",
+        "countOne": "{{count}} episode",
+        "countMany": "{{count}} episodes",
+        "columnSeries": "Series",
+        "columnEpisode": "Episode",
+        "columnSize": "Size",
+        "unknownSeries": "Unknown series",
+        "unknownEpisode": "Special",
+        "empty": "Nothing was added in this period.",
+        "error": "Couldn't load the episode list.",
+        "retry": "Retry",
+        "close": "Close",
+        "truncated": "Newest {{shown}} of {{total}} shown"
+      },
+      "error": {
+        "title": "Couldn't load activity",
+        "sub": "Activity data is unavailable right now. Check the API connection and try again."
+      }
     }
   },
   "seasonal": {
+    "forYou": {
+      "add": "Add",
+      "airingProgress": "Airing · Ep {{current}}/{{total}}",
+      "batch": {
+        "addSelected": "Add ({{count}})",
+        "addingItem": "Adding {{current}} of {{total}}…",
+        "clear": "Clear",
+        "completeTitle": "Batch complete",
+        "modalTitle": "Add {{count}} anime to providers",
+        "partialSuccess": "Added {{success}} of {{total}} anime ({{failed}} failed).",
+        "passSelected": "Pass ({{count}})",
+        "result": "Added {{added}} · {{failed}} failed",
+        "selectAll": "Select all",
+        "selectCardAria": "Select {{title}}",
+        "selectProviders": "Choose target providers:",
+        "selectedCount": "{{count}} selected",
+        "startAdding": "Start adding ({{count}})",
+        "successSummary": "Successfully added {{count}} anime."
+      },
+      "becauseLabel": "Because you liked",
+      "becauseLiked": "Because you liked {{titles}} · {{tags}}",
+      "becauseLikedNoTags": "Because you liked {{titles}}",
+      "carousel": {
+        "showing": "Showing {{start}}–{{end}} of {{total}}",
+        "prev": "Previous picks",
+        "next": "Next picks",
+        "shuffle": "Shuffle deck"
+      },
+      "customRange": {
+        "title": "Custom season range",
+        "apply": "Apply range"
+      },
+      "emptyFiltered": "No picks match your active filters.",
+      "excludeDonghua": "Exclude donghua",
+      "excludeGenres": "Exclude genres",
+      "filters": {
+        "formats": "Format",
+        "formatAll": "All formats",
+        "formatTv": "TV",
+        "formatMovie": "Movie",
+        "formatOvaOna": "OVA / ONA",
+        "statusAll": "Any status",
+        "statusAiring": "Airing",
+        "statusUpcoming": "Upcoming",
+        "statusFinished": "Finished",
+        "scoreAny": "Any score",
+        "hideSequels": "Hide sequels",
+        "genres": "Genres",
+        "genreHint": "Click to include · Shift-click to exclude",
+        "reset": "Reset filters"
+      },
+      "finishedEps": "Finished · {{total}} eps",
+      "genreModal": {
+        "title": "Filter by Genre",
+        "searchPlaceholder": "Search genres…",
+        "tabInclude": "Include ({{count}})",
+        "tabExclude": "Exclude ({{count}})",
+        "apply": "Apply Filters",
+        "applyWithCount": "Apply ({{count}} anime)",
+        "clearTab": "Clear tab",
+        "noMatch": "No genre matches that search.",
+        "cycleHint": "Click to cycle: Neutral → Include → Exclude → Neutral",
+        "activeSummary": "Active",
+        "included": "Included ({{count}})",
+        "excluded": "Excluded ({{count}})",
+        "clearAll": "Clear all genres",
+        "legendNeutral": "Neutral",
+        "legendInclude": "Include",
+        "legendExclude": "Exclude"
+      },
+      "inReserve": "{{count}} more in reserve",
+      "match": "match",
+      "newPicks": "New picks",
+      "pass": "Pass",
+      "peekHint": "Click for full details",
+      "popularReason": "Popular this season — rate a few series to personalise this",
+      "scope": {
+        "label": "Suggestion scope",
+        "current": "This season",
+        "last2": "Last 2 seasons",
+        "last4": "Full year",
+        "custom": "Custom range",
+        "from": "From",
+        "to": "To",
+        "apply": "Apply"
+      },
+      "subtitle": "Based on what you've watched",
+      "title": "Picked for you",
+      "upcomingDate": "Starts {{date}}",
+      "donghua": "Donghua"
+    },
     "title": "Seasonal Anime",
     "subtitle": "Browse anime by season from MyAnimeList",
     "seasonSelect": "Select season",
@@ -132,7 +253,7 @@
       "stepConfigure": "Configure"
     },
     "allTracked": "Tracked in Sonarr & MAL",
-    "alreadyTracked": "Already tracked ✓",
+    "alreadyTracked": "Already tracked",
     "willAdd": "Will be added",
     "notTracked": "Not tracked",
     "addSuccess": "Added successfully!",
@@ -202,7 +323,9 @@
       },
       "noFilterActive": "No filter active",
       "mediaType": "Media type",
-      "apply": "Apply"
+      "apply": "Apply",
+      "filterPlaceholder": "Filter…",
+      "done": "Done"
     },
     "sonarrAlreadyInLibrary": "Already in Sonarr",
     "partiallyTracked": "Partially tracked — add to more providers",
@@ -221,6 +344,14 @@
       "monitorSpecials": "Monitor Specials",
       "unmonitorSpecials": "Unmonitor Specials",
       "none": "None"
+    },
+    "formats": {
+      "tv": "TV",
+      "movie": "Movie",
+      "ova": "OVA",
+      "ona": "ONA",
+      "special": "Special",
+      "music": "Music"
     }
   },
   "malSearch": {
@@ -233,6 +364,7 @@
     "loading": "Searching for anime…",
     "error": "Search failed. Please try again.",
     "empty": "No results found. Try a different title.",
+    "noResults": "No results found for \"{{query}}\".",
     "noQuery": "Enter a title above to start searching.",
     "resultCount": "{{count}} results for \"{{query}}\"",
     "openMal": "Open on MyAnimeList",
@@ -249,7 +381,7 @@
       "stepConfigure": "Configure"
     },
     "allTracked": "Tracked in Sonarr & MAL",
-    "alreadyTracked": "Already tracked ✓",
+    "alreadyTracked": "Already tracked",
     "willAdd": "Will be added",
     "notTracked": "Not tracked",
     "addSuccess": "Added successfully!",
@@ -343,7 +475,9 @@
   "animeList": {
     "title": "Anime List",
     "error": "Failed to load anime. Please try again later.",
+    "errorSubtext": "Check your connection and try again.",
     "empty": "No anime found.",
+    "emptySubtext": "Try adjusting or clearing your filters.",
     "totalCount": "{{count}} anime found",
     "loadingMore": "Loading more…",
     "loadMore": "Load more",
@@ -402,6 +536,8 @@
       "expandFilters": "Expand filters",
       "collapseFilters": "Collapse filters",
       "noFilterActive": "No filter selected",
+      "done": "Done",
+      "filterPlaceholder": "Filter…",
       "prompt": "Set your filters and press Search to explore your anime library.",
       "advanced": "Advanced filters",
       "hideAdvanced": "Hide advanced",
@@ -786,6 +922,10 @@
       "BotKun_Model": {
         "name": "Model",
         "desc": "Model identifier to use for chat (e.g. llama-3.3-70b-versatile, gpt-4o-mini, qwen2.5:1.5b). Optional for local setups that expose only one model."
+      },
+      "Sonarr_SearchForMissingEpisodes": {
+        "name": "Search for missing episodes on add",
+        "desc": "Start a search for monitored missing episodes when a new series is sent to Sonarr"
       }
     },
     "toggle": {
@@ -920,6 +1060,9 @@
     "title": "Explore Universe",
     "loading": "Mapping Franchise Data...",
     "loadingProgress": "Mapping Franchise... ({{count}} nodes found)",
+    "errorTitle": "Franchise mapping failed",
+    "retry": "Retry",
+    "graphAlt": "Franchise timeline graph with {{count}} anime: {{nodes}}",
     "empty": "No related anime found in the franchise data.",
     "close": "Close",
     "viewButton": "View Franchise Constellation",
@@ -1059,7 +1202,7 @@
       "daysAgo": "{{n}}d ago"
     },
     "welcome": {
-      "title": "Welcome to MetaAnime 👋",
+      "title": "Welcome to MetaAnime",
       "message": "Your setup is complete. MetaAnime is now aggregating your anime library from Plex, Sonarr and MyAnimeList — all in one place. Enjoy!"
     },
     "noSync": {
@@ -1070,7 +1213,7 @@
     "sync": {
       "startTitle": "Sync started",
       "startMessage": "Manual sync has been triggered. Check the progress log in Settings.",
-      "doneTitle": "Sync complete ✓",
+      "doneTitle": "Sync complete",
       "doneMessage": "All sources have been synchronized successfully.",
       "errorTitle": "Sync failed",
       "errorMessage": "The synchronization encountered an error. Check the sync log for details.",
@@ -1084,7 +1227,7 @@
       "reloadFailedMessage": "Please refresh the page to see the updated token status."
     },
     "malConnect": {
-      "successTitle": "MyAnimeList connected ✓",
+      "successTitle": "MyAnimeList connected",
       "successMessage": "MyAnimeList connected successfully.",
       "errorTitle": "MyAnimeList connection failed",
       "errorMessage": "Authorization failed. Please try connecting again."
@@ -1093,24 +1236,24 @@
       "plex": {
         "downTitle": "Plex Offline",
         "downMessage": "Plex Media Server is currently unreachable. It may be a network issue or the server may be down.",
-        "upTitle": "Plex Restored ✓",
+        "upTitle": "Plex Restored",
         "upMessage": "Plex Media Server connection has been restored."
       },
       "sonarr": {
         "downTitle": "Sonarr Offline",
         "downMessage": "Sonarr is currently unreachable. It may be a network issue or the server may be down.",
-        "upTitle": "Sonarr Restored ✓",
+        "upTitle": "Sonarr Restored",
         "upMessage": "Sonarr connection has been restored."
       },
       "mal": {
         "downTitle": "MAL API Offline",
         "downMessage": "MyAnimeList API is currently unreachable. MAL features may be unavailable.",
-        "upTitle": "MAL API Restored ✓",
+        "upTitle": "MAL API Restored",
         "upMessage": "MyAnimeList API connection has been restored."
       }
     },
     "botKun": {
-      "discoverTitle": "Meet Bot-kun AI Concierge 🤖",
+      "discoverTitle": "Meet Bot-kun AI Concierge",
       "discoverMessage": "Bot-kun is an AI assistant that can help you discover, manage, and talk about your anime library. Enable it in Bot-kun settings to get started.",
       "configure": "Configure Bot-kun"
     }
@@ -1137,12 +1280,18 @@
       "kb": "KB",
       "mb": "MB",
       "gb": "GB",
-      "tb": "TB"
+      "tb": "TB",
+      "kib": "KiB",
+      "mib": "MiB",
+      "gib": "GiB",
+      "tib": "TiB"
     },
     "loading": "Loading...",
+    "retry": "Retry",
     "previousPage": "Previous page",
     "nextPage": "Next page",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "done": "Done"
   },
   "providers": {
     "mal": "MyAnimeList",
@@ -1152,7 +1301,17 @@
     "inMal": "In MAL",
     "inPlex": "In Plex",
     "inSonarr": "In Sonarr",
-    "alreadyTracked": "Already tracked"
+    "alreadyTracked": "Already tracked",
+    "add": {
+      "searchMissingEpisodes": "Search for missing episodes",
+      "modalTitle": "Add to Providers",
+      "modalTitleSingle": "Add to Providers",
+      "modalTitleBatch": "Add {{count}} anime to providers",
+      "searchMissingHint": "Start searching immediately on Sonarr",
+      "selectedAnimeCount": "Selected anime ({{count}})",
+      "removeItemAria": "Remove {{title}} from selection",
+      "clearAll": "Clear all"
+    }
   },
   "aria": {
     "primaryNavigation": "Primary navigation",
@@ -1164,6 +1323,12 @@
     "previousImage": "Previous image",
     "nextImage": "Next image",
     "imageGallery": "Image Gallery",
+    "homeHero": "Hero banner",
+    "closeGalleryTitle": "Close (Esc)",
+    "previousImageTitle": "Previous (←)",
+    "nextImageTitle": "Next (→)",
+    "imageNumber": "Image {{index}}",
+    "animePoster": "Anime poster",
     "syncSteps": "Sync steps",
     "legend": "Legend",
     "providerLinks": "Provider links",
@@ -1249,7 +1414,7 @@
       "desc": "When enabled, your last used anime search filters will be automatically restored and applied when you open the Anime List or Seasonal Anime page."
     },
     "libraryHandbrake": {
-      "groupTitle": "🎬 Library & HandBrake Transcode Paths",
+      "groupTitle": "Library & HandBrake Transcode Paths",
       "containerRoot": {
         "name": "Container Media Root",
         "desc": "Media root as stored by Sonarr inside the container (default: /downloads_root)."
@@ -1267,10 +1432,10 @@
         "desc": "Name of the HandBrake preset applied to exported queue jobs."
       },
       "destModeTranscoded": "Output in \"_transcoded\" subfolder next to source files",
-      "browse": "📁 Browse Folder",
-      "smbWarning": "⚠️ HandBrake requires a mounted local POSIX/Windows path (e.g. `/mnt/media/...` or `/run/user/1000/gvfs/...`), not a virtual `smb://` URI.",
-      "browseUp": "⬆ Up one level",
-      "browseSelectHere": "✅ Use this folder",
+      "browse": "Browse Folder",
+      "smbWarning": "HandBrake requires a mounted local POSIX/Windows path (e.g. `/mnt/media/...` or `/run/user/1000/gvfs/...`), not a virtual `smb://` URI.",
+      "browseUp": "Up one level",
+      "browseSelectHere": "Use this folder",
       "browseLoading": "Loading folders…",
       "browseEmpty": "No subfolders here",
       "browseError": "Cannot read this folder",
@@ -1295,11 +1460,17 @@
   },
   "botKun": {
     "subtitle": "AI Anime Concierge",
+    "emptyTitle": "Bot-kun is listening",
+    "emptySubtitle": "Ask about your library, discover something new, or pick a quick action below.",
+    "retry": "Retry",
+    "quickActions": "Quick actions",
+    "scoreLabel": "Score",
     "inputPlaceholder": "Ask me about anime…",
     "clearConversation": "Clear conversation",
     "errorFallback": "Sorry, something went wrong. Please try again.",
     "connectionError": "Connection error — please check your Bot-kun settings.",
     "fabLabel": "Bot-kun",
+    "dockLabel": "Bot-kun",
     "fabOpen": "Open Bot-kun AI concierge",
     "newMessage": "New message from Bot-kun",
     "dialogLabel": "Bot-kun AI Anime Concierge",
@@ -1314,25 +1485,25 @@
     "stopReading": "Stop reading",
     "speaking": "Reading...",
     "chips": {
-      "transcodeTonight": "🎯 What should I transcode tonight?",
-      "biggestOffenders": "📊 Who are my biggest GiB/h offenders?",
-      "finishedH264": "✅ Finished seasons still in H264",
-      "brokenMixed": "🧹 Find broken/mixed codec seasons"
+      "transcodeTonight": "What should I transcode tonight?",
+      "biggestOffenders": "Who are my biggest GiB/h offenders?",
+      "finishedH264": "Finished seasons still in H264",
+      "brokenMixed": "Find broken/mixed codec seasons"
     },
     "actions": {
       "applyFilter": "Apply Filter",
       "openSeries": "Open Series",
-      "applied": "✓ Applied"
+      "applied": "Applied"
     }
   },
-    "configBackup": {
+  "configBackup": {
     "title": "Backup & Restore",
     "desc": "Export your full configuration (providers, tokens, preferences) or restore it from a JSON file.",
-    "exportBtn": "⬇ Export Config",
-    "importBtn": "⬆ Import Config",
-    "exportWarning": "⚠️ The exported file contains UNMASKED API keys and tokens. Store it securely.",
+    "exportBtn": "Export Config",
+    "importBtn": "Import Config",
+    "exportWarning": "The exported file contains UNMASKED API keys and tokens. Store it securely.",
     "importTitle": "Import Configuration",
-    "dropHint": "Drop a .json config file here or click to choose",
+    "dropHint": "Drop a.json config file here or click to choose",
     "imported": "Configuration imported ({{count}} values) — Plex: {{plex}}, Sonarr: {{sonarr}}, MAL: {{mal}}",
     "statusYes": "connected",
     "statusNo": "not connected",
@@ -1340,7 +1511,7 @@
     "completeSetup": "Complete Setup",
     "reviewSteps": "Review steps"
   },
-"libraryIntel": {
+  "libraryIntel": {
     "matchMode": {
       "label": "Codec match",
       "any": "Any (>0%)",
@@ -1350,7 +1521,7 @@
       "opGte": "≥",
       "opLte": "≤",
       "percent": "Percent",
-      "splitOnly": "⚡ Split Codecs Only"
+      "splitOnly": "Split Codecs Only"
     },
     "status": {
       "label": "Status",
@@ -1399,7 +1570,7 @@
       "savingsSeries": "{{count}} series",
       "chipsPrime": "Prime Transcode Targets",
       "chipsUnfinished": "Unfinished Transcodes",
-      "chipsEightBit": "🐘 8-Bit Bloat",
+      "chipsEightBit": "8-Bit Bloat",
       "batchTitle": "Transcode Batch",
       "batchCount": "Episodes",
       "batchCustom": "Custom…",
@@ -1421,9 +1592,10 @@
       "batchSortBitrate": "Bitrate (GiB/h ↓)",
       "batchSortAlpha": "Alphabetical (A→Z)",
       "chipsCompleteH264": "Complete Seasons in H264",
-      "presetApplied": "✓ Applied",
+      "presetApplied": "Applied",
       "analyzing": "Analyzing {{count}} files…",
-      "noData": "Enrichment in progress…"
+      "noData": "Enrichment in progress…",
+      "chartAria": "Codec distribution chart: {{summary}}"
     },
     "drawer": {
       "stackedTitle": "Codec Composition",
@@ -1435,15 +1607,15 @@
       "copyH264": "Copy H264 Paths",
       "exportList": "Export Transcode List",
       "copied": "Copied!",
-      "copyFolderPath": "📁 Copy Folder Path",
-      "copySelectedPaths": "📋 Copy Selected Paths ({{count}})",
+      "copyFolderPath": "Copy Folder Path",
+      "copySelectedPaths": "Copy Selected Paths ({{count}})",
       "selectAllFiltered": "Select All Filtered ({{count}})",
       "clearSelection": "Clear selection",
-      "exportQueue": "🎬 Export HandBrake Queue ({{count}})",
-      "copyPaths": "📋 Copy Paths",
+      "exportQueue": "Export HandBrake Queue ({{count}})",
+      "copyPaths": "Copy Paths",
       "copyPlainPaths": "Copy Selected Episode Paths (Plain Text)",
       "quotedCliArgs": "Copy Selected Episode Paths (Quoted CLI Args)",
-      "handBrakeScript": "🎬 Export HandBrake Batch (.sh)",
+      "handBrakeScript": "Export HandBrake Batch (.sh)",
       "mappedToHostPath": "Mapped to Host Path",
       "editMapping": "Edit path mapping",
       "mapContainerRoot": "Container Media Root",
@@ -1455,13 +1627,25 @@
     }
   },
   "luckyPick": {
+    "triggerShort": "Lucky",
+    "filters": {
+      "label": "Roll filters",
+      "planToWatch": "Plan to Watch",
+      "finished": "Finished",
+      "hasFiles": "Downloaded"
+    },
+    "actions": {
+      "watchPlex": "Watch on Plex",
+      "openMal": "MyAnimeList",
+      "openDetails": "Details",
+      "reroll": "Reroll"
+    },
+    "history": {
+      "label": "Previous rolls"
+    },
     "buttonLabel": "I'm Feeling Lucky",
     "ariaLabel": "Random anime pick overlay",
     "resultAriaLabel": "Recommended anime",
-    "searching": "Finding your next anime…",
-    "watchNow": "Watch Now",
-    "viewDetails": "View on MAL",
-    "tryAgain": "Try Again",
     "close": "Close",
     "noMatch": {
       "title": "No matches found",
@@ -1745,7 +1929,7 @@
     "mal": {
       "title": "How to get your MAL Client ID & Secret",
       "step1": "Go to myanimelist.net and sign in to your account.",
-      "step2prefix": "Navigate to Account → API (or go to ",
+      "step2prefix": "Navigate to Account → API (or go to",
       "step2suffix": ").",
       "step3": "Click \"Create ID\", fill in the application details, and set the App Type to \"Web\".",
       "step4": "Set the App Redirect URL to the following URL (copy exactly):",
@@ -1809,7 +1993,7 @@
     "step4": {
       "title": "Connect Plex (Optional)",
       "desc": "Link your Plex account to see which anime are in your library and which are missing.",
-      "disclaimer": "💡 For the best matching experience, create a dedicated Anime-only library in Plex.",
+      "disclaimer": "For the best matching experience, create a dedicated Anime-only library in Plex.",
       "serverUrlLabel": "Plex Server URL",
       "serverUrlPlaceholder": "e.g. http://localhost:32400",
       "connectBtn": "Sign in with Plex",
@@ -1821,7 +2005,7 @@
     "step5": {
       "title": "Connect Sonarr (Optional)",
       "desc": "Configure Sonarr to track and manage anime series downloads.",
-      "disclaimer": "💡 Setting a specific Sonarr tag for anime is required to filter and identify series correctly.",
+      "disclaimer": "Setting a specific Sonarr tag for anime is required to filter and identify series correctly.",
       "localUrlLabel": "Local Server URL",
       "localUrlPlaceholder": "e.g. http://localhost:8989",
       "remoteUrlLabel": "Remote URL",
@@ -1991,7 +2175,10 @@
       "showing": "Showing",
       "of": "of",
       "series": "series",
-      "rowsPerPage": "Rows per page"
+      "rowsPerPage": "Rows per page",
+      "paginationNav": "Table pagination",
+      "prevPage": "Previous page",
+      "nextPage": "Next page"
     },
     "detail": {
       "ended": "Ended",
@@ -2030,6 +2217,9 @@
     "loading": "Building nexus…",
     "empty": "No cast data available. Run a sync to populate.",
     "error": "Failed to load nexus data. Please try again.",
+    "retry": "Retry",
+    "crossLibrary": "Also in your library",
+    "appearsInOpen": "Open details",
     "hint": "Click a voice actor card to see their profile.",
     "lastUpdated": "Last updated",
     "close": "Close Seiyuu Nexus",
@@ -2048,11 +2238,41 @@
       "supporting": "Supporting"
     },
     "vaProfile": {
+      "close": "Close profile",
+      "notFound": "Profile not found.",
+      "birthday": "Birthday",
       "age": "Age",
       "bloodType": "Blood type",
       "height": "Height",
       "weight": "Weight",
       "roles": "Roles"
+    }
+  },
+  "onboarding": {
+    "import": {
+      "reading": "Reading configuration…",
+      "validating": "Validating configuration…",
+      "success": "Configuration verified!",
+      "detected": "Detected:",
+      "error": "Invalid configuration file.",
+      "verified": "Configuration verified!",
+      "continueToRecap": "Continue to Recap →",
+      "chooseAnother": "Choose another file"
+    },
+    "nav": {
+      "startOver": "Start over",
+      "startOverConfirm": "Reset all configuration and return to the beginning?"
+    },
+    "reset": {
+      "button": "Reset setup",
+      "startFresh": "Start fresh",
+      "confirm": "Reset all settings and return to the start?",
+      "confirmBtn": "Reset"
+    },
+    "sync": {
+      "completeTitle": "All Set! Setup Complete",
+      "completeSubtitle": "Your library is synchronized and ready to explore.",
+      "launchDashboard": "Launch Dashboard →"
     }
   }
 }

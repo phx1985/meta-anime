@@ -1,6 +1,8 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
+  ElementRef,
   HostListener,
   inject,
   signal,
@@ -19,6 +21,7 @@ import { AnimeImageGalleryService } from '../services/anime-image-gallery.servic
 })
 export class AnimeImageGalleryComponent {
   protected gallery = inject(AnimeImageGalleryService);
+  private readonly hostEl = inject(ElementRef<HTMLElement>);
 
   /** True while the active image is loading/transitioning. */
   protected imageLoading = signal(false);
@@ -30,6 +33,20 @@ export class AnimeImageGalleryComponent {
   private swipeStartX = 0;
   private swipeStartY = 0;
 
+  /** Focus management state (dialog open/close). */
+  private wasOpen = false;
+  private triggerEl: HTMLElement | null = null;
+  private focusTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // Memoized view models — plain getters would allocate a fresh [] on every
+  // change-detection read; computeds cache until the source signals change.
+  private readonly imagesSig = computed(() => this.gallery.images() ?? []);
+  private readonly activeIndexSig = computed(() => this.gallery.activeIndex());
+  private readonly activeImageSig = computed(
+    () => this.imagesSig()[this.activeIndexSig()] ?? '',
+  );
+  private readonly hasMultipleSig = computed(() => this.imagesSig().length > 1);
+
   constructor() {
     // Whenever the active image changes, show the loading spinner until (load) fires.
     effect(() => {
@@ -39,22 +56,46 @@ export class AnimeImageGalleryComponent {
         this.imageLoading.set(true);
       }
     });
+
+    // Dialog focus management: move focus into the gallery on open and
+    // restore it to the trigger element on close.
+    effect((onCleanup) => {
+      const open = this.gallery.images() !== null;
+      if (open && !this.wasOpen) {
+        this.triggerEl = (document.activeElement as HTMLElement) ?? null;
+        this.focusTimer = setTimeout(() => {
+          this.focusTimer = null;
+          const closeBtn = this.hostEl.nativeElement.querySelector('.gallery-close') as HTMLElement | null;
+          closeBtn?.focus();
+        }, 0);
+        onCleanup(() => {
+          if (this.focusTimer !== null) {
+            clearTimeout(this.focusTimer);
+            this.focusTimer = null;
+          }
+        });
+      } else if (!open && this.wasOpen) {
+        this.triggerEl?.focus();
+        this.triggerEl = null;
+      }
+      this.wasOpen = open;
+    });
   }
 
   get images(): string[] {
-    return this.gallery.images() ?? [];
+    return this.imagesSig();
   }
 
   get activeIndex(): number {
-    return this.gallery.activeIndex();
+    return this.activeIndexSig();
   }
 
   get activeImage(): string {
-    return this.images[this.activeIndex] ?? '';
+    return this.activeImageSig();
   }
 
   get hasMultiple(): boolean {
-    return this.images.length > 1;
+    return this.hasMultipleSig();
   }
 
   onImageLoad(): void {

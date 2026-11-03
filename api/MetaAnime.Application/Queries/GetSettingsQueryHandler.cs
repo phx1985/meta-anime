@@ -69,6 +69,7 @@ public sealed class GetSettingsQueryHandler(
             new(SettingsKeys.SonarrDefaultRootFolder, "sonarr", false, false, Get(SettingsKeys.SonarrDefaultRootFolder)),
             new(SettingsKeys.SonarrDefaultQualityProfileName, "sonarr", false, false, Get(SettingsKeys.SonarrDefaultQualityProfileName)),
             new(SettingsKeys.SonarrDefaultSeasonFolder, "sonarr", false, false, Get(SettingsKeys.SonarrDefaultSeasonFolder), "boolean"),
+            new(SettingsKeys.SonarrSearchForMissingEpisodes, "sonarr", false, false, Get(SettingsKeys.SonarrSearchForMissingEpisodes), "boolean"),
             new(SettingsKeys.SonarrDefaultMonitor, "sonarr", false, false, Get(SettingsKeys.SonarrDefaultMonitor), "select",
                 SelectOptions: ["all", "future", "missing", "existing", "recent", "pilot", "firstSeason", "lastSeason", "monitorSpecials", "unmonitorSpecials", "none"]),
 

@@ -4,11 +4,13 @@ import {
   signal,
   computed,
   DestroyRef,
+  HostListener,
   ChangeDetectionStrategy,
 } from '@angular/core';
 
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NgTemplateOutlet } from '@angular/common';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest, forkJoin, timer } from 'rxjs';
@@ -26,6 +28,9 @@ import { SonarrService, SonarrTag } from '../services/sonarr.service';
 import { AuthService } from '../services/auth.service';
 import { EnrollmentService, PlexLibrary } from '../services/enrollment.service';
 import { BotKunService } from '../services/bot-kun.service';
+import { NsfwEasterEggService } from '../services/nsfw-easter-egg.service';
+import { UiSelectComponent, UiSelectOption } from '../shared/ui/ui-select/ui-select.component';
+import { UiToggleComponent } from '../shared/ui/ui-toggle/ui-toggle.component';
 import { PropertyBagService } from '../services/property-bag.service';
 import { UserPathService } from '../services/user-path.service';
 import { FsBrowseService, FsBrowseEntry } from '../services/fs-browse.service';
@@ -58,7 +63,7 @@ function langToLocale(lang: string): string {
   selector: 'app-settings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, ReactiveFormsModule, SyncStepComponent, HelpModalComponent],
+  imports: [TranslatePipe, ReactiveFormsModule, NgTemplateOutlet, SyncStepComponent, HelpModalComponent, UiSelectComponent, UiToggleComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
@@ -79,6 +84,7 @@ export class SettingsComponent {
   readonly popupService = inject(PopupService);
   private enrollmentService = inject(EnrollmentService);
   private botKunService = inject(BotKunService);
+  private nsfwEasterEgg = inject(NsfwEasterEggService);
   private propertyBagService = inject(PropertyBagService);
   readonly userPaths = inject(UserPathService);
   private readonly fsBrowse = inject(FsBrowseService);
@@ -314,6 +320,7 @@ export class SettingsComponent {
       'Sonarr:DefaultQualityProfileName',
       'Sonarr:DefaultSeasonFolder',
       'Sonarr:DefaultMonitor',
+      'Sonarr:SearchForMissingEpisodes',
     ];
     return this.settings()
       .filter((s) => SettingsComponent.SONARR_DEFAULT_KEYS.has(s.key))
@@ -390,6 +397,7 @@ export class SettingsComponent {
     'Sonarr:DefaultQualityProfileName',
     'Sonarr:DefaultSeasonFolder',
     'Sonarr:DefaultMonitor',
+    'Sonarr:SearchForMissingEpisodes',
   ]);
   private static readonly PROVIDER_ENABLED_KEYS = new Set([
     'Plex:Enabled',
@@ -413,6 +421,8 @@ export class SettingsComponent {
   private static readonly FRONTEND_SENSITIVE_KEYS = new Set(['MAL:ClientId', 'MAL:ClientSecret']);
   /** The Kometa JSON URL key that requires a warning before editing. */
   private static readonly KOMETA_URL_KEY = 'Kometa:AnimeIdsJsonUrl';
+  /** "Show NSFW Content" — enabling it fires the blush easter egg. */
+  private static readonly NSFW_TOGGLE_KEY = 'App:ShowNsfw';
 
   /** Locale-aware date formatter — uses current app language */
   fmtDate(iso: string): string {
@@ -591,6 +601,27 @@ export class SettingsComponent {
       });
   }
 
+  /** Retry after a failed settings load (error-state recovery). */
+  retryLoad(): void {
+    this.error.set(false);
+    this.loading.set(true);
+    this.loadSettings();
+  }
+
+  /** Escape closes the topmost open dialog/picker (keyboard completeness). */
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.browseTarget()) this.closePathBrowse();
+    else if (this.plexPickerOpen()) this.plexPickerOpen.set(false);
+    else if (this.sonarrPickerOpen()) this.sonarrPickerOpen.set(false);
+    else if (this.kometaWarnKey()) this.dismissKometaWarning();
+    else if (this.exportConfirmOpen()) this.dismissExportConfirm();
+    else if (this.providerEnableWarnFor()) this.dismissProviderEnableWarn();
+    else if (this.malHelpOpen()) this.malHelpOpen.set(false);
+    else if (this.sonarrHelpOpen()) this.sonarrHelpOpen.set(false);
+    else if (this.syncPromptProvider()) this.dismissSyncPrompt();
+  }
+
   private loadSyncStatus(): void {
     this.settingsService
       .getSyncStatus()
@@ -739,6 +770,60 @@ export class SettingsComponent {
     return fieldSlug(key);
   }
 
+  // ── ui-select option sets (memoized — labels translate once per lang/settings change) ──
+
+  /** Generic per-setting select options, keyed by settings key. */
+  readonly selectOptionsByKey = computed<Record<string, UiSelectOption[]>>(() => {
+    this.currentLang(); // re-translate on language change
+    const map: Record<string, UiSelectOption[]> = {};
+    for (const s of this.settings()) {
+      if (s.selectOptions?.length) {
+        map[s.key] = s.selectOptions.map((opt) => ({
+          label: this.translate.instant('settings.fields.' + fieldSlug(s.key) + '.option.' + opt),
+          value: opt,
+        }));
+      }
+    }
+    return map;
+  });
+
+  readonly botkunModelOptions = computed<UiSelectOption[]>(() => {
+    this.currentLang();
+    return [
+      { label: this.translate.instant('settings.botkun.selectModel'), value: '' },
+      ...this.botkunModels().map((m) => ({ label: m, value: m })),
+    ];
+  });
+
+  readonly sonarrRootFolderOptions = computed<UiSelectOption[]>(() => {
+    this.currentLang();
+    return [
+      { label: this.translate.instant('settings.notSet'), value: '' },
+      ...this.sonarrRootFolders().map((f) => ({ label: f.path, value: f.path })),
+    ];
+  });
+
+  readonly sonarrQualityProfileOptions = computed<UiSelectOption[]>(() => {
+    this.currentLang();
+    return [
+      { label: this.translate.instant('settings.notSet'), value: '' },
+      ...this.sonarrQualityProfiles().map((p) => ({ label: p.name, value: p.name })),
+    ];
+  });
+
+  readonly sonarrMonitorOptions = computed<UiSelectOption[]>(() => {
+    this.currentLang();
+    return (this.sonarrDefaultByKey('Sonarr:DefaultMonitor')?.selectOptions ?? []).map((opt) => ({
+      label: this.translate.instant('settings.fields.Sonarr_DefaultMonitor.option.' + opt),
+      value: opt,
+    }));
+  });
+
+  readonly separatorOptions: UiSelectOption[] = [
+    { label: 'POSIX /', value: 'posix' },
+    { label: 'Windows \\', value: 'windows' },
+  ];
+
   /**
    * Called from the "Edit" button.  For the Kometa JSON URL this first shows
    * a warning dialog; for all other keys it switches directly to edit mode.
@@ -877,6 +962,11 @@ export class SettingsComponent {
 
   toggleBool(setting: SettingDefinition): void {
     const next = setting.value !== 'true' ? 'true' : 'false';
+    // Capture the switch position synchronously: the async save response is too late to
+    // locate the toggle, and the easter egg spawns its hearts from there.
+    const eggOrigin = setting.key === SettingsComponent.NSFW_TOGGLE_KEY
+      ? this.toggleOrigin(setting.key)
+      : null;
     this.savingKey.set(setting.key);
     this.settingsService
       .update(setting.key, { value: next })
@@ -888,6 +978,10 @@ export class SettingsComponent {
           this.settings.update((list) =>
             list.map((s) => (s.key === setting.key ? { ...s, value: next } : s)),
           );
+          // Easter egg: only on a genuine false → true flip of the NSFW toggle.
+          if (setting.key === SettingsComponent.NSFW_TOGGLE_KEY && next === 'true') {
+            this.nsfwEasterEgg.celebrate(eggOrigin ?? undefined);
+          }
           setTimeout(() => {
             if (this.savedKey() === setting.key) this.savedKey.set(null);
           }, 2000);
@@ -896,6 +990,16 @@ export class SettingsComponent {
           this.savingKey.set(null);
         },
       });
+  }
+
+  /** Viewport centre of a setting's toggle — the spawn point of the NSFW easter egg. */
+  private toggleOrigin(key: string): { x: number; y: number } | null {
+    const row = document.querySelector<HTMLElement>(`[data-setting-key="${key}"]`);
+    const el = row?.querySelector<HTMLElement>('app-ui-toggle') ?? row;
+    const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const rect = (el ?? active)?.getBoundingClientRect();
+    if (!rect || (rect.width === 0 && rect.height === 0)) return null;
+    return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
   }
 
   boolValue(setting: SettingDefinition): boolean {
@@ -1253,9 +1357,15 @@ export class SettingsComponent {
         next: () => {
           this.savingKey.set(null);
           this.savedKey.set(key);
-          this.settings.update((list) =>
-            list.map((s) => (s.key === key ? { ...s, value } : s)),
-          );
+          if (this.settings().some((s) => s.key === key)) {
+            this.settings.update((list) =>
+              list.map((s) => (s.key === key ? { ...s, value } : s)),
+            );
+          } else {
+            // A key that has never been written is absent from the preloaded list — refetch
+            // so the new row reflects the stored value instead of silently staying "off".
+            this.loadSettings();
+          }
           setTimeout(() => {
             if (this.savedKey() === key) this.savedKey.set(null);
           }, SettingsComponent.SAVED_STATE_TIMEOUT_MS);

@@ -71,7 +71,7 @@
     }
 
     &--files svg {
-      color: rgba(56, 189, 248, 0.85); // text-sky-400
+      color: color-mix(in srgb, var(--accent-primary) 85%, transparent); // files icon tone
     }
 
     &--missing svg {
@@ -157,5 +157,16 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+// ── Reduced motion — decorative animation off ───────────────────────────────
+@media (prefers-reduced-motion: reduce) {
+  .la-kpi {
+    animation: none;
+  }
+
+  .la-kpi--interactive .la-kpi__footer-arrow {
+    transition: none;
   }
 }

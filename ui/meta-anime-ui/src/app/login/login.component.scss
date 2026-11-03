@@ -99,13 +99,14 @@
 .login-input-group {
   display: flex;
   align-items: center;
-  border: 1px solid var(--card-border);
-  border-radius: 0.6rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
   overflow: hidden;
-  background: var(--bg-secondary);
+  background: color-mix(in srgb, var(--text-primary) 4%, transparent);
   transition: border-color 0.15s;
 
-  &:focus-within { border-color: #6c63ff; box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15); }
+  &:hover { border-color: color-mix(in srgb, var(--text-primary) 20%, transparent); }
+  &:focus-within { outline: none; border-color: color-mix(in srgb, var(--accent-primary) 50%, transparent); box-shadow: none; }
 }
 
 .login-input {

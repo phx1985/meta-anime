@@ -183,6 +183,26 @@ export interface ActivityStatsResponse {
   lastUpdated?: string | null;
 }
 
+/** The four selectable activity periods — also the `period` query token of the episodes API. */
+export type ActivityPeriod = 'today' | 'thisWeek' | 'thisMonth' | 'thisYear';
+
+/** One imported episode in the activity drill-down list. */
+export interface ActivityEpisodeItem {
+  seriesTitle: string;
+  seasonNumber: number;
+  episodeNumber: number;
+  sizeBytes: number;
+  occurredAt: string;
+}
+
+/** Episode list for one activity period (newest first, capped by `limit`). */
+export interface ActivityEpisodesResponse {
+  period: ActivityPeriod;
+  totalCount: number;
+  totalBytes: number;
+  items: ActivityEpisodeItem[];
+}
+
 export interface PagedResponse<T> {
   data: T[];
   page: number;
@@ -274,6 +294,9 @@ export interface SeasonalAnimeItem {
   malViewState?: string;
   aniDbId?: string;
   ageRating?: string;
+  endDate?: string;
+  numEpisodes?: number | null;
+  airedEpisodesEst?: number | null;
 }
 
 export type SeasonName = 'winter' | 'spring' | 'summer' | 'fall';
@@ -334,6 +357,34 @@ export interface FranchiseGraph {
   nodes: FranchiseGraphNode[];
   edges: FranchiseGraphEdge[];
 }
+
+/** One "because you liked X" source behind a seasonal suggestion. */
+export interface SeasonalSuggestionReasonSource {
+  malId: string;
+  title: string;
+}
+
+/** Explainability payload — `kind` is `taste` when backed by history, `popular` otherwise. */
+export interface SeasonalSuggestionReason {
+  tags: string[];
+  because: SeasonalSuggestionReasonSource[];
+  kind: 'taste' | 'popular' | string;
+}
+
+/** A "For you" card: the seasonal item plus its match score and reason. */
+export interface SeasonalSuggestionItem extends SeasonalAnimeItem {
+  /** AniList country of origin is CN/TW. */
+  isDonghua?: boolean;
+  matchScore: number;
+  reasons: SeasonalSuggestionReason[];
+  /** Populated for every card (the grid DTO carries them too). */
+  endDate?: string;
+  numEpisodes?: number | null;
+  airedEpisodesEst?: number | null;
+}
+
+/** Scope of the suggestion pool. */
+export type SeasonalSuggestionScope = 'current' | 'last2' | 'last4' | 'custom';
 
 /** Serialisable snapshot of the seasonal filter panel state for saved presets. */
 export interface SeasonalSavedFilterState {
@@ -404,8 +455,11 @@ export interface VoiceActorProfileResponse {
   givenName?: string;
   imageUrl?: string;
   age?: number;
-  bloodType?: string;
-  heightCm?: number;
-  weightKg?: number;
-  birthday?: string;
+  bloodType?: string | null;
+  /** AniList-sourced: always null today — UI hides the cell when null. */
+  heightCm?: number | null;
+  /** AniList-sourced: always null today — UI hides the cell when null. */
+  weightKg?: number | null;
+  /** Fuzzy/partial ('--05-12', '1985--') or null — UI renders what exists. */
+  birthday?: string | null;
 }

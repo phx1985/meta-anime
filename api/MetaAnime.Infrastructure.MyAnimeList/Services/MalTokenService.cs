@@ -9,9 +9,19 @@ using System.Text.Json.Serialization;
 namespace MetaAnime.Infrastructure.MyAnimeList.Services;
 
 public sealed class MalTokenService(
-    IPropertyBagRepository propertyBagRepository) : IMalTokenService
+    IPropertyBagRepository propertyBagRepository,
+    IHttpClientFactory httpClientFactory) : IMalTokenService
 {
     private const string TokenUrl = "https://myanimelist.net/v1/oauth2/token";
+    private const string ClientName = "MAL";
+
+    /// <summary>
+    /// Creates a RestSharp client backed by the pooled <see cref="IHttpClientFactory"/> client
+    /// so requests flow through the Aspire standard resilience handler instead of allocating
+    /// a fresh socket pool per call.
+    /// </summary>
+    private RestClient CreateRestClient(Uri uri)
+        => new(httpClientFactory.CreateClient(ClientName), new RestClientOptions { BaseUrl = uri });
 
     public async Task<string?> GetAccessTokenAsync()
     {
@@ -50,7 +60,7 @@ public sealed class MalTokenService(
         var clientSecretEntry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.MalClientSecret);
         var clientSecret = clientSecretEntry?.Value;
 
-        var client = new RestClient(new Uri(TokenUrl));
+        var client = CreateRestClient(new Uri(TokenUrl));
         var request = new RestRequest { Method = Method.Post };
         request.AddParameter("client_id", clientId);
         if (!string.IsNullOrWhiteSpace(clientSecret))

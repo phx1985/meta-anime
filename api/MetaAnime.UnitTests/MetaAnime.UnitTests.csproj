@@ -67,6 +67,7 @@
     <ProjectReference Include="../MetaAnime.Application/MetaAnime.Application.csproj" />
     <ProjectReference Include="../MetaAnime.Core/MetaAnime.Core.csproj" />
     <ProjectReference Include="../MetaAnime.Domain/MetaAnime.Domain.csproj" />
+    <ProjectReference Include="../MetaAnime.Infrastructure.Kometa/MetaAnime.Infrastructure.Kometa.csproj" />
     <ProjectReference Include="../MetaAnime.Infrastructure.MyAnimeList/MetaAnime.Infrastructure.MyAnimeList.csproj" />
     <ProjectReference Include="../MetaAnime.Infrastructure.Plex/MetaAnime.Infrastructure.Plex.csproj" />
     <ProjectReference Include="../MetaAnime.Infrastructure.Sonarr/MetaAnime.Infrastructure.Sonarr.csproj" />

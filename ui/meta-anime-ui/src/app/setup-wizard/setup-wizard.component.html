@@ -15,9 +15,32 @@
       </div>
     } @else {
 
+      <!-- Reset / start fresh -->
+      @if (step() > 1) {
+        <div class="wizard-reset">
+          <button type="button" class="wizard-reset__link" (click)="askReset()">
+            {{ (step() === 6 ? 'onboarding.reset.startFresh' : 'onboarding.reset.button') | translate }}
+          </button>
+
+          @if (resetConfirmOpen()) {
+            <div class="wizard-reset__pop" role="dialog" aria-modal="false">
+              <p class="wizard-reset__text">{{ 'onboarding.reset.confirm' | translate }}</p>
+              <div class="wizard-reset__actions">
+                <button type="button" class="wizard-reset__cancel" (click)="cancelReset()">
+                  {{ 'common.cancel' | translate }}
+                </button>
+                <button type="button" class="wizard-reset__confirm" (click)="confirmReset()">
+                  {{ 'onboarding.reset.confirmBtn' | translate }}
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
       <!-- Progress dots -->
       <div class="wizard-progress" [attr.aria-label]="'aria.setupProgress' | translate">
-        @for (n of [1, 2, 3, 4, 5, 6, 7]; track n) {
+        @for (n of [1, 2, 3, 4, 5, 6]; track n) {
           <div
             class="wizard-dot"
             [class.wizard-dot--active]="step() === n"
@@ -94,12 +117,68 @@
                 {{ 'configBackup.dropHint' | translate }}
               </button>
 
-              @if (importStatus(); as status) {
-                <div
-                  class="wizard-import-status"
-                  [class.wizard-import-status--error]="status.kind === 'error'"
-                  role="alert"
-                >{{ status.message }}</div>
+              @if (importState().status !== 'idle') {
+                <div class="import-card"
+                  [class.import-card--error]="importState().status === 'error'"
+                  [class.import-card--done]="importState().status === 'verified'"
+                  role="status" aria-live="polite">
+
+                  <div class="import-card__head">
+                    <span class="import-card__icon" aria-hidden="true">
+                      @switch (importState().status) {
+                        @case ('verified') { ✓ }
+                        @case ('error') { ! }
+                        @default { ↑ }
+                      }
+                    </span>
+                    <span class="import-card__name">{{ importState().fileName }}</span>
+                    <span class="import-card__pct">{{ importState().progress }}%</span>
+                  </div>
+
+                  <div class="import-bar">
+                    <span [style.width.%]="importState().progress"></span>
+                  </div>
+
+                  <p class="import-stage">
+                    @switch (importState().status) {
+                      @case ('reading') { {{ 'onboarding.import.reading' | translate }} }
+                      @case ('validating') { {{ 'onboarding.import.validating' | translate }} }
+                      @case ('verified') { {{ 'onboarding.import.verified' | translate }} }
+                      @case ('error') { {{ importState().errorMessage }} }
+                    }
+                  </p>
+
+                  @if (importState().detected.length > 0) {
+                    <div class="import-providers">
+                      @for (p of importState().detected; track p.key; let i = $index) {
+                        <span class="import-chip import-chip--{{ p.key }}"
+                          [class.import-chip--on]="p.configured"
+                          [class.import-chip--off]="!p.configured"
+                          [style.animation-delay.ms]="i * 90">
+                          <span class="import-chip__mark" aria-hidden="true">{{ p.configured ? '✓' : '–' }}</span>
+                          {{ p.label }}
+                        </span>
+                      }
+                    </div>
+                  }
+
+                  <div class="import-actions">
+                    <button type="button" class="import-link" (click)="chooseAnotherFile(configFileInput)">
+                      {{ 'onboarding.import.chooseAnother' | translate }}
+                    </button>
+                    @if (importState().status === 'verified') {
+                      <button type="button" class="wizard-primary-btn import-continue" (click)="continueToRecap()">
+                        {{ 'onboarding.import.continueToRecap' | translate }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+
+              @if (importStatus()?.kind === 'error' && importState().status === 'idle') {
+                <div class="wizard-import-status wizard-import-status--error" role="alert">
+                  {{ importStatus()?.message }}
+                </div>
               }
 
             </div>
@@ -180,15 +259,10 @@
               <!-- Enable toggle -->
               <div class="wizard-toggle-row">
                 <span class="wizard-label">{{ 'wizard.step2.enableLabel' | translate }}</span>
-                <button
-                  type="button"
-                  class="wizard-toggle-btn"
-                  [class.wizard-toggle-btn--on]="securityForm.get('enableAuth')?.value"
-                  (click)="securityForm.patchValue({ enableAuth: !securityForm.get('enableAuth')?.value })"
-                  [attr.aria-pressed]="securityForm.get('enableAuth')?.value"
-                >
-                  <span class="wizard-toggle-knob"></span>
-                </button>
+                <app-ui-toggle
+                  [checked]="!!securityForm.get('enableAuth')?.value"
+                  (checkedChange)="securityForm.patchValue({ enableAuth: $event })"
+                />
               </div>
 
               @if (securityForm.get('enableAuth')?.value) {
@@ -552,52 +626,56 @@
 
                     @if (sonarrRootFolders().length > 0) {
                       <div class="wizard-field">
-                        <label class="wizard-label" for="sonarr-root-folder">
+                        <label class="wizard-label">
                           {{ 'wizard.step5.rootFolderLabel' | translate }}
                         </label>
-                        <select id="sonarr-root-folder" class="wizard-input wizard-select" formControlName="rootFolder">
-                          @for (rf of sonarrRootFolders(); track rf.id) {
-                            <option [value]="rf.path">{{ rf.path }}</option>
-                          }
-                        </select>
+                        <div class="wizard-select-wrap">
+                          <app-ui-select
+                            [options]="rootFolderSelectOptions()"
+                            [value]="sonarrForm.get('rootFolder')?.value ?? ''"
+                            [ariaLabel]="'wizard.step5.rootFolderLabel' | translate"
+                            (selectionChange)="sonarrForm.patchValue({ rootFolder: $event })"
+                          />
+                        </div>
                       </div>
                     }
 
                     @if (sonarrQualityProfiles().length > 0) {
                       <div class="wizard-field">
-                        <label class="wizard-label" for="sonarr-quality-profile">
+                        <label class="wizard-label">
                           {{ 'wizard.step5.qualityProfileLabel' | translate }}
                         </label>
-                        <select id="sonarr-quality-profile" class="wizard-input wizard-select" formControlName="qualityProfile">
-                          @for (qp of sonarrQualityProfiles(); track qp.id) {
-                            <option [value]="qp.name">{{ qp.name }}</option>
-                          }
-                        </select>
+                        <div class="wizard-select-wrap">
+                          <app-ui-select
+                            [options]="qualityProfileSelectOptions()"
+                            [value]="sonarrForm.get('qualityProfile')?.value ?? ''"
+                            [ariaLabel]="'wizard.step5.qualityProfileLabel' | translate"
+                            (selectionChange)="sonarrForm.patchValue({ qualityProfile: $event })"
+                          />
+                        </div>
                       </div>
                     }
 
                     <div class="wizard-field">
-                      <label class="wizard-label" for="sonarr-monitor">
+                      <label class="wizard-label">
                         {{ 'wizard.step5.monitorLabel' | translate }}
                       </label>
-                      <select id="sonarr-monitor" class="wizard-input wizard-select" formControlName="monitor">
-                        @for (opt of MONITOR_OPTIONS; track opt) {
-                          <option [value]="opt">{{ 'wizard.step5.monitor.' + opt | translate }}</option>
-                        }
-                      </select>
+                      <div class="wizard-select-wrap">
+                        <app-ui-select
+                          [options]="monitorSelectOptions()"
+                          [value]="sonarrForm.get('monitor')?.value ?? ''"
+                          [ariaLabel]="'wizard.step5.monitorLabel' | translate"
+                          (selectionChange)="sonarrForm.patchValue({ monitor: $event })"
+                        />
+                      </div>
                     </div>
 
                     <div class="wizard-toggle-row">
                       <span class="wizard-label">{{ 'wizard.step5.seasonFolderLabel' | translate }}</span>
-                      <button
-                        type="button"
-                        class="wizard-toggle-btn"
-                        [class.wizard-toggle-btn--on]="sonarrForm.get('seasonFolder')?.value"
-                        (click)="sonarrForm.patchValue({ seasonFolder: !sonarrForm.get('seasonFolder')?.value })"
-                        [attr.aria-pressed]="sonarrForm.get('seasonFolder')?.value"
-                      >
-                        <span class="wizard-toggle-knob"></span>
-                      </button>
+                      <app-ui-toggle
+                        [checked]="!!sonarrForm.get('seasonFolder')?.value"
+                        (checkedChange)="sonarrForm.patchValue({ seasonFolder: $event })"
+                      />
                     </div>
                   </div>
                 }
@@ -612,16 +690,31 @@
 
         <!-- Step 6: Recap & Sync -->
         @if (step() === 6) {
-          <div class="wizard-step">
-            <div class="wizard-step-icon wizard-step-icon--sync" aria-hidden="true">
-              <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <polyline points="1 4 1 10 7 10" />
-                <polyline points="23 20 23 14 17 14" />
-                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
-              </svg>
+          <div class="wizard-step wizard-step--recap"
+            [class.sync-finished]="syncDone() && !syncError()">
+            <span class="card-aurora-sweep" aria-hidden="true"></span>
+            <div class="wizard-step-icon wizard-step-icon--sync sync-icon-wrapper"
+              [class.sync-complete-glow]="syncDone() && !syncError()" aria-hidden="true">
+              @if (syncDone() && !syncError()) {
+                <span class="energy-ring" aria-hidden="true"></span>
+                <svg class="sync-check" width="30" height="30" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path class="sync-check__path" d="M20 6 9 17l-5-5" />
+                </svg>
+              } @else {
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <polyline points="1 4 1 10 7 10" />
+                  <polyline points="23 20 23 14 17 14" />
+                  <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                </svg>
+              }
             </div>
-            <h2 class="wizard-title">{{ 'wizard.step6.title' | translate }}</h2>
-            <p class="wizard-desc">{{ 'wizard.step6.desc' | translate }}</p>
+            <h2 class="wizard-title">
+              {{ (syncDone() && !syncError() ? 'onboarding.sync.completeTitle' : 'wizard.step6.title') | translate }}
+            </h2>
+            <p class="wizard-desc">
+              {{ (syncDone() && !syncError() ? 'onboarding.sync.completeSubtitle' : 'wizard.step6.desc') | translate }}
+            </p>
 
             <!-- Status badges -->
             <ul class="wizard-status-list">
@@ -654,16 +747,16 @@
 
             @if (syncing() || syncSteps().length > 0) {
               <div class="wizard-sync-progress">
-                @for (step of syncSteps(); track step.stepKey) {
+                @for (step of syncSteps(); track step.stepKey; let i = $index) {
                   @if (shouldShowStep(step.stepKey)) {
-                    <div class="wizard-sync-row">
+                    <div class="wizard-sync-row" [style.--row-index]="i">
                       <span class="wizard-sync-state wizard-sync-state--{{ step.state }}">
                         @if (step.state === 'running') {
                           <span class="spinner-border spinner-border-sm" role="status"></span>
                         } @else if (step.state === 'done') {
-                          ✓
+                          <svg class="wizard-sync-state__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
                         } @else if (step.state === 'error') {
-                          ✗
+                          <svg class="wizard-sync-state__ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                         }
                       </span>
                       <span class="wizard-sync-label">{{ step.stepKey }}</span>
@@ -680,23 +773,20 @@
           </div>
         }
 
-        <!-- Step 7: Success -->
-        @if (step() === 7) {
-          <div class="wizard-step wizard-step--success">
-            <div class="wizard-success-icon" aria-hidden="true">🎉</div>
-            <h2 class="wizard-title">{{ 'wizard.step7.title' | translate }}</h2>
-            <p class="wizard-desc">{{ 'wizard.step7.desc' | translate }}</p>
-            <p class="wizard-hint">{{ 'wizard.step7.hint' | translate }}</p>
-          </div>
-        }
       </div>
 
       <!-- Footer navigation -->
       <div class="wizard-footer">
-        @if (step() > 1 && step() < 7) {
-          <button type="button" class="wizard-back-btn" (click)="prevStep()">
-            ← {{ 'wizard.back' | translate }}
-          </button>
+        @if (step() > 1 && !(step() === 6 && syncDone() && !syncError())) {
+          @if (isImportedViaJson() && step() === 6) {
+            <button type="button" class="wizard-back-btn" (click)="askReset()">
+              ← {{ 'onboarding.nav.startOver' | translate }}
+            </button>
+          } @else {
+            <button type="button" class="wizard-back-btn" (click)="prevStep()">
+              ← {{ 'wizard.back' | translate }}
+            </button>
+          }
         } @else {
           <div></div>
         }
@@ -766,8 +856,8 @@
 
           @if (step() === 6) {
             @if (syncDone() && !syncError()) {
-              <button type="button" class="wizard-next-btn" (click)="nextStep()">
-                {{ 'wizard.next' | translate }}
+              <button type="button" class="wizard-next-btn wizard-launch-btn" (click)="finish()">
+                {{ 'onboarding.sync.launchDashboard' | translate }}
               </button>
             } @else {
               <button
@@ -784,11 +874,6 @@
             }
           }
 
-          @if (step() === 7) {
-            <button type="button" class="wizard-next-btn" (click)="finish()">
-              {{ 'wizard.step7.finish' | translate }}
-            </button>
-          }
         </div>
       </div>
     }

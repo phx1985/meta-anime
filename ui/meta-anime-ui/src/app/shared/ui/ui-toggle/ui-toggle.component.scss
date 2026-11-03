@@ -1,0 +1,67 @@
+// ── House iOS-style switch (Linear/Raycast form style) ────────────────────────
+// Unified visual for every toggle in the app: 34×20 track, radius full, off =
+// color-mix of --text-primary at 12%, on = var(--color-brand), white knob with
+// a slight shadow, 0.2s transitions. The interactive variant is a
+// <button role="switch">; the static variant is a <span> for embedding inside
+// an existing button (choice cards, switch rows) without nesting buttons.
+
+:host {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ui-toggle {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-primary) 12%, transparent);
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &--on {
+    background: var(--color-brand);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent-primary) 50%, transparent);
+    outline-offset: 2px;
+  }
+
+  // Decorative variant — the surrounding control owns interaction/state.
+  &--static {
+    cursor: inherit;
+    pointer-events: none;
+  }
+}
+
+.ui-toggle__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
+
+  .ui-toggle--on & {
+    transform: translateX(14px);
+  }
+}
+
+.ui-toggle__label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}

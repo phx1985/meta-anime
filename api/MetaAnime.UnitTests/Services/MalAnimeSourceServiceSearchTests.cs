@@ -342,7 +342,7 @@ public class MalAnimeSourceServiceSearchTests
             tokenService = tokens.Object;
         }
 
-        return new MalAnimeSourceService(repo.Object, tokenService, Mock.Of<ILogger<MalAnimeSourceService>>());
+        return new MalAnimeSourceService(repo.Object, tokenService, new StubHttpClientFactory(), Mock.Of<ILogger<MalAnimeSourceService>>());
     }
 
     private static string RequestTarget(string rawRequest) => rawRequest.Split("\r\n")[0].Split(' ')[1];

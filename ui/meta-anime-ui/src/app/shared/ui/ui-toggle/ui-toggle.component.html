@@ -1,0 +1,25 @@
+@if (interactive()) {
+  <button type="button"
+          class="ui-toggle"
+          [class.ui-toggle--on]="checked()"
+          [disabled]="disabled()"
+          [attr.title]="title()"
+          role="switch"
+          [attr.aria-checked]="checked()"
+          [attr.aria-label]="ariaLabel()"
+          (click)="toggle()">
+    <span class="ui-toggle__knob"></span>
+  </button>
+} @else {
+  <span class="ui-toggle ui-toggle--static"
+        [class.ui-toggle--on]="checked()"
+        [attr.role]="ariaLabel() ? 'switch' : null"
+        [attr.aria-checked]="ariaLabel() ? checked() : null"
+        [attr.aria-label]="ariaLabel()"
+        [attr.aria-hidden]="ariaLabel() ? null : true">
+    <span class="ui-toggle__knob"></span>
+  </span>
+}
+@if (label()) {
+  <span class="ui-toggle__label">{{ label() }}</span>
+}

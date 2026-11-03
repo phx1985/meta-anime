@@ -40,7 +40,7 @@
     </div>
 
     @if (error()) {
-      <div class="la-error">
+      <div class="la-error" role="alert">
         <p>{{ error() }}</p>
         <button (click)="loadData()">{{ 'library.retry' | translate }}</button>
       </div>

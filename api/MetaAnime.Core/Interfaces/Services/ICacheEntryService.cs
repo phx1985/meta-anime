@@ -17,4 +17,12 @@ public interface ICacheEntryService
     Task<Result> BulkDeleteBySourceAsync(AnimeSource animeSource);
     Task<Result> BulkInsertAsync(IEnumerable<CacheEntry> cacheEntries);
     Task<Result> BulkInsertAsync(IEnumerable<ICacheable> cacheables);
+    /// <summary>
+    /// Diff-based merge for sync pipelines: inserts new rows, updates rows whose
+    /// <see cref="CacheEntry.RawData"/> changed and tombstones rows missing from
+    /// <paramref name="incoming"/> for the given source. Unchanged rows are never rewritten.
+    /// </summary>
+    Task<Result> MergeBySourceAsync(AnimeSource animeSource, IEnumerable<ICacheable> incoming);
+    /// <summary>Updates the <see cref="CacheEntry.RawData"/> of existing rows (matched by source + sourceId) in one batched write.</summary>
+    Task<Result> BulkUpdateRawDataAsync(AnimeSource animeSource, IEnumerable<(string SourceId, string RawData)> updates);
 }

@@ -16,6 +16,8 @@ public static class Constants
         public const string BulkDeleteAllAsync = "Error.BulkDeleteAllAsync";
         public const string BulkDeleteBySourceAsync = "Error.BulkDeleteBySourceAsync";
         public const string BulkInsertAsync = "Error.BulkInsertAsync";
+        public const string MergeAsync = "Error.MergeAsync";
+        public const string UpdateRawDataAsync = "Error.UpdateRawDataAsync";
         public const string CreateAsync = "Error.CreateAsync";
         public const string DeleteAsync = "Error.DeleteAsync";
         public const string DeletePropertyBag = "Error.DeletePropertyBag";
@@ -35,8 +37,12 @@ public static class Constants
         public const string GetSonarrSeriesByCodecAsync = "Error.GetSonarrSeriesByCodecAsync";
         public const string GetStatisticsAsync = "Error.GetStatisticsAsync";
         public const string GetActivityStatsAsync = "Error.GetActivityStatsAsync";
+        public const string GetActivityEpisodesAsync = "Error.GetActivityEpisodesAsync";
         public const string GetCachedActivityStatsAsync = "Error.GetCachedActivityStatsAsync";
         public const string CacheDownloadStatsAsync = "Error.CacheDownloadStatsAsync";
+        public const string RefreshDownloadHistoryAsync = "Error.RefreshDownloadHistoryAsync";
+        /// <summary>Failure raised by the Sonarr client when the history endpoint is unreachable or errors.</summary>
+        public const string SonarrDownloadHistory = "Error.SonarrDownloadHistory";
         public const string GetSyncStatus = "Error.GetSyncStatus";
         public const string NotFound = "Error.NotFound";
         public const string RefreshData = "Error.RefreshData";
@@ -50,8 +56,11 @@ public static class Constants
         public const string EnrichLibrarySeriesAsync = "Error.EnrichLibrarySeriesAsync";
         public const string GetEpisodeFilesAsync = "Error.GetEpisodeFilesAsync";
         public const string GetSeiyuuNexusAsync = "Error.GetSeiyuuNexusAsync";
+        public const string ResolveMalCoversAsync = "Error.ResolveMalCoversAsync";
+        public const string CastProviderUnavailable = "Error.CastProviderUnavailable";
         public const string GetVoiceActorProfileAsync = "Error.GetVoiceActorProfileAsync";
         public const string SyncAnimeCastAsync = "Error.SyncAnimeCastAsync";
+        public const string MigrateCastIdSpace = "Error.MigrateCastIdSpace";
 
         // Admin authentication flows
         public const string GetAuthStatus = "Error.GetAuthStatus";
@@ -89,6 +98,7 @@ public static class Constants
         {
             public const string Starting = "Starting anime metadata sync at {Time}";
             public const string Succeeded = "Successfully synced anime metadata at {Time}";
+            public const string MatchSummary = "Matching produced {Exact} exact-id mappings, {Strong} strong title+year mappings; {Unmatched} rows unmatched";
             public const string MatchFailed = "Failed to match anime: {ErrorMessage}";
             public const string Error = "Error during anime sync";
         }
@@ -105,22 +115,31 @@ public static class Constants
         public static class DownloadStatsCacheJob
         {
             public const string Starting = "Starting download stats cache refresh at {Time}";
+            public const string Refreshed = "Download history sync: fetched {Fetched} event(s) from Sonarr since {Since}, stored {Inserted} new one(s) ({Elapsed} ms)";
             public const string Succeeded = "Successfully cached download stats at {Time}";
             public const string Error = "Error during download stats cache refresh";
+        }
+
+        public static class CodecEnrichmentJob
+        {
+            public const string Starting = "Starting Sonarr codec enrichment at {Time}";
+            public const string Succeeded = "Sonarr codec enrichment complete: {Updated} entries updated";
+            public const string Failed = "Sonarr codec enrichment failed: {ErrorMessage}";
+            public const string Error = "Error during Sonarr codec enrichment";
         }
 
         public static class CastSyncJob
         {
             public const string Starting  = "Starting cast sync for anime {MalId}";
             public const string Succeeded = "Cast sync complete for anime {MalId}: {Count} entries";
-            public const string Skipped   = "Skipping cast sync for anime {MalId}: MAL credentials not configured";
+            public const string Skipped   = "Skipping cast sync for anime {MalId}: no cast data available";
             public const string Error     = "Error during cast sync for anime {MalId}";
         }
 
-        public static class JikanPersonService
+        public static class AniListPersonService
         {
-            public const string Fetching = "Fetching Jikan profile for person {PersonId}";
-            public const string FetchFailed = "Jikan fetch failed for person {PersonId}";
+            public const string Fetching = "Fetching AniList profile for person {PersonId}";
+            public const string FetchFailed = "AniList fetch failed for person {PersonId}";
         }
 
         public static class AnimeMediatorService
@@ -133,6 +152,11 @@ public static class Constants
             public const string MalCacheDeserializeFailed = "Failed to deserialize MAL anime cache data for SourceId: {SourceId}";
             public const string SonarrAnimeSeasons = "Sonarr anime {SourceId} ({Title}) has {TotalSeasons} seasons";
             public const string SonarrCacheDeserializeFailed = "Failed to deserialize Sonarr anime cache data for SourceId: {SourceId}";
+        }
+
+        public static class AnimeMatchingService
+        {
+            public const string MatchTimings = "Match timings: index {IndexMs}ms, meta {MetaMs}ms, idPass {IdPassMs}ms, fuzzy {FuzzyMs}ms, crossLinks {CrossLinkMs}ms, persist {PersistMs}ms";
         }
     }
 }

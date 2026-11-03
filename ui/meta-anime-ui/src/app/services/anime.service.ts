@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import {
   AnimeStatisticsResponse,
   ActivityStatsResponse,
+  ActivityEpisodesResponse,
+  ActivityPeriod,
   AnimeResponse,
   AnimeDetailsResponse,
   PagedResponse,
@@ -11,6 +13,8 @@ import {
   CreateAnimeRequest,
   UpdateAnimeRequest,
   SeasonalAnimeItem,
+  SeasonalSuggestionItem,
+  SeasonalSuggestionScope,
   FranchiseConstellationData,
   CoverageGapItem,
   CrossLinkEntry,
@@ -40,6 +44,21 @@ export class AnimeService {
 
   refreshActivityStats(): Observable<void> {
     return this.http.post<void>(`${this.base}/activity-stats/refresh`, null);
+  }
+
+  /** Newest-first list of the episodes imported during the given activity period. */
+  getActivityEpisodes(
+    period: ActivityPeriod,
+    tzOffset: number,
+    limit = 250,
+  ): Observable<ActivityEpisodesResponse> {
+    return this.http.get<ActivityEpisodesResponse>(`${this.base}/activity-stats/episodes`, {
+      params: {
+        period,
+        tzOffset: tzOffset.toString(),
+        limit: limit.toString(),
+      },
+    });
   }
 
   getAnimes(
@@ -106,6 +125,39 @@ export class AnimeService {
 
   getCoverageGap(gapType: string): Observable<CoverageGapItem[]> {
     return this.http.get<CoverageGapItem[]>(`${this.base}/coverage-gap/${gapType}`);
+  }
+
+  /**
+   * "For you" deck: the season ranked against the user's own MAL history.
+   * Shares the backend's 15-minute seasonal cache — no extra MAL round-trip.
+   */
+  getSeasonalSuggestions(
+    year: number,
+    season: string,
+    limit = 16,
+    scope: SeasonalSuggestionScope = 'current',
+    range?: { fromYear: number; fromSeason: string; toYear: number; toSeason: string },
+    excludeChinese = false,
+    excludeGenres: string[] = [],
+  ): Observable<SeasonalSuggestionItem[]> {
+    let params = new HttpParams()
+      .set('year', year)
+      .set('season', season)
+      .set('limit', limit)
+      .set('scope', scope);
+
+    if (scope === 'custom' && range) {
+      params = params
+        .set('fromYear', range.fromYear)
+        .set('fromSeason', range.fromSeason)
+        .set('toYear', range.toYear)
+        .set('toSeason', range.toSeason);
+    }
+
+    if (excludeChinese) params = params.set('excludeChinese', true);
+    if (excludeGenres.length > 0) params = params.set('excludeGenres', excludeGenres.join(','));
+
+    return this.http.get<SeasonalSuggestionItem[]>(`${this.seasonalBase}/suggestions`, { params });
   }
 
   getSeasonalAnimes(year: number, season: string): Observable<SeasonalAnimeItem[]> {

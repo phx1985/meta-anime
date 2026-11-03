@@ -19,6 +19,7 @@ public static class SettingsKeys
     public const string SonarrHost = "Sonarr:Host";
     public const string SonarrApiKey = "Sonarr:ApiKey";
     public const string SonarrAnimeTags = "Sonarr:AnimeTags";
+    public const string SonarrSearchForMissingEpisodes = "Sonarr:SearchForMissingEpisodes";
     public const string SonarrRemoteUrl = "Sonarr:RemoteUrl";
 
     // Sonarr "Add Series" defaults
@@ -41,6 +42,9 @@ public static class SettingsKeys
 
     // Kometa
     public const string KometaAnimeIdsJsonUrl = "Kometa:AnimeIdsJsonUrl";
+    // Kometa conditional-fetch validators (managed internally by the sync pipeline)
+    public const string KometaAnimeIdsJsonEtag = "Kometa:AnimeIdsJsonEtag";
+    public const string KometaAnimeIdsJsonLastModified = "Kometa:AnimeIdsJsonLastModified";
 
     // App preferences
     public const string AppShowNsfw = "App:ShowNsfw";

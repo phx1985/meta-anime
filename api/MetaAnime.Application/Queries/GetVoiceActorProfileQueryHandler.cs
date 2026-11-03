@@ -5,14 +5,18 @@ using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Queries;
 
-public sealed class GetVoiceActorProfileQueryHandler(JikanPersonService jikanPersonService)
+public sealed class GetVoiceActorProfileQueryHandler(AniListPersonService anilistPersonService)
     : IRequestHandler<GetVoiceActorProfileQuery, Result<VoiceActorProfileResponse?>>
 {
     public async ValueTask<Result<VoiceActorProfileResponse?>> Handle(GetVoiceActorProfileQuery request, CancellationToken cancellationToken)
     {
         try
         {
-            var va = await jikanPersonService.GetOrFetchAsync(request.PersonId);
+            var vaResult = await anilistPersonService.GetOrFetchAsync(request.PersonId);
+            if (vaResult.IsFailure)
+                return Result.Failure<VoiceActorProfileResponse?>(vaResult.Error);
+
+            var va = vaResult.Value;
             if (va is null)
                 return Result.Success<VoiceActorProfileResponse?>(null);
 

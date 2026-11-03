@@ -34,6 +34,19 @@ public sealed class AnimeMappingService(IAnimeMappingRepository mappingRepositor
         }
     }
 
+    public async Task<Result> MergeAsync(IEnumerable<AnimeMapping> mappings)
+    {
+        try
+        {
+            await mappingRepository.MergeAsync(mappings);
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(new(Constants.Errors.MergeAsync, ex.Message));
+        }
+    }
+
     public async Task<Result<IEnumerable<AnimeMapping>>> GetAllAsync(bool includeAnime = false)
     {
         try

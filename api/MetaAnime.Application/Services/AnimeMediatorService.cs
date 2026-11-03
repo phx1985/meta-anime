@@ -1,6 +1,8 @@
 using MetaAnime.Application.Contracts;
 using MetaAnime.Application.Interfaces;
+using MetaAnime.Application.Services.AniList;
 using MetaAnime.Application.Queries;
+using MetaAnime.Application.Utilities;
 using MetaAnime.Domain.Enums;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
@@ -11,9 +13,12 @@ using MetaAnime.Core.Settings;
 using MetaAnime.Infrastructure.MyAnimeList.Models;
 using MetaAnime.Infrastructure.Plex.Models;
 using MetaAnime.Infrastructure.SonarrAPIs.Sonarr.Models;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MalSearchResultItem = MetaAnime.Core.Models.MalSearchResultItem;
@@ -34,11 +39,17 @@ public sealed class AnimeMediatorService(
     IKometaAnimeMappingRepository kometaAnimeMappingRepository,
     IAnimeRepository animeRepository,
     IAnimeMappingRepository animeMappingRepository,
-    JikanCastService jikanCastService,
+    ISonarrHistoryEventRepository sonarrHistoryEventRepository,
+    AniListCastService anilistCastService,
+    AniListOriginService anilistOriginService,
+    IMemoryCache cache,
     IOptions<MalSettings> malOptions,
     ILogger<AnimeMediatorService> logger)
     : IAnimeMediatorService
 {
+    private const string SeasonalCacheKeyPrefix = "seasonal:";
+    private static readonly TimeSpan SeasonalCacheTtl = TimeSpan.FromMinutes(15);
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -46,7 +57,6 @@ public sealed class AnimeMediatorService(
     };
 
     private const int    TitleSimilarityDefault = 80;
-    private const double MinLengthRatioForFuzzy = 0.2;
     private const string SonarrCoverType        = "poster";
 
     /// <summary>Maps filter codec tokens to all equivalent codec strings that may appear in file metadata.</summary>
@@ -173,18 +183,7 @@ public sealed class AnimeMediatorService(
                 .Distinct()
                 .ToList();
 
-            var cacheResult = await cacheEntryService.GetBySourceIdsAsync(sourceIds);
-            var cacheEntries = cacheResult.IsSuccess ? cacheResult.Value.ToList() : new List<CacheEntry>();
-
-            var plexCache = cacheEntries
-                .Where(c => c.AnimeSource == AnimeSource.Plex)
-                .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData);
-            var malCache = cacheEntries
-                .Where(c => c.AnimeSource == AnimeSource.MyAnimeList)
-                .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData);
-            var sonarrCache = cacheEntries
-                .Where(c => c.AnimeSource == AnimeSource.Sonarr)
-                .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData);
+            var (plexCache, malCache, sonarrCache) = await BuildSourceCachesAsync(sourceIds);
 
             var sonarrBaseUrl = await GetSonarrSeriesBaseUrlAsync();
 
@@ -207,9 +206,9 @@ public sealed class AnimeMediatorService(
 
                 if (enriched)
                 {
-                    var plexTask = FetchPlexAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex));
-                    var malTask = FetchMalAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList));
-                    var sonarrTask = FetchSonarrAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr));
+                    var plexTask = FetchPlexAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex), plexCache);
+                    var malTask = FetchMalAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList), malCache);
+                    var sonarrTask = FetchSonarrAnimeDetailsAsync(group.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr), sonarrCache);
                     await Task.WhenAll(plexTask, malTask, sonarrTask);
                     plexAnimes = plexTask.Result;
                     malAnimes = malTask.Result;
@@ -475,79 +474,7 @@ public sealed class AnimeMediatorService(
     private static bool TitleMatches(string? candidate, string query, double threshold) =>
         !string.IsNullOrWhiteSpace(candidate) &&
         (candidate.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-         ComputeWordLevelFuzzySimilarity(candidate, query) >= threshold);
-
-    /// <summary>
-    /// Computes a word-level fuzzy similarity between a search query and an anime title.
-    /// For each word in the query, finds the best-matching word in the title using normalised
-    /// Levenshtein distance, then averages those per-word scores.
-    /// This correctly handles single-character typos (e.g. "dargon ball" ≈ "Dragon Ball Z").
-    /// Returns a value in [0.0, 1.0].
-    /// </summary>
-    private static double ComputeWordLevelFuzzySimilarity(string title, string query)
-    {
-        if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(query)) return 0.0;
-
-        var qWords = query.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var tWords = title.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-        if (qWords.Length == 0 || tWords.Length == 0) return 0.0;
-
-        double totalScore = 0;
-        foreach (var qWord in qWords)
-        {
-            double bestWordScore = 0;
-            foreach (var tWord in tWords)
-            {
-                double score = NormalisedLevenshteinSimilarity(qWord, tWord);
-                if (score > bestWordScore) bestWordScore = score;
-                if (bestWordScore >= 1.0) break; // exact match found – no need to check further
-            }
-            totalScore += bestWordScore;
-        }
-
-        return totalScore / qWords.Length;
-    }
-
-    /// <summary>
-    /// Returns 1 − (Levenshtein(a, b) / max(|a|, |b|)), i.e. 1.0 for identical strings.
-    /// </summary>
-    private static double NormalisedLevenshteinSimilarity(string a, string b)
-    {
-        if (a == b) return 1.0;
-        int maxLen = Math.Max(a.Length, b.Length);
-        if (maxLen == 0) return 1.0;
-        // Skip if lengths differ too much to ever reach the caller's 80% threshold
-        int minLen = Math.Min(a.Length, b.Length);
-        if ((double)minLen / maxLen < MinLengthRatioForFuzzy) return 0.0;
-        return 1.0 - (double)LevenshteinDistance(a, b) / maxLen;
-    }
-
-    /// <summary>Standard iterative Levenshtein (edit) distance.</summary>
-    private static int LevenshteinDistance(string s, string t)
-    {
-        int m = s.Length, n = t.Length;
-        if (m == 0) return n;
-        if (n == 0) return m;
-
-        var prev = new int[n + 1];
-        var curr = new int[n + 1];
-
-        for (int j = 0; j <= n; j++) prev[j] = j;
-
-        for (int i = 1; i <= m; i++)
-        {
-            curr[0] = i;
-            for (int j = 1; j <= n; j++)
-            {
-                int cost = s[i - 1] == t[j - 1] ? 0 : 1;
-                curr[j] = Math.Min(Math.Min(curr[j - 1] + 1, prev[j] + 1), prev[j - 1] + cost);
-            }
-            Array.Copy(curr, prev, n + 1);
-        }
-
-        return prev[n];
-    }
+         TitleSimilarity.ComputeWordLevelFuzzySimilarity(candidate, query) >= threshold);
 
     /// <summary>
     /// Returns <c>true</c> when the anime has at least one Sonarr series with downloaded episode files
@@ -677,76 +604,118 @@ public sealed class AnimeMediatorService(
     {
         try
         {
-            // Shift UTC to the caller's local clock so day/week/month/year
-            // boundaries match what the user sees on their calendar.
-            // JavaScript's Date.getTimezoneOffset() returns (UTC − local) in minutes,
-            // so UTC-4 → tzOffsetMinutes = +240; subtracting 240 min from UTC = local time.
-            var nowLocal = DateTime.UtcNow.AddMinutes(-tzOffsetMinutes);
+            var nowUtc = DateTime.UtcNow;
 
-            var todayStart = nowLocal.Date;
-            var weekStart  = todayStart.AddDays(-(int)nowLocal.DayOfWeek);
-            var monthStart = new DateTime(nowLocal.Year, nowLocal.Month, 1);
-            var yearStart  = new DateTime(nowLocal.Year, 1, 1);
+            // Served entirely from the local mirror written by DownloadStatsCacheJob — this
+            // path never calls Sonarr, so it stays fast (and correct for any tz offset)
+            // even when Sonarr is slow, busy or unreachable.
+            var events = await sonarrHistoryEventRepository.GetSinceAsync(ActivityStatsCalculator.WindowStartUtc(nowUtc));
+            var lastUpdated = (await propertyBagRepository.GetByKeyAsync(SettingsKeys.DownloadStatsCacheLastUpdated))?.Value;
 
-            // Convert a UTC datetime to the caller's local time before comparing.
-            DateTime ToLocal(DateTime utcDt) => utcDt.AddMinutes(-tzOffsetMinutes);
-
-            var dlTask    = await sonarrAnimeSource.GetDownloadHistoryAsync();
-            var dlRecords = dlTask.IsSuccess ? dlTask.Value : [];
-
-            // ── Period totals ──────────────────────────────────────────────────
-            var dlToday  = dlRecords.Count(r => ToLocal(r.Date) >= todayStart);
-            var dlWeek   = dlRecords.Count(r => ToLocal(r.Date) >= weekStart);
-            var dlMonth  = dlRecords.Count(r => ToLocal(r.Date) >= monthStart);
-            var dlYear   = dlRecords.Count(r => ToLocal(r.Date) >= yearStart);
-
-            var storToday = dlRecords.Where(r => ToLocal(r.Date) >= todayStart).Sum(r => r.SizeBytes);
-            var storWeek  = dlRecords.Where(r => ToLocal(r.Date) >= weekStart).Sum(r => r.SizeBytes);
-            var storMonth = dlRecords.Where(r => ToLocal(r.Date) >= monthStart).Sum(r => r.SizeBytes);
-            var storYear  = dlRecords.Where(r => ToLocal(r.Date) >= yearStart).Sum(r => r.SizeBytes);
-
-            // ── Chart series ───────────────────────────────────────────────────
-            string[] shortDays   = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-            string[] shortMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-            // Week: past 7 days (day-6 … today), one point per day
-            var weekPoints = Enumerable.Range(0, 7).Select(i =>
-            {
-                var day     = todayStart.AddDays(i - 6);
-                var dls     = dlRecords.Count(r => ToLocal(r.Date).Date == day);
-                var storage = dlRecords.Where(r => ToLocal(r.Date).Date == day).Sum(r => r.SizeBytes);
-                return new ActivityChartPoint(shortDays[(int)day.DayOfWeek], dls, storage);
-            }).ToList();
-
-            // Month: ALL days in the current month (future days show 0), one point per day
-            var daysInMonth = DateTime.DaysInMonth(nowLocal.Year, nowLocal.Month);
-            var monthPoints = Enumerable.Range(1, daysInMonth).Select(d =>
-            {
-                var day     = new DateTime(nowLocal.Year, nowLocal.Month, d);
-                var dls     = dlRecords.Count(r => ToLocal(r.Date).Date == day);
-                var storage = dlRecords.Where(r => ToLocal(r.Date).Date == day).Sum(r => r.SizeBytes);
-                return new ActivityChartPoint(d.ToString(), dls, storage);
-            }).ToList();
-
-            // Year: ALL 12 months (future months show 0), one point per month
-            var yearPoints = Enumerable.Range(1, 12).Select(m =>
-            {
-                var mStart = new DateTime(nowLocal.Year, m, 1);
-                var mEnd   = mStart.AddMonths(1);
-                var dls     = dlRecords.Count(r => ToLocal(r.Date) >= mStart && ToLocal(r.Date) < mEnd);
-                var storage = dlRecords.Where(r => ToLocal(r.Date) >= mStart && ToLocal(r.Date) < mEnd).Sum(r => r.SizeBytes);
-                return new ActivityChartPoint(shortMonths[m - 1], dls, storage);
-            }).ToList();
-
-            return Result.Success(new ActivityStatsResponse(
-                new ActivityPeriodStats(dlToday, dlWeek, dlMonth, dlYear),
-                new StoragePeriodStats(storToday, storWeek, storMonth, storYear),
-                new ActivityChartData(weekPoints, monthPoints, yearPoints)));
+            var stats = ActivityStatsCalculator.Build(events, nowUtc, tzOffsetMinutes) with { LastUpdated = lastUpdated };
+            return Result.Success(stats);
         }
         catch (Exception ex)
         {
             return Result.Failure<ActivityStatsResponse>(new(Constants.Errors.GetActivityStatsAsync, ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Lists the episodes imported during <paramref name="period"/>, newest first, straight from
+    /// the local mirror (no Sonarr call, so the dialog opens instantly).
+    /// </summary>
+    public async Task<Result<ActivityEpisodesResponse>> GetActivityEpisodesAsync(
+        ActivityStatsPeriod period,
+        int tzOffsetMinutes = 0,
+        int limit = 250)
+    {
+        try
+        {
+            var nowUtc = DateTime.UtcNow;
+            var periodStartUtc = ActivityStatsCalculator.PeriodStartUtc(period, nowUtc, tzOffsetMinutes);
+
+            // The repository already filters on OccurredAt and orders newest-first, so the
+            // period cut is the only extra predicate needed.
+            var events = await sonarrHistoryEventRepository.GetSinceAsync(periodStartUtc);
+            var inPeriod = events.Where(e => e.OccurredAt <= nowUtc).ToList();
+
+            var capped = limit <= 0 ? inPeriod : inPeriod.Take(limit).ToList();
+
+            IList<ActivityEpisodeItem> items = capped
+                .Select(e => new ActivityEpisodeItem(
+                    e.SeriesTitle,
+                    e.SeasonNumber,
+                    e.EpisodeNumber,
+                    e.SizeBytes,
+                    e.OccurredAt))
+                .ToList();
+
+            return Result.Success(new ActivityEpisodesResponse(
+                period,
+                inPeriod.Count,
+                inPeriod.Sum(e => e.SizeBytes),
+                items));
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<ActivityEpisodesResponse>(new(Constants.Errors.GetActivityEpisodesAsync, ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Overlap re-requested on every sync so late-arriving history rows are never missed.
+    /// Duplicates are dropped by Sonarr history id, so re-fetching is free.
+    /// </summary>
+    private static readonly TimeSpan DownloadHistoryOverlap = TimeSpan.FromHours(2);
+
+    public async Task<Result<DownloadHistorySyncSummary>> RefreshDownloadHistoryAsync()
+    {
+        var startedAt = Stopwatch.GetTimestamp();
+        try
+        {
+            var nowUtc = DateTime.UtcNow;
+            var windowStart = ActivityStatsCalculator.WindowStartUtc(nowUtc);
+
+            // Cold start (or a mirror that never reached the current year) backfills the whole
+            // stats window in a single call. Once warm, only the recent overlap is requested —
+            // that is what turns an hourly 20s job into a few-hundred-ms one.
+            var watermark = await sonarrHistoryEventRepository.GetLatestOccurredAtAsync();
+            var since = watermark is null || watermark.Value - DownloadHistoryOverlap < windowStart
+                ? windowStart
+                : watermark.Value - DownloadHistoryOverlap;
+
+            var fetched = await sonarrAnimeSource.GetDownloadHistorySinceAsync(since);
+            if (fetched.IsFailure)
+                return Result.Failure<DownloadHistorySyncSummary>(fetched.Error);
+
+            var incoming = fetched.Value
+                .Where(e => e.Date >= windowStart)
+                .Select(e => new SonarrHistoryEvent
+                {
+                    Id = e.Id,
+                    OccurredAt = e.Date,
+                    SizeBytes = e.SizeBytes,
+                    SeriesId = e.SeriesId,
+                    EpisodeId = e.EpisodeId,
+                    SeriesTitle = e.SeriesTitle,
+                    SeasonNumber = e.SeasonNumber,
+                    EpisodeNumber = e.EpisodeNumber,
+                })
+                .ToList();
+
+            var inserted = await sonarrHistoryEventRepository.MergeAsync(incoming);
+            await sonarrHistoryEventRepository.PruneBeforeAsync(windowStart);
+
+            return Result.Success(new DownloadHistorySyncSummary(
+                fetched.Value.Count,
+                inserted,
+                since,
+                (long)Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds));
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<DownloadHistorySyncSummary>(new(Constants.Errors.RefreshDownloadHistoryAsync, ex.Message));
         }
     }
 
@@ -991,14 +960,19 @@ public sealed class AnimeMediatorService(
             var plexEnabled = await IsPlexEnabledAsync();
             var sonarrEnabled = await IsSonarrEnabledAsync();
 
+            // Cached provider payloads — used as fallback when a live fetch fails, so a
+            // transient API error never downgrades the response to empty shells.
+            var (plexCache, malCache, sonarrCache) = await BuildSourceCachesAsync(
+                animeMappings.Where(m => m.Anime != null).Select(m => m.Anime!.SourceId));
+
             var plexAnimes = plexEnabled
-                ? await FetchPlexAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex))
+                ? await FetchPlexAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Plex), plexCache)
                 : [];
 
-            var malAnimes = await FetchMalAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList));
+            var malAnimes = await FetchMalAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.MyAnimeList), malCache);
 
             var sonarrAnimes = sonarrEnabled
-                ? await FetchSonarrAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr))
+                ? await FetchSonarrAnimeDetailsAsync(animeMappings.Where(m => m.Anime?.AnimeSource == AnimeSource.Sonarr), sonarrCache)
                 : [];
 
             var animeDto = new AnimeDetailsResponse(
@@ -1168,7 +1142,7 @@ public sealed class AnimeMediatorService(
         try
         {
             bool showNsfw = await IsNsfwAllowedAsync();
-            var seasonalResult = await malAnimeSource.GetSeasonalAsync(year, season);
+            var seasonalResult = await GetSeasonalRawAsync(year, season);
             if (seasonalResult.IsFailure)
                 return Result.Failure<IEnumerable<SeasonalAnimeResponse>>(seasonalResult.Error);
 
@@ -1179,6 +1153,310 @@ public sealed class AnimeMediatorService(
         {
             return Result.Failure<IEnumerable<SeasonalAnimeResponse>>(new(Constants.Errors.GetAllAsync, ex.Message));
         }
+    }
+
+    /// <summary>Studios/licensors that identify a Chinese animation (donghua).</summary>
+    private static readonly string[] ChineseStudioMarkers =
+    [
+        // platforms / publishers
+        "bilibili", "tencent", "iqiyi", "youku", "bytedance", "kuaikan", "ruo hong",
+        // studios (MAL reports short names: 寒木春华 → "HMCH")
+        "haoliners", "haoliner", "hmch", "hanmu", "mtjj", "sparkly key", "foch", "cg year",
+        "colored pencil", "colored-pencil", "studio lan", "paper plane", "b.cmay", "g.cmay",
+        "g.cmay animation", "motion magic", "original force", "nurostar", "sunrise kids",
+        "alpha group", "toonmax", "yuewen", "linx animation", "wawayu",
+    ];
+
+    /// <summary>
+    /// True when the title is a Chinese production. MAL exposes studios (requested in
+    /// SEASONAL_FIELDS); AniDB has no country column in this schema, so the studio list is the
+    /// only reliable signal.
+    /// </summary>
+    private static bool IsChineseAnimation(MalAnime anime)
+    {
+        if (anime.Studios is null) return false;
+
+        foreach (var studio in anime.Studios)
+        {
+            var name = studio.Name;
+            if (string.IsNullOrWhiteSpace(name)) continue;
+            foreach (var marker in ChineseStudioMarkers)
+            {
+                if (name.Contains(marker, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Weekly airing estimate for a currently-airing show: one episode per 7 days since the start
+    /// date, clamped to what MAL announces (99 when the total is unknown).
+    /// </summary>
+    private static int? EstimateAiredEpisodes(MalAnime anime)
+    {
+        if (!string.Equals(anime.Status, "currently_airing", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        if (!DateTime.TryParse(anime.StartDate, CultureInfo.InvariantCulture,
+                DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var start))
+            return null;
+
+        var days = (DateTime.UtcNow - start).TotalDays;
+        if (days < 0) return 0;
+
+        var max = anime.NumEpisodes > 0 ? anime.NumEpisodes : 99;
+        return Math.Clamp((int)Math.Floor(days / 7) + 1, 1, max);
+    }
+
+    /// <summary>
+    /// Per-season MAL cache (15 min) shared by the grid and the "For you" deck, so opening the
+    /// suggestions never costs a second MyAnimeList round-trip.
+    /// </summary>
+    private async Task<Result<IList<MalAnime>>> GetSeasonalRawAsync(int year, string season)
+    {
+        var key = $"{SeasonalCacheKeyPrefix}{year}:{season.ToLowerInvariant()}";
+        if (cache.TryGetValue(key, out IList<MalAnime>? cached) && cached is not null)
+            return Result.Success(cached);
+
+        var result = await malAnimeSource.GetSeasonalAsync(year, season);
+        if (result.IsSuccess)
+            cache.Set(key, result.Value, SeasonalCacheTtl);
+
+        return result;
+    }
+
+    /// <summary>
+    /// Ranks one or more seasons against the user's own MAL scores/statuses (local cache only —
+    /// no extra HTTP), excludes anything already tracked/owned, then enriches just the picked
+    /// titles with provider flags and deep links.
+    /// </summary>
+    public async Task<Result<IEnumerable<SeasonalSuggestionResponse>>> GetSeasonalSuggestionsAsync(
+        int year, string season, int limit = 16, string scope = "current",
+        int? fromYear = null, string? fromSeason = null, int? toYear = null, string? toSeason = null,
+        bool excludeChinese = false, string? excludeGenres = null)
+    {
+        try
+        {
+            limit = Math.Clamp(limit, 1, 48);
+            bool showNsfw = await IsNsfwAllowedAsync();
+
+            var excludedGenres = new HashSet<string>(
+                (excludeGenres ?? string.Empty)
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+                StringComparer.OrdinalIgnoreCase);
+
+            // ── 0. Donghua: ask AniList for the real country of origin (MAL has no such field) ──
+            var chineseMalIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            if (excludeChinese)
+            {
+                var windowsProbe = SeasonalScopeResolver.ResolveSeasons(year, season, scope, fromYear, fromSeason, toYear, toSeason);
+                var probeIds = new List<string>();
+                foreach (var window in windowsProbe)
+                {
+                    var probe = await GetSeasonalRawAsync(window.Year, window.Season);
+                    if (probe.IsFailure) continue;
+                    probeIds.AddRange(probe.Value.Select(a => a.Id.ToString()));
+                }
+
+                var origins = await anilistOriginService.GetOriginsAsync(probeIds);
+                foreach (var (malId, country) in origins)
+                {
+                    if (country is "CN" or "TW") chineseMalIds.Add(malId);
+                }
+
+                // Belt-and-braces: titles AniList does not know still get the studio check.
+                foreach (var window in windowsProbe)
+                {
+                    var probe = await GetSeasonalRawAsync(window.Year, window.Season);
+                    if (probe.IsFailure) continue;
+                    foreach (var anime in probe.Value.Where(IsChineseAnimation))
+                        chineseMalIds.Add(anime.Id.ToString());
+                }
+            }
+
+            // ── 1. Gather candidates across the requested windows (each one cached) ──
+            var windows = SeasonalScopeResolver.ResolveSeasons(year, season, scope, fromYear, fromSeason, toYear, toSeason);
+            var items = new List<MalAnime>();
+            var seenMalIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var window in windows)
+            {
+                var seasonalResult = await GetSeasonalRawAsync(window.Year, window.Season);
+                if (seasonalResult.IsFailure)
+                {
+                    // A single unavailable season must not sink the whole deck unless it is the only one.
+                    if (windows.Count == 1)
+                        return Result.Failure<IEnumerable<SeasonalSuggestionResponse>>(seasonalResult.Error);
+                    continue;
+                }
+
+                foreach (var anime in seasonalResult.Value)
+                {
+                    if (!showNsfw && IsNsfwAnime(anime)) continue;
+                    if (excludeChinese && chineseMalIds.Contains(anime.Id.ToString())) continue;
+                    if (excludedGenres.Count > 0 &&
+                        anime.Genres?.Any(g => g.Name != null && excludedGenres.Contains(g.Name)) == true) continue;
+                    if (!seenMalIds.Add(anime.Id.ToString())) continue; // dedupe multi-season overlaps
+                    items.Add(anime);
+                }
+            }
+
+            if (items.Count == 0)
+                return Result.Success(Enumerable.Empty<SeasonalSuggestionResponse>());
+
+            // ── 2. The user's taste data: every MAL cache row already carries my_list_status ──
+            var history = new List<TasteEntry>();
+            var stateByMalId = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            var malCache = await cacheEntryService.GetAsync(AnimeSource.MyAnimeList);
+            if (malCache.IsSuccess)
+            {
+                foreach (var entry in malCache.Value)
+                {
+                    try
+                    {
+                        var mal = JsonSerializer.Deserialize<MalAnime>(entry.RawData, JsonOptions);
+                        var status = mal?.MyListStatus?.Status;
+                        if (string.IsNullOrWhiteSpace(status)) continue;
+
+                        stateByMalId[entry.SourceId] = status;
+                        history.Add(new TasteEntry(
+                            entry.SourceId,
+                            mal!.Title ?? entry.SourceId,
+                            mal.MyListStatus!.Score,
+                            status,
+                            mal.Genres?.Select(g => g.Name).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? []));
+                    }
+                    catch (JsonException ex)
+                    {
+                        logger.LogWarning(ex, Constants.LogMessages.AnimeMediatorService.MalCacheDeserializeFailed, entry.SourceId);
+                    }
+                }
+            }
+
+            // ── 3. Anything already in MAL / Plex / Sonarr is not a discovery pick ──
+            var libraryMalIds = await GetLibraryMalIdsAsync(items.Select(a => a.Id.ToString()).ToList(), stateByMalId);
+
+            // ── 4. Rank ─────────────────────────────────────────────────────────────
+            var candidates = items
+                .Select(anime =>
+                {
+                    var malId = anime.Id.ToString();
+                    return new SeasonalCandidate(
+                        malId,
+                        anime.Title ?? string.Empty,
+                        anime.Genres?.Select(g => g.Name).Where(n => !string.IsNullOrWhiteSpace(n)).ToList() ?? [],
+                        anime.Mean,
+                        stateByMalId.GetValueOrDefault(malId),
+                        InLibrary: libraryMalIds.Contains(malId));
+                })
+                .ToList();
+
+            var picks = SeasonalSuggestionCalculator.Compute(
+                candidates, history, new SuggestionOptions(Limit: limit));
+
+            if (picks.Count == 0)
+                return Result.Success(Enumerable.Empty<SeasonalSuggestionResponse>());
+
+            // ── 5. Enrich only what we actually return ──────────────────────────────
+            var byId = items.ToDictionary(a => a.Id.ToString(), a => a);
+            var pickedItems = picks.Select(p => byId[p.Candidate.MalId]).ToList();
+            var enrichedById = (await EnrichMalItemsAsync(pickedItems, showNsfw))
+                .ToDictionary(e => e.MalId, e => e, StringComparer.OrdinalIgnoreCase);
+
+            // Human-friendly affinity: stretch the raw scores over a 0.60 … 0.98 display band.
+            var raw = picks.Select(p => p.MatchScore).ToList();
+            var min = raw.Min();
+            var max = raw.Max();
+            static double Calibrate(double value, double lo, double hi) =>
+                hi - lo < 1e-9 ? 0.80 : 0.68 + (value - lo) / (hi - lo) * 0.29;
+
+            // Country of origin for the final picks only (≤ 48 ids, one batched + 24 h cached
+            // AniList call) so a card can badge donghua even when the exclusion is off.
+            var pickOrigins = new HashSet<string>(chineseMalIds, StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                var pickedIds = picks.Select(p => p.Candidate.MalId)
+                    .Where(id => !string.IsNullOrEmpty(id)).ToList();
+                var origins = await anilistOriginService.GetOriginsAsync(pickedIds);
+                foreach (var (malId, country) in origins)
+                {
+                    if (country is "CN" or "TW") pickOrigins.Add(malId);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "AniList origin lookup failed; donghua badges skipped");
+            }
+
+            var responses = picks
+                .Where(p => enrichedById.ContainsKey(p.Candidate.MalId))
+                .Select(p =>
+                {
+                    var e = enrichedById[p.Candidate.MalId];
+                    return new SeasonalSuggestionResponse(
+                        e.MalId, e.Title, e.EnglishTitle, e.CoverImageUrl, e.Synopsis, e.Genres,
+                        e.MalScore, e.StartDate, e.MediaType, e.Status, e.MalUrl,
+                        e.InMal, e.InPlex, e.PlexUrl, e.InSonarr, e.SonarrUrl,
+                        e.TvdbId, e.AniDbId, e.AgeRating, e.MalViewState,
+                        Math.Round(Calibrate(p.MatchScore, min, max), 4),
+                        p.Reasons
+                            .Select(r => new SuggestionReason(
+                                r.Tags.ToArray(),
+                                r.Because.Select(b => new SuggestionReasonSource(b.MalId, b.Title)).ToArray(),
+                                r.Kind))
+                            .ToArray(),
+                        e.EndDate,
+                        e.NumEpisodes,
+                        e.AiredEpisodesEst,
+                        pickOrigins.Contains(e.MalId));
+                })
+                .ToList();
+
+            return Result.Success<IEnumerable<SeasonalSuggestionResponse>>(responses);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<IEnumerable<SeasonalSuggestionResponse>>(new(Constants.Errors.GetAllAsync, ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// MAL ids that must never be suggested because the user already tracks or owns them:
+    /// any row in the MAL list (even unsynced), plus everything mapped to Plex or Sonarr.
+    /// Two DB reads, no HTTP.
+    /// </summary>
+    private async Task<HashSet<string>> GetLibraryMalIdsAsync(
+        IReadOnlyCollection<string> malIds,
+        Dictionary<string, string> malStateById)
+    {
+        var result = new HashSet<string>(malStateById.Keys, StringComparer.OrdinalIgnoreCase);
+        if (malIds.Count == 0) return result;
+
+        var malToAniDb = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var kometaMappings = await kometaAnimeMappingRepository.GetMalMappingsWithTvdbAsync(malIds);
+        foreach (var (malId, aniDbId, _) in kometaMappings)
+            malToAniDb[malId] = aniDbId;
+
+        if (malToAniDb.Count == 0) return result;
+
+        var ownedAniDbIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var mappings = await animeMappingService.GetAllAsync(includeAnime: true);
+        if (mappings.IsSuccess)
+        {
+            foreach (var mapping in mappings.Value.Where(m => m.Anime != null))
+                ownedAniDbIds.Add(mapping.AniDbId);
+        }
+
+        foreach (var (malId, aniDbId) in malToAniDb)
+        {
+            if (ownedAniDbIds.Contains(aniDbId))
+                result.Add(malId);
+        }
+
+        return result;
     }
 
     private async Task<IEnumerable<SeasonalAnimeResponse>> EnrichMalItemsAsync(IList<MalAnime> items, bool showNsfw)
@@ -1323,7 +1601,10 @@ public sealed class AnimeMediatorService(
                 EnglishTitle: anime.AlternativeTitles?.En,
                 MalViewState: malViewState,
                 AniDbId: aniDbId,
-                AgeRating: anime.Rating
+                AgeRating: anime.Rating,
+                EndDate: anime.EndDate,
+                NumEpisodes: anime.NumEpisodes > 0 ? anime.NumEpisodes : null,
+                AiredEpisodesEst: EstimateAiredEpisodes(anime)
             );
         });
     }
@@ -1429,7 +1710,7 @@ public sealed class AnimeMediatorService(
         }
     }
 
-    public async Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, string monitor = "all", bool seasonFolder = true, string? malId = null)
+    public async Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, string monitor = "all", bool seasonFolder = true, string? malId = null, bool? searchForMissingEpisodes = null)
     {
         try
         {
@@ -1437,7 +1718,7 @@ public sealed class AnimeMediatorService(
             var optionsResult = await sonarrAnimeSource.GetOptionsAsync();
             var tagIds = optionsResult.IsSuccess ? optionsResult.Value.AnimeTagIds : new List<int>();
 
-            var addResult = await sonarrAnimeSource.AddSeriesAsync(tvdbId, rootFolderPath, qualityProfileId, tagIds, monitor, seasonFolder);
+            var addResult = await sonarrAnimeSource.AddSeriesAsync(tvdbId, rootFolderPath, qualityProfileId, tagIds, monitor, seasonFolder, searchForMissingEpisodes);
             if (addResult.IsFailure)
                 return Result.Failure<SonarrAddResult>(addResult.Error);
 
@@ -1734,7 +2015,30 @@ public sealed class AnimeMediatorService(
         return new SonarrAnimeInfo(mapping.Anime, sonarrBaseUrl);
     }
 
-    private async Task<List<PlexAnimeInfo>> FetchPlexAnimeDetailsAsync(IEnumerable<AnimeMapping> mappings)
+    /// <summary>
+    /// Loads the cached provider payloads (CacheEntry.RawData) for the given source ids,
+    /// grouped per provider. The Fetch* helpers fall back to these when a live fetch fails.
+    /// </summary>
+    private async Task<(Dictionary<string, string> Plex, Dictionary<string, string> Mal, Dictionary<string, string> Sonarr)> BuildSourceCachesAsync(
+        IEnumerable<string> sourceIds)
+    {
+        var cacheResult = await cacheEntryService.GetBySourceIdsAsync(sourceIds.Distinct().ToList());
+        var cacheEntries = cacheResult.IsSuccess ? cacheResult.Value.ToList() : new List<CacheEntry>();
+
+        return (
+            cacheEntries
+                .Where(c => c.AnimeSource == AnimeSource.Plex)
+                .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData),
+            cacheEntries
+                .Where(c => c.AnimeSource == AnimeSource.MyAnimeList)
+                .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData),
+            cacheEntries
+                .Where(c => c.AnimeSource == AnimeSource.Sonarr)
+                .GroupBy(c => c.SourceId).ToDictionary(g => g.Key, g => g.Last().RawData));
+    }
+
+    private async Task<List<PlexAnimeInfo>> FetchPlexAnimeDetailsAsync(
+        IEnumerable<AnimeMapping> mappings, Dictionary<string, string> plexCache)
     {
         var baseUrl = await GetPlexBaseUrlAsync();
         var tasks = mappings.Select(async mapping =>
@@ -1751,14 +2055,16 @@ public sealed class AnimeMediatorService(
             }
             else
             {
-                return new PlexAnimeInfo(mapping.Anime, baseUrl);
+                // Live fetch failed → fall back to the cached payload, never to a bare shell.
+                return await CreatePlexAnimeInfoFromCacheAsync(mapping, plexCache);
             }
         });
 
         return (await Task.WhenAll(tasks)).ToList();
     }
 
-    private async Task<List<MalAnimeInfo>> FetchMalAnimeDetailsAsync(IEnumerable<AnimeMapping> mappings)
+    private async Task<List<MalAnimeInfo>> FetchMalAnimeDetailsAsync(
+        IEnumerable<AnimeMapping> mappings, Dictionary<string, string> malCache)
     {
         var tasks = mappings.Select(async mapping =>
         {
@@ -1769,14 +2075,16 @@ public sealed class AnimeMediatorService(
             }
             else
             {
-                return new MalAnimeInfo(mapping.Anime, myAnimeListHost);
+                // Live fetch failed → fall back to the cached payload, never to a bare shell.
+                return CreateMalAnimeInfoFromCache(mapping, malCache);
             }
         });
 
         return (await Task.WhenAll(tasks)).ToList();
     }
 
-    private async Task<List<SonarrAnimeInfo>> FetchSonarrAnimeDetailsAsync(IEnumerable<AnimeMapping> mappings)
+    private async Task<List<SonarrAnimeInfo>> FetchSonarrAnimeDetailsAsync(
+        IEnumerable<AnimeMapping> mappings, Dictionary<string, string> sonarrCache)
     {
         try
         {
@@ -1797,7 +2105,8 @@ public sealed class AnimeMediatorService(
                 }
                 else
                 {
-                    return new SonarrAnimeInfo(mapping.Anime, sonarrBaseUrl);
+                    // Live fetch failed → fall back to the cached payload, never to a bare shell.
+                    return CreateSonarrAnimeInfoFromCache(mapping, sonarrCache, sonarrBaseUrl);
                 }
             });
 
@@ -1951,11 +2260,93 @@ public sealed class AnimeMediatorService(
 
     public async Task<Result> EnsureAnimeCastForAnimeAsync(string malId)
     {
-        var ok = await jikanCastService.EnsureAsync(malId);
-        return ok
-            ? Result.Success()
-            : Result.Failure(new(Constants.Errors.GetSeiyuuNexusAsync, $"Failed to fetch cast for anime {malId}"));
+        // DB-first lazy sync; on provider failure the error is CastProviderUnavailable with the
+        // exact contract message "Cast provider is unavailable for anime {malId}" (→ 503).
+        var outcome = await anilistCastService.EnsureAsync(malId);
+        return outcome.IsSuccess ? Result.Success() : Result.Failure(outcome.Error);
     }
+
+    /// <summary>
+    /// Batch-resolves titles + poster URLs for MAL ids. Layered so the common case never touches
+    /// the network: (1) local MAL-sourced Anime rows (titles — the Anime table has no image
+    /// column), (2) cached MAL payloads (title + main_picture, same raw data the anime cards use),
+    /// (3) bounded live MAL lookups for ids still unresolved (library anime outside the MAL list
+    /// sync). Unresolvable ids are absent from the dictionary — callers must never render a raw
+    /// id in place of a title.
+    /// </summary>
+    public async Task<Result<IReadOnlyDictionary<string, AnimeCoverInfo>>> ResolveMalCoversAsync(IEnumerable<string> malIds)
+    {
+        try
+        {
+            var ids = malIds.Where(id => !string.IsNullOrWhiteSpace(id)).Distinct().ToList();
+            var covers = new Dictionary<string, AnimeCoverInfo>();
+            if (ids.Count == 0)
+                return Result.Success<IReadOnlyDictionary<string, AnimeCoverInfo>>(covers);
+
+            // ── 1) Local Anime rows (titles) ────────────────────────────────────────────
+            foreach (var anime in await animeRepository.GetManyBySourceIdsAsync(AnimeSource.MyAnimeList, ids))
+            {
+                if (!string.IsNullOrWhiteSpace(anime.Title))
+                    covers[anime.SourceId] = new AnimeCoverInfo(anime.Title, null);
+            }
+
+            // ── 2) Cached MAL payloads (title + main_picture — wins over step 1) ────────
+            var cacheResult = await cacheEntryService.GetBySourceIdsAsync(ids);
+            if (cacheResult.IsSuccess)
+            {
+                foreach (var entry in cacheResult.Value.Where(e => e.AnimeSource == AnimeSource.MyAnimeList))
+                {
+                    if (string.IsNullOrWhiteSpace(entry.RawData))
+                        continue;
+
+                    try
+                    {
+                        var malAnime = JsonSerializer.Deserialize<MalAnime>(entry.RawData, JsonOptions);
+                        if (malAnime is null || string.IsNullOrWhiteSpace(malAnime.Title))
+                            continue;
+
+                        covers[entry.SourceId] = new AnimeCoverInfo(
+                            malAnime.Title,
+                            malAnime.MainPicture?.Large ?? malAnime.MainPicture?.Medium);
+                    }
+                    catch (JsonException ex)
+                    {
+                        logger.LogWarning(ex, Constants.LogMessages.AnimeMediatorService.MalCacheDeserializeFailed, entry.SourceId);
+                    }
+                }
+            }
+
+            // ── 3) Live MAL lookups for the (small) remainder, in bounded parallel chunks ─
+            var missing = ids.Where(id => !covers.ContainsKey(id)).ToList();
+            foreach (var chunk in missing.Chunk(LiveCoverFetchChunk))
+            {
+                var fetched = await Task.WhenAll(chunk.Select(async id =>
+                {
+                    var result = await malAnimeSource.GetByIdAsync(id);
+                    return (Id: id, Mal: result.IsSuccess ? result.Value : null);
+                }));
+
+                foreach (var (id, mal) in fetched)
+                {
+                    if (mal is null || string.IsNullOrWhiteSpace(mal.Title))
+                        continue;
+
+                    covers[id] = new AnimeCoverInfo(
+                        mal.Title,
+                        mal.MainPicture?.Large ?? mal.MainPicture?.Medium);
+                }
+            }
+
+            return Result.Success<IReadOnlyDictionary<string, AnimeCoverInfo>>(covers);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<IReadOnlyDictionary<string, AnimeCoverInfo>>(new(Constants.Errors.ResolveMalCoversAsync, ex.Message));
+        }
+    }
+
+    /// <summary>Parallelism bound for last-resort live MAL cover lookups.</summary>
+    private const int LiveCoverFetchChunk = 8;
 
 }
 

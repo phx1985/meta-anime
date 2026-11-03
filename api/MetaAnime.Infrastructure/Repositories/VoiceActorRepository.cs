@@ -33,4 +33,7 @@ public sealed class VoiceActorRepository(MetaAnimeDbContext dbContext) : IVoiceA
 
         await dbContext.SaveChangesAsync();
     }
+
+    public async Task DeleteAllAsync()
+        => await dbContext.VoiceActors.ExecuteDeleteAsync();
 }

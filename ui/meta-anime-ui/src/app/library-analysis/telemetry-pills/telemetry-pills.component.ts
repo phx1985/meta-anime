@@ -46,7 +46,8 @@ export class LaCountUpDirective {
           maximumFractionDigits: decimals,
         });
 
-      if (range === 0) {
+      if (range === 0 || LaCountUpDirective.prefersReducedMotion()) {
+        this.displayed = target;
         this.el.nativeElement.textContent = format(target);
         return;
       }
@@ -70,6 +71,15 @@ export class LaCountUpDirective {
       rafId = requestAnimationFrame(step);
       onCleanup(() => cancelAnimationFrame(rafId));
     });
+  }
+
+  /** Count-up animation honors the user's reduced-motion preference. */
+  private static prefersReducedMotion(): boolean {
+    return (
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    );
   }
 }
 

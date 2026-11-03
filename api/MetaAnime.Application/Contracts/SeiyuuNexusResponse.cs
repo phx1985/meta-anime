@@ -24,7 +24,11 @@ public sealed record NexusEdgeDto(
     string ToId,
     /// <summary>voices | appearsIn | hasCharacter</summary>
     string Relation,
-    /// <summary>The dub language for "voices" edges (e.g. "Japanese", "English"). Null for other edge types.</summary>
+    /// <summary>
+    /// For "voices" edges: the dub language (e.g. "Japanese", "English").
+    /// For "appearsIn" edges: the dub language(s) this VA voiced in that anime (comma-separated). Null when unknown.
+    /// Null for other edge types.
+    /// </summary>
     string? Language
 );
 

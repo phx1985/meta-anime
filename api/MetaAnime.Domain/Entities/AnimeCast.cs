@@ -1,7 +1,8 @@
 namespace MetaAnime.Domain.Entities;
 
 /// <summary>
-/// Caches character and voice actor data for a specific anime, fetched from MAL during sync.
+/// Caches character and voice actor data for a specific anime, fetched from the AniList GraphQL API.
+/// CharacterId/VaPersonId are AniList character/staff IDs (one-time ID-space migration clears older MAL-ID rows).
 /// </summary>
 public sealed class AnimeCast
 {

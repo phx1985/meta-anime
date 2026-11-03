@@ -32,7 +32,7 @@ namespace MetaAnime.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     SourceId = table.Column<string>(type: "text", nullable: false),
-                    RawData = table.Column<string>(type: "jsonb", nullable: false),
+                    RawData = table.Column<string>(type: "text", nullable: false),
                     AnimeSource = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
@@ -95,6 +95,24 @@ namespace MetaAnime.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "SonarrHistoryEvents",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "bigint", nullable: false),
+                    OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    SizeBytes = table.Column<long>(type: "bigint", nullable: false),
+                    SeriesId = table.Column<int>(type: "integer", nullable: false),
+                    EpisodeId = table.Column<int>(type: "integer", nullable: false),
+                    SeriesTitle = table.Column<string>(type: "text", nullable: false),
+                    SeasonNumber = table.Column<int>(type: "integer", nullable: false),
+                    EpisodeNumber = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SonarrHistoryEvents", x => x.Id);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AnimeMapping_AnimeId",
                 table: "AnimeMapping",
@@ -104,6 +122,11 @@ namespace MetaAnime.Infrastructure.Migrations
                 name: "IX_ExternalAnimeIdentifier_AnimeId",
                 table: "ExternalAnimeIdentifier",
                 column: "AnimeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SonarrHistoryEvents_OccurredAt",
+                table: "SonarrHistoryEvents",
+                column: "OccurredAt");
         }
 
         /// <inheritdoc />
@@ -114,6 +137,9 @@ namespace MetaAnime.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "CacheEntry");
+
+            migrationBuilder.DropTable(
+                name: "SonarrHistoryEvents");
 
             migrationBuilder.DropTable(
                 name: "ExternalAnimeIdentifier");

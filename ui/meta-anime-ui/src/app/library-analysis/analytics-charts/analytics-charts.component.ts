@@ -16,9 +16,12 @@ import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { map, merge } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { SegmentedControlComponent, SegmentedOption } from '../../shared/ui/segmented-control.component';
+import { UiToggleComponent } from '../../shared/ui/ui-toggle/ui-toggle.component';
 import { UiBadgeComponent, UiBadgeColor } from '../../shared/ui/ui-badge.component';
 import { UiCardComponent } from '../../shared/ui/ui-card.component';
+import { TelemetryBoxComponent } from '../../shared/ui/telemetry-box.component';
 import { ThemeService } from '../../services/theme.service';
+import { readToken } from '../../shared/chart-theme';
 import { AnimeService } from '../../services/anime.service';
 import { UserPathService } from '../../services/user-path.service';
 import { buildHandBrakeQueue, serializeHandBrakeQueue } from '../../utils/user-path.utils';
@@ -76,7 +79,7 @@ export interface QuickFilterPreset {
   selector: 'app-la-analytics-charts',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslatePipe, UiCardComponent, UiBadgeComponent, SegmentedControlComponent],
+  imports: [TranslatePipe, UiCardComponent, UiBadgeComponent, SegmentedControlComponent, TelemetryBoxComponent, UiToggleComponent],
   templateUrl: './analytics-charts.component.html',
   styleUrl: './analytics-charts.component.scss',
 })
@@ -259,6 +262,18 @@ export class AnalyticsChartsComponent implements OnDestroy {
     }));
   });
 
+  /**
+   * Text alternative for the donut canvas (role="img" aria-label): the same
+   * per-codec shares the HTML legend renders, in reading order.
+   */
+  readonly donutAriaLabel = computed(() => {
+    this.translationsVersion();
+    const summary = this.donutLegend()
+      .map((r) => `${r.label} ${r.pct} (${this.formatCount(r.count)})`)
+      .join(', ');
+    return this.translate.instant('libraryIntel.buddy.chartAria', { summary });
+  });
+
   /** File counts per codec label (mirrors buildCodecDonut's aggregation). */
   private readonly codecCounts = computed<Record<string, number>>(() => {
     const counts: Record<string, number> = {};
@@ -299,7 +314,7 @@ export class AnalyticsChartsComponent implements OnDestroy {
   /** Id of the preset currently driving the filters (bright ring on its chip). */
   readonly activePresetId = this.store.activePresetId;
 
-  /** Chip that just applied its preset (brief "✓ Applied" flash). */
+  /** Chip that just applied its preset (brief "Applied" checkmark flash). */
   readonly flashPresetId = signal<QuickFilterPresetId | null>(null);
   private flashTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -624,8 +639,8 @@ export class AnalyticsChartsComponent implements OnDestroy {
     const fmt = (value: number): string =>
       mode === 'size' ? this.formatSize(value) : `${value}`;
 
-    const isDark = this.themeService.isDarkTheme();
-    const textColor = isDark ? '#e8e8f0' : '#1a1a2e';
+    this.themeService.isDarkTheme(); // signal read: keeps chart rebuilds theme-tracked
+    const textColor = readToken('--text-primary');
 
     const config: ChartConfiguration<'doughnut'> = {
       type: 'doughnut',
@@ -645,7 +660,10 @@ export class AnalyticsChartsComponent implements OnDestroy {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: { duration: 900, easing: 'easeInOutQuart' as const },
+        animation: {
+          duration: AnalyticsChartsComponent.prefersReducedMotion() ? 0 : 900,
+          easing: 'easeInOutQuart' as const,
+        },
         cutout: '62%',
         plugins: {
           // Legend + slice % labels live in HTML now (donut hole & breakdown list).
@@ -669,6 +687,15 @@ export class AnalyticsChartsComponent implements OnDestroy {
   }
 
   // ── Shared helpers ─────────────────────────────────────────────────────────
+
+  /** Chart animation honors the user's reduced-motion preference. */
+  private static prefersReducedMotion(): boolean {
+    return (
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    );
+  }
 
   private tooltipLabel(
     ctx: { raw: unknown; dataset: { data: unknown[] } },

@@ -11,7 +11,7 @@ public sealed class CacheEntryConfiguration : IEntityTypeConfiguration<CacheEntr
         builder.ToTable("CacheEntry");
         builder.HasKey(cache => cache.Id);
         builder.Property(cache => cache.Id).ValueGeneratedOnAdd();
-        builder.Property(cache => cache.RawData).HasColumnType("jsonb").IsRequired();
+        builder.Property(cache => cache.RawData).HasColumnType("text").IsRequired();
         builder.Property(cache => cache.SourceId).IsRequired();
         builder.Property(cache => cache.AnimeSource).IsRequired();
         builder.HasIndex(c => c.SourceId).HasDatabaseName("IX_CacheEntry_SourceId");

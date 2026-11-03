@@ -1,4 +1,4 @@
-<!-- Glassmorphism full-screen overlay -->
+<!-- Full-screen glass overlay — franchise constellation dialog -->
 <div
   class="constellation-overlay"
   role="dialog"
@@ -6,21 +6,22 @@
   [attr.aria-label]="'franchise.title' | translate"
   [style.z-index]="svc.zIndexBase()"
 >
-  <!-- Close button -->
+  <!-- Close button — receives focus when the overlay opens -->
   <button
+    #closeBtn
     type="button"
     class="constellation-close"
     (click)="close()"
     [attr.aria-label]="'franchise.close' | translate"
     [title]="'franchise.close' | translate"
   >
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
       <path d="M18 6L6 18M6 6l12 12" />
     </svg>
   </button>
 
   <!-- Header -->
-  <div class="constellation-header">
+  <header class="constellation-header">
     <div class="constellation-title-row">
       <!-- fa-code-branch style: branching chronological roadmap icon -->
       <svg class="constellation-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -31,34 +32,49 @@
         <circle cx="13.5" cy="2.5" r="1.8" />
         <path d="M4.5 9 C4.5 4.5 13.5 4.5 13.5 4.3" />
       </svg>
-      <span class="constellation-title-label">{{ 'franchise.title' | translate }}</span>
+      <h1 class="constellation-title-label">{{ 'franchise.title' | translate }}</h1>
     </div>
 
     @if (rootTitle) {
       <span class="constellation-anime-name">{{ rootTitle }}</span>
     }
-  </div>
+  </header>
 
   <!-- ── Error state ───────────────────────────────────────────────────── -->
   @if (svc.error() && !svc.graph()) {
     <div class="constellation-error">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="12" />
-        <line x1="12" y1="16" x2="12.01" y2="16" />
-      </svg>
-      <p>{{ svc.error() }}</p>
+      <app-ui-state-panel
+        variant="error"
+        [heading]="'franchise.errorTitle' | translate"
+        [subtext]="svc.error() ?? ''"
+        [actionLabel]="'franchise.retry' | translate"
+        (action)="retry()"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+      </app-ui-state-panel>
     </div>
   }
 
-  <!-- ── Centered loading overlay ─────────────────────────────────────── -->
+  <!-- ── Centered loading state ────────────────────────────────────────── -->
   @if (svc.loading() && !svc.graph()) {
-    <div class="loading-center" aria-live="polite">
-      <div class="loading-pill">
-        <span class="loading-pill-dot"></span>
-        <span class="loading-pill-text">
-          {{ 'franchise.loadingProgress' | translate: { count: svc.loadingCount() } }}
-        </span>
+    <div class="loading-center">
+      <div class="loading-progress">
+        <div class="loading-pill" role="status" aria-live="polite">
+          <span class="loading-pill-dot" aria-hidden="true"></span>
+          <span class="loading-pill-text">
+            {{ 'franchise.loadingProgress' | translate: { count: svc.loadingCount() } }}
+          </span>
+        </div>
+        <!-- Skeleton preview of the cards still being mapped -->
+        <div class="loading-skeleton" aria-hidden="true">
+          <div class="loading-skeleton-card"></div>
+          <div class="loading-skeleton-card"></div>
+          <div class="loading-skeleton-card"></div>
+        </div>
       </div>
     </div>
   }
@@ -78,13 +94,18 @@
     >
       <!-- In-canvas loading progress pill (shown while BFS is still running) -->
       @if (svc.loading()) {
-        <div class="loading-pill loading-pill--in-canvas" aria-live="polite">
-          <span class="loading-pill-dot"></span>
+        <div class="loading-pill loading-pill--in-canvas" role="status" aria-live="polite">
+          <span class="loading-pill-dot" aria-hidden="true"></span>
           <span class="loading-pill-text">
             {{ 'franchise.loadingProgress' | translate: { count: svc.loadingCount() } }}
           </span>
         </div>
       }
+
+      <!-- Text alternative for the graph: lists every rendered node -->
+      <p class="visually-hidden">
+        {{ 'franchise.graphAlt' | translate: { count: displayNodes().length, nodes: nodeListText() } }}
+      </p>
 
       <div
         class="constellation-graph"
@@ -124,8 +145,8 @@
             [style.top.px]="node.y"
             role="button"
             tabindex="0"
-            (keydown.enter)="nodeSelected.emit(node.malId)"
-            (keydown.space)="nodeSelected.emit(node.malId)"
+            (keydown.enter)="activateNode($event, node.malId)"
+            (keydown.space)="activateNode($event, node.malId)"
             [attr.aria-label]="node.title"
             [title]="node.title"
           >
@@ -170,38 +191,63 @@
       </div>
     </div>
 
+    <!-- ── Empty state ─────────────────────────────────────────────────── -->
     @if (!displayNodes().length || displayNodes().length === 1) {
       <div class="constellation-empty">
-        <p>{{ 'franchise.empty' | translate }}</p>
+        <p class="constellation-empty-text">{{ 'franchise.empty' | translate }}</p>
+        <button type="button" class="constellation-empty-close" (click)="close()">
+          {{ 'franchise.close' | translate }}
+        </button>
       </div>
     }
 
     <!-- ── Desktop Legend (bottom-left) ───────────────────────────────── -->
-    <div class="edge-legend edge-legend--desktop" [attr.aria-label]="'aria.legend' | translate">
-      <span class="edge-legend-title">{{ 'franchise.legend.title' | translate }}</span>
-      <div class="edge-legend-item">
-        <svg class="edge-legend-svg" viewBox="0 0 36 8" aria-hidden="true">
-          <line x1="0" y1="4" x2="28" y2="4" class="legend-line legend-line--canonical" />
-          <polygon points="28,1 36,4 28,7" class="legend-arrow legend-arrow--canonical" />
-        </svg>
-        <span>{{ 'franchise.legend.canonical' | translate }}</span>
-      </div>
-
-      @if (presentMediaTypes().length) {
-        <!-- Media type swatches — only types present in this franchise -->
-        <div class="edge-legend-divider" aria-hidden="true"></div>
-        <span class="edge-legend-title">{{ 'franchise.legend.mediaTypes.title' | translate }}</span>
-        @for (type of presentMediaTypes(); track type) {
+    <div
+      class="edge-legend edge-legend--desktop"
+      role="group"
+      [attr.aria-label]="'aria.legend' | translate"
+    >
+      <app-ui-card padding="0.65rem 0.85rem">
+        <div class="edge-legend-list">
+          <span class="edge-legend-title">
+            <svg class="edge-legend-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M4 6h16M4 12h10M4 18h6" />
+            </svg>
+            {{ 'franchise.legend.title' | translate }}
+          </span>
           <div class="edge-legend-item">
-            <span class="legend-swatch" [class]="'legend-swatch--' + type" aria-hidden="true"></span>
-            <span>{{ 'franchise.legend.mediaTypes.' + type | translate }}</span>
+            <svg class="edge-legend-svg" viewBox="0 0 36 8" aria-hidden="true">
+              <line x1="0" y1="4" x2="28" y2="4" class="legend-line legend-line--canonical" />
+              <polygon points="28,1 36,4 28,7" class="legend-arrow legend-arrow--canonical" />
+            </svg>
+            <span>{{ 'franchise.legend.canonical' | translate }}</span>
           </div>
-        }
-      }
+
+          @if (presentMediaTypes().length) {
+            <!-- Media type swatches — only types present in this franchise -->
+            <div class="edge-legend-divider" aria-hidden="true"></div>
+            <span class="edge-legend-title">
+              <svg class="edge-legend-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 2 2 7l10 5 10-5-10-5z" />
+                <path d="m2 17 10 5 10-5" />
+                <path d="m2 12 10 5 10-5" />
+              </svg>
+              {{ 'franchise.legend.mediaTypes.title' | translate }}
+            </span>
+            @for (type of presentMediaTypes(); track type) {
+              <div class="edge-legend-item">
+                <span class="legend-swatch" [class]="'legend-swatch--' + type" aria-hidden="true"></span>
+                <span>{{ 'franchise.legend.mediaTypes.' + type | translate }}</span>
+              </div>
+            }
+          }
+        </div>
+      </app-ui-card>
     </div>
 
     <!-- ── Mobile legend toggle button ───────────────────────────────── -->
     <button
+      #legendToggleBtn
       type="button"
       class="legend-toggle-btn"
       (click)="toggleLegend()"
@@ -218,26 +264,46 @@
     <!-- ── Mobile legend bottom-sheet ────────────────────────────────── -->
     @if (legendOpen()) {
       <div class="legend-sheet-backdrop" (click)="toggleLegend()" aria-hidden="true"></div>
-      <div class="legend-sheet" role="dialog" [attr.aria-label]="'franchise.legend.title' | translate">
+      <div
+        #legendSheet
+        class="legend-sheet"
+        role="dialog"
+        tabindex="-1"
+        [attr.aria-label]="'franchise.legend.title' | translate"
+      >
         <div class="legend-sheet-handle" aria-hidden="true"></div>
-        <span class="edge-legend-title">{{ 'franchise.legend.title' | translate }}</span>
-        <div class="edge-legend-item">
-          <svg class="edge-legend-svg" viewBox="0 0 36 8" aria-hidden="true">
-            <line x1="0" y1="4" x2="28" y2="4" class="legend-line legend-line--canonical" />
-            <polygon points="28,1 36,4 28,7" class="legend-arrow legend-arrow--canonical" />
-          </svg>
-          <span>{{ 'franchise.legend.canonical' | translate }}</span>
-        </div>
-        @if (presentMediaTypes().length) {
-          <div class="edge-legend-divider" aria-hidden="true"></div>
-          <span class="edge-legend-title">{{ 'franchise.legend.mediaTypes.title' | translate }}</span>
-          @for (type of presentMediaTypes(); track type) {
-            <div class="edge-legend-item">
-              <span class="legend-swatch" [class]="'legend-swatch--' + type" aria-hidden="true"></span>
-              <span>{{ 'franchise.legend.mediaTypes.' + type | translate }}</span>
-            </div>
+        <div class="edge-legend-list">
+          <span class="edge-legend-title">
+            <svg class="edge-legend-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M4 6h16M4 12h10M4 18h6" />
+            </svg>
+            {{ 'franchise.legend.title' | translate }}
+          </span>
+          <div class="edge-legend-item">
+            <svg class="edge-legend-svg" viewBox="0 0 36 8" aria-hidden="true">
+              <line x1="0" y1="4" x2="28" y2="4" class="legend-line legend-line--canonical" />
+              <polygon points="28,1 36,4 28,7" class="legend-arrow legend-arrow--canonical" />
+            </svg>
+            <span>{{ 'franchise.legend.canonical' | translate }}</span>
+          </div>
+          @if (presentMediaTypes().length) {
+            <div class="edge-legend-divider" aria-hidden="true"></div>
+            <span class="edge-legend-title">
+              <svg class="edge-legend-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 2 2 7l10 5 10-5-10-5z" />
+                <path d="m2 17 10 5 10-5" />
+                <path d="m2 12 10 5 10-5" />
+              </svg>
+              {{ 'franchise.legend.mediaTypes.title' | translate }}
+            </span>
+            @for (type of presentMediaTypes(); track type) {
+              <div class="edge-legend-item">
+                <span class="legend-swatch" [class]="'legend-swatch--' + type" aria-hidden="true"></span>
+                <span>{{ 'franchise.legend.mediaTypes.' + type | translate }}</span>
+              </div>
+            }
           }
-        }
+        </div>
       </div>
     }
   }

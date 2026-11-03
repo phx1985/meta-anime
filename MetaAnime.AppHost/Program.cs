@@ -6,6 +6,9 @@ using Aspire.Hosting;
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres = builder.AddPostgres("postgres")
+    // Ephemeral per debug run: the container is deleted when the apphost stops, so
+    // the dev database never carries state between runs (no volumes, no reuse).
+    .WithLifetime(ContainerLifetime.Session)
     .AddDatabase("metaanime");
 
 var api = builder.AddProject<Projects.MetaAnime_Presentation>("api")

@@ -1,4 +1,12 @@
-// ── Overlay backdrop — adds perspective so the container "pops" in 3D ────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Lucky Pick — "gacha card" overlay
+// One card DNA for desktop and mobile: compact glass card, ambient poster aura,
+// inline filter chips, single action row, session history strip.
+// ─────────────────────────────────────────────────────────────────────────────
+
+$card-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1);
+
+// ── Overlay ───────────────────────────────────────────────────────────────────
 .lucky-overlay {
   position: fixed;
   inset: 0;
@@ -6,604 +14,800 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
-  padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
-  background: rgba(0, 0, 0, 0.82);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  animation: overlayIn 0.25s ease both;
-  perspective: 1400px;
-  perspective-origin: 50% 40%;
-}
+  padding: 1.5rem;
+  background: rgba(4, 5, 12, 0.74);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  animation: luckyOverlayIn 0.22s ease both;
 
-@keyframes overlayIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
+  @media (max-width: 768px) {
+    padding: 0;
+    background: rgba(4, 5, 12, 0.62);
   }
 }
 
-// ── Container ─────────────────────────────────────────────────────────────────
-$container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+@keyframes luckyOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
 
-.lucky-container {
+// ── Card ──────────────────────────────────────────────────────────────────────
+.lucky-card {
   position: relative;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: min(760px, 100%);
-  // Increased base height to accommodate the 30% taller cover image
-  min-height: 420px;
-  padding: 3.5rem 2.5rem 2.5rem;
-  border-radius: 22px;
+  flex-direction: column;
+  width: min(680px, calc(100vw - 32px));
+  max-height: min(640px, calc(100dvh - 48px));
+  overflow: hidden; // keeps the blurred aura inside the radius
+  border-radius: 24px;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.5),
-    0 6px 16px rgba(0, 0, 0, 0.45),
-    0 20px 48px rgba(0, 0, 0, 0.42),
-    0 48px 96px rgba(0, 0, 0, 0.35),
+    0 12px 32px rgba(0, 0, 0, 0.45),
+    0 32px 72px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  transform-style: preserve-3d;
-  animation: containerIn $container-in;
+  animation: luckyCardIn $card-in;
+  outline: none;
 
-  @media (max-width: 500px) {
-    // Increased height and padding for mobile 30% scaling
-    padding: 3.5rem 1.25rem 1.5rem;
-    min-height: 0;
-    border-radius: 18px;
-    // Clamp to the visible viewport so the close button and all content stay accessible
-    max-height: calc(100dvh - 2rem);
-    overflow-y: auto;
-    // Hide the scrollbar — content is controlled by line-clamp
+  // Mobile: floating sheet above the dock, never clipped by it
+  @media (max-width: 768px) {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(84px + env(safe-area-inset-bottom, 12px));
+    width: auto;
+    max-height: calc(100dvh - 110px - env(safe-area-inset-bottom, 12px));
+    border-radius: 22px;
+    animation: luckySheetIn 0.32s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+  }
+
+  // No wrapper pulse: the summon timeline owns all motion while rolling.
+  &--spinning {
+    animation: luckyCardIn $card-in;
+  }
+}
+
+@keyframes luckyCardIn {
+  from { opacity: 0; transform: scale(0.94) translateY(16px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes luckySheetIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+// Ambient backdrop: the picked poster, blurred, tints the glass
+.lucky-card__ambient {
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(48px) saturate(160%);
+  opacity: 0.22;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+
+  @media (max-width: 768px) {
+    filter: blur(36px) saturate(150%);
+    opacity: 0.2;
+  }
+}
+
+// ── Top bar ───────────────────────────────────────────────────────────────────
+.lucky-card__bar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 0.9rem 0.6rem 1rem;
+  flex-shrink: 0;
+}
+
+.lucky-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  min-width: 0;
+  flex: 1;
+
+  @media (max-width: 480px) {
+    flex-wrap: nowrap;
+    overflow-x: auto;
     scrollbar-width: none;
+    gap: 0.3rem;
+
     &::-webkit-scrollbar { display: none; }
   }
 }
 
-@keyframes containerIn {
-  from {
-    opacity: 0;
-    transform: scale(0.82) translateY(24px) rotateX(-10deg);
+.lucky-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  height: 26px;
+  padding: 0 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+
+  svg { opacity: 0.8; }
+
+  &:hover {
+    color: var(--text-primary);
+    border-color: color-mix(in srgb, var(--accent-primary) 40%, var(--card-border));
   }
 
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0) rotateX(0deg);
+  &--on {
+    color: var(--accent-primary);
+    border-color: color-mix(in srgb, var(--accent-primary) 55%, transparent);
+    background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--accent-primary) 22%, transparent);
+
+    svg { opacity: 1; }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 1px;
+  }
+
+  // Keep all three chips on ONE row on phones instead of wrapping under the close button.
+  @media (max-width: 480px) {
+    font-size: 0.66rem;
+    gap: 0.25rem;
+    padding: 0 0.42rem;
+    height: 24px;
+
+    svg { width: 10px; height: 10px; }
   }
 }
 
-// ── Heartbeat ─────────────────────────────────────────────────────────────────
-.lucky-container--beating {
-  animation:
-    containerIn $container-in,
-    heartbeat 1.15s ease-in-out 0.5s infinite;
-}
-
-@keyframes heartbeat {
-  0% {
-    transform: scale(1);
-  }
-
-  8% {
-    transform: scale(1.03);
-  }
-
-  18% {
-    transform: scale(1);
-  }
-
-  28% {
-    transform: scale(1.018);
-  }
-
-  42% {
-    transform: scale(1);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
-// ── Close button ─────────────────────────────────────────────────────────────
-.lucky-close {
-  position: absolute;
-  top: 0.9rem;
-  right: 0.9rem;
+.lucky-card__close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
+  flex-shrink: 0;
   border-radius: 50%;
-  border: 1.5px solid var(--card-border);
-  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
   color: var(--text-muted);
   cursor: pointer;
-  z-index: 10;
-  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
 
   &:hover,
   &:focus-visible {
     color: var(--accent-primary);
     border-color: var(--accent-primary);
-    background: rgba(108, 99, 255, 0.08);
+    background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
     outline: none;
   }
 }
 
-// ── Spin scene ────────────────────────────────────────────────────────────────
+// ── Body ──────────────────────────────────────────────────────────────────────
+.lucky-card__body {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 1.25rem 0.75rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--text-primary) 20%, transparent) transparent;
+
+  @media (max-width: 768px) {
+    padding: 0.35rem 1rem 0.5rem;
+  }
+}
+
+// ── Summon scene (authored 4-beat timeline) ─────────────────────────────────
+// One clock drives every beat: --spin-dur is bound per roll (1600ms open /
+// 950ms prefetched reroll / 0ms reduced motion). Nothing loops.
 .lucky-spin-scene {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  justify-content: center;
+  gap: 1.35rem;
+  min-height: 275px; // same box as the result body → no layout jump on reveal
+  width: 100%;
+  perspective: 900px;
+  user-select: none;
+  --spin-dur: 1600ms;
+
+  @media (max-width: 768px) {
+    gap: 1.1rem;
+  }
 }
 
-// ── True 3D Gyroscope ─────────────────────────────────────────────────────────
-.lucky-orb {
+.lucky-summon {
   position: relative;
-  width: 140px;
-  height: 140px;
+  width: 180px;
+  height: 196px;
   display: flex;
   align-items: center;
   justify-content: center;
-  perspective: 600px;
   transform-style: preserve-3d;
-  animation: gyroAssemblySpin 12s linear infinite;
-}
 
-@keyframes gyroAssemblySpin {
-  from {
-    transform: rotateX(-15deg) rotateY(0deg);
-  }
-
-  to {
-    transform: rotateX(-15deg) rotateY(360deg);
+  @media (max-width: 768px) {
+    width: 156px;
+    height: 176px;
+    transform: scale(0.92);
   }
 }
 
-.lucky-orb__gimbal {
+// Aura — transform/opacity only (box-shadow is not compositable)
+.lucky-summon__aura {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(157, 148, 255, 0.55) 0%,
+    rgba(62, 207, 207, 0.28) 42%,
+    rgba(108, 99, 255, 0) 72%
+  );
+  opacity: 0;
+  transform: scale(0.6);
+  will-change: transform, opacity;
+  animation: summonAura var(--spin-dur) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.lucky-summon__ring {
   position: absolute;
   border-radius: 50%;
-  transform-style: preserve-3d;
-  border: 3px solid transparent;
-  box-shadow: inset 0 0 10px rgba(108, 99, 255, 0.2), 0 0 5px rgba(108, 99, 255, 0.2);
+  border: 2px solid transparent;
+  pointer-events: none;
+  will-change: transform, opacity;
 
   &--outer {
-    width: 140px;
-    height: 140px;
-    border-color: rgba(108, 99, 255, 0.4);
-    border-left-color: rgba(108, 99, 255, 0.9);
-    border-right-color: rgba(108, 99, 255, 0.9);
-    animation: gimbalSpinZ 4s linear infinite;
-  }
-
-  &--mid {
-    width: 105px;
-    height: 105px;
-    border-color: rgba(62, 207, 207, 0.3);
-    border-top-color: rgba(62, 207, 207, 0.8);
-    border-bottom-color: rgba(62, 207, 207, 0.8);
-    animation: gimbalSpinX 2.5s linear infinite;
+    width: 164px;
+    height: 164px;
+    border-top-color: rgba(157, 148, 255, 0.95);
+    border-bottom-color: rgba(108, 99, 255, 0.75);
+    border-left-color: rgba(108, 99, 255, 0.18);
+    border-right-color: rgba(108, 99, 255, 0.18);
+    animation: summonRingOuter var(--spin-dur) cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
   &--inner {
-    width: 70px;
-    height: 70px;
-    border-color: rgba(157, 148, 255, 0.3);
-    border-left-color: rgba(157, 148, 255, 0.9);
-    border-right-color: rgba(157, 148, 255, 0.9);
-    animation: gimbalSpinY 1.8s linear infinite reverse;
+    width: 122px;
+    height: 122px;
+    border-left-color: rgba(62, 207, 207, 0.95);
+    border-right-color: rgba(157, 148, 255, 0.85);
+    border-top-color: rgba(62, 207, 207, 0.15);
+    border-bottom-color: rgba(62, 207, 207, 0.15);
+    animation: summonRingInner var(--spin-dur) cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 }
 
-@keyframes gimbalSpinX {
-  from {
-    transform: rotateX(0deg);
-  }
-
-  to {
-    transform: rotateX(360deg);
-  }
-}
-
-@keyframes gimbalSpinY {
-  from {
-    transform: rotateY(0deg);
-  }
-
-  to {
-    transform: rotateY(360deg);
-  }
-}
-
-@keyframes gimbalSpinZ {
-  from {
-    transform: rotateZ(0deg);
-  }
-
-  to {
-    transform: rotateZ(360deg);
-  }
-}
-
-// ── True Mathematical 3D Sphere Implementation ────────────────────────────────
-.lucky-orb__center {
+.lucky-summon__shockwave {
   position: absolute;
-  z-index: 2;
-  width: 56px;
-  height: 56px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid rgba(157, 148, 255, 0.9);
+  opacity: 0;
+  transform: scale(0.5);
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: summonShockwave var(--spin-dur) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.lucky-summon__card {
+  position: relative;
+  z-index: 3;
+  width: 112px;
+  height: 160px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(145deg, #262346 0%, #17162b 100%);
+  border: 1.5px solid rgba(157, 148, 255, 0.65);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55);
+  transform-style: preserve-3d;
+  will-change: transform, filter;
+  animation: summonCardArc var(--spin-dur) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.lucky-summon__poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
+
+// Decoy riffle: history covers flashing past at ~70ms each
+.lucky-summon__poster--d1 { animation: decoyFlicker1 var(--spin-dur) steps(1, end) forwards; }
+.lucky-summon__poster--d2 { animation: decoyFlicker2 var(--spin-dur) steps(1, end) forwards; }
+.lucky-summon__poster--d3 { animation: decoyFlicker3 var(--spin-dur) steps(1, end) forwards; }
+
+.lucky-summon__poster--final {
+  animation: finalPosterLock var(--spin-dur) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.lucky-summon__card-back {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  perspective: 800px;
-  transform-style: preserve-3d;
-  transform: rotateX(15deg); // Counters parent assembly tilt
-  animation: centerPulse3D 2s ease-in-out infinite alternate;
-}
-
-.lucky-orb__sphere {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  animation: trueSphereSpin 5s linear infinite;
-}
-
-@keyframes trueSphereSpin {
-  from {
-    transform: rotateY(0deg) rotateX(20deg);
-  }
-
-  to {
-    transform: rotateY(360deg) rotateX(20deg);
-  }
-}
-
-// Generating the 3D sphere from 6 intersecting circular planes
-.lucky-orb__slice {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  // Wireframe structural lines
-  border: 1.5px solid rgba(157, 148, 255, 0.75);
-  // Extends the light outward from the slices
-  box-shadow: 0 0 8px rgba(108, 99, 255, 0.6), inset 0 0 8px rgba(108, 99, 255, 0.4);
-  // Calculates the rotation angle based on the CSS variable index (0 to 5)
-  transform: rotateY(calc(var(--slice-idx) * 30deg));
-}
-
-// The internal energy core
-.lucky-orb__core-glow {
-  position: absolute;
-  inset: 8px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(157, 148, 255, 0.7) 40%, transparent 80%);
-  transform: translateZ(0); // Anchors exactly in the centre
-  box-shadow: 0 0 20px rgba(157, 148, 255, 0.8);
-}
-
-.lucky-orb__star {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) translateZ(0);
+  background: radial-gradient(circle at 50% 50%, rgba(108, 99, 255, 0.32), rgba(20, 18, 38, 0.92));
   color: #fff;
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 1));
+  animation: cardBackFade var(--spin-dur) ease-out forwards;
 }
 
-@keyframes centerPulse3D {
-  0% {
-    transform: rotateX(15deg) scale(0.95);
-  }
-
-  100% {
-    transform: rotateX(15deg) scale(1.05);
-  }
+.lucky-summon__star {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
+  animation: starSpinPulse var(--spin-dur) cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-.lucky-overlay--reduced-motion .lucky-orb {
-  animation: none;
-  transform: rotateX(-15deg) rotateY(30deg);
-}
-
-.lucky-overlay--reduced-motion .lucky-orb__gimbal {
-  animation: none;
-}
-
-.lucky-overlay--reduced-motion .lucky-orb__center {
-  animation: none;
-  transform: rotateX(15deg) scale(1);
-}
-
-.lucky-overlay--reduced-motion .lucky-orb__sphere {
-  animation: none;
-}
-
-.lucky-overlay--reduced-motion .lucky-container--beating {
-  animation: containerIn $container-in;
+.lucky-summon__foil {
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(
+    115deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.55) 47%,
+    rgba(62, 207, 207, 0.45) 53%,
+    transparent 68%
+  );
+  transform: translateX(-140%) rotate(12deg);
+  pointer-events: none;
+  animation: foilSweep var(--spin-dur) cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .lucky-spin-label {
   margin: 0;
-  font-size: 0.92rem;
+  padding: 0.42rem 0.95rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  border: 1px solid var(--card-border);
   color: var(--text-muted);
-  letter-spacing: 0.03em;
-  animation: labelPulse 2s ease-in-out infinite;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+  animation: labelStoryArc var(--spin-dur) ease-in-out forwards;
 }
 
-@keyframes labelPulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
+// ── The 4 beats ─────────────────────────────────────────────────────────────
+// 0–14%   anticipation: rings contract onto one plane, star charges
+// 14–68%  vortex: counter-spinning rings + poster riffle
+// 68–88%  lock-in: shockwave, poster springs to 1.08 then settles
+// 88–100% foil sheen finishes as the result layout takes over
+@keyframes summonAura {
+  0%   { opacity: 0.2;  transform: scale(0.85); }
+  14%  { opacity: 0.45; transform: scale(0.72); }
+  68%  { opacity: 0.95; transform: scale(1.18); }
+  84%  { opacity: 1;    transform: scale(1.32); }
+  100% { opacity: 0.70; transform: scale(1.10); }
 }
 
-// ── Result card ───────────────────────────────────────────────────────────────
+@keyframes summonRingOuter {
+  0%   { opacity: 0.60; transform: rotateX(52deg) rotateZ(0deg)   scale(1); }
+  14%  { opacity: 0.95; transform: rotateX(62deg) rotateZ(-35deg) scale(0.84); }
+  68%  { opacity: 1;    transform: rotateX(18deg) rotateZ(680deg) scale(1.04); }
+  85%  { opacity: 0;    transform: rotateX(0deg)  rotateZ(760deg) scale(1.42); }
+  100% { opacity: 0;    transform: rotateX(0deg)  rotateZ(760deg) scale(1.50); }
+}
+
+@keyframes summonRingInner {
+  0%   { opacity: 0.50; transform: rotateY(45deg)  rotateZ(0deg)    scale(1); }
+  14%  { opacity: 0.95; transform: rotateY(-55deg) rotateZ(40deg)   scale(0.82); }
+  68%  { opacity: 1;    transform: rotateY(15deg)  rotateZ(-820deg) scale(1.02); }
+  85%  { opacity: 0;    transform: rotateY(0deg)   rotateZ(-900deg) scale(1.38); }
+  100% { opacity: 0;    transform: rotateY(0deg)   rotateZ(-900deg) scale(1.45); }
+}
+
+@keyframes summonShockwave {
+  0%, 66%   { opacity: 0;    transform: scale(0.55); }
+  70%       { opacity: 0.95; transform: scale(0.92); }
+  96%, 100% { opacity: 0;    transform: scale(1.95); }
+}
+
+@keyframes summonCardArc {
+  0%   { transform: rotateY(0deg)   scale(0.78); filter: brightness(0.9); }
+  14%  { transform: rotateY(-25deg) scale(0.70); filter: brightness(1.05); }
+  32%  { transform: rotateY(180deg) scale(0.86); }
+  50%  { transform: rotateY(360deg) scale(0.92); }
+  68%  { transform: rotateY(540deg) scale(0.96); filter: brightness(1.35); }
+  82%  { transform: rotateY(720deg) scale(1.08); filter: brightness(1.12); }
+  92%  { transform: rotateY(720deg) scale(0.985); filter: brightness(1); }
+  100% { transform: rotateY(720deg) scale(1);    filter: brightness(1); }
+}
+
+@keyframes decoyFlicker1 {
+  0%, 18%   { opacity: 0; }
+  19%, 34%  { opacity: 0.85; }
+  35%, 100% { opacity: 0; }
+}
+
+@keyframes decoyFlicker2 {
+  0%, 34%   { opacity: 0; }
+  35%, 51%  { opacity: 0.85; }
+  52%, 100% { opacity: 0; }
+}
+
+@keyframes decoyFlicker3 {
+  0%, 51%   { opacity: 0; }
+  52%, 67%  { opacity: 0.85; }
+  68%, 100% { opacity: 0; }
+}
+
+@keyframes finalPosterLock {
+  0%, 67%   { opacity: 0; transform: scale(1.08); }
+  68%, 100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes cardBackFade {
+  0%, 66%   { opacity: 1; }
+  68%, 100% { opacity: 0; }
+}
+
+@keyframes starSpinPulse {
+  0%   { transform: scale(0.9)  rotate(0deg); }
+  14%  { transform: scale(0.72) rotate(-45deg); }
+  68%  { transform: scale(1.35) rotate(360deg); }
+  100% { transform: scale(1)    rotate(360deg); }
+}
+
+@keyframes foilSweep {
+  0%, 68% { transform: translateX(-140%) rotate(12deg); opacity: 0; }
+  72%     { opacity: 1; }
+  96%     { transform: translateX(120%) rotate(12deg); opacity: 0.95; }
+  100%    { transform: translateX(145%) rotate(12deg); opacity: 0; }
+}
+
+@keyframes labelStoryArc {
+  0%   { opacity: 0;    transform: translateY(6px); }
+  12%  { opacity: 1;    transform: translateY(0); }
+  85%  { opacity: 1;    transform: translateY(0); }
+  100% { opacity: 0.75; transform: translateY(-2px); }
+}
+
+// ── Result ────────────────────────────────────────────────────────────────────
 .lucky-result {
-  position: relative;
   width: 100%;
-  border-radius: 14px;
-  overflow: hidden;
-  animation: resultIn 0.48s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  display: grid;
+  grid-template-columns: 185px minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr;
+  grid-template-areas:
+    'poster head'
+    'poster text'
+    'poster tags';
+  column-gap: 1.4rem;
+  row-gap: 0.75rem;
+  align-items: start;
+  align-content: start;
+  animation: cardRevealFlip 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 96px minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      'poster head'
+      'text   text'
+      'tags   tags';
+    column-gap: 0.9rem;
+    row-gap: 0.65rem;
+  }
 }
 
-@keyframes resultIn {
+@keyframes cardRevealFlip {
   from {
     opacity: 0;
-    transform: scale(0.88) translateY(18px);
+    transform: perspective(900px) rotateY(12deg) scale(0.96);
   }
-
   to {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: perspective(900px) rotateY(0deg) scale(1);
   }
 }
 
-
-
-.lucky-result__body {
-  display: flex;
-  gap: 1.5rem;
-  align-items: center;
-  padding: 0.25rem 0;
-
-  @media (max-width: 500px) {
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    text-align: center;
-  }
-}
-
-.lucky-result__cover {
-  // Increased 30% for PC view (previously 160x226)
-  width: 208px;
-  height: 294px;
-  object-fit: cover;
+.lucky-result__poster {
+  grid-area: poster;
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
   border-radius: 12px;
-  flex-shrink: 0;
-  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  background: var(--bg-secondary);
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42), inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  aspect-ratio: 185 / 262;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 
-  &--placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg-secondary);
-    color: var(--text-muted);
-    font-size: 3.5rem;
-    font-weight: 700;
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 
-  &--clickable {
-    cursor: zoom-in;
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
-
-    &:hover {
-      transform: scale(1.03);
-      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55);
-    }
+  // Foil sheen sweep on reveal
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.22) 45%, transparent 60%);
+    transform: translateX(-120%);
+    animation: foilSweep 0.9s ease-out 0.25s 1 both;
+    pointer-events: none;
   }
 
-  @media (max-width: 500px) {
-    // Increased 30% for Mobile view (previously 120x170)
-    width: 120px;
-    height: 170px;
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+    outline: none;
+  }
+
+  @media (max-width: 768px) {
+    aspect-ratio: 96 / 138;
+    border-radius: 10px;
   }
 }
 
-.lucky-result__info {
-  flex: 1;
-  min-width: 0;
+@keyframes foilSweep {
+  from { transform: translateX(-120%); }
+  to   { transform: translateX(120%); }
+}
+
+.lucky-result__poster-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 140px;
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.lucky-result__zoom {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(8, 9, 16, 0.72);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+
+  .lucky-result__poster:hover &,
+  .lucky-result__poster:focus-visible & {
+    opacity: 1;
+  }
+}
+
+.lucky-result__head {
+  grid-area: head;
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
+  gap: 0.45rem;
+  min-width: 0;
 }
 
-// ── Status pills ──────────────────────────────────────────────────────────────
-.lucky-result__status-pills {
+.lucky-result__title {
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: clamp(1.15rem, 2vw, 1.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.16s ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--accent-primary);
+    outline: none;
+  }
+}
+
+.lucky-result__pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .lucky-pill {
   display: inline-flex;
   align-items: center;
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  padding: 0.15rem 0.5rem;
-  border-radius: 5px;
+  height: 21px;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  line-height: 1.4;
+  background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+  color: var(--text-muted);
 
-  &--watching {
-    background: rgba(59, 130, 246, 0.14);
-    color: #3b82f6;
-    border: 1px solid rgba(59, 130, 246, 0.3);
+  &--media {
+    background: color-mix(in srgb, var(--text-primary) 8%, transparent);
   }
+
+  &--plan_to_watch,
+  &--watching {
+    background: rgba(108, 99, 255, 0.16);
+    color: var(--accent-primary);
+  }
+
   &--completed {
     background: rgba(34, 197, 94, 0.14);
     color: #22c55e;
-    border: 1px solid rgba(34, 197, 94, 0.3);
   }
+
+  &--dropped,
   &--on_hold {
     background: color-mix(in srgb, var(--color-warning-deep) 14%, transparent);
     color: var(--color-warning-deep);
-    border: 1px solid color-mix(in srgb, var(--color-warning-deep) 30%, transparent);
   }
-  &--dropped {
-    background: color-mix(in srgb, var(--color-danger-deep) 14%, transparent);
-    color: var(--color-danger-deep);
-    border: 1px solid color-mix(in srgb, var(--color-danger-deep) 30%, transparent);
-  }
-  &--plan_to_watch {
-    background: color-mix(in srgb, var(--color-mixed) 14%, transparent);
-    color: var(--color-mixed);
-    border: 1px solid color-mix(in srgb, var(--color-mixed) 30%, transparent);
-  }
+
   &--series {
-    background: color-mix(in srgb, var(--text-muted) 12%, transparent);
-    color: var(--text-muted);
-    border: 1px solid color-mix(in srgb, var(--text-muted) 20%, transparent);
-  }
-  &--media-type {
-    background: color-mix(in srgb, var(--accent-primary) 12%, transparent);
-    color: var(--accent-primary);
-    border: 1px solid color-mix(in srgb, var(--accent-primary) 25%, transparent);
+    background: color-mix(in srgb, var(--text-primary) 6%, transparent);
   }
 }
 
-// ── Genre / Theme / Demographic tags ──────────────────────────────────────────
-.lucky-genre-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-
-  & + .lucky-genre-list {
-    margin-top: 0.15rem;
-  }
+.lucky-result__dates {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
 }
 
-.lucky-genre-tag {
-  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
-  color: var(--accent-primary);
-  border: 1px solid color-mix(in srgb, var(--accent-primary) 22%, transparent);
-  border-radius: 4px;
-  font-size: 0.67rem;
-  font-weight: 600;
-  padding: 0.1rem 0.45rem;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-
-  &--theme {
-    background: color-mix(in srgb, #14b8a6 10%, transparent);
-    color: #14b8a6;
-    border-color: color-mix(in srgb, #14b8a6 25%, transparent);
-  }
-
-  &--demographic {
-    background: color-mix(in srgb, var(--color-warning-deep) 10%, transparent);
-    color: #d97706;
-    border-color: color-mix(in srgb, var(--color-warning-deep) 25%, transparent);
-  }
+.lucky-result__arrow {
+  opacity: 0.6;
 }
 
-// ── Score + dates row ─────────────────────────────────────────────────────────
-.lucky-meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.lucky-date-range {
-  font-size: 0.73rem;
-  color: var(--text-secondary);
-}
-
-.lucky-date-arrow {
-  opacity: 0.5;
-  margin: 0 0.2em;
-}
-
-.lucky-result__title {
-  margin: 0;
-  font-size: 1.35rem; // Slightly scaled up title to match larger image
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.3;
-}
-
-.lucky-result__synopsis-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
+.lucky-result__text {
+  grid-area: text;
+  min-width: 0;
 }
 
 .lucky-result__synopsis {
   margin: 0;
-  font-size: 0.88rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text-muted);
   display: -webkit-box;
-  // Increased clamp lines to balance the taller cover image
-  -webkit-line-clamp: 10;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
 
-  @media (max-width: 500px) {
+  @media (max-width: 768px) {
     -webkit-line-clamp: 3;
   }
-
-  &--clickable {
-    cursor: pointer;
-    user-select: none;
-    transition: opacity 0.15s;
-    &:hover {
-      opacity: 0.75;
-    }
-  }
 }
 
-.lucky-result__synopsis-toggle {
-  align-self: flex-start;
-  background: none;
-  border: none;
+.lucky-result__more {
+  margin-top: 0.25rem;
   padding: 0;
+  border: none;
+  background: none;
   color: var(--accent-primary);
-  cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  text-decoration: underline dotted;
-  opacity: 0.8;
-  transition: opacity 0.15s;
-  &:hover {
-    opacity: 1;
-  }
+  cursor: pointer;
+
+  &:hover { text-decoration: underline; }
 }
 
-// ── Action buttons ────────────────────────────────────────────────────────────
-.lucky-result__actions,
-.lucky-message__actions {
+.lucky-result__tags {
+  grid-area: tags;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem;
-  margin-top: 0.5rem;
+  gap: 0.3rem;
+  align-self: start;
+}
 
-  @media (max-width: 500px) {
-    justify-content: center;
+.lucky-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 0.55rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+  color: var(--accent-primary);
+
+  &--theme {
+    background: color-mix(in srgb, #14b8a6 12%, transparent);
+    color: #14b8a6;
+  }
+
+  &--demographic {
+    background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+    color: var(--text-muted);
+  }
+
+  &--more {
+    background: color-mix(in srgb, var(--text-primary) 7%, transparent);
+    color: var(--text-muted);
+  }
+}
+
+// Reserves the footprint of the result's action zone while the summon plays.
+.lucky-reserve {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.lucky-actions.lucky-reserve { min-height: 42px; }
+.lucky-history.lucky-reserve { min-height: 63px; padding-bottom: 0; border-top-width: 0; }
+
+// ── Whisper quip + action bar ────────────────────────────────────────────────
+.lucky-whisper {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0 1.25rem 0.55rem;
+  font-size: 0.76rem;
+  font-style: italic;
+  color: var(--text-muted);
+  flex-shrink: 0;
+
+  &__icon {
+    flex-shrink: 0;
+    color: var(--accent-primary);
+    opacity: 0.85;
+  }
+
+  @media (max-width: 768px) {
+    padding: 0 1rem 0.5rem;
+  }
+}
+
+.lucky-actions {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0 1.25rem;
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    padding: 0 1rem;
+    flex-wrap: wrap;
   }
 }
 
@@ -612,116 +816,201 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  padding: 0.6rem 1.1rem;
-  border-radius: 8px;
-  font-size: 0.84rem;
-  font-weight: 600;
-  cursor: pointer;
+  height: 42px;
+  padding: 0 0.9rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-size: 0.83rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
   text-decoration: none;
-  border: 1.5px solid transparent;
-  transition: opacity 0.18s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
 
-  // Flex layout fixes wrapping alignment
-  flex: 1 1 auto;
-  text-align: center;
-
-  &--plex {
-    background: transparent;
-    color: var(--text-muted);
-    border-color: var(--card-border);
-
-    &:hover {
-      color: #e5a00d;
-      border-color: #e5a00d;
-      background: rgba(229, 160, 13, 0.1);
-      transform: translateY(-1px);
-    }
-  }
-
-  &--mal {
-    background: transparent;
-    color: var(--text-muted);
-    border-color: var(--card-border);
-
-    &:hover {
-      color: #2e51a2;
-      border-color: #2e51a2;
-      background: rgba(46, 81, 162, 0.1);
-      transform: translateY(-1px);
-    }
-  }
-
-  &--reroll {
-    background: transparent;
-    color: var(--text-muted);
-    border-color: var(--card-border);
-
-    &:hover {
-      color: var(--text-primary);
-      border-color: var(--text-muted);
-    }
-  }
-
-  &--primary {
-    background: var(--accent-primary);
-    color: #fff;
-    border-color: var(--accent-primary);
-
-    &:hover {
-      opacity: 0.88;
-      box-shadow: 0 4px 16px rgba(108, 99, 255, 0.35);
-    }
-  }
-
-  &--secondary {
-    background: transparent;
-    color: var(--accent-primary);
-    border-color: var(--accent-primary);
-
-    &:hover {
-      background: rgba(108, 99, 255, 0.1);
-    }
-  }
-
-  &--ghost {
-    background: transparent;
-    color: var(--text-muted);
-    border-color: var(--card-border);
-
-    &:hover {
-      color: var(--text-primary);
-      border-color: var(--text-muted);
-    }
+  &__logo {
+    flex-shrink: 0;
   }
 
   &:focus-visible {
     outline: 2px solid var(--accent-primary);
     outline-offset: 2px;
   }
+
+  // Primary — the thing the user probably wants to do
+  &--primary {
+    flex: 1.4 1 0;
+    background: var(--accent-primary);
+    color: #fff;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--accent-primary) 32%, transparent);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px color-mix(in srgb, var(--accent-primary) 40%, transparent);
+    }
+  }
+
+  // Secondary — glass
+  &--secondary {
+    flex: 1 1 0;
+    background: color-mix(in srgb, var(--text-primary) 7%, transparent);
+    border-color: var(--card-border);
+    color: var(--text-primary);
+
+    &:hover {
+      background: color-mix(in srgb, var(--text-primary) 11%, transparent);
+      border-color: color-mix(in srgb, var(--accent-primary) 40%, var(--card-border));
+    }
+  }
+
+  // Reroll — tactile, visually distinct, never the same weight as the CTA
+  &--reroll {
+    flex: 0 0 auto;
+    background: transparent;
+    border-color: color-mix(in srgb, var(--accent-primary) 35%, var(--card-border));
+    color: var(--accent-primary);
+
+    &:hover .lucky-btn__dice {
+      transform: rotate(180deg);
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+  }
+
+  &__dice {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  &__kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 17px;
+    height: 17px;
+    margin-left: 0.15rem;
+    padding: 0 4px;
+    border-radius: 5px;
+    border: 1px solid color-mix(in srgb, var(--accent-primary) 30%, transparent);
+    background: color-mix(in srgb, var(--accent-primary) 10%, transparent);
+    font-family: inherit;
+    font-size: 0.66rem;
+    font-weight: 700;
+    line-height: 1;
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  // Desktop: primary / secondary / reroll on one row
+  @media (max-width: 768px) {
+    &--primary {
+      flex: 1 1 100%;
+      order: 1;
+    }
+
+    &--secondary {
+      flex: 1 1 auto;
+      order: 2;
+    }
+
+    &--reroll {
+      order: 3;
+    }
+  }
 }
 
-.lucky-btn__logo {
+// ── History strip ────────────────────────────────────────────────────────────
+.lucky-history {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.6rem 1.25rem 0.85rem;
+  margin-top: 0.55rem;
+  border-top: 1px solid color-mix(in srgb, var(--card-border) 70%, transparent);
   flex-shrink: 0;
-  border-radius: 3px;
+
+  @media (max-width: 768px) {
+    padding: 0.55rem 1rem 0.7rem;
+  }
 }
 
-// ── No-match / error message ──────────────────────────────────────────────────
+.lucky-history__label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.lucky-history__list {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+}
+
+.lucky-history__thumb {
+  width: 28px;
+  height: 40px;
+  flex-shrink: 0;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
+  overflow: hidden;
+  background: var(--bg-secondary);
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-2px);
+    border-color: var(--accent-primary);
+    outline: none;
+  }
+}
+
+.lucky-history__thumb-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+// ── Empty / error states ─────────────────────────────────────────────────────
 .lucky-message {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.85rem;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 320px;
+  padding: 1rem;
   text-align: center;
-  padding: 0.75rem 0;
-  animation: resultIn 0.38s ease both;
 }
 
 .lucky-message__icon {
   color: var(--text-muted);
 
-  &--error {
-    color: #e53e3e;
-  }
+  &--error { color: var(--color-danger-deep); }
 }
 
 .lucky-message__title {
@@ -733,48 +1022,85 @@ $container-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 
 .lucky-message__desc {
   margin: 0;
-  font-size: 0.86rem;
-  color: var(--text-muted);
   max-width: 34ch;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-muted);
 }
 
-// ── Full-screen cover image overlay ──────────────────────────────────────────
-.lucky-cover-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  background: rgba(0, 0, 0, 0.85);
+.lucky-message__actions {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   justify-content: center;
-  cursor: zoom-out;
-  animation: fadeIn 0.18s ease;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+
+  .lucky-btn {
+    flex: 0 0 auto;
+  }
+
+  .lucky-btn--ghost {
+    background: transparent;
+    border-color: var(--card-border);
+    color: var(--text-muted);
+
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--text-muted);
+    }
+  }
 }
 
-.lucky-cover-overlay__img {
-  max-width: 90vw;
-  max-height: 90vh;
-  object-fit: contain;
-  border-radius: 12px;
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7);
-  pointer-events: none;
+// ── Screen-reader only ───────────────────────────────────────────────────────
+.lucky-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+// ── Reduced motion ───────────────────────────────────────────────────────────
+// No timeline at all: static card back, soft glow, poster already visible.
+.lucky-overlay--reduced-motion {
+  .lucky-summon *,
+  .lucky-spin-label {
+    animation: none !important;
+  }
+
+  .lucky-summon__aura { opacity: 0.55; transform: scale(1); }
+  .lucky-summon__poster--final { opacity: 1; transform: scale(1); }
+  .lucky-summon__card-back { opacity: 0; }
+  .lucky-summon__shockwave,
+  .lucky-summon__ring { opacity: 0; }
+
+  .lucky-card,
+  .lucky-card--spinning {
+    animation: luckyCardIn $card-in;
+  }
+
+  .lucky-result,
+  .lucky-result__poster::after {
+    animation: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lucky-cover-overlay { animation: none; }
-}
-// ── CSS Animations for Lucky Pick ───────────────────────────────────────
-@keyframes luckyFadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
+  .lucky-overlay,
+  .lucky-card,
+  .lucky-result,
+  .lucky-spin-label,
+  .lucky-summon *,
+  .lucky-result__poster::after {
+    animation: none !important;
+  }
 
-.lucky-card-wrapper {
-  animation: luckyFadeIn 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards; // Pop effect
+  .lucky-btn,
+  .lucky-result__poster {
+    transition: none;
+  }
 }
-

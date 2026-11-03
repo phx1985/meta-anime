@@ -1,0 +1,130 @@
+<div id="fp-popover-dialog" class="fp-backdrop" (click)="closed.emit()" role="dialog" aria-modal="true" [attr.aria-label]="title()">
+  <div class="fp-popup" (click)="$event.stopPropagation()">
+    <div class="fp-popup__header">
+      <span class="fp-popup__title">{{ title() }}</span>
+      @if (showOperator()) {
+        <div class="fp-popup__ops" role="radiogroup" [attr.aria-label]="title()">
+          <button
+            type="button"
+            class="op-btn"
+            role="radio"
+            [attr.aria-checked]="operator() === 'or'"
+            [class.op-btn--active]="operator() === 'or'"
+            (click)="setOperator('or', $event)"
+          >
+            OR
+          </button>
+          <button
+            type="button"
+            class="op-btn"
+            role="radio"
+            [attr.aria-checked]="operator() === 'and'"
+            [class.op-btn--active]="operator() === 'and'"
+            (click)="setOperator('and', $event)"
+          >
+            AND
+          </button>
+        </div>
+      }
+      <button
+        type="button"
+        class="fp-popup__close"
+        (click)="closed.emit()"
+        [attr.aria-label]="closeLabel()"
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    @if (searchable()) {
+      <div class="fp-popup__search">
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="M20 20l-3.6-3.6" stroke-linecap="round" />
+        </svg>
+        <input
+          class="fp-popup__search-input"
+          type="search"
+          [ngModel]="search()"
+          (ngModelChange)="onSearchInput($event)"
+          [placeholder]="searchPlaceholder()"
+          [attr.aria-label]="searchPlaceholder()"
+          autocomplete="off"
+        />
+        @if (search()) {
+          <button
+            type="button"
+            class="fp-popup__search-clear"
+            (click)="clearSearch($event)"
+            [attr.aria-label]="clearLabel()"
+          >
+            <svg
+              width="9"
+              height="9"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        }
+      </div>
+    }
+
+    <div
+      class="fp-popup__body"
+      [class.fp-popup__body--no-search]="!searchable()"
+      role="listbox"
+      [attr.aria-label]="title()"
+      aria-multiselectable="true"
+    >
+      @for (item of filteredItems(); track item.key) {
+        <button
+          type="button"
+          class="fp-option"
+          [class.fp-option--selected]="isSelected(item.key)"
+          [class.fp-option--nsfw]="item.nsfw"
+          role="option"
+          [attr.aria-selected]="isSelected(item.key)"
+          (click)="onOptionClick(item.key, $event)"
+        >
+          {{ item.label }}
+        </button>
+      }
+    </div>
+
+    <div class="fp-popup__footer">
+      @if (selected().length > 0) {
+        <button type="button" class="fp-popup__clear-all" (click)="onClearAll($event)">
+          {{ clearLabel() }} ({{ selected().length }})
+        </button>
+      }
+      <button type="button" class="fp-popup__done" (click)="closed.emit()">
+        {{ doneLabel() }}
+      </button>
+    </div>
+  </div>
+</div>

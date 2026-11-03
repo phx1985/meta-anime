@@ -22,11 +22,13 @@ import { NotificationService, AppNotification } from './services/notification.se
 import { SyncSignalRService } from './services/sync-signalr.service';
 import { ProviderStateService } from './services/provider-state.service';
 import { PopupService } from './services/popup.service';
+import { BotKunService } from './services/bot-kun.service';
 import { PlexDeepLinkService } from './services/plex-deep-link.service';
 import { LuckyPickComponent } from './lucky-pick/lucky-pick.component';
 import { FranchiseConstellationComponent } from './franchise-constellation/franchise-constellation.component';
 import { FranchiseConstellationService } from './services/franchise-constellation.service';
 import { SeiyuuNexusComponent } from './seiyuu-nexus/seiyuu-nexus.component';
+import { SeiyuuNexusService } from './seiyuu-nexus/seiyuu-nexus.service';
 import { MalQuickUpdateModalComponent } from './mal-quick-update/mal-quick-update-modal.component';
 import { ProviderHealthComponent } from './provider-health/provider-health.component';
 import { AuthService } from './services/auth.service';
@@ -36,11 +38,13 @@ import { HealthService } from './services/health.service';
 import { ProviderHealthResult } from './models/health.models';
 import { BotKunComponent } from './bot-kun/bot-kun.component';
 import { AnimeDetailPanelComponent } from './anime-detail-panel/anime-detail-panel.component';
+import { NsfwBlushComponent } from './nsfw-blush/nsfw-blush.component';
+import { NsfwEasterEggService } from './services/nsfw-easter-egg.service';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent, UpperCasePipe, FranchiseConstellationComponent, SeiyuuNexusComponent, MalQuickUpdateModalComponent, ProviderHealthComponent, BotKunComponent, AnimeDetailPanelComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, TranslatePipe, LuckyPickComponent, UpperCasePipe, FranchiseConstellationComponent, SeiyuuNexusComponent, MalQuickUpdateModalComponent, ProviderHealthComponent, BotKunComponent, AnimeDetailPanelComponent, NsfwBlushComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -53,8 +57,15 @@ export class App implements OnInit, AfterViewInit {
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   readonly providerState = inject(ProviderStateService);
+  /** "Show NSFW Content" easter egg — rendered at the root so the overlay escapes every
+   *  transformed ancestor (a settings card would trap `position: fixed`). */
+  readonly nsfwEgg = inject(NsfwEasterEggService);
+  /** Mobile dock's hero slot opens the same Bot-kun drawer the FAB used to (and mirrors
+   *  its unread dot on the orb). */
+  readonly botKunService = inject(BotKunService);
   readonly popupService = inject(PopupService);
   readonly franchiseConstellationSvc = inject(FranchiseConstellationService);
+  readonly seiyuuNexusSvc = inject(SeiyuuNexusService);
   private plexDeepLink = inject(PlexDeepLinkService);
   private authService = inject(AuthService);
   private userPrefs = inject(UserPreferencesService);
@@ -122,6 +133,18 @@ export class App implements OnInit, AfterViewInit {
 
   closeConstellationDetail(): void {
     this.constellationDetailMalId.set(null);
+  }
+
+  /** Seiyuu Nexus: MAL ID to open in the detail panel (on a cross-library entry click).
+   *  The nexus overlay closes first (top-layer dialog can't sit under a z-indexed panel). */
+  protected seiyuuDetailMalId = signal<string | null>(null);
+
+  onSeiyuuAnimeSelected(malId: string): void {
+    this.seiyuuDetailMalId.set(malId);
+  }
+
+  closeSeiyuuDetail(): void {
+    this.seiyuuDetailMalId.set(null);
   }
 
   /** True when a JWT token is stored — controls logout button visibility. */
@@ -405,6 +428,16 @@ export class App implements OnInit, AfterViewInit {
   toggleNotifCenter(event: Event): void {
     event.stopPropagation();
     this.notifCenterOpen.update((v) => !v);
+  }
+
+  /**
+   * Mobile dock hero slot: toggles the Bot-kun drawer (the service de-bounces duplicate
+   * touch+click events and the drawer itself decides open vs close).
+   */
+  openBotKun(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.botKunService.requestOpen();
   }
 
   openLuckyPick(): void {

@@ -20,4 +20,9 @@ public interface IAnimeMappingService
     Task<Result<string?>> GetAniDbIdByMalIdAsync(string malId);
     Task<Result> BulkDeleteAllAsync();
     Task<Result> BulkInsertAsync(IEnumerable<AnimeMapping> mappings);
+    /// <summary>
+    /// Diff-based merge keyed on (AnimeId, AniDbId): inserts new pairs and tombstones stale
+    /// pairs. Unchanged pairs are never rewritten.
+    /// </summary>
+    Task<Result> MergeAsync(IEnumerable<AnimeMapping> mappings);
 }

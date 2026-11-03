@@ -19,9 +19,13 @@ public interface IAnimeMediatorService
     Task<Result> DeleteAsync(Guid id);
     Task<Result> SyncAllAsync(bool forceRefreshKometaMapping = false);
     Task<Result<IEnumerable<SeasonalAnimeResponse>>> GetSeasonalAnimesAsync(int year, string season);
+    Task<Result<IEnumerable<SeasonalSuggestionResponse>>> GetSeasonalSuggestionsAsync(
+        int year, string season, int limit = 16, string scope = "current",
+        int? fromYear = null, string? fromSeason = null, int? toYear = null, string? toSeason = null,
+        bool excludeChinese = false, string? excludeGenres = null);
     Task<Result<SonarrOptionsResponse>> GetSonarrOptionsAsync();
     Task<Result<IList<SonarrLookupItem>>> SearchSonarrLookupAsync(string term);
-    Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, string monitor = "all", bool seasonFolder = true, string? malId = null);
+    Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, string monitor = "all", bool seasonFolder = true, string? malId = null, bool? searchForMissingEpisodes = null);
     Task<Result> RemoveSonarrSeriesAsync(int sonarrId);
     Task<Result> UpdateMalListStatusAsync(string malId, string status, int numWatchedEpisodes, int score, string? sourceAniDbId = null);
     Task<Result<FranchiseConstellationResponse>> GetFranchiseConstellationAsync(string malId);
@@ -31,5 +35,23 @@ public interface IAnimeMediatorService
     Task<Result<IList<MalSearchResultItem>>> SearchMalAnimeAsync(string query, int limit = 10);
     Task<Result<IEnumerable<SeasonalAnimeResponse>>> SearchMalAnimeWithDetailsAsync(string query, int limit = 100);
     Task<Result<ActivityStatsResponse>> GetActivityStatsAsync(int tzOffsetMinutes = 0);
+    /// <summary>
+    /// Lists the episodes imported during <paramref name="period"/>, newest first, straight from
+    /// the local Sonarr history mirror (no provider call). <paramref name="limit"/> caps the rows;
+    /// the response always reports the true period totals.
+    /// </summary>
+    Task<Result<ActivityEpisodesResponse>> GetActivityEpisodesAsync(ActivityStatsPeriod period, int tzOffsetMinutes = 0, int limit = 250);
+    /// <summary>
+    /// Mirrors new Sonarr download events into the local history table (incremental — only the
+    /// recent overlap is re-fetched, de-duplicated by Sonarr history id) and prunes rows that
+    /// fell out of the stats window. Returns what the sync actually did.
+    /// </summary>
+    Task<Result<DownloadHistorySyncSummary>> RefreshDownloadHistoryAsync();
     Task<Result> EnsureAnimeCastForAnimeAsync(string malId);
+    /// <summary>
+    /// Batch-resolves titles + poster URLs for MAL ids from local data (Anime table, cached MAL
+    /// payloads) with bounded live MAL lookups as a last resort. Ids that cannot be resolved are
+    /// simply absent from the result dictionary.
+    /// </summary>
+    Task<Result<IReadOnlyDictionary<string, AnimeCoverInfo>>> ResolveMalCoversAsync(IEnumerable<string> malIds);
 }

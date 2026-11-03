@@ -1,6 +1,6 @@
 namespace MetaAnime.Application.Contracts;
 
-/// <summary>VA profile data fetched on-demand from Jikan and cached in DB.</summary>
+/// <summary>VA profile data fetched on-demand from AniList and cached in DB.</summary>
 public sealed record VoiceActorProfileResponse(
     int PersonId,
     string Name,

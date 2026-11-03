@@ -1,0 +1,25 @@
+<!-- Decorative only: no pointer events, hidden from assistive tech, auto-unmounted after 3 s. -->
+<div
+  class="blush"
+  [class.blush--out]="fadingOut()"
+  aria-hidden="true"
+  role="presentation"
+>
+  <div class="blush__vignette"></div>
+  <div class="blush__hearts">
+    @for (heart of hearts(); track heart.key) {
+      <svg
+        class="blush__heart"
+        [style]="trackStyle(heart)"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path
+          d="M12 21s-7.5-4.6-9.6-9A5.6 5.6 0 0 1 12 6.2 5.6 5.6 0 0 1 21.6 12c-2.1 4.4-9.6 9-9.6 9z"
+          fill="var(--heart-color)"
+        />
+      </svg>
+    }
+  </div>
+</div>

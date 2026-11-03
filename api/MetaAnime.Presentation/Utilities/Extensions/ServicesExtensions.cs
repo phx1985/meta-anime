@@ -3,6 +3,7 @@ using MetaAnime.Application.BackgroundJobs;
 using MetaAnime.Application.Interfaces;
 using MetaAnime.Application.Services;
 using MetaAnime.Application.Services.BotKun;
+using MetaAnime.Application.Services.AniList;
 using MetaAnime.Core.Interfaces.Repositories;
 using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Infrastructure;
@@ -67,6 +68,10 @@ public static class ServicesExtensions
             .ValidateOnStart();
 
         services.AddHttpClient("Kometa");
+        // Named clients for Sonarr/MAL traffic: pooled handlers + the Aspire standard
+        // resilience handler apply to every request (RestSharp wraps these clients).
+        services.AddHttpClient("Sonarr");
+        services.AddHttpClient("MAL");
         services.AddScoped<IKometaAnimeJsonService<KometaRaw>, KometaAnimeJsonService>();
         services.AddScoped<IKometaAnimeMappingService, KometaAnimeMappingService>();
         services.AddScoped<ISonarrAnimeSourceService<SonarrSeries>, SonarrAnimeSourceService>();
@@ -116,18 +121,35 @@ public static class ServicesExtensions
         services.AddScoped<IPropertyBagRepository, PropertyBagRepository>();
         services.AddScoped<IAnimeCastRepository, AnimeCastRepository>();
         services.AddScoped<IVoiceActorRepository, VoiceActorRepository>();
-        services.AddScoped<JikanPersonService>();
-        services.AddScoped<JikanCastService>();
-        services.AddHttpClient("Jikan", client =>
+        services.AddScoped<ISonarrHistoryEventRepository, SonarrHistoryEventRepository>();
+        // AniList GraphQL client: singleton pacing gate (400ms spacing, 55 req/60s sliding window,
+        // queue with 15s drop budget — safe under AniList's ~90 req/min unauthenticated limit) and
+        // two-state negative cache shared across requests. The pipeline POSTs { query, variables }
+        // with the required headers, a hard 10s per-attempt timeout and the 3-attempt retry policy
+        // on a fresh request message (and content) per attempt. Endpoint is config-overridable
+        // (AniList:ApiUrl / env AniList__ApiUrl) for self-hosted proxies.
+        services.AddOptions<AniListSettings>()
+            .Bind(configuration.GetSection(AniListSettings.SectionName));
+        services.AddSingleton<AniListPacingGate>();
+        services.AddSingleton<AniListCastNegativeCache>();
+        services.AddSingleton<IAniListClient, AniListHttpPipeline>();
+        services.AddScoped<CastIdSpaceMigrator>();
+        services.AddScoped<AniListPersonService>();
+        services.AddScoped<AniListCastService>();
+        services.AddScoped<AniListOriginService>();
+        services.AddHttpClient(AniListHttpPipeline.HttpClientName, (sp, client) =>
         {
-            client.BaseAddress = new Uri("https://api.jikan.moe/v4/");
-            client.DefaultRequestHeaders.Add("Accept", "application/json");
+            var apiUrl = sp.GetRequiredService<IOptions<AniListSettings>>().Value.ApiUrl;
+            client.BaseAddress = new Uri(string.IsNullOrWhiteSpace(apiUrl) ? AniListSettings.DefaultApiUrl : apiUrl);
+            // Timeout is enforced per attempt by the pipeline (hard 10s linked CTS).
+            client.Timeout = Timeout.InfiniteTimeSpan;
         });
 
         services.AddScoped<ISyncProgressNotifier, SyncProgressNotifier>();
         services.AddSingleton<ISyncStateTracker, InMemorySyncStateTracker>();
         services.AddSingleton<IProviderHealthCache, InMemoryProviderHealthCache>();
         services.AddScoped<AnimeSyncJob>();
+        services.AddScoped<SonarrCodecEnrichmentJob>();
         services.AddHostedService<SettingsSeedService>();
         services.AddHostedService<ProviderHealthMonitor>();
     }

@@ -4,4 +4,4 @@ using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Queries;
 
-public sealed record GetCachedActivityStatsQuery : IRequest<Result<ActivityStatsResponse?>>;
+public sealed record GetCachedActivityStatsQuery(int TzOffsetMinutes = 0) : IRequest<Result<ActivityStatsResponse?>>;

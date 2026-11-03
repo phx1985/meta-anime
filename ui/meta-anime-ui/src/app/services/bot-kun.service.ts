@@ -34,6 +34,40 @@ export class BotKunService {
     this._pendingPrompt.set(text);
   }
 
+  /** True when Bot-kun produced a response while the drawer was closed. */
+  private readonly _hasUnread = signal(false);
+  readonly hasUnread = this._hasUnread.asReadonly();
+
+  markUnread(): void {
+    this._hasUnread.set(true);
+  }
+
+  markRead(): void {
+    this._hasUnread.set(false);
+  }
+
+  /**
+   * Open-request counter. Bumped by launchers that live outside the Bot-kun component
+   * (mobile dock, future toolbar entries); the component watches it and opens the drawer.
+   */
+  private readonly _openRequested = signal(0);
+  readonly openRequested = this._openRequested.asReadonly();
+
+  /** Last accepted open-request timestamp — drops duplicate taps (touch + click). */
+  private lastOpenRequest = 0;
+
+  /**
+   * Ask the Bot-kun drawer to toggle (open when closed, close when open).
+   * Requests closer than 250 ms apart are ignored so a touch+click pair cannot
+   * open-then-close the drawer, or open it twice.
+   */
+  requestOpen(): void {
+    const now = Date.now();
+    if (now - this.lastOpenRequest < 250) return;
+    this.lastOpenRequest = now;
+    this._openRequested.update((n) => n + 1);
+  }
+
   consumePrompt(): void {
     this._pendingPrompt.set(null);
   }

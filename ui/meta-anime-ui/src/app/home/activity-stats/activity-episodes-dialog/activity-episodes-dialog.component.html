@@ -1,0 +1,76 @@
+<div class="aed-backdrop" (click)="onBackdropClick()">
+  <div
+    class="aed-panel"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="('home.activityStats.episodesDialog.title' | translate) + ' — ' + (periodLabelKey() | translate)"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="aed-header">
+      <div class="aed-header__text">
+        <h3 class="aed-header__title">{{ 'home.activityStats.episodesDialog.title' | translate }}</h3>
+        <p class="aed-header__meta">
+          <span class="aed-header__period">{{ periodLabelKey() | translate }}</span>
+          @if (!loading() && !error()) {
+            <span class="aed-header__dot" aria-hidden="true">·</span>
+            <span class="aed-header__count">{{ countLabel() }}</span>
+            <span class="aed-header__dot" aria-hidden="true">·</span>
+            <span class="aed-header__total">{{ totalLabel() }}</span>
+          }
+        </p>
+      </div>
+      <button
+        type="button"
+        class="aed-close"
+        data-autofocus
+        (click)="closed.emit()"
+        [attr.aria-label]="'home.activityStats.episodesDialog.close' | translate"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+    </header>
+
+    @if (loading()) {
+      <div class="aed-loading" aria-hidden="true">
+        @for (row of [1, 2, 3, 4, 5, 6]; track row) {
+          <div class="aed-skeleton"></div>
+        }
+      </div>
+    } @else if (error()) {
+      <div class="aed-state">
+        <p class="aed-state__text">{{ 'home.activityStats.episodesDialog.error' | translate }}</p>
+        <button type="button" class="aed-retry" (click)="retry.emit()">
+          {{ 'home.activityStats.episodesDialog.retry' | translate }}
+        </button>
+      </div>
+    } @else if (items().length === 0) {
+      <div class="aed-state">
+        <p class="aed-state__text">{{ 'home.activityStats.episodesDialog.empty' | translate }}</p>
+      </div>
+    } @else {
+      <div class="aed-table-head" aria-hidden="true">
+        <span>{{ 'home.activityStats.episodesDialog.columnSeries' | translate }}</span>
+        <span class="aed-table-head__ep">{{ 'home.activityStats.episodesDialog.columnEpisode' | translate }}</span>
+        <span class="aed-table-head__size">{{ 'home.activityStats.episodesDialog.columnSize' | translate }}</span>
+      </div>
+      <ul class="aed-list">
+        @for (item of items(); track $index) {
+          <li class="aed-row">
+            <span class="aed-row__title" [title]="item.seriesTitle">
+              {{ item.seriesTitle || ('home.activityStats.episodesDialog.unknownSeries' | translate) }}
+            </span>
+            <span class="aed-row__ep">{{ episodeCode(item) }}</span>
+            <span class="aed-row__size">{{ formatSize(item.sizeBytes) }}</span>
+          </li>
+        }
+      </ul>
+      @if (isTruncated()) {
+        <p class="aed-footer">
+          {{ 'home.activityStats.episodesDialog.truncated' | translate: { shown: items().length, total: totalCount() } }}
+        </p>
+      }
+    }
+  </div>
+</div>
