@@ -14,7 +14,6 @@ import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators, A
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import confetti from 'canvas-confetti';
 import { EnrollmentService, PlexLibrary } from '../services/enrollment.service';
 import { SettingsService } from '../services/settings.service';
 import { AnimeService } from '../services/anime.service';
@@ -30,7 +29,7 @@ import { ThemeService } from '../services/theme.service';
 import { StorageKeys } from '../constants/storage-keys';
 import { SyncStep } from '../models/sync-progress.models';
 import { fmtElapsed } from '../utils/format.utils';
-import { filter, map, switchMap } from 'rxjs/operators';
+import { delay, filter, map, switchMap, tap } from 'rxjs/operators';
 import { combineLatest, forkJoin } from 'rxjs';
 import {
   AppConfigBackup,
@@ -40,6 +39,16 @@ import {
 
 const PLEX_POLL_INTERVAL_MS = 3000;
 const PLEX_POLL_MAX = 40;
+
+/** Live feedback for the JSON configuration dropzone. */
+export interface ImportFeedbackState {
+  status: 'idle' | 'reading' | 'validating' | 'verified' | 'error';
+  /** 0 → 40 → 85 → 100, animated by the CSS bar. */
+  progress: number;
+  fileName?: string;
+  detected: Array<{ key: string; label: string; configured: boolean }>;
+  errorMessage?: string;
+}
 
 @Component({
   selector: 'app-setup-wizard',
@@ -191,6 +200,17 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   importingConfig = signal(false);
   importDragOver = signal(false);
   importStatus = signal<{ kind: 'success' | 'error'; message: string } | null>(null);
+  /** Rich feedback for the JSON dropzone: reading → validating → success/error. */
+  readonly importState = signal<ImportFeedbackState>({ status: 'idle', progress: 0, detected: [] });
+  /** True when the wizard was populated from a JSON file (affects navigation). */
+  readonly isImportedViaJson = signal(false);
+  /** Total pacing budget so the stages are actually readable. */
+  private static readonly IMPORT_MIN_MS = 1200;
+  private importStartedAt = 0;
+  private importStageTimer?: ReturnType<typeof setTimeout>;
+  private importFinishTimer?: ReturnType<typeof setTimeout>;
+  /** Reset confirmation popover. */
+  readonly resetConfirmOpen = signal(false);
   readonly importResponse = signal<AppConfigImportResponse | null>(null);
   /** After a successful import: all three providers verified as connected. */
 
@@ -212,11 +232,6 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
     // Set wizard-active flag as early as possible so NotificationService
     // suppresses all toasts before any lifecycle hooks fire.
     this.notifService.setWizardActive(true);
-    effect(() => {
-      if (this.step() === 7) {
-        this.launchFireworks();
-      }
-    });
   }
 
   ngOnInit(): void {
@@ -617,9 +632,23 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
     if (this.importingConfig()) return;
     this.importingConfig.set(true);
     this.importStatus.set(null);
+    this.importStartedAt = Date.now();
+    this.importState.set({ status: 'reading', progress: 40, fileName: file.name, detected: [] });
+
+    // Stage 2 lands at 400 ms so the eye registers the read before validation starts.
+    clearTimeout(this.importStageTimer);
+    this.importStageTimer = setTimeout(() => {
+      if (this.importState().status === 'reading') {
+        this.importState.update((s) => ({ ...s, status: 'validating', progress: 85 }));
+      }
+    }, 400);
     this.configBackupService
       .parseFile(file)
       .pipe(
+        // A beat of "reading" so the dropzone visibly reacts even for a tiny file.
+        delay(300),
+        tap(() => this.importState.update((s) =>
+          s.status === 'reading' ? { ...s, status: 'validating', progress: 85 } : s)),
         switchMap((backup) =>
           this.configBackupService.importConfig(backup).pipe(map((res) => ({ backup, res }))),
         ),
@@ -647,15 +676,33 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
             titleKey: this.translate.instant('configBackup.title'),
             messageKey: message,
           });
-          // Successfully imported config → skip the provider steps entirely and
-          // land on the sync step (dots navigation allows going back to review).
-          this.goToStep(SetupWizardComponent.SYNC_STEP);
+          const detected = [
+            { key: 'mal', label: 'MyAnimeList', configured: res.malConnected },
+            { key: 'sonarr', label: 'Sonarr', configured: res.sonarrConnected },
+            { key: 'plex', label: 'Plex', configured: res.plexConnected },
+          ];
+          this.isImportedViaJson.set(true);
+
+          // Hold the verified card until the pacing budget is spent; the user then
+          // clicks "Continue to Recap" (no silent jump).
+          const remaining = Math.max(0, SetupWizardComponent.IMPORT_MIN_MS - (Date.now() - this.importStartedAt));
+          clearTimeout(this.importFinishTimer);
+          this.importFinishTimer = setTimeout(() => {
+            this.importState.set({ status: 'verified', progress: 100, fileName: file.name, detected });
+          }, remaining);
         },
         error: () => {
           this.importingConfig.set(false);
           this.importStatus.set({
             kind: 'error',
             message: this.translate.instant('configBackup.importFailed'),
+          });
+          this.importState.set({
+            status: 'error',
+            progress: 85,
+            fileName: file.name,
+            detected: [],
+            errorMessage: this.translate.instant('onboarding.import.error'),
           });
         },
       });
@@ -733,23 +780,69 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
   }
 
 
+  /** Explicit hand-off from the import card to the recap screen. */
+  continueToRecap(): void {
+    this.goToStep(SetupWizardComponent.SYNC_STEP);
+  }
+
+  /** Re-opens the picker without losing the wizard state. */
+  chooseAnotherFile(input: HTMLInputElement): void {
+    this.importState.set({ status: 'idle', progress: 0, detected: [] });
+    this.importStatus.set(null);
+    input.click();
+  }
+
+  // Reset & start fresh
+  askReset(): void {
+    this.resetConfirmOpen.set(true);
+  }
+
+  cancelReset(): void {
+    this.resetConfirmOpen.set(false);
+  }
+
+  /** Clears every draft field and returns to the welcome step. */
+  confirmReset(): void {
+    this.resetConfirmOpen.set(false);
+
+    this.malConnected.set(false);
+    this.malError.set(false);
+    this.malClientIdControl.setValue('');
+    this.malClientSecretControl.setValue('');
+
+    this.plexConnected.set(false);
+    this.plexServerUrlControl.setValue('');
+    this.plexSelectedLibKeys.set([]);
+
+    this.sonarrSaved.set(false);
+    this.sonarrError.set('');
+    this.sonarrSelectedTagIds.set([]);
+    this.sonarrForm.reset({
+      localUrl: '',
+      remoteUrl: '',
+      apiKey: '',
+      rootFolder: '',
+      qualityProfile: '',
+      seasonFolder: true,
+      monitor: 'all',
+    });
+
+    this.importStatus.set(null);
+    clearTimeout(this.importStageTimer);
+    clearTimeout(this.importFinishTimer);
+    this.importState.set({ status: 'idle', progress: 0, detected: [] });
+    this.isImportedViaJson.set(false);
+
+    this.step.set(1);
+    this.animStep.set(1);
+  }
+
   // Completion
   finish(): void { this.notifService.setWizardActive(false); this.providerState.refresh(); this.router.navigate(['/']); }
 
-  private launchFireworks(): void {
-    const duration = 3500;
-    const end = Date.now() + duration;
-    const colors = ['#6c63ff', '#a855f7', '#22c55e', '#f59e0b', '#ec4899', '#38bdf8'];
-    const frame = () => {
-      confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0, y: 1 }, colors, startVelocity: 45, ticks: 200, gravity: 0.85 });
-      confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1, y: 1 }, colors, startVelocity: 45, ticks: 200, gravity: 0.85 });
-      confetti({ particleCount: 4, angle: 90, spread: 70, origin: { x: 0.5, y: 1 }, colors, startVelocity: 50, ticks: 200, gravity: 0.85 });
-      if (Date.now() < end) requestAnimationFrame(frame);
-    };
-    frame();
-  }
-
   ngOnDestroy(): void {
+    clearTimeout(this.importStageTimer);
+    clearTimeout(this.importFinishTimer);
     this.stopPlexPolling();
     if (this.malCallbackCopyTimer) clearTimeout(this.malCallbackCopyTimer);
     this.notifService.setWizardActive(false);

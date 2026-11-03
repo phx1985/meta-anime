@@ -2247,5 +2247,32 @@
       "weight": "Weight",
       "roles": "Roles"
     }
+  },
+  "onboarding": {
+    "import": {
+      "reading": "Reading configuration…",
+      "validating": "Validating configuration…",
+      "success": "Configuration verified!",
+      "detected": "Detected:",
+      "error": "Invalid configuration file.",
+      "verified": "Configuration verified!",
+      "continueToRecap": "Continue to Recap →",
+      "chooseAnother": "Choose another file"
+    },
+    "nav": {
+      "startOver": "Start over",
+      "startOverConfirm": "Reset all configuration and return to the beginning?"
+    },
+    "reset": {
+      "button": "Reset setup",
+      "startFresh": "Start fresh",
+      "confirm": "Reset all settings and return to the start?",
+      "confirmBtn": "Reset"
+    },
+    "sync": {
+      "completeTitle": "All Set! Setup Complete",
+      "completeSubtitle": "Your library is synchronized and ready to explore.",
+      "launchDashboard": "Launch Dashboard →"
+    }
   }
 }

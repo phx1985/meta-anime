@@ -2247,5 +2247,32 @@
       "weight": "Poids",
       "roles": "Rôles"
     }
+  },
+  "onboarding": {
+    "import": {
+      "reading": "Lecture de la configuration…",
+      "validating": "Validation de la configuration…",
+      "success": "Configuration vérifiée !",
+      "detected": "Détecté :",
+      "error": "Fichier de configuration invalide.",
+      "verified": "Configuration vérifiée !",
+      "continueToRecap": "Continuer vers le récapitulatif →",
+      "chooseAnother": "Choisir un autre fichier"
+    },
+    "nav": {
+      "startOver": "Recommencer",
+      "startOverConfirm": "Réinitialiser toute la configuration et revenir au début ?"
+    },
+    "reset": {
+      "button": "Recommencer",
+      "startFresh": "Repartir de zéro",
+      "confirm": "Réinitialiser tous les paramètres et revenir au début ?",
+      "confirmBtn": "Réinitialiser"
+    },
+    "sync": {
+      "completeTitle": "Tout est prêt ! Configuration terminée",
+      "completeSubtitle": "Votre bibliothèque est synchronisée et prête à être explorée.",
+      "launchDashboard": "Accéder au tableau de bord →"
+    }
   }
 }
