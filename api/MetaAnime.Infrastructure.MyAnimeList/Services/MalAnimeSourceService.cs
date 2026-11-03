@@ -58,12 +58,14 @@ public sealed class MalAnimeSourceService(
                                            "main_picture, " +
                                            "nsfw, " +
                                            "start_date, " +
+                                           "end_date, " +
                                            "start_season{year,season}, " +
                                            "status, " +
                                            "media_type, " +
                                            "mean, " +
                                            "num_episodes, " +
-                                           "rating";
+                                           "rating, " +
+                                           "studios";
     private const string FRANCHISE_FIELDS = "id,title,main_picture,synopsis,start_date,end_date,media_type,status,my_list_status{status},related_anime{node{id,title,main_picture,media_type,status,my_list_status{status}},relation_type,relation_type_formatted}";
     #endregion
 

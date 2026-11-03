@@ -43,6 +43,7 @@ public static class PropertyBagKeyPolicy
         SettingsKeys.SonarrDefaultQualityProfileName,
         SettingsKeys.SonarrDefaultSeasonFolder,
         SettingsKeys.SonarrDefaultMonitor,
+        SettingsKeys.SonarrSearchForMissingEpisodes,
 
         // Library analysis
         SettingsKeys.LibraryAnalysisAvgEpSizeMb,

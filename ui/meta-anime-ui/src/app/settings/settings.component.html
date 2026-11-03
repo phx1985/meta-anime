@@ -934,6 +934,36 @@
                       </div>
                     </div>
 
+                    <!-- Search for missing episodes (boolean toggle) -->
+<div class="setting-row sonarr-default-row" [class.setting-row--saved]="isSaved('Sonarr:SearchForMissingEpisodes')">
+                      <div class="setting-info">
+                        <div class="setting-name">{{ 'settings.fields.Sonarr_SearchForMissingEpisodes.name' | translate }}</div>
+                        <div class="setting-desc">{{ 'settings.fields.Sonarr_SearchForMissingEpisodes.desc' | translate }}</div>
+                      </div>
+                      <div class="setting-value-area">
+                        <div class="display-row">
+                          <app-ui-toggle
+                            [checked]="sonarrDefaultByKey('Sonarr:SearchForMissingEpisodes')?.value === 'true'"
+                            [disabled]="!sonarrDefaultsUnlocked() || isSaving('Sonarr:SearchForMissingEpisodes')"
+                            [ariaLabel]="'settings.fields.Sonarr_SearchForMissingEpisodes.name' | translate"
+                            (checkedChange)="onSonarrDefaultBoolToggle('Sonarr:SearchForMissingEpisodes')"
+                          />
+                          <span class="toggle-label">
+                            {{
+                              (sonarrDefaultByKey('Sonarr:SearchForMissingEpisodes')?.value === 'true'
+                                ? 'settings.toggle.on'
+                                : 'settings.toggle.off'
+                              ) | translate
+                            }}
+                          </span>
+                          @if (isSaved('Sonarr:SearchForMissingEpisodes')) {
+                            <span class="badge-saved"><svg class="check-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+
                     <!-- Monitor (static select with all monitor types) -->
                     <div class="setting-row sonarr-default-row" [class.setting-row--saved]="isSaved('Sonarr:DefaultMonitor')">
                       <div class="setting-info">

@@ -173,6 +173,21 @@ export class LuckyPickComponent implements OnInit, OnDestroy {
     return this.allMalGenres.filter((g) => DEMOGRAPHIC_LIST.includes(g));
   }
 
+  /** Poster the timeline will land on — known during the spin, before the reveal. */
+  protected readonly spinCover = computed(
+    () => this.lucky.pending()?.malAnimes?.[0]?.coverImageUrl ?? null,
+  );
+
+  /** Up to 3 previous covers that riffle past during the vortex beat. */
+  protected readonly decoyCovers = computed(() => {
+    const pendingId = this.lucky.pending()?.aniDbId;
+    return this.history()
+      .filter((h) => h.aniDbId !== pendingId)
+      .map((h) => h.malAnimes?.[0]?.coverImageUrl)
+      .filter((url): url is string => !!url)
+      .slice(0, 3);
+  });
+
   /** Announced by the visually-hidden aria-live region when a result lands. */
   protected liveMessage = computed(() => {
     const a = this.result();

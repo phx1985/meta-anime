@@ -136,6 +136,7 @@ public static class ServicesExtensions
         services.AddScoped<CastIdSpaceMigrator>();
         services.AddScoped<AniListPersonService>();
         services.AddScoped<AniListCastService>();
+        services.AddScoped<AniListOriginService>();
         services.AddHttpClient(AniListHttpPipeline.HttpClientName, (sp, client) =>
         {
             var apiUrl = sp.GetRequiredService<IOptions<AniListSettings>>().Value.ApiUrl;

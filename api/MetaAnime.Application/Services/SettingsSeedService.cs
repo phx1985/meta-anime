@@ -105,6 +105,7 @@ public sealed class SettingsSeedService(
         [SettingsKeys.SonarrEnabled] = "false",
         [SettingsKeys.SonarrDefaultSeasonFolder] = "true",
         [SettingsKeys.SonarrDefaultMonitor] = "all",
+        [SettingsKeys.SonarrSearchForMissingEpisodes] = "false",
         [SettingsKeys.KometaAnimeIdsJsonUrl] = KometaSettings.DefaultAnimeIdsJsonUrl,
         [SettingsKeys.AppShowNsfw] = "false",
         [SettingsKeys.AppSyncInterval] = "daily",

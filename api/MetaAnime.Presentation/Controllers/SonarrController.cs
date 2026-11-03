@@ -82,7 +82,7 @@ public sealed class SonarrController(
 
         var result = await animeMediatorService.AddSonarrSeriesAsync(
             request.TvdbId, request.RootFolderPath, request.QualityProfileId,
-            request.Monitor, request.SeasonFolder, request.MalId);
+            request.Monitor, request.SeasonFolder, request.MalId, request.SearchForMissingEpisodes);
 
         if (result.IsFailure)
         {
@@ -142,7 +142,7 @@ public sealed class SonarrController(
 public sealed record SonarrTagDto(int Id, string Label);
 public sealed record CreateSonarrTagRequest(string Label);
 
-public sealed record SonarrAddSeriesRequest(int TvdbId, string RootFolderPath, int QualityProfileId, string Monitor = "all", bool SeasonFolder = true, string? MalId = null)
+public sealed record SonarrAddSeriesRequest(int TvdbId, string RootFolderPath, int QualityProfileId, string Monitor = "all", bool SeasonFolder = true, string? MalId = null, bool? SearchForMissingEpisodes = null)
 {
     public static readonly IReadOnlySet<string> ValidMonitorTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {

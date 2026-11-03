@@ -137,6 +137,97 @@
     }
   },
   "seasonal": {
+    "forYou": {
+      "add": "Add",
+      "airingProgress": "Airing · Ep {{current}}/{{total}}",
+      "batch": {
+        "addSelected": "Add ({{count}})",
+        "addingItem": "Adding {{current}} of {{total}}…",
+        "clear": "Clear",
+        "completeTitle": "Batch complete",
+        "modalTitle": "Add {{count}} anime to providers",
+        "partialSuccess": "Added {{success}} of {{total}} anime ({{failed}} failed).",
+        "passSelected": "Pass ({{count}})",
+        "result": "Added {{added}} · {{failed}} failed",
+        "selectAll": "Select all",
+        "selectCardAria": "Select {{title}}",
+        "selectProviders": "Choose target providers:",
+        "selectedCount": "{{count}} selected",
+        "startAdding": "Start adding ({{count}})",
+        "successSummary": "Successfully added {{count}} anime."
+      },
+      "becauseLabel": "Because you liked",
+      "becauseLiked": "Because you liked {{titles}} · {{tags}}",
+      "becauseLikedNoTags": "Because you liked {{titles}}",
+      "carousel": {
+        "showing": "Showing {{start}}–{{end}} of {{total}}",
+        "prev": "Previous picks",
+        "next": "Next picks",
+        "shuffle": "Shuffle deck"
+      },
+      "customRange": {
+        "title": "Custom season range",
+        "apply": "Apply range"
+      },
+      "emptyFiltered": "No picks match your active filters.",
+      "excludeDonghua": "Exclude donghua",
+      "excludeGenres": "Exclude genres",
+      "filters": {
+        "formats": "Format",
+        "formatAll": "All formats",
+        "formatTv": "TV",
+        "formatMovie": "Movie",
+        "formatOvaOna": "OVA / ONA",
+        "statusAll": "Any status",
+        "statusAiring": "Airing",
+        "statusUpcoming": "Upcoming",
+        "statusFinished": "Finished",
+        "scoreAny": "Any score",
+        "hideSequels": "Hide sequels",
+        "genres": "Genres",
+        "genreHint": "Click to include · Shift-click to exclude",
+        "reset": "Reset filters"
+      },
+      "finishedEps": "Finished · {{total}} eps",
+      "genreModal": {
+        "title": "Filter by Genre",
+        "searchPlaceholder": "Search genres…",
+        "tabInclude": "Include ({{count}})",
+        "tabExclude": "Exclude ({{count}})",
+        "apply": "Apply Filters",
+        "applyWithCount": "Apply ({{count}} anime)",
+        "clearTab": "Clear tab",
+        "noMatch": "No genre matches that search.",
+        "cycleHint": "Click to cycle: Neutral → Include → Exclude → Neutral",
+        "activeSummary": "Active",
+        "included": "Included ({{count}})",
+        "excluded": "Excluded ({{count}})",
+        "clearAll": "Clear all genres",
+        "legendNeutral": "Neutral",
+        "legendInclude": "Include",
+        "legendExclude": "Exclude"
+      },
+      "inReserve": "{{count}} more in reserve",
+      "match": "match",
+      "newPicks": "New picks",
+      "pass": "Pass",
+      "peekHint": "Click for full details",
+      "popularReason": "Popular this season — rate a few series to personalise this",
+      "scope": {
+        "label": "Suggestion scope",
+        "current": "This season",
+        "last2": "Last 2 seasons",
+        "last4": "Full year",
+        "custom": "Custom range",
+        "from": "From",
+        "to": "To",
+        "apply": "Apply"
+      },
+      "subtitle": "Based on what you've watched",
+      "title": "Picked for you",
+      "upcomingDate": "Starts {{date}}",
+      "donghua": "Donghua"
+    },
     "title": "Seasonal Anime",
     "subtitle": "Browse anime by season from MyAnimeList",
     "seasonSelect": "Select season",
@@ -253,6 +344,14 @@
       "monitorSpecials": "Monitor Specials",
       "unmonitorSpecials": "Unmonitor Specials",
       "none": "None"
+    },
+    "formats": {
+      "tv": "TV",
+      "movie": "Movie",
+      "ova": "OVA",
+      "ona": "ONA",
+      "special": "Special",
+      "music": "Music"
     }
   },
   "malSearch": {
@@ -823,6 +922,10 @@
       "BotKun_Model": {
         "name": "Model",
         "desc": "Model identifier to use for chat (e.g. llama-3.3-70b-versatile, gpt-4o-mini, qwen2.5:1.5b). Optional for local setups that expose only one model."
+      },
+      "Sonarr_SearchForMissingEpisodes": {
+        "name": "Search for missing episodes on add",
+        "desc": "Start a search for monitored missing episodes when a new series is sent to Sonarr"
       }
     },
     "toggle": {
@@ -1187,7 +1290,8 @@
     "retry": "Retry",
     "previousPage": "Previous page",
     "nextPage": "Next page",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "done": "Done"
   },
   "providers": {
     "mal": "MyAnimeList",
@@ -1197,7 +1301,17 @@
     "inMal": "In MAL",
     "inPlex": "In Plex",
     "inSonarr": "In Sonarr",
-    "alreadyTracked": "Already tracked"
+    "alreadyTracked": "Already tracked",
+    "add": {
+      "searchMissingEpisodes": "Search for missing episodes",
+      "modalTitle": "Add to Providers",
+      "modalTitleSingle": "Add to Providers",
+      "modalTitleBatch": "Add {{count}} anime to providers",
+      "searchMissingHint": "Start searching immediately on Sonarr",
+      "selectedAnimeCount": "Selected anime ({{count}})",
+      "removeItemAria": "Remove {{title}} from selection",
+      "clearAll": "Clear all"
+    }
   },
   "aria": {
     "primaryNavigation": "Primary navigation",
@@ -1514,10 +1628,21 @@
   },
   "luckyPick": {
     "triggerShort": "Lucky",
-    "filters": {"label": "Roll filters", "planToWatch": "Plan to Watch", "finished": "Finished", "hasFiles": "Downloaded"},
-    "actions": {"watchPlex": "Watch on Plex", "openMal": "MyAnimeList", "openDetails": "Details", "reroll": "Reroll"},
-    "history": {"label": "Previous rolls"},
-
+    "filters": {
+      "label": "Roll filters",
+      "planToWatch": "Plan to Watch",
+      "finished": "Finished",
+      "hasFiles": "Downloaded"
+    },
+    "actions": {
+      "watchPlex": "Watch on Plex",
+      "openMal": "MyAnimeList",
+      "openDetails": "Details",
+      "reroll": "Reroll"
+    },
+    "history": {
+      "label": "Previous rolls"
+    },
     "buttonLabel": "I'm Feeling Lucky",
     "ariaLabel": "Random anime pick overlay",
     "resultAriaLabel": "Recommended anime",

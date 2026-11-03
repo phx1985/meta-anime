@@ -269,6 +269,13 @@
                       {{ 'seasonal.seasonFolder' | translate }}
                     </label>
                   </div>
+                  <div class="field field--checkbox">
+                    <label class="field__checkbox-label">
+                      <input type="checkbox" class="field__checkbox" [ngModel]="sonarrSearchMissing()"
+                        (ngModelChange)="onSearchMissingChange($event)" />
+                      {{ 'providers.add.searchMissingEpisodes' | translate }}
+                    </label>
+                  </div>
                   <p class="options-panel__note">{{ 'seasonal.sonarrAutoSettings' | translate }}</p>
                 }
               </div>

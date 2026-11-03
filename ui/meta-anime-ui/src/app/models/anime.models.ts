@@ -294,6 +294,9 @@ export interface SeasonalAnimeItem {
   malViewState?: string;
   aniDbId?: string;
   ageRating?: string;
+  endDate?: string;
+  numEpisodes?: number | null;
+  airedEpisodesEst?: number | null;
 }
 
 export type SeasonName = 'winter' | 'spring' | 'summer' | 'fall';
@@ -354,6 +357,34 @@ export interface FranchiseGraph {
   nodes: FranchiseGraphNode[];
   edges: FranchiseGraphEdge[];
 }
+
+/** One "because you liked X" source behind a seasonal suggestion. */
+export interface SeasonalSuggestionReasonSource {
+  malId: string;
+  title: string;
+}
+
+/** Explainability payload — `kind` is `taste` when backed by history, `popular` otherwise. */
+export interface SeasonalSuggestionReason {
+  tags: string[];
+  because: SeasonalSuggestionReasonSource[];
+  kind: 'taste' | 'popular' | string;
+}
+
+/** A "For you" card: the seasonal item plus its match score and reason. */
+export interface SeasonalSuggestionItem extends SeasonalAnimeItem {
+  /** AniList country of origin is CN/TW. */
+  isDonghua?: boolean;
+  matchScore: number;
+  reasons: SeasonalSuggestionReason[];
+  /** Populated for every card (the grid DTO carries them too). */
+  endDate?: string;
+  numEpisodes?: number | null;
+  airedEpisodesEst?: number | null;
+}
+
+/** Scope of the suggestion pool. */
+export type SeasonalSuggestionScope = 'current' | 'last2' | 'last4' | 'custom';
 
 /** Serialisable snapshot of the seasonal filter panel state for saved presets. */
 export interface SeasonalSavedFilterState {

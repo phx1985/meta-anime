@@ -4,6 +4,9 @@ import { PropertyBagService } from './property-bag.service';
 import { firstValueFrom } from 'rxjs';
 
 const AUTO_APPLY_KEY = StorageKeys.autoApplyLastFilters;
+const SEASONAL_SCOPE_KEY = StorageKeys.seasonalSuggestionScope;
+const SEASONAL_DONGHUA_KEY = StorageKeys.seasonalExcludeDonghua;
+const SEASONAL_EXCLUDED_GENRES_KEY = StorageKeys.seasonalExcludedGenres;
 const LAST_FILTERS_KEY = StorageKeys.lastUsedFilters;
 const LAST_SEASONAL_FILTERS_KEY = StorageKeys.seasonalLastUsedFilters;
 const LUCKY_ONLY_FINISHED_KEY = StorageKeys.luckyOnlyFinished;
@@ -17,6 +20,12 @@ export class UserPreferencesService {
 
   /** When true, the last used anime search filters are restored automatically on page load. */
   readonly autoApplyLastFilters = signal<boolean>(false);
+  /** "For you" deck scope: current | last2 | last4 | custom */
+  readonly seasonalSuggestionScope = signal<string>('current');
+  /** "For you" deck: hide Chinese animation (donghua). */
+  readonly seasonalExcludeDonghua = signal<boolean>(false);
+  /** "For you" deck: tags that must never appear in a suggestion. */
+  readonly seasonalExcludedGenres = signal<string[]>([]);
 
   // ── Lucky Pick preferences ─────────────────────────────────────────────────
   /** When true, "I'm Feeling Lucky" only selects from finished anime. Default: false */
@@ -66,6 +75,20 @@ export class UserPreferencesService {
       };
 
       loadBool(AUTO_APPLY_KEY, true, this.autoApplyLastFilters);
+
+      try {
+        const scope = localStorage.getItem(SEASONAL_SCOPE_KEY);
+        if (scope) this.seasonalSuggestionScope.set(scope);
+
+        this.seasonalExcludeDonghua.set(localStorage.getItem(SEASONAL_DONGHUA_KEY) === 'true');
+
+        const genres = localStorage.getItem(SEASONAL_EXCLUDED_GENRES_KEY);
+        if (genres) {
+          const parsed = JSON.parse(genres);
+          if (Array.isArray(parsed)) this.seasonalExcludedGenres.set(parsed as string[]);
+        }
+      } catch { /* storage unavailable — keep the defaults */ }
+
       loadBool(LUCKY_ONLY_FINISHED_KEY, false, this.luckyOnlyFinished);
       loadBool(LUCKY_ONLY_PLAN_TO_WATCH_KEY, true, this.luckyOnlyPlanToWatch);
       loadBool(LUCKY_ONLY_WITH_FILES_KEY, true, this.luckyOnlyWithFiles);
@@ -133,6 +156,30 @@ export class UserPreferencesService {
   setLuckyOnlyWithFiles(value: boolean): void {
     this.luckyOnlyWithFiles.set(value);
     this.saveBool(LUCKY_ONLY_WITH_FILES_KEY, value);
+  }
+
+  /** Hides Chinese animation from the "For you" deck. */
+  setSeasonalExcludeDonghua(value: boolean): void {
+    this.seasonalExcludeDonghua.set(value);
+    try {
+      localStorage.setItem(SEASONAL_DONGHUA_KEY, String(value));
+    } catch { /* ignore */ }
+  }
+
+  /** Tags that must never appear in a suggestion. */
+  setSeasonalExcludedGenres(value: string[]): void {
+    this.seasonalExcludedGenres.set(value);
+    try {
+      localStorage.setItem(SEASONAL_EXCLUDED_GENRES_KEY, JSON.stringify(value));
+    } catch { /* ignore */ }
+  }
+
+  /** Persists the "For you" deck scope (current | last2 | last4 | custom). */
+  setSeasonalSuggestionScope(value: string): void {
+    this.seasonalSuggestionScope.set(value);
+    try {
+      localStorage.setItem(SEASONAL_SCOPE_KEY, value);
+    } catch { /* ignore quota / private mode */ }
   }
 
   saveLastFilters(filters: string): void {

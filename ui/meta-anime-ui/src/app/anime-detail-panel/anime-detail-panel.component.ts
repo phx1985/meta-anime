@@ -30,6 +30,7 @@ import { FranchiseConstellationService } from '../services/franchise-constellati
 import { SeiyuuNexusService } from '../seiyuu-nexus/seiyuu-nexus.service';
 import { AnimeImageGalleryService } from '../services/anime-image-gallery.service';
 import { ProviderStateService } from '../services/provider-state.service';
+import { SettingsService } from '../services/settings.service';
 import { SonarrService } from '../services/sonarr.service';
 import { SonarrLookupResult, SonarrRootFolder, SonarrQualityProfile } from '../models/sonarr.models';
 import { BotKunService } from '../services/bot-kun.service';
@@ -89,6 +90,7 @@ export class AnimeDetailPanelComponent {
   private gallery = inject(AnimeImageGalleryService);
   private providerState = inject(ProviderStateService);
   private sonarrService = inject(SonarrService);
+  private settingsService = inject(SettingsService);
   private botKunService = inject(BotKunService);
 
   /** Expose provider state for template conditional rendering. */
@@ -147,6 +149,8 @@ export class AnimeDetailPanelComponent {
   readonly sonarrLookupLoading = signal(false);
   readonly sonarrLookupError = signal('');
   readonly sonarrSelectedResult = signal<SonarrLookupResult | null>(null);
+  /** Per-add override, defaulting to the Sonarr setting. */
+  readonly sonarrSearchMissing = signal(false);
   readonly sonarrRootFolders = signal<SonarrRootFolder[]>([]);
   readonly sonarrQualityProfiles = signal<SonarrQualityProfile[]>([]);
   readonly sonarrRootFolder = signal('');
@@ -581,6 +585,12 @@ export class AnimeDetailPanelComponent {
     this.sonarrSelectedResult.set(null);
     this.sonarrLookupResults.set([]);
 
+    // Default the per-add search flag from the stored Sonarr setting (user can override).
+    this.settingsService.getAll().subscribe({
+      next: (list) => this.sonarrSearchMissing.set(list.find((s) => s.key === 'Sonarr:SearchForMissingEpisodes')?.value === 'true'),
+      error: () => {},
+    });
+
     // Parallel: fetch Sonarr config options
     this.sonarrService.getOptions().subscribe({
       next: (opts) => {
@@ -636,6 +646,7 @@ export class AnimeDetailPanelComponent {
       monitor: 'all',
       seasonFolder: true,
       malId: this.mal?.id,
+      searchForMissingEpisodes: this.sonarrSearchMissing(),
     }).subscribe({
       next: () => {
         this.sonarrAddBusy.set(false);

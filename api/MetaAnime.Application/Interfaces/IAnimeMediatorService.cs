@@ -19,9 +19,13 @@ public interface IAnimeMediatorService
     Task<Result> DeleteAsync(Guid id);
     Task<Result> SyncAllAsync(bool forceRefreshKometaMapping = false);
     Task<Result<IEnumerable<SeasonalAnimeResponse>>> GetSeasonalAnimesAsync(int year, string season);
+    Task<Result<IEnumerable<SeasonalSuggestionResponse>>> GetSeasonalSuggestionsAsync(
+        int year, string season, int limit = 16, string scope = "current",
+        int? fromYear = null, string? fromSeason = null, int? toYear = null, string? toSeason = null,
+        bool excludeChinese = false, string? excludeGenres = null);
     Task<Result<SonarrOptionsResponse>> GetSonarrOptionsAsync();
     Task<Result<IList<SonarrLookupItem>>> SearchSonarrLookupAsync(string term);
-    Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, string monitor = "all", bool seasonFolder = true, string? malId = null);
+    Task<Result<SonarrAddResult>> AddSonarrSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, string monitor = "all", bool seasonFolder = true, string? malId = null, bool? searchForMissingEpisodes = null);
     Task<Result> RemoveSonarrSeriesAsync(int sonarrId);
     Task<Result> UpdateMalListStatusAsync(string malId, string status, int numWatchedEpisodes, int score, string? sourceAniDbId = null);
     Task<Result<FranchiseConstellationResponse>> GetFranchiseConstellationAsync(string malId);

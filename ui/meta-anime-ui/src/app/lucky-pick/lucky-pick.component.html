@@ -57,30 +57,40 @@
     <!-- ── Body ──────────────────────────────────────────────────────────── -->
     <div class="lucky-card__body">
 
-      @if (isSpinning()) {
-      <div class="lucky-spin-scene" aria-hidden="true">
-        <div class="lucky-orb">
-          <div class="lucky-orb__gimbal lucky-orb__gimbal--outer"></div>
-          <div class="lucky-orb__gimbal lucky-orb__gimbal--mid"></div>
-          <div class="lucky-orb__gimbal lucky-orb__gimbal--inner"></div>
+      @if (isSpinning() && !prefersReducedMotion) {
+      <!-- Authored 4-beat summon: anticipation → vortex + poster riffle → lock-in →
+           foil settle. One clock (--spin-dur) drives every beat. -->
+      <div class="lucky-spin-scene" aria-hidden="true" [style.--spin-dur]="lucky.spinMs() + 'ms'">
+        <div class="lucky-summon">
+          <div class="lucky-summon__aura"></div>
+          <div class="lucky-summon__ring lucky-summon__ring--outer"></div>
+          <div class="lucky-summon__ring lucky-summon__ring--inner"></div>
+          <div class="lucky-summon__shockwave"></div>
 
-          <div class="lucky-orb__center">
-            <div class="lucky-orb__sphere">
-              <div class="lucky-orb__slice" style="--slice-idx: 0;"></div>
-              <div class="lucky-orb__slice" style="--slice-idx: 1;"></div>
-              <div class="lucky-orb__slice" style="--slice-idx: 2;"></div>
-              <div class="lucky-orb__slice" style="--slice-idx: 3;"></div>
-              <div class="lucky-orb__slice" style="--slice-idx: 4;"></div>
-              <div class="lucky-orb__slice" style="--slice-idx: 5;"></div>
+          <div class="lucky-summon__card">
+            <!-- Decoy riffle: previous picks of this session flashing past -->
+            @for (decoy of decoyCovers(); track $index) {
+            <img class="lucky-summon__poster" [class.lucky-summon__poster--d1]="$index === 0"
+              [class.lucky-summon__poster--d2]="$index === 1" [class.lucky-summon__poster--d3]="$index === 2"
+              [src]="decoy" alt="" />
+            }
 
-              <div class="lucky-orb__core-glow"></div>
+            <!-- The real pick, locked forward at 68% -->
+            @if (spinCover()) {
+            <img class="lucky-summon__poster lucky-summon__poster--final" [src]="spinCover()!" alt="" />
+            }
 
-              <svg class="lucky-orb__star" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"
+            <!-- Arcane tarot back while the vortex winds up -->
+            <div class="lucky-summon__card-back">
+              <svg class="lucky-summon__star" width="28" height="28" viewBox="0 0 24 24" fill="currentColor"
                 aria-hidden="true">
                 <polygon
                   points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
             </div>
+
+            <!-- Holographic foil sheen across the locked poster -->
+            <div class="lucky-summon__foil"></div>
           </div>
         </div>
         <p class="lucky-spin-label">{{ searchingPhrase() }}</p>
@@ -198,6 +208,17 @@
       </div>
       }
     </div>
+
+    <!-- Space reservation: the action zone + history strip attendent le résultat ;
+         on réserve leur place pendant le spin pour supprimer le saut de hauteur. -->
+    @if (isSpinning() && !prefersReducedMotion) {
+    <p class="lucky-whisper lucky-reserve" aria-hidden="true">&nbsp;</p>
+    <div class="lucky-actions lucky-reserve" aria-hidden="true"></div>
+    <!-- dès le 2e tirage, la bande d'historique apparaîtra : on réserve sa place aussi -->
+    @if (history().length > 0) {
+    <div class="lucky-history lucky-reserve" aria-hidden="true"></div>
+    }
+    }
 
     <!-- ── Action zone (result only) ─────────────────────────────────────── -->
     @if (isResult()) {

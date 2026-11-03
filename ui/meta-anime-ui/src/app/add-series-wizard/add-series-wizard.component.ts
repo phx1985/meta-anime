@@ -75,6 +75,8 @@ export class AddSeriesWizardComponent {
   sonarrProfileId       = input.required<number>();
   sonarrMonitor         = input.required<SonarrMonitorType>();
   sonarrSeasonFolder    = input.required<boolean>();
+  /** Optional: defaults to false so hosts that don't wire it still compile. */
+  sonarrSearchMissing   = input<boolean>(false);
   addMalStatus          = input.required<string>();
   addMalEpisodes        = input.required<number>();
   addMalScore           = input.required<number>();
@@ -94,6 +96,7 @@ export class AddSeriesWizardComponent {
   sonarrProfileIdChanged    = output<number>();
   sonarrMonitorChanged      = output<string>();
   sonarrSeasonFolderChanged = output<boolean>();
+  sonarrSearchMissingChanged = output<boolean>();
   malStatusChanged          = output<string>();
   malEpisodesChanged        = output<number>();
   malScoreChanged           = output<number>();
@@ -194,6 +197,10 @@ export class AddSeriesWizardComponent {
 
   onSeasonFolderChange(val: boolean): void {
     this.sonarrSeasonFolderChanged.emit(val);
+  }
+
+  onSearchMissingChange(val: boolean): void {
+    this.sonarrSearchMissingChanged.emit(val);
   }
 
   onMalStatusChange(val: string): void {

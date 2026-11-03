@@ -175,6 +175,7 @@ export class MalSearchComponent {
   sonarrProfileId = signal(0);
   sonarrMonitor = signal<SonarrMonitorType>('all');
   sonarrSeasonFolder = signal(true);
+  sonarrSearchMissing = signal(false);
   addMalStatus = signal('plan_to_watch');
   addMalEpisodes = signal(0);
   addMalScore = signal(0);
@@ -1094,6 +1095,8 @@ export class MalSearchComponent {
           if (folder) this.sonarrRootFolder.set(folder.path);
           const profile = (defaultProfileName ? opts.qualityProfiles.find((p) => p.name === defaultProfileName) : null) ?? opts.qualityProfiles[0];
           if (profile) this.sonarrProfileId.set(profile.id);
+          const defaultSearchMissing = getDefault('Sonarr:SearchForMissingEpisodes');
+          if (defaultSearchMissing) this.sonarrSearchMissing.set(defaultSearchMissing === 'true');
           if (defaultSeasonFolder) this.sonarrSeasonFolder.set(defaultSeasonFolder === 'true');
           if (defaultMonitor && this.sonarrMonitorTypes.some((t) => t.value === defaultMonitor))
             this.sonarrMonitor.set(defaultMonitor as SonarrMonitorType);
@@ -1122,6 +1125,7 @@ export class MalSearchComponent {
       monitor: this.sonarrMonitor(),
       seasonFolder: this.sonarrSeasonFolder(),
       malId: item.malId,
+      searchForMissingEpisodes: this.sonarrSearchMissing(),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (result: SonarrAddResult) => {
         this.lastAddedSonarrId.set(result.sonarrId);

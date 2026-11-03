@@ -7,6 +7,645 @@
       <p class="seasonal-subtitle">{{ 'seasonal.subtitle' | translate }}</p>
     </div>
 
+    <!-- ══════ "For you" deck — 4 slots, ranked from the user's own MAL taste ══════ -->
+    @if (suggestionsLoading()) {
+      <section class="for-you" aria-busy="true">
+        <header class="for-you__head">
+          <h2 class="for-you__title">{{ 'seasonal.forYou.title' | translate }}</h2>
+        </header>
+        <div class="for-you__grid"
+          [class.for-you__grid--next]="slideDir() === 'next'"
+          [class.for-you__grid--prev]="slideDir() === 'prev'">
+          @for (i of [0, 1, 2, 3]; track i) {
+            <div class="for-you__card for-you__card--skeleton"></div>
+          }
+        </div>
+      </section>
+    } @else if (showDeck()) {
+      <section class="for-you">
+        <!-- Row 1 — title, scope, reserve --->
+        <header class="for-you__head">
+          <div class="for-you__title-block">
+            <h2 class="for-you__title">
+              {{ 'seasonal.forYou.title' | translate }}
+              <span class="for-you__subtitle">{{ 'seasonal.forYou.subtitle' | translate }}</span>
+            </h2>
+
+            <div class="for-you__scope-wrap" (document:click)="closeCustomRangeOnOutsideClick($event)">
+            <div class="for-you__scopes" role="group" [attr.aria-label]="'seasonal.forYou.scope.label' | translate">
+              @for (opt of scopeOptions; track opt.value) {
+                <button class="for-you__scope" type="button"
+                  [class.for-you__scope--active]="suggestionScope() === opt.value"
+                  [attr.aria-pressed]="suggestionScope() === opt.value"
+                  (click)="setScope(opt.value)">
+                  {{ opt.labelKey | translate }}
+                  @if (opt.value === 'custom' && !customRangeOpen() && suggestionScope() === 'custom') {
+                    <span class="for-you__scope-range">{{ customRangeLabel() }}</span>
+                  }
+                </button>
+              }
+            </div>
+
+            @if (customRangeOpen()) {
+              <div class="custom-range-popover" role="dialog">
+                <p class="custom-range-popover__title">{{ 'seasonal.forYou.customRange.title' | translate }}</p>
+
+                <div class="custom-range-popover__row">
+                  <span class="custom-range-popover__label">{{ 'seasonal.forYou.scope.from' | translate }}</span>
+                  <select class="custom-range-popover__select" [value]="customFromSeason()"
+                    (change)="customFromSeason.set($any($event.target).value)">
+                    @for (s of allSeasonNames; track s.season) {
+                      <option [value]="s.season">{{ s.labelKey | translate }}</option>
+                    }
+                  </select>
+                  <select class="custom-range-popover__select" [value]="customFromYear()"
+                    (change)="customFromYear.set(+$any($event.target).value)">
+                    @for (y of yearOptions; track y) {
+                      <option [value]="y">{{ y }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="custom-range-popover__row">
+                  <span class="custom-range-popover__label">{{ 'seasonal.forYou.scope.to' | translate }}</span>
+                  <select class="custom-range-popover__select" [value]="customToSeason()"
+                    (change)="customToSeason.set($any($event.target).value)">
+                    @for (s of allSeasonNames; track s.season) {
+                      <option [value]="s.season">{{ s.labelKey | translate }}</option>
+                    }
+                  </select>
+                  <select class="custom-range-popover__select" [value]="customToYear()"
+                    (change)="customToYear.set(+$any($event.target).value)">
+                    @for (y of yearOptions; track y) {
+                      <option [value]="y">{{ y }}</option>
+                    }
+                  </select>
+                </div>
+
+                <div class="custom-range-popover__actions">
+                  <button class="custom-range-popover__cancel" type="button" (click)="customRangeOpen.set(false)">
+                    {{ 'common.cancel' | translate }}
+                  </button>
+                  <button class="custom-range-popover__apply" type="button" (click)="applyCustomRange()">
+                    {{ 'seasonal.forYou.customRange.apply' | translate }}
+                  </button>
+                </div>
+              </div>
+            }
+            </div>
+          </div>
+
+          <div class="for-you__actions">
+            <span class="for-you__window">
+              {{ 'seasonal.forYou.carousel.showing' | translate: { start: pageWindow().start, end: pageWindow().end, total: pageWindow().total } }}
+            </span>
+
+            <div class="for-you__pager" role="group" [attr.aria-label]="'seasonal.forYou.carousel.prev' | translate">
+              <button class="for-you__arrow" type="button"
+                [disabled]="pageWindow().page === 0"
+                [attr.aria-label]="'seasonal.forYou.carousel.prev' | translate"
+                (click)="prevPicksPage()">‹</button>
+              <button class="for-you__arrow" type="button"
+                [disabled]="pageWindow().page >= pageWindow().pages - 1"
+                [attr.aria-label]="'seasonal.forYou.carousel.next' | translate"
+                (click)="nextPicksPage()">›</button>
+            </div>
+
+            @if (pageWindow().pages > 1) {
+              <div class="for-you__dots" role="tablist">
+                @for (p of dotsRange(); track p) {
+                  <button class="for-you__dot" type="button" role="tab"
+                    [class.for-you__dot--active]="pageWindow().page === p"
+                    [attr.aria-selected]="pageWindow().page === p"
+                    [attr.aria-label]="(p + 1) + ' / ' + pageWindow().pages"
+                    (click)="goToPicksPage(p)"></button>
+                }
+              </div>
+            }
+
+            <button class="for-you__shuffle" type="button" (click)="shuffleDeck()"
+              [attr.title]="'seasonal.forYou.carousel.shuffle' | translate"
+              [attr.aria-label]="'seasonal.forYou.carousel.shuffle' | translate">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="16 3 21 3 21 8" />
+                <line x1="4" y1="20" x2="21" y2="3" />
+                <polyline points="21 16 21 21 16 21" />
+                <line x1="15" y1="15" x2="21" y2="21" />
+                <line x1="4" y1="4" x2="9" y2="9" />
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        <!-- Row 2 — real discovery filters -->
+        <div class="for-you__toolbar">
+          <div class="for-you__pillgroup" role="group" [attr.aria-label]="'seasonal.forYou.filters.formats' | translate">
+            <button class="for-you__pill" type="button"
+              [class.for-you__pill--on]="forYouFilters().formats.length === 0"
+              (click)="setFormats([])">{{ 'seasonal.forYou.filters.formatAll' | translate }}</button>
+            @for (fmt of [['tv', 'formatTv'], ['movie', 'formatMovie'], ['ova', 'formatOvaOna']]; track fmt[0]) {
+              <button class="for-you__pill" type="button"
+                [class.for-you__pill--on]="forYouFilters().formats.includes(fmt[0])"
+                (click)="toggleFormat($any(fmt[0]))">{{ 'seasonal.forYou.filters.' + fmt[1] | translate }}</button>
+            }
+          </div>
+
+          <div class="for-you__pillgroup">
+            @for (st of [['all', 'statusAll'], ['airing', 'statusAiring'], ['upcoming', 'statusUpcoming'], ['finished', 'statusFinished']]; track st[0]) {
+              <button class="for-you__pill" type="button"
+                [class.for-you__pill--on]="forYouFilters().status === st[0]"
+                (click)="setStatusFilter($any(st[0]))">{{ 'seasonal.forYou.filters.' + st[1] | translate }}</button>
+            }
+          </div>
+
+          <div class="for-you__pillgroup">
+            <button class="for-you__pill" type="button"
+              [class.for-you__pill--on]="forYouFilters().minScore === null"
+              (click)="setMinScore(null)">{{ 'seasonal.forYou.filters.scoreAny' | translate }}</button>
+            @for (s of [6.5, 7, 7.5, 8]; track s) {
+              <button class="for-you__pill" type="button"
+                [class.for-you__pill--on]="forYouFilters().minScore === s"
+                (click)="setMinScore(s)">{{ s }}+</button>
+            }
+          </div>
+
+          <button class="for-you__pill for-you__pill--toggle" type="button"
+            [class.for-you__pill--on]="forYouFilters().hideSequels"
+            [attr.aria-pressed]="forYouFilters().hideSequels"
+            (click)="toggleHideSequels()">{{ 'seasonal.forYou.filters.hideSequels' | translate }}</button>
+
+          <button class="for-you__pill for-you__pill--toggle" type="button"
+            [class.for-you__pill--on]="excludeDonghua()"
+            [attr.aria-pressed]="excludeDonghua()"
+            (click)="toggleExcludeDonghua()">🚫 {{ 'seasonal.forYou.excludeDonghua' | translate }}</button>
+
+          <button class="for-you__pill for-you__pill--toggle" type="button"
+            [class.for-you__pill--on]="forYouFilters().includeGenres.length + forYouFilters().excludeGenres.length > 0"
+            [attr.aria-haspopup]="'dialog'"
+            (click)="openGenreModal()">
+            {{ 'seasonal.forYou.filters.genres' | translate }}
+            @if (forYouFilters().includeGenres.length > 0) {
+              <span class="for-you__pill-count for-you__pill-count--inc">
+                +{{ forYouFilters().includeGenres.length }}
+              </span>
+            }
+            @if (forYouFilters().excludeGenres.length > 0) {
+              <span class="for-you__pill-count for-you__pill-count--exc">
+                −{{ forYouFilters().excludeGenres.length }}
+              </span>
+            }
+          </button>
+
+      @if (hasActiveForYouFilters()) {
+            <button class="for-you__reset" type="button" (click)="resetForYouFilters()">
+              {{ 'seasonal.forYou.filters.reset' | translate }}
+            </button>
+          }
+        </div>
+
+        <!-- Batch bar -->
+        @if (selectedIds().size > 0) {
+          <div class="for-you__batch" role="toolbar">
+            <span class="for-you__batch-count">
+              {{ 'seasonal.forYou.batch.selectedCount' | translate: { count: selectedIds().size } }}
+            </span>
+            <button class="for-you__batch-btn" type="button" (click)="selectAllVisible()">
+              {{ 'seasonal.forYou.batch.selectAll' | translate }}
+            </button>
+            <button class="for-you__batch-btn" type="button" (click)="clearSelection()">
+              {{ 'seasonal.forYou.batch.clear' | translate }}
+            </button>
+            <button class="for-you__batch-btn for-you__batch-btn--pass" type="button" (click)="passSelected()">
+              × {{ 'seasonal.forYou.batch.passSelected' | translate: { count: selectedIds().size } }}
+            </button>
+            <button class="for-you__batch-btn for-you__batch-btn--add" type="button"
+              (click)="openBatchAddModal()">
+              + {{ 'seasonal.forYou.batch.addSelected' | translate: { count: selectedIds().size } }}
+            </button>
+          </div>
+        }
+
+        @if (batchMessage()) {
+          <p class="for-you__batch-msg" role="status">{{ batchMessage() }}</p>
+        }
+
+        <div class="for-you__grid"
+          [class.for-you__grid--next]="slideDir() === 'next'"
+          [class.for-you__grid--prev]="slideDir() === 'prev'">
+          @for (item of activeSlots(); track item.malId) {
+            <article class="for-you__card"
+              tabindex="0" role="article"
+              [attr.aria-label]="item.title"
+              (click)="openDeckDetail(item)"
+              (keydown.enter)="openDeckDetail(item)"
+              (keydown.space)="$event.preventDefault(); openDeckDetail(item)"
+              [class.for-you__card--leaving]="leavingMalIds().has(item.malId)"
+              [class.for-you__card--entering]="enteringMalIds().has(item.malId)"
+              [class.for-you__card--selected]="isSelected(item.malId)"
+              [class.for-you__card--peek]="peekId() === item.malId">
+
+              <div class="for-you__poster">
+                <button class="for-you__poster-btn" type="button" (click)="openDeckDetail(item, $event)"
+                  [attr.aria-label]="item.title">
+                  @if (item.coverImageUrl) {
+                    <img [src]="item.coverImageUrl" [alt]="item.title" loading="lazy" />
+                  } @else {
+                    <span class="for-you__poster-fallback">{{ item.title.charAt(0) }}</span>
+                  }
+                </button>
+
+                <!-- top-left: selection + match -->
+                <button class="for-you__check" type="button" role="checkbox"
+                  [attr.aria-checked]="isSelected(item.malId)"
+                  [attr.aria-label]="'seasonal.forYou.batch.selectCardAria' | translate: { title: item.title }"
+                  (click)="togglePickSelection(item.malId, $event)">
+                  @if (isSelected(item.malId)) {
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2"
+                      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  }
+                </button>
+                <span class="for-you__match for-you__match--{{ matchTier(item) }}">
+                  {{ matchPercent(item) }}%
+                </span>
+
+                <!-- top-right: season (desktop) + dismiss -->
+                @if (seasonTag(item)) {
+                  <span class="for-you__season-tag">{{ seasonTag(item) }}</span>
+                }
+                <button class="for-you__dismiss" type="button" (click)="passSuggestion(item, $event)"
+                  [attr.aria-label]="'seasonal.forYou.pass' | translate">✕</button>
+
+                <!-- resting HUD (fades out when the synopsis overlay is up) -->
+                <div class="for-you__hud">
+                  @if (item.malScore > 0) {
+                    <span class="for-you__hud-score">★ {{ item.malScore.toFixed(1) }}</span>
+                  } @else {
+                    <span class="for-you__hud-score">N/A</span>
+                  }
+                  <button class="for-you__info" type="button"
+                    [attr.aria-expanded]="peekId() === item.malId"
+                    [attr.aria-label]="'seasonal.forYou.peekHint' | translate"
+                    (click)="togglePeek(item.malId, $event)">i</button>
+                  @if (airingLabel(item)) {
+                    <span class="for-you__airing" [class.for-you__airing--live]="item.status === 'currently_airing'">
+                      @if (item.status === 'currently_airing') {
+                        <span class="for-you__live-dot" aria-hidden="true"></span>
+                      }
+                      {{ airingLabel(item) }}
+                    </span>
+                  }
+                </div>
+
+                <!-- hover / focus / tap quick-peek -->
+                @if (item.synopsis) {
+                  <div class="for-you__peek">
+                    <p class="for-you__peek-text">{{ item.synopsis }}</p>
+                    <button class="for-you__peek-link" type="button" (click)="openDeckDetail(item, $event)">
+                      {{ 'seasonal.forYou.peekHint' | translate }} →
+                    </button>
+                  </div>
+                }
+              </div>
+
+              <div class="for-you__body">
+                <button class="for-you__name" type="button" (click)="openDeckDetail(item)"
+                  [title]="item.title">{{ item.title }}</button>
+
+                <div class="for-you__meta-row">
+                  @if (airDateLabel(item)) {
+                    <span>{{ airDateLabel(item) }}</span>
+                  }
+                  @if (seasonTag(item)) {
+                    <span class="for-you__meta-season">{{ seasonTag(item) }}</span>
+                  }
+                  @if (item.isDonghua) {
+                    <span class="for-you__donghua">{{ 'seasonal.forYou.donghua' | translate }}</span>
+                  }
+                  @if (item.mediaType) {
+                    <span [class]="formatClass(item) + ' for-you__media'">{{ formatLabel(item) }}</span>
+                  }
+                </div>
+
+                @if (genreChips(item).length > 0) {
+                  <div class="for-you__chips">
+                    @for (genre of genreChips(item); track genre) {
+                      <span class="for-you__chip" [class.for-you__chip--nsfw]="isNsfwChip(genre)">{{ genre }}</span>
+                    }
+                    @if (hiddenGenreCount(item) > 0) {
+                      <span class="for-you__chip for-you__chip--more">+{{ hiddenGenreCount(item) }}</span>
+                    }
+                  </div>
+                }
+
+                <div class="for-you__because">
+                  @if (reasonTitles(item)) {
+                    <span class="for-you__because-line">
+                      <span class="for-you__because-label">{{ 'seasonal.forYou.becauseLabel' | translate }}</span>
+                      <strong>{{ reasonTitles(item) }}</strong>
+                    </span>
+                    @if (reasonTags(item)) {
+                      <span class="for-you__because-tags">{{ reasonTags(item) }}</span>
+                    }
+                  } @else {
+                    <span class="for-you__because-line">{{ 'seasonal.forYou.popularReason' | translate }}</span>
+                  }
+                </div>
+              </div>
+
+              <div class="for-you__card-actions">
+                <button class="for-you__pass" type="button" (click)="passSuggestion(item, $event)">
+                  ✕ {{ 'seasonal.forYou.pass' | translate }}
+                </button>
+                <button class="for-you__add" type="button" (click)="onDeckAdd(item, $event)">
+                  + {{ 'seasonal.forYou.add' | translate }}
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+
+
+        <!-- Genre filter modal -->
+        @if (genreModalOpen()) {
+          <div class="genre-modal-backdrop" (click)="closeGenreModal()">
+            <div class="genre-modal" role="dialog" aria-modal="true"
+              [attr.aria-label]="'seasonal.forYou.genreModal.title' | translate"
+              (click)="$event.stopPropagation()">
+
+              <header class="genre-modal__head">
+                <h3 class="genre-modal__title">{{ 'seasonal.forYou.genreModal.title' | translate }}</h3>
+                <span class="genre-modal__count">
+                  +{{ draftInclude().size }} / −{{ draftExclude().size }}
+                </span>
+                <button class="genre-modal__close" type="button" (click)="closeGenreModal()"
+                  [attr.aria-label]="'common.cancel' | translate">✕</button>
+              </header>
+
+              <div class="genre-modal__search">
+                <input class="genre-search-input" type="search" autofocus
+                  [value]="genreQuery()"
+                  [attr.placeholder]="'seasonal.forYou.genreModal.searchPlaceholder' | translate"
+                  (input)="genreQuery.set($any($event.target).value)" />
+                @if (genreQuery()) {
+                  <button class="genre-search-clear" type="button" (click)="genreQuery.set('')">✕</button>
+                }
+              </div>
+
+              <div class="genre-modal__legend">
+                <span class="genre-legend genre-legend--inc">
+                  {{ 'seasonal.forYou.genreModal.included' | translate: { count: draftInclude().size } }}
+                </span>
+                <span class="genre-legend genre-legend--exc">
+                  {{ 'seasonal.forYou.genreModal.excluded' | translate: { count: draftExclude().size } }}
+                </span>
+                <div class="genre-visual-legend" aria-hidden="true">
+                  <span class="legend-chip legend-chip--neutral">{{ 'seasonal.forYou.genreModal.legendNeutral' | translate }}</span>
+                  <span class="legend-arrow">→</span>
+                  <span class="legend-chip legend-chip--include">+ {{ 'seasonal.forYou.genreModal.legendInclude' | translate }}</span>
+                  <span class="legend-arrow">→</span>
+                  <span class="legend-chip legend-chip--exclude">− {{ 'seasonal.forYou.genreModal.legendExclude' | translate }}</span>
+                </div>
+              </div>
+
+              @if (draftInclude().size + draftExclude().size > 0) {
+                <div class="genre-modal__active">
+                  <span class="genre-modal__active-label">{{ 'seasonal.forYou.genreModal.activeSummary' | translate }}</span>
+                  @for (genre of draftGenreList().included; track genre) {
+                    <button class="genre-active-chip genre-active-chip--inc" type="button"
+                      (click)="removeDraftGenre(genre)">{{ genre }} <span aria-hidden="true">×</span></button>
+                  }
+                  @for (genre of draftGenreList().excluded; track genre) {
+                    <button class="genre-active-chip genre-active-chip--exc" type="button"
+                      (click)="removeDraftGenre(genre)">{{ genre }} <span aria-hidden="true">×</span></button>
+                  }
+                  <button class="genre-modal__clear-all" type="button" (click)="clearDraftGenres()">
+                    {{ 'seasonal.forYou.genreModal.clearAll' | translate }}
+                  </button>
+                </div>
+              }
+
+              <div class="genre-modal__grid">
+                @for (genre of filteredGenreChoices(); track genre) {
+                  <button class="genre-pill" type="button"
+                    [attr.data-state]="draftGenreState(genre)"
+                    [attr.data-nsfw]="isNsfwTag(genre)"
+                    (click)="cycleDraftGenre(genre)">
+                    @switch (draftGenreState(genre)) {
+                      @case ('include') { <span aria-hidden="true">+</span> }
+                      @case ('exclude') { <span aria-hidden="true">−</span> }
+                    }
+                    {{ genre }}
+                  </button>
+                }
+                @if (filteredGenreChoices().length === 0) {
+                  <p class="genre-modal__empty">{{ 'seasonal.forYou.genreModal.noMatch' | translate }}</p>
+                }
+              </div>
+
+              <footer class="genre-modal__footer">
+                <button type="button" class="genre-modal__ghost" (click)="closeGenreModal()">
+                  {{ 'common.cancel' | translate }}
+                </button>
+                <button type="button" class="genre-modal__apply" (click)="applyGenreModal()">
+                  {{ 'seasonal.forYou.genreModal.applyWithCount' | translate: { count: draftMatchCount() } }}
+                </button>
+              </footer>
+            </div>
+          </div>
+        }
+
+
+        <!-- Batch add: confirm, then watch each item land -->
+        @if (batchState(); as batch) {
+          <div class="batch-modal-backdrop" (click)="batch.phase === 'complete' ? dismissBatchModal() : null">
+            <div class="batch-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+
+              @if (batch.phase === 'confirm') {
+                <header class="batch-modal__head">
+                  <div>
+                    <h3>
+                      {{ (batch.items.length > 1
+                        ? 'providers.add.modalTitleBatch'
+                        : 'providers.add.modalTitleSingle') | translate: { count: batch.items.length } }}
+                    </h3>
+                    <p class="batch-modal__sub">{{ 'seasonal.forYou.batch.selectProviders' | translate }}</p>
+                  </div>
+                  <button class="batch-modal__close" type="button" (click)="dismissBatchModal()"
+                    [attr.aria-label]="'common.cancel' | translate">✕</button>
+                </header>
+
+                @if (batch.items.length === 1 && batch.items[0]; as first) {
+                  <!-- single selection: rich media card -->
+                  <div class="batch-preview">
+                    @if (first.coverImageUrl) {
+                      <img class="batch-preview__poster" [src]="first.coverImageUrl" [alt]="first.title" />
+                    } @else {
+                      <div class="batch-preview__poster batch-preview__poster--empty"></div>
+                    }
+                    <div class="batch-preview__body">
+                      <span class="batch-preview__title">{{ first.title }}</span>
+                      <span class="batch-preview__meta">
+                        <span [class]="formatClass(first)">{{ formatLabel(first) }}</span>
+                        @if (airDateLabel(first)) { {{ airDateLabel(first) }} }
+                        @if (first.isDonghua) { · <span class="for-you__donghua">{{ 'seasonal.forYou.donghua' | translate }}</span> }
+                        @if (first.malScore > 0) { · {{ first.malScore.toFixed(1) }} MAL }
+                      </span>
+                    </div>
+                  </div>
+                } @else if (batch.items.length > 1) {
+                  <!-- multi selection: every title is visible, none hidden behind a counter -->
+                  <div class="batch-selected">
+                    <div class="batch-selected__head">
+                      <span>{{ 'providers.add.selectedAnimeCount' | translate: { count: batch.items.length } }}</span>
+                      <button class="batch-selected__clear" type="button" (click)="clearBatchItems()">
+                        {{ 'providers.add.clearAll' | translate }}
+                      </button>
+                    </div>
+
+                    <div class="batch-items-scroll">
+                      @for (entry of batch.items; track entry.malId) {
+                        <div class="batch-item-row">
+                          @if (entry.coverImageUrl) {
+                            <img class="batch-item-row__thumb" [src]="entry.coverImageUrl" [alt]="entry.title" />
+                          } @else {
+                            <div class="batch-item-row__thumb batch-item-row__thumb--empty"></div>
+                          }
+
+                          <div class="batch-item-row__info">
+                            <span class="batch-item-row__title">{{ entry.title }}</span>
+                            <span class="batch-item-row__meta">
+                              <span [class]="formatClass(entry)">{{ formatLabel(entry) }}</span>
+                              @if (entry.malScore) { <span>{{ entry.malScore }} ★</span> }
+                              @if (entry.isDonghua) { <span class="for-you__donghua">{{ 'seasonal.forYou.donghua' | translate }}</span> }
+                            </span>
+                          </div>
+
+                          <button class="batch-item-row__remove" type="button"
+                            [attr.aria-label]="'providers.add.removeItemAria' | translate: { title: entry.title }"
+                            (click)="removeBatchItem(entry.malId)">×</button>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <div class="provider-tiles">
+                  <button class="provider-tile provider-tile--mal" type="button"
+                    [class.provider-tile--on]="batch.targets.mal"
+                    [attr.aria-pressed]="batch.targets.mal"
+                    (click)="setBatchTarget('mal', !batch.targets.mal)">
+                    <img class="provider-tile__logo" src="assets/images/mal.svg" alt="" aria-hidden="true" />
+                    <span class="provider-tile__name">MyAnimeList</span>
+                    @if (batch.targets.mal) { <span class="provider-tile__check" aria-hidden="true">✓</span> }
+                  </button>
+
+                  <button class="provider-tile provider-tile--sonarr" type="button"
+                    [class.provider-tile--on]="batch.targets.sonarr"
+                    [class.provider-tile--disabled]="!providerState.sonarrEnabled()"
+                    [attr.aria-pressed]="batch.targets.sonarr"
+                    [disabled]="!providerState.sonarrEnabled()"
+                    (click)="setBatchTarget('sonarr', !batch.targets.sonarr)">
+                    <img class="provider-tile__logo" src="assets/images/sonarr.svg" alt="" aria-hidden="true" />
+                    <span class="provider-tile__name">Sonarr</span>
+                    @if (batch.targets.sonarr) { <span class="provider-tile__check" aria-hidden="true">✓</span> }
+                  </button>
+                </div>
+
+                @if (batch.targets.sonarr) {
+                  <div class="batch-options">
+                    <label class="batch-switch">
+                      <input type="checkbox" [checked]="batch.targets.searchMissing"
+                        (change)="setBatchTarget('searchMissing', $any($event.target).checked)" />
+                      <span class="batch-switch__track" aria-hidden="true"><span class="batch-switch__knob"></span></span>
+                      <span class="batch-switch__text">
+                        <span class="batch-switch__label">{{ 'providers.add.searchMissingEpisodes' | translate }}</span>
+                        <span class="batch-switch__hint">{{ 'providers.add.searchMissingHint' | translate }}</span>
+                      </span>
+                    </label>
+                  </div>
+                }
+
+                <div class="batch-modal__footer">
+                  <button class="batch-modal__ghost" type="button" (click)="dismissBatchModal()">
+                    {{ 'common.cancel' | translate }}
+                  </button>
+                  <button class="batch-modal__primary" type="button"
+                    [disabled]="!batch.targets.mal && !batch.targets.sonarr"
+                    (click)="startBatchAdd()">
+                    {{ 'seasonal.forYou.batch.startAdding' | translate: { count: batch.items.length } }}
+                  </button>
+                </div>
+
+              } @else {
+                <header class="batch-modal__head">
+                  <h3>
+                    @if (batch.phase === 'progress') {
+                      {{ 'seasonal.forYou.batch.addingItem' | translate: { current: batch.index, total: batch.items.length } }}
+                    } @else {
+                      {{ 'seasonal.forYou.batch.completeTitle' | translate }}
+                    }
+                  </h3>
+                  @if (batch.phase === 'complete') {
+                    <button class="batch-modal__close" type="button" (click)="dismissBatchModal()">✕</button>
+                  }
+                </header>
+
+                <div class="batch-progress" role="progressbar"
+                  [attr.aria-valuenow]="batch.index" [attr.aria-valuemin]="0" [attr.aria-valuemax]="batch.items.length">
+                  <div class="batch-progress__fill"
+                    [style.width.%]="batch.items.length ? (batch.index / batch.items.length) * 100 : 0"></div>
+                </div>
+
+                <ul class="batch-modal__list">
+                  @for (row of batch.results; track row.malId; let i = $index) {
+                    <li class="batch-row">
+                      @if (i < batch.index) {
+                        <span class="batch-row__state" [class.batch-row__state--ok]="row.ok"
+                          [class.batch-row__state--fail]="!row.ok">{{ row.ok ? '✓' : '✕' }}</span>
+                      } @else {
+                        <span class="batch-row__state batch-row__state--wait" aria-hidden="true">•</span>
+                      }
+                      <span class="batch-row__title">{{ row.title }}</span>
+                      @if (i < batch.index && !row.ok) {
+                        <span class="batch-row__error">{{ row.error }}</span>
+                      }
+                    </li>
+                  }
+                </ul>
+
+                @if (batch.phase === 'complete') {
+                  <p class="batch-modal__summary">
+                    @if (failedBatchResult(batch) === 0) {
+                      {{ 'seasonal.forYou.batch.successSummary' | translate: { count: batch.items.length } }}
+                    } @else {
+                      {{ 'seasonal.forYou.batch.partialSuccess' | translate: { success: batch.items.length - failedBatchResult(batch), total: batch.items.length, failed: failedBatchResult(batch) } }}
+                    }
+                  </p>
+                  <div class="batch-modal__footer">
+                    <button class="batch-modal__primary" type="button" (click)="dismissBatchModal()">
+                      {{ 'common.done' | translate }}
+                    </button>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        }
+
+        @if (visiblePicks().length === 0) {
+          <div class="for-you__empty-filtered">
+            <p>{{ 'seasonal.forYou.emptyFiltered' | translate }}</p>
+            <button class="for-you__reset" type="button" (click)="resetForYouFilters()">
+              {{ 'seasonal.forYou.filters.reset' | translate }}
+            </button>
+          </div>
+        }
+      </section>
+    }
+
     <!-- Season selector: year picker + 4 season pills -->
     <div class="season-selector mb-4">
       <!-- Year picker row -->
@@ -945,6 +1584,7 @@
     [sonarrProfileId]="sonarrProfileId()"
     [sonarrMonitor]="sonarrMonitor()"
     [sonarrSeasonFolder]="sonarrSeasonFolder()"
+    [sonarrSearchMissing]="sonarrSearchMissing()"
     [addMalStatus]="addMalStatus()"
     [addMalEpisodes]="addMalEpisodes()"
     [addMalScore]="addMalScore()"
@@ -962,6 +1602,7 @@
     (sonarrProfileIdChanged)="sonarrProfileId.set($event)"
     (sonarrMonitorChanged)="sonarrMonitor.set($any($event))"
     (sonarrSeasonFolderChanged)="sonarrSeasonFolder.set($event)"
+    (sonarrSearchMissingChanged)="sonarrSearchMissing.set($event)"
     (malStatusChanged)="addMalStatus.set($event)"
     (malEpisodesChanged)="addMalEpisodes.set($event)"
     (malScoreChanged)="addMalScore.set($event)"

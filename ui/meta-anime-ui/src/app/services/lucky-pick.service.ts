@@ -50,6 +50,18 @@ export class LuckyPickService {
   private readonly _history = signal<AnimeDetailsResponse[]>([]);
   readonly history = this._history.asReadonly();
 
+  /**
+   * The pick that is about to be revealed. Set as soon as the data lands so the
+   * summon timeline can show the real poster during its lock-in beat, before the
+   * state actually flips to 'result'.
+   */
+  private readonly _pending = signal<AnimeDetailsResponse | null>(null);
+  readonly pending = this._pending.asReadonly();
+
+  /** Length of the current spin — drives `--spin-dur` in the scene timeline. */
+  private readonly _spinMs = signal(SPIN_OPEN_MS);
+  readonly spinMs = this._spinMs.asReadonly();
+
   /** Indices already returned — cheap pre-check that costs no request. */
   private readonly seenIndices = new Set<number>();
   /** Real ids already returned — survives index drift after a library sync. */
@@ -104,15 +116,19 @@ export class LuckyPickService {
     this.clearTimer();
     this._state.set('spinning');
     this._result.set(null);
+    this._pending.set(null);
 
-    const startedAt = performance.now();
     const minSpin = this.prefersReducedMotion ? 0 : mode === 'reroll' ? SPIN_REROLL_MS : SPIN_OPEN_MS;
+    this._spinMs.set(minSpin);
+    const startedAt = performance.now();
 
     const reveal = (item: AnimeDetailsResponse | null, fallback: LuckyPickState): void => {
+      this._pending.set(item);
       const wait = Math.max(0, minSpin - (performance.now() - startedAt));
       this.clearTimer();
       this.timer = setTimeout(() => {
         this.timer = null;
+        this._pending.set(null);
         if (item) {
           this._result.set(item);
           this.pushHistory(item);
@@ -141,6 +157,7 @@ export class LuckyPickService {
   showHistorical(item: AnimeDetailsResponse): void {
     if (this._state() === 'spinning') return;
     this.clearTimer();
+    this._pending.set(null);
     this._result.set(item);
     this._state.set('result');
   }
@@ -153,6 +170,7 @@ export class LuckyPickService {
   /** Called when the modal closes: cancels a pending reveal. */
   dismiss(): void {
     this.clearTimer();
+    this._pending.set(null);
   }
 
   // ── Internals ──────────────────────────────────────────────────────────────

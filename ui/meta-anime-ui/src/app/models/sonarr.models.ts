@@ -54,6 +54,8 @@ export interface SonarrAddSeriesRequest {
   monitor: SonarrMonitorType;
   seasonFolder: boolean;
   malId?: string;
+  /** Overrides the Sonarr setting for this add only. */
+  searchForMissingEpisodes?: boolean;
 }
 
 export interface SonarrAddResult {

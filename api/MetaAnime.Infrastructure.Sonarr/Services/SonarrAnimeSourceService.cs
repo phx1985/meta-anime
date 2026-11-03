@@ -47,6 +47,12 @@ public sealed class SonarrAnimeSourceService(
         return (host, apiKey, tags, isConfigured);
     }
 
+    private async Task<bool> GetSearchForMissingEpisodesAsync()
+    {
+        var entry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.SonarrSearchForMissingEpisodes);
+        return bool.TryParse(entry?.Value, out var parsed) && parsed;
+    }
+
     #region ISonarrSourceService Implementation
     /// <summary>
     /// Allows to get all anime series from Sonarr
@@ -270,13 +276,16 @@ public sealed class SonarrAnimeSourceService(
         return Result.Success(new SonarrInstanceOptions(rootFolders, profiles, tagIds));
     }
 
-    public async Task<Result<SonarrAddedSeries>> AddSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, IList<int> tagIds, string monitor = "all", bool seasonFolder = true)
+    public async Task<Result<SonarrAddedSeries>> AddSeriesAsync(int tvdbId, string rootFolderPath, int qualityProfileId, IList<int> tagIds, string monitor = "all", bool seasonFolder = true, bool? searchForMissingEpisodes = null)
     {
         var (host, apiKey, _, isConfigured) = await GetSettingsAsync();
         if (!isConfigured)
             return Result.Failure<SonarrAddedSeries>(new(Constants.Errors.NotConfigured, "Sonarr is not configured"));
 
         var client = CreateRestClient(host);
+
+        // Per-add override wins; otherwise fall back to the stored Sonarr preference.
+        var searchMissing = searchForMissingEpisodes ?? await GetSearchForMissingEpisodesAsync();
 
         // Look up series by TVDB ID
         var lookupReq = new RestRequest("api/v3/series/lookup");
@@ -305,7 +314,7 @@ public sealed class SonarrAnimeSourceService(
             seasonFolder,
             monitored = true,
             tags = tagIds,
-            addOptions = new { monitor },
+            addOptions = new { monitor, searchForMissingEpisodes = searchMissing },
         };
 
         var addReq = new RestRequest("api/v3/series", Method.Post);

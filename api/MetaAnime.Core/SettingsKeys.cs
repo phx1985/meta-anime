@@ -19,6 +19,7 @@ public static class SettingsKeys
     public const string SonarrHost = "Sonarr:Host";
     public const string SonarrApiKey = "Sonarr:ApiKey";
     public const string SonarrAnimeTags = "Sonarr:AnimeTags";
+    public const string SonarrSearchForMissingEpisodes = "Sonarr:SearchForMissingEpisodes";
     public const string SonarrRemoteUrl = "Sonarr:RemoteUrl";
 
     // Sonarr "Add Series" defaults

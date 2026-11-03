@@ -11,4 +11,9 @@ public record SonarrSettings
     /// When set, this URL is used instead of Host for building series URLs.
     /// </summary>
     public string? RemoteUrl { get; init; }
+    /// <summary>
+    /// Default for the per-add "search for missing episodes" flag. Individual add requests can
+    /// override it; null there falls back to this value.
+    /// </summary>
+    public bool SearchForMissingEpisodes { get; init; }
 }

@@ -62,9 +62,9 @@ $card-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1);
     animation: luckySheetIn 0.32s cubic-bezier(0.34, 1.3, 0.64, 1) both;
   }
 
-  // Soft breathing while the orb spins (reduced motion overrides it below)
+  // No wrapper pulse: the summon timeline owns all motion while rolling.
   &--spinning {
-    animation: luckyCardIn $card-in, luckyHeartbeat 1.6s ease-in-out 0.4s infinite;
+    animation: luckyCardIn $card-in;
   }
 }
 
@@ -78,13 +78,6 @@ $card-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1);
   to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes luckyHeartbeat {
-  0%, 100% { transform: scale(1); }
-  8%       { transform: scale(1.008); }
-  20%      { transform: scale(1); }
-  30%      { transform: scale(1.005); }
-  45%      { transform: scale(1); }
-}
 
 // Ambient backdrop: the picked poster, blurred, tints the glass
 .lucky-card__ambient {
@@ -223,147 +216,169 @@ $card-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1);
   }
 }
 
-// ── Spin scene ────────────────────────────────────────────────────────────────
+// ── Summon scene (authored 4-beat timeline) ─────────────────────────────────
+// One clock drives every beat: --spin-dur is bound per roll (1600ms open /
+// 950ms prefetched reroll / 0ms reduced motion). Nothing loops.
 .lucky-spin-scene {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.6rem;
-  // Matches the result body (~poster height) so the reveal causes no layout jump
-  min-height: 275px;
+  gap: 1.35rem;
+  min-height: 275px; // same box as the result body → no layout jump on reveal
   width: 100%;
+  perspective: 900px;
+  user-select: none;
+  --spin-dur: 1600ms;
+
+  @media (max-width: 768px) {
+    gap: 1.1rem;
+  }
 }
 
-.lucky-orb {
+.lucky-summon {
   position: relative;
-  width: 140px;
-  height: 140px;
+  width: 180px;
+  height: 196px;
   display: flex;
   align-items: center;
   justify-content: center;
-  perspective: 600px;
   transform-style: preserve-3d;
-  animation: gyroAssemblySpin 12s linear infinite;
+
+  @media (max-width: 768px) {
+    width: 156px;
+    height: 176px;
+    transform: scale(0.92);
+  }
 }
 
-@keyframes gyroAssemblySpin {
-  from { transform: rotateX(-15deg) rotateY(0deg); }
-  to   { transform: rotateX(-15deg) rotateY(360deg); }
+// Aura — transform/opacity only (box-shadow is not compositable)
+.lucky-summon__aura {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(157, 148, 255, 0.55) 0%,
+    rgba(62, 207, 207, 0.28) 42%,
+    rgba(108, 99, 255, 0) 72%
+  );
+  opacity: 0;
+  transform: scale(0.6);
+  will-change: transform, opacity;
+  animation: summonAura var(--spin-dur) cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.lucky-orb__gimbal {
+.lucky-summon__ring {
   position: absolute;
   border-radius: 50%;
-  transform-style: preserve-3d;
-  border: 3px solid transparent;
-  box-shadow: inset 0 0 10px rgba(108, 99, 255, 0.2), 0 0 5px rgba(108, 99, 255, 0.2);
+  border: 2px solid transparent;
+  pointer-events: none;
+  will-change: transform, opacity;
 
   &--outer {
-    width: 140px;
-    height: 140px;
-    border-color: rgba(108, 99, 255, 0.4);
-    border-left-color: rgba(108, 99, 255, 0.9);
-    border-right-color: rgba(108, 99, 255, 0.9);
-    animation: gimbalSpinZ 4s linear infinite;
-  }
-
-  &--mid {
-    width: 105px;
-    height: 105px;
-    border-color: rgba(62, 207, 207, 0.3);
-    border-top-color: rgba(62, 207, 207, 0.8);
-    border-bottom-color: rgba(62, 207, 207, 0.8);
-    animation: gimbalSpinX 2.5s linear infinite;
+    width: 164px;
+    height: 164px;
+    border-top-color: rgba(157, 148, 255, 0.95);
+    border-bottom-color: rgba(108, 99, 255, 0.75);
+    border-left-color: rgba(108, 99, 255, 0.18);
+    border-right-color: rgba(108, 99, 255, 0.18);
+    animation: summonRingOuter var(--spin-dur) cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 
   &--inner {
-    width: 70px;
-    height: 70px;
-    border-color: rgba(157, 148, 255, 0.3);
-    border-left-color: rgba(157, 148, 255, 0.9);
-    border-right-color: rgba(157, 148, 255, 0.9);
-    animation: gimbalSpinY 1.8s linear infinite reverse;
+    width: 122px;
+    height: 122px;
+    border-left-color: rgba(62, 207, 207, 0.95);
+    border-right-color: rgba(157, 148, 255, 0.85);
+    border-top-color: rgba(62, 207, 207, 0.15);
+    border-bottom-color: rgba(62, 207, 207, 0.15);
+    animation: summonRingInner var(--spin-dur) cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
 }
 
-@keyframes gimbalSpinX {
-  from { transform: rotateX(0deg); }
-  to   { transform: rotateX(360deg); }
-}
-
-@keyframes gimbalSpinY {
-  from { transform: rotateY(0deg); }
-  to   { transform: rotateY(360deg); }
-}
-
-@keyframes gimbalSpinZ {
-  from { transform: rotateZ(0deg); }
-  to   { transform: rotateZ(360deg); }
-}
-
-.lucky-orb__center {
+.lucky-summon__shockwave {
   position: absolute;
-  z-index: 2;
-  width: 56px;
-  height: 56px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid rgba(157, 148, 255, 0.9);
+  opacity: 0;
+  transform: scale(0.5);
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: summonShockwave var(--spin-dur) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.lucky-summon__card {
+  position: relative;
+  z-index: 3;
+  width: 112px;
+  height: 160px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(145deg, #262346 0%, #17162b 100%);
+  border: 1.5px solid rgba(157, 148, 255, 0.65);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55);
+  transform-style: preserve-3d;
+  will-change: transform, filter;
+  animation: summonCardArc var(--spin-dur) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.lucky-summon__poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
+
+// Decoy riffle: history covers flashing past at ~70ms each
+.lucky-summon__poster--d1 { animation: decoyFlicker1 var(--spin-dur) steps(1, end) forwards; }
+.lucky-summon__poster--d2 { animation: decoyFlicker2 var(--spin-dur) steps(1, end) forwards; }
+.lucky-summon__poster--d3 { animation: decoyFlicker3 var(--spin-dur) steps(1, end) forwards; }
+
+.lucky-summon__poster--final {
+  animation: finalPosterLock var(--spin-dur) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.lucky-summon__card-back {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  perspective: 800px;
-  transform-style: preserve-3d;
-  transform: rotateX(15deg);
-  animation: centerPulse3D 2s ease-in-out infinite alternate;
-}
-
-.lucky-orb__sphere {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  animation: trueSphereSpin 5s linear infinite;
-}
-
-@keyframes trueSphereSpin {
-  from { transform: rotateY(0deg) rotateX(20deg); }
-  to   { transform: rotateY(360deg) rotateX(20deg); }
-}
-
-.lucky-orb__slice {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1.5px solid rgba(157, 148, 255, 0.75);
-  box-shadow: 0 0 8px rgba(108, 99, 255, 0.6), inset 0 0 8px rgba(108, 99, 255, 0.4);
-  transform: rotateY(calc(var(--slice-idx) * 30deg));
-}
-
-.lucky-orb__core-glow {
-  position: absolute;
-  inset: 8px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(157, 148, 255, 0.7) 40%, transparent 80%);
-  transform: translateZ(0);
-  box-shadow: 0 0 20px rgba(157, 148, 255, 0.8);
-}
-
-.lucky-orb__star {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) translateZ(0);
+  background: radial-gradient(circle at 50% 50%, rgba(108, 99, 255, 0.32), rgba(20, 18, 38, 0.92));
   color: #fff;
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 1));
+  animation: cardBackFade var(--spin-dur) ease-out forwards;
 }
 
-@keyframes centerPulse3D {
-  0%   { transform: rotateX(15deg) scale(0.95); }
-  100% { transform: rotateX(15deg) scale(1.05); }
+.lucky-summon__star {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
+  animation: starSpinPulse var(--spin-dur) cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-// Searching copy as a pill instead of loose muted text
+.lucky-summon__foil {
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(
+    115deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.55) 47%,
+    rgba(62, 207, 207, 0.45) 53%,
+    transparent 68%
+  );
+  transform: translateX(-140%) rotate(12deg);
+  pointer-events: none;
+  animation: foilSweep var(--spin-dur) cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 .lucky-spin-label {
   margin: 0;
-  padding: 0.4rem 0.85rem;
+  padding: 0.42rem 0.95rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--text-primary) 6%, transparent);
   border: 1px solid var(--card-border);
@@ -371,12 +386,102 @@ $card-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1);
   font-size: 0.82rem;
   letter-spacing: 0.02em;
   text-align: center;
-  animation: labelPulse 2s ease-in-out infinite;
+  animation: labelStoryArc var(--spin-dur) ease-in-out forwards;
 }
 
-@keyframes labelPulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.55; }
+// ── The 4 beats ─────────────────────────────────────────────────────────────
+// 0–14%   anticipation: rings contract onto one plane, star charges
+// 14–68%  vortex: counter-spinning rings + poster riffle
+// 68–88%  lock-in: shockwave, poster springs to 1.08 then settles
+// 88–100% foil sheen finishes as the result layout takes over
+@keyframes summonAura {
+  0%   { opacity: 0.2;  transform: scale(0.85); }
+  14%  { opacity: 0.45; transform: scale(0.72); }
+  68%  { opacity: 0.95; transform: scale(1.18); }
+  84%  { opacity: 1;    transform: scale(1.32); }
+  100% { opacity: 0.70; transform: scale(1.10); }
+}
+
+@keyframes summonRingOuter {
+  0%   { opacity: 0.60; transform: rotateX(52deg) rotateZ(0deg)   scale(1); }
+  14%  { opacity: 0.95; transform: rotateX(62deg) rotateZ(-35deg) scale(0.84); }
+  68%  { opacity: 1;    transform: rotateX(18deg) rotateZ(680deg) scale(1.04); }
+  85%  { opacity: 0;    transform: rotateX(0deg)  rotateZ(760deg) scale(1.42); }
+  100% { opacity: 0;    transform: rotateX(0deg)  rotateZ(760deg) scale(1.50); }
+}
+
+@keyframes summonRingInner {
+  0%   { opacity: 0.50; transform: rotateY(45deg)  rotateZ(0deg)    scale(1); }
+  14%  { opacity: 0.95; transform: rotateY(-55deg) rotateZ(40deg)   scale(0.82); }
+  68%  { opacity: 1;    transform: rotateY(15deg)  rotateZ(-820deg) scale(1.02); }
+  85%  { opacity: 0;    transform: rotateY(0deg)   rotateZ(-900deg) scale(1.38); }
+  100% { opacity: 0;    transform: rotateY(0deg)   rotateZ(-900deg) scale(1.45); }
+}
+
+@keyframes summonShockwave {
+  0%, 66%   { opacity: 0;    transform: scale(0.55); }
+  70%       { opacity: 0.95; transform: scale(0.92); }
+  96%, 100% { opacity: 0;    transform: scale(1.95); }
+}
+
+@keyframes summonCardArc {
+  0%   { transform: rotateY(0deg)   scale(0.78); filter: brightness(0.9); }
+  14%  { transform: rotateY(-25deg) scale(0.70); filter: brightness(1.05); }
+  32%  { transform: rotateY(180deg) scale(0.86); }
+  50%  { transform: rotateY(360deg) scale(0.92); }
+  68%  { transform: rotateY(540deg) scale(0.96); filter: brightness(1.35); }
+  82%  { transform: rotateY(720deg) scale(1.08); filter: brightness(1.12); }
+  92%  { transform: rotateY(720deg) scale(0.985); filter: brightness(1); }
+  100% { transform: rotateY(720deg) scale(1);    filter: brightness(1); }
+}
+
+@keyframes decoyFlicker1 {
+  0%, 18%   { opacity: 0; }
+  19%, 34%  { opacity: 0.85; }
+  35%, 100% { opacity: 0; }
+}
+
+@keyframes decoyFlicker2 {
+  0%, 34%   { opacity: 0; }
+  35%, 51%  { opacity: 0.85; }
+  52%, 100% { opacity: 0; }
+}
+
+@keyframes decoyFlicker3 {
+  0%, 51%   { opacity: 0; }
+  52%, 67%  { opacity: 0.85; }
+  68%, 100% { opacity: 0; }
+}
+
+@keyframes finalPosterLock {
+  0%, 67%   { opacity: 0; transform: scale(1.08); }
+  68%, 100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes cardBackFade {
+  0%, 66%   { opacity: 1; }
+  68%, 100% { opacity: 0; }
+}
+
+@keyframes starSpinPulse {
+  0%   { transform: scale(0.9)  rotate(0deg); }
+  14%  { transform: scale(0.72) rotate(-45deg); }
+  68%  { transform: scale(1.35) rotate(360deg); }
+  100% { transform: scale(1)    rotate(360deg); }
+}
+
+@keyframes foilSweep {
+  0%, 68% { transform: translateX(-140%) rotate(12deg); opacity: 0; }
+  72%     { opacity: 1; }
+  96%     { transform: translateX(120%) rotate(12deg); opacity: 0.95; }
+  100%    { transform: translateX(145%) rotate(12deg); opacity: 0; }
+}
+
+@keyframes labelStoryArc {
+  0%   { opacity: 0;    transform: translateY(6px); }
+  12%  { opacity: 1;    transform: translateY(0); }
+  85%  { opacity: 1;    transform: translateY(0); }
+  100% { opacity: 0.75; transform: translateY(-2px); }
 }
 
 // ── Result ────────────────────────────────────────────────────────────────────
@@ -656,6 +761,15 @@ $card-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1);
     color: var(--text-muted);
   }
 }
+
+// Reserves the footprint of the result's action zone while the summon plays.
+.lucky-reserve {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.lucky-actions.lucky-reserve { min-height: 42px; }
+.lucky-history.lucky-reserve { min-height: 63px; padding-bottom: 0; border-top-width: 0; }
 
 // ── Whisper quip + action bar ────────────────────────────────────────────────
 .lucky-whisper {
@@ -951,21 +1065,18 @@ $card-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 
 // ── Reduced motion ───────────────────────────────────────────────────────────
+// No timeline at all: static card back, soft glow, poster already visible.
 .lucky-overlay--reduced-motion {
-  .lucky-orb {
-    animation: none;
-    transform: rotateX(-15deg) rotateY(30deg);
+  .lucky-summon *,
+  .lucky-spin-label {
+    animation: none !important;
   }
 
-  .lucky-orb__gimbal,
-  .lucky-orb__center,
-  .lucky-orb__sphere {
-    animation: none;
-  }
-
-  .lucky-orb__center {
-    transform: rotateX(15deg) scale(1);
-  }
+  .lucky-summon__aura { opacity: 0.55; transform: scale(1); }
+  .lucky-summon__poster--final { opacity: 1; transform: scale(1); }
+  .lucky-summon__card-back { opacity: 0; }
+  .lucky-summon__shockwave,
+  .lucky-summon__ring { opacity: 0; }
 
   .lucky-card,
   .lucky-card--spinning {
@@ -973,8 +1084,7 @@ $card-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1);
   }
 
   .lucky-result,
-  .lucky-result__poster::after,
-  .lucky-spin-label {
+  .lucky-result__poster::after {
     animation: none;
   }
 }
@@ -984,10 +1094,7 @@ $card-in: 0.38s cubic-bezier(0.34, 1.4, 0.64, 1);
   .lucky-card,
   .lucky-result,
   .lucky-spin-label,
-  .lucky-orb,
-  .lucky-orb__gimbal,
-  .lucky-orb__center,
-  .lucky-orb__sphere,
+  .lucky-summon *,
   .lucky-result__poster::after {
     animation: none !important;
   }

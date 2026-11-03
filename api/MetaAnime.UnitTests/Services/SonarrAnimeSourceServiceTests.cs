@@ -178,4 +178,63 @@ public class SonarrAnimeSourceServiceTests
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("Sonarr.DownloadHistory");
     }
+
+    private static Mock<IPropertyBagRepository> PropertyBagWithSearchFlag(string? storedValue)
+    {
+        var propertyBag = new Mock<IPropertyBagRepository>();
+        propertyBag
+            .Setup(p => p.GetByKeyAsync(It.IsAny<string>()))
+            .ReturnsAsync((string key) => key switch
+            {
+                SettingsKeys.SonarrHost => new PropertyBag { Key = key, Value = "http://sonarr.test" },
+                SettingsKeys.SonarrApiKey => new PropertyBag { Key = key, Value = "key" },
+                SettingsKeys.SonarrAnimeTags => new PropertyBag { Key = key, Value = "" },
+                SettingsKeys.SonarrSearchForMissingEpisodes when storedValue is not null
+                    => new PropertyBag { Key = key, Value = storedValue },
+                _ => null,
+            });
+        return propertyBag;
+    }
+
+    private static RecordingHandler AddSeriesHandler(List<string> bodies) => new(request =>
+    {
+        if (request.RequestUri!.AbsolutePath.EndsWith("/series/lookup", StringComparison.Ordinal))
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""[{"id":0,"title":"X","titleSlug":"x","tvdbId":42,"images":[],"seasons":[{"seasonNumber":1}]}]"""),
+            };
+
+        bodies.Add(request.Content!.ReadAsStringAsync().GetAwaiter().GetResult());
+        return new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("""{"id":7,"title":"X","titleSlug":"x"}"""),
+        };
+    });
+
+    [Fact]
+    public async Task AddSeriesAsync_SendsTheStoredSearchForMissingEpisodesPreference()
+    {
+        var bodies = new List<string>();
+        var service = new SonarrAnimeSourceService(
+            PropertyBagWithSearchFlag("true").Object, new RecordingFactory(new HttpClient(AddSeriesHandler(bodies))));
+
+        var result = await service.AddSeriesAsync(42, "/tv", 1, []);
+
+        Assert.True(result.IsSuccess);
+        var payload = Assert.Single(bodies);
+        Assert.Contains("\"searchForMissingEpisodes\":true", payload);
+    }
+
+    [Fact]
+    public async Task AddSeriesAsync_PerAddOverride_WinsOverTheStoredPreference()
+    {
+        var bodies = new List<string>();
+        var service = new SonarrAnimeSourceService(
+            PropertyBagWithSearchFlag("false").Object, new RecordingFactory(new HttpClient(AddSeriesHandler(bodies))));
+
+        var result = await service.AddSeriesAsync(42, "/tv", 1, [], searchForMissingEpisodes: true);
+
+        Assert.True(result.IsSuccess);
+        Assert.Contains("\"searchForMissingEpisodes\":true", Assert.Single(bodies));
+    }
 }

@@ -320,6 +320,7 @@ export class SettingsComponent {
       'Sonarr:DefaultQualityProfileName',
       'Sonarr:DefaultSeasonFolder',
       'Sonarr:DefaultMonitor',
+      'Sonarr:SearchForMissingEpisodes',
     ];
     return this.settings()
       .filter((s) => SettingsComponent.SONARR_DEFAULT_KEYS.has(s.key))
@@ -396,6 +397,7 @@ export class SettingsComponent {
     'Sonarr:DefaultQualityProfileName',
     'Sonarr:DefaultSeasonFolder',
     'Sonarr:DefaultMonitor',
+    'Sonarr:SearchForMissingEpisodes',
   ]);
   private static readonly PROVIDER_ENABLED_KEYS = new Set([
     'Plex:Enabled',
@@ -1355,9 +1357,15 @@ export class SettingsComponent {
         next: () => {
           this.savingKey.set(null);
           this.savedKey.set(key);
-          this.settings.update((list) =>
-            list.map((s) => (s.key === key ? { ...s, value } : s)),
-          );
+          if (this.settings().some((s) => s.key === key)) {
+            this.settings.update((list) =>
+              list.map((s) => (s.key === key ? { ...s, value } : s)),
+            );
+          } else {
+            // A key that has never been written is absent from the preloaded list — refetch
+            // so the new row reflects the stored value instead of silently staying "off".
+            this.loadSettings();
+          }
           setTimeout(() => {
             if (this.savedKey() === key) this.savedKey.set(null);
           }, SettingsComponent.SAVED_STATE_TIMEOUT_MS);

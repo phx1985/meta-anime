@@ -137,6 +137,97 @@
     }
   },
   "seasonal": {
+    "forYou": {
+      "add": "Ajouter",
+      "airingProgress": "En cours · Ép {{current}}/{{total}}",
+      "batch": {
+        "addSelected": "Ajouter ({{count}})",
+        "addingItem": "Ajout de {{current}} sur {{total}}…",
+        "clear": "Effacer",
+        "completeTitle": "Ajout terminé",
+        "modalTitle": "Ajouter {{count}} animés aux sources",
+        "partialSuccess": "{{success}} sur {{total}} animés ajoutés ({{failed}} en échec).",
+        "passSelected": "Ignorer ({{count}})",
+        "result": "{{added}} ajouté(s) · {{failed}} échec(s)",
+        "selectAll": "Tout sélectionner",
+        "selectCardAria": "Sélectionner {{title}}",
+        "selectProviders": "Choisir les sources cibles :",
+        "selectedCount": "{{count}} sélectionné(s)",
+        "startAdding": "Lancer l'ajout ({{count}})",
+        "successSummary": "{{count}} animés ajoutés avec succès."
+      },
+      "becauseLabel": "Parce que vous avez aimé",
+      "becauseLiked": "Parce que vous avez aimé {{titles}} · {{tags}}",
+      "becauseLikedNoTags": "Parce que vous avez aimé {{titles}}",
+      "carousel": {
+        "showing": "Affichage {{start}}–{{end}} sur {{total}}",
+        "prev": "Recommandations précédentes",
+        "next": "Recommandations suivantes",
+        "shuffle": "Mélanger le deck"
+      },
+      "customRange": {
+        "title": "Période personnalisée",
+        "apply": "Appliquer la période"
+      },
+      "emptyFiltered": "Aucune recommandation ne correspond à vos filtres.",
+      "excludeDonghua": "Exclure le donghua",
+      "excludeGenres": "Exclure des genres",
+      "filters": {
+        "formats": "Format",
+        "formatAll": "Tous les formats",
+        "formatTv": "TV",
+        "formatMovie": "Film",
+        "formatOvaOna": "OAV / ONA",
+        "statusAll": "Tout statut",
+        "statusAiring": "En cours",
+        "statusUpcoming": "À venir",
+        "statusFinished": "Terminé",
+        "scoreAny": "Toute note",
+        "hideSequels": "Masquer les suites",
+        "genres": "Genres",
+        "genreHint": "Clic pour inclure · Maj+clic pour exclure",
+        "reset": "Réinitialiser"
+      },
+      "finishedEps": "Terminé · {{total}} ép.",
+      "genreModal": {
+        "title": "Filtrer par genre",
+        "searchPlaceholder": "Rechercher un genre…",
+        "tabInclude": "Inclure ({{count}})",
+        "tabExclude": "Exclure ({{count}})",
+        "apply": "Appliquer les filtres",
+        "applyWithCount": "Appliquer ({{count}} animés)",
+        "clearTab": "Effacer l'onglet",
+        "noMatch": "Aucun genre ne correspond à cette recherche.",
+        "cycleHint": "Cliquer pour basculer : Neutre → Inclure → Exclure → Neutre",
+        "activeSummary": "Filtres actifs",
+        "included": "Inclus ({{count}})",
+        "excluded": "Exclus ({{count}})",
+        "clearAll": "Réinitialiser les genres",
+        "legendNeutral": "Neutre",
+        "legendInclude": "Inclure",
+        "legendExclude": "Exclure"
+      },
+      "inReserve": "{{count}} autres en réserve",
+      "match": "de correspondance",
+      "newPicks": "Nouveaux choix",
+      "pass": "Passer",
+      "peekHint": "Cliquez pour la fiche complète",
+      "popularReason": "Populaire cette saison — notez quelques séries pour personnaliser",
+      "scope": {
+        "label": "Périmètre des suggestions",
+        "current": "Cette saison",
+        "last2": "2 dernières saisons",
+        "last4": "Toute l'année",
+        "custom": "Période personnalisée",
+        "from": "Du",
+        "to": "au",
+        "apply": "Appliquer"
+      },
+      "subtitle": "D'après ce que vous avez regardé",
+      "title": "Sélectionnés pour vous",
+      "upcomingDate": "Débute le {{date}}",
+      "donghua": "Donghua"
+    },
     "title": "Animes saisonniers",
     "subtitle": "Parcourez les animes par saison depuis MyAnimeList",
     "seasonSelect": "Sélectionner une saison",
@@ -253,6 +344,14 @@
       "monitorSpecials": "Surveiller les spéciaux",
       "unmonitorSpecials": "Ne plus surveiller les spéciaux",
       "none": "Aucun"
+    },
+    "formats": {
+      "tv": "TV",
+      "movie": "Film",
+      "ova": "OAV",
+      "ona": "ONA",
+      "special": "Spécial",
+      "music": "Musique"
     }
   },
   "malSearch": {
@@ -823,6 +922,10 @@
       "BotKun_Model": {
         "name": "Modèle",
         "desc": "Identifiant du modèle à utiliser pour le chat (p. ex. llama-3.3-70b-versatile, gpt-4o-mini, qwen2.5:1.5b). Facultatif pour les configurations locales n'exposant qu'un seul modèle."
+      },
+      "Sonarr_SearchForMissingEpisodes": {
+        "name": "Rechercher les épisodes manquants à l'ajout",
+        "desc": "Démarre une recherche des épisodes manquants surveillés lors de l'ajout d'une série à Sonarr"
       }
     },
     "toggle": {
@@ -1187,7 +1290,8 @@
     "retry": "Réessayer",
     "previousPage": "Page précédente",
     "nextPage": "Page suivante",
-    "dismiss": "Masquer"
+    "dismiss": "Masquer",
+    "done": "Terminé"
   },
   "providers": {
     "mal": "MyAnimeList",
@@ -1197,7 +1301,17 @@
     "inMal": "Dans MAL",
     "inPlex": "Dans Plex",
     "inSonarr": "Dans Sonarr",
-    "alreadyTracked": "Déjà suivi"
+    "alreadyTracked": "Déjà suivi",
+    "add": {
+      "searchMissingEpisodes": "Rechercher les épisodes manquants",
+      "modalTitle": "Ajouter aux sources",
+      "modalTitleSingle": "Ajouter aux sources",
+      "modalTitleBatch": "Ajouter {{count}} animés aux sources",
+      "searchMissingHint": "Lancer la recherche immédiatement sur Sonarr",
+      "selectedAnimeCount": "Animés sélectionnés ({{count}})",
+      "removeItemAria": "Retirer {{title}} de la sélection",
+      "clearAll": "Tout retirer"
+    }
   },
   "aria": {
     "primaryNavigation": "Navigation principale",
@@ -1514,10 +1628,21 @@
   },
   "luckyPick": {
     "triggerShort": "Au hasard",
-    "filters": {"label": "Filtres du tirage", "planToWatch": "À regarder", "finished": "Terminé", "hasFiles": "Téléchargé"},
-    "actions": {"watchPlex": "Regarder sur Plex", "openMal": "MyAnimeList", "openDetails": "Détails", "reroll": "Relancer"},
-    "history": {"label": "Tirages récents"},
-
+    "filters": {
+      "label": "Filtres du tirage",
+      "planToWatch": "À regarder",
+      "finished": "Terminé",
+      "hasFiles": "Téléchargé"
+    },
+    "actions": {
+      "watchPlex": "Regarder sur Plex",
+      "openMal": "MyAnimeList",
+      "openDetails": "Détails",
+      "reroll": "Relancer"
+    },
+    "history": {
+      "label": "Tirages récents"
+    },
     "buttonLabel": "J'ai de la chance",
     "ariaLabel": "Fenêtre de sélection aléatoire d'anime",
     "resultAriaLabel": "Anime recommandé",

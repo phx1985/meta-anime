@@ -514,6 +514,12 @@
           </div>
         }
 
+        <label class="panel__sonarr-add__check">
+          <input type="checkbox" [checked]="sonarrSearchMissing()"
+            (change)="sonarrSearchMissing.set($any($event.target).checked)" />
+          {{ 'providers.add.searchMissingEpisodes' | translate }}
+        </label>
+
         @if (sonarrRootFolders().length > 1 || sonarrQualityProfiles().length > 1) {
           <div class="panel__sonarr-add__config">
             @if (sonarrRootFolders().length > 1) {
