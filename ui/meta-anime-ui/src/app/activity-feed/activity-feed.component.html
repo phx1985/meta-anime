@@ -1,0 +1,369 @@
+<div class="hub">
+  <header class="hub-head">
+    <div class="hub-head__left">
+      <h1 class="hub-title">{{ 'activity.hub.title' | translate }}</h1>
+      <span class="hub-count">
+        <strong>{{ total() }}</strong>
+        <span>{{ 'activity.header.events' | translate }}</span>
+      </span>
+    </div>
+
+    <div class="hub-head__right">
+      <!-- Global range: drives the tiles AND the trend chart (it used to sit inside the chart). -->
+      <div class="range-pills range-pills--global" role="group" [attr.aria-label]="'activity.chart.title' | translate">
+        @for (p of periods; track p.key) {
+          <button type="button" class="range-pill" [class.range-pill--active]="period() === p.key"
+            (click)="setPeriod(p.key)">{{ p.labelKey | translate }}</button>
+        }
+
+        @if (period() === 'thisYear' && years().length > 1) {
+          <!-- Older years are in the mirror; pick one instead of being stuck on "this year". -->
+          <select class="year-select" [value]="year()" (change)="setYear(+$any($event.target).value)"
+            [attr.aria-label]="'activity.range.year' | translate">
+            @for (y of years(); track y) { <option [value]="y">{{ y }}</option> }
+          </select>
+        }
+      </div>
+
+      <div class="view-switch" role="tablist">
+        <button type="button" role="tab" class="view-switch__btn"
+          [class.view-switch__btn--active]="view() === 'timeline'"
+          [attr.aria-selected]="view() === 'timeline'"
+          (click)="setView('timeline')">{{ 'activity.view.timeline' | translate }}</button>
+        <button type="button" role="tab" class="view-switch__btn"
+          [class.view-switch__btn--active]="view() === 'logs'"
+          [attr.aria-selected]="view() === 'logs'"
+          (click)="setView('logs')">{{ 'activity.view.logs' | translate }}</button>
+      </div>
+
+      <span class="live-status" [class.live-status--off]="!liveConnected()">
+        <span class="live-status__dot" aria-hidden="true"></span>
+        {{ (liveConnected() ? 'activity.header.liveUpdates' : 'activity.header.reconnecting') | translate }}
+      </span>
+      <button type="button" class="hub-btn hub-btn--accent" (click)="forceRefresh()" [disabled]="isBusy()">
+        <span class="hub-btn__spin" [class.hub-btn__spin--on]="isBusy()" aria-hidden="true">↻</span>
+        {{ 'activity.hub.refresh' | translate }}
+      </button>
+    </div>
+  </header>
+
+  <div class="hub-grid" [class.hub-grid--wide]="view() === 'logs'">
+    <!-- ── Left: media timeline (or the API log stream) ─────────────────── -->
+    <section class="hub-main">
+      @if (view() === 'logs') {
+        <app-server-logs />
+      } @else {
+      <div class="hub-toolbar">
+        <div class="hub-chips" role="tablist">
+          @for (f of filters; track f.key) {
+            <button type="button" role="tab" class="hub-chip"
+              [class.hub-chip--active]="filter() === f.key"
+              [attr.aria-selected]="filter() === f.key"
+              (click)="setFilter(f.key)">
+              <span class="hub-chip__label">{{ f.labelKey | translate }}</span>
+              @if (f.key !== 'all' && counts()[f.key]) {
+                <span class="hub-chip__count">{{ counts()[f.key] }}</span>
+              }
+            </button>
+          }
+        </div>
+
+        <div class="hub-search">
+          <span class="hub-search__icon" aria-hidden="true">⌕</span>
+          <input type="search" [value]="search()"
+            [placeholder]="'activity.hub.search' | translate"
+            [attr.aria-label]="'activity.hub.search' | translate"
+            (input)="onSearch($any($event.target).value)" />
+          @if (search()) {
+            <button type="button" class="hub-search__clear" (click)="clearSearch()"
+              [attr.aria-label]="'activity.hub.clearSearch' | translate">×</button>
+          }
+        </div>
+      </div>
+
+      <div class="hub-stream" [class.hub-stream--switching]="switching()" [class.hub-stream--busy]="isBusy()">
+        @if (!isBusy() && neverImported() && items().length === 0) {
+          <!-- First run on a fresh install: ask instead of silently scanning a 700-series
+               library for two minutes with nothing on screen. -->
+          <div class="backfill-card backfill-card--prompt" role="status">
+            <span class="backfill-card__badge" aria-hidden="true">↻</span>
+            <p class="backfill-card__title">{{ 'activity.firstRun.title' | translate }}</p>
+            <p class="backfill-card__body">{{ 'activity.firstRun.body' | translate }}</p>
+            <button type="button" class="hub-btn hub-btn--accent first-run-btn"
+              [disabled]="startingBackfill()" (click)="startBackfill()">
+              {{ (startingBackfill() ? 'activity.firstRun.starting' : 'activity.firstRun.action') | translate }}
+            </button>
+          </div>
+        } @else if (isBusy() && items().length === 0) {
+          <!-- Cold start: the Sonarr/Plex history import runs in a background job and can take
+               a minute. Show that it is working instead of an empty feed that fills "by magic". -->
+          <div class="backfill-card" role="status" aria-live="polite">
+            <span class="backfill-card__spinner" aria-hidden="true"></span>
+            <p class="backfill-card__title">{{ 'activity.backfill.title' | translate }}</p>
+            <p class="backfill-card__body">
+              {{ 'activity.backfill.body' | translate: { seconds: backfillSeconds() } }}
+            </p>
+          </div>
+        } @else if (loading() && items().length === 0) {
+          <div class="hub-skeleton">
+            @for (i of [1, 2, 3, 4, 5]; track i) { <div class="hub-skeleton__row"></div> }
+          </div>
+        } @else if (error()) {
+          <p class="hub-empty">{{ 'activity.hub.error' | translate }}</p>
+        } @else if (items().length === 0) {
+          <div class="hub-empty-card">
+            <span class="hub-empty-card__glyph" aria-hidden="true">◎</span>
+            <p class="hub-empty-card__title">{{ 'activity.tile.emptyFilter' | translate }}</p>
+            <p class="hub-empty-card__sub">{{ 'activity.hub.empty' | translate }}</p>
+          </div>
+        } @else {
+          <ul class="hub-feed">
+            @for (item of items(); track item.id) {
+              <!-- Sync runs get a compact horizontal banner, never an empty poster box -->
+              @if (isSync(item)) {
+                <li class="sync-banner">
+                  <span class="sync-banner__icon" aria-hidden="true">⟳</span>
+                  <div class="sync-banner__body">
+                    <span class="sync-banner__title">{{ item.title }}</span>
+                    <div class="sync-banner__chips">
+                      @if (payloadNumber(item, 'sonarrTotal'); as sonarrTotal) {
+                        <span class="chip chip--sonarr"><app-provider-icon provider="sonarr" [size]="13" /> Sonarr {{ sonarrTotal }}</span>
+                      }
+                      @if (payloadNumber(item, 'malTotal'); as malTotal) {
+                        <span class="chip chip--mal"><app-provider-icon provider="mal" [size]="13" /> MAL {{ malTotal }}</span>
+                      }
+                      @if (payloadNumber(item, 'plexTotal'); as plexTotal) {
+                        <span class="chip chip--plex"><app-provider-icon provider="plex" [size]="13" /> Plex {{ plexTotal }}</span>
+                      }
+                    </div>
+                  </div>
+                  <div class="sync-banner__aside">
+                    <span class="hub-time" [attr.title]="formatTimestamp(item.timestamp)">{{ relativeTime(item.timestamp) }}</span>
+                    @if (hasDetails(item)) {
+                      <button type="button" class="hub-link" (click)="toggleExpand(item)">
+                        {{ (isExpanded(item) ? 'activity.card.hideDetails' : 'activity.card.expandDiff') | translate }}
+                      </button>
+                    }
+                  </div>
+                  @if (isExpanded(item)) {
+                    @if (diffs(item).length === 0) {
+                      <!-- Baseline run: everything was indexed at once, so there is no diff to list. -->
+                      <p class="diff-note">{{ 'activity.card.baselineNote' | translate }}</p>
+                    }
+                    <ul class="diff-list">
+                      @for (d of diffs(item); track $index) {
+                        <li class="diff-row">
+                          <span class="diff-row__chip" [class.diff-row__chip--add]="d.action === 'added'"
+                            [class.diff-row__chip--remove]="d.action === 'removed'">
+                            {{ d.action === 'added' ? '+' : d.action === 'removed' ? '−' : '~' }}
+                          </span>
+                          <span class="diff-row__title">{{ d.title }}</span>
+                          <span class="diff-row__reason">{{ d.reason }}</span>
+                        </li>
+                      }
+                    </ul>
+                  }
+                </li>
+              } @else {
+                <li [class]="severityClass(item)">
+                  <button type="button" class="timeline-card__poster" (click)="openDetails(item)"
+                    [disabled]="!item.malId && !item.animeId" [attr.aria-label]="item.title">
+                    @if (item.posterUrl) {
+                      <img [src]="item.posterUrl" [alt]="item.title" loading="lazy"
+                        decoding="async" width="88" height="126" />
+                    } @else {
+                      <span class="timeline-card__ph" aria-hidden="true">{{ icon(item.type) }}</span>
+                    }
+                  </button>
+
+                  <div class="timeline-card__main">
+                    <div class="timeline-card__top">
+                      <span [class]="'event-pill event-pill--' + item.type">{{ eventKey(item) | translate }}</span>
+                      @if (item.isReverted) {
+                        <span class="hub-tag hub-tag--reverted">{{ 'activity.badge.reverted' | translate }}</span>
+                      }
+                      <span class="hub-time" [attr.title]="formatTimestamp(item.timestamp)">{{ relativeTime(item.timestamp) }}</span>
+                    </div>
+
+                    <span class="timeline-card__title" [class.timeline-card__title--link]="!!item.malId || !!item.animeId"
+                      (click)="openDetails(item)">{{ item.title }}</span>
+
+                    <div class="timeline-card__badges">
+                      @if (episodeCode(item); as code) { <span class="chip chip--mono">{{ code }}</span> }
+                      @if (restOfSubtitle(item)) { <span class="chip chip--muted">{{ restOfSubtitle(item) }}</span> }
+                    </div>
+
+                    <div class="provider-link-cluster">
+                      <!-- Opens the same detail drawer the anime cards use. Hidden when the show
+                           is not identified (no MAL id): a permanently greyed button is worse
+                           than no button. -->
+                      @if (item.malId || item.animeId) {
+                        <button type="button" class="btn-detail" (click)="openDetails(item)"
+                          [attr.title]="('activity.card.viewDetails' | translate)">
+                          {{ 'activity.card.details' | translate }}
+                        </button>
+                      }
+
+                      @if (providerLinks(item).length > 0) {
+                        @for (link of providerLinks(item); track link.provider) {
+                          <a class="btn-provider-link"
+                            [class]="'btn-provider-link btn-provider-link--' + link.provider"
+                            [href]="link.externalUrl" target="_blank" rel="noopener noreferrer"
+                            [attr.aria-label]="'activity.tile.openInProvider' | translate: { provider: link.label }"
+                            (click)="$event.stopPropagation()">
+                            <app-provider-icon [provider]="providerIcon(link.provider)" [size]="15" />
+                            <span>{{ link.label }}</span>
+                            <span class="ext-arrow" aria-hidden="true">↗</span>
+                          </a>
+                        }
+                      }
+                    </div>
+                  </div>
+                </li>
+              }
+            }
+          </ul>
+
+          @if (hasMore()) {
+            <button class="hub-more" type="button" (click)="loadMore()" [disabled]="loading()">
+              {{ 'activity.hub.loadMore' | translate }}
+            </button>
+          }
+        }
+      </div>
+      }
+    </section>
+
+    <!-- ── Right: analytics & system health (timeline only — logs take the full width) ── -->
+    @if (view() === 'timeline') {
+    <aside class="hub-side">
+      <div class="kpi-grid">
+        <div class="kpi kpi--net">
+          <span class="kpi__icon kpi__icon--emerald" aria-hidden="true">✦</span>
+          <div class="kpi__body">
+            <span class="kpi__value">{{ summary()?.netAdded ?? 0 }}</span>
+            <span class="kpi__label">{{ 'activity.kpi.netAnimeAdded' | translate }}</span>
+            <span class="kpi__range">{{ periodLabelKey() | translate }}</span>
+            <span class="kpi__sub">{{ 'activity.kpi.netSubtitle' | translate: { added: summary()?.added ?? 0, removed: summary()?.removed ?? 0 } }}</span>
+          </div>
+        </div>
+
+        <div class="kpi">
+          <span class="kpi__icon kpi__icon--indigo"><app-provider-icon provider="sonarr" [size]="20" /></span>
+          <div class="kpi__body">
+            <span class="kpi__value">{{ summary()?.ingested ?? 0 }}</span>
+            <span class="kpi__label">{{ 'activity.kpi.episodesIngested' | translate }}</span>
+            <span class="kpi__range">{{ periodLabelKey() | translate }}</span>
+          </div>
+        </div>
+
+        <div class="kpi" [class.kpi--muted]="!plexConfigured() && !(summary()?.watched)">
+          <span class="kpi__icon kpi__icon--amber"><app-provider-icon provider="plex" [size]="20" /></span>
+          <div class="kpi__body">
+            <span class="kpi__value">{{ summary()?.watched ?? 0 }}</span>
+            <span class="kpi__label">{{ 'activity.kpi.episodesWatched' | translate }}</span>
+            <span class="kpi__range">{{ periodLabelKey() | translate }}</span>
+            @if (!plexConfigured()) {
+              <!-- A zero that never moves is usually just "no Plex server connected". -->
+              <span class="kpi__hint">{{ 'activity.kpi.plexMissing' | translate }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="kpi">
+          <span class="kpi__icon kpi__icon--cyan" aria-hidden="true">⛁</span>
+          <div class="kpi__body">
+            <span class="kpi__value">{{ formatSize(storageForPeriod()) }}</span>
+            <span class="kpi__label">{{ 'activity.kpi.storageAdded' | translate }}</span>
+            <span class="kpi__range">{{ periodLabelKey() | translate }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="side-card trend-card">
+        <div class="side-card__head">
+          <span class="side-card__label">{{ 'activity.chart.title' | translate }}</span>
+          <span class="side-card__range">{{ periodLabelKey() | translate }}</span>
+        </div>
+
+        <div class="trend-legend">
+          @for (s of series(); track s.key) {
+            <span class="trend-legend__item">
+              <i class="trend-legend__dot" [style.background]="s.color"></i>{{ s.labelKey | translate }}
+            </span>
+          }
+        </div>
+
+        <div class="trend-canvas">
+          @if (trendPoints().length > 1 && !emptyPeriod()) {
+            <div class="trend-yaxis" aria-hidden="true">
+              @for (tick of yAxisTicks(); track $index) { <span>{{ tick }}</span> }
+            </div>
+
+            <svg class="trend-svg" viewBox="0 0 720 200" preserveAspectRatio="none" role="img"
+              [attr.aria-label]="'activity.chart.title' | translate"
+              (pointermove)="onChartPointer($event)" (pointerleave)="clearHover()">
+
+              @for (tick of yAxisTicks(); track $index) {
+                <line x1="36" [attr.y1]="16 + 39 * $index" x2="700" [attr.y2]="16 + 39 * $index" class="grid" />
+              }
+
+              @for (s of series(); track s.key) {
+                <path [attr.d]="s.path" fill="none" [attr.stroke]="s.color" stroke-width="2.2"
+                  stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" />
+              }
+
+              @if (hoverX(); as x) {
+                <line class="crosshair" [attr.x1]="x" y1="16" [attr.x2]="x" y2="172" />
+              }
+            </svg>
+
+            @if (hoverX(); as x) {
+              <span class="trend-tip" [style.left.%]="(x / 720) * 100">{{ hoverLabel() }}</span>
+            }
+
+            <div class="spark-labels">
+              @for (p of trendPoints(); track p.label; let i = $index) {
+                @if (i % 3 === 0 || i === trendPoints().length - 1) { <span>{{ p.label }}</span> }
+              }
+            </div>
+          } @else {
+            <svg class="trend-svg trend-svg--empty" viewBox="0 0 720 200" preserveAspectRatio="none" aria-hidden="true">
+              <line x1="36" y1="172" x2="700" y2="172" class="grid grid--baseline" />
+            </svg>
+            <div class="trend-empty">{{ 'activity.chart.emptyPeriod' | translate }}</div>
+          }
+        </div>
+      </div>
+
+      <div class="side-card sync-card">
+        <span class="side-card__label">{{ 'activity.syncCard.title' | translate }}</span>
+        @if (lastSync(); as last) {
+          <div class="sync-card__row">
+            <span class="sync-card__duration">{{ formatDuration(payloadNumber(last, 'durationMs')) }}</span>
+            <span class="sync-card__time" [attr.title]="formatTimestamp(last.timestamp)">{{ relativeTime(last.timestamp) }}</span>
+          </div>
+          <div class="sync-card__chips">
+            @if (payloadNumber(last, 'sonarrTotal'); as sonarrTotal) {
+              <span class="chip chip--sonarr"><app-provider-icon provider="sonarr" [size]="13" /> {{ sonarrTotal }}</span>
+            }
+            @if (payloadNumber(last, 'malTotal'); as malTotal) {
+              <span class="chip chip--mal"><app-provider-icon provider="mal" [size]="13" /> {{ malTotal }}</span>
+            }
+            @if (payloadNumber(last, 'plexTotal'); as plexTotal) {
+              <span class="chip chip--plex"><app-provider-icon provider="plex" [size]="13" /> {{ plexTotal }}</span>
+            }
+          </div>
+        } @else {
+          <p class="sync-card__empty">{{ 'activity.syncCard.none' | translate }}</p>
+        }
+      </div>
+    </aside>
+    }
+  </div>
+</div>
+
+<!-- In-place detail drawer: /activity never routes away -->
+@if (detailMalId(); as malId) {
+  <app-anime-detail-panel [malId]="detailMalId()" [animeId]="detailAnimeId()" (closed)="closeDetails()" />
+}

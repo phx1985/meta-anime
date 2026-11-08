@@ -10,10 +10,6 @@
   <ItemGroup>
     <PackageReference Include="linq2db.EntityFrameworkCore" Version="10.7.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.13" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.13">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.13" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
   </ItemGroup>
@@ -21,10 +17,6 @@
   <ItemGroup>
     <ProjectReference Include="../MetaAnime.Core/MetaAnime.Core.csproj" />
     <ProjectReference Include="../MetaAnime.Domain/MetaAnime.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Data/Migrations/" />
   </ItemGroup>
 
 </Project>

@@ -42,6 +42,7 @@ public sealed class AnimeMediatorService(
     ISonarrHistoryEventRepository sonarrHistoryEventRepository,
     AniListCastService anilistCastService,
     AniListOriginService anilistOriginService,
+    ActivityLogService activityLog,
     IMemoryCache cache,
     IOptions<MalSettings> malOptions,
     ILogger<AnimeMediatorService> logger)
@@ -675,15 +676,24 @@ public sealed class AnimeMediatorService(
         try
         {
             var nowUtc = DateTime.UtcNow;
-            var windowStart = ActivityStatsCalculator.WindowStartUtc(nowUtc);
+            // Keep several years in the mirror: the hub can chart past years, and pruning at
+            // Jan 1 of the current year made "Year → 2024" impossible.
+            var windowStart = ActivityStatsCalculator.HistoryWindowStartUtc(nowUtc);
 
             // Cold start (or a mirror that never reached the current year) backfills the whole
             // stats window in a single call. Once warm, only the recent overlap is requested —
             // that is what turns an hourly 20s job into a few-hundred-ms one.
             var watermark = await sonarrHistoryEventRepository.GetLatestOccurredAtAsync();
-            var since = watermark is null || watermark.Value - DownloadHistoryOverlap < windowStart
+            var earliest = await sonarrHistoryEventRepository.GetEarliestOccurredAtAsync();
+
+            // A mirror that does not reach the retention floor gets a full backfill — that is
+            // what happens the first time after the floor moves back (e.g. now that past years
+            // are chartable). Otherwise only the recent overlap is re-requested.
+            var needsBackfill = earliest is null || earliest.Value > windowStart.AddDays(1);
+
+            var since = needsBackfill
                 ? windowStart
-                : watermark.Value - DownloadHistoryOverlap;
+                : (watermark ?? windowStart) - DownloadHistoryOverlap;
 
             var fetched = await sonarrAnimeSource.GetDownloadHistorySinceAsync(since);
             if (fetched.IsFailure)
@@ -704,6 +714,13 @@ public sealed class AnimeMediatorService(
                 })
                 .ToList();
 
+            // Diff against what we already mirror *before* merging, so the activity feed can
+            // log one card per genuinely new import instead of a bare count.
+            var knownIds = (await sonarrHistoryEventRepository.GetSinceAsync(since))
+                .Select(e => e.Id)
+                .ToHashSet();
+            var newEvents = incoming.Where(e => !knownIds.Contains(e.Id)).ToList();
+
             var inserted = await sonarrHistoryEventRepository.MergeAsync(incoming);
             await sonarrHistoryEventRepository.PruneBeforeAsync(windowStart);
 
@@ -711,7 +728,8 @@ public sealed class AnimeMediatorService(
                 fetched.Value.Count,
                 inserted,
                 since,
-                (long)Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds));
+                (long)Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds,
+                newEvents));
         }
         catch (Exception ex)
         {
@@ -1725,6 +1743,14 @@ public sealed class AnimeMediatorService(
             var added = addResult.Value;
 
             // Construct a SonarrSeries for cache/DB persistence (full JSON including TvdbId)
+            await activityLog.LogAsync(
+                ActivityType.AnimeAdded,
+                added.Title,
+                "Added to Sonarr",
+                int.TryParse(malId, out var loggedMalId) ? loggedMalId : null,
+                tvdbId,
+                provider: "sonarr");
+
             var seriesForSync = new SonarrSeries { Id = added.Id, Title = added.Title, TitleSlug = added.TitleSlug, TvdbId = tvdbId };
 
             // Write full cache entry for immediate TitleSlug availability
@@ -1798,6 +1824,15 @@ public sealed class AnimeMediatorService(
             if (malAnimeResult.IsSuccess && malAnimeResult.Value != null)
             {
                 var malAnime = malAnimeResult.Value;
+
+                await activityLog.LogAsync(
+                    ActivityType.AnimeAdded,
+                    malAnime.Title ?? malId,
+                    $"Added to MyAnimeList ({status})",
+                    int.TryParse(malId, out var parsedMalId) ? parsedMalId : null,
+                    null,
+                    malAnime.MainPicture?.Large ?? malAnime.MainPicture?.Medium,
+                    provider: "mal");
 
                 // Replace any stale cache entry with the fresh fetch
                 var existingCache = await cacheEntryService.GetAsync(AnimeSource.MyAnimeList, malId);

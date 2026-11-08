@@ -463,3 +463,70 @@ export interface VoiceActorProfileResponse {
   /** Fuzzy/partial ('--05-12', '1985--') or null — UI renders what exists. */
   birthday?: string | null;
 }
+
+/** One row of the Activity Hub feed (GET /api/v1/activity/feed). */
+/** One resolved deep link into a provider. */
+export interface ActivityProviderLink {
+  provider: 'mal' | 'sonarr' | 'plex' | string;
+  label: string;
+  externalUrl: string;
+}
+
+export interface ActivityFeedItem {
+  id: string;
+  type: 'AnimeAdded' | 'AnimeRemoved' | 'AnimeUpdated' | 'EpisodeDownloaded' | 'EpisodeWatched' | 'SeasonCompleted' | 'SyncCompleted';
+  title: string;
+  subtitle?: string | null;
+  severity?: 'info' | 'success' | 'warning' | 'error' | string;
+  malId?: number | null;
+  tvdbId?: number | null;
+  sonarrSeriesId?: number | null;
+  /** Internal anime id: lets the detail drawer open even without a MAL id. */
+  animeId?: string | null;
+  posterUrl?: string | null;
+  metadataJson?: string | null;
+  isReverted?: boolean;
+  providerLinks?: ActivityProviderLink[];
+  timestamp: string;
+}
+
+/** Activity polling cadence (GET/PUT /api/v1/activity/config). */
+export interface ActivityConfigResponse {
+  intervalMinutes: number;
+  lastRunAt?: string | null;
+  /** False when no Plex host/token is stored: "Watched on Plex" cannot move until it is. */
+  plexConfigured?: boolean;
+}
+
+/** One bucket of the multi-series activity trend (GET /api/v1/activity/trend). */
+export interface ActivityTrendPoint {
+  label: string;
+  ingested: number;
+  added: number;
+  watched: number;
+  syncs: number;
+}
+
+export interface ActivityTrendResponse {
+  period: string;
+  points: ActivityTrendPoint[];
+}
+
+/** Net counters for the Activity hub KPI cards (GET /api/v1/activity/summary). */
+export interface ActivitySummaryResponse {
+  added: number;
+  removed: number;
+  netAdded: number;
+  ingested: number;
+  watched: number;
+  seasonsCompleted: number;
+  syncRuns: number;
+  days: number;
+}
+
+export interface ActivityFeedResponse {
+  items: ActivityFeedItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+}

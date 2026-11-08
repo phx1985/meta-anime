@@ -66,6 +66,12 @@ builder.Configuration.AddJsonFile(
 
 builder.AddServiceDefaults();
 
+// Recent log lines, exposed through GET /api/v1/logs so the UI can show real server logs.
+var logStore = new MetaAnime.Core.Logging.InMemoryLogStore();
+builder.Services.AddSingleton(logStore);
+// Same instance: the provider tees into the very store the controller reads.
+builder.Logging.AddProvider(new MetaAnime.Presentation.Logging.InMemoryLoggerProvider(logStore));
+
 // Add services to the container.
 builder.Services.AddResponseCaching();
 
@@ -170,28 +176,16 @@ if (!string.IsNullOrWhiteSpace(dataProtectionKeysDir))
     }
 }
 var app = builder.Build();
-await app.Services.MigrateDatabaseAsync();
+await app.Services.EnsureDatabaseAsync();
 
-// Hangfire.PostgreSql probes its version table ("hangfire"."schema") BEFORE creating it,
-// so on a fresh database Postgres logs `relation "hangfire.schema" does not exist` once.
-// Pre-create the schema and version table with the installer's own idempotent DDL so the
-// probe simply reads zero rows and the install proceeds silently. The warm-up connection
-// also forces the (idempotent) install to complete single-threaded before the background
+// Hangfire.PostgreSql installs its own schema/tables on first connection (no DDL from us —
+// the app schema comes from EnsureCreatedAsync above, and nothing here is a migration).
+// One warm-up call forces that install to finish single-threaded before the background
 // server hands connections to its workers.
-await using (var hangfireSetup = new Npgsql.NpgsqlConnection(hangfireConnectionString))
-{
-    await hangfireSetup.OpenAsync();
-    await using var setupCommand = new Npgsql.NpgsqlCommand(
-        """
-        CREATE SCHEMA IF NOT EXISTS "hangfire";
-        CREATE TABLE IF NOT EXISTS "hangfire"."schema" ("version" INT NOT NULL, PRIMARY KEY ("version"));
-        """, hangfireSetup);
-    await setupCommand.ExecuteNonQueryAsync();
-}
 using (var hangfireConnection = (app.Services.GetService<JobStorage>() ?? JobStorage.Current).GetConnection())
 {
     // Job ids are numeric in Hangfire.PostgreSql (GetJobData parses the id as long) —
-    // a nonexistent id just returns null but still forces the schema bootstrap above.
+    // a nonexistent id just returns null but still forces the schema bootstrap.
     hangfireConnection.GetJobData("1");
 }
 

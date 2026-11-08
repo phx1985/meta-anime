@@ -20,8 +20,8 @@ import {
   CrossLinkEntry,
   MalSearchResult,
   SeiyuuNexusResponse,
-  VoiceActorProfileResponse,
-} from '../models/anime.models';
+  VoiceActorProfileResponse, ActivityFeedResponse, ActivitySummaryResponse, ActivityConfigResponse,
+  ActivityTrendResponse } from '../models/anime.models';
 import { MalListStatusRequest } from '../models/sonarr.models';
 
 @Injectable({ providedIn: 'root' })
@@ -47,6 +47,77 @@ export class AnimeService {
   }
 
   /** Newest-first list of the episodes imported during the given activity period. */
+  /** Activity Hub feed (adds, downloads, completions, sync diffs). */
+  /** Activity polling cadence (0 = manual only). */
+  getActivityConfig(): Observable<ActivityConfigResponse> {
+    return this.http.get<ActivityConfigResponse>('/api/v1/activity/config');
+  }
+
+  /** Multi-series trend (ingested / added / watched / syncs) for the hub chart. */
+  getActivityTrend(
+    period: ActivityPeriod,
+    tzOffset: number,
+    year?: number | null,
+  ): Observable<ActivityTrendResponse> {
+    const params: Record<string, string> = { period, tzOffset: String(tzOffset) };
+    if (period === 'thisYear' && year) params['year'] = String(year);
+
+    return this.http.get<ActivityTrendResponse>('/api/v1/activity/trend', { params });
+  }
+
+  /** Enqueues the activity backfill now (first-run prompt on the hub). */
+  refreshActivity(): Observable<void> {
+    return this.http.post<void>('/api/v1/activity/refresh', {});
+  }
+
+  updateActivityConfig(intervalMinutes: number): Observable<ActivityConfigResponse> {
+    return this.http.put<ActivityConfigResponse>('/api/v1/activity/config', { intervalMinutes });
+  }
+
+  /** Net KPI counters for the Activity hub (adds − removals, ingested, watched). */
+  getActivitySummary(days = 30): Observable<ActivitySummaryResponse> {
+    return this.http.get<ActivitySummaryResponse>('/api/v1/activity/summary', {
+      params: { days: String(days) },
+    });
+  }
+
+  /**
+   * Same counters, but over the CALENDAR window of `period` — the boundary the trend chart and
+   * the download tiles use, so the global range pills drive every card on the page.
+   */
+  getActivityPeriodSummary(
+    period: ActivityPeriod,
+    tzOffset: number,
+    year?: number | null,
+  ): Observable<ActivitySummaryResponse> {
+    const params: Record<string, string> = { period, tzOffset: String(tzOffset) };
+    if (period === 'thisYear' && year) params['year'] = String(year);
+
+    return this.http.get<ActivitySummaryResponse>('/api/v1/activity/summary', { params });
+  }
+
+  /** Years the hub can chart (newest first) — drives the year picker next to "Year". */
+  getActivityYears(): Observable<number[]> {
+    return this.http.get<number[]>('/api/v1/activity/years');
+  }
+
+  getActivityFeed(
+    type: string,
+    page = 1,
+    pageSize = 25,
+    search = '',
+    period?: ActivityPeriod,
+    tzOffset = 0,
+    year?: number | null,
+  ): Observable<ActivityFeedResponse> {
+    let params = new HttpParams().set('type', type).set('page', String(page)).set('pageSize', String(pageSize));
+    if (search.trim()) params = params.set('search', search.trim());
+    // The timeline follows the same range pills as the tiles and the chart.
+    if (period) params = params.set('period', period).set('tzOffset', String(tzOffset));
+    if (period === 'thisYear' && year) params = params.set('year', String(year));
+    return this.http.get<ActivityFeedResponse>('/api/v1/activity/feed', { params });
+  }
+
   getActivityEpisodes(
     period: ActivityPeriod,
     tzOffset: number,

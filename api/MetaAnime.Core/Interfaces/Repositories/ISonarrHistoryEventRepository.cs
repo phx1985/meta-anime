@@ -11,6 +11,9 @@ public interface ISonarrHistoryEventRepository
     /// <summary>Returns every mirrored event at or after <paramref name="fromUtc"/>, unsorted.</summary>
     Task<IReadOnlyList<SonarrHistoryEvent>> GetSinceAsync(DateTime fromUtc, CancellationToken cancellationToken = default);
 
+    /// <summary>Timestamp of the oldest mirrored event, or <c>null</c> when the mirror is empty.</summary>
+    Task<DateTime?> GetEarliestOccurredAtAsync(CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Timestamp of the newest mirrored event, or <c>null</c> when the mirror is empty.
     /// Used as the incremental sync watermark.

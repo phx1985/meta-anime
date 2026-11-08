@@ -785,6 +785,13 @@ export class SetupWizardComponent implements OnInit, OnDestroy {
     this.goToStep(SetupWizardComponent.SYNC_STEP);
   }
 
+  /** Footer ghost action: reset the import state and reopen the file picker. */
+  rechooseFile(): void {
+    this.importState.set({ status: 'idle', progress: 0, detected: [] });
+    this.importStatus.set(null);
+    document.getElementById('config-file-input')?.click();
+  }
+
   /** Re-opens the picker without losing the wizard state. */
   chooseAnotherFile(input: HTMLInputElement): void {
     this.importState.set({ status: 'idle', progress: 0, detected: [] });

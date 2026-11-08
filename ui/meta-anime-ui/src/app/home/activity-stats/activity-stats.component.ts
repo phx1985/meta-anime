@@ -29,6 +29,7 @@ import {
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { AnimeService } from '../../services/anime.service';
+import { SyncSignalRService } from '../../services/sync-signalr.service';
 import { ProviderStateService } from '../../services/provider-state.service';
 import { ThemeService } from '../../services/theme.service';
 import { ActivityChartPoint, ActivityEpisodeItem, ActivityPeriod, ActivityStatsResponse } from '../../models/anime.models';
@@ -63,6 +64,7 @@ type Period = ActivityPeriod;
 })
 export class ActivityStatsComponent implements OnInit, AfterViewInit, OnDestroy {
   private animeService = inject(AnimeService);
+  private readonly syncSignalR = inject(SyncSignalRService);
   private destroyRef = inject(DestroyRef);
   private translate = inject(TranslateService);
   readonly providerState = inject(ProviderStateService);
@@ -262,6 +264,33 @@ export class ActivityStatsComponent implements OnInit, AfterViewInit, OnDestroy 
   retryFetch(): void {
     this.fetchStats();
   }
+
+  /** True while the backend activity refresh runs — hydrated on refresh, live via SignalR. */
+  readonly activitySyncRunning = this.syncSignalR.isActivitySyncRunning;
+
+  /** Reloads the stats once the backend job finishes (covers a refresh started elsewhere/F5). */
+  private readonly _reloadOnActivityDone = effect(() => {
+    const running = this.activitySyncRunning();
+    if (this._wasActivityRunning && !running) {
+      this.animeService
+        .getActivityStats(new Date().getTimezoneOffset())
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (data) => {
+            this.activityStats.set(data);
+            this.loading.set(false);
+            this.refreshing.set(false);
+          },
+          error: () => {},
+        });
+    }
+    this._wasActivityRunning = running;
+  });
+
+  private _wasActivityRunning = false;
+
+  /** The button and overlay react to both the local request and the backend job. */
+  readonly isRefreshing = computed(() => this.refreshing() || this.activitySyncRunning());
 
   forceRefresh(): void {
     if (this.refreshing()) return;

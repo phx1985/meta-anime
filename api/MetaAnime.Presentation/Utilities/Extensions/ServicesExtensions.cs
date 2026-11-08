@@ -70,7 +70,28 @@ public static class ServicesExtensions
         services.AddHttpClient("Kometa");
         // Named clients for Sonarr/MAL traffic: pooled handlers + the Aspire standard
         // resilience handler apply to every request (RestSharp wraps these clients).
-        services.AddHttpClient("Sonarr");
+        //
+        // Sonarr gets its OWN pipeline: a cold first sync reads /api/v3/series in one request
+        // (~700 series with images + season statistics, several MB), which routinely outlives
+        // the default 10 s AttemptTimeout. The handler then cancels the transfer mid-body and
+        // the retry pays for the whole payload again — measured 15.1 s for a library that took
+        // ~5 s to transfer, plus a red `fail: Polly … OnTimeout` line on the very first sync.
+        // Retries stay on for real outages; only the per-attempt budget is sized for this read.
+#pragma warning disable EXTEXP0001 // RemoveAllResilienceHandlers is experimental but stable for our use
+        services.AddHttpClient("Sonarr")
+            .RemoveAllResilienceHandlers()
+            .AddStandardResilienceHandler(options =>
+            {
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(60);
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(3);
+                // Polly validates SamplingDuration >= 2 × AttemptTimeout.
+                options.CircuitBreaker.SamplingDuration = TimeSpan.FromMinutes(3);
+                options.Retry.MaxRetryAttempts = 2;
+            });
+#pragma warning restore EXTEXP0001
+        // Plex server (media server) traffic: watch-history polling for the Activity hub.
+        services.AddHttpClient(PlexWatchHistoryPoller.HttpClientName, client =>
+            client.DefaultRequestHeaders.Add("Accept", "application/json"));
         services.AddHttpClient("MAL");
         services.AddScoped<IKometaAnimeJsonService<KometaRaw>, KometaAnimeJsonService>();
         services.AddScoped<IKometaAnimeMappingService, KometaAnimeMappingService>();
@@ -122,6 +143,9 @@ public static class ServicesExtensions
         services.AddScoped<IAnimeCastRepository, AnimeCastRepository>();
         services.AddScoped<IVoiceActorRepository, VoiceActorRepository>();
         services.AddScoped<ISonarrHistoryEventRepository, SonarrHistoryEventRepository>();
+        services.AddScoped<IActivityLogRepository, ActivityLogRepository>();
+        services.AddScoped<ActivityLogService>();
+        services.AddScoped<PlexWatchHistoryPoller>();
         // AniList GraphQL client: singleton pacing gate (400ms spacing, 55 req/60s sliding window,
         // queue with 15s drop budget — safe under AniList's ~90 req/min unauthenticated limit) and
         // two-state negative cache shared across requests. The pipeline POSTs { query, variables }
@@ -180,10 +204,15 @@ public static class ServicesExtensions
 
 
     /// <summary>
-    /// Migrate database
+    /// Creates the schema straight from the EF model on a fresh database.
+    /// <para>
+    /// This project is pre-1.0 and the development database is thrown away on every apphost run,
+    /// so there is no upgrade path to maintain: no migration classes, no version table, no SQL
+    /// scripts to keep in sync with the model. Changing an entity is enough — the next start
+    /// builds the new shape from scratch.
+    /// </para>
     /// </summary>
-    /// <param name="serviceProvider"></param>
-    public static async Task MigrateDatabaseAsync(this IServiceProvider serviceProvider)
+    public static async Task EnsureDatabaseAsync(this IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<MetaAnimeDbContext>();
@@ -199,17 +228,9 @@ public static class ServicesExtensions
 
             try
             {
-                // Pre-create the migrations history table so EF Core can query it
-                // without logging "Failed executing DbCommand" on a fresh database.
-                await dbContext.Database.ExecuteSqlRawAsync("""
-                    CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
-                        "MigrationId" character varying(150) NOT NULL,
-                        "ProductVersion" character varying(32) NOT NULL,
-                        CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
-                    )
-                    """);
-
-                await dbContext.Database.MigrateAsync();
+                // Returns false when the database already holds tables (a recycled server):
+                // the schema was created by a previous run, nothing to do.
+                await dbContext.Database.EnsureCreatedAsync();
                 return;
             }
             catch (Exception ex)

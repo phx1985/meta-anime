@@ -470,6 +470,29 @@ export class SettingsComponent {
   }
 
   constructor() {
+    // Deep link from a notification ("View log →"): /settings#sync-log must land on the
+    // sync section with the log visible, not just change the URL.
+    this.route.fragment
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((fragment) => {
+        if (!fragment) return;
+        if (fragment === 'sync-log' || fragment === 'sync' || fragment === 'api-logs') {
+          setTimeout(() => {
+            this.scrollToSection('sync');
+            setTimeout(() => {
+              // Both fragments land on the server-log panel (the step list sits right above it).
+              // Offset by the sticky navbar height so the panel header is not hidden underneath it.
+              const panel = document.getElementById('api-logs');
+              if (panel) {
+                const NAVBAR_OFFSET = 88;
+                const top = panel.getBoundingClientRect().top + window.scrollY - NAVBAR_OFFSET;
+                window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+              }
+            }, SettingsComponent.DEEP_LINK_SCROLL_DELAY_MS);
+          }, SettingsComponent.DEEP_LINK_SCROLL_DELAY_MS);
+        }
+      });
+
     this.signalR.connect();
 
     this.destroyRef.onDestroy(() => {
@@ -985,6 +1008,7 @@ export class SettingsComponent {
           setTimeout(() => {
             if (this.savedKey() === setting.key) this.savedKey.set(null);
           }, 2000);
+
         },
         error: () => {
           this.savingKey.set(null);
@@ -1008,6 +1032,7 @@ export class SettingsComponent {
 
   onSelectChange(setting: SettingDefinition, event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
+    const previous = setting.value;
     this.savingKey.set(setting.key);
     this.settingsService
       .update(setting.key, { value })
@@ -1022,6 +1047,26 @@ export class SettingsComponent {
           setTimeout(() => {
             if (this.savedKey() === setting.key) this.savedKey.set(null);
           }, 2000);
+
+          // Sync cadence is the one select with real consequences, so it gets an Undo.
+          if (setting.key === 'App:SyncInterval' && previous && previous !== value) {
+            const label = this.translate.instant('settings.fields.App_SyncInterval.name');
+            this.notifService.pushOrReplace(
+              {
+                id: `setting-${setting.key}`,
+                severity: 'info',
+                titleKey: this.translate.instant('notifications.settings.changedTitle'),
+                messageKey: this.translate.instant('notifications.settings.changedMessage', { setting: label }),
+                action: { labelKey: this.translate.instant('notifications.settings.undo') },
+              },
+              () => {
+                const current = this.settings().find((s) => s.key === setting.key);
+                if (current) {
+                  this.onSelectChange(current, { target: { value: previous } } as unknown as Event);
+                }
+              },
+            );
+          }
         },
         error: () => {
           this.savingKey.set(null);
@@ -1481,6 +1526,29 @@ export class SettingsComponent {
           if (enabling && cat !== 'botkun') {
             this.popupService.openSyncPrompt(cat);
           }
+
+          // One-click revert from the toast or the bell. The callback is session-scoped
+          // (NotificationService drops it on reload), so the notification shows without an
+          // action after an F5 instead of a dead button.
+          const label = this.translate.instant('providers.' + cat);
+          this.notifService.pushOrReplace(
+            {
+              id: `setting-${key}`,
+              severity: 'info',
+              titleKey: this.translate.instant('notifications.settings.changedTitle'),
+              messageKey: this.translate.instant('notifications.settings.changedMessage', { setting: label }),
+              action: { labelKey: this.translate.instant('notifications.settings.undo') },
+            },
+            () => {
+              this._doProviderToggle(cat, !enabling);
+              this.notifService.push({
+                id: `setting-reverted-${key}-${Date.now()}`,
+                severity: 'success',
+                titleKey: this.translate.instant('notifications.settings.revertedTitle'),
+                messageKey: this.translate.instant('notifications.settings.revertedMessage', { setting: label }),
+              });
+            },
+          );
         },
         error: () => {
           this.savingKey.set(null);

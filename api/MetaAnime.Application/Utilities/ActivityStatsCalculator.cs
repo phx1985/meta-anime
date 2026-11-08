@@ -16,6 +16,9 @@ public static class ActivityStatsCalculator
     /// </summary>
     public const int WindowSlackDays = 8;
 
+    /// <summary>How many past years the mirror keeps, so the hub can show older trends.</summary>
+    public const int HistoryYearsBack = 3;
+
     private static readonly string[] ShortDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     private static readonly string[] ShortMonths =
         ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -25,6 +28,13 @@ public static class ActivityStatsCalculator
     /// </summary>
     public static DateTime WindowStartUtc(DateTime nowUtc) =>
         new DateTime(nowUtc.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddDays(-WindowSlackDays);
+
+    /// <summary>
+    /// Earliest instant the download mirror keeps: N years back, so "Year → 2024" has data
+    /// instead of an empty chart. Pruning uses the same floor.
+    /// </summary>
+    public static DateTime HistoryWindowStartUtc(DateTime nowUtc) =>
+        new DateTime(nowUtc.Year - HistoryYearsBack, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddDays(-WindowSlackDays);
 
     /// <summary>
     /// Local-midnight boundaries of every selectable period. Shared by the tiles aggregation
@@ -41,12 +51,72 @@ public static class ActivityStatsCalculator
         new DateTime(nowLocal.Year, 1, 1));
 
     /// <summary>
+    /// Buckets of the multi-series trend chart: label + [start, end) window in LOCAL time.
+    /// Same boundaries as the tiles/chart so the lines can never disagree with the counters.
+    /// </summary>
+    public static IReadOnlyList<(string Label, DateTime StartLocal, DateTime EndLocal)> TrendBuckets(
+        ActivityStatsPeriod period, DateTime nowUtc, int tzOffsetMinutes, int? year = null)
+    {
+        var nowLocal = nowUtc.AddMinutes(-tzOffsetMinutes);
+        var bounds = Bounds(nowLocal);
+        var buckets = new List<(string, DateTime, DateTime)>();
+
+        switch (period)
+        {
+            case ActivityStatsPeriod.Today:
+                for (var hour = 0; hour < 24; hour++)
+                {
+                    var start = nowLocal.Date.AddHours(hour);
+                    buckets.Add((start.Hour.ToString("00"), start, start.AddHours(1)));
+                }
+                break;
+
+            case ActivityStatsPeriod.ThisWeek:
+                for (var i = 0; i < 7; i++)
+                {
+                    var start = bounds.Week.AddDays(i);
+                    buckets.Add((ShortDays[(int)start.DayOfWeek], start, start.AddDays(1)));
+                }
+                break;
+
+            case ActivityStatsPeriod.ThisMonth:
+                var days = DateTime.DaysInMonth(nowLocal.Year, nowLocal.Month);
+                for (var i = 0; i < days; i++)
+                {
+                    var start = bounds.Month.AddDays(i);
+                    buckets.Add((start.Day.ToString(), start, start.AddDays(1)));
+                }
+                break;
+
+            default:
+                var chartedYear = year ?? nowLocal.Year;
+                for (var i = 0; i < 12; i++)
+                {
+                    var start = new DateTime(chartedYear, i + 1, 1);
+                    buckets.Add((ShortMonths[i], start, start.AddMonths(1)));
+                }
+                break;
+        }
+
+        return buckets;
+    }
+
+    /// <summary>
     /// UTC instant at/after which an event belongs to <paramref name="period"/> for a caller at
     /// <paramref name="tzOffsetMinutes"/>.
     /// </summary>
-    public static DateTime PeriodStartUtc(ActivityStatsPeriod period, DateTime nowUtc, int tzOffsetMinutes)
+    public static DateTime PeriodStartUtc(
+        ActivityStatsPeriod period, DateTime nowUtc, int tzOffsetMinutes, int? year = null)
     {
-        var bounds = Bounds(nowUtc.AddMinutes(-tzOffsetMinutes));
+        var nowLocal = nowUtc.AddMinutes(-tzOffsetMinutes);
+        if (year is not null && period == ActivityStatsPeriod.ThisYear)
+        {
+            // An explicit year shifts the whole yearly window; the other periods stay "current".
+            return DateTime.SpecifyKind(
+                new DateTime(year.Value, 1, 1).AddMinutes(tzOffsetMinutes), DateTimeKind.Utc);
+        }
+
+        var bounds = Bounds(nowLocal);
         var localStart = period switch
         {
             ActivityStatsPeriod.Today     => bounds.Today,

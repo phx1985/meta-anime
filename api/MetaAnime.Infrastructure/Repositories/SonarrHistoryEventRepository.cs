@@ -18,6 +18,15 @@ public sealed class SonarrHistoryEventRepository(MetaAnimeDbContext dbContext) :
     }
 
     /// <inheritdoc />
+    public async Task<DateTime?> GetEarliestOccurredAtAsync(CancellationToken cancellationToken = default)
+    {
+        return await dbContext.SonarrHistoryEvents
+            .AsNoTracking()
+            .OrderBy(e => e.OccurredAt)
+            .Select(e => (DateTime?)e.OccurredAt)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async Task<DateTime?> GetLatestOccurredAtAsync(CancellationToken cancellationToken = default)
     {
         return await dbContext.SonarrHistoryEvents
