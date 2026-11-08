@@ -89,6 +89,7 @@
                 accept=".json,application/json"
                 class="wizard-import-file-input"
                 #configFileInput
+                id="config-file-input"
                 (change)="onImportFileSelected($event)"
               />
               <button
@@ -108,14 +109,7 @@
                 }
                 <span class="btn-label">{{ 'configBackup.importTitle' | translate }}</span>
               </button>
-              <button
-                type="button"
-                class="wizard-import-link"
-                (click)="configFileInput.click()"
-                [disabled]="importingConfig()"
-              >
-                {{ 'configBackup.dropHint' | translate }}
-              </button>
+              <p class="wizard-import-hint">{{ 'configBackup.dropHint' | translate }}</p>
 
               @if (importState().status !== 'idle') {
                 <div class="import-card"
@@ -162,16 +156,6 @@
                     </div>
                   }
 
-                  <div class="import-actions">
-                    <button type="button" class="import-link" (click)="chooseAnotherFile(configFileInput)">
-                      {{ 'onboarding.import.chooseAnother' | translate }}
-                    </button>
-                    @if (importState().status === 'verified') {
-                      <button type="button" class="wizard-primary-btn import-continue" (click)="continueToRecap()">
-                        {{ 'onboarding.import.continueToRecap' | translate }}
-                      </button>
-                    }
-                  </div>
                 </div>
               }
 
@@ -787,15 +771,27 @@
               ← {{ 'wizard.back' | translate }}
             </button>
           }
+        } @else if (step() === 1 && importState().status !== 'idle') {
+          <button type="button" class="wizard-back-btn" (click)="rechooseFile()">
+            × {{ 'onboarding.import.chooseAnother' | translate }}
+          </button>
         } @else {
           <div></div>
         }
 
         <div class="wizard-footer-right">
           @if (step() === 1) {
-            <button type="button" class="wizard-next-btn" (click)="nextStep()">
-              {{ 'wizard.step1.getStarted' | translate }}
-            </button>
+            @if (importState().status === 'idle') {
+              <button type="button" class="wizard-next-btn" (click)="nextStep()">
+                {{ 'wizard.step1.getStarted' | translate }}
+              </button>
+            } @else {
+              <button type="button" class="wizard-next-btn"
+                [disabled]="importState().status !== 'verified'"
+                (click)="continueToRecap()">
+                {{ 'onboarding.import.continueToRecap' | translate }}
+              </button>
+            }
           }
 
           @if (step() === 2) {

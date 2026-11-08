@@ -5,7 +5,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, forkJoin, debounceTime, switchMap, of, catchError, firstValueFrom } from 'rxjs';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AnimeService } from '../services/anime.service';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SettingsService } from '../services/settings.service';
+import { NotificationService } from '../services/notification.service';
 import { SonarrService } from '../services/sonarr.service';
 import { FilterPresetService } from '../services/filter-preset.service';
 import { UserPreferencesService } from '../services/user-preferences.service';
@@ -138,6 +140,9 @@ const DEFAULT_FOR_YOU_FILTERS: ForYouFilters = {
 export class SeasonalComponent {
   private animeService = inject(AnimeService);
   private settingsService = inject(SettingsService);
+  private notifService = inject(NotificationService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private presetService = inject(FilterPresetService);
   private userPrefs = inject(UserPreferencesService);
   private destroyRef = inject(DestroyRef);
@@ -628,6 +633,17 @@ export class SeasonalComponent {
   });
 
   constructor() {
+    // Deep link from an "Anime added" notification: open the panel, then clear the param so
+    // a refresh does not reopen it.
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        const malId = params.get('malId');
+        if (!malId) return;
+        this.openDetailsByMalId(malId);
+        this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
+      });
+
     this.settingsService
       .getShowNsfw()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -1084,7 +1100,12 @@ export class SeasonalComponent {
   /** Picks the user passed on — removed from the visible pool but kept for stats. */
   readonly passedIds = signal<ReadonlySet<string>>(new Set());
   /** Multi-selection for the batch bar. */
-  readonly selectedIds = signal<ReadonlySet<string>>(new Set());
+  /**
+   * Selection is keyed by MAL id and holds the *item itself*, not an index and not a boolean.
+   * Scrolling, filtering, paging or a deck reshuffle can therefore never lose or scramble a
+   * chosen title — the payload needed to add it travels with the selection.
+   */
+  readonly selectedPicks = signal<ReadonlyMap<string, SeasonalSuggestionItem>>(new Map());
   /** Discovery filters, persisted under one versioned localStorage key. */
   readonly forYouFilters = signal<ForYouFilters>(this._loadForYouFilters());
 
@@ -1116,10 +1137,8 @@ export class SeasonalComponent {
   });
   /** Remaining ranked candidates behind the visible slots. */
   readonly reserveQueue = computed(() => this.visiblePicks().slice(SeasonalComponent.DECK_SLOTS));
-  readonly selectedItems = computed(() => {
-    const selected = this.selectedIds();
-    return this.visiblePicks().filter((p) => selected.has(p.malId));
-  });
+  /** Everything the user ticked, including titles the current filters no longer show. */
+  readonly selectedItems = computed(() => [...this.selectedPicks().values()]);
   readonly batchState = signal<BatchAddState | null>(null);
   readonly batchMessage = signal<string | null>(null);
   /** Cards mid fade-out — used by the template for the leaving animation. */
@@ -1291,9 +1310,9 @@ export class SeasonalComponent {
       malIds.forEach((id) => cleared.delete(id));
       this.leavingMalIds.set(cleared);
 
-      const selected = new Set(this.selectedIds());
+      const selected = new Map(this.selectedPicks());
       malIds.forEach((id) => selected.delete(id));
-      this.selectedIds.set(selected);
+      this.selectedPicks.set(selected);
 
       this._flashEntering(this.activeSlots().map((s) => s.malId));
     }, SeasonalComponent.LEAVE_MS);
@@ -1725,7 +1744,7 @@ export class SeasonalComponent {
 
   /** Clears the selection whenever the pool changes shape (season/scope switch). */
   clearSelection(): void {
-    this.selectedIds.set(new Set());
+    this.selectedPicks.set(new Map());
   }
 
   private _patchFilters(patch: Partial<ForYouFilters>): void {
@@ -1733,10 +1752,6 @@ export class SeasonalComponent {
     this.forYouFilters.set(next);
     this._saveForYouFilters(next);
 
-    // Selected cards that no longer match must not linger in the batch bar.
-    const visible = new Set(this.visiblePicks().map((p) => p.malId));
-    const kept = [...this.selectedIds()].filter((id) => visible.has(id));
-    if (kept.length !== this.selectedIds().size) this.selectedIds.set(new Set(kept));
   }
 
   private _loadForYouFilters(): ForYouFilters {
@@ -1758,30 +1773,35 @@ export class SeasonalComponent {
 
   // ── Multi-selection + batch actions ───────────────────────────────────────
   isSelected(malId: string): boolean {
-    return this.selectedIds().has(malId);
+    return this.selectedPicks().has(malId);
   }
 
   togglePickSelection(malId: string, event?: Event): void {
     event?.stopPropagation();
     event?.preventDefault();
 
-    const next = new Set(this.selectedIds());
-    if (next.has(malId)) next.delete(malId);
-    else next.add(malId);
-    this.selectedIds.set(next);
+    const next = new Map(this.selectedPicks());
+    if (next.has(malId)) {
+      next.delete(malId);
+    } else {
+      const item = this.visiblePicks().find((p) => p.malId === malId) ?? this.activeSlots().find((p) => p.malId === malId);
+      if (!item) return;
+      next.set(malId, item);
+    }
+    this.selectedPicks.set(next);
   }
 
   selectAllVisible(): void {
-    const next = new Set(this.selectedIds());
-    this.activeSlots().forEach((p) => next.add(p.malId));
-    this.selectedIds.set(next);
+    const next = new Map(this.selectedPicks());
+    this.activeSlots().forEach((p) => next.set(p.malId, p));
+    this.selectedPicks.set(next);
   }
 
   /** × Pass (N) — retires every selected card in one animated batch. */
   passSelected(): void {
-    const ids = [...this.selectedIds()];
+    const ids = [...this.selectedPicks().keys()];
     if (ids.length === 0) return;
-    this.selectedIds.set(new Set());
+    this.selectedPicks.set(new Map());
     this._removeFromDeck(ids);
   }
 
@@ -1789,6 +1809,8 @@ export class SeasonalComponent {
   openBatchAddModal(): void {
     const items = this.selectedItems();
     if (items.length === 0) return;
+
+    if (this.providerState.sonarrEnabled()) this.refreshSearchMissingDefault();
 
     this.batchState.set({
       phase: 'confirm',
@@ -1812,14 +1834,14 @@ export class SeasonalComponent {
       this.batchState.set({ ...state, items });
     }
 
-    const selected = new Set(this.selectedIds());
+    const selected = new Map(this.selectedPicks());
     selected.delete(malId);
-    this.selectedIds.set(selected);
+    this.selectedPicks.set(selected);
   }
 
   clearBatchItems(): void {
     this.dismissBatchModal();
-    this.selectedIds.set(new Set());
+    this.selectedPicks.set(new Map());
   }
 
   setBatchTarget(target: 'mal' | 'sonarr' | 'searchMissing', value: boolean): void {
@@ -1901,8 +1923,25 @@ export class SeasonalComponent {
     const failed = results.filter((r) => !r.ok).map((r) => r.malId);
 
     this.batchState.update((st) => (st ? { ...st, phase: 'complete', busy: false, results } : st));
-    this.selectedIds.set(new Set(failed));
+    this.selectedPicks.set(new Map(state.items.filter((i) => failed.includes(i.malId)).map((i) => [i.malId, i])));
     this._removeFromDeck(added);
+
+    // Batch summary — one row, not one per item, so the bell stays readable.
+    if (added.length > 0 || failed.length > 0) {
+      this.notifService.pushOrReplace({
+        id: `batch-${Date.now()}`,
+        severity: failed.length === 0 ? 'success' : 'warning',
+        titleKey: this.translateService.instant('notifications.animeAdded.multiTitle'),
+        messageKey: this.translateService.instant('notifications.animeAdded.multiMessage', {
+          count: added.length,
+        }),
+        action: {
+          labelKey: this.translateService.instant('notifications.animeAdded.viewActivity', { count: added.length }),
+          route: ['/activity'],
+          queryParams: { filter: 'adds', batchId: `batch-${Date.now()}` },
+        },
+      });
+    }
 
     if (failed.length === 0) setTimeout(() => this.dismissBatchModal(), 2000);
   }
@@ -1973,8 +2012,25 @@ export class SeasonalComponent {
     this.popupService.addProviderModalOpen.set(true);
 
     if (!seasonal.inSonarr && this.providerState.sonarrEnabled()) {
+      // Re-read the flag every time the modal opens: the options loader bails out once
+      // cached, which is why a setting changed in Settings never reached this switch.
+      this.refreshSearchMissingDefault();
       this.initSonarrSection();
     }
+  }
+
+  /** Pulls Sonarr:SearchForMissingEpisodes fresh from the settings store. */
+  private refreshSearchMissingDefault(): void {
+    this.settingsService
+      .getAll()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (list) =>
+          this.sonarrSearchMissing.set(
+            list.find((s) => s.key === 'Sonarr:SearchForMissingEpisodes')?.value === 'true',
+          ),
+        error: () => {},
+      });
   }
 
   closeAddModal(): void {
@@ -2029,6 +2085,22 @@ export class SeasonalComponent {
         this.addSuccess.set(true);
         this.addBusy.set(false);
         const addedMalId = this.addModalItem()?.malId ?? null;
+        if (addedMalId) {
+          const added = this.addModalItem();
+          this.notifService.pushOrReplace({
+            id: `anime-added-${addedMalId}`,
+            severity: 'success',
+            titleKey: this.translateService.instant('notifications.animeAdded.singleTitle'),
+            messageKey: this.translateService.instant('notifications.animeAdded.singleMessage', {
+              title: added?.title ?? '',
+            }),
+            action: {
+              labelKey: this.translateService.instant('notifications.animeAdded.viewDetails'),
+              route: ['/seasonal'],
+              queryParams: { malId: addedMalId },
+            },
+          });
+        }
         setTimeout(() => {
           this.closeAddModal();
           // Close the detail panel so the glowing card animation is fully visible.

@@ -52,6 +52,12 @@ public static class SettingsKeys
     public const string AppTitleSimilarityThreshold = "App:TitleSimilarityThreshold";
     public const string DownloadStatsCacheInterval = "App:DownloadStatsCacheInterval";
 
+    /// <summary>
+    /// How often the activity job polls Sonarr history, in minutes. 0 = manual only.
+    /// Allowed values are 0, 5, 15, 30 and 60 — anything else falls back to 15.
+    /// </summary>
+    public const string ActivityRefreshIntervalMinutes = "Activity:RefreshIntervalMinutes";
+
     // Download stats cache (populated by DownloadStatsCacheJob; not user-configurable)
     public const string DownloadStatsCache = "Cache:DownloadStats";
     public const string DownloadStatsCacheLastUpdated = "Cache:DownloadStatsLastUpdated";

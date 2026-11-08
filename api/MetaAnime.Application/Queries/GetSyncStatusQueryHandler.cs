@@ -2,11 +2,14 @@ using Mediator;
 using MetaAnime.Application.Contracts;
 using MetaAnime.Core;
 using MetaAnime.Core.Interfaces.Repositories;
+using MetaAnime.Core.Interfaces.Services;
 using MetaAnime.Core.Interfaces.Shared.Results;
 
 namespace MetaAnime.Application.Queries;
 
-public sealed class GetSyncStatusQueryHandler(IPropertyBagRepository propertyBagRepository)
+public sealed class GetSyncStatusQueryHandler(
+    IPropertyBagRepository propertyBagRepository,
+    ISyncStateTracker stateTracker)
     : IRequestHandler<GetSyncStatusQuery, Result<SyncStatusResponse>>
 {
     public async ValueTask<Result<SyncStatusResponse>> Handle(GetSyncStatusQuery request, CancellationToken cancellationToken)
@@ -15,12 +18,17 @@ public sealed class GetSyncStatusQueryHandler(IPropertyBagRepository propertyBag
         {
             var entry = await propertyBagRepository.GetByKeyAsync(SettingsKeys.LastSyncDate);
 
-            if (entry == null || string.IsNullOrWhiteSpace(entry.Value))
-                return Result.Success(new SyncStatusResponse(null));
+            DateTimeOffset? last = null;
+            if (!string.IsNullOrWhiteSpace(entry?.Value) && DateTimeOffset.TryParse(entry.Value, out var parsed))
+                last = parsed;
 
-            return DateTimeOffset.TryParse(entry.Value, out var dt)
-                ? Result.Success(new SyncStatusResponse(dt))
-                : Result.Success(new SyncStatusResponse(null));
+            // The persisted date is authoritative for "last completed"; the tracker contributes
+            // the live running flags so a page refresh can restore an in-flight state.
+            return Result.Success(new SyncStatusResponse(
+                last ?? stateTracker.LastSyncDate,
+                IsSyncRunning: stateTracker.IsFullSyncRunning,
+                IsActivitySyncRunning: stateTracker.IsActivitySyncRunning,
+                LastActivitySyncDate: stateTracker.LastActivitySyncDate));
         }
         catch (Exception ex)
         {

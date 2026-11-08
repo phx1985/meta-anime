@@ -535,3 +535,19 @@ $timing-fns: (
     opacity: 0.4;
   }
 }
+
+// ── Provider counter tooltips must paint above the hero's text layer ───────
+// The counters live inside .hero-section, whose decorative layers use z-index 1..4;
+// without an explicit stacking context of its own the strip's tooltip (z 100) is
+// still painted under .hero-content (z 4), which is what darkened its top edge.
+.stat-counters {
+  position: relative;
+  z-index: 6;
+}
+
+// The tooltip is a pseudo-element of the card, so the card needs to come forward on
+// hover for the bubble to clear its neighbours.
+.stat-card:hover,
+.stat-card:focus-visible {
+  z-index: 50;
+}

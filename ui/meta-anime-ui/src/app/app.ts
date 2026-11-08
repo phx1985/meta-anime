@@ -53,7 +53,7 @@ export class App implements OnInit, AfterViewInit {
   protected translate = inject(TranslateService);
   protected notifService = inject(NotificationService);
   private settingsService = inject(SettingsService);
-  private syncSignalR = inject(SyncSignalRService);
+  readonly syncSignalR = inject(SyncSignalRService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   readonly providerState = inject(ProviderStateService);
@@ -262,11 +262,16 @@ export class App implements OnInit, AfterViewInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(() => {
+        // A finished sync retires every "Sync started" row so the panel never shows
+        // both a start and a completion for the same run.
+        this.notifService.acknowledgeByPrefix('sync-start');
+        this.notifService.acknowledge('sync-running');
         this.notifService.pushOrReplace({
           id: 'sync-done',
           severity: 'success',
           titleKey: 'notifications.sync.doneTitle',
           messageKey: 'notifications.sync.doneMessage',
+          action: { labelKey: 'notifications.sync.viewLog', route: ['/activity'], queryParams: { view: 'logs' } },
         });
       });
 
@@ -277,6 +282,8 @@ export class App implements OnInit, AfterViewInit {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe(() => {
+        this.notifService.acknowledgeByPrefix('sync-start');
+        this.notifService.acknowledge('sync-running');
         this.notifService.push({
           id: `sync-error-${Date.now()}`,
           severity: 'error',
@@ -284,8 +291,8 @@ export class App implements OnInit, AfterViewInit {
           messageKey: 'notifications.sync.errorMessage',
           action: {
             labelKey: 'notifications.sync.viewLog',
-            route: ['/settings'],
-            fragment: 'sync-section',
+            route: ['/activity'],
+            queryParams: { view: 'logs' },
           },
         });
       });
@@ -492,24 +499,27 @@ export class App implements OnInit, AfterViewInit {
   }
 
   handleNotifClick(notif: AppNotification): void {
+    const action = this.notifService.executeAction(notif.id);
     this.notifService.acknowledge(notif.id);
     this.notifCenterOpen.set(false);
-    if (notif.action) {
-      this.router.navigate(
-        notif.action.route,
-        notif.action.fragment ? { fragment: notif.action.fragment } : undefined,
-      );
+
+    if (action?.route?.length) {
+      this.router.navigate(action.route, {
+        ...(action.queryParams ? { queryParams: action.queryParams } : {}),
+        ...(action.fragment ? { fragment: action.fragment } : {}),
+      });
     }
   }
 
   handleToastAction(toast: AppNotification): void {
+    const action = this.notifService.executeAction(toast.id);
     this.notifService.acknowledge(toast.id);
     this.notifService.dismissToast(toast.id);
-    if (toast.action) {
-      this.router.navigate(
-        toast.action.route,
-        toast.action.fragment ? { fragment: toast.action.fragment } : undefined,
-      );
+    if (action?.route?.length) {
+      this.router.navigate(action.route, {
+        ...(action.queryParams ? { queryParams: action.queryParams } : {}),
+        ...(action.fragment ? { fragment: action.fragment } : {}),
+      });
     }
   }
 

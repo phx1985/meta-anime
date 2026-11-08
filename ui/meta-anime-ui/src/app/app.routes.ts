@@ -10,6 +10,7 @@ import { MalSearchComponent } from './mal-search/mal-search.component';
 import { NotFoundComponent } from './not-found/not-found.component';
 import { MalCallbackComponent } from './mal-callback/mal-callback.component';
 import { SetupWizardComponent } from './setup-wizard/setup-wizard.component';
+import { ActivityFeedComponent } from './activity-feed/activity-feed.component';
 import { LoginComponent } from './login/login.component';
 import { LibraryAnalysisComponent } from './library-analysis/library-analysis.component';
 import { EnrollmentService } from './services/enrollment.service';
@@ -52,6 +53,7 @@ export const routes: Routes = [
   { path: 'mal-search', component: MalSearchComponent, canActivate: [authGuard] },
   { path: 'settings', component: SettingsComponent, canActivate: [authGuard] },
   { path: 'library', component: LibraryAnalysisComponent, canActivate: [authGuard] },
+  { path: 'activity', component: ActivityFeedComponent, canActivate: [authGuard] },
   { path: 'auth/mal/callback', component: MalCallbackComponent },
   { path: '**', component: NotFoundComponent },
 ];

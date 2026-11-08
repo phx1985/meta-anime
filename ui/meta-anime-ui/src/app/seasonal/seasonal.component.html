@@ -205,10 +205,10 @@
         </div>
 
         <!-- Batch bar -->
-        @if (selectedIds().size > 0) {
+        @if (selectedPicks().size > 0) {
           <div class="for-you__batch" role="toolbar">
             <span class="for-you__batch-count">
-              {{ 'seasonal.forYou.batch.selectedCount' | translate: { count: selectedIds().size } }}
+              {{ 'seasonal.forYou.batch.selectedCount' | translate: { count: selectedPicks().size } }}
             </span>
             <button class="for-you__batch-btn" type="button" (click)="selectAllVisible()">
               {{ 'seasonal.forYou.batch.selectAll' | translate }}
@@ -217,11 +217,11 @@
               {{ 'seasonal.forYou.batch.clear' | translate }}
             </button>
             <button class="for-you__batch-btn for-you__batch-btn--pass" type="button" (click)="passSelected()">
-              × {{ 'seasonal.forYou.batch.passSelected' | translate: { count: selectedIds().size } }}
+              × {{ 'seasonal.forYou.batch.passSelected' | translate: { count: selectedPicks().size } }}
             </button>
             <button class="for-you__batch-btn for-you__batch-btn--add" type="button"
               (click)="openBatchAddModal()">
-              + {{ 'seasonal.forYou.batch.addSelected' | translate: { count: selectedIds().size } }}
+              + {{ 'seasonal.forYou.batch.addSelected' | translate: { count: selectedPicks().size } }}
             </button>
           </div>
         }

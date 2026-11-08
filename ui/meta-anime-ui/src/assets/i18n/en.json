@@ -19,7 +19,8 @@
       "close": "Close"
     },
     "menu": "Menu",
-    "logout": "Sign Out"
+    "logout": "Sign Out",
+    "activity": "Activity"
   },
   "home": {
     "title": "Meta Anime",
@@ -133,7 +134,8 @@
       "error": {
         "title": "Couldn't load activity",
         "sub": "Activity data is unavailable right now. Check the API connection and try again."
-      }
+      },
+      "refreshingData": "Updating activity stats…"
     }
   },
   "seasonal": {
@@ -734,6 +736,7 @@
       "lastSync": "Last sync",
       "neverSynced": "Never synced",
       "card": {
+        "viewDetails": "View details",
         "title": "Synchronization",
         "desc": "Monitor background sync progress and configure the automatic sync schedule."
       },
@@ -1189,48 +1192,32 @@
     "selectLanguage": "Language"
   },
   "notifications": {
+    "activitySync": {
+      "startTitle": "Activity sync running",
+      "startMessage": "Refreshing your watch activity.",
+      "doneTitle": "Activity sync complete",
+      "doneMessage": "Your watch history is up to date.",
+      "errorTitle": "Activity sync failed",
+      "errorMessage": "Could not refresh watch activity. Check logs."
+    },
+    "animeAdded": {
+      "singleTitle": "Anime added",
+      "singleMessage": "{{title}} has been added to your library.",
+      "multiTitle": "Anime added",
+      "multiMessage": "{{count}} anime added to your library.",
+      "viewDetails": "View anime →",
+      "viewActivity": "View added anime ({{count}}) →"
+    },
+    "botKun": {
+      "discoverTitle": "Meet Bot-kun AI Concierge",
+      "discoverMessage": "Bot-kun is an AI assistant that can help you discover, manage, and talk about your anime library. Enable it in Bot-kun settings to get started.",
+      "configure": "Configure Bot-kun"
+    },
     "center": {
       "title": "Notifications",
       "empty": "All caught up!",
       "markAllRead": "Mark all read",
       "dismiss": "Dismiss"
-    },
-    "time": {
-      "justNow": "just now",
-      "minutesAgo": "{{n}}m ago",
-      "hoursAgo": "{{n}}h ago",
-      "daysAgo": "{{n}}d ago"
-    },
-    "welcome": {
-      "title": "Welcome to MetaAnime",
-      "message": "Your setup is complete. MetaAnime is now aggregating your anime library from Plex, Sonarr and MyAnimeList — all in one place. Enjoy!"
-    },
-    "noSync": {
-      "title": "First sync needed",
-      "message": "Your library has not been synced yet. Run a sync to populate your anime list with metadata.",
-      "action": "Go to Sync"
-    },
-    "sync": {
-      "startTitle": "Sync started",
-      "startMessage": "Manual sync has been triggered. Check the progress log in Settings.",
-      "doneTitle": "Sync complete",
-      "doneMessage": "All sources have been synchronized successfully.",
-      "errorTitle": "Sync failed",
-      "errorMessage": "The synchronization encountered an error. Check the sync log for details.",
-      "viewLog": "View log"
-    },
-    "malAuth": {
-      "title": "MyAnimeList authentication error",
-      "message": "MyAnimeList token is invalid or expired. Please authorize in Settings.",
-      "action": "Go to Settings",
-      "reloadFailed": "Token refreshed, but could not reload settings.",
-      "reloadFailedMessage": "Please refresh the page to see the updated token status."
-    },
-    "malConnect": {
-      "successTitle": "MyAnimeList connected",
-      "successMessage": "MyAnimeList connected successfully.",
-      "errorTitle": "MyAnimeList connection failed",
-      "errorMessage": "Authorization failed. Please try connecting again."
     },
     "health": {
       "plex": {
@@ -1252,10 +1239,49 @@
         "upMessage": "MyAnimeList API connection has been restored."
       }
     },
-    "botKun": {
-      "discoverTitle": "Meet Bot-kun AI Concierge",
-      "discoverMessage": "Bot-kun is an AI assistant that can help you discover, manage, and talk about your anime library. Enable it in Bot-kun settings to get started.",
-      "configure": "Configure Bot-kun"
+    "malAuth": {
+      "title": "MyAnimeList authentication error",
+      "message": "MyAnimeList token is invalid or expired. Please authorize in Settings.",
+      "action": "Go to Settings",
+      "reloadFailed": "Token refreshed, but could not reload settings.",
+      "reloadFailedMessage": "Please refresh the page to see the updated token status."
+    },
+    "malConnect": {
+      "successTitle": "MyAnimeList connected",
+      "successMessage": "MyAnimeList connected successfully.",
+      "errorTitle": "MyAnimeList connection failed",
+      "errorMessage": "Authorization failed. Please try connecting again."
+    },
+    "noSync": {
+      "title": "First sync needed",
+      "message": "Your library has not been synced yet. Run a sync to populate your anime list with metadata.",
+      "action": "Go to Sync"
+    },
+    "settings": {
+      "changedTitle": "Setting updated",
+      "changedMessage": "{{setting}} was updated.",
+      "undo": "Undo",
+      "revertedTitle": "Change reverted",
+      "revertedMessage": "{{setting}} was restored to its previous value."
+    },
+    "sync": {
+      "startTitle": "Sync started",
+      "startMessage": "Manual sync has been triggered. Check the progress log in Settings.",
+      "doneTitle": "Sync complete",
+      "doneMessage": "All sources have been synchronized successfully.",
+      "errorTitle": "Sync failed",
+      "errorMessage": "The synchronization encountered an error. Check the sync log for details.",
+      "viewLog": "View log"
+    },
+    "time": {
+      "justNow": "just now",
+      "minutesAgo": "{{n}}m ago",
+      "hoursAgo": "{{n}}h ago",
+      "daysAgo": "{{n}}d ago"
+    },
+    "welcome": {
+      "title": "Welcome to MetaAnime",
+      "message": "Your setup is complete. MetaAnime is now aggregating your anime library from Plex, Sonarr and MyAnimeList — all in one place. Enjoy!"
     }
   },
   "malCallback": {
@@ -1503,7 +1529,7 @@
     "importBtn": "Import Config",
     "exportWarning": "The exported file contains UNMASKED API keys and tokens. Store it securely.",
     "importTitle": "Import Configuration",
-    "dropHint": "Drop a.json config file here or click to choose",
+    "dropHint": "Drop a .json config file here or click to browse",
     "imported": "Configuration imported ({{count}} values) — Plex: {{plex}}, Sonarr: {{sonarr}}, MAL: {{mal}}",
     "statusYes": "connected",
     "statusNo": "not connected",
@@ -1956,7 +1982,7 @@
       "feature1": "Sync your MyAnimeList watch list automatically",
       "feature2": "Track anime in Sonarr and Plex",
       "feature3": "Browse seasonal releases and manage your library",
-      "getStarted": "Get Started",
+      "getStarted": "Get Started →",
       "languageLabel": "Language",
       "themeLabel": "Theme",
       "themeLight": "Light",
@@ -2273,6 +2299,133 @@
       "completeTitle": "All Set! Setup Complete",
       "completeSubtitle": "Your library is synchronized and ready to explore.",
       "launchDashboard": "Launch Dashboard →"
+    }
+  },
+  "activity": {
+    "feed": {
+      "title": "Activity History",
+      "empty": "Nothing here yet.",
+      "error": "Could not load the activity feed.",
+      "loadMore": "Load more",
+      "filter": {
+        "all": "All Events",
+        "adds": "Added Anime",
+        "episodes": "Episodes",
+        "completions": "Completed Seasons",
+        "syncs": "Sync Diffs"
+      }
+    },
+    "hub": {
+      "title": "Activity & Logs",
+      "live": "Live",
+      "search": "Search title, episode, provider…",
+      "empty": "Nothing here yet — add an anime or run a sync.",
+      "error": "Could not load the activity feed.",
+      "loadMore": "Load more",
+      "clearSearch": "Clear search",
+      "filter": {
+        "all": "All Activity",
+        "adds": "Anime Added",
+        "episodes": "Episodes Ingested",
+        "completions": "Seasons Completed",
+        "syncs": "Sync Runs",
+        "watched": "Watched (Plex)"
+      },
+      "tile": {
+        "episodesToday": "Episodes today",
+        "storageMonth": "Storage this month",
+        "animeAdded": "Anime added",
+        "lastSync": "Last sync"
+      },
+      "refresh": "Refresh"
+    },
+    "card": {
+      "viewDetails": "View anime details →",
+      "expandDiff": "Show details",
+      "hideDetails": "Hide details",
+      "details": "Details",
+      "baselineNote": "First import: everything was indexed at once, so there is no diff to list."
+    },
+    "chart": {
+      "title": "Activity Trend",
+      "empty": "No activity in this range.",
+      "emptyPeriod": "No activity recorded for this period yet"
+    },
+    "range": {
+      "today": "Today",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    },
+    "kpi": {
+      "plexMissing": "Plex not connected",
+      "episodesIngested": "Episodes Ingested",
+      "storageAdded": "Storage Added",
+      "episodesWatched": "Watched on Plex",
+      "netAnimeAdded": "Net Anime Added",
+      "netSubtitle": "{{added}} added · {{removed}} removed"
+    },
+    "badge": {
+      "reverted": "Removed later",
+      "baseline": "Initial baseline"
+    },
+    "event": {
+      "added": "+ Anime Added",
+      "removed": "− Anime Removed",
+      "ingested": "↓ Episode Ingested",
+      "watched": "▶ Watched on Plex",
+      "completed": "✓ Season Completed",
+      "sync": "⟳ Sync Run"
+    },
+    "tile": {
+      "openInProvider": "Open in {{provider}}",
+      "viewDetails": "Anime details",
+      "emptyFilter": "No events match this filter"
+    },
+    "syncCard": {
+      "title": "Last metadata sync",
+      "none": "No sync run recorded yet"
+    },
+    "view": {
+      "timeline": "Timeline",
+      "logs": "Server logs"
+    },
+    "backfill": {
+      "firstRun": {
+        "title": "No activity history yet",
+        "body": "Nothing has been imported from Sonarr or Plex on this install. Start the import now — it runs in the background and the feed fills as it goes.",
+        "action": "Import history",
+        "starting": "Starting…"
+      },
+      "title": "Building your activity history",
+      "body": "Importing Sonarr and Plex history in the background — {{seconds}}s so far. The feed appears as soon as the first import finishes."
+    },
+    "header": {
+      "liveUpdates": "Live updates active",
+      "reconnecting": "Reconnecting to live stream…",
+      "events": "events"
+    },
+    "logs": {
+      "title": "Server logs",
+      "autoRefresh": "Auto",
+      "refresh": "Refresh",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "download": "Download",
+      "clear": "Clear",
+      "searchPlaceholder": "Filter logs…",
+      "empty": "No log entries yet.",
+      "loading": "Loading logs…",
+      "error": "Could not load server logs.",
+      "showStack": "Stack",
+      "hideStack": "Hide",
+      "capacity": "Keeps the last {{count}} lines",
+      "level": {
+        "all": "All",
+        "info": "Info",
+        "warn": "Warn",
+        "error": "Error"
+      }
     }
   }
 }

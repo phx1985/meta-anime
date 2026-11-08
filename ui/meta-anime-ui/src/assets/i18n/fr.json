@@ -19,7 +19,8 @@
       "close": "Fermer"
     },
     "menu": "Menu",
-    "logout": "Se déconnecter"
+    "logout": "Se déconnecter",
+    "activity": "Activité"
   },
   "home": {
     "title": "Meta Anime",
@@ -133,7 +134,8 @@
       "error": {
         "title": "Impossible de charger l'activité",
         "sub": "Les données d'activité sont indisponibles. Vérifiez la connexion à l'API puis réessayez."
-      }
+      },
+      "refreshingData": "Mise à jour des statistiques…"
     }
   },
   "seasonal": {
@@ -734,6 +736,7 @@
       "lastSync": "Dernière synchronisation",
       "neverSynced": "Jamais synchronisé",
       "card": {
+        "viewDetails": "Voir les détails",
         "title": "Synchronisation",
         "desc": "Suivez la progression de la synchronisation en arrière-plan et configurez la planification automatique."
       },
@@ -1189,48 +1192,32 @@
     "selectLanguage": "Langue"
   },
   "notifications": {
+    "activitySync": {
+      "startTitle": "Synchronisation de l'activité en cours",
+      "startMessage": "Actualisation de votre activité de visionnage.",
+      "doneTitle": "Activité synchronisée",
+      "doneMessage": "Votre historique de visionnage est à jour.",
+      "errorTitle": "Échec de la synchronisation d'activité",
+      "errorMessage": "Impossible d'actualiser l'activité. Consultez les journaux."
+    },
+    "animeAdded": {
+      "singleTitle": "Anime ajouté",
+      "singleMessage": "{{title}} a été ajouté à votre bibliothèque.",
+      "multiTitle": "Anime ajouté",
+      "multiMessage": "{{count}} animés ajoutés à votre bibliothèque.",
+      "viewDetails": "Voir l'anime →",
+      "viewActivity": "Voir les animes ajoutés ({{count}}) →"
+    },
+    "botKun": {
+      "discoverTitle": "Découvrez Bot-kun, votre concierge IA",
+      "discoverMessage": "Bot-kun est un assistant IA qui vous aide à découvrir, gérer et discuter de votre bibliothèque d'animes. Activez-le dans les paramètres de Bot-kun pour commencer.",
+      "configure": "Configurer Bot-kun"
+    },
     "center": {
       "title": "Notifications",
       "empty": "Tout est à jour!",
       "markAllRead": "Tout marquer comme lu",
       "dismiss": "Ignorer"
-    },
-    "time": {
-      "justNow": "à l'instant",
-      "minutesAgo": "il y a {{n}} min",
-      "hoursAgo": "il y a {{n}}h",
-      "daysAgo": "il y a {{n}} j"
-    },
-    "welcome": {
-      "title": "Bienvenue sur MetaAnime",
-      "message": "La configuration est terminée. MetaAnime agrège désormais votre bibliothèque d'animes depuis Plex, Sonarr et MyAnimeList — tout en un seul endroit. Profitez-en!"
-    },
-    "noSync": {
-      "title": "Première synchronisation requise",
-      "message": "Votre bibliothèque n'a pas encore été synchronisée. Lancez une synchronisation pour remplir votre liste d'animes avec les métadonnées.",
-      "action": "Aller à la synchronisation"
-    },
-    "sync": {
-      "startTitle": "Synchronisation démarrée",
-      "startMessage": "Une synchronisation manuelle a été lancée. Consultez le journal de progression dans les paramètres.",
-      "doneTitle": "Synchronisation terminée",
-      "doneMessage": "Toutes les sources ont été synchronisées avec succès.",
-      "errorTitle": "Échec de la synchronisation",
-      "errorMessage": "La synchronisation a rencontré une erreur. Consultez le journal de synchronisation pour plus de détails.",
-      "viewLog": "Voir le journal"
-    },
-    "malAuth": {
-      "title": "Erreur d'authentification MyAnimeList",
-      "message": "Le jeton MyAnimeList est invalide ou expiré. Veuillez autoriser la connexion depuis les paramètres.",
-      "action": "Aller aux paramètres",
-      "reloadFailed": "Jeton actualisé, mais impossible de recharger les paramètres.",
-      "reloadFailedMessage": "Veuillez actualiser la page pour afficher le statut mis à jour du jeton."
-    },
-    "malConnect": {
-      "successTitle": "MyAnimeList connecté",
-      "successMessage": "MyAnimeList a été connecté avec succès.",
-      "errorTitle": "Échec de la connexion MyAnimeList",
-      "errorMessage": "L'autorisation a échoué. Veuillez réessayer de vous connecter."
     },
     "health": {
       "plex": {
@@ -1252,10 +1239,49 @@
         "upMessage": "La connexion à l'API MyAnimeList a été rétablie."
       }
     },
-    "botKun": {
-      "discoverTitle": "Découvrez Bot-kun, votre concierge IA",
-      "discoverMessage": "Bot-kun est un assistant IA qui vous aide à découvrir, gérer et discuter de votre bibliothèque d'animes. Activez-le dans les paramètres de Bot-kun pour commencer.",
-      "configure": "Configurer Bot-kun"
+    "malAuth": {
+      "title": "Erreur d'authentification MyAnimeList",
+      "message": "Le jeton MyAnimeList est invalide ou expiré. Veuillez autoriser la connexion depuis les paramètres.",
+      "action": "Aller aux paramètres",
+      "reloadFailed": "Jeton actualisé, mais impossible de recharger les paramètres.",
+      "reloadFailedMessage": "Veuillez actualiser la page pour afficher le statut mis à jour du jeton."
+    },
+    "malConnect": {
+      "successTitle": "MyAnimeList connecté",
+      "successMessage": "MyAnimeList a été connecté avec succès.",
+      "errorTitle": "Échec de la connexion MyAnimeList",
+      "errorMessage": "L'autorisation a échoué. Veuillez réessayer de vous connecter."
+    },
+    "noSync": {
+      "title": "Première synchronisation requise",
+      "message": "Votre bibliothèque n'a pas encore été synchronisée. Lancez une synchronisation pour remplir votre liste d'animes avec les métadonnées.",
+      "action": "Aller à la synchronisation"
+    },
+    "settings": {
+      "changedTitle": "Paramètre mis à jour",
+      "changedMessage": "{{setting}} a été modifié.",
+      "undo": "Annuler",
+      "revertedTitle": "Modification annulée",
+      "revertedMessage": "{{setting}} a été rétabli à sa valeur précédente."
+    },
+    "sync": {
+      "startTitle": "Synchronisation démarrée",
+      "startMessage": "Une synchronisation manuelle a été lancée. Consultez le journal de progression dans les paramètres.",
+      "doneTitle": "Synchronisation terminée",
+      "doneMessage": "Toutes les sources ont été synchronisées avec succès.",
+      "errorTitle": "Échec de la synchronisation",
+      "errorMessage": "La synchronisation a rencontré une erreur. Consultez le journal de synchronisation pour plus de détails.",
+      "viewLog": "Voir le journal"
+    },
+    "time": {
+      "justNow": "à l'instant",
+      "minutesAgo": "il y a {{n}} min",
+      "hoursAgo": "il y a {{n}}h",
+      "daysAgo": "il y a {{n}} j"
+    },
+    "welcome": {
+      "title": "Bienvenue sur MetaAnime",
+      "message": "La configuration est terminée. MetaAnime agrège désormais votre bibliothèque d'animes depuis Plex, Sonarr et MyAnimeList — tout en un seul endroit. Profitez-en!"
     }
   },
   "malCallback": {
@@ -1503,7 +1529,7 @@
     "importBtn": "Importer la configuration",
     "exportWarning": "Le fichier exporté contient des clés API et des jetons NON MASQUÉS. Conservez-le en lieu sûr.",
     "importTitle": "Importer une configuration",
-    "dropHint": "Déposez un fichier de configuration.json ici ou cliquez pour en choisir un",
+    "dropHint": "Glissez un fichier .json ici ou cliquez pour parcourir",
     "imported": "Configuration importée ({{count}} valeurs) — Plex: {{plex}}, Sonarr: {{sonarr}}, MAL: {{mal}}",
     "statusYes": "connecté",
     "statusNo": "non connecté",
@@ -1956,7 +1982,7 @@
       "feature1": "Synchronisez automatiquement votre liste de suivi MyAnimeList",
       "feature2": "Suivez vos animes dans Sonarr et Plex",
       "feature3": "Parcourez les sorties saisonnières et gérez votre bibliothèque",
-      "getStarted": "Commencer",
+      "getStarted": "Commencer →",
       "languageLabel": "Langue",
       "themeLabel": "Thème",
       "themeLight": "Clair",
@@ -2273,6 +2299,133 @@
       "completeTitle": "Tout est prêt ! Configuration terminée",
       "completeSubtitle": "Votre bibliothèque est synchronisée et prête à être explorée.",
       "launchDashboard": "Accéder au tableau de bord →"
+    }
+  },
+  "activity": {
+    "feed": {
+      "title": "Historique d'activité",
+      "empty": "Rien pour le moment.",
+      "error": "Impossible de charger l'historique.",
+      "loadMore": "Charger plus",
+      "filter": {
+        "all": "Tous les événements",
+        "adds": "Animes ajoutés",
+        "episodes": "Épisodes",
+        "completions": "Saisons terminées",
+        "syncs": "Diffs de synchronisation"
+      }
+    },
+    "hub": {
+      "title": "Activité & Journaux",
+      "live": "Direct",
+      "search": "Rechercher un titre, un épisode, un fournisseur…",
+      "empty": "Rien pour le moment — ajoutez un anime ou lancez une synchro.",
+      "error": "Impossible de charger l'activité.",
+      "loadMore": "Charger plus",
+      "clearSearch": "Effacer la recherche",
+      "filter": {
+        "all": "Toute l'activité",
+        "adds": "Animes ajoutés",
+        "episodes": "Épisodes téléchargés",
+        "completions": "Saisons terminées",
+        "syncs": "Synchros",
+        "watched": "Vus (Plex)"
+      },
+      "tile": {
+        "episodesToday": "Épisodes aujourd'hui",
+        "storageMonth": "Stockage ce mois",
+        "animeAdded": "Animes ajoutés",
+        "lastSync": "Dernière synchro"
+      },
+      "refresh": "Actualiser"
+    },
+    "card": {
+      "viewDetails": "Voir les détails →",
+      "expandDiff": "Afficher les détails",
+      "hideDetails": "Masquer les détails",
+      "details": "Détails",
+      "baselineNote": "Premier import : tout a été indexé d’un coup, il n’y a donc aucun différentiel à afficher."
+    },
+    "chart": {
+      "title": "Tendance",
+      "empty": "Aucune activité sur cette période.",
+      "emptyPeriod": "Aucune activité enregistrée pour cette période"
+    },
+    "range": {
+      "today": "Aujourd'hui",
+      "week": "Semaine",
+      "month": "Mois",
+      "year": "Année"
+    },
+    "kpi": {
+      "plexMissing": "Plex non connecté",
+      "episodesIngested": "Épisodes téléchargés",
+      "storageAdded": "Stockage ajouté",
+      "episodesWatched": "Vus sur Plex",
+      "netAnimeAdded": "Animes ajoutés (net)",
+      "netSubtitle": "{{added}} ajouté(s) · {{removed}} supprimé(s)"
+    },
+    "badge": {
+      "reverted": "Supprimé depuis",
+      "baseline": "Référence initiale"
+    },
+    "event": {
+      "added": "+ Anime ajouté",
+      "removed": "− Anime supprimé",
+      "ingested": "↓ Épisode téléchargé",
+      "watched": "▶ Vu sur Plex",
+      "completed": "✓ Saison terminée",
+      "sync": "⟳ Synchro"
+    },
+    "tile": {
+      "openInProvider": "Ouvrir dans {{provider}}",
+      "viewDetails": "Détails de l'anime",
+      "emptyFilter": "Aucun événement ne correspond à ce filtre"
+    },
+    "syncCard": {
+      "title": "Dernière synchro de métadonnées",
+      "none": "Aucune synchronisation enregistrée pour l'instant"
+    },
+    "view": {
+      "timeline": "Fil d’activité",
+      "logs": "Logs du serveur"
+    },
+    "backfill": {
+      "firstRun": {
+        "title": "Aucun historique d’activité",
+        "body": "Rien n’a encore été importé depuis Sonarr ou Plex sur cette installation. Lancez l’import maintenant — il tourne en arrière-plan et le fil se remplit au fur et à mesure.",
+        "action": "Importer l’historique",
+        "starting": "Démarrage…"
+      },
+      "title": "Construction de votre historique",
+      "body": "Importation de l’historique Sonarr et Plex en arrière-plan — {{seconds}} s écoulées. Le fil apparaît dès la fin du premier import."
+    },
+    "header": {
+      "liveUpdates": "Mises à jour en direct actives",
+      "reconnecting": "Reconnexion au flux en direct…",
+      "events": "événements"
+    },
+    "logs": {
+      "title": "Logs du serveur",
+      "autoRefresh": "Auto",
+      "refresh": "Rafraîchir",
+      "copy": "Copier",
+      "copied": "Copié !",
+      "download": "Télécharger",
+      "clear": "Vider",
+      "searchPlaceholder": "Filtrer les logs…",
+      "empty": "Aucune entrée de log pour le moment.",
+      "loading": "Chargement des logs…",
+      "error": "Impossible de charger les logs du serveur.",
+      "showStack": "Pile",
+      "hideStack": "Masquer",
+      "capacity": "Conserve les {{count}} dernières lignes",
+      "level": {
+        "all": "Tous",
+        "info": "Info",
+        "warn": "Avert.",
+        "error": "Erreur"
+      }
     }
   }
 }

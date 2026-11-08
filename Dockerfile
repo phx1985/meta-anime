@@ -64,7 +64,7 @@ RUN chmod +x /etc/cont-init.d/10-init-config \
 VOLUME ["/config"]
 
 # Health check — probes the .NET app via Alpine's built-in wget (no curl needed).
-# start-period accounts for first-boot PostgreSQL init + EF migrations.
+# start-period accounts for first-boot PostgreSQL init + schema creation.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/health || exit 1
 

@@ -1,8 +1,9 @@
-import { Injectable, OnDestroy, inject } from '@angular/core';
+import { Injectable, OnDestroy, inject, signal } from '@angular/core';
 import * as signalR from '@microsoft/signalr';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { SyncStep, SyncStepState, SyncProgressMessage } from '../models/sync-progress.models';
+import { HttpClient } from '@angular/common/http';
 import { ApiConstants } from '../constants/api.constants';
 import { RuntimeConfigService } from './runtime-config.service';
 
@@ -21,6 +22,7 @@ function makeInitialSteps(): SyncStep[] {
 export class SyncSignalRService implements OnDestroy {
   private connection: signalR.HubConnection | null = null;
   private readonly runtimeConfig = inject(RuntimeConfigService);
+  private readonly http = inject(HttpClient);
 
   private readonly _steps$ = new BehaviorSubject<SyncStep[]>(makeInitialSteps());
   private readonly _connected$ = new BehaviorSubject<boolean>(false);
@@ -29,6 +31,8 @@ export class SyncSignalRService implements OnDestroy {
   private readonly _overallElapsedMs$ = new BehaviorSubject<number>(0);
   /** Emits void once each time a sync run fully completes. No replay — safe to subscribe on mount. */
   private readonly _syncCompleted$ = new Subject<void>();
+  /** Emits once per finished activity backfill (done or failed) so the hub can refresh the feed. */
+  private readonly _activitySyncDone$ = new Subject<void>();
 
   readonly steps$: Observable<SyncStep[]> = this._steps$.asObservable();
   readonly connected$: Observable<boolean> = this._connected$.asObservable();
@@ -36,6 +40,10 @@ export class SyncSignalRService implements OnDestroy {
   readonly syncError$: Observable<boolean> = this._syncError$.asObservable();
   readonly overallElapsedMs$: Observable<number> = this._overallElapsedMs$.asObservable();
   readonly syncCompleted$: Observable<void> = this._syncCompleted$.asObservable();
+  readonly activitySyncDone$: Observable<void> = this._activitySyncDone$.asObservable();
+
+  /** Activity-stats refresh, hydrated from GET /sync-status and kept live by SignalR. */
+  readonly isActivitySyncRunning = signal<boolean>(false);
   /** True while at least one step is in the 'running' state — driven purely by SignalR messages. */
   readonly syncActive$: Observable<boolean> = this._steps$.pipe(
     map((steps) => steps.some((s) => s.state === 'running')),
@@ -46,6 +54,19 @@ export class SyncSignalRService implements OnDestroy {
   private lastTickAt = 0;
   /** Wall-clock timestamp when the first 'Running' message was received */
   private overallStartedAt: number | null = null;
+
+  /**
+   * Restores the running flags after an F5: SignalR events fired while the tab was
+   * closed, so the HTTP snapshot is the only source that knows a job is mid-flight.
+   */
+  private hydrateStatus(): void {
+    this.http
+      .get<{ isSyncRunning?: boolean; isActivitySyncRunning?: boolean }>('/api/v1/settings/sync-status')
+      .subscribe({
+        next: (res) => this.isActivitySyncRunning.set(!!res?.isActivitySyncRunning),
+        error: () => {},
+      });
+  }
 
   connect(): void {
     if (this.connection) return;
@@ -65,6 +86,16 @@ export class SyncSignalRService implements OnDestroy {
       this.handleMessage(msg);
     });
 
+    this.connection.on('activitySyncStarted', () => this.isActivitySyncRunning.set(true));
+    this.connection.on('activitySyncDone', () => {
+      this.isActivitySyncRunning.set(false);
+      this._activitySyncDone$.next();
+    });
+    this.connection.on('activitySyncFailed', () => {
+      this.isActivitySyncRunning.set(false);
+      this._activitySyncDone$.next();
+    });
+
     this.connection.onreconnecting(() => this._connected$.next(false));
     this.connection.onreconnected(() => this._connected$.next(true));
     this.connection.onclose(() => {
@@ -74,7 +105,10 @@ export class SyncSignalRService implements OnDestroy {
 
     this.connection
       .start()
-      .then(() => this._connected$.next(true))
+      .then(() => {
+        this._connected$.next(true);
+        this.hydrateStatus();
+      })
       .catch(() => this._connected$.next(false));
   }
 

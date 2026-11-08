@@ -12,7 +12,18 @@ public sealed class InMemorySyncStateTracker : ISyncStateTracker
 {
     private readonly Dictionary<string, SyncProgressUpdate> _steps = new();
     private bool _active;
+    private bool _activityRunning;
+    private DateTimeOffset? _lastSyncDate;
+    private DateTimeOffset? _lastActivitySyncDate;
     private readonly Lock _lock = new();
+
+    public bool IsFullSyncRunning { get { lock (_lock) return _active; } }
+
+    public bool IsActivitySyncRunning { get { lock (_lock) return _activityRunning; } }
+
+    public DateTimeOffset? LastSyncDate { get { lock (_lock) return _lastSyncDate; } }
+
+    public DateTimeOffset? LastActivitySyncDate { get { lock (_lock) return _lastActivitySyncDate; } }
 
     public void BeginSync()
     {
@@ -31,11 +42,21 @@ public sealed class InMemorySyncStateTracker : ISyncStateTracker
         }
     }
 
-    public void EndSync()
+    public void EndSync(bool success = true)
     {
         lock (_lock)
         {
             _active = false;
+            if (success) _lastSyncDate = DateTimeOffset.UtcNow;
+        }
+    }
+
+    public void SetActivitySyncRunning(bool isRunning, bool succeeded = true)
+    {
+        lock (_lock)
+        {
+            _activityRunning = isRunning;
+            if (!isRunning) _lastActivitySyncDate = DateTimeOffset.UtcNow;
         }
     }
 

@@ -137,6 +137,12 @@ public sealed class LibraryAnalysisService(
                     var enrichedRow = BuildEnrichedRow(sonarrId, episodeFiles);
                     enrichedRows[sonarrId] = enrichedRow;
                 }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    // The client hung up (page reload, navigation, HMR, proxy timeout). That is not
+                    // a failure per series — logging it would flood the console with hundreds of
+                    // red stacks; the aggregate handler below reports the cancellation once.
+                }
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "Failed to enrich series {SonarrId}", sonarrId);
@@ -154,6 +160,13 @@ public sealed class LibraryAnalysisService(
                 .ToList();
 
             return Result.Success(result);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Same story one level up: a cancelled enrichment is a disconnected client, not a bug.
+            logger.LogDebug("Library enrichment cancelled before completion (client disconnected).");
+            return Result.Failure<IList<LibrarySeriesRow>>(
+                new Error(Constants.Errors.EnrichLibrarySeriesAsync, "The request was cancelled."));
         }
         catch (Exception ex)
         {

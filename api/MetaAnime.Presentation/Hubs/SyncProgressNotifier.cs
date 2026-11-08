@@ -19,4 +19,21 @@ public sealed class SyncProgressNotifier(
         stateTracker.UpdateStep(update);
         return hubContext.Clients.All.SendAsync("SyncProgress", update);
     }
+
+    public Task NotifySyncFailedAsync(string message) =>
+        hubContext.Clients.All.SendAsync("syncError", new { message, failedAt = DateTimeOffset.UtcNow });
+
+    public Task NotifyActivitySyncStartedAsync()
+    {
+        stateTracker.SetActivitySyncRunning(true);
+        return hubContext.Clients.All.SendAsync("activitySyncStarted", new { startedAt = DateTimeOffset.UtcNow });
+    }
+
+    public Task NotifyActivitySyncFinishedAsync(bool succeeded)
+    {
+        stateTracker.SetActivitySyncRunning(false, succeeded);
+        return hubContext.Clients.All.SendAsync(
+            succeeded ? "activitySyncDone" : "activitySyncFailed",
+            new { completedAt = DateTimeOffset.UtcNow, errorCode = succeeded ? null : "ERR_ACTIVITY_SYNC_FAILED" });
+    }
 }

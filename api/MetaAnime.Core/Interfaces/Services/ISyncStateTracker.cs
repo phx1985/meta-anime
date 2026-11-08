@@ -15,7 +15,22 @@ public interface ISyncStateTracker
     void UpdateStep(SyncProgressUpdate update);
 
     /// <summary>Marks the sync run as finished (success or terminal error).</summary>
-    void EndSync();
+    void EndSync(bool success = true);
+
+    /// <summary>True while a metadata sync is executing.</summary>
+    bool IsFullSyncRunning { get; }
+
+    /// <summary>True while the activity-stats refresh job is executing.</summary>
+    bool IsActivitySyncRunning { get; }
+
+    /// <summary>When the last metadata sync finished successfully.</summary>
+    DateTimeOffset? LastSyncDate { get; }
+
+    /// <summary>When the activity-stats refresh last finished (any outcome).</summary>
+    DateTimeOffset? LastActivitySyncDate { get; }
+
+    /// <summary>Flags the activity refresh as running/finished and stamps its completion time.</summary>
+    void SetActivitySyncRunning(bool isRunning, bool succeeded = true);
 
     /// <summary>
     /// Returns the snapshot of all recorded step states while a sync is active.

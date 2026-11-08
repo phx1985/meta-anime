@@ -24,8 +24,8 @@
         </div>
         <button
           class="refresh-btn"
-          [class.refresh-btn--spinning]="refreshing()"
-          [disabled]="refreshing()"
+          [class.refresh-btn--spinning]="isRefreshing()"
+          [disabled]="isRefreshing()"
           (click)="forceRefresh()"
           [attr.aria-label]="'home.activityStats.forceRefresh' | translate"
         >
@@ -33,7 +33,7 @@
             <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
             <path d="M3 3v5h5"/>
           </svg>
-          @if (refreshing()) {
+          @if (isRefreshing()) {
             {{ 'home.activityStats.refreshing' | translate }}
           } @else {
             {{ 'home.activityStats.forceRefresh' | translate }}
@@ -49,7 +49,14 @@
       role="tabpanel"
       [attr.aria-labelledby]="'activity-tab-' + selectedPeriod()"
       tabindex="0"
+      [class.activity-card__panel--busy]="isRefreshing()"
     >
+      @if (isRefreshing()) {
+        <div class="activity-loading-overlay" role="status">
+          <span class="activity-loading-overlay__ring" aria-hidden="true"></span>
+          <span>{{ 'home.activityStats.refreshingData' | translate }}</span>
+        </div>
+      }
 
     <!-- Stat tiles -->
     <div

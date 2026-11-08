@@ -55,6 +55,10 @@ public sealed class LibraryAnalysisController(
         var result = await libraryAnalysisService.EnrichSeriesAsync(request.SonarrIds, cancellationToken);
         if (result.IsFailure)
         {
+            // A cancelled request is the client closing the tab, not an application error.
+            if (cancellationToken.IsCancellationRequested)
+                return StatusCode(StatusCodes.Status499ClientClosedRequest);
+
             logger.LogError("Failed to enrich library series: {Error}", result.Error.Message);
             return this.ToErrorResult(result);
         }

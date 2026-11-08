@@ -32,6 +32,11 @@
             {{ 'nav.malSearch' | translate }}
           </a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/activity" routerLinkActive="active">
+            {{ 'nav.activity' | translate }}
+          </a>
+        </li>
         @if (providerState.sonarrEnabled()) {
           <li class="nav-item">
             <a class="nav-link" routerLink="/library" routerLinkActive="active">
@@ -61,6 +66,16 @@
       </button>
 
       <span class="navbar-divider" aria-hidden="true"></span>
+
+      <!-- ── Activity sync running (survives refresh via /sync-status) ── -->
+      @if (syncSignalR.isActivitySyncRunning()) {
+        <span class="sync-activity" role="status"
+          [attr.aria-label]="'notifications.activitySync.startTitle' | translate"
+          [attr.title]="'notifications.activitySync.startTitle' | translate">
+          <span class="sync-activity__ring" aria-hidden="true"></span>
+          <span class="sync-activity__dot" aria-hidden="true"></span>
+        </span>
+      }
 
       <!-- ── Notification bell ── -->
       <div class="notif-wrapper" (click)="$event.stopPropagation()">
@@ -490,6 +505,13 @@
       <line x1="3" y1="10" x2="21" y2="10" />
     </svg>
     <span>{{ 'nav.seasonal' | translate }}</span>
+  </a>
+  <a class="bottom-nav-item" routerLink="/activity" routerLinkActive="bottom-nav-item--active" (click)="closeMenu()">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polyline points="3 13 7 13 10 7 13 17 16 11 21 11" />
+    </svg>
+    <span>{{ 'nav.activity' | translate }}</span>
   </a>
   <a class="bottom-nav-item" routerLink="/mal-search" routerLinkActive="bottom-nav-item--active" (click)="closeMenu()">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

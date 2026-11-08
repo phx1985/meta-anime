@@ -3,6 +3,14 @@ import { StorageKeys } from '../constants/storage-keys';
 
 export type NotifSeverity = 'info' | 'success' | 'warning' | 'error';
 
+export interface AppNotificationAction {
+  labelKey: string;
+  /** Navigation target. Omitted for session-only callback actions (e.g. Undo). */
+  route?: string[];
+  queryParams?: Record<string, string | number>;
+  fragment?: string;
+}
+
 export interface AppNotification {
   id: string;
   severity: NotifSeverity;
@@ -10,7 +18,7 @@ export interface AppNotification {
   messageKey: string;
   timestamp: number;
   acknowledged: boolean;
-  action?: { labelKey: string; route: string[]; fragment?: string };
+  action?: AppNotificationAction;
 }
 
 const STORAGE_KEY = StorageKeys.notifications;
@@ -42,6 +50,12 @@ export class NotificationService {
   readonly leavingToastIds = signal<ReadonlySet<string>>(new Set<string>());
   readonly leavingNotifIds = signal<ReadonlySet<string>>(new Set<string>());
 
+  /**
+   * Session-only action handlers (Undo, open-details). Closures cannot be serialized to
+   * localStorage, so they live here and are dropped on reload — see _load().
+   */
+  private readonly actionCallbacks = new Map<string, () => void>();
+
   /** Wizard-active flag. Initialized from localStorage so it survives OAuth page reloads.
    *  The setup wizard component calls setWizardActive(true/false) to toggle it. */
   private readonly _wizardActive = signal<boolean>(
@@ -63,9 +77,10 @@ export class NotificationService {
     return this.notifications().some((n) => n.id === id);
   }
 
-  push(notif: Omit<AppNotification, 'timestamp' | 'acknowledged'>): void {
+  push(notif: Omit<AppNotification, 'timestamp' | 'acknowledged'>, onAction?: () => void): void {
     if (this.has(notif.id)) return;
     const full: AppNotification = { ...notif, timestamp: Date.now(), acknowledged: false };
+    if (onAction) this.actionCallbacks.set(full.id, onAction);
     this.notifications.update((list) => [full, ...list].slice(0, MAX_STORED));
     this._save();
     // Suppress floating toasts while the setup wizard is active. Also check
@@ -79,8 +94,10 @@ export class NotificationService {
   }
 
   /** Push a notification, replacing any existing entry with the same id (upsert). */
-  pushOrReplace(notif: Omit<AppNotification, 'timestamp' | 'acknowledged'>): void {
+  pushOrReplace(notif: Omit<AppNotification, 'timestamp' | 'acknowledged'>, onAction?: () => void): void {
     const full: AppNotification = { ...notif, timestamp: Date.now(), acknowledged: false };
+    if (onAction) this.actionCallbacks.set(full.id, onAction);
+    else this.actionCallbacks.delete(full.id);
     this.notifications.update((list) => [full, ...list.filter((n) => n.id !== notif.id)].slice(0, MAX_STORED));
     this._save();
     const inWizard = this._wizardActive() || window.location.pathname === '/welcome';
@@ -91,6 +108,7 @@ export class NotificationService {
   }
 
   acknowledge(id: string): void {
+    this.actionCallbacks.delete(id);
     this.notifications.update((list) =>
       list.map((n) => (n.id === id ? { ...n, acknowledged: true } : n)),
     );
@@ -98,8 +116,32 @@ export class NotificationService {
   }
 
   acknowledgeAll(): void {
+    this.actionCallbacks.clear();
     this.notifications.update((list) => list.map((n) => ({ ...n, acknowledged: true })));
     this._save();
+  }
+
+  /** Retires every notification whose id starts with the prefix (e.g. stale "Sync started"). */
+  acknowledgeByPrefix(prefix: string): void {
+    const ids = this.notifications().filter((n) => n.id.startsWith(prefix) && !n.acknowledged).map((n) => n.id);
+    if (ids.length === 0) return;
+    const set = new Set(ids);
+    this.notifications.update((list) => list.map((n) => (set.has(n.id) ? { ...n, acknowledged: true } : n)));
+    ids.forEach((id) => this.actionCallbacks.delete(id));
+    this._save();
+  }
+
+  /**
+   * Runs a notification's action. Callback-backed actions (Undo, open details) execute here;
+   * route-backed ones are returned so the caller can navigate.
+   */
+  executeAction(id: string): AppNotificationAction | undefined {
+    const callback = this.actionCallbacks.get(id);
+    if (callback) {
+      callback();
+      return this.notifications().find((n) => n.id === id)?.action;
+    }
+    return this.notifications().find((n) => n.id === id)?.action;
   }
 
   /** Animate a notif-center item out then acknowledge it (keeps the panel open). */
@@ -143,7 +185,12 @@ export class NotificationService {
   private _load(): AppNotification[] {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? (JSON.parse(raw) as AppNotification[]) : [];
+      if (!raw) return [];
+      // Callback-only actions cannot survive a reload — strip them so the panel never
+      // shows a dead "Undo" button after F5.
+      return (JSON.parse(raw) as AppNotification[]).map((n) =>
+        n.action && !n.action.route ? { ...n, action: undefined } : n,
+      );
     } catch {
       return [];
     }
