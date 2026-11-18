@@ -176,6 +176,17 @@ if (!string.IsNullOrWhiteSpace(dataProtectionKeysDir))
     }
 }
 var app = builder.Build();
+
+// Effective console-noise levels, one line at boot. The usual reason a log floods with
+// "Executed DbCommand" is a stale process (a config change needs a restart) or an env override —
+// printing the resolved level makes that obvious instead of leaving the user to guess.
+app.Logger.LogInformation(
+    "Log levels: default={Default} · EF Core={EfCore} · HttpClient={Http} · Polly={Polly}",
+    builder.Configuration["Logging:LogLevel:Default"] ?? "(unset)",
+    builder.Configuration["Logging:LogLevel:Microsoft.EntityFrameworkCore"] ?? "(unset)",
+    builder.Configuration["Logging:LogLevel:System.Net.Http.HttpClient"] ?? "(unset)",
+    builder.Configuration["Logging:LogLevel:Polly"] ?? "(unset)");
+
 await app.Services.EnsureDatabaseAsync();
 
 // Hangfire.PostgreSql installs its own schema/tables on first connection (no DDL from us —

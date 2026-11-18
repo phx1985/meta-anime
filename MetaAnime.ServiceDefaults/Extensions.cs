@@ -20,7 +20,19 @@ public static class Extensions
         builder.Services.AddServiceDiscovery();
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
-            http.AddStandardResilienceHandler();
+            // The stock 10 s per-attempt budget is too tight for the slow third parties this app
+            // depends on (MAL seasonal listings, AniList GraphQL batches, Kometa's JSON, Plex).
+            // Crossing it does not just fail: Polly logs a red `OnTimeout` per attempt and the
+            // retry starts the whole request again, which is what fills the console at ~10 s
+            // intervals while the Seasonal page is open.
+            http.AddStandardResilienceHandler(options =>
+            {
+                options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(30);
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(2);
+                // Polly requires SamplingDuration >= 2 × AttemptTimeout.
+                options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(90);
+                options.Retry.MaxRetryAttempts = 2;
+            });
             http.AddServiceDiscovery();
         });
 

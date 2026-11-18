@@ -55,7 +55,9 @@
           <span class="log-row__time" [attr.title]="entry.timestamp | date: 'medium'">{{ entry.timestamp | date: 'HH:mm:ss' }}</span>
           <span class="log-row__level">{{ entry.level.charAt(0) }}</span>
           <span class="log-row__cat">{{ entry.category }}</span>
-          <span class="log-row__msg">{{ entry.message }}</span>
+          <span class="log-row__msg">@for (seg of segments(entry.message); track $index) {
+            @if (seg.cls) {<span [class]="'log-prov ' + seg.cls">{{ seg.text }}</span>} @else {<span>{{ seg.text }}</span>}
+          }</span>
           @if (entry.exception) {
             <button type="button" class="log-row__more" (click)="toggleException($index)">
               {{ (isExpanded($index) ? 'activity.logs.hideStack' : 'activity.logs.showStack') | translate }}
