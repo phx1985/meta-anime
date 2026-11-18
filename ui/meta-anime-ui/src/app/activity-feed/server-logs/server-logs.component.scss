@@ -214,3 +214,13 @@
   }
   .logs-search { margin-left: 0; width: 100%; }
 }
+
+/* Provider names inside a log line: bold, in each service's signature colour.
+   Only the word is coloured — never the whole row. */
+.log-prov {
+  font-weight: 700;
+
+  &--sonarr { color: #35c5f4; }
+  &--plex   { color: #e5a00d; }
+  &--mal    { color: #8fa8ff; }
+}

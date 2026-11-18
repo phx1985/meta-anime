@@ -199,6 +199,7 @@ export class App implements OnInit, AfterViewInit {
     '/mal-search': 'nav.malSearch',
     '/settings': 'nav.settings',
     '/library': 'nav.library',
+    '/activity': 'nav.activity',
   };
 
   /** Controls the disabled-provider interception modal — delegated to PopupService */

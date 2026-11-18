@@ -15,6 +15,43 @@ import { LogsService, ServerLogEntry } from '../../services/logs.service';
 
 type LogLevel = 'all' | 'Information' | 'Warning' | 'Error';
 
+/** One run of log text: plain, or a provider name that gets its own colour. */
+export interface LogSegment {
+  text: string;
+  cls: string;
+}
+
+/** Provider names to highlight inside the message. MyAnimeList counts as MAL. */
+// Case-insensitive so "sonarr sync fetched …" is highlighted too; \b keeps words intact.
+const PROVIDER_PATTERN = /\b(Sonarr|Plex|MAL|MyAnimeList)\b/gi;
+const PROVIDER_CLASS: Record<string, string> = {
+  sonarr: 'log-prov--sonarr',
+  plex: 'log-prov--plex',
+  mal: 'log-prov--mal',
+  myanimelist: 'log-prov--mal',
+};
+
+/**
+ * Splits a log line into plain + provider runs. Done in TS (not with innerHTML) so arbitrary
+ * log text can never inject markup into the panel.
+ */
+export function splitProviderSegments(text: string): LogSegment[] {
+  if (!text) return [];
+
+  const segments: LogSegment[] = [];
+  let cursor = 0;
+
+  for (const match of text.matchAll(PROVIDER_PATTERN)) {
+    const start = match.index ?? 0;
+    if (start > cursor) segments.push({ text: text.slice(cursor, start), cls: '' });
+    segments.push({ text: match[1], cls: PROVIDER_CLASS[match[1].toLowerCase()] ?? '' });
+    cursor = start + match[1].length;
+  }
+
+  if (cursor < text.length) segments.push({ text: text.slice(cursor), cls: '' });
+  return segments;
+}
+
 /**
  * "Server logs" panel: what the API is actually doing, straight from its in-process ring buffer.
  * Lives on the Activity & Logs page (the notification action "View log →" lands here via
@@ -41,6 +78,20 @@ export class ServerLogsComponent implements OnDestroy {
   readonly autoRefresh = signal(true);
   readonly expanded = signal<ReadonlySet<number>>(new Set());
   readonly copied = signal(false);
+
+  /** Per-line cache: the list re-renders on every poll and the same lines come back. */
+  private readonly segmentCache = new Map<string, LogSegment[]>();
+
+  segments(text: string): LogSegment[] {
+    if (!text) return [];
+    const cached = this.segmentCache.get(text);
+    if (cached) return cached;
+
+    const segments = splitProviderSegments(text);
+    if (this.segmentCache.size > 500) this.segmentCache.clear();
+    this.segmentCache.set(text, segments);
+    return segments;
+  }
 
   readonly counts = computed(() => {
     const items = this.entries();

@@ -30,18 +30,23 @@ public sealed class SettingsSeedService(
         // Always upsert provider credentials from configuration (if non-empty).
         // This ensures a config-file change is picked up on the next restart.
         var providerSeeds = BuildProviderSeeds();
+        var upserted = 0;
         foreach (var (key, value) in providerSeeds)
         {
             if (string.IsNullOrWhiteSpace(value))
                 continue;
 
             await repo.UpsertAsync(key, value);
-            logger.LogInformation("Settings seed: upserted '{Key}' from configuration", key);
+            // Per-key lines are Debug: a boot that seeds ~20 keys used to push 20 lines of noise
+            // into the console before the app had served a single request.
+            logger.LogDebug("Settings seed: upserted '{Key}' from configuration", key);
+            upserted++;
         }
 
         // Only initialise default values when the key is not yet in the database,
         // so that user changes made via the UI are preserved across restarts.
         var defaultSeeds = BuildDefaultSeeds();
+        var initialised = 0;
         foreach (var (key, value) in defaultSeeds)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -51,9 +56,15 @@ public sealed class SettingsSeedService(
             if (existing is null)
             {
                 await repo.UpsertAsync(key, value);
-                logger.LogInformation("Settings seed: initialised '{Key}' with default", key);
+                logger.LogDebug("Settings seed: initialised '{Key}' with default", key);
+                initialised++;
             }
         }
+
+        if (upserted > 0 || initialised > 0)
+            logger.LogInformation(
+                "Settings seed: {Upserted} provider value(s) applied, {Initialised} default(s) created",
+                upserted, initialised);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

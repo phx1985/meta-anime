@@ -29,7 +29,9 @@ public sealed class AniListHttpPipeline(
 
     private const int MaxAttempts = 3; // initial attempt + max 2 retries
 
-    private static readonly TimeSpan PerAttemptTimeout = TimeSpan.FromSeconds(10);
+    // AniList answers batched GraphQL queries over a shared rate limit; 10 s cut healthy queries
+    // mid-flight. Keep it under the HTTP pipeline attempt (30 s) so the transport stays in charge.
+    private static readonly TimeSpan PerAttemptTimeout = TimeSpan.FromSeconds(25);
     private static readonly TimeSpan RetryAfterCap = TimeSpan.FromSeconds(5);
 
     private static readonly JsonSerializerOptions JsonOptions = new()

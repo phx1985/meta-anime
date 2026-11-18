@@ -346,6 +346,16 @@
       </a>
     }
 
+    <!-- Activity feed — moved out of the mobile dock, which keeps five slots -->
+    <a class="drawer-nav-link" routerLink="/activity" routerLinkActive="drawer-nav-link--active"
+      (click)="closeMenu()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="3 13 7 13 10 7 13 17 16 11 21 11" />
+      </svg>
+      {{ 'nav.activity' | translate }}
+    </a>
+
     <!-- Settings link -->
     <a class="drawer-nav-link" routerLink="/settings" routerLinkActive="drawer-nav-link--active"
       (click)="closeMenu()">
@@ -505,13 +515,6 @@
       <line x1="3" y1="10" x2="21" y2="10" />
     </svg>
     <span>{{ 'nav.seasonal' | translate }}</span>
-  </a>
-  <a class="bottom-nav-item" routerLink="/activity" routerLinkActive="bottom-nav-item--active" (click)="closeMenu()">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <polyline points="3 13 7 13 10 7 13 17 16 11 21 11" />
-    </svg>
-    <span>{{ 'nav.activity' | translate }}</span>
   </a>
   <a class="bottom-nav-item" routerLink="/mal-search" routerLinkActive="bottom-nav-item--active" (click)="closeMenu()">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
